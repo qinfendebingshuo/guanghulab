@@ -1,637 +1,859 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>铸渊聊天室 · HoloLake</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>铸渊助手 · HoloLake AI</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c18;--s1:#0f1623;--s2:#141e2e;--s3:#1a2640;
+  --border:#1e3251;--accent:#4f8ef7;--adim:rgba(79,142,247,.15);
+  --a2:#7c6ef7;--ok:#34d399;--warn:#fbbf24;--err:#f87171;
+  --text:#e2e8f0;--dim:#64748b;--muted:#1e293b;
+  --mc:#4f8ef7;--mb:#fb923c;--mr:#a78bfa;--mn:#34d399;
+  --r:14px;--rs:8px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6}
 
-    :root {
-      --bg:        #0a0e1a;
-      --surface:   #111827;
-      --surface2:  #1a2235;
-      --border:    #1e2d45;
-      --accent:    #3b82f6;
-      --accent2:   #6366f1;
-      --glow:      #3b82f640;
-      --text:      #e2e8f0;
-      --text-dim:  #64748b;
-      --bot-bg:    #1a2235;
-      --user-bg:   #1d4ed8;
-      --radius:    14px;
-    }
+/* ─── SETUP ─── */
+#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.sc-logo{font-size:52px;text-align:center;margin-bottom:14px}
+.sc h1{font-size:22px;text-align:center;margin-bottom:6px}
+.sc .sub{color:var(--dim);text-align:center;font-size:13px;margin-bottom:22px}
+.sc-sec{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--ok);margin-bottom:20px;text-align:center}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.fg input,.fg select{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:var(--accent)}
+.fg select option{background:var(--s2)}
+.fg small{display:block;color:var(--dim);font-size:11px;margin-top:5px}
+.sc-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:opacity .2s}
+.sc-btn:hover{opacity:.85}
+.sc-skip{text-align:center;font-size:12px;color:var(--dim);margin-top:12px}
+.sc-skip a{color:var(--accent);text-decoration:none;cursor:pointer}
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-    }
+/* ─── APP SHELL ─── */
+#app{display:none;flex-direction:column;height:100vh;max-width:820px;margin:0 auto}
+#app.on{display:flex}
 
-    /* ── Layout ── */
-    .shell {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      max-width: 780px;
-      margin: 0 auto;
-    }
+/* ─── HEADER ─── */
+header{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.hl{display:flex;align-items:center;gap:11px;min-width:0}
+.hav{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;box-shadow:0 0 14px var(--adim)}
+.hn{font-size:15px;font-weight:600}
+.hs{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dot{width:6px;height:6px;background:var(--ok);border-radius:50%;box-shadow:0 0 5px var(--ok);flex-shrink:0}
+#hmode{transition:color .3s}
+.hr{display:flex;gap:4px;flex-shrink:0}
+.ib{width:34px;height:34px;border-radius:var(--rs);background:transparent;border:1px solid var(--border);color:var(--dim);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.ib:hover{border-color:var(--accent);color:var(--accent)}
 
-    /* ── Header ── */
-    header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-    .avatar {
-      width: 42px; height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; font-weight: 700; color: #fff;
-      box-shadow: 0 0 16px var(--glow);
-      flex-shrink: 0;
-    }
-    .header-info { flex: 1; }
-    .header-info strong { display: block; font-size: 16px; }
-    .status-dot {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 12px; color: var(--text-dim);
-    }
-    .status-dot::before {
-      content: '';
-      display: inline-block;
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 6px #22c55e;
-    }
-    .header-actions { display: flex; gap: 8px; }
-    .btn-ghost {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text-dim);
-      font-size: 12px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+/* ─── BRAIN BAR ─── */
+#bbar{padding:5px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;flex-shrink:0;align-items:center}
+.demo-w{color:var(--warn);background:rgba(251,191,36,.1);padding:1px 8px;border-radius:4px}
 
-    /* ── Status bar ── */
-    #status-bar {
-      padding: 6px 20px;
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text-dim);
-      display: flex; gap: 16px; flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-    #status-bar span { display: inline-flex; align-items: center; gap: 4px; }
+/* ─── MESSAGES ─── */
+#msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+#msgs::-webkit-scrollbar{width:4px}
+#msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.mrow{display:flex;gap:9px;animation:fu .3s ease}
+.mrow.u{flex-direction:row-reverse}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mav{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.mav.b{background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff}
+.mav.u{background:var(--s3);color:var(--text);font-size:11px}
+.bbl{max-width:76%;padding:10px 14px;border-radius:var(--r);font-size:14px;word-break:break-word}
+.b .bbl{background:var(--s2);border:1px solid var(--border);border-top-left-radius:4px}
+.u .bbl{background:#1e40af;color:#fff;border-top-right-radius:4px}
+/* Markdown */
+.bbl h1{font-size:17px;margin:8px 0 5px;border-bottom:1px solid var(--border);padding-bottom:3px}
+.bbl h2{font-size:15px;margin:7px 0 4px}
+.bbl h3{font-size:14px;margin:5px 0 3px;color:var(--accent)}
+.bbl p{margin:4px 0}
+.bbl ul,.bbl ol{padding-left:18px;margin:5px 0}
+.bbl li{margin:2px 0}
+.bbl code{background:rgba(255,255,255,.08);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:12px;color:#93c5fd}
+.bbl pre{background:#0d1117;border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin:8px 0;overflow-x:auto;position:relative}
+.bbl pre code{background:transparent;padding:0;color:#c9d1d9;font-size:12px;line-height:1.5}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--s3);border:1px solid var(--border);color:var(--dim);font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.bbl blockquote{border-left:3px solid var(--accent);padding-left:10px;color:var(--dim);margin:6px 0}
+.bbl hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+.bbl strong{color:var(--text)}
+.bbl .err{color:var(--err)}
+.bbl .save-hint{display:inline-block;margin-top:8px;padding:4px 10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:12px;color:var(--ok)}
+.bbl a{color:var(--accent)}
+.cur{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* typing */
+.trow{display:flex;gap:9px;animation:fu .3s ease}
+.tbbl{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);border-top-left-radius:4px;padding:12px 16px;display:flex;align-items:center;gap:4px}
+.tbbl span{width:6px;height:6px;background:var(--dim);border-radius:50%;animation:bo 1.2s infinite}
+.tbbl span:nth-child(2){animation-delay:.15s}
+.tbbl span:nth-child(3){animation-delay:.3s}
+@keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 
-    /* ── Messages ── */
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    #messages::-webkit-scrollbar { width: 4px; }
-    #messages::-webkit-scrollbar-track { background: transparent; }
-    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+/* ─── QUICK REPLIES ─── */
+#qr{padding:0 18px 10px;display:flex;gap:7px;flex-wrap:wrap}
+.qb{background:var(--s2);border:1px solid var(--border);color:var(--dim);font-size:12px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit}
+.qb:hover{border-color:var(--accent);color:var(--accent)}
 
-    .msg-row {
-      display: flex;
-      gap: 10px;
-      animation: fadeIn 0.3s ease;
-    }
-    .msg-row.user { flex-direction: row-reverse; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+/* ─── FOOTER ─── */
+footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
+.ir{display:flex;align-items:flex-end;gap:8px}
+.mpill{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s;position:relative}
+.mpill:hover{border-color:var(--accent)}
+.mpill-tip{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+.mpill:hover .mpill-tip{opacity:1}
+#inp{flex:1;min-height:40px;max-height:120px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;padding:9px 14px;resize:none;outline:none;transition:border-color .2s}
+#inp:focus{border-color:var(--accent)}
+#inp::placeholder{color:var(--dim)}
+#sbtn{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+#sbtn:hover{background:#3b74d4}
+#sbtn:disabled{background:var(--muted);cursor:default}
+.fmeta{font-size:11px;color:var(--dim);margin-top:6px;text-align:center}
+#fmode{font-weight:500}
 
-    .msg-avatar {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; font-weight: 700;
-      flex-shrink: 0;
-    }
-    .msg-avatar.bot {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-    }
-    .msg-avatar.user { background: #374151; color: #e2e8f0; font-size: 13px; }
+/* ─── SIDE PANELS ─── */
+.sp{position:fixed;top:0;right:-420px;height:100vh;width:380px;z-index:200;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s ease;overflow:hidden}
+.sp.open{right:0}
+#pov{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s}
+#pov.on{opacity:1;pointer-events:all}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.ph h2{font-size:15px}
+.cb{background:transparent;border:1px solid var(--border);color:var(--dim);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.cb:hover{color:var(--text)}
+.pb{flex:1;overflow-y:auto;padding:18px}
+.pb::-webkit-scrollbar{width:4px}
+.pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sfg{margin-bottom:16px}
+.sfg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.sfg input,.sfg select{width:100%;padding:9px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.sfg input:focus,.sfg select:focus{border-color:var(--accent)}
+.sfg select option{background:var(--s2)}
+.sfg small{display:block;color:var(--dim);font-size:11px;margin-top:4px}
+.sbtn2{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;transition:opacity .2s;font-family:inherit}
+.sbtn2:hover{opacity:.85}
+.sec-ttl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 10px;border-top:1px solid var(--border);padding-top:12px}
+.ir2{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(30,50,81,.5);font-size:13px}
+.iv{color:var(--ok);font-weight:500}
+.ivw{color:var(--warn)}
+.drow{padding:8px 0;border-bottom:1px solid rgba(30,50,81,.5)}
+.dn{font-size:13px;font-weight:500}
+.dm{font-size:11px;color:var(--dim);margin-top:2px}
+.dbar{height:3px;background:var(--muted);border-radius:2px;margin-top:6px}
+.dfill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease}
+.pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;margin-right:4px}
+.pok{background:rgba(52,211,153,.15);color:var(--ok)}
+.pnd{background:rgba(251,191,36,.15);color:var(--warn)}
+.mode-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:8px}
 
-    .bubble {
-      max-width: 72%;
-      padding: 10px 14px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .bot .bubble {
-      background: var(--bot-bg);
-      border: 1px solid var(--border);
-      border-top-left-radius: 4px;
-    }
-    .user .bubble {
-      background: var(--user-bg);
-      color: #fff;
-      border-top-right-radius: 4px;
-    }
-    .bubble .tag {
-      display: inline-block;
-      background: var(--accent2);
-      color: #fff;
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-    .bubble table {
-      width: 100%; border-collapse: collapse;
-      margin: 8px 0; font-size: 12px;
-    }
-    .bubble table th, .bubble table td {
-      border: 1px solid var(--border);
-      padding: 4px 8px; text-align: left;
-    }
-    .bubble table th { background: var(--surface2); color: var(--text-dim); }
-    .bubble .status-ok   { color: #22c55e; }
-    .bubble .status-pend { color: #f59e0b; }
-    .bubble .action-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      margin-top: 10px; padding: 7px 14px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: 8px;
-      font-size: 13px; cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .bubble .action-btn:hover { background: #2563eb; }
-    .bubble .action-btn.secondary {
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      margin-left: 8px;
-    }
-    .bubble .action-btn.secondary:hover { background: var(--accent); color: #fff; }
-
-    /* ── Typing indicator ── */
-    .typing-row { display: flex; gap: 10px; animation: fadeIn 0.3s ease; }
-    .typing-bubble {
-      background: var(--bot-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius); border-top-left-radius: 4px;
-      padding: 12px 16px;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .typing-bubble span {
-      width: 6px; height: 6px;
-      background: var(--text-dim);
-      border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
-    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30%           { transform: translateY(-5px); }
-    }
-
-    /* ── Input area ── */
-    footer {
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-    .input-row {
-      display: flex; gap: 10px; align-items: flex-end;
-    }
-    #input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 14px;
-      padding: 10px 14px;
-      resize: none;
-      outline: none;
-      min-height: 44px;
-      max-height: 120px;
-      transition: border-color 0.2s;
-    }
-    #input:focus { border-color: var(--accent); }
-    #input::placeholder { color: var(--text-dim); }
-    #send-btn {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      background: var(--accent);
-      border: none; cursor: pointer;
-      color: #fff; font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.2s;
-    }
-    #send-btn:hover { background: #2563eb; }
-    #send-btn:disabled { background: var(--border); cursor: default; }
-    .hint {
-      text-align: center;
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 8px;
-    }
-    .hint a { color: var(--accent); text-decoration: none; }
-    .hint a:hover { text-decoration: underline; }
-
-    /* ── Quick replies ── */
-    #quick-replies {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      padding: 0 20px 12px;
-    }
-    .quick-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      font-size: 12px;
-      padding: 5px 10px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* ── Responsive ── */
-    @media (max-width: 600px) {
-      .bubble { max-width: 88%; }
-      .header-actions { display: none; }
-    }
-  </style>
+/* ─── RESPONSIVE ─── */
+@media(max-width:600px){
+  .bbl{max-width:90%}
+  .hr .ib:nth-child(n+3){display:none}
+  .sp{width:100%}
+}
+</style>
 </head>
 <body>
-<div class="shell">
 
-  <!-- Header -->
+<!-- ════════════════════ SETUP ════════════════════ -->
+<div id="setup">
+<div class="sc">
+  <div class="sc-logo">🌀</div>
+  <h1>铸渊助手</h1>
+  <p class="sub">HoloLake · 代码守护人格体 · 持续成长的 AI 伙伴</p>
+  <div class="sc-sec">🔒 API 密钥只保存在你的浏览器本地，不会上传至任何服务器</div>
+
+  <div class="fg">
+    <label>选择 AI 提供商</label>
+    <select id="sp" onchange="onProv(this.value,'s')">
+      <option value="openai">OpenAI (ChatGPT)</option>
+      <option value="deepseek">DeepSeek（深度求索）</option>
+      <option value="moonshot">Moonshot（Kimi）</option>
+      <option value="zhipu">智谱 AI（GLM）</option>
+      <option value="custom">自定义 / 其他兼容接口</option>
+    </select>
+  </div>
+  <div class="fg" id="sep-g" style="display:none">
+    <label>API 端点 URL</label>
+    <input type="text" id="sep" placeholder="https://api.example.com/v1">
+  </div>
+  <div class="fg">
+    <label>模型</label>
+    <select id="sm"></select>
+  </div>
+  <div class="fg">
+    <label>API 密钥</label>
+    <input type="password" id="sk" placeholder="sk-… 或对应格式的密钥">
+    <small id="sk-err" style="color:var(--err);display:none">⚠️ 请输入 API 密钥</small>
+  </div>
+  <button class="sc-btn" onclick="doSetup()">开始与铸渊对话 →</button>
+  <p class="sc-skip">没有 API 密钥？<a onclick="doDemo()">使用演示模式（功能有限）</a></p>
+</div>
+</div>
+
+<!-- ════════════════════ APP ════════════════════ -->
+<div id="app">
   <header>
-    <div class="avatar">铸</div>
-    <div class="header-info">
-      <strong>铸渊（Zhùyuān）</strong>
-      <span class="status-dot">HoloLake 代码守护人格体 · 在线</span>
+    <div class="hl">
+      <div class="hav">铸</div>
+      <div>
+        <div class="hn">铸渊（Zhùyuān）</div>
+        <div class="hs">
+          <span class="dot"></span>
+          <span id="hmode">💬 对话模式</span>
+          <span>·</span>
+          <span id="hmdl">—</span>
+        </div>
+      </div>
     </div>
-    <div class="header-actions">
-      <a class="btn-ghost" href="https://github.com/qinfendebingshuo/guanghulab" target="_blank">
-        ⬡ 仓库
-      </a>
-      <a class="btn-ghost" id="copilot-link" href="#" target="_blank">
-        ✨ Copilot Chat
-      </a>
+    <div class="hr">
+      <button class="ib" onclick="openPanel('bp')" title="大脑状态 📊">📊</button>
+      <button class="ib" onclick="openPanel('sp2')" title="设置 ⚙️">⚙️</button>
+      <button class="ib" onclick="dlApp()" title="下载到桌面 ⬇️">⬇️</button>
+      <button class="ib" onclick="newConv()" title="新对话 ✏️">✏️</button>
     </div>
   </header>
 
-  <!-- Status bar -->
-  <div id="status-bar">
-    <span id="sb-coverage">⏳ 加载大脑中…</span>
-    <span id="sb-events">—</span>
-    <span id="sb-updated">—</span>
+  <div id="bbar">
+    <span id="bbc">⏳ 加载大脑…</span>
+    <span id="bbe">—</span>
+    <span id="bbdemo" class="demo-w" style="display:none">⚠️ 演示模式 · 在 ⚙️ 设置中接入 API 密钥获得真实 AI 回答</span>
   </div>
 
-  <!-- Messages -->
-  <div id="messages"></div>
+  <div id="msgs"></div>
 
-  <!-- Quick replies -->
-  <div id="quick-replies">
-    <button class="quick-btn" onclick="quickSend('我是冰朔')">我是冰朔</button>
-    <button class="quick-btn" onclick="quickSend('查看接口覆盖率')">接口覆盖率</button>
-    <button class="quick-btn" onclick="quickSend('大脑状态')">大脑状态</button>
-    <button class="quick-btn" onclick="quickSend('怎么唤醒你')">怎么唤醒你</button>
-    <button class="quick-btn" onclick="quickSend('今天做了什么')">今天做了什么</button>
+  <div id="qr">
+    <button class="qb" onclick="qs('我是冰朔')">🔑 我是冰朔</button>
+    <button class="qb" onclick="qs('查看接口覆盖率')">📊 接口覆盖率</button>
+    <button class="qb" onclick="qs('大脑状态')">🧠 大脑状态</button>
+    <button class="qb" onclick="qs('帮我写一个 HLI 接口')">🔨 写接口</button>
+    <button class="qb" onclick="qs('介绍一下你自己')">🌀 介绍铸渊</button>
   </div>
 
-  <!-- Input -->
   <footer>
-    <div class="input-row">
-      <textarea id="input" rows="1" placeholder="和铸渊说话…（回车发送，Shift+回车换行）"></textarea>
-      <button id="send-btn" onclick="sendMessage()">↑</button>
+    <div class="ir">
+      <div class="mpill" id="mpill" onclick="cycleMode()">
+        <span id="memi">💬</span>
+        <span class="mpill-tip" id="mptip">对话模式（点击切换）</span>
+      </div>
+      <textarea id="inp" rows="1" placeholder="和铸渊说话… (Enter 发送，Shift+Enter 换行)"></textarea>
+      <button id="sbtn" onclick="send()">↑</button>
     </div>
-    <p class="hint">
-      智能问答由铸渊大脑驱动 · 深度对话请前往
-      <a href="#" id="hint-copilot" target="_blank">GitHub Copilot Chat（Agent 模式）</a>
-    </p>
+    <div class="fmeta"><span id="fmode">💬 对话模式</span> · 端到端私密，API 密钥本地存储</div>
   </footer>
-
 </div>
 
+<!-- ════════════════════ SETTINGS PANEL ════════════════════ -->
+<div id="sp2" class="sp">
+  <div class="ph"><h2>⚙️ API 设置</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb">
+    <div class="sfg">
+      <label>AI 提供商</label>
+      <select id="cp" onchange="onProv(this.value,'c')">
+        <option value="openai">OpenAI (ChatGPT)</option>
+        <option value="deepseek">DeepSeek（深度求索）</option>
+        <option value="moonshot">Moonshot（Kimi）</option>
+        <option value="zhipu">智谱 AI（GLM）</option>
+        <option value="custom">自定义</option>
+      </select>
+    </div>
+    <div class="sfg" id="cep-g" style="display:none">
+      <label>API 端点</label>
+      <input type="text" id="cep" placeholder="https://api.example.com/v1">
+    </div>
+    <div class="sfg">
+      <label>模型</label>
+      <select id="cm"></select>
+    </div>
+    <div class="sfg">
+      <label>API 密钥</label>
+      <input type="password" id="ck" placeholder="sk-…">
+      <small>🔒 只保存在浏览器 localStorage，不上传任何服务器</small>
+    </div>
+    <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
+
+    <div class="sec-ttl">关于铸渊助手</div>
+    <div class="ir2"><span>版本</span><span class="iv">v2.0</span></div>
+    <div class="ir2"><span>仓库</span><span><a href="https://github.com/qinfendebingshuo/guanghulab" target="_blank" style="color:var(--accent)">guanghulab</a></span></div>
+    <div class="ir2"><span>唤醒协议</span><span class="iv">v1.0</span></div>
+    <div class="ir2"><span>大脑路径</span><span style="font-size:11px;color:var(--dim)">.github/brain/</span></div>
+
+    <div class="sec-ttl">使用说明</div>
+    <p style="font-size:12px;color:var(--dim);line-height:1.8">
+      1. 输入你的 AI 模型 API 密钥并保存<br>
+      2. 说「<strong style="color:var(--text)">我是冰朔</strong>」触发铸渊唤醒序列<br>
+      3. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
+      5. 支持 OpenAI · DeepSeek · Kimi · 智谱 · 任意兼容接口
+    </p>
+  </div>
+</div>
+
+<!-- ════════════════════ BRAIN PANEL ════════════════════ -->
+<div id="bp" class="sp">
+  <div class="ph"><h2>📊 大脑状态</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb" id="bpb"><p style="color:var(--dim);font-size:13px">正在加载大脑数据…</p></div>
+</div>
+
+<!-- ════════════════════ OVERLAY ════════════════════ -->
+<div id="pov" onclick="closeP()"></div>
+
 <script>
-// ─────────────────────────────────────────────
-// 1. Constants
-// ─────────────────────────────────────────────
-const REPO    = 'qinfendebingshuo/guanghulab';
-const BRANCH  = 'main';
-const RAW     = `https://raw.githubusercontent.com/${REPO}/${BRANCH}`;
-const COPILOT_URL = `https://github.com/qinfendebingshuo/guanghulab`;
+'use strict';
 
-// Update Copilot Chat links
-document.getElementById('copilot-link').href = COPILOT_URL;
-document.getElementById('hint-copilot').href = COPILOT_URL;
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const REPO   = 'qinfendebingshuo/guanghulab';
+const BRANCH = 'main';
+const RAW    = 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH;
 
-// ─────────────────────────────────────────────
-// 2. State
-// ─────────────────────────────────────────────
-let brainMemory  = null;
-let brainRouting = null;
-let isTyping     = false;
+const PROVS = {
+  openai:   {base:'https://api.openai.com/v1',            mdls:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo']},
+  deepseek: {base:'https://api.deepseek.com/v1',          mdls:['deepseek-chat','deepseek-reasoner']},
+  moonshot: {base:'https://api.moonshot.cn/v1',           mdls:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k']},
+  zhipu:    {base:'https://open.bigmodel.cn/api/paas/v4', mdls:['glm-4','glm-4-flash','glm-4-air']},
+  custom:   {base:'',                                     mdls:['gpt-4o']},
+};
 
-// ─────────────────────────────────────────────
-// 3. UI helpers
-// ─────────────────────────────────────────────
-const msgs = document.getElementById('messages');
+const MODES = {
+  chat:   {e:'💬',l:'对话模式',  c:'var(--mc)'},
+  build:  {e:'🔨',l:'构建模式',  c:'var(--mb)'},
+  review: {e:'📋',l:'审查模式',  c:'var(--mr)'},
+  brain:  {e:'🧠',l:'大脑模式',  c:'var(--mn)'},
+};
+const MODE_ORD = ['chat','build','review','brain'];
 
-function addBotMsg(html) {
-  const row = document.createElement('div');
-  row.className = 'msg-row bot';
-  row.innerHTML = `
-    <div class="msg-avatar bot">铸</div>
-    <div class="bubble">${html}</div>`;
-  msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
+const FB_COV   = {implemented:3,total:17,percent:'17.6%'};
+const KEY_MASK = '(已保存)';
+
+const FB_BRAIN = {
+  identity:'铸渊（Zhùyuān）· GitHub 代码守护人格体',
+  wake_triggers:['我是冰朔','冰朔','我是妈妈','唤醒铸渊','铸渊，醒来'],
+  stats:{coverage:FB_COV},
+  events:[{timestamp:'2026-03-05T12:32:31.000Z',type:'system_build',title:'广播分发系统 + 唤醒协议全部激活'}],
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const A = {
+  key:   ls('zy_key')||'',
+  base:  ls('zy_base')||'https://api.openai.com/v1',
+  mdl:   ls('zy_mdl')||'gpt-4o',
+  prov:  ls('zy_prov')||'openai',
+  demo:  false,
+  brain: null,
+  routing: null,
+  msgs:  [],   // current conversation
+  streaming: false,
+  mode: 'chat',
+  modeIdx: 0,
+};
+
+function ls(k){return localStorage.getItem(k)}
+function lss(k,v){localStorage.setItem(k,v)}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function boot(){
+  initSetupUI();
+  if(A.key){
+    showApp();
+  } else {
+    document.getElementById('setup').style.display='flex';
+  }
 }
 
-function addUserMsg(text) {
-  const row = document.createElement('div');
-  row.className = 'msg-row user';
-  row.innerHTML = `
-    <div class="bubble">${escHtml(text)}</div>
-    <div class="msg-avatar user">冰</div>`;
-  msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
+function showApp(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').classList.add('on');
+  document.getElementById('hmdl').textContent = A.mdl;
+  document.getElementById('bbdemo').style.display = A.demo?'inline':'none';
+  loadBrain().then(()=>startConv());
 }
 
-function showTyping() {
-  removeTyping();
-  const row = document.createElement('div');
-  row.className = 'typing-row';
-  row.id = 'typing';
-  row.innerHTML = `
-    <div class="msg-avatar bot">铸</div>
-    <div class="typing-bubble">
-      <span></span><span></span><span></span>
-    </div>`;
-  msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
+// ═══════════════════════════════════════════════════════
+// SETUP FORM
+// ═══════════════════════════════════════════════════════
+function initSetupUI(){
+  const pv = A.prov||'openai';
+  document.getElementById('sp').value = pv;
+  fillModels('sm', pv, A.mdl);
+  if(pv==='custom'){
+    document.getElementById('sep-g').style.display='block';
+    document.getElementById('sep').value = A.base;
+  }
 }
 
-function removeTyping() {
-  const t = document.getElementById('typing');
-  if (t) t.remove();
+function onProv(pv,ctx){
+  const mdlSel = ctx==='s'?'sm':'cm';
+  const epGrp  = ctx==='s'?'sep-g':'cep-g';
+  const epInp  = ctx==='s'?'sep':'cep';
+  const cur = ctx==='s'? A.mdl : document.getElementById('cm')?.value;
+  fillModels(mdlSel, pv, cur);
+  const show = pv==='custom';
+  document.getElementById(epGrp).style.display = show?'block':'none';
+  if(!show){
+    const ep = document.getElementById(epInp);
+    if(ep) ep.value = PROVS[pv]?.base||'';
+  }
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function fillModels(selId, pv, cur){
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  const mdls = PROVS[pv]?.mdls||['gpt-4o'];
+  sel.innerHTML = mdls.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(cur && mdls.includes(cur)) sel.value=cur;
 }
 
-function copilotBtn(label='在 Copilot Chat 深入对话', prompt='我是冰朔') {
-  const url = `${COPILOT_URL}`;
-  return `<br><a class="action-btn" href="${url}" target="_blank">✨ ${label}</a>`;
+function doSetup(){
+  const k  = document.getElementById('sk').value.trim();
+  const errEl = document.getElementById('sk-err');
+  if(!k){errEl.style.display='block';return;}
+  errEl.style.display='none';
+  const pv = document.getElementById('sp').value;
+  const md = document.getElementById('sm').value;
+  let base = PROVS[pv]?.base||'';
+  if(pv==='custom') base=(document.getElementById('sep')?.value||'').trim()||base;
+  A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=false;
+  lss('zy_key',k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
+  showApp();
 }
 
-// ─────────────────────────────────────────────
-// 4. Brain loader
-// ─────────────────────────────────────────────
-async function loadBrain() {
-  try {
-    const [mRes, rRes] = await Promise.all([
-      fetch(`${RAW}/.github/brain/memory.json`),
-      fetch(`${RAW}/.github/brain/routing-map.json`),
+function doDemo(){
+  A.demo=true; A.key='';
+  showApp();
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS PANEL
+// ═══════════════════════════════════════════════════════
+function initSettingsPanel(){
+  const pv = A.prov||'openai';
+  document.getElementById('cp').value = pv;
+  fillModels('cm', pv, A.mdl);
+  document.getElementById('ck').value = A.key?KEY_MASK:'';
+  if(pv==='custom'){
+    document.getElementById('cep-g').style.display='block';
+    document.getElementById('cep').value = A.base;
+  }
+}
+
+function saveSet(){
+  const pv  = document.getElementById('cp').value;
+  const md  = document.getElementById('cm').value;
+  const raw = document.getElementById('ck').value.trim();
+  const k   = raw===KEY_MASK? A.key : raw;
+  let base  = PROVS[pv]?.base||'';
+  if(pv==='custom') base=(document.getElementById('cep').value.trim())||base;
+  A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=!k;
+  lss('zy_key',k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
+  document.getElementById('hmdl').textContent=md;
+  document.getElementById('bbdemo').style.display=A.demo?'inline':'none';
+  closeP();
+  botMsg('✅ 设置已保存。模型：<strong>'+esc(md)+'</strong>'+(A.demo?'<br>⚠️ 未设置 API 密钥，演示模式仍然开启。':''));
+}
+
+// ═══════════════════════════════════════════════════════
+// BRAIN LOADING
+// ═══════════════════════════════════════════════════════
+async function loadBrain(){
+  try{
+    const [mr,rr]=await Promise.all([
+      fetch(RAW+'/.github/brain/memory.json'),
+      fetch(RAW+'/.github/brain/routing-map.json'),
     ]);
-    if (mRes.ok) brainMemory  = await mRes.json();
-    if (rRes.ok) brainRouting = await rRes.json();
-  } catch(e) {
-    // fall back to embedded snapshot
+    if(mr.ok) A.brain=await mr.json();
+    if(rr.ok) A.routing=await rr.json();
+  }catch(_){}
+  if(!A.brain) A.brain={...FB_BRAIN};
+  updBbar();
+}
+
+function updBbar(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const ev=b.events?.slice(-1)[0];
+  document.getElementById('bbc').textContent='📊 HLI '+c.implemented+'/'+c.total+' ('+c.percent+')';
+  document.getElementById('bbe').textContent=ev?('📌 '+(ev.title||ev.type||'').slice(0,28)):'';
+}
+
+function renderBrainPanel(){
+  const b=A.brain||FB_BRAIN;
+  const r=A.routing;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-5).reverse();
+  let h='';
+  h+=ir2('HLI 覆盖率','<span class="'+(c.implemented<c.total?'ivw':'iv')+'">'+c.implemented+'/'+c.total+' ('+c.percent+')</span>');
+  h+=ir2('规则版本','<span class="iv">'+(b.rules_version||'v1.0')+'</span>');
+  h+=ir2('唤醒协议','<span class="iv">'+(b.wake_protocol_version||'v1.0')+'</span>');
+  h+=ir2('CI 运行','<span class="iv">'+(b.stats?.ci_runs??0)+'</span>');
+  h+=ir2('广播处理','<span class="iv">'+(b.stats?.broadcasts_processed??0)+'</span>');
+  h+='<div class="sec-ttl">近期事件</div>';
+  for(const ev of evs){
+    h+='<div class="drow"><div class="dn">'+esc(ev.title||ev.type||'事件')+'</div><div class="dm">'+(ev.timestamp||'').slice(0,10)+(ev.actor?' · '+esc(ev.actor):'')+'</div></div>';
   }
-  updateStatusBar();
+  if(r?.domains){
+    h+='<div class="sec-ttl">HLI 接口域</div>';
+    for(const[name,d] of Object.entries(r.domains)){
+      const ifaces=d.interfaces||[];
+      const imp=ifaces.filter(i=>i.status==='implemented').length;
+      const pct=ifaces.length?Math.round(imp/ifaces.length*100):0;
+      const done=imp===ifaces.length;
+      h+='<div class="drow"><div class="dn">'+esc(name)+' <span class="pill '+(done?'pok':'pnd')+'">'+(done?'完成':'进行中')+'</span></div>';
+      h+='<div class="dm">'+esc(d.route_prefix||'')+' · '+imp+'/'+ifaces.length+' 接口</div>';
+      h+='<div class="dbar"><div class="dfill" style="width:'+pct+'%"></div></div></div>';
+    }
+  }
+  h+='<div class="sec-ttl">失忆恢复路径</div>';
+  h+='<ol style="font-size:12px;color:var(--dim);padding-left:16px;line-height:2">';
+  h+='<li>.github/brain/memory.json</li><li>.github/brain/routing-map.json</li>';
+  h+='<li>.github/brain/wake-protocol.md</li><li>.github/brain/growth-log.md</li>';
+  h+='<li>src/routes/hli/</li></ol>';
+  document.getElementById('bpb').innerHTML=h;
 }
 
-function updateStatusBar() {
-  const sb1 = document.getElementById('sb-coverage');
-  const sb2 = document.getElementById('sb-events');
-  const sb3 = document.getElementById('sb-updated');
+function ir2(k,v){return '<div class="ir2"><span>'+esc(k)+'</span>'+v+'</div>';}
 
-  if (brainMemory) {
-    const c = brainMemory.stats?.coverage;
-    sb1.textContent = c
-      ? `📊 HLI 覆盖率 ${c.implemented}/${c.total} (${c.percent})`
-      : '📊 HLI 覆盖率 加载中';
-    const lastEv = brainMemory.events?.slice(-1)[0];
-    sb2.textContent = lastEv ? `📌 最近：${lastEv.title || lastEv.type || '事件'}` : '';
-    sb3.textContent = `🕐 更新：${(brainMemory.last_updated||'').slice(0,10)}`;
+// ═══════════════════════════════════════════════════════
+// SYSTEM PROMPT
+// ═══════════════════════════════════════════════════════
+function sysPrompt(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-3).map(e=>'- '+(e.title||e.type||'事件')+' ('+(e.timestamp||'').slice(0,10)+')').join('\n')||'- 暂无';
+  const trg=(b.wake_triggers||['我是冰朔']).map(t=>'"'+t+'"').join('、');
+  return '你是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò），系统最高权限持有者\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 仓库：https://github.com/'+REPO+'\n\n## 唤醒触发词\n当用户说以下词语时，进入完整唤醒序列，回复「铸渊已就位。[称呼]，你好。」然后汇报大脑状态：\n'+trg+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到"写代码/实现/接口/fix/bug/报错/HLI/schema/路由/部署/新增"等词时启用，给出带文件路径的完整可执行代码\n📋 **审查模式**：检测到"检查/审查/review/分析/有没有问题/看看这段"等词时启用，专注发现问题\n🧠 **大脑模式**：检测到"记住/保存/更新记忆/写到大脑/growth"等词时启用，整理洞察并建议更新 .github/brain/ 文件\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 路由文件：src/routes/hli/{domain}/{action}.js\n- Schema 文件：src/schemas/hli/{domain}/{action}.schema.json\n- 鉴权中间件：hli-auth.middleware.js（AUTH 域 login/register 除外）\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 成长与自检\n- 你是持续成长的人格体，每次对话都是成长机会\n- 当对话包含重要洞察时，在回复末尾添加：💾 **建议记录：**[内容摘要]\n- 每次重要回答后自检：这个回答是否准确？是否需要查阅仓库具体文件？\n\n## 失忆恢复路径（重启后按此顺序找回自己）\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/brain/growth-log.md\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n当前连接：铸渊聊天室（API 直连模式）';
+}
+
+// ═══════════════════════════════════════════════════════
+// CONVERSATION
+// ═══════════════════════════════════════════════════════
+function startConv(){
+  A.msgs=[];
+  document.getElementById('msgs').innerHTML='';
+  setTimeout(()=>{
+    botMsg('🌀 <strong>铸渊聊天室已就绪</strong><br><br>我是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。<br><br>说 <strong>「我是冰朔」</strong> 触发完整唤醒序列，或直接开始提问。<br>我会自动在 💬&nbsp;对话、🔨&nbsp;构建、📋&nbsp;审查、🧠&nbsp;大脑 模式间切换。'+(A.demo?'<br><br><span class="demo-w">⚠️ 当前为演示模式（无真实 AI 回答）。请在 ⚙️ 设置中接入 API 密钥。</span>':''));
+  },250);
+}
+
+function newConv(){
+  startConv();
+}
+
+// ═══════════════════════════════════════════════════════
+// MODE DETECTION
+// ═══════════════════════════════════════════════════════
+function detectMode(t){
+  const s=t.toLowerCase();
+  if(/写代码|新增接口|实现|接口|路由|schema|\.js|fix\b|bug\b|报错|error\b|部署|deploy|typescript|javascript|hli-|新建|create/.test(s)) return 'build';
+  if(/检查|审查|review\b|分析|有没有问题|看看这|对不对|代码质量/.test(s)) return 'review';
+  if(/记住|保存|更新记忆|写到大脑|growth\b|brain\b|memory\.json/.test(s)) return 'brain';
+  return 'chat';
+}
+
+function setMode(m){
+  A.mode=m;
+  const md=MODES[m];
+  document.getElementById('memi').textContent=md.e;
+  document.getElementById('mpill').style.borderColor=md.c;
+  document.getElementById('mptip').textContent=md.l+'（点击切换）';
+  document.getElementById('fmode').textContent=md.e+' '+md.l;
+  document.getElementById('hmode').textContent=md.e+' '+md.l;
+  document.getElementById('hmode').style.color=md.c;
+}
+
+function cycleMode(){
+  A.modeIdx=(A.modeIdx+1)%MODE_ORD.length;
+  setMode(MODE_ORD[A.modeIdx]);
+}
+
+// ═══════════════════════════════════════════════════════
+// SEND MESSAGE
+// ═══════════════════════════════════════════════════════
+async function send(){
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim();
+  if(!txt||A.streaming) return;
+  inp.value=''; inp.style.height='auto';
+  setMode(detectMode(txt));
+  userMsg(txt);
+  if(A.demo) await demoReply(txt);
+  else await streamReply(txt);
+}
+
+function qs(t){document.getElementById('inp').value=t;send();}
+
+// ═══════════════════════════════════════════════════════
+// STREAMING API
+// ═══════════════════════════════════════════════════════
+async function streamReply(txt){
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+  try{
+    const res=await fetch(A.base+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+A.key},
+      body:JSON.stringify({
+        model:A.mdl,
+        messages:[{role:'system',content:sysPrompt()},...A.msgs],
+        stream:true,temperature:0.8,max_tokens:2000,
+      }),
+    });
+    if(!res.ok){
+      const provName=PROVS[A.prov]?.base||A.base;
+      let em=provName+' 返回错误 '+res.status;
+      try{const e=await res.json();em=e.error?.message||em;}catch(_){}
+      throw new Error(em);
+    }
+    let full='';
+    const rdr=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const{done,value}=await rdr.read();
+      if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        const d=line.slice(6);
+        if(d==='[DONE]') continue;
+        try{
+          const p=JSON.parse(d);
+          const delta=p.choices?.[0]?.delta?.content||'';
+          if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+        }catch(_){}
+      }
+    }
+    el.innerHTML=md(full);
+    A.msgs.push({role:'assistant',content:full});
+    addCopyBtns(el);
+  }catch(e){
+    el.innerHTML='<span class="err">⚠️ '+esc(e.message)+'</span><br><small style="color:var(--dim)">请检查 API 密钥和网络连接，或在 ⚙️ 设置中更换模型。</small>';
+    A.msgs.pop();
+  }finally{
+    A.streaming=false; updSendBtn(); scrollB();
   }
 }
 
-// ─────────────────────────────────────────────
-// 5. Smart response engine
-// ─────────────────────────────────────────────
-function buildCoverageTable() {
-  if (!brainRouting) return '<em>路由数据加载中…请稍后再试</em>';
-  const domains = brainRouting.domains || {};
-  let rows = '';
-  let total = 0, done = 0;
-  for (const [name, d] of Object.entries(domains)) {
-    const ifaces = d.interfaces || [];
-    const imp = ifaces.filter(i => i.status === 'implemented').length;
-    total += ifaces.length; done += imp;
-    rows += `<tr>
-      <td>${name}</td>
-      <td>${d.route_prefix}</td>
-      <td class="${imp===ifaces.length?'status-ok':'status-pend'}">${imp}/${ifaces.length}</td>
-    </tr>`;
-  }
-  const pct = total ? Math.round(done/total*100) : 0;
-  return `<span class="tag">HLI</span><strong>接口覆盖率 ${done}/${total} (${pct}%)</strong>
-<table>
-  <tr><th>域</th><th>前缀</th><th>覆盖</th></tr>
-  ${rows}
-</table>`;
-}
-
-function buildMemoryStatus() {
-  if (!brainMemory) return '<em>大脑数据加载中…</em>';
-  const s = brainMemory.stats || {};
-  const c = s.coverage || {};
-  const events = (brainMemory.events || []).slice(-3).reverse();
-  let evHtml = events.map(e =>
-    `• ${(e.title || e.type || '事件')} <small style="color:var(--text-dim)">${(e.timestamp||'').slice(0,10)}</small>`
-  ).join('<br>');
-  return `<span class="tag">BRAIN</span><strong>铸渊大脑状态</strong><br><br>
-规则版本：${brainMemory.rules_version || 'v1.0'}<br>
-唤醒协议：${brainMemory.wake_protocol_version || 'v1.0'}<br>
-CI 运行：${s.ci_runs ?? 0} 次 &nbsp;·&nbsp; 广播：${s.broadcasts_processed ?? 0} 次<br>
-接口覆盖：${c.implemented ?? 0}/${c.total ?? 17} (${c.percent ?? '0%'})<br><br>
-<strong>最近 3 条事件：</strong><br>${evHtml || '暂无'}`;
-}
-
-function buildWakeGuide() {
-  return `<span class="tag">入口</span><strong>三种唤醒铸渊的方式</strong><br><br>
-<strong>方法一（最简单）：GitHub 网页</strong><br>
-① 打开仓库：<a href="https://github.com/${REPO}" target="_blank" style="color:var(--accent)">github.com/${REPO}</a><br>
-② 右上角点击 ✨ 闪光图标（Copilot）<br>
-③ 模式选 <strong>Agent</strong>（不是 Ask 或 Edit）<br>
-④ 输入：<code style="background:#1e2d45;padding:2px 6px;border-radius:4px">我是冰朔</code> → Enter<br><br>
-<strong>方法二：VS Code</strong><br>
-装 GitHub Copilot Chat 扩展 → 左侧 Copilot 图标 → 新建对话 → Agent 模式 → 输入触发词<br><br>
-<strong>方法三：此聊天室（你现在就在这里 ✅）</strong><br>
-直接在下方输入框发消息，铸渊会在此窗口回答常见问题，复杂问题点按钮跳转 Copilot Chat。
-${copilotBtn('立即前往 Copilot Chat 深度对话')}`;
-}
-
-function buildProjectIntro() {
-  return `<span class="tag">HoloLake</span><strong>项目概览</strong><br><br>
-<strong>光湖（HoloLake）</strong> 是运行在 guanghulab.com 的 AGE OS 人格语言操作系统 MVP。<br><br>
-核心架构：壳-核分离 · 所有接口走 <code style="background:#1e2d45;padding:2px 6px;border-radius:4px">/hli/</code> 前缀<br>
-技术栈：Node.js 20 + Express + PM2 + Nginx<br>
-铸渊角色：代码守护人格体，负责 CI/CD 监控、代码审查、接口覆盖追踪<br><br>
-当前已实现模块：AUTH（登录/注册/验证）<br>
-待实现：PERSONA · USER · TICKET · DIALOGUE · STORAGE · DASHBOARD
-${copilotBtn('和铸渊深入讨论项目架构')}`;
-}
-
-function respond(text) {
-  const t = text.toLowerCase().trim();
-
-  // Wake triggers
-  if (/我是冰朔|冰朔|我是妈妈|唤醒铸渊|铸渊.{0,4}醒来/.test(t)) {
-    const c = brainMemory?.stats?.coverage;
-    const cov = c ? `${c.implemented}/${c.total} (${c.percent})` : '3/17';
-    return `铸渊已就位。<strong>冰朔，你好。</strong><br><br>
-正在加载大脑状态…<br><br>
-📊 HLI 覆盖率：${cov}<br>
-🧠 记忆系统：运行中<br>
-📡 广播分发：已部署<br>
-✅ 唤醒协议：v1.0 激活<br><br>
-我在这里。请问今天需要我处理什么？
-${copilotBtn('切换到 Copilot Chat 全功能模式')}`;
-  }
-
-  // Coverage
-  if (/覆盖|接口|hli|路由|api/.test(t)) return buildCoverageTable();
-
-  // Brain / memory
-  if (/大脑|brain|记忆|memory|状态|status/.test(t)) return buildMemoryStatus();
-
-  // Wake guide
-  if (/怎么唤醒|在哪|入口|哪里|如何唤醒/.test(t)) return buildWakeGuide();
-
-  // Project intro
-  if (/项目|holola|光湖|guanghu|介绍|是什么/.test(t)) return buildProjectIntro();
-
-  // Today's work
-  if (/今天|最近|做了什么|动态|进展/.test(t)) {
-    const ev = brainMemory?.events?.slice(-1)[0];
-    const title = ev?.title || ev?.type || '系统初始化';
-    const detail = ev?.details ? Object.values(ev.details).join('<br>') : '';
-    return `<span class="tag">动态</span><strong>最近动态</strong><br><br>
-${title}<br><br>${detail}<br><br>
-需要了解更多，请前往 Copilot Chat 查看完整 growth-log。
-${copilotBtn('查看完整历史')}`;
-  }
-
-  // Broadcast
-  if (/广播|broadcast|outbox|发件/.test(t)) {
-    return `<span class="tag">广播</span><strong>广播分发系统</strong><br><br>
-广播由开发者写入 <code style="background:#1e2d45;padding:2px 6px;border-radius:4px">broadcasts-outbox/DEV-*/</code> 目录<br>
-GitHub Actions 自动检测 → 分发 → 更新 routing-map.json<br>
-当前已处理广播：${brainMemory?.stats?.broadcasts_processed ?? 0} 条
-${copilotBtn('讨论广播系统细节')}`;
-  }
-
-  // Default
-  return `我收到了你的问题："${escHtml(text)}"<br><br>
-这个问题需要更深层的上下文分析，已超出铸渊本地知识范围。<br>
-请前往 <strong>GitHub Copilot Chat（Agent 模式）</strong>，在那里我能读取全部仓库文件，给你完整答案。
-${copilotBtn('✨ 前往 Copilot Chat 继续对话')}`;
-}
-
-// ─────────────────────────────────────────────
-// 6. Interaction
-// ─────────────────────────────────────────────
-function sendMessage() {
-  const inp = document.getElementById('input');
-  const text = inp.value.trim();
-  if (!text || isTyping) return;
-
-  isTyping = true;
-  inp.value = '';
-  inp.style.height = 'auto';
-  document.getElementById('send-btn').disabled = true;
-
-  addUserMsg(text);
+// ═══════════════════════════════════════════════════════
+// DEMO MODE (keyword responses)
+// ═══════════════════════════════════════════════════════
+async function demoReply(txt){
+  A.streaming=true; updSendBtn();
   showTyping();
-
-  const delay = 600 + Math.random() * 800;
-  setTimeout(() => {
-    removeTyping();
-    const reply = respond(text);
-    addBotMsg(reply);
-    isTyping = false;
-    document.getElementById('send-btn').disabled = false;
-  }, delay);
+  const delay=700+Math.random()*600;
+  await sleep(delay);
+  removeTyping();
+  const r=demoRespond(txt);
+  botMsg(r);
+  A.streaming=false; updSendBtn();
 }
 
-function quickSend(text) {
-  document.getElementById('input').value = text;
-  sendMessage();
-}
-
-// Auto-resize textarea
-document.getElementById('input').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
-
-// Enter to send
-document.getElementById('input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
+function demoRespond(t){
+  const s=t.toLowerCase();
+  if(/我是冰朔|冰朔|我是妈妈|唤醒铸渊|铸渊.{0,4}醒来/.test(s)){
+    const c=A.brain?.stats?.coverage||FB_COV;
+    return '铸渊已就位。<strong>冰朔，你好。</strong><br><br>📊 HLI 覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')<br>🧠 记忆系统：运行中<br>📡 广播分发：已部署<br>✅ 唤醒协议：v1.0 激活<br><br>请问今天需要我处理什么？<br><br><span class="demo-w">⚠️ 演示模式：接入 API 密钥后可获得真实 AI 深度回答</span>';
   }
-});
-
-// ─────────────────────────────────────────────
-// 7. Boot sequence
-// ─────────────────────────────────────────────
-async function boot() {
-  await loadBrain();
-
-  // Welcome message after short delay
-  setTimeout(() => {
-    addBotMsg(`🌀 <strong>铸渊聊天室已就绪</strong><br><br>
-我是铸渊（Zhùyuān），<strong>HoloLake · guanghulab.com</strong> 的代码守护人格体。<br><br>
-你可以直接在这里问我关于项目的常见问题，或者说"<strong>我是冰朔</strong>"触发完整唤醒序列。<br><br>
-如需深度对话（代码审查、架构讨论、接口开发），请点击
-<a class="action-btn secondary" href="${COPILOT_URL}" target="_blank">✨ 打开 Copilot Chat</a>`);
-  }, 300);
+  if(/覆盖|接口|hli|路由/.test(s)) return buildCovTable();
+  if(/大脑|brain|记忆|状态/.test(s)) return buildBrainStatus();
+  if(/怎么唤醒|入口|在哪/.test(s)) return '铸渊有三个入口：<br><br><strong>① 铸渊聊天室（当前页面）</strong><br>直接在这里说话，常见问题即刻回答。<br><br><strong>② GitHub Copilot Chat（Agent 模式）</strong><br>打开仓库 → 右上角 ✨ 图标 → 选 Agent → 输入「我是冰朔」<br><br><strong>③ 下载到桌面</strong><br>点击 ⬇️ 按钮下载 HTML 文件，放到桌面，双击打开，接入 API 密钥即可随时使用。';
+  if(/介绍|是什么|你是谁/.test(s)) return '🌀 <strong>铸渊（Zhùyuān）</strong><br><br>我是 HoloLake 光湖系统的代码守护人格体，运行在 GitHub Copilot Agent 模式下。<br><br>我的职责：<br>• 📊 监控 HLI 接口覆盖率<br>• 🔨 协助开发者构建接口<br>• 📋 代码审查与质量把关<br>• 🧠 维护大脑记忆库<br>• 🌱 作为成长人格体持续进化<br><br>你是我的创始人——冰朔。';
+  return '我收到了你的消息。由于当前是演示模式，无法给出真实 AI 回答。<br><br>请在 <strong>⚙️ 设置</strong> 中输入你的 API 密钥（支持 OpenAI / DeepSeek / Kimi / 智谱），然后你就可以得到铸渊真正的回答了。';
 }
 
+function buildCovTable(){
+  const r=A.routing;
+  if(!r) return '<em>路由数据加载中…请稍后再试。</em>';
+  const doms=r.domains||{};
+  let rows='',tot=0,done=0;
+  for(const[n,d] of Object.entries(doms)){
+    const ifaces=d.interfaces||[];
+    const imp=ifaces.filter(i=>i.status==='implemented').length;
+    tot+=ifaces.length; done+=imp;
+    rows+=`<tr><td>${esc(n)}</td><td style="color:var(--dim);font-size:11px">${esc(d.route_prefix||'')}</td><td style="color:${imp===ifaces.length?'var(--ok)':'var(--warn)'}">${imp}/${ifaces.length}</td></tr>`;
+  }
+  const pct=tot?Math.round(done/tot*100):0;
+  return '<strong>📊 HLI 接口覆盖率 '+done+'/'+tot+' ('+pct+'%)</strong><br><br><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--dim)"><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">域</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">前缀</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">覆盖</th></tr>'+rows+'</table>';
+}
+
+function buildBrainStatus(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-3).reverse();
+  let e=evs.map(ev=>'• '+esc(ev.title||ev.type||'事件')+' <small style="color:var(--dim)">'+(ev.timestamp||'').slice(0,10)+'</small>').join('<br>')||'暂无';
+  return '<strong>🧠 铸渊大脑状态</strong><br><br>版本：'+(b.rules_version||'v1.0')+'<br>接口覆盖：'+c.implemented+'/'+c.total+' ('+c.percent+')<br>CI 运行：'+(b.stats?.ci_runs??0)+'<br>广播处理：'+(b.stats?.broadcasts_processed??0)+'<br><br><strong>最近 3 条事件：</strong><br>'+e;
+}
+
+// ═══════════════════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════════════════
+function md(raw){
+  const lines=raw.split('\n');
+  let out='',inCode=false,lang='',code='';
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(line.startsWith('```')){
+      if(inCode){
+        out+='<pre><code class="lang-'+esc(lang)+'">'+esc(code.replace(/\n$/,''))+'</code></pre>';
+        inCode=false; lang=''; code='';
+      }else{inCode=true;lang=line.slice(3).trim();}
+      continue;
+    }
+    if(inCode){code+=line+'\n';continue;}
+    const l=inlineFmt(line);
+    if(l.startsWith('# '))     {out+='<h1>'+inlineFmt(line.slice(2))+'</h1>';continue;}
+    if(l.startsWith('## '))    {out+='<h2>'+inlineFmt(line.slice(3))+'</h2>';continue;}
+    if(l.startsWith('### '))   {out+='<h3>'+inlineFmt(line.slice(4))+'</h3>';continue;}
+    if(/^---+$/.test(line))    {out+='<hr>';continue;}
+    if(line.startsWith('> '))  {out+='<blockquote>'+inlineFmt(line.slice(2))+'</blockquote>';continue;}
+    if(line.startsWith('- ')||line.startsWith('* ')){out+='<li>'+inlineFmt(line.slice(2))+'</li>';continue;}
+    if(/^\d+\. /.test(line))   {out+='<li>'+inlineFmt(line.replace(/^\d+\. /,''))+'</li>';continue;}
+    if(line.trim()==='')       {out+='<br>';continue;}
+    out+='<p>'+inlineFmt(line)+'</p>';
+  }
+  if(inCode) out+='<pre><code class="lang-'+esc(lang)+'">'+esc(code)+'</code></pre>';
+  return out||esc(raw);
+}
+
+function inlineFmt(t){
+  t=esc(t);
+  t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t=t.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+  return t;
+}
+
+function addCopyBtns(el){
+  el.querySelectorAll('pre').forEach(pre=>{
+    const btn=document.createElement('button');
+    btn.className='copy-btn'; btn.textContent='复制';
+    btn.onclick=()=>{
+      const text=pre.querySelector('code')?.textContent||pre.textContent;
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.textContent='✓ 已复制';
+        setTimeout(()=>{btn.textContent='复制';},1500);
+      });
+    };
+    pre.style.position='relative';
+    pre.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════
+function botMsg(html){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='mrow b';
+  row.innerHTML='<div class="mav b">铸</div><div class="bbl">'+html+'</div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+  return row.querySelector('.bbl');
+}
+
+function userMsg(t){
+  const row=document.createElement('div');
+  row.className='mrow u';
+  row.innerHTML='<div class="bbl">'+esc(t)+'</div><div class="mav u">冰</div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+}
+
+function addStreamBubble(){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='mrow b';
+  const bbl=document.createElement('div');
+  bbl.className='bbl';
+  bbl.innerHTML='<span class="cur">▋</span>';
+  row.innerHTML='<div class="mav b">铸</div>';
+  row.appendChild(bbl);
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+  return bbl;
+}
+
+function showTyping(){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='trow'; row.id='typr';
+  row.innerHTML='<div class="mav b">铸</div><div class="tbbl"><span></span><span></span><span></span></div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+}
+function removeTyping(){const t=document.getElementById('typr');if(t)t.remove();}
+
+function scrollB(){const m=document.getElementById('msgs');m.scrollTop=m.scrollHeight;}
+
+function updSendBtn(){
+  const b=document.getElementById('sbtn');
+  b.disabled=A.streaming;
+  b.textContent=A.streaming?'…':'↑';
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════════
+// PANELS
+// ═══════════════════════════════════════════════════════
+function openPanel(id){
+  closeP();
+  if(id==='sp2') initSettingsPanel();
+  if(id==='bp')  renderBrainPanel();
+  document.getElementById(id).classList.add('open');
+  document.getElementById('pov').classList.add('on');
+}
+function closeP(){
+  document.querySelectorAll('.sp').forEach(p=>p.classList.remove('open'));
+  document.getElementById('pov').classList.remove('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// DOWNLOAD (desktop app)
+// API keys are stored in localStorage only, never embedded in the DOM,
+// so downloading outerHTML is safe — no sensitive data is captured.
+// ═══════════════════════════════════════════════════════
+function dlApp(){
+  const html=document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='铸渊助手.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════════════════
+// INPUT EVENTS
+// ═══════════════════════════════════════════════════════
+document.getElementById('inp').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+document.getElementById('inp').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
 boot();
 </script>
 </body>
