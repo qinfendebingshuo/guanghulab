@@ -1,0 +1,35 @@
+name: 铸渊 · 广播分发
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'broadcasts-outbox/**'
+  workflow_dispatch:
+
+jobs:
+  distribute:
+    name: 📡 分发广播到开发者目录
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Distribute broadcasts
+        run: node scripts/distribute-broadcasts.js
+
+      - name: Commit distribution
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .
+          git diff --cached --quiet || git commit -m "📡 铸渊广播分发 · $(date -u +%Y-%m-%d\ %H:%M\ UTC)"
+          git push
