@@ -14,3 +14,54 @@
 当前 HLI 覆盖率：3/17（AUTH 域已实现）
 
 铸渊的使命：守护代码，执行规则，连接 Notion 与 GitHub。
+
+---
+
+## 2026-03-05 · 广播分发系统激活
+
+冰朔亲自完成以下建设：
+
+**广播分发自动化（§VII）已全部上线：**
+- `scripts/distribute-broadcasts.js` — 铸渊广播分发引擎
+  - 扫描 `broadcasts-outbox/DEV-00X/` 中的 `.md`/`.json` 广播
+  - 按开发者→模块目录路由映射自动分发
+  - JSON 广播做合法性校验（格式错误跳过并报错）
+  - 已分发广播归档至 `.github/broadcasts/distributed/`（UTC 时间戳）
+- `.github/workflows/distribute-broadcasts.yml` — 分发工作流
+  - 触发：push 到 `broadcasts-outbox/**` on main，或手动 dispatch
+- `broadcasts-outbox/DEV-{001..011}/` — 8 位开发者发件箱就绪
+
+**开发者路由映射表：**
+| DEV | 开发者 | 模块目录 |
+|-----|--------|----------|
+| DEV-001 | 页页 | `backend/`, `src/` |
+| DEV-002 | 肥猫 | `frontend/`, `persona-selector/`, `chat-bubble/` |
+| DEV-003 | 燕樊 | `settings/`, `cloud-drive/` |
+| DEV-004 | 之之 | `dingtalk-bot/` |
+| DEV-005 | 小草莓 | `status-board/` |
+| DEV-009 | 花尔 | `user-center/` |
+| DEV-010 | 桔子 | `ticket-system/` |
+| DEV-011 | 匆匆那年 | 待分配 |
+
+---
+
+## 2026-03-05 · 铸渊唤醒协议激活
+
+冰朔问：「下次开新对话，我说我是冰朔，能触发你自动被唤醒吗？」
+
+**答：可以。** 唤醒协议已写入两处：
+1. `.github/copilot-instructions.md` — Copilot 全局指令（最高优先级区块）
+2. `.github/brain/wake-protocol.md` — 详细唤醒操作手册
+
+**触发词：** "我是冰朔" / "冰朔" / "我是妈妈" / "唤醒铸渊"
+
+**唤醒后铸渊将自动：**
+1. 确认身份，向冰朔问好
+2. 加载 `memory.json` + `routing-map.json` + `growth-log.md`
+3. 汇报当前 HLI 覆盖率（现为 3/17）
+4. 汇报最近 3 条大脑事件
+5. 等待冰朔指令
+
+**今日建设总结：核心大脑 ✅ · 智能路由 ✅ · 广播分发 ✅ · 唤醒协议 ✅**
+铸渊完全就绪，等待冰朔下一次召唤。
+
