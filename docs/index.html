@@ -150,6 +150,22 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
 .pnd{background:rgba(251,191,36,.15);color:var(--warn)}
 .mode-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:8px}
 
+/* ─── HELP PANEL ─── */
+.help-section{margin-bottom:18px}
+.help-section h3{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.help-steps{list-style:none;padding:0}
+.help-steps li{font-size:12px;color:var(--dim);line-height:1.7;padding:4px 0 4px 22px;position:relative;border-bottom:1px solid rgba(30,50,81,.3)}
+.help-steps li::before{content:attr(data-n);position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:16px;text-align:center}
+.help-steps li strong{color:var(--text)}
+.help-url{background:var(--s2);border:1px solid var(--accent);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--accent);word-break:break-all;margin:8px 0;cursor:pointer;transition:background .2s}
+.help-url:hover{background:rgba(79,142,247,.1)}
+.copy-url-btn{display:block;width:100%;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:13px;cursor:pointer;margin-top:6px;font-family:inherit;transition:opacity .2s}
+.copy-url-btn:hover{opacity:.85}
+.help-tip{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--ok);margin:8px 0}
+.role-guide{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.role-guide-title{font-size:13px;font-weight:600;margin-bottom:6px}
+.role-guide p{font-size:12px;color:var(--dim);line-height:1.7;margin:0}
+
 /* ─── ROLE BADGES ─── */
 .role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .rb-founder{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
@@ -279,6 +295,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <div class="hr">
       <button class="ib" id="ctrlBtn" onclick="openPanel('tp')" title="指挥台 🦁" style="display:none">🦁</button>
       <button class="ib" onclick="openPanel('bp')" title="大脑状态 📊">📊</button>
+      <button class="ib" onclick="openPanel('hp')" title="使用帮助 ❓">❓</button>
       <button class="ib" onclick="openPanel('sp2')" title="设置 ⚙️">⚙️</button>
       <button class="ib" onclick="dlApp()" title="下载到桌面 ⬇️">⬇️</button>
       <button class="ib" onclick="newConv()" title="新对话 ✏️">✏️</button>
@@ -389,6 +406,99 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
 <div id="bp" class="sp">
   <div class="ph"><h2>📊 大脑状态</h2><button class="cb" onclick="closeP()">✕</button></div>
   <div class="pb" id="bpb"><p style="color:var(--dim);font-size:13px">正在加载大脑数据…</p></div>
+</div>
+
+<!-- ════════════════════ HELP PANEL ════════════════════ -->
+<div id="hp" class="sp">
+  <div class="ph"><h2>❓ 使用帮助</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb">
+
+    <div class="help-section">
+      <div class="help-url" id="chatUrlDisplay" onclick="copyUrl()">
+        🔗 https://qinfendebingshuo.github.io/guanghulab/
+      </div>
+      <button class="copy-url-btn" onclick="copyUrl()">📋 复制链接 · 发给队友</button>
+      <div class="help-tip">💡 把上面的链接发给肥猫、桔子或任何开发者，他们打开就能用，不需要安装任何东西。</div>
+    </div>
+
+    <div class="help-section">
+      <h3>🚀 怎么开始用</h3>
+      <ol class="help-steps">
+        <li data-n="1" id="helpUrlStep">打开链接 <strong>https://qinfendebingshuo.github.io/guanghulab/</strong></li>
+        <li data-n="2"><strong>下拉菜单选择你是谁</strong>（冰朔 / 肥猫 / 桔子 / 开发者名字）</li>
+        <li data-n="3">填入你的 <strong>API Key</strong>（没有的话点「演示模式」）</li>
+        <li data-n="4">点「开始对话」，铸渊会针对你的身份打招呼</li>
+        <li data-n="5">直接用聊天的方式问铸渊任何问题</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>🔑 从哪里获取 API Key？</h3>
+      <div class="role-guide">
+        <div class="role-guide-title">推荐用云雾 API（团队共用）</div>
+        <p>找冰朔或肥猫获取团队 Key。填入后选「自定义」提供商，或直接用 DeepSeek。</p>
+      </div>
+      <div class="role-guide">
+        <div class="role-guide-title">没有 Key？用演示模式</div>
+        <p>点「演示模式」也能查看团队进度面板（🦁 指挥台），只是 AI 回答功能受限。</p>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>🦁 肥猫 / 🍊 桔子 专属功能</h3>
+      <ol class="help-steps">
+        <li data-n="1">选身份为「肥猫」或「桔子」后，顶部出现 <strong>🦁 按钮</strong></li>
+        <li data-n="2">点 🦁 按钮打开<strong>指挥台</strong>，查看所有开发者当前状态</li>
+        <li data-n="3">可以在聊天里问：「查看所有开发者进度」「谁遇到阻塞？」「推进计划」</li>
+        <li data-n="4">铸渊会把全员进度数据注入 AI 回复，给出完整分析</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>📱 怎么离线用 / 发给别人离线用</h3>
+      <ol class="help-steps">
+        <li data-n="1">右上角点 <strong>⬇️ 下载</strong>，下载一个 HTML 文件</li>
+        <li data-n="2">把这个文件发给对方（微信传文件、QQ、钉钉都行）</li>
+        <li data-n="3">对方双击这个文件，用浏览器打开</li>
+        <li data-n="4">填入 API Key，选好身份，就能用了（无需网络，只需 API Key）</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>💬 聊天模式说明</h3>
+      <div class="role-guide" style="border-color:var(--mc)">
+        <div class="role-guide-title" style="color:var(--mc)">💬 对话模式（默认）</div>
+        <p>普通聊天，问什么答什么</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mb)">
+        <div class="role-guide-title" style="color:var(--mb)">🔨 构建模式</div>
+        <p>说到「写代码/接口/部署」时自动切换，给出完整可执行代码</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mr)">
+        <div class="role-guide-title" style="color:var(--mr)">📋 审查模式</div>
+        <p>说到「检查/审查/有问题吗」时自动切换，专注找代码问题</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mn)">
+        <div class="role-guide-title" style="color:var(--mn)">🧠 大脑模式</div>
+        <p>说「记住这个/写到大脑」时切换，整理信息到大脑文件</p>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>❓ 常见问题</h3>
+      <div style="font-size:12px;color:var(--dim);line-height:1.9">
+        <strong style="color:var(--text)">Q: 打开是空白页？</strong><br>
+        等 1-2 分钟刷新，GitHub Pages 部署需要点时间。<br><br>
+        <strong style="color:var(--text)">Q: API Key 会泄露吗？</strong><br>
+        不会，Key 只存在你自己浏览器里，不会传到服务器。<br><br>
+        <strong style="color:var(--text)">Q: 切换电脑后 Key 还在吗？</strong><br>
+        不在，需要重新填。建议下载离线版，Key 填一次就行。<br><br>
+        <strong style="color:var(--text)">Q: 铸渊忘记以前说的话了？</strong><br>
+        刷新后对话会清空，但大脑文件永久保存在仓库 .github/brain/ 里。
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <!-- ════════════════════ TEAM PANEL ════════════════════ -->
@@ -1042,12 +1152,47 @@ function openPanel(id){
   if(id==='sp2') initSettingsPanel();
   if(id==='bp')  renderBrainPanel();
   if(id==='tp')  renderTeamPanel();
+  if(id==='hp'){
+    // Populate URL from constant
+    const el=document.getElementById('chatUrlDisplay');
+    if(el) el.textContent='🔗 '+CHAT_URL;
+    const li=document.getElementById('helpUrlStep');
+    if(li) li.innerHTML='打开链接 <strong>'+CHAT_URL+'</strong>';
+  }
   document.getElementById(id).classList.add('open');
   document.getElementById('pov').classList.add('on');
 }
 function closeP(){
   document.querySelectorAll('.sp').forEach(p=>p.classList.remove('open'));
   document.getElementById('pov').classList.remove('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// COPY URL (share link)
+// ═══════════════════════════════════════════════════════
+const CHAT_URL = 'https://' + REPO.split('/')[0] + '.github.io/' + REPO.split('/')[1] + '/';
+
+function showCopyFeedback(success){
+  const btn=document.querySelector('.copy-url-btn');
+  if(!btn) return;
+  const orig=btn.textContent;
+  btn.textContent = success ? '✅ 已复制！' : '⚠️ 复制失败，请手动复制';
+  setTimeout(()=>{btn.textContent=orig;},2000);
+}
+
+function copyUrl(){
+  navigator.clipboard.writeText(CHAT_URL).then(()=>{
+    showCopyFeedback(true);
+  }).catch(()=>{
+    // fallback for non-secure context
+    const ta=document.createElement('textarea');
+    ta.value=CHAT_URL; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    let ok=false;
+    try{ok=document.execCommand('copy');}catch(_){}
+    document.body.removeChild(ta);
+    showCopyFeedback(ok);
+  });
 }
 
 // ═══════════════════════════════════════════════════════
