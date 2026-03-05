@@ -1,0 +1,32 @@
+name: 模块结构检查
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: 检查模块结构
+        run: |
+          MODULES="m01-login m03-personality m05-user-center m06-ticket m07-dialogue-ui m10-cloud m11-module m12-kanban dingtalk-bot backend-integration"
+          ERRORS=0
+          for mod in $MODULES; do
+            if [ -d "$mod" ]; then
+              if [ ! -f "$mod/README.md" ]; then
+                echo "❌ $mod 缺少 README.md"
+                ERRORS=$((ERRORS+1))
+              fi
+              if [ ! -f "$mod/package.json" ]; then
+                echo "⚠️ $mod 缺少 package.json（环节1前需补充）"
+              fi
+              if [ ! -d "$mod/src" ]; then
+                echo "⚠️ $mod 缺少 src/ 目录（环节1前需补充）"
+              fi
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "结构检查未通过，请修复以上问题"
+            exit 1
+          fi
+          echo "✅ 所有模块结构检查通过"
