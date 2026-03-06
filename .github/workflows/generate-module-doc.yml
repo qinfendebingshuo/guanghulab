@@ -1,0 +1,95 @@
+name: 铸渊 · HoloLake Era 模块文档自动生成
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'm01-login/**'
+      - 'm03-personality/**'
+      - 'm05-user-center/**'
+      - 'm06-ticket/**'
+      - 'm07-dialogue-ui/**'
+      - 'm10-cloud/**'
+      - 'm11-module/**'
+      - 'm12-kanban/**'
+      - 'm15-cloud-drive/**'
+      - 'dingtalk-bot/**'
+      - 'backend-integration/**'
+      - 'status-board/**'
+      - 'scripts/generate-module-doc.js'
+  workflow_dispatch:
+
+jobs:
+  generate-doc:
+    name: 📋 生成部署模块总文档
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 生成 HoloLake Era 模块文档
+        run: node scripts/generate-module-doc.js
+
+      - name: 提交更新文档
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add docs/HoloLake-Era-OS-Modules.md
+          if git diff --cached --quiet; then
+            echo "📋 文档无变化，跳过提交"
+          else
+            git commit -m "📋 自动更新 HoloLake Era 模块文档 · $(date -u +%Y-%m-%d\ %H:%M\ UTC)"
+            git push
+          fi
+
+  notify-collaborator:
+    name: 📧 通知合作者模块已收到
+    runs-on: ubuntu-latest
+    # 仅 push 事件触发（workflow_dispatch 为手动，不发通知）
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 获取本次 push 改动的文件列表
+        id: changed
+        run: |
+          # 获取本次 push 相对于上一个 commit 改动的文件
+          FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git show --name-only --format="" HEAD)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "📄 改动文件：$FILES"
+
+      - name: 发送模块收讫通知
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          PUSHER_LOGIN: ${{ github.actor }}
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: node scripts/notify-module-received.js
+
