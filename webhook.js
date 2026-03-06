@@ -7,11 +7,31 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 调用 Kimi API
+async function callKimiAPI(content) {
+  const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.KIMI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'moonshot-v1-8k',
+      messages: [
+        { role: 'system', content: '你是之之秋秋，光湖纪元的钉钉机器人助手。' },
+        { role: 'user', content: content }
+      ]
+    })
+  });
+  
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
 // AI 处理函数
 async function processWithAI(content) {
   // 这里接入 Kimi API
   // 暂时返回测试回复
-  return `🤖 收到："${content}"\n\n我是之之秋秋，正在开发中...`;
+   return await callKimiAPI(content);
 }
 
 // 验证签名
