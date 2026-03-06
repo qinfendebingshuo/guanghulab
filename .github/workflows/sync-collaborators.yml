@@ -1,0 +1,42 @@
+name: 霜砚 合作者白名单同步
+
+on:
+  # 每日 06:00 UTC 自动同步
+  schedule:
+    - cron: '0 6 * * *'
+  # 手动触发（可在 Actions 页面点击 Run workflow）
+  workflow_dispatch:
+  # 仓库成员变更时自动触发（需 member 事件权限）
+  member:
+    types: [added, removed]
+
+jobs:
+  sync-collaborators:
+    name: 🔍 同步 GitHub 合作者白名单
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 同步合作者列表
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-collaborators.js
+
+      - name: 提交更新（如有变化）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/brain/collaborators.json
+          git diff --staged --quiet && echo "No changes." || \
+            git commit -m "chore(brain): sync GitHub collaborators whitelist [skip ci]"
+          git push
