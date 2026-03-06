@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 铸渊助手 v3.1 · 2026-03-06 · auto-detect API + Gemini + sessionStorage key -->
+<!-- 铸渊助手 v3.2 · 2026-03-06 · auto-detect API only + member whitelist verify -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -21,7 +21,7 @@
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6}
 
 /* ─── SETUP ─── */
-#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
 .sc-logo{font-size:52px;text-align:center;margin-bottom:14px}
 .sc h1{font-size:22px;text-align:center;margin-bottom:6px}
@@ -214,6 +214,8 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
   .bbl{max-width:90%}
   .hr .ib:nth-child(n+3){display:none}
   .sp{width:100%}
+  #setup{align-items:flex-start;padding:12px}
+  .sc{padding:24px 16px;border-radius:14px}
 }
 </style>
 </head>
@@ -227,61 +229,43 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
   <p class="sub">HoloLake · 代码守护人格体 · 持续成长的 AI 伙伴</p>
   <div class="sc-sec">🔒 API 密钥仅本次会话有效，关闭标签页即自动清除，不会持久保存在任何地方</div>
 
-  <div class="fg">
-    <label>选择 AI 提供商</label>
-    <select id="sp" onchange="onProv(this.value,'s')">
-      <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
-      <option value="openai">OpenAI (ChatGPT)</option>
-      <option value="gemini">🔮 Google Gemini</option>
-      <option value="deepseek">DeepSeek（深度求索）</option>
-      <option value="moonshot">Moonshot（Kimi）</option>
-      <option value="zhipu">智谱 AI（GLM）</option>
-      <option value="custom">自定义 / 其他兼容接口</option>
-    </select>
-  </div>
-  <div class="fg" id="sep-g" style="display:none">
+  <div class="fg" id="sep-g">
     <label>API 端点 URL</label>
     <input type="text" id="sep" placeholder="https://api.example.com/v1">
+    <small>支持任意 OpenAI 兼容接口，留空后点自动检测</small>
   </div>
   <div class="fg">
     <label>模型</label>
-    <select id="sm"></select>
-    <input type="text" id="sm-cust" placeholder="输入模型名称，如 gpt-4o、claude-3-5-sonnet-20241022、deepseek-chat" style="display:none;margin-top:6px">
-    <small id="sm-cust-hint" style="display:none;color:var(--dim);font-size:11px;margin-top:4px">自定义模式：直接输入你的服务商支持的任意模型名称</small>
+    <select id="sm" style="display:none"></select>
+    <input type="text" id="sm-cust" placeholder="输入模型名称，如 gpt-4o、deepseek-chat（点自动检测可自动获取）">
+    <small id="sm-cust-hint" style="color:var(--dim);font-size:11px;margin-top:4px">直接输入你的服务商支持的任意模型名称，或点自动检测自动获取</small>
   </div>
   <div class="fg">
     <label>API 密钥</label>
     <div style="display:flex;gap:6px;align-items:stretch">
-      <input type="password" id="sk" placeholder="粘贴任意 API 密钥，点击右侧按钮自动识别提供商和模型" style="flex:1">
-      <button onclick="autoDetectAPI('s')" id="sdet-btn" class="det-btn" title="自动检测提供商和可用模型">🔍 自动检测</button>
+      <input type="password" id="sk" placeholder="粘贴 API 密钥，点右侧按钮自动识别可用模型" style="flex:1">
+      <button onclick="autoDetectAPI('s')" id="sdet-btn" class="det-btn" title="自动检测可用模型">🔍 自动检测</button>
     </div>
     <small id="sk-err" style="color:var(--err);display:none">⚠️ 请输入 API 密钥</small>
     <small id="sdet-status" style="display:block;margin-top:4px;min-height:16px"></small>
   </div>
 
   <div class="id-section">
-    <div class="id-section-title">👤 身份识别（可选）</div>
+    <div class="id-section-title">👤 身份验证（可选）</div>
     <div class="fg" style="margin-bottom:10px">
-      <label>你是谁？</label>
-      <select id="suid">
-        <option value="">— 访客模式 —</option>
-        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
-        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
-        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
-        <option value="页页">页页（DEV-001）</option>
-        <option value="燕樊">燕樊（DEV-003）</option>
-        <option value="之之">之之·秋秋（DEV-004）</option>
-        <option value="小草莓">小草莓（DEV-005）</option>
-        <option value="花尔">花尔（DEV-009）</option>
-        <option value="匆匆那年">匆匆那年（DEV-011）</option>
-        <option value="Awen">Awen（DEV-012）</option>
+      <label>访问模式</label>
+      <select id="smode" onchange="onIdentMode(this.value,'s')">
+        <option value="guest">— 访客模式 —</option>
+        <option value="member">🔑 光湖语言系统内部注册用户</option>
       </select>
-      <small>选择你的身份，铸渊将开放对应权限面板</small>
     </div>
-    <div class="fg" style="margin-bottom:0">
-      <label>GitHub 用户名（可选）</label>
-      <input type="text" id="sghuser" placeholder="your-github-username">
-      <small>用于人格体记忆绑定，可留空</small>
+    <div class="fg" id="smember-g" style="display:none;margin-bottom:0">
+      <label>成员编号</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="text" id="smember-id" placeholder="输入你的成员编号，如 DEV-002" style="flex:1">
+        <button onclick="verifyMember('s')" id="sverify-btn" class="det-btn">🔍 验证</button>
+      </div>
+      <small id="sverify-status" style="display:block;margin-top:4px;min-height:16px;color:var(--dim)">输入编号后点击验证，系统将连接霜砚确认白名单</small>
     </div>
   </div>
 
@@ -359,33 +343,22 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     </div>
   </div>
   <div class="pb">
-    <div class="sfg">
-      <label>AI 提供商</label>
-      <select id="cp" onchange="onProv(this.value,'c')">
-        <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
-        <option value="openai">OpenAI (ChatGPT)</option>
-        <option value="gemini">🔮 Google Gemini</option>
-        <option value="deepseek">DeepSeek（深度求索）</option>
-        <option value="moonshot">Moonshot（Kimi）</option>
-        <option value="zhipu">智谱 AI（GLM）</option>
-        <option value="custom">自定义</option>
-      </select>
-    </div>
-    <div class="sfg" id="cep-g" style="display:none">
-      <label>API 端点</label>
+    <div class="sfg" id="cep-g">
+      <label>API 端点 URL</label>
       <input type="text" id="cep" placeholder="https://api.example.com/v1">
+      <small>支持任意 OpenAI 兼容接口，留空后点自动检测</small>
     </div>
     <div class="sfg">
       <label>模型</label>
-      <select id="cm"></select>
-      <input type="text" id="cm-cust" placeholder="输入模型名称，如 gpt-4o、claude-3-5-sonnet-20241022、deepseek-chat" style="display:none;margin-top:6px">
-      <small id="cm-cust-hint" style="display:none;color:var(--dim);font-size:11px;margin-top:4px">自定义模式：直接输入你的服务商支持的任意模型名称</small>
+      <select id="cm" style="display:none"></select>
+      <input type="text" id="cm-cust" placeholder="输入模型名称，如 gpt-4o、deepseek-chat（点自动检测可自动获取）">
+      <small id="cm-cust-hint" style="color:var(--dim);font-size:11px;margin-top:4px">直接输入你的服务商支持的任意模型名称，或点自动检测自动获取</small>
     </div>
     <div class="sfg">
       <label>API 密钥</label>
       <div style="display:flex;gap:6px;align-items:stretch">
         <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；粘贴新密钥即替换" style="flex:1">
-        <button onclick="autoDetectAPI('c')" id="cdet-btn" class="det-btn" title="自动检测提供商和可用模型">🔍 自动检测</button>
+        <button onclick="autoDetectAPI('c')" id="cdet-btn" class="det-btn" title="自动检测可用模型">🔍 自动检测</button>
       </div>
       <small id="ck-hint" style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页自动清除</small>
       <small id="cdet-status" style="display:block;margin-top:4px;min-height:14px"></small>
@@ -393,40 +366,35 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
 
     <div class="sec-ttl">身份设置</div>
-    <div class="sfg">
-      <label>你是谁</label>
-      <select id="cuid">
-        <option value="">— 访客模式 —</option>
-        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
-        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
-        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
-        <option value="页页">页页（DEV-001）</option>
-        <option value="燕樊">燕樊（DEV-003）</option>
-        <option value="之之">之之·秋秋（DEV-004）</option>
-        <option value="小草莓">小草莓（DEV-005）</option>
-        <option value="花尔">花尔（DEV-009）</option>
-        <option value="匆匆那年">匆匆那年（DEV-011）</option>
-        <option value="Awen">Awen（DEV-012）</option>
+    <div class="sfg" style="margin-bottom:10px">
+      <label>访问模式</label>
+      <select id="cmode" onchange="onIdentMode(this.value,'c')">
+        <option value="guest">— 访客模式 —</option>
+        <option value="member">🔑 光湖语言系统内部注册用户</option>
       </select>
     </div>
-    <div class="sfg">
-      <label>GitHub 用户名</label>
-      <input type="text" id="cghuser" placeholder="your-github-username">
+    <div class="sfg" id="cmember-g" style="display:none">
+      <label>成员编号</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="text" id="cmember-id" placeholder="输入你的成员编号，如 DEV-002" style="flex:1">
+        <button onclick="verifyMember('c')" id="cverify-btn" class="det-btn">🔍 验证</button>
+      </div>
+      <small id="cverify-status" style="display:block;margin-top:4px;min-height:14px;color:var(--dim)">输入编号后点击验证，系统将连接霜砚确认白名单</small>
     </div>
 
     <div class="sec-ttl">关于铸渊助手</div>
-    <div class="ir2"><span>版本</span><span class="iv">v2.0</span></div>
+    <div class="ir2"><span>版本</span><span class="iv">v3.2</span></div>
     <div class="ir2"><span>仓库</span><span><a href="https://github.com/qinfendebingshuo/guanghulab" target="_blank" style="color:var(--accent)">guanghulab</a></span></div>
     <div class="ir2"><span>唤醒协议</span><span class="iv">v1.0</span></div>
     <div class="ir2"><span>大脑路径</span><span style="font-size:11px;color:var(--dim)">.github/brain/</span></div>
 
     <div class="sec-ttl">使用说明</div>
     <p style="font-size:12px;color:var(--dim);line-height:1.8">
-      1. 输入你的 AI 模型 API 密钥并保存<br>
-      2. 说「<strong style="color:var(--text)">我是冰朔</strong>」触发铸渊唤醒序列<br>
-      3. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
-      4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
-      5. 支持 OpenAI · DeepSeek · Kimi · 智谱 · 任意兼容接口
+      1. 填入 API 端点和密钥，点「🔍 自动检测」获取可用模型<br>
+      2. 如有成员编号，选择「内部注册用户」验证身份<br>
+      3. 说「<strong style="color:var(--text)">我是冰朔</strong>」触发铸渊唤醒序列<br>
+      4. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      5. 点 ⬇️ 下载单文件，放桌面直接打开使用
     </p>
 
     <div class="sec-ttl" style="color:#ef4444;margin-top:16px">⚠️ 危险操作</div>
@@ -601,11 +569,9 @@ const FB_BRAIN = {
 // ═══════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════
-// Derive base URL from saved provider; never use stale zy_base for named providers
-const _initProv = ls('zy_prov')||'yunwu';
-const _initBase = _initProv === 'custom'
-  ? (ls('zy_base')||'')
-  : (PROVS[_initProv]?.base||'https://api.yunwu.ai/v1');
+// Derive base URL from saved settings; always use custom mode
+const _initProv = 'custom';
+const _initBase = ls('zy_base')||'';
 
 const A = {
   key:   sessionStorage.getItem('zy_key')||'',
@@ -630,7 +596,7 @@ const A = {
 function ls(k){return localStorage.getItem(k)}
 function lss(k,v){localStorage.setItem(k,v)}
 
-const RESET_KEYS = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role'];
+const RESET_KEYS = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role','zy_member_id'];
 
 // ═══════════════════════════════════════════════════════
 // INIT
@@ -641,7 +607,7 @@ async function boot(){
   if(new URLSearchParams(location.search).get('reset')==='1'){
     RESET_KEYS.forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem('zy_key');
-    A.key=''; A.base=PROVS['yunwu'].base; A.mdl=DEFAULT_MDL; A.prov='yunwu'; A.demo=false;
+    A.key=''; A.base=''; A.mdl=DEFAULT_MDL; A.prov='custom'; A.demo=false;
     A.userName=''; A.ghUser=''; A.role='guest';
     // Remove ?reset=1 from the URL so a subsequent refresh does not trigger another reset.
     history.replaceState(null,'',location.pathname);
@@ -656,9 +622,14 @@ async function boot(){
   if(A.key||A.demo){
     showApp();
   } else {
-    // Pre-fill identity from localStorage
-    if(A.userName) document.getElementById('suid').value=A.userName;
-    if(A.ghUser)   document.getElementById('sghuser').value=A.ghUser;
+    // Pre-fill identity mode from localStorage
+    const savedMemberId = ls('zy_member_id');
+    if(A.userName && savedMemberId){
+      const smodeEl = document.getElementById('smode');
+      if(smodeEl){ smodeEl.value='member'; onIdentMode('member','s'); }
+      const smidEl = document.getElementById('smember-id');
+      if(smidEl) smidEl.value = savedMemberId;
+    }
     document.getElementById('setup').style.display='flex';
   }
 }
@@ -676,44 +647,27 @@ function showApp(){
 // SETUP FORM
 // ═══════════════════════════════════════════════════════
 function initSetupUI(){
-  const pv = A.prov||'yunwu';
-  document.getElementById('sp').value = pv;
-  const isCustom = pv==='custom';
-  document.getElementById('sm').style.display          = isCustom?'none':'block';
-  document.getElementById('sm-cust').style.display     = isCustom?'block':'none';
-  document.getElementById('sm-cust-hint').style.display= isCustom?'block':'none';
-  if(isCustom){
-    document.getElementById('sm-cust').value = A.mdl||DEFAULT_MDL;
-    document.getElementById('sep-g').style.display='block';
-    document.getElementById('sep').value = A.base;
-  } else {
-    fillModels('sm', pv, A.mdl);
-  }
+  // Always use custom/auto-detect mode — no fixed provider selection
+  document.getElementById('sm').style.display           = 'none';
+  document.getElementById('sm-cust').style.display      = 'block';
+  document.getElementById('sm-cust-hint').style.display = 'block';
+  document.getElementById('sm-cust').value = A.mdl||DEFAULT_MDL;
+  document.getElementById('sep').value = A.base||'';
 }
 
 function onProv(pv,ctx){
+  // Provider dropdown removed; endpoint field is always visible.
+  // This function is kept for use by autoDetectAPI after a successful match.
   const mdlSel  = ctx==='s'?'sm':'cm';
   const mdlCust = ctx==='s'?'sm-cust':'cm-cust';
   const mdlHint = ctx==='s'?'sm-cust-hint':'cm-cust-hint';
-  const epGrp   = ctx==='s'?'sep-g':'cep-g';
   const epInp   = ctx==='s'?'sep':'cep';
-  const cur     = ctx==='s'? A.mdl : document.getElementById('cm')?.value;
-  const isCustom = pv==='custom';
-  // Toggle model input: dropdown for known providers, text input for custom
-  document.getElementById(mdlSel).style.display  = isCustom?'none':'block';
-  document.getElementById(mdlCust).style.display = isCustom?'block':'none';
-  document.getElementById(mdlHint).style.display = isCustom?'block':'none';
-  if(isCustom){
-    const custInp = document.getElementById(mdlCust);
-    if(custInp && !custInp.value) custInp.value = cur||DEFAULT_MDL;
-  } else {
-    fillModels(mdlSel, pv, cur);
-  }
-  document.getElementById(epGrp).style.display = isCustom?'block':'none';
-  if(!isCustom){
-    const ep = document.getElementById(epInp);
-    if(ep) ep.value = PROVS[pv]?.base||'';
-  }
+  // After detection, the model dropdown is populated by the caller; hide text input
+  document.getElementById(mdlCust).style.display = 'none';
+  document.getElementById(mdlHint).style.display = 'none';
+  // Always update the endpoint field with the matched provider's base URL
+  const ep = document.getElementById(epInp);
+  if(ep && PROVS[pv]?.base) ep.value = PROVS[pv].base;
 }
 
 function fillModels(selId, pv, cur){
@@ -748,7 +702,7 @@ async function autoDetectAPI(ctx){
 
   btnEl.disabled = true;
   btnEl.textContent = '⏳ 检测中…';
-  statusEl.innerHTML = '<span style="color:var(--dim)">🔍 正在自动探测兼容提供商…</span>';
+  statusEl.innerHTML = '<span style="color:var(--dim)">🔍 正在自动探测兼容接口…</span>';
 
   let matched = false;
   for(const {pv, base} of candidates){
@@ -767,12 +721,12 @@ async function autoDetectAPI(ctx){
         const mdls  = (data.data||[]).map(m=>m.id).filter(Boolean).sort();
         if(!mdls.length) continue;
 
-        // Switch provider select
-        const provSel = document.getElementById(ctx==='s'?'sp':'cp');
-        if(provSel) provSel.value = pv;
+        // Update endpoint field with matched base URL (always visible now)
+        const epInp = document.getElementById(ctx==='s'?'sep':'cep');
+        if(epInp) epInp.value = base;
         onProv(pv, ctx);
 
-        // Override model dropdown with live list (always show as dropdown)
+        // Override model dropdown with live list (always show as dropdown after detection)
         const mdlSel  = document.getElementById(ctx==='s'?'sm':'cm');
         const mdlCust = document.getElementById(ctx==='s'?'sm-cust':'cm-cust');
         const mdlHint = document.getElementById(ctx==='s'?'sm-cust-hint':'cm-cust-hint');
@@ -783,16 +737,7 @@ async function autoDetectAPI(ctx){
         if(mdlCust) mdlCust.style.display='none';
         if(mdlHint) mdlHint.style.display='none';
 
-        // If custom endpoint was the match, show the endpoint field
-        if(pv==='custom' && ctx==='s'){
-          document.getElementById('sep-g').style.display='block';
-          document.getElementById('sep').value = customBase;
-        } else if(pv==='custom' && ctx==='c'){
-          document.getElementById('cep-g').style.display='block';
-          document.getElementById('cep').value = customBase;
-        }
-
-        const label = PROVS[pv]?.base ? pv : customBase;
+        const label = pv === 'custom' ? base : pv;
         statusEl.innerHTML = `<span style="color:var(--ok)">✅ 检测成功（${label}）· 共发现 <strong>${mdls.length}</strong> 个可用模型</span>`;
         matched = true;
         break;
@@ -801,40 +746,43 @@ async function autoDetectAPI(ctx){
   }
 
   if(!matched){
-    statusEl.innerHTML = '<span style="color:var(--err)">❌ 未能自动匹配，请手动选择提供商和模型后保存</span>';
+    statusEl.innerHTML = '<span style="color:var(--err)">❌ 未能自动匹配，请检查端点地址和密钥后重试</span>';
   }
 
   btnEl.disabled = false;
   btnEl.textContent = '🔍 自动检测';
 }
 
-function doSetup(){
+async function doSetup(){
   const k  = document.getElementById('sk').value.trim();
   const errEl = document.getElementById('sk-err');
   if(!k){errEl.style.display='block';return;}
   errEl.style.display='none';
-  const pv = document.getElementById('sp').value;
-  const md = pv==='custom'
-    ? ((document.getElementById('sm-cust')?.value||'').trim()||DEFAULT_MDL)
-    : document.getElementById('sm').value;
-  let base = PROVS[pv]?.base||'';
-  if(pv==='custom') base=(document.getElementById('sep')?.value||'').trim()||base;
-  A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=false;
+  // Determine model: dropdown (after auto-detect) or text input
+  const mdlSel = document.getElementById('sm');
+  const md = mdlSel.style.display!=='none'
+    ? mdlSel.value
+    : ((document.getElementById('sm-cust')?.value||'').trim()||DEFAULT_MDL);
+  const base = (document.getElementById('sep')?.value||'').trim();
+  A.key=k; A.base=base; A.mdl=md; A.prov='custom'; A.demo=false;
   // Key is stored in sessionStorage only — it disappears when the tab/browser is closed.
-  // This prevents stale keys from persisting across sessions.
-  sessionStorage.setItem('zy_key', k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
-  // Save identity
-  const un = document.getElementById('suid').value;
-  const gh = (document.getElementById('sghuser')?.value||'').trim();
-  setIdentity(un, gh);
+  sessionStorage.setItem('zy_key', k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov','custom');
+  // Save identity — auto-verify if member mode and not yet verified
+  const mode = document.getElementById('smode')?.value||'guest';
+  if(mode==='member' && !window._verifiedMember){
+    const memberId = document.getElementById('smember-id')?.value.trim();
+    if(memberId) await verifyMember('s');
+  }
+  const un = (mode==='member' && window._verifiedMember) ? window._verifiedMember.name : '';
+  setIdentity(un, '');
   showApp();
 }
 
 function doDemo(){
   A.demo=true; A.key='';
-  const un = document.getElementById('suid').value;
-  const gh = (document.getElementById('sghuser')?.value||'').trim();
-  setIdentity(un, gh);
+  const mode = document.getElementById('smode')?.value||'guest';
+  const un = (mode==='member' && window._verifiedMember) ? window._verifiedMember.name : '';
+  setIdentity(un, '');
   showApp();
 }
 
@@ -842,20 +790,13 @@ function doDemo(){
 // SETTINGS PANEL
 // ═══════════════════════════════════════════════════════
 function initSettingsPanel(){
-  const pv = A.prov||'yunwu';
-  document.getElementById('cp').value = pv;
-  const isCustom = pv==='custom';
-  document.getElementById('cm').style.display          = isCustom?'none':'block';
-  document.getElementById('cm-cust').style.display     = isCustom?'block':'none';
-  document.getElementById('cm-cust-hint').style.display= isCustom?'block':'none';
-  if(isCustom){
-    document.getElementById('cm-cust').value = A.mdl||DEFAULT_MDL;
-    document.getElementById('cep-g').style.display='block';
-    document.getElementById('cep').value = A.base;
-  } else {
-    fillModels('cm', pv, A.mdl);
-  }
-  // Always show EMPTY field — never prefill with a mask string.
+  // Always use custom/auto-detect mode — no fixed provider selection
+  document.getElementById('cm').style.display           = 'none';
+  document.getElementById('cm-cust').style.display      = 'block';
+  document.getElementById('cm-cust-hint').style.display = 'block';
+  document.getElementById('cm-cust').value = A.mdl||DEFAULT_MDL;
+  document.getElementById('cep').value = A.base||'';
+  // Always show EMPTY key field — never prefill with a mask string.
   // Empty on save = keep old key; any typed value = replace key.
   document.getElementById('ck').value = '';
   const hint = document.getElementById('ck-hint');
@@ -864,35 +805,110 @@ function initSettingsPanel(){
       ? '🕐 密钥本次会话有效（末4位：…'+(A.key.length>=4?A.key.slice(-4):A.key)+'）· 留空保持不变，输入新值即替换 · 关闭标签页自动清除'
       : '🔒 密钥仅本次会话有效，关闭标签页自动清除，请输入后保存';
   }
-  if(A.userName) document.getElementById('cuid').value=A.userName;
-  if(A.ghUser)   document.getElementById('cghuser').value=A.ghUser;
+  // Pre-fill identity mode
+  const isGuest = !A.userName || A.role==='guest';
+  const cmodeEl = document.getElementById('cmode');
+  if(cmodeEl) cmodeEl.value = isGuest ? 'guest' : 'member';
+  const cmemberG = document.getElementById('cmember-g');
+  if(cmemberG) cmemberG.style.display = isGuest ? 'none' : 'block';
+  if(!isGuest){
+    // Pre-fill with saved member ID
+    const savedId = ls('zy_member_id')||'';
+    const cmidEl = document.getElementById('cmember-id');
+    if(cmidEl && savedId) cmidEl.value = savedId;
+    // Restore verified member from saved state
+    if(!window._verifiedMember && A.userName && savedId){
+      window._verifiedMember = {name:A.userName, id:savedId, role:A.role,
+        emoji: ROLE_MAP[A.userName]?.emoji||'👤', title: ROLE_MAP[A.userName]?.title||A.role};
+    }
+    const cverifyStatus = document.getElementById('cverify-status');
+    if(cverifyStatus && A.userName){
+      const meta = ROLE_MAP[A.userName];
+      cverifyStatus.innerHTML=`<span style="color:var(--ok)">✅ 当前身份：${meta?.emoji||'👤'} ${esc(A.userName)}（${esc(meta?.title||A.role)}）</span>`;
+    }
+  }
 }
 
-function saveSet(){
-  const pv  = document.getElementById('cp').value;
-  const md  = pv==='custom'
-    ? ((document.getElementById('cm-cust')?.value||'').trim()||A.mdl||DEFAULT_MDL)
-    : document.getElementById('cm').value;
+async function saveSet(){
+  // Determine model: dropdown (after auto-detect) or text input
+  const mdlSel = document.getElementById('cm');
+  const md = mdlSel.style.display!=='none'
+    ? mdlSel.value
+    : ((document.getElementById('cm-cust')?.value||'').trim()||A.mdl||DEFAULT_MDL);
   const raw = document.getElementById('ck').value.trim();
   // Empty field = keep existing key; any non-empty input = use as new key.
-  // Never use KEY_MASK string comparison — that caused mixed-input bugs.
   const k = raw || A.key;
-  let base  = PROVS[pv]?.base||'';
-  if(pv==='custom') base=(document.getElementById('cep').value.trim())||base;
-  A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=!k;
+  const base = (document.getElementById('cep').value.trim())||'';
+  A.key=k; A.base=base; A.mdl=md; A.prov='custom'; A.demo=!k;
   // Key lives in sessionStorage only — cleared when tab/browser closes.
   if(k){ sessionStorage.setItem('zy_key', k); } else { sessionStorage.removeItem('zy_key'); }
-  lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
-  // Save identity
-  const un = document.getElementById('cuid')?.value||A.userName;
-  const gh = document.getElementById('cghuser')?.value?.trim()||A.ghUser;
-  setIdentity(un, gh);
+  lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov','custom');
+  // Save identity — auto-verify if member mode and not yet verified
+  const mode = document.getElementById('cmode')?.value||'guest';
+  if(mode==='member' && !window._verifiedMember){
+    const memberId = document.getElementById('cmember-id')?.value.trim();
+    if(memberId) await verifyMember('c');
+  }
+  const un = (mode==='member' && window._verifiedMember) ? window._verifiedMember.name : (mode==='guest'?'':A.userName);
+  if(mode==='guest') window._verifiedMember=null;
+  setIdentity(un, A.ghUser||'');
   document.getElementById('hmdl').textContent=md;
   document.getElementById('bbdemo').style.display=A.demo?'inline':'none';
   applyIdentityUI();
   closeP();
   const keyNote = raw ? ' · 🔑 新密钥已保存（末4位：…'+(k.length>=4?k.slice(-4):k)+'）' : ' · 🔑 密钥未变更';
   botMsg('✅ 设置已保存。模型：<strong>'+esc(md)+'</strong>'+keyNote+(un?' · 身份：'+esc(un):'')+(A.demo?'<br>⚠️ 未设置 API 密钥，演示模式仍然开启。':''));
+}
+
+// ═══════════════════════════════════════════════════════
+// IDENTITY VERIFICATION (Notion whitelist · 霜砚人格体)
+// Whitelist is maintained in .github/brain/whitelist.json
+// and can be synced from Notion via GitHub Actions.
+// ═══════════════════════════════════════════════════════
+function onIdentMode(mode, ctx){
+  const grpId = ctx==='s'?'smember-g':'cmember-g';
+  const grpEl = document.getElementById(grpId);
+  if(grpEl) grpEl.style.display = mode==='member'?'block':'none';
+  if(mode!=='member') window._verifiedMember = null;
+}
+
+async function verifyMember(ctx){
+  const idInp    = document.getElementById(ctx==='s'?'smember-id':'cmember-id');
+  const statusEl = document.getElementById(ctx==='s'?'sverify-status':'cverify-status');
+  const btnEl    = document.getElementById(ctx==='s'?'sverify-btn':'cverify-btn');
+
+  const memberId = (idInp?.value||'').trim();
+  if(!memberId){
+    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 请输入成员编号</span>';
+    return;
+  }
+
+  btnEl.disabled=true;
+  btnEl.textContent='⏳ 验证中…';
+  statusEl.innerHTML='<span style="color:var(--dim)">🔍 正在连接霜砚人格体，核查白名单…</span>';
+
+  try{
+    const r = await fetch(RAW+'/.github/brain/whitelist.json',{cache:'no-store'});
+    if(!r.ok) throw new Error('whitelist unavailable');
+    const wl = await r.json();
+    const member = (wl.members||[]).find(m=>
+      m.id===memberId || m.id.toUpperCase()===memberId.toUpperCase()
+    );
+    if(member){
+      window._verifiedMember = member;
+      statusEl.innerHTML=`<span style="color:var(--ok)">✅ 霜砚确认通过 · ${esc(member.emoji)} <strong>${esc(member.name)}</strong>（${esc(member.title||member.role)}）· 权限已开放</span>`;
+    } else {
+      window._verifiedMember = null;
+      statusEl.innerHTML='<span style="color:var(--err)">❌ 编号不在白名单中，系统将以访客身份对待</span>';
+    }
+  }catch(e){
+    window._verifiedMember = null;
+    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 白名单暂时无法访问，将以访客身份进入</span>';
+    console.debug('verifyMember error:', e.message);
+  }
+
+  btnEl.disabled=false;
+  btnEl.textContent='🔍 验证';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1444,6 +1460,9 @@ function setIdentity(userName, ghUser){
   lss('zy_uname', A.userName);
   lss('zy_ghuser', A.ghUser);
   lss('zy_role', A.role);
+  // Persist member ID from verified member so it can be pre-filled next time
+  if(window._verifiedMember?.id) lss('zy_member_id', window._verifiedMember.id);
+  else if(!userName) localStorage.removeItem('zy_member_id');
 }
 
 function applyIdentityUI(){
