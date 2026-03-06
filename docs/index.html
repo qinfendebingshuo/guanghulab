@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>铸渊助手 · HoloLake AI</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -337,7 +340,13 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
 
 <!-- ════════════════════ SETTINGS PANEL ════════════════════ -->
 <div id="sp2" class="sp">
-  <div class="ph"><h2>⚙️ API 设置</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="ph">
+    <h2>⚙️ API 设置</h2>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button onclick="resetAllSettings()" title="清除所有本地设置，重新开始" style="padding:4px 10px;border-radius:6px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:11px;cursor:pointer;white-space:nowrap">🔄 重置</button>
+      <button class="cb" onclick="closeP()">✕</button>
+    </div>
+  </div>
   <div class="pb">
     <div class="sfg">
       <label>AI 提供商</label>
@@ -600,12 +609,26 @@ const A = {
 function ls(k){return localStorage.getItem(k)}
 function lss(k,v){localStorage.setItem(k,v)}
 
+const RESET_KEYS = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role'];
+
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
 async function boot(){
-  // Sanitize: if a previous version accidentally stored the KEY_MASK string as the key, clear it.
-  if(ls('zy_key') === KEY_MASK){
+  // URL-based reset: visiting the page with ?reset=1 clears all local settings.
+  // This is a reliable escape hatch when the UI cannot be navigated.
+  if(new URLSearchParams(location.search).get('reset')==='1'){
+    RESET_KEYS.forEach(k => localStorage.removeItem(k));
+    A.key=''; A.base=PROVS['yunwu'].base; A.mdl='gpt-4o'; A.prov='yunwu'; A.demo=false;
+    A.userName=''; A.ghUser=''; A.role='guest';
+    // Remove ?reset=1 from the URL so a subsequent refresh does not trigger another reset.
+    history.replaceState(null,'',location.pathname);
+  }
+  // Sanitize: clear any stored key that contains the old KEY_MASK placeholder string.
+  // Valid API keys are always alphanumeric (no Chinese characters), so this check
+  // cannot produce false positives on a legitimate key.
+  const storedKey = ls('zy_key');
+  if(storedKey && storedKey.includes(KEY_MASK)){
     localStorage.removeItem('zy_key');
     A.key = '';
   }
@@ -744,8 +767,7 @@ function saveSet(){
 // ═══════════════════════════════════════════════════════
 function resetAllSettings(){
   if(!confirm('确定要清除所有本地设置吗？\n\n· API 密钥会被删除\n· 身份设置会被删除\n· 将返回初始设置界面\n\n这不会影响任何聊天记录或云端数据。')) return;
-  const keys = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role'];
-  keys.forEach(k => localStorage.removeItem(k));
+  RESET_KEYS.forEach(k => localStorage.removeItem(k));
   window.location.reload();
 }
 
