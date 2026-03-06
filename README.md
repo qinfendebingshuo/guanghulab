@@ -6,10 +6,10 @@
 
 **一句话：点下面这个链接就能打开，直接聊天。**
 
-### 👉 [点这里打开铸渊聊天室](https://qinfendebingshuo.github.io/guanghulab/)
+### 👉 [点这里打开铸渊聊天室](https://qinfendebingshuo.github.io/guanghulab/docs/index.html)
 
 ```
-https://qinfendebingshuo.github.io/guanghulab/
+https://qinfendebingshuo.github.io/guanghulab/docs/index.html
 ```
 
 > 把这个链接发给任何人，他们打开就能用，不需要安装任何东西。
@@ -20,7 +20,7 @@ https://qinfendebingshuo.github.io/guanghulab/
 
 ### ❄️ 冰朔（你）
 
-1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/
+1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/docs/index.html
 2. **选身份** → 下拉菜单选「❄️ 冰朔（语言架构师·创始人）」
 3. **填 API 密钥** → 输入你的云雾/OpenAI/DeepSeek API Key
 4. **点「开始对话」** → 铸渊自动唤醒，汇报大脑状态
@@ -30,7 +30,7 @@ https://qinfendebingshuo.github.io/guanghulab/
 
 ### 🦁 肥猫（光湖团队总控 · DEV-002）
 
-1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/
+1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/docs/index.html
 2. **选身份** → 下拉菜单选「🦁 肥猫（光湖团队总控·DEV-002）」
 3. **填 API 密钥** → 输入自己的 API Key（或点「演示模式」也能看进度面板）
 4. **点「开始对话」** → 铸渊自动打开**总控指挥台**，显示全员进度
@@ -44,7 +44,7 @@ https://qinfendebingshuo.github.io/guanghulab/
 
 ### 🍊 桔子（光湖主控 · DEV-010）
 
-1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/
+1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/docs/index.html
 2. **选身份** → 下拉菜单选「🍊 桔子（光湖主控·DEV-010）」
 3. **填 API 密钥** → 输入自己的 API Key
 4. **点「开始对话」** → 铸渊显示你当前模块进度，并开放指挥台
@@ -53,7 +53,7 @@ https://qinfendebingshuo.github.io/guanghulab/
 
 ### 👩‍💻 其他开发者（页页 / 燕樊 / 小草莓 / 花尔 等）
 
-1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/
+1. **打开链接** → https://qinfendebingshuo.github.io/guanghulab/docs/index.html
 2. **选身份** → 下拉菜单选自己的名字
 3. **填 API 密钥** → 填自己的 Key（没有的话点「演示模式」）
 4. **点「开始对话」** → 铸渊显示你的当前任务状态，可以问问题
@@ -80,7 +80,7 @@ https://qinfendebingshuo.github.io/guanghulab/
 
 ```
 铸渊聊天室入口 👇
-https://qinfendebingshuo.github.io/guanghulab/
+https://qinfendebingshuo.github.io/guanghulab/docs/index.html
 
 打开后选择你的身份，填入 API Key 就能和铸渊说话了。
 ```

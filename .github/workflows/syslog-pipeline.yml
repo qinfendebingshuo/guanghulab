@@ -1,0 +1,130 @@
+name: 铸渊 · SYSLOG Pipeline (A/D/E)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'syslog-inbox/**'
+  workflow_dispatch:
+
+jobs:
+  # ── Pipeline A：SYSLOG 读取与处理 ──────────────────────
+  pipeline-a-syslog:
+    name: 📥 Pipeline A · SYSLOG 读取处理
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+    outputs:
+      processed_count: ${{ steps.process.outputs.processed_count }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: 📥 处理 syslog-inbox 条目
+        id: process
+        run: |
+          node scripts/process-syslog.js
+          COUNT=$(ls syslog-processed/ -R 2>/dev/null | grep -c '\.json' || echo 0)
+          echo "processed_count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: 提交处理结果
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add syslog-inbox/ syslog-processed/ .github/brain/memory.json
+          git diff --staged --quiet || git commit -m "📥 syslog: 处理 inbox 条目，更新大脑记忆 [skip ci]"
+          git push
+
+  # ── Pipeline D：Issues 巡检 ─────────────────────────────
+  pipeline-d-issues:
+    name: 🔍 Pipeline D · Issues 巡检
+    runs-on: ubuntu-latest
+    needs: pipeline-a-syslog
+    permissions:
+      contents: write
+      issues: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: 🔍 巡检 Issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🔍 Pipeline D · Issues 巡检开始"
+          node -e "
+          const https = require('https');
+          const token = process.env.GITHUB_TOKEN;
+          const repo  = process.env.REPO;
+          const opts = {
+            hostname: 'api.github.com',
+            path: '/repos/' + repo + '/issues?state=open&per_page=20',
+            headers: { 'Authorization': 'Bearer ' + token, 'User-Agent': 'zhuyuan-bot' }
+          };
+          https.get(opts, res => {
+            let body = '';
+            res.on('data', c => body += c);
+            res.on('end', () => {
+              const issues = JSON.parse(body);
+              console.log('📋 开放 Issues 数量：' + (Array.isArray(issues) ? issues.length : '读取失败'));
+              if (Array.isArray(issues) && issues.length > 0) {
+                issues.slice(0, 5).forEach(i => console.log('  #' + i.number + ' ' + i.title));
+              }
+              console.log('✅ Pipeline D 巡检完成');
+            });
+          }).on('error', e => { console.error('❌ 巡检失败:', e.message); process.exit(1); });
+          "
+
+  # ── Pipeline E：变更感知 ────────────────────────────────
+  pipeline-e-changes:
+    name: 📡 Pipeline E · 变更感知
+    runs-on: ubuntu-latest
+    needs: pipeline-a-syslog
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+          fetch-depth: 10
+
+      - name: 📡 感知近期变更
+        run: |
+          echo "📡 Pipeline E · 变更感知开始"
+          echo "=== 近期 10 次提交 ==="
+          git --no-pager log --oneline -10
+          echo ""
+          echo "=== syslog-inbox 文件状态 ==="
+          ls -la syslog-inbox/ || echo "(空)"
+          echo ""
+          echo "=== syslog-processed 文件状态 ==="
+          ls -laR syslog-processed/ || echo "(空)"
+          echo "✅ Pipeline E 变更感知完成"
