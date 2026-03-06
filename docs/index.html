@@ -221,7 +221,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
   <div class="sc-logo">🌀</div>
   <h1>铸渊助手</h1>
   <p class="sub">HoloLake · 代码守护人格体 · 持续成长的 AI 伙伴</p>
-  <div class="sc-sec">🔒 API 密钥只保存在你的浏览器本地，不会上传至任何服务器</div>
+  <div class="sc-sec">🔒 API 密钥仅本次会话有效，关闭标签页即自动清除，不会持久保存在任何地方</div>
 
   <div class="fg">
     <label>选择 AI 提供商</label>
@@ -370,7 +370,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <div class="sfg">
       <label>API 密钥</label>
       <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；输入新密钥即替换">
-      <small id="ck-hint" style="color:var(--dim)">🔒 只保存在浏览器 localStorage，不上传任何服务器</small>
+      <small id="ck-hint" style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页自动清除</small>
     </div>
     <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
 
@@ -587,7 +587,7 @@ const _initBase = _initProv === 'custom'
   : (PROVS[_initProv]?.base||'https://api.yunwu.ai/v1');
 
 const A = {
-  key:   ls('zy_key')||'',
+  key:   sessionStorage.getItem('zy_key')||'',
   base:  _initBase,
   mdl:   ls('zy_mdl')||'gpt-4o',
   prov:  _initProv,
@@ -619,19 +619,16 @@ async function boot(){
   // This is a reliable escape hatch when the UI cannot be navigated.
   if(new URLSearchParams(location.search).get('reset')==='1'){
     RESET_KEYS.forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('zy_key');
     A.key=''; A.base=PROVS['yunwu'].base; A.mdl='gpt-4o'; A.prov='yunwu'; A.demo=false;
     A.userName=''; A.ghUser=''; A.role='guest';
     // Remove ?reset=1 from the URL so a subsequent refresh does not trigger another reset.
     history.replaceState(null,'',location.pathname);
   }
-  // Sanitize: clear any stored key that contains the old KEY_MASK placeholder string.
-  // Valid API keys are always alphanumeric (no Chinese characters), so this check
-  // cannot produce false positives on a legitimate key.
-  const storedKey = ls('zy_key');
-  if(storedKey && storedKey.includes(KEY_MASK)){
-    localStorage.removeItem('zy_key');
-    A.key = '';
-  }
+  // One-time migration: keys stored by old versions of this app in localStorage are
+  // no longer used (keys now live only in sessionStorage). Clear any stale value
+  // so it can never be accidentally picked up again.
+  localStorage.removeItem('zy_key');
   initSetupUI();
   // Restore identity from localStorage
   if(A.userName) A.userMeta = ROLE_MAP[A.userName]||null;
@@ -699,7 +696,9 @@ function doSetup(){
   let base = PROVS[pv]?.base||'';
   if(pv==='custom') base=(document.getElementById('sep')?.value||'').trim()||base;
   A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=false;
-  lss('zy_key',k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
+  // Key is stored in sessionStorage only — it disappears when the tab/browser is closed.
+  // This prevents stale keys from persisting across sessions.
+  sessionStorage.setItem('zy_key', k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
   // Save identity
   const un = document.getElementById('suid').value;
   const gh = (document.getElementById('sghuser')?.value||'').trim();
@@ -728,8 +727,8 @@ function initSettingsPanel(){
   const hint = document.getElementById('ck-hint');
   if(hint){
     hint.textContent = A.key
-      ? '🔒 当前已保存 Key 末4位：…'+(A.key.length>=4?A.key.slice(-4):A.key)+'  · 留空保持不变，直接输入新 Key 即可替换'
-      : '🔒 尚未设置 API 密钥，请输入后保存';
+      ? '🕐 密钥本次会话有效（末4位：…'+(A.key.length>=4?A.key.slice(-4):A.key)+'）· 留空保持不变，输入新值即替换 · 关闭标签页自动清除'
+      : '🔒 密钥仅本次会话有效，关闭标签页自动清除，请输入后保存';
   }
   if(pv==='custom'){
     document.getElementById('cep-g').style.display='block';
@@ -749,7 +748,9 @@ function saveSet(){
   let base  = PROVS[pv]?.base||'';
   if(pv==='custom') base=(document.getElementById('cep').value.trim())||base;
   A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=!k;
-  lss('zy_key',k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
+  // Key lives in sessionStorage only — cleared when tab/browser closes.
+  if(k){ sessionStorage.setItem('zy_key', k); } else { sessionStorage.removeItem('zy_key'); }
+  lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
   // Save identity
   const un = document.getElementById('cuid')?.value||A.userName;
   const gh = document.getElementById('cghuser')?.value?.trim()||A.ghUser;
@@ -768,6 +769,7 @@ function saveSet(){
 function resetAllSettings(){
   if(!confirm('确定要清除所有本地设置吗？\n\n· API 密钥会被删除\n· 身份设置会被删除\n· 将返回初始设置界面\n\n这不会影响任何聊天记录或云端数据。')) return;
   RESET_KEYS.forEach(k => localStorage.removeItem(k));
+  sessionStorage.removeItem('zy_key');
   window.location.reload();
 }
 
