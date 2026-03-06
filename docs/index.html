@@ -228,6 +228,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <select id="sp" onchange="onProv(this.value,'s')">
       <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
       <option value="openai">OpenAI (ChatGPT)</option>
+      <option value="gemini">🔮 Google Gemini</option>
       <option value="deepseek">DeepSeek（深度求索）</option>
       <option value="moonshot">Moonshot（Kimi）</option>
       <option value="zhipu">智谱 AI（GLM）</option>
@@ -355,6 +356,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
       <select id="cp" onchange="onProv(this.value,'c')">
         <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
         <option value="openai">OpenAI (ChatGPT)</option>
+        <option value="gemini">🔮 Google Gemini</option>
         <option value="deepseek">DeepSeek（深度求索）</option>
         <option value="moonshot">Moonshot（Kimi）</option>
         <option value="zhipu">智谱 AI（GLM）</option>
@@ -553,12 +555,13 @@ const ROLE_MAP = {
 };
 
 const PROVS = {
-  yunwu:    {base:'https://api.yunwu.ai/v1',              mdls:['gpt-4o','gpt-4o-mini','claude-3-5-sonnet-20241022','deepseek-chat','gemini-1.5-pro']},
-  openai:   {base:'https://api.openai.com/v1',            mdls:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo']},
-  deepseek: {base:'https://api.deepseek.com/v1',          mdls:['deepseek-chat','deepseek-reasoner']},
-  moonshot: {base:'https://api.moonshot.cn/v1',           mdls:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k']},
-  zhipu:    {base:'https://open.bigmodel.cn/api/paas/v4', mdls:['glm-4','glm-4-flash','glm-4-air']},
-  custom:   {base:'',                                     mdls:['gpt-4o']},
+  yunwu:    {base:'https://api.yunwu.ai/v1',                                    mdls:['gpt-4o','gpt-4o-mini','claude-3-5-sonnet-20241022','deepseek-chat','gemini-1.5-pro']},
+  openai:   {base:'https://api.openai.com/v1',                                  mdls:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo']},
+  gemini:   {base:'https://generativelanguage.googleapis.com/v1beta/openai',    mdls:['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro','gemini-1.5-flash']},
+  deepseek: {base:'https://api.deepseek.com/v1',                                mdls:['deepseek-chat','deepseek-reasoner']},
+  moonshot: {base:'https://api.moonshot.cn/v1',                                 mdls:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k']},
+  zhipu:    {base:'https://open.bigmodel.cn/api/paas/v4',                       mdls:['glm-4','glm-4-flash','glm-4-air']},
+  custom:   {base:'',                                                            mdls:['gpt-4o']},
 };
 
 const MODES = {
