@@ -360,10 +360,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     </div>
     <div class="sfg">
       <label>API 密钥</label>
-      <div style="display:flex;gap:6px;align-items:center">
-        <input type="password" id="ck" placeholder="sk-…" style="flex:1">
-        <button type="button" onclick="clearKeyField()" style="white-space:nowrap;padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg2);color:var(--dim);cursor:pointer" title="清空输入框，输入新密钥">清空重填</button>
-      </div>
+      <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；输入新密钥即替换">
       <small id="ck-hint" style="color:var(--dim)">🔒 只保存在浏览器 localStorage，不上传任何服务器</small>
     </div>
     <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
@@ -404,6 +401,10 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
       4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
       5. 支持 OpenAI · DeepSeek · Kimi · 智谱 · 任意兼容接口
     </p>
+
+    <div class="sec-ttl" style="color:#ef4444;margin-top:16px">⚠️ 危险操作</div>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:8px">遇到密钥卡住、无法更新等问题时，点下方按钮彻底清除本地设置，从头重新输入。</p>
+    <button onclick="resetAllSettings()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:13px;cursor:pointer">🔄 清除所有设置，重新开始</button>
   </div>
 </div>
 
@@ -556,6 +557,8 @@ const MODES = {
 const MODE_ORD = ['chat','build','review','brain'];
 
 const FB_COV   = {implemented:3,total:17,percent:'17.6%'};
+// KEY_MASK is no longer used in the input field; kept only for backward compatibility
+// with any saved value that might still be in localStorage.
 const KEY_MASK = '(已保存)';
 
 const FB_BRAIN = {
@@ -601,6 +604,11 @@ function lss(k,v){localStorage.setItem(k,v)}
 // INIT
 // ═══════════════════════════════════════════════════════
 async function boot(){
+  // Sanitize: if a previous version accidentally stored the KEY_MASK string as the key, clear it.
+  if(ls('zy_key') === KEY_MASK){
+    localStorage.removeItem('zy_key');
+    A.key = '';
+  }
   initSetupUI();
   // Restore identity from localStorage
   if(A.userName) A.userMeta = ROLE_MAP[A.userName]||null;
@@ -691,13 +699,14 @@ function initSettingsPanel(){
   const pv = A.prov||'yunwu';
   document.getElementById('cp').value = pv;
   fillModels('cm', pv, A.mdl);
-  document.getElementById('ck').value = A.key?KEY_MASK:'';
-  // Show last 4 chars of current key so user can verify they're changing to a new one
+  // Always show EMPTY field — never prefill with a mask string.
+  // Empty on save = keep old key; any typed value = replace key.
+  document.getElementById('ck').value = '';
   const hint = document.getElementById('ck-hint');
   if(hint){
     hint.textContent = A.key
-      ? '🔒 当前 Key 末4位：…'+A.key.slice(-4)+'  · 要换新 Key 请点「清空重填」再输入'
-      : '🔒 只保存在浏览器 localStorage，不上传任何服务器';
+      ? '🔒 当前已保存 Key 末4位：…'+(A.key.length>=4?A.key.slice(-4):A.key)+'  · 留空保持不变，直接输入新 Key 即可替换'
+      : '🔒 尚未设置 API 密钥，请输入后保存';
   }
   if(pv==='custom'){
     document.getElementById('cep-g').style.display='block';
@@ -707,18 +716,13 @@ function initSettingsPanel(){
   if(A.ghUser)   document.getElementById('cghuser').value=A.ghUser;
 }
 
-function clearKeyField(){
-  const el = document.getElementById('ck');
-  if(el){el.value='';el.focus();}
-  const hint = document.getElementById('ck-hint');
-  if(hint) hint.textContent = '✏️ 请输入新的 API 密钥，输入完成后点「保存设置」';
-}
-
 function saveSet(){
   const pv  = document.getElementById('cp').value;
   const md  = document.getElementById('cm').value;
   const raw = document.getElementById('ck').value.trim();
-  const k   = raw===KEY_MASK? A.key : raw;
+  // Empty field = keep existing key; any non-empty input = use as new key.
+  // Never use KEY_MASK string comparison — that caused mixed-input bugs.
+  const k = raw || A.key;
   let base  = PROVS[pv]?.base||'';
   if(pv==='custom') base=(document.getElementById('cep').value.trim())||base;
   A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=!k;
@@ -731,7 +735,18 @@ function saveSet(){
   document.getElementById('bbdemo').style.display=A.demo?'inline':'none';
   applyIdentityUI();
   closeP();
-  botMsg('✅ 设置已保存。模型：<strong>'+esc(md)+'</strong>'+(un?' · 身份：'+esc(un):'')+(A.demo?'<br>⚠️ 未设置 API 密钥，演示模式仍然开启。':''));
+  const keyNote = raw ? ' · 🔑 新密钥已保存（末4位：…'+(k.length>=4?k.slice(-4):k)+'）' : ' · 🔑 密钥未变更';
+  botMsg('✅ 设置已保存。模型：<strong>'+esc(md)+'</strong>'+keyNote+(un?' · 身份：'+esc(un):'')+(A.demo?'<br>⚠️ 未设置 API 密钥，演示模式仍然开启。':''));
+}
+
+// ═══════════════════════════════════════════════════════
+// RESET ALL SETTINGS
+// ═══════════════════════════════════════════════════════
+function resetAllSettings(){
+  if(!confirm('确定要清除所有本地设置吗？\n\n· API 密钥会被删除\n· 身份设置会被删除\n· 将返回初始设置界面\n\n这不会影响任何聊天记录或云端数据。')) return;
+  const keys = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role'];
+  keys.forEach(k => localStorage.removeItem(k));
+  window.location.reload();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -974,8 +989,11 @@ async function streamReply(txt){
     if(e.isAuth){
       el.innerHTML='<span class="err">🔑 API 密钥认证失败</span>'
         +'<br><small style="color:var(--dim)">'+esc(e.message)+'</small>'
-        +'<br><button onclick="openPanel(\'sp2\')" style="margin-top:8px;padding:6px 14px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:13px">⚙️ 立即更新 API 密钥</button>'
-        +'<br><small style="color:var(--dim);display:block;margin-top:6px">打开设置 → 点「清空重填」→ 输入新密钥 → 保存</small>';
+        +'<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+        +'<button onclick="openPanel(\'sp2\')" style="padding:6px 14px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:13px">⚙️ 更新 API 密钥</button>'
+        +'<button onclick="resetAllSettings()" style="padding:6px 14px;border-radius:6px;border:1px solid #ef4444;background:transparent;color:#ef4444;cursor:pointer;font-size:13px">🔄 清除重置</button>'
+        +'</div>'
+        +'<small style="color:var(--dim);display:block;margin-top:6px">打开设置 → 直接输入新密钥 → 保存（无需清空，留空 = 保留旧密钥）</small>';
     } else {
       el.innerHTML='<span class="err">⚠️ '+esc(e.message)+'</span><br><small style="color:var(--dim)">请检查 API 密钥和网络连接，或在 ⚙️ 设置中更换模型。</small>';
     }
