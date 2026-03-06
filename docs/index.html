@@ -565,11 +565,17 @@ const FB_BRAIN = {
 // ═══════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════
+// Derive base URL from saved provider; never use stale zy_base for named providers
+const _initProv = ls('zy_prov')||'yunwu';
+const _initBase = _initProv === 'custom'
+  ? (ls('zy_base')||'')
+  : (PROVS[_initProv]?.base||'https://api.yunwu.ai/v1');
+
 const A = {
   key:   ls('zy_key')||'',
-  base:  ls('zy_base')||'https://api.yunwu.ai/v1',
+  base:  _initBase,
   mdl:   ls('zy_mdl')||'gpt-4o',
-  prov:  ls('zy_prov')||'yunwu',
+  prov:  _initProv,
   demo:  false,
   brain: null,
   routing: null,
@@ -916,8 +922,8 @@ async function streamReply(txt){
       }),
     });
     if(!res.ok){
-      const provName=PROVS[A.prov]?.base||A.base;
-      let em=provName+' 返回错误 '+res.status;
+      const provLabel = A.prov==='custom' ? A.base : (A.prov+'('+A.base+')');
+      let em='['+provLabel+'] 返回错误 '+res.status;
       try{const e=await res.json();em=e.error?.message||em;}catch(_){}
       throw new Error(em);
     }
