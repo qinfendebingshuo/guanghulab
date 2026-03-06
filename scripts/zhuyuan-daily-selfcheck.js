@@ -32,6 +32,25 @@ if (missing.length > 0) {
   console.log('✅ 大脑文件完整性：全部就绪');
 }
 
+// === ① bis · 目录结构巡检 ===
+const requiredDirs = ['syslog-inbox', 'syslog-processed', 'broadcasts-outbox', '.github/brain'];
+const missingDirs  = requiredDirs.filter(d => !fs.existsSync(d));
+if (missingDirs.length > 0) {
+  console.error('⚠️ 缺失目录：' + missingDirs.join(', '));
+} else {
+  console.log('✅ 目录结构巡检：syslog-inbox / syslog-processed / broadcasts-outbox 全部就绪');
+}
+
+// 统计 syslog-inbox 待处理条目
+const inboxFiles = fs.existsSync('syslog-inbox')
+  ? fs.readdirSync('syslog-inbox').filter(f => f.endsWith('.json')).length
+  : 0;
+if (inboxFiles > 0) {
+  console.log(`📥 syslog-inbox 待处理条目：${inboxFiles} 个（建议触发 syslog-pipeline workflow）`);
+} else {
+  console.log('📭 syslog-inbox 无待处理条目');
+}
+
 // === ② 知识库去重与整理 ===
 const seen = new Set();
 const uniqueFaq = kb.faq.filter(item => {
