@@ -260,12 +260,12 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
       </select>
     </div>
     <div class="fg" id="smember-g" style="display:none;margin-bottom:0">
-      <label>成员编号</label>
+      <label>GitHub 用户名</label>
       <div style="display:flex;gap:6px;align-items:stretch">
-        <input type="text" id="smember-id" placeholder="输入你的成员编号，如 DEV-002" style="flex:1">
+        <input type="text" id="smember-id" placeholder="输入你的 GitHub 用户名" style="flex:1">
         <button onclick="verifyMember('s')" id="sverify-btn" class="det-btn">🔍 验证</button>
       </div>
-      <small id="sverify-status" style="display:block;margin-top:4px;min-height:16px;color:var(--dim)">输入编号后点击验证，系统将连接霜砚确认白名单</small>
+      <small id="sverify-status" style="display:block;margin-top:4px;min-height:16px;color:var(--dim)">输入 GitHub 用户名，系统将检查你是否为仓库合作者</small>
     </div>
   </div>
 
@@ -374,12 +374,12 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
       </select>
     </div>
     <div class="sfg" id="cmember-g" style="display:none">
-      <label>成员编号</label>
+      <label>GitHub 用户名</label>
       <div style="display:flex;gap:6px;align-items:stretch">
-        <input type="text" id="cmember-id" placeholder="输入你的成员编号，如 DEV-002" style="flex:1">
+        <input type="text" id="cmember-id" placeholder="输入你的 GitHub 用户名" style="flex:1">
         <button onclick="verifyMember('c')" id="cverify-btn" class="det-btn">🔍 验证</button>
       </div>
-      <small id="cverify-status" style="display:block;margin-top:4px;min-height:14px;color:var(--dim)">输入编号后点击验证，系统将连接霜砚确认白名单</small>
+      <small id="cverify-status" style="display:block;margin-top:4px;min-height:14px;color:var(--dim)">输入 GitHub 用户名，系统将检查你是否为仓库合作者</small>
     </div>
 
     <div class="sec-ttl">关于铸渊助手</div>
@@ -623,12 +623,12 @@ async function boot(){
     showApp();
   } else {
     // Pre-fill identity mode from localStorage
-    const savedMemberId = ls('zy_member_id');
-    if(A.userName && savedMemberId){
+    const savedGithub = ls('zy_member_id');
+    if(A.userName && savedGithub){
       const smodeEl = document.getElementById('smode');
       if(smodeEl){ smodeEl.value='member'; onIdentMode('member','s'); }
       const smidEl = document.getElementById('smember-id');
-      if(smidEl) smidEl.value = savedMemberId;
+      if(smidEl) smidEl.value = savedGithub;
     }
     document.getElementById('setup').style.display='flex';
   }
@@ -771,7 +771,7 @@ async function doSetup(){
   const mode = document.getElementById('smode')?.value||'guest';
   if(mode==='member' && !window._verifiedMember){
     const memberId = document.getElementById('smember-id')?.value.trim();
-    if(memberId) await verifyMember('s');
+    if(memberId) try{ await verifyMember('s'); }catch(_){}
   }
   const un = (mode==='member' && window._verifiedMember) ? window._verifiedMember.name : '';
   setIdentity(un, '');
@@ -812,13 +812,13 @@ function initSettingsPanel(){
   const cmemberG = document.getElementById('cmember-g');
   if(cmemberG) cmemberG.style.display = isGuest ? 'none' : 'block';
   if(!isGuest){
-    // Pre-fill with saved member ID
-    const savedId = ls('zy_member_id')||'';
+    // Pre-fill with saved GitHub username
+    const savedGithub = ls('zy_member_id')||'';
     const cmidEl = document.getElementById('cmember-id');
-    if(cmidEl && savedId) cmidEl.value = savedId;
-    // Restore verified member from saved state
-    if(!window._verifiedMember && A.userName && savedId){
-      window._verifiedMember = {name:A.userName, id:savedId, role:A.role,
+    if(cmidEl && savedGithub) cmidEl.value = savedGithub;
+    // Restore verified member from saved state so settings panel shows current identity
+    if(!window._verifiedMember && A.userName && savedGithub){
+      window._verifiedMember = {name:A.userName, github_username:savedGithub, role:A.role,
         emoji: ROLE_MAP[A.userName]?.emoji||'👤', title: ROLE_MAP[A.userName]?.title||A.role};
     }
     const cverifyStatus = document.getElementById('cverify-status');
@@ -847,7 +847,7 @@ async function saveSet(){
   const mode = document.getElementById('cmode')?.value||'guest';
   if(mode==='member' && !window._verifiedMember){
     const memberId = document.getElementById('cmember-id')?.value.trim();
-    if(memberId) await verifyMember('c');
+    if(memberId) try{ await verifyMember('c'); }catch(_){}
   }
   const un = (mode==='member' && window._verifiedMember) ? window._verifiedMember.name : (mode==='guest'?'':A.userName);
   if(mode==='guest') window._verifiedMember=null;
@@ -861,9 +861,10 @@ async function saveSet(){
 }
 
 // ═══════════════════════════════════════════════════════
-// IDENTITY VERIFICATION (Notion whitelist · 霜砚人格体)
-// Whitelist is maintained in .github/brain/whitelist.json
-// and can be synced from Notion via GitHub Actions.
+// IDENTITY VERIFICATION (GitHub Collaborator Check · 霜砚人格体)
+// Collaborator whitelist is stored in .github/brain/collaborators.json
+// and kept in sync with the GitHub repo collaborators via GH Actions
+// (sync-collaborators.yml runs daily and on member events).
 // ═══════════════════════════════════════════════════════
 function onIdentMode(mode, ctx){
   const grpId = ctx==='s'?'smember-g':'cmember-g';
@@ -877,29 +878,34 @@ async function verifyMember(ctx){
   const statusEl = document.getElementById(ctx==='s'?'sverify-status':'cverify-status');
   const btnEl    = document.getElementById(ctx==='s'?'sverify-btn':'cverify-btn');
 
-  const memberId = (idInp?.value||'').trim();
-  if(!memberId){
-    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 请输入成员编号</span>';
+  const githubUsername = (idInp?.value||'').trim();
+  if(!githubUsername){
+    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 请输入 GitHub 用户名</span>';
     return;
   }
 
   btnEl.disabled=true;
   btnEl.textContent='⏳ 验证中…';
-  statusEl.innerHTML='<span style="color:var(--dim)">🔍 正在连接霜砚人格体，核查白名单…</span>';
+  statusEl.innerHTML='<span style="color:var(--dim)">🔍 正在查询仓库合作者白名单…</span>';
 
   try{
-    const r = await fetch(RAW+'/.github/brain/whitelist.json',{cache:'no-store'});
-    if(!r.ok) throw new Error('whitelist unavailable');
-    const wl = await r.json();
-    const member = (wl.members||[]).find(m=>
-      m.id===memberId || m.id.toUpperCase()===memberId.toUpperCase()
+    // Fetch the collaborators whitelist (maintained by sync-collaborators.yml)
+    const r = await fetch(RAW+'/.github/brain/collaborators.json',{cache:'no-store'});
+    if(!r.ok) throw new Error(`collaborators list unavailable (HTTP ${r.status})`);
+    const cl = await r.json();
+    const member = (cl.members||[]).find(m=>
+      m.github_username &&
+      m.github_username.toLowerCase() === githubUsername.toLowerCase()
     );
-    if(member){
+    if(member && member.active !== false){
       window._verifiedMember = member;
-      statusEl.innerHTML=`<span style="color:var(--ok)">✅ 霜砚确认通过 · ${esc(member.emoji)} <strong>${esc(member.name)}</strong>（${esc(member.title||member.role)}）· 权限已开放</span>`;
+      statusEl.innerHTML=`<span style="color:var(--ok)">✅ GitHub 身份确认 · ${esc(member.emoji||'👤')} <strong>${esc(member.name)}</strong>（${esc(member.title||member.role)}）· 权限已开放</span>`;
+    } else if(member && member.active === false){
+      window._verifiedMember = null;
+      statusEl.innerHTML='<span style="color:var(--err)">❌ 账号已从仓库合作者中移除，将以访客身份对待</span>';
     } else {
       window._verifiedMember = null;
-      statusEl.innerHTML='<span style="color:var(--err)">❌ 编号不在白名单中，系统将以访客身份对待</span>';
+      statusEl.innerHTML='<span style="color:var(--err)">❌ 该 GitHub 账号不在仓库合作者名单中，将以访客身份对待</span>';
     }
   }catch(e){
     window._verifiedMember = null;
@@ -1460,8 +1466,8 @@ function setIdentity(userName, ghUser){
   lss('zy_uname', A.userName);
   lss('zy_ghuser', A.ghUser);
   lss('zy_role', A.role);
-  // Persist member ID from verified member so it can be pre-filled next time
-  if(window._verifiedMember?.id) lss('zy_member_id', window._verifiedMember.id);
+  // Persist GitHub username from verified member so it can be pre-filled next time
+  if(window._verifiedMember?.github_username) lss('zy_member_id', window._verifiedMember.github_username);
   else if(!userName) localStorage.removeItem('zy_member_id');
 }
 
