@@ -1,0 +1,25 @@
+name: 🔒 锁定 Pages 为 GitHub Actions 模式
+
+# 每次推送到 main（无论改了哪些文件）都运行，确保 Pages 部署源保持为
+# GitHub Actions 模式，而不是 Jekyll 分支模式。
+# 这样合作者上传模块时，GitHub 不会自动触发 Jekyll 构建，
+# 聊天室网站不受影响。
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 锁定 Pages 部署源为 GitHub Actions
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true  # 如 Pages 处于 Jekyll/分支模式，立即切回 GitHub Actions 模式
+          token: ${{ secrets.GITHUB_TOKEN }}
