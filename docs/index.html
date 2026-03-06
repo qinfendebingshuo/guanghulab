@@ -223,6 +223,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
   <div class="fg">
     <label>选择 AI 提供商</label>
     <select id="sp" onchange="onProv(this.value,'s')">
+      <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
       <option value="openai">OpenAI (ChatGPT)</option>
       <option value="deepseek">DeepSeek（深度求索）</option>
       <option value="moonshot">Moonshot（Kimi）</option>
@@ -341,6 +342,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <div class="sfg">
       <label>AI 提供商</label>
       <select id="cp" onchange="onProv(this.value,'c')">
+        <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
         <option value="openai">OpenAI (ChatGPT)</option>
         <option value="deepseek">DeepSeek（深度求索）</option>
         <option value="moonshot">Moonshot（Kimi）</option>
@@ -435,8 +437,8 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <div class="help-section">
       <h3>🔑 从哪里获取 API Key？</h3>
       <div class="role-guide">
-        <div class="role-guide-title">推荐用云雾 API（团队共用）</div>
-        <p>找冰朔或肥猫获取团队 Key。填入后选「自定义」提供商，或直接用 DeepSeek。</p>
+        <div class="role-guide-title">推荐用云雾 AI（团队共用）</div>
+        <p>找冰朔或肥猫获取团队 Key。填入后选「☁️ 云雾 AI（团队推荐）」提供商即可直接使用。</p>
       </div>
       <div class="role-guide">
         <div class="role-guide-title">没有 Key？用演示模式</div>
@@ -534,6 +536,7 @@ const ROLE_MAP = {
 };
 
 const PROVS = {
+  yunwu:    {base:'https://api.yunwu.ai/v1',              mdls:['gpt-4o','gpt-4o-mini','claude-3-5-sonnet-20241022','deepseek-chat','gemini-1.5-pro']},
   openai:   {base:'https://api.openai.com/v1',            mdls:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo']},
   deepseek: {base:'https://api.deepseek.com/v1',          mdls:['deepseek-chat','deepseek-reasoner']},
   moonshot: {base:'https://api.moonshot.cn/v1',           mdls:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k']},
@@ -564,9 +567,9 @@ const FB_BRAIN = {
 // ═══════════════════════════════════════════════════════
 const A = {
   key:   ls('zy_key')||'',
-  base:  ls('zy_base')||'https://api.openai.com/v1',
+  base:  ls('zy_base')||'https://api.yunwu.ai/v1',
   mdl:   ls('zy_mdl')||'gpt-4o',
-  prov:  ls('zy_prov')||'openai',
+  prov:  ls('zy_prov')||'yunwu',
   demo:  false,
   brain: null,
   routing: null,
@@ -615,7 +618,7 @@ function showApp(){
 // SETUP FORM
 // ═══════════════════════════════════════════════════════
 function initSetupUI(){
-  const pv = A.prov||'openai';
+  const pv = A.prov||'yunwu';
   document.getElementById('sp').value = pv;
   fillModels('sm', pv, A.mdl);
   if(pv==='custom'){
@@ -676,7 +679,7 @@ function doDemo(){
 // SETTINGS PANEL
 // ═══════════════════════════════════════════════════════
 function initSettingsPanel(){
-  const pv = A.prov||'openai';
+  const pv = A.prov||'yunwu';
   document.getElementById('cp').value = pv;
   fillModels('cm', pv, A.mdl);
   document.getElementById('ck').value = A.key?KEY_MASK:'';
