@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -47,7 +47,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 #id-preview{display:none;text-align:center;margin-bottom:10px;padding:10px;background:var(--s3);border-radius:8px;font-size:14px;font-weight:600}
 
 /* ─── APP SHELL (three-column) ─── */
-#app{display:none;height:100vh;height:100dvh;width:100%;overflow:hidden}
+#app{display:none;height:100vh;height:100dvh;height:var(--vh,100dvh);width:100%;overflow:hidden}
 #app.on{display:flex;flex-direction:column}
 
 /* ─── LEFT SIDEBAR ─── */
@@ -2106,14 +2106,18 @@ window.addEventListener('resize', function(){
 // MOBILE: VIEWPORT HEIGHT FIX & KEYBOARD HANDLER
 // ═══════════════════════════════════════════════════════
 (function(){
-  // Fix iOS/Android virtual keyboard pushing content
+  // Fix iOS/Android virtual keyboard pushing content via CSS custom property
   if(window.visualViewport){
-    var appEl=document.getElementById('app');
+    var raf=0;
     window.visualViewport.addEventListener('resize',function(){
-      if(appEl && appEl.classList.contains('on')){
-        appEl.style.height=window.visualViewport.height+'px';
-        scrollB();
-      }
+      cancelAnimationFrame(raf);
+      raf=requestAnimationFrame(function(){
+        var appEl=document.getElementById('app');
+        if(appEl && appEl.classList.contains('on')){
+          appEl.style.setProperty('--vh',window.visualViewport.height+'px');
+          scrollB();
+        }
+      });
     });
   }
   // Close sidebar on any outside tap (mobile)
