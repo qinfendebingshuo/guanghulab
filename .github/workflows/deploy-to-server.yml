@@ -209,22 +209,32 @@ jobs:
                 exit 0
               fi
 
-              # 部署 backend 服务
+              # 部署 backend 服务（Express API，端口 3000）
               if [ -f '${{ secrets.DEPLOY_PATH }}/backend/server.js' ]; then
                 echo '📦 安装 backend 依赖...'
                 cd '${{ secrets.DEPLOY_PATH }}/backend'
-                npm install --production || echo '⚠️ backend npm install 失败'
+                npm install --production 2>/dev/null || echo '⚠️ backend npm install 失败'
                 echo '🔄 重启 backend 服务...'
                 pm2 restart guanghulab-backend 2>/dev/null || \
                   pm2 start server.js --name guanghulab-backend 2>/dev/null || \
                   echo '⚠️ backend pm2 启动失败'
               fi
 
+              # 部署 status-board WebSocket 服务（端口 8080）
+              if [ -f '${{ secrets.DEPLOY_PATH }}/status-board/mock-ws-server.js' ]; then
+                echo '🔄 重启 WebSocket 服务...'
+                cd '${{ secrets.DEPLOY_PATH }}/status-board'
+                npm install --production 2>/dev/null || true
+                pm2 restart guanghulab-ws 2>/dev/null || \
+                  pm2 start mock-ws-server.js --name guanghulab-ws 2>/dev/null || \
+                  echo '⚠️ WebSocket pm2 启动失败'
+              fi
+
               # 部署 src HLI 中间层
               if [ -f '${{ secrets.DEPLOY_PATH }}/src/index.js' ]; then
                 echo '📦 安装 src 依赖...'
                 cd '${{ secrets.DEPLOY_PATH }}'
-                npm install --production || echo '⚠️ src npm install 失败'
+                npm install --production 2>/dev/null || echo '⚠️ src npm install 失败'
                 echo '🔄 重启 HLI 服务...'
                 pm2 restart guanghulab 2>/dev/null || \
                   pm2 start src/index.js --name guanghulab 2>/dev/null || \
@@ -232,6 +242,10 @@ jobs:
               fi
 
               pm2 save || echo '⚠️ pm2 save 失败，重启后进程可能不会自动启动'
+
+              # 设置开机自启（仅首次需要，后续无操作）
+              pm2 startup 2>/dev/null | grep -o 'sudo.*' | bash 2>/dev/null || true
+
               echo '✅ 后端服务部署完成'
             "
 
@@ -247,8 +261,9 @@ jobs:
                 exit 0
               fi
 
+              NGINX_CHANGED=false
+
               # 一次性迁移：更新 root 路径（从旧的 status-board 子目录改为站点根目录）
-              # 迁移完成后此检查自动无操作
               if grep -q 'root.*guanghulab/status-board' /etc/nginx/sites-available/default 2>/dev/null || \
                  grep -q 'root.*guanghulab/status-board' /etc/nginx/conf.d/*.conf 2>/dev/null; then
                 echo '🔄 更新 Nginx root 路径...'
@@ -256,10 +271,63 @@ jobs:
                   /etc/nginx/sites-available/default 2>/dev/null || true
                 sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
                   /etc/nginx/conf.d/*.conf 2>/dev/null || true
-                sudo nginx -t && sudo systemctl reload nginx
-                echo '✅ Nginx 配置已更新'
+                NGINX_CHANGED=true
+                echo '✅ Nginx root 路径已更新'
               else
                 echo '✅ Nginx root 路径正确，无需修改'
+              fi
+
+              # 配置 API + WebSocket 反向代理
+              if ! grep -rq 'location /api/' /etc/nginx/sites-available/ /etc/nginx/conf.d/ /etc/nginx/snippets/ 2>/dev/null; then
+                echo '🔄 添加 API + WebSocket 反向代理...'
+                sudo mkdir -p /etc/nginx/snippets
+                # 注意：\$ 在本地 shell 中转义为 $，远程 shell 的单引号保护不再展开，
+                # 最终写入文件的 Nginx 变量为 $host、$http_upgrade 等
+                printf '%s\n' \
+                  '# guanghulab 反向代理（由 CD 工作流自动生成）' \
+                  '' \
+                  '# API 反向代理 → Express 后端端口 3000' \
+                  'location /api/ {' \
+                  '    proxy_pass http://127.0.0.1:3000/api/;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' \
+                  '    proxy_set_header X-Forwarded-Proto \$scheme;' \
+                  '    proxy_cache_bypass \$http_upgrade;' \
+                  '}' \
+                  '' \
+                  '# WebSocket 反向代理 → 看板实时推送端口 8080' \
+                  'location /ws {' \
+                  '    proxy_pass http://127.0.0.1:8080;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Upgrade \$http_upgrade;' \
+                  '    proxy_set_header Connection \"Upgrade\";' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' \
+                  '    proxy_read_timeout 86400;' \
+                  '}' \
+                  | sudo tee /etc/nginx/snippets/guanghulab-proxy.conf > /dev/null
+
+                # 在 server 块中加入 include 指令（仅搜索 sites-available 避免 symlink 重复）
+                NGINX_MAIN=\$(grep -rl 'server_name' /etc/nginx/sites-available/ 2>/dev/null | head -1)
+                if [ -z \"\$NGINX_MAIN\" ]; then
+                  NGINX_MAIN='/etc/nginx/sites-available/default'
+                fi
+                if [ -f \"\$NGINX_MAIN\" ] && ! grep -q 'guanghulab-proxy' \"\$NGINX_MAIN\" 2>/dev/null; then
+                  sudo sed -i '/server_name/a\\    include /etc/nginx/snippets/guanghulab-proxy.conf;' \"\$NGINX_MAIN\" 2>/dev/null && \
+                    NGINX_CHANGED=true && echo '✅ 反向代理已自动配置' || \
+                    echo '⚠️ 自动配置失败，请手动在 Nginx server 块中加入: include /etc/nginx/snippets/guanghulab-proxy.conf;'
+                fi
+              else
+                echo '✅ API 反向代理已存在，无需修改'
+              fi
+
+              # 如果有变更，验证并重新加载 Nginx
+              if [ \"\$NGINX_CHANGED\" = true ]; then
+                sudo nginx -t && sudo systemctl reload nginx && echo '✅ Nginx 配置已重新加载' || \
+                  echo '⚠️ Nginx 配置验证失败，请手动检查'
               fi
             "
 
