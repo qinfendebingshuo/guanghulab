@@ -16,13 +16,6 @@ name: "🚀 铸渊 CD · 自动部署到 guanghulab.com"
 on:
   push:
     branches: [main]
-        paths:
-      - '**'
-      - '!broadcasts-outbox/**'
-      - '!syslog-inbox/**'
-      - '!syslog-processed/**'
-      - '!dev-nodes/**'
-      - '!.github/persona-brain/**'
     paths-ignore:
       - '.github/persona-brain/**'
       - 'broadcasts-outbox/**'
