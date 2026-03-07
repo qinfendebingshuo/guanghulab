@@ -26,6 +26,9 @@ jobs:
       - name: 更新图书馆目录
         run: node scripts/generate-repo-map.js
 
+      - name: 模块目录盘点
+        run: node scripts/scan-repo-inventory.js
+
       - name: 提交自检结果
         run: |
           git config user.name "铸渊 (ZhùYuān)"
