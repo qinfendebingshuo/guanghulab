@@ -115,6 +115,18 @@ jobs:
                  exit 1; }); }"
           echo "✅ 远程服务器 rsync 检查完成"
 
+      - name: 📁 确保远程部署目录存在
+        run: |
+          echo "🔍 检查远程部署目录..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "mkdir -p '${{ secrets.DEPLOY_PATH }}'" || {
+              echo "❌ 无法创建远程部署目录（SSH 连接失败或权限不足）"
+              echo "请确认 DEPLOY_PATH 设置正确且 DEPLOY_USER 有写入权限"
+              exit 1
+            }
+          echo "✅ 远程部署目录已就绪"
+
       - name: 🔒 部署前安全检查
         run: |
           if [ ! -f "docs/index.html" ]; then
