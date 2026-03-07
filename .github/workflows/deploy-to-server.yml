@@ -1,13 +1,13 @@
 name: "🚀 铸渊 CD · 自动部署到 guanghulab.com"
 
-# ━━━ 工单 YM-CD-20260307-001 ━━━
-# push 到 main → 校验 → rsync 同步到服务器 → Notion 部署通知
+# ━━━ 工单 YM-DEPLOY-FIX-20260307-001 ━━━
+# push 到 main → 校验 → rsync 同步全站到服务器 → 后端重启 → Nginx 配置 → Notion 通知
 #
 # 必需 GitHub Secrets（仓库 Settings → Secrets → Actions）:
 #   DEPLOY_HOST  — 服务器 IP
 #   DEPLOY_USER  — SSH 用户名
 #   DEPLOY_KEY   — SSH 私钥（完整 PEM 内容）
-#   DEPLOY_PATH  — Nginx 网站根目录（如 /usr/share/nginx/html）
+#   DEPLOY_PATH  — 网站根目录（如 /var/www/guanghulab）
 #
 # 可选 Secrets（已有则自动启用 Notion 通知）:
 #   NOTION_TOKEN   — Notion 集成 token
@@ -133,37 +133,41 @@ jobs:
             echo "❌ docs/index.html 不存在，中止部署以防清空生产环境"
             exit 1
           fi
-          FILE_COUNT=$(find docs/ -type f | wc -l)
-          if [ "$FILE_COUNT" -lt 2 ]; then
-            echo "❌ docs/ 目录文件数异常（仅 ${FILE_COUNT} 个），中止部署"
+          FILE_COUNT=$(find . -type f \
+            -not -path './.git/*' \
+            -not -path './.github/*' \
+            -not -path '*/node_modules/*' \
+            | wc -l)
+          if [ "$FILE_COUNT" -lt 5 ]; then
+            echo "❌ 仓库文件数异常（仅 ${FILE_COUNT} 个），中止部署"
             exit 1
           fi
-          echo "✅ docs/ 目录包含 ${FILE_COUNT} 个文件，安全检查通过"
+          echo "✅ 仓库包含 ${FILE_COUNT} 个文件，安全检查通过"
 
-      - name: 🚀 rsync 同步到服务器
+      - name: 🚀 rsync 同步全站到服务器
         run: |
-          echo "📡 开始同步到 ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
+          echo "📡 开始同步全站到 ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
 
           rsync -avz --delete-after \
             --exclude '.git' \
             --exclude '.github' \
             --exclude 'node_modules' \
-            --exclude 'scripts' \
             --exclude 'syslog-inbox' \
             --exclude 'syslog-processed' \
-            --exclude 'signal-log' \
-            --exclude 'dev-nodes' \
             --exclude 'broadcasts-outbox' \
-            --exclude 'backend-integration' \
+            --exclude 'dev-nodes' \
+            --exclude 'signal-log' \
             --exclude 'tests' \
-            --exclude 'src' \
-            --exclude 'cost-control' \
-            --exclude 'notion-push' \
-            --exclude 'multi-persona' \
-            --exclude 'status-board' \
             --exclude 'reports' \
-            --exclude 'guanghulab-main' \
-            --exclude 'package*.json' \
+            --exclude 'scripts' \
+            --exclude '*.bak' \
+            --exclude '*.bak2' \
+            --exclude '*_副本' \
+            --exclude '*_副本/' \
+            --exclude '*_副本.*' \
+            --exclude '.DS_Store' \
+            --exclude '.env' \
+            --exclude 'package-lock.json' \
             --exclude 'tsconfig.json' \
             --exclude 'next.config.ts' \
             --exclude 'postcss.config.mjs' \
@@ -171,22 +175,110 @@ jobs:
             --exclude 'ecosystem.config.js' \
             --exclude '.gitignore' \
             --exclude 'CNAME' \
+            --exclude '*.zip' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            docs/ \
+            ./ \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/
 
-          echo "✅ 同步完成"
+          echo "✅ 全站同步完成"
+
+      - name: 📄 复制首页到站点根目录
+        run: |
+          echo "📄 复制 docs/index.html → 站点根目录 index.html"
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              cp '${{ secrets.DEPLOY_PATH }}/docs/index.html' '${{ secrets.DEPLOY_PATH }}/index.html'
+              # 同步 docs 下的其他静态资源到根目录
+              cp '${{ secrets.DEPLOY_PATH }}/docs/.nojekyll' '${{ secrets.DEPLOY_PATH }}/.nojekyll' 2>/dev/null || true
+            "
+          echo "✅ 首页已部署到根目录"
+
+      - name: 🔧 后端服务部署
+        continue-on-error: true
+        run: |
+          echo "🔧 检查并部署后端服务..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              # 检查 Node.js 和 pm2 是否可用
+              if ! command -v node &>/dev/null; then
+                echo '⏭️ Node.js 未安装，跳过后端部署'
+                exit 0
+              fi
+              if ! command -v pm2 &>/dev/null; then
+                echo '⏭️ pm2 未安装，跳过后端服务管理'
+                exit 0
+              fi
+
+              # 部署 backend 服务
+              if [ -f '${{ secrets.DEPLOY_PATH }}/backend/server.js' ]; then
+                echo '📦 安装 backend 依赖...'
+                cd '${{ secrets.DEPLOY_PATH }}/backend'
+                npm install --production 2>/dev/null || echo '⚠️ backend npm install 失败'
+                echo '🔄 重启 backend 服务...'
+                pm2 restart guanghulab-backend 2>/dev/null || \
+                  pm2 start server.js --name guanghulab-backend 2>/dev/null || \
+                  echo '⚠️ backend pm2 启动失败'
+              fi
+
+              # 部署 src HLI 中间层
+              if [ -f '${{ secrets.DEPLOY_PATH }}/src/index.js' ]; then
+                echo '📦 安装 src 依赖...'
+                cd '${{ secrets.DEPLOY_PATH }}'
+                npm install --production 2>/dev/null || echo '⚠️ src npm install 失败'
+                echo '🔄 重启 HLI 服务...'
+                pm2 restart guanghulab 2>/dev/null || \
+                  pm2 start src/index.js --name guanghulab 2>/dev/null || \
+                  echo '⚠️ src pm2 启动失败'
+              fi
+
+              pm2 save 2>/dev/null || true
+              echo '✅ 后端服务部署完成'
+            "
+
+      - name: 🌐 更新 Nginx 配置
+        continue-on-error: true
+        run: |
+          echo "🔧 检查 Nginx 配置..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              # 检查 Nginx 是否安装
+              if ! command -v nginx &>/dev/null; then
+                echo '⏭️ Nginx 未安装，跳过配置更新'
+                exit 0
+              fi
+
+              # 更新 root 路径（从旧的 status-board 子目录改为站点根目录）
+              if grep -q 'root.*guanghulab/status-board' /etc/nginx/sites-available/default 2>/dev/null || \
+                 grep -q 'root.*guanghulab/status-board' /etc/nginx/conf.d/*.conf 2>/dev/null; then
+                echo '🔄 更新 Nginx root 路径...'
+                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
+                  /etc/nginx/sites-available/default 2>/dev/null || true
+                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
+                  /etc/nginx/conf.d/*.conf 2>/dev/null || true
+                sudo nginx -t && sudo systemctl reload nginx
+                echo '✅ Nginx 配置已更新'
+              else
+                echo '✅ Nginx root 路径正确，无需修改'
+              fi
+            "
 
       - name: 🔍 验证部署
         run: |
           ssh -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "echo '✅ 服务器连接正常' && ls -la ${{ secrets.DEPLOY_PATH }}/ | head -20"
+            "echo '✅ 服务器连接正常' && \
+             echo '--- 站点根目录 ---' && \
+             ls -la ${{ secrets.DEPLOY_PATH }}/ | head -30 && \
+             echo '--- docs/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/docs/ 2>/dev/null || echo '(docs/ 不存在)' && \
+             echo '--- status-board/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/status-board/ 2>/dev/null || echo '(status-board/ 不存在)'"
 
       - name: 📝 部署汇总
         run: |
-          echo "### 🚀 部署完成" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 全站部署完成" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 同步范围: 全仓库（含排除规则）" >> $GITHUB_STEP_SUMMARY
           echo "- 目标: \`${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- 提交: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- 时间: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')" >> $GITHUB_STEP_SUMMARY

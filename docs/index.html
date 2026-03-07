@@ -954,6 +954,33 @@ function renderAnnouncements(){
   h+='<button class="ann-action-btn" onclick="navigateAndSend(\'帮我写一个 HLI 接口\')">📦 上传模块</button>';
   h+='</div></div>';
 
+  // Module navigation — 模块入口导航
+  h+='<div class="ann-section"><div class="ann-section-title">🗂️ 模块导航</div><div class="ann-actions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">';
+  var modules=[
+    {icon:'📊',name:'看板',path:'/status-board/'},
+    {icon:'🖥️',name:'主站',path:'/app/'},
+    {icon:'👤',name:'用户中心',path:'/m05-user-center/'},
+    {icon:'💬',name:'对话界面',path:'/m07-dialogue-ui/'},
+    {icon:'☁️',name:'云服务',path:'/m10-cloud/'},
+    {icon:'📦',name:'模块管理',path:'/m11-module/'},
+    {icon:'💾',name:'云盘',path:'/m15-cloud-drive/'},
+    {icon:'🔐',name:'登录',path:'/m01-login/'},
+    {icon:'🎭',name:'人格系统',path:'/m03-personality/'},
+    {icon:'🎫',name:'工单',path:'/m06-ticket/'},
+    {icon:'📋',name:'看板管理',path:'/m12-kanban/'},
+    {icon:'❤️',name:'健康检查',path:'/m18-health-check/'},
+    {icon:'🚀',name:'冷启动',path:'/coldstart/'},
+    {icon:'📈',name:'仪表盘',path:'/dashboard/'},
+    {icon:'🏠',name:'门户',path:'/portal/'},
+    {icon:'🔔',name:'通知',path:'/notification/'},
+    {icon:'❓',name:'帮助中心',path:'/help-center/'},
+    {icon:'🎨',name:'前端',path:'/frontend/'}
+  ];
+  modules.forEach(function(m){
+    h+='<a href="'+m.path+'" class="ann-action-btn" style="text-decoration:none;text-align:center;display:block">'+m.icon+' '+m.name+'</a>';
+  });
+  h+='</div></div>';
+
   el.innerHTML=h;
 }
 
