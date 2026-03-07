@@ -1,0 +1,209 @@
+# 铸渊图书馆快照 · Repo Snapshot
+> 生成于 2026-03-07 13:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+
+---
+
+## 📊 仓库总览（一眼全局）
+
+| 指标 | 数值 |
+|------|------|
+| 区域总数 | 13 个区域 |
+| 功能模块 | 10 个 (m01~m18) |
+| 工作流 | 14 个 GitHub Actions |
+| 脚本 | 15 个执行脚本 |
+| 开发者节点 | 8 人 |
+| HLI 接口覆盖率 | 3/17 (18%) |
+| 快照生成时间 | 2026-03-07 13:37 CST |
+
+---
+
+## 🗺️ 图书馆全区地图
+
+### 🧠 铸渊大脑（BRAIN）
+**路径**: `.github/brain` · **数量**: 7 项
+**描述**: 铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录
+**关键词**: brain · memory · routing · wake · 大脑 · 记忆
+
+### 🎭 人格大脑（PERSONA_BRAIN）
+**路径**: `.github/persona-brain` · **数量**: 4 项
+**描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
+**关键词**: persona · identity · dev-status · 人格 · 开发者状态
+
+### ⚡ 自动化工作流（WORKFLOWS）
+**路径**: `.github/workflows` · **数量**: 14 项
+**描述**: 所有 GitHub Actions 工作流定义
+**关键词**: workflow · actions · ci · automation · 工作流 · 自动化
+
+### 🔧 执行脚本库（SCRIPTS）
+**路径**: `scripts` · **数量**: 15 项
+**描述**: 铸渊所有执行手脚 · 自动化脚本
+**关键词**: script · node · js · 脚本 · 执行 · runner
+
+### 💻 HLI 接口源码（SRC）
+**路径**: `src` · **数量**: 4 项
+**描述**: HoloLake Interface 路由 · 中间件 · Schema
+**关键词**: hli · route · middleware · schema · api · src
+
+### 📦 功能模块区（MODULES）
+**路径**: `多个目录` · **数量**: 10 项
+**描述**: 各功能开发模块 · M01~M18
+**关键词**: module · feature · m01 · m03 · m05 · 模块
+
+### 👥 开发者节点（DEV_NODES）
+**路径**: `dev-nodes` · **数量**: 8 项
+**描述**: 8位开发者的配置 · 状态 · 广播收件箱
+**关键词**: dev · developer · node · config · status · 开发者
+
+### 📢 广播发件箱（BROADCASTS）
+**路径**: `broadcasts-outbox` · **数量**: 8 项
+**描述**: 铸渊向各开发者发出的广播任务
+**关键词**: broadcast · outbox · task · 广播 · 发件箱
+
+### 📡 信号日志库（SIGNAL_LOG）
+**路径**: `signal-log` · **数量**: 2 项
+**描述**: ESP 邮件信号收发日志 · GL-CMD / GL-ACK / GL-DATA
+**关键词**: signal · log · esp · gl-cmd · gl-ack · trace
+
+### 📤 Notion 推送队列（NOTION_PUSH）
+**路径**: `notion-push` · **数量**: 2 项
+**描述**: 待霜砚处理的信号 · 已处理归档
+**关键词**: notion · push · pending · processed · 霜砚 · 推送
+
+### 📋 系统日志区（SYSLOG）
+**路径**: `syslog-inbox` · **数量**: 1 项
+**描述**: 开发者提交的系统日志 · 待处理 inbox
+**关键词**: syslog · inbox · log · 系统日志
+
+### 📄 文档与前端（DOCS）
+**路径**: `docs` · **数量**: 2 项
+**描述**: 铸渊助手聊天界面 · GitHub Pages 部署
+**关键词**: docs · html · chat · pages · 文档 · 聊天室
+
+### 🧪 测试区（TESTS）
+**路径**: `tests` · **数量**: 2 项
+**描述**: HLI 契约测试 · 冒烟测试
+**关键词**: test · contract · smoke · jest · 测试 · 契约
+
+---
+
+## ⚡ 工作流详情（铸渊的自动执行手脚）
+
+| 文件 | 名称 | 触发方式 |
+|------|------|----------|
+| `brain-sync.yml` | 铸渊 Brain Sync | push, schedule(0 8 * * *), manual |
+| `bridge-changes-to-notion.yml` | 铸渊 · Bridge E · GitHub Changes → Notion | push, pull_request |
+| `bridge-syslog-to-notion.yml` | 铸渊 · Bridge A · SYSLOG → Notion | push, manual |
+| `check-structure.yml` | 模块结构检查 | push, pull_request |
+| `deploy-pages.yml` | 🌀 部署铸渊聊天室 (GitHub Pages) | push, manual |
+| `distribute-broadcasts.yml` | 铸渊 · 广播分发 | push, manual |
+| `esp-signal-processor.yml` | 铸渊 · ESP 邮件信号处理器 | schedule(*/30 * * * *), manual |
+| `generate-module-doc.yml` | 铸渊 · HoloLake Era 模块文档自动生成 | push, manual |
+| `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
+| `psp-daily-inspection.yml` | 铸渊 · PSP 分身巡检 | schedule(0 1 * * *), manual |
+| `syslog-pipeline.yml` | 铸渊 · SYSLOG Pipeline (A/D/E) | push, manual |
+| `update-repo-map.yml` | 铸渊 · 图书馆目录自动更新 | push, schedule(0 0 * * *), manual |
+| `zhuyuan-daily-selfcheck.yml` | 铸渊 · 每日自检与自进化 | schedule(0 0 * * *), manual |
+| `zhuyuan-issue-reply.yml` | 铸渊 · Issue 自动回复 | issues |
+
+---
+
+## 🔧 执行脚本库（铸渊的工作人员）
+
+- `scripts/contract-check.js`
+- `scripts/daily-check.js`
+- `scripts/distribute-broadcasts.js`
+- `scripts/esp-email-processor.js`
+- `scripts/generate-module-doc.js`
+- `scripts/generate-repo-map.js`
+- `scripts/notify-module-received.js`
+- `scripts/notion-bridge.js`
+- `scripts/process-broadcasts.js`
+- `scripts/process-syslog.js`
+- `scripts/psp-inspection.js`
+- `scripts/route-align-check.js`
+- `scripts/update-memory.js`
+- `scripts/zhuyuan-daily-selfcheck.js`
+- `scripts/zhuyuan-issue-reply.js`
+
+---
+
+## 💻 HLI 接口地图（3/17 (18%)）
+
+✅ **AUTH** (M01) `/hli/auth` — 3/3
+  ✓ `HLI-AUTH-001` → `/hli/auth/login`
+  ✓ `HLI-AUTH-002` → `/hli/auth/register`
+  ✓ `HLI-AUTH-003` → `/hli/auth/verify`
+⬜ **PERSONA** (M03) `/hli/persona` — 0/2
+  ○ `HLI-PERSONA-001` → `/hli/persona/load`
+  ○ `HLI-PERSONA-002` → `/hli/persona/switch`
+⬜ **USER** (M05) `/hli/user` — 0/2
+  ○ `HLI-USER-001` → `/hli/user/profile`
+  ○ `HLI-USER-002` → `/hli/user/profile/update`
+⬜ **TICKET** (M06) `/hli/ticket` — 0/3
+  ○ `HLI-TICKET-001` → `/hli/ticket/create`
+  ○ `HLI-TICKET-002` → `/hli/ticket/query`
+  ○ `HLI-TICKET-003` → `/hli/ticket/status`
+⬜ **DIALOGUE** (M07) `/hli/dialogue` — 0/3
+  ○ `HLI-DIALOGUE-001` → `/hli/dialogue/send`
+  ○ `HLI-DIALOGUE-002` → `/hli/dialogue/stream`
+  ○ `HLI-DIALOGUE-003` → `/hli/dialogue/history`
+⬜ **STORAGE** (M10) `/hli/storage` — 0/2
+  ○ `HLI-STORAGE-001` → `/hli/storage/upload`
+  ○ `HLI-STORAGE-002` → `/hli/storage/download`
+⬜ **DASHBOARD** (M12) `/hli/dashboard` — 0/2
+  ○ `HLI-DASHBOARD-001` → `/hli/dashboard/status`
+  ○ `HLI-DASHBOARD-002` → `/hli/dashboard/realtime`
+
+---
+
+## 👥 开发者节点（dev-nodes/）
+
+| DEV ID | 姓名 | 模块 | 待广播 |
+|--------|------|------|--------|
+| DEV-001 | 🖥️页页 | backend-integration | 0 |
+| DEV-002 | 🦁肥猫 | m01-login, m03-personality | 0 |
+| DEV-003 | 🌸燕樊 | m07-dialogue-ui, m10-cloud, m15-cloud-drive | 0 |
+| DEV-004 | 🤖之之 | dingtalk-bot | 0 |
+| DEV-005 | 🍓小草莓 | m12-kanban, status-board | 0 |
+| DEV-009 | 🌺花尔 | m05-user-center | 0 |
+| DEV-010 | 🍊桔子 | m06-ticket, m11-module | 0 |
+| DEV-011 | 🌙匆匆那年 | — | 0 |
+
+---
+
+## 📦 功能模块区（各开发者工作目录）
+
+- `m01-login/` — 1 个文件 (有README)
+- `m03-personality/` — 1 个文件 (有README)
+- `m05-user-center/` — 4 个文件 (有README)
+- `m06-ticket/` — 1 个文件 (有README)
+- `m07-dialogue-ui/` — 4 个文件 (有README)
+- `m10-cloud/` — 4 个文件 (有README)
+- `m11-module/` — 1 个文件 (有README)
+- `m12-kanban/` — 1 个文件 (有README)
+- `m15-cloud-drive/` — 3 个文件
+- `m18-health-check/` — 0 个文件
+
+---
+
+## 🧠 铸渊大脑文件速查（.github/brain/）
+
+- `.github/brain/collaborators.json`
+- `.github/brain/growth-log.md`
+- `.github/brain/memory.json`
+- `.github/brain/repo-map.json`
+- `.github/brain/repo-snapshot.md`
+- `.github/brain/routing-map.json`
+- `.github/brain/wake-protocol.md`
+
+---
+
+## 🕐 最近动态（memory.json 最新3条）
+
+- `2026-03-06T08:51:24.830Z` · daily_check — passed
+- `2026-03-05T16:07:24.070Z` · ci_run — passed
+- `2026-03-05T12:32:31.000Z` · system_build — 广播分发系统 + 唤醒协议全部激活
+
+---
+
+*本文件由 `scripts/generate-repo-map.js` 自动生成，勿手动编辑*
