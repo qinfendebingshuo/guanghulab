@@ -323,13 +323,13 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
   <div class="fg">
     <label>选择 AI 提供商</label>
     <select id="sp" onchange="onProv(this.value,'s')">
-      <option value="proxy">🔌 后端代理（国内直连·推荐）</option>
       <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
-      <option value="openai">OpenAI (ChatGPT)</option>
-      <option value="gemini">🔮 Google Gemini</option>
       <option value="deepseek">DeepSeek（深度求索·国内直连）</option>
+      <option value="proxy">🔌 后端代理（guanghulab.com）</option>
       <option value="moonshot">Moonshot（Kimi·国内直连）</option>
       <option value="zhipu">智谱 AI（GLM·国内直连）</option>
+      <option value="openai">OpenAI (ChatGPT)</option>
+      <option value="gemini">🔮 Google Gemini</option>
       <option value="custom">自定义 / 其他兼容接口</option>
     </select>
   </div>
@@ -515,13 +515,13 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
     <div class="sfg">
       <label>AI 提供商</label>
       <select id="cp" onchange="onProv(this.value,'c')">
-        <option value="proxy">🔌 后端代理（国内直连·推荐）</option>
         <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
-        <option value="openai">OpenAI (ChatGPT)</option>
-        <option value="gemini">🔮 Google Gemini</option>
         <option value="deepseek">DeepSeek（深度求索·国内直连）</option>
+        <option value="proxy">🔌 后端代理（guanghulab.com）</option>
         <option value="moonshot">Moonshot（Kimi·国内直连）</option>
         <option value="zhipu">智谱 AI（GLM·国内直连）</option>
+        <option value="openai">OpenAI (ChatGPT)</option>
+        <option value="gemini">🔮 Google Gemini</option>
         <option value="custom">自定义</option>
       </select>
     </div>
@@ -1188,7 +1188,7 @@ function onProv(pv,ctx){
   }
   // Proxy mode: API key is optional (managed server-side)
   const ki = document.getElementById(keyInp);
-  if(ki) ki.placeholder = isProxy ? '后端代理模式 — 无需填写 API 密钥（服务器端统一管理）' : (ctx==='s'?'粘贴任意 API 密钥，点击右侧按钮自动识别提供商和模型':'留空 = 保持当前密钥不变；粘贴新密钥即替换');
+  if(ki) ki.placeholder = isProxy ? '后端代理模式（无需密钥）' : (ctx==='s'?'粘贴任意 API 密钥，点击右侧按钮自动识别提供商和模型':'留空 = 保持当前密钥不变；粘贴新密钥即替换');
 }
 
 function fillModels(selId, pv, cur){
@@ -1584,9 +1584,10 @@ async function streamReply(txt){
     const url = isProxy ? (A.base+'/chat') : (A.base+'/chat/completions');
     const headers = {'Content-Type':'application/json'};
     if(!isProxy && A.key) headers['Authorization'] = 'Bearer '+A.key;
+    const allMsgs = [{role:'system',content:sysPrompt()},...A.msgs];
     const reqBody = isProxy
-      ? {provider:A.prov==='proxy'?undefined:A.prov, model:A.mdl, messages:[{role:'system',content:sysPrompt()},...A.msgs], stream:true, temperature:0.8, max_tokens:2000, system:sysPrompt()}
-      : {model:A.mdl, messages:[{role:'system',content:sysPrompt()},...A.msgs], stream:true, temperature:0.8, max_tokens:2000};
+      ? {model:A.mdl, messages:allMsgs, stream:true, temperature:0.8, max_tokens:2000}
+      : {model:A.mdl, messages:allMsgs, stream:true, temperature:0.8, max_tokens:2000};
     const res=await fetch(url,{
       method:'POST',
       headers:headers,

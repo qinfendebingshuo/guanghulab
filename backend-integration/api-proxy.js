@@ -40,7 +40,7 @@ const { URL } = require('url');
 // 配置
 // ═══════════════════════════════════════════════════════
 const PORT = parseInt(process.env.PROXY_PORT || '3721', 10);
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*').split(',').map(s => s.trim());
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://qinfendebingshuo.github.io,https://guanghulab.com,http://localhost:8765').split(',').map(s => s.trim());
 const RATE_LIMIT_RPM = parseInt(process.env.RATE_LIMIT_RPM || '10', 10);
 
 // 模型端点映射
@@ -243,8 +243,8 @@ function proxyStream(upstreamUrl, apiKey, requestBody, res) {
       reject(err);
     });
 
-    // Set timeout (30 seconds for connection, but streaming can be longer)
-    upstream.setTimeout(30000, () => {
+    // Connection timeout only — once response headers arrive, streaming can run longer
+    upstream.setTimeout(60000, () => {
       upstream.destroy(new Error('连接超时'));
     });
 
@@ -312,6 +312,10 @@ async function handleChat(req, res) {
     return;
   }
 
+  // Validate numeric parameters
+  const temp = typeof temperature === 'number' ? Math.max(0, Math.min(2, temperature)) : 0.8;
+  const maxTok = typeof max_tokens === 'number' ? Math.max(1, Math.min(8192, Math.floor(max_tokens))) : 2000;
+
   // Determine provider
   const prov = provider || 'deepseek';
   const config = MODEL_CONFIG[prov];
@@ -341,8 +345,8 @@ async function handleChat(req, res) {
     model: mdl,
     messages: messages,
     stream: stream !== false, // Default to streaming
-    temperature: temperature ?? 0.8,
-    max_tokens: max_tokens ?? 2000
+    temperature: temp,
+    max_tokens: maxTok
   };
 
   // If system prompt provided, prepend as system message
@@ -352,7 +356,7 @@ async function handleChat(req, res) {
 
   const upstreamUrl = config.base + '/chat/completions';
 
-  console.log(`[代理] ${clientId} → ${prov}/${mdl} (${messages.length}条消息)`);
+  console.log(`[代理] ${prov}/${mdl}`);
 
   try {
     await proxyStream(upstreamUrl, apiKey, upstreamBody, res);
