@@ -89,7 +89,7 @@ jobs:
       - name: 📥 检出代码
         uses: actions/checkout@v4
 
-      - name: 📦 确保 rsync 已安装
+      - name: 📦 确保本地 rsync 已安装
         run: |
           if ! command -v rsync &>/dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y rsync
@@ -102,6 +102,16 @@ jobs:
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 📦 确保远程服务器 rsync 已安装
+        run: |
+          echo "🔍 检查远程服务器 rsync..."
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "command -v rsync || { echo '⚠️ 远程服务器未安装 rsync，尝试安装...' && \
+              (sudo apt-get update -qq && sudo apt-get install -y rsync 2>/dev/null || \
+               sudo yum install -y rsync 2>/dev/null || \
+               echo '❌ 无法自动安装 rsync，请手动在服务器上安装: sudo apt-get install rsync'); }"
+          echo "✅ 远程服务器 rsync 检查完成"
 
       - name: 🔒 部署前安全检查
         run: |
