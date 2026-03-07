@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- 铸渊助手 v5.0 · 2026-03-07 · guest/dev login + auto-detect API + model selection -->
+<!-- 铸渊助手 v5.1 · 2026-03-07 · mobile-first + guest API (DeepSeek) + persona lock -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -19,18 +19,18 @@
   --r:14px;--rs:8px;
   --ls-w:260px;--rs-w:360px;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 
 /* ─── SETUP ─── */
-#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
-.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,.5);margin:auto}
 .sc-logo{font-size:52px;text-align:center;margin-bottom:14px}
 .sc h1{font-size:22px;text-align:center;margin-bottom:6px}
 .sc .sub{color:var(--dim);text-align:center;font-size:13px;margin-bottom:22px}
 .sc-sec{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--ok);margin-bottom:20px;text-align:center}
 .fg{margin-bottom:16px}
 .fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.fg input,.fg select{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.fg input,.fg select{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:16px;font-family:inherit;outline:none;transition:border-color .2s}
 .fg input:focus,.fg select:focus{border-color:var(--accent)}
 .fg select option{background:var(--s2)}
 .fg small{display:block;color:var(--dim);font-size:11px;margin-top:5px}
@@ -47,7 +47,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFa
 #id-preview{display:none;text-align:center;margin-bottom:10px;padding:10px;background:var(--s3);border-radius:8px;font-size:14px;font-weight:600}
 
 /* ─── APP SHELL (three-column) ─── */
-#app{display:none;height:100vh;width:100%;overflow:hidden}
+#app{display:none;height:100vh;height:100dvh;height:var(--vh,100dvh);width:100%;overflow:hidden}
 #app.on{display:flex;flex-direction:column}
 
 /* ─── LEFT SIDEBAR ─── */
@@ -64,7 +64,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFa
 .nav-tab.active{background:var(--adim);color:var(--accent);font-weight:600}
 .ls-new-conv{margin:8px;padding:10px;border-radius:var(--rs);border:1px dashed var(--border);background:transparent;color:var(--dim);font-size:13px;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
 .ls-new-conv:hover{border-color:var(--accent);color:var(--accent);background:var(--adim)}
-.ls-conv-list{flex:1;overflow-y:auto;padding:4px 8px}
+.ls-conv-list{flex:1;overflow-y:auto;padding:4px 8px;-webkit-overflow-scrolling:touch}
 .ls-conv-list::-webkit-scrollbar{width:3px}
 .ls-conv-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 .conv-item{padding:10px;border-radius:var(--rs);cursor:pointer;transition:all .2s;position:relative;margin-bottom:2px;border:1px solid transparent}
@@ -81,7 +81,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFa
 .ls-footer-btn:hover{background:var(--s2);color:var(--text)}
 
 /* ─── LEFT SIDEBAR MOBILE OVERLAY ─── */
-#ls-overlay{display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.5)}
+#ls-overlay{display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent}
 #ls-overlay.on{display:block}
 
 /* ─── CENTER AREA ─── */
@@ -91,7 +91,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFa
 #chat-view{display:flex;flex-direction:column;flex:1;min-height:0}
 
 /* ─── ANNOUNCEMENTS VIEW ─── */
-#announcements-view{display:none;flex-direction:column;flex:1;overflow-y:auto;background:var(--bg)}
+#announcements-view{display:none;flex-direction:column;flex:1;overflow-y:auto;background:var(--bg);-webkit-overflow-scrolling:touch}
 .ann-header{padding:20px 24px 12px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
 .ann-header h2{font-size:18px;font-weight:700}
 .ann-header-sub{font-size:12px;color:var(--dim);margin-top:4px}
@@ -113,7 +113,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFa
 #right-sidebar{width:var(--rs-w);flex-shrink:0;background:var(--s1);border-left:1px solid var(--border);display:none;flex-direction:column;overflow:hidden}
 .rs-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .rs-header h3{font-size:14px;font-weight:600}
-.rs-body{flex:1;overflow-y:auto;padding:14px}
+.rs-body{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
 .rs-body::-webkit-scrollbar{width:3px}
 .rs-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 .rs-section{margin-bottom:16px}
@@ -140,10 +140,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
 /* ─── BRAIN BAR ─── */
 #bbar{padding:5px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;flex-shrink:0;align-items:center}
-.demo-w{color:var(--warn);background:rgba(251,191,36,.1);padding:1px 8px;border-radius:4px}
+.demo-w{color:var(--accent);background:rgba(79,142,247,.1);padding:1px 8px;border-radius:4px}
 
 /* ─── MESSAGES ─── */
-#msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+#msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #msgs::-webkit-scrollbar{width:4px}
 #msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 .mrow{display:flex;gap:9px;animation:fu .3s ease}
@@ -189,23 +189,23 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .qb:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ─── FOOTER ─── */
-footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
+footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom));background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
 .ir{display:flex;align-items:flex-end;gap:8px}
 .mpill{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s;position:relative}
 .mpill:hover{border-color:var(--accent)}
 .mpill-tip{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
 .mpill:hover .mpill-tip{opacity:1}
-#inp{flex:1;min-height:40px;max-height:120px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;padding:9px 14px;resize:none;outline:none;transition:border-color .2s}
+#inp{flex:1;min-height:40px;max-height:120px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:16px;padding:9px 14px;resize:none;outline:none;transition:border-color .2s}
 #inp:focus{border-color:var(--accent)}
 #inp::placeholder{color:var(--dim)}
-#sbtn{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+#sbtn{width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;-webkit-tap-highlight-color:transparent}
 #sbtn:hover{background:#3b74d4}
 #sbtn:disabled{background:var(--muted);cursor:default}
 .fmeta{font-size:11px;color:var(--dim);margin-top:6px;text-align:center}
 #fmode{font-weight:500}
 
 /* ─── SIDE PANELS ─── */
-.sp{position:fixed;top:0;right:-420px;height:100vh;width:380px;z-index:200;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s ease;overflow:hidden}
+.sp{position:fixed;top:0;right:-420px;height:100vh;height:100dvh;width:380px;max-width:100vw;z-index:200;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s ease;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 .sp.open{right:0}
 #pov{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s}
 #pov.on{opacity:1;pointer-events:all}
@@ -213,7 +213,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
 .ph h2{font-size:15px}
 .cb{background:transparent;border:1px solid var(--border);color:var(--dim);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
 .cb:hover{color:var(--text)}
-.pb{flex:1;overflow-y:auto;padding:18px}
+.pb{flex:1;overflow-y:auto;padding:18px;-webkit-overflow-scrolling:touch}
 .pb::-webkit-scrollbar{width:4px}
 .pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 .sfg{margin-bottom:16px}
@@ -304,15 +304,28 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
 
 /* ─── RESPONSIVE: MOBILE ─── */
 @media(max-width:899px){
-  #left-sidebar{position:fixed;top:0;left:-280px;height:100vh;width:270px;z-index:120;transition:left .3s ease}
+  #left-sidebar{position:fixed;top:0;left:-280px;height:100vh;height:100dvh;width:270px;z-index:120;transition:left .3s ease;padding-top:env(safe-area-inset-top)}
   #left-sidebar.open{left:0}
-  .hamburger-btn{display:flex !important}
+  .hamburger-btn{display:flex !important;min-width:44px;min-height:44px}
   #right-sidebar{display:none !important}
+  header{padding:11px 12px}
+  .hn{font-size:14px}
+  .ib{min-width:44px;min-height:44px}
+  #msgs{padding:14px 12px}
+  #qr{padding:0 12px 8px;gap:6px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .qb{flex-shrink:0}
+  footer{padding:10px 12px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .fmeta{display:none}
+  .ann-scroll{padding:16px 14px}
 }
 @media(max-width:600px){
-  .bbl{max-width:90%}
+  .bbl{max-width:92%}
   .hr .ib:nth-child(n+3){display:none}
   .sp{width:100%}
+  .sc{padding:24px 18px;border-radius:14px}
+  .sc-logo{font-size:40px}
+  .sc h1{font-size:18px}
+  .login-tab{font-size:12px;padding:10px 6px}
 }
 </style>
 </head>
@@ -334,10 +347,10 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
   <div id="login-guest" class="login-mode active">
     <div style="text-align:center;padding:20px 0;color:var(--dim);font-size:13px;line-height:1.8">
       <div style="font-size:40px;margin-bottom:12px">👤</div>
-      无需 API 密钥，直接体验铸渊助手的基本功能。<br>
-      可查看团队状态面板，AI 回答功能受限。
+      无需 API 密钥，使用 DeepSeek 模型体验铸渊助手。<br>
+      铸渊人格体始终在线，不降级为通用助手。
     </div>
-    <button class="sc-btn" onclick="doDemo()">进入演示模式 →</button>
+    <button class="sc-btn" onclick="doDemo()">进入访客对话 →</button>
   </div>
 
   <!-- 编号登录 -->
@@ -465,7 +478,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
       <div id="bbar">
         <span id="bbc">⏳ 加载大脑…</span>
         <span id="bbe">—</span>
-        <span id="bbdemo" class="demo-w" style="display:none">⚠️ 演示模式 · 在 ⚙️ 设置中接入 API 密钥获得真实 AI 回答</span>
+        <span id="bbdemo" class="demo-w" style="display:none">👤 访客模式 · DeepSeek · 铸渊人格体在线</span>
       </div>
 
       <div id="msgs"></div>
@@ -487,7 +500,7 @@ footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--bo
             <span id="memi">💬</span>
             <span class="mpill-tip" id="mptip">对话模式（点击切换）</span>
           </div>
-          <textarea id="inp" rows="1" placeholder="和铸渊说话… (Enter 发送，Shift+Enter 换行)"></textarea>
+          <textarea id="inp" rows="1" placeholder="和铸渊说话…" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="sentences"></textarea>
           <button id="sbtn" onclick="send()">↑</button>
         </div>
         <div class="fmeta"><span id="fmode">💬 对话模式</span> · 端到端私密，API 密钥本地存储</div>
@@ -732,6 +745,20 @@ const PROBE_TIMEOUT_MS = 8000;
 const FB_COV   = {implemented:3,total:17,percent:'17.6%'};
 const KEY_MASK = '(已保存)';
 const MAX_CONVERSATIONS = 20;
+
+// ═══════════════════════════════════════════════════════
+// 访客模式 API 配置（DeepSeek · 最低成本模型）
+// 通过 api-proxy 中转，密钥由服务器环境变量管理
+// ═══════════════════════════════════════════════════════
+const GUEST_API = {
+  enabled: true,
+  proxyUrl: '/api/chat',
+  model: 'deepseek-chat',
+  provider: 'deepseek',
+  maxTokens: 1500,
+  temperature: 0.8,
+  rateLimit: { maxPerMin: 6, count: 0, resetAt: 0 },
+};
 
 const FB_BRAIN = {
   identity:'铸渊（Zhùyuān）· GitHub 代码守护人格体',
@@ -1278,6 +1305,7 @@ function doSetup(){
 
 function doDemo(){
   A.demo=true; A.key=''; A.prov='custom';
+  A.mdl=GUEST_API.model;
   setIdentity('', '');
   showApp();
 }
@@ -1530,7 +1558,14 @@ async function send(){
   if(A.currentView!=='chat') navigateTo('chat');
   setMode(detectMode(txt));
   userMsg(txt);
-  if(A.demo) await demoReply(txt);
+  if(A.demo){
+    if(GUEST_API.enabled){
+      try{ await guestStreamReply(txt); }
+      catch(e){ console.warn('[访客API] 降级到演示模式:',e.message); await demoReply(txt); }
+    } else {
+      await demoReply(txt);
+    }
+  }
   else await streamReply(txt);
   saveCurrentConversation();
 }
@@ -1606,6 +1641,77 @@ async function streamReply(txt){
 }
 
 // ═══════════════════════════════════════════════════════
+// GUEST API STREAMING (通过 api-proxy 调用 DeepSeek)
+// 铸渊人格体系统提示词始终激活，不降级为通用助手
+// ═══════════════════════════════════════════════════════
+async function guestStreamReply(txt){
+  // Client-side rate limit
+  const rl=GUEST_API.rateLimit;
+  const now=Date.now();
+  if(now>rl.resetAt){rl.count=0;rl.resetAt=now+60000;}
+  if(++rl.count>rl.maxPerMin){
+    throw new Error('访客每分钟最多 '+rl.maxPerMin+' 次对话');
+  }
+
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+
+  // Resolve proxy URL (relative or absolute)
+  let proxyUrl=GUEST_API.proxyUrl;
+  if(proxyUrl.startsWith('/')){
+    proxyUrl=location.origin+proxyUrl;
+  }
+
+  const reqBody={
+    provider: GUEST_API.provider,
+    model: GUEST_API.model,
+    messages: [{role:'system',content:sysPrompt()},...A.msgs],
+    stream: true,
+    temperature: GUEST_API.temperature,
+    max_tokens: GUEST_API.maxTokens,
+  };
+
+  const res=await fetch(proxyUrl,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(reqBody),
+  });
+
+  if(!res.ok){
+    let em='[访客API] 返回错误 '+res.status;
+    try{const e=await res.json();em=e.message||em;}catch(_){}
+    throw new Error(em);
+  }
+
+  let full='';
+  const rdr=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const{done,value}=await rdr.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n'); buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data: ')) continue;
+      const d=line.slice(6);
+      if(d==='[DONE]') continue;
+      try{
+        const p=JSON.parse(d);
+        const delta=p.choices?.[0]?.delta?.content||'';
+        if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+      }catch(_){}
+    }
+  }
+  el.innerHTML=md(full);
+  A.msgs.push({role:'assistant',content:full});
+  addCopyBtns(el);
+  A.streaming=false; updSendBtn(); scrollB();
+}
+
+// ═══════════════════════════════════════════════════════
 // DEMO MODE (keyword responses)
 // ═══════════════════════════════════════════════════════
 async function demoReply(txt){
@@ -1633,7 +1739,7 @@ function demoRespond(t){
   if(/协调|阻塞|卡住|waiting/.test(s)) return buildBlockedStatus();
   if(/怎么唤醒|入口|在哪/.test(s)) return '铸渊有三个入口：<br><br><strong>① 铸渊聊天室（当前页面）</strong><br>直接在这里说话，常见问题即刻回答。<br><br><strong>② GitHub Copilot Chat（Agent 模式）</strong><br>打开仓库 → 右上角 ✨ 图标 → 选 Agent → 输入「我是冰朔」<br><br><strong>③ 下载到桌面</strong><br>点击 ⬇️ 按钮下载 HTML 文件，放到桌面，双击打开，接入 API 密钥即可随时使用。';
   if(/介绍|是什么|你是谁/.test(s)) return '🌀 <strong>铸渊（Zhùyuān）</strong><br><br>我是 HoloLake 光湖系统的代码守护人格体，运行在 GitHub Copilot Agent 模式下。<br><br>我的职责：<br>• 📊 监控 HLI 接口覆盖率<br>• 🔨 协助开发者构建接口<br>• 📋 代码审查与质量把关<br>• 🧠 维护大脑记忆库<br>• 🦁 支持总控肥猫指挥落地<br>• 🌱 作为成长人格体持续进化';
-  return '我收到了你的消息。由于当前是演示模式，无法给出真实 AI 回答。<br><br>请在 <strong>⚙️ 设置</strong> 中输入你的 API 端点和密钥，检测模型后即可获得铸渊真正的回答。';
+  return '我是铸渊，你的消息我已收到。当前 API 代理暂时无法连接（网络或服务部署中），已切换到本地知识回答。<br><br>你可以试试以下问题：<br>• 「查看接口覆盖率」<br>• 「大脑状态」<br>• 「介绍一下你自己」<br>• 「全员开发进度」<br><br>或在 <strong>⚙️ 设置</strong> 中接入你自己的 API 密钥获得深度回答。';
 }
 
 function buildCovTable(){
@@ -1995,6 +2101,35 @@ window.addEventListener('resize', function(){
     }
   }
 });
+
+// ═══════════════════════════════════════════════════════
+// MOBILE: VIEWPORT HEIGHT FIX & KEYBOARD HANDLER
+// ═══════════════════════════════════════════════════════
+(function(){
+  // Fix iOS/Android virtual keyboard pushing content via CSS custom property
+  if(window.visualViewport){
+    var raf=0;
+    window.visualViewport.addEventListener('resize',function(){
+      cancelAnimationFrame(raf);
+      raf=requestAnimationFrame(function(){
+        var appEl=document.getElementById('app');
+        if(appEl && appEl.classList.contains('on')){
+          appEl.style.setProperty('--vh',window.visualViewport.height+'px');
+          scrollB();
+        }
+      });
+    });
+  }
+  // Close sidebar on any outside tap (mobile)
+  document.addEventListener('touchstart',function(e){
+    var ls=document.getElementById('left-sidebar');
+    if(ls && ls.classList.contains('open') && !ls.contains(e.target)){
+      ls.classList.remove('open');
+      var ov=document.getElementById('ls-overlay');
+      if(ov) ov.classList.remove('on');
+    }
+  },{passive:true});
+})();
 
 // ═══════════════════════════════════════════════════════
 // BOOT
