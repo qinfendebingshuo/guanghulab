@@ -23,10 +23,13 @@ jobs:
       - name: 铸渊自检
         run: node scripts/zhuyuan-daily-selfcheck.js
 
+      - name: 更新图书馆目录
+        run: node scripts/generate-repo-map.js
+
       - name: 提交自检结果
         run: |
           git config user.name "铸渊 (ZhùYuān)"
           git config user.email "zhuyuan@guanghulab.com"
-          git add .github/persona-brain/
+          git add .github/persona-brain/ .github/brain/repo-map.json .github/brain/repo-snapshot.md
           git diff --cached --quiet || git commit -m "🔍 铸渊每日自检 · $(date +%Y-%m-%d)"
           git push

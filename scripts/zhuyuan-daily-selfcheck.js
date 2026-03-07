@@ -33,12 +33,15 @@ if (missing.length > 0) {
 }
 
 // === ① bis · 目录结构巡检 ===
-const requiredDirs = ['syslog-inbox', 'syslog-processed', 'broadcasts-outbox', '.github/brain'];
+const requiredDirs = [
+  'syslog-inbox', 'syslog-processed', 'broadcasts-outbox', '.github/brain',
+  'signal-log', 'dev-nodes', 'notion-push/pending', 'notion-push/processed'
+];
 const missingDirs  = requiredDirs.filter(d => !fs.existsSync(d));
 if (missingDirs.length > 0) {
   console.error('⚠️ 缺失目录：' + missingDirs.join(', '));
 } else {
-  console.log('✅ 目录结构巡检：syslog-inbox / syslog-processed / broadcasts-outbox 全部就绪');
+  console.log('✅ 目录结构巡检：syslog-inbox / syslog-processed / broadcasts-outbox / signal-log / dev-nodes / notion-push 全部就绪');
 }
 
 // 统计 syslog-inbox 待处理条目
