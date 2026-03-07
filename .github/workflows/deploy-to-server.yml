@@ -213,7 +213,7 @@ jobs:
               if [ -f '${{ secrets.DEPLOY_PATH }}/backend/server.js' ]; then
                 echo '📦 安装 backend 依赖...'
                 cd '${{ secrets.DEPLOY_PATH }}/backend'
-                npm install --production 2>/dev/null || echo '⚠️ backend npm install 失败'
+                npm install --production || echo '⚠️ backend npm install 失败'
                 echo '🔄 重启 backend 服务...'
                 pm2 restart guanghulab-backend 2>/dev/null || \
                   pm2 start server.js --name guanghulab-backend 2>/dev/null || \
@@ -224,14 +224,14 @@ jobs:
               if [ -f '${{ secrets.DEPLOY_PATH }}/src/index.js' ]; then
                 echo '📦 安装 src 依赖...'
                 cd '${{ secrets.DEPLOY_PATH }}'
-                npm install --production 2>/dev/null || echo '⚠️ src npm install 失败'
+                npm install --production || echo '⚠️ src npm install 失败'
                 echo '🔄 重启 HLI 服务...'
                 pm2 restart guanghulab 2>/dev/null || \
                   pm2 start src/index.js --name guanghulab 2>/dev/null || \
                   echo '⚠️ src pm2 启动失败'
               fi
 
-              pm2 save 2>/dev/null || true
+              pm2 save || echo '⚠️ pm2 save 失败，重启后进程可能不会自动启动'
               echo '✅ 后端服务部署完成'
             "
 
@@ -247,7 +247,8 @@ jobs:
                 exit 0
               fi
 
-              # 更新 root 路径（从旧的 status-board 子目录改为站点根目录）
+              # 一次性迁移：更新 root 路径（从旧的 status-board 子目录改为站点根目录）
+              # 迁移完成后此检查自动无操作
               if grep -q 'root.*guanghulab/status-board' /etc/nginx/sites-available/default 2>/dev/null || \
                  grep -q 'root.*guanghulab/status-board' /etc/nginx/conf.d/*.conf 2>/dev/null; then
                 echo '🔄 更新 Nginx root 路径...'
