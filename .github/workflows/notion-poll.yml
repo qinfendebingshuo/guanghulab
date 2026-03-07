@@ -21,6 +21,7 @@ jobs:
           node-version: '20'
 
       - name: 轮询工单簿 + 处理 + 回写
+        id: poll
         env:
           NOTION_API_TOKEN:  ${{ secrets.NOTION_API_TOKEN }}
           WORKORDER_DB_ID:   ${{ vars.WORKORDER_DB_ID }}
@@ -28,6 +29,7 @@ jobs:
         run: node scripts/notion-signal-bridge.js poll
 
       - name: 提交信号日志
+        if: success()
         run: |
           git config user.name "铸渊 (ZhùYuān)"
           git config user.email "zhuyuan@guanghulab.com"

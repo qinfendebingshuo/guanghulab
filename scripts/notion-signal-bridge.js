@@ -125,7 +125,7 @@ function generateSignalId() {
 function loadSignalIndex() {
   if (!fs.existsSync(SIGNAL_INDEX_PATH)) {
     return {
-      description: '铸渊信号日志目录索引 · AGE OS Notion 信号桥协议',
+      description: '铸渊信号日志目录索引 · AGE OS 信号协议（Notion API 直连）',
       last_updated: new Date().toISOString(),
       total_count: 0,
       signals: []
