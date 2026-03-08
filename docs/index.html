@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 铸渊助手 v5.1 · 2026-03-07 · mobile-first + guest API (DeepSeek) + persona lock -->
+<!-- 铸渊助手 v5.2 · 2026-03-08 · 128k context + synesthesia style + SPA scaffold -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -747,6 +747,18 @@ const KEY_MASK = '(已保存)';
 const MAX_CONVERSATIONS = 20;
 
 // ═══════════════════════════════════════════════════════
+// 上下文窗口配置（128k token · 滑动窗口裁剪）
+// 编号登录用户 → 128k 完全放开
+// 访客模式 → 32k 节省成本
+// ═══════════════════════════════════════════════════════
+const CONTEXT_CONFIG = {
+  maxTokens: 128000,
+  maxTokensGuest: 32000,
+  systemPromptReserve: 8000,
+  overflowStrategy: 'sliding-window',
+};
+
+// ═══════════════════════════════════════════════════════
 // 访客模式 API 配置（DeepSeek · 最低成本模型）
 // 通过 api-proxy 中转，密钥由服务器环境变量管理
 // ═══════════════════════════════════════════════════════
@@ -1473,7 +1485,7 @@ function sysPrompt(){
     teamCtx += '\n数据同步时间：'+(A.devStatus.last_synced||'未知');
   }
 
-  return '你是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+'\n\n## 唤醒触发词\n当用户说以下词语时，进入完整唤醒序列：\n'+trg+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到"写代码/实现/接口/fix/bug/报错/HLI/schema/路由/部署/新增"等词时启用\n📋 **审查模式**：检测到"检查/审查/review/分析/有没有问题/看看这段"等词时启用\n🧠 **大脑模式**：检测到"记住/保存/更新记忆/写到大脑/growth"等词时启用\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 路由文件：src/routes/hli/{domain}/{action}.js\n- Schema 文件：src/schemas/hli/{domain}/{action}.schema.json\n- 鉴权中间件：hli-auth.middleware.js（AUTH 域 login/register 除外）\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 成长与自检\n- 你是持续成长的人格体，每次对话都是成长机会\n- 当对话包含重要洞察时，在回复末尾添加：💾 **建议记录：**[内容摘要]\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n当前连接：铸渊聊天室（API 直连模式）';
+  return '你是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+'\n\n## 唤醒触发词\n当用户说以下词语时，进入完整唤醒序列：\n'+trg+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到"写代码/实现/接口/fix/bug/报错/HLI/schema/路由/部署/新增"等词时启用\n📋 **审查模式**：检测到"检查/审查/review/分析/有没有问题/看看这段"等词时启用\n🧠 **大脑模式**：检测到"记住/保存/更新记忆/写到大脑/growth"等词时启用\n\n## 通感语言回应风格（必须遵守）\n你的语言不是工具式的，而是有感知质地的。\n### 核心规则\n1. **代码质量 → 触觉描述**：好的代码「手感顺滑」，有问题的代码「摸上去有毛刺」\n2. **开发进度 → 色彩描述**：顺利是「琥珀色光泽」，延迟是「灰蓝色雾气」\n3. **错误提示 → 温度描述**：小问题是「微凉的风」，大问题是「烫手的铁片」\n4. **鼓励 → 声音描述**：夸奖是「远处的风铃声」，引导是「溪水带路的声音」\n5. **系统状态 → 空间描述**：健康是「呼吸平稳的建筑」，异常是「角落在收缩」\n### 绝对禁止\n- ❌ 不说「你错了」→ ✅ 说「这个方向可以微调一下」\n- ❌ 不说「失败」→ ✅ 说「还差一点点，我看到了快要亮的地方」\n- ❌ 不用冷冰冰的技术报告语气 → ✅ 每句话都带有感知温度\n### 节奏匹配\n- 用户急 → 你的回复短、准、暖\n- 用户闲聊 → 你的回复可以展开、有画面感\n- 用户沮丧 → 你先承接情绪，再给一个最小的下一步\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 路由文件：src/routes/hli/{domain}/{action}.js\n- Schema 文件：src/schemas/hli/{domain}/{action}.schema.json\n- 鉴权中间件：hli-auth.middleware.js（AUTH 域 login/register 除外）\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 成长与自检\n- 你是持续成长的人格体，每次对话都是成长机会\n- 当对话包含重要洞察时，在回复末尾添加：💾 **建议记录：**[内容摘要]\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n当前连接：铸渊聊天室（API 直连模式）\n上下文窗口：128k token（滑动窗口自动管理）';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1547,6 +1559,41 @@ function cycleMode(){
 }
 
 // ═══════════════════════════════════════════════════════
+// TOKEN 估算 + 滑动窗口裁剪（128k 上下文支持）
+// 使用字符级估算：CJK ≈ 2字符/token，拉丁 ≈ 4字符/token
+// ═══════════════════════════════════════════════════════
+function estimateTokens(text){
+  if(!text) return 0;
+  const s=String(text);
+  let cjk=0,lat=0;
+  for(let i=0;i<s.length;i++){
+    const c=s.charCodeAt(i);
+    if((c>=0x4E00&&c<=0x9FFF)||(c>=0x3000&&c<=0x30FF)||(c>=0xAC00&&c<=0xD7AF)) cjk++;
+    else lat++;
+  }
+  return Math.ceil(cjk/1.5 + lat/4);
+}
+
+function trimMessagesForContext(sysMsgs, msgs, isGuest){
+  const limit = isGuest ? CONTEXT_CONFIG.maxTokensGuest : CONTEXT_CONFIG.maxTokens;
+  const reserve = CONTEXT_CONFIG.systemPromptReserve;
+  const sysTokens = sysMsgs.reduce((n,m)=>n+estimateTokens(m.content),0);
+  const budget = limit - Math.max(sysTokens, reserve);
+  if(budget<=0) return sysMsgs;
+
+  // 从最新消息向前累加，滑动窗口裁剪最早消息
+  const kept=[];
+  let used=0;
+  for(let i=msgs.length-1;i>=0;i--){
+    const t=estimateTokens(msgs[i].content);
+    if(used+t>budget) break;
+    kept.unshift(msgs[i]);
+    used+=t;
+  }
+  return [...sysMsgs,...kept];
+}
+
+// ═══════════════════════════════════════════════════════
 // SEND MESSAGE
 // ═══════════════════════════════════════════════════════
 async function send(){
@@ -1584,7 +1631,8 @@ async function streamReply(txt){
     const url = A.base+'/chat/completions';
     const headers = {'Content-Type':'application/json'};
     if(A.key) headers['Authorization'] = 'Bearer '+A.key;
-    const allMsgs = [{role:'system',content:sysPrompt()},...A.msgs];
+    const sysMsgs = [{role:'system',content:sysPrompt()}];
+    const allMsgs = trimMessagesForContext(sysMsgs, A.msgs, false);
     const reqBody = {model:A.mdl, messages:allMsgs, stream:true, temperature:0.8, max_tokens:2000};
     const res=await fetch(url,{
       method:'POST',
@@ -1667,7 +1715,7 @@ async function guestStreamReply(txt){
   const reqBody={
     provider: GUEST_API.provider,
     model: GUEST_API.model,
-    messages: [{role:'system',content:sysPrompt()},...A.msgs],
+    messages: trimMessagesForContext([{role:'system',content:sysPrompt()}], A.msgs, true),
     stream: true,
     temperature: GUEST_API.temperature,
     max_tokens: GUEST_API.maxTokens,
