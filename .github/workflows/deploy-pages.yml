@@ -3,8 +3,7 @@ name: 🌀 部署铸渊聊天室 (GitHub Pages)
 on:
   push:
     branches:
-      - main
-      - copilot/**    # Copilot Agent 功能分支可直接部署预览，PR 合并后自动失效
+      - main          # 仅 main 分支触发生产部署
     paths:
       - 'docs/**'
       - '.github/brain/**'

@@ -17,7 +17,12 @@
     "broadcast:distribute": "node scripts/distribute-broadcasts.js",
     "esp:process": "node scripts/esp-email-processor.js",
     "psp:inspect": "node scripts/psp-inspection.js",
-    "repo:map": "node scripts/generate-repo-map.js"
+    "repo:map": "node scripts/generate-repo-map.js",
+    "deploy:agent": "node scripts/bingshuo-deploy-agent.js",
+    "module:protocol": "node scripts/zhuyuan-module-protocol.js",
+    "proxy:start": "node backend-integration/api-proxy.js",
+    "notion:poll": "node scripts/notion-signal-bridge.js poll",
+    "notion:health": "node scripts/notion-signal-bridge.js health"
   },
   "dependencies": {
     "imapflow": "^1.2.12",

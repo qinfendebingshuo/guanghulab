@@ -1,20 +1,20 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-07T05:59:15.498Z",
+  "generated_at": "2026-03-08T02:10:17.144Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 14,
-    "total_scripts": 15,
+    "total_workflows": 18,
+    "total_scripts": 18,
     "total_dev_nodes": 8,
     "hli_interfaces": 17,
     "hli_implemented": 3,
     "hli_coverage_pct": "18%",
     "last_ci_run": "2026-03-05T10:30:46.894Z",
-    "memory_last_updated": "2026-03-07T04:45:55.670Z"
+    "memory_last_updated": "2026-03-07T08:41:28.888Z"
   },
   "zones": [
     {
@@ -43,6 +43,9 @@
           "file": "memory.json"
         },
         {
+          "file": "module-protocol.md"
+        },
+        {
           "file": "repo-map.json"
         },
         {
@@ -55,7 +58,7 @@
           "file": "wake-protocol.md"
         }
       ],
-      "item_count": 7
+      "item_count": 8
     },
     {
       "zone_id": "PERSONA_BRAIN",
@@ -103,6 +106,15 @@
       ],
       "shelves": [
         {
+          "file": "bingshuo-deploy-agent.yml",
+          "name": "\"🧊 冰朔人格体 · 自动部署诊断\"",
+          "triggers": [
+            "issues",
+            "issue_comment",
+            "manual"
+          ]
+        },
+        {
           "file": "brain-sync.yml",
           "name": "铸渊 Brain Sync",
           "triggers": [
@@ -144,6 +156,14 @@
           ]
         },
         {
+          "file": "deploy-to-server.yml",
+          "name": "\"🚀 铸渊 CD · 自动部署到 guanghulab.com\"",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
           "file": "distribute-broadcasts.yml",
           "name": "铸渊 · 广播分发",
           "triggers": [
@@ -153,7 +173,7 @@
         },
         {
           "file": "esp-signal-processor.yml",
-          "name": "铸渊 · ESP 邮件信号处理器",
+          "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
           "triggers": [
             "schedule(*/30 * * * *)",
             "manual"
@@ -176,10 +196,26 @@
           ]
         },
         {
+          "file": "notion-poll.yml",
+          "name": "铸渊 · Notion 工单轮询",
+          "triggers": [
+            "schedule(*/15 * * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "psp-daily-inspection.yml",
           "name": "铸渊 · PSP 分身巡检",
           "triggers": [
             "schedule(0 1 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "staging-preview.yml",
+          "name": "\"🔍 铸渊预演部署 (Staging Preview)\"",
+          "triggers": [
+            "pull_request",
             "manual"
           ]
         },
@@ -216,7 +252,7 @@
           ]
         }
       ],
-      "item_count": 14
+      "item_count": 18
     },
     {
       "zone_id": "SCRIPTS",
@@ -233,6 +269,9 @@
         "runner"
       ],
       "shelves": [
+        {
+          "file": "bingshuo-deploy-agent.js"
+        },
         {
           "file": "contract-check.js"
         },
@@ -258,6 +297,9 @@
           "file": "notion-bridge.js"
         },
         {
+          "file": "notion-signal-bridge.js"
+        },
+        {
           "file": "process-broadcasts.js"
         },
         {
@@ -277,9 +319,12 @@
         },
         {
           "file": "zhuyuan-issue-reply.js"
+        },
+        {
+          "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 15
+      "item_count": 18
     },
     {
       "zone_id": "SRC",
@@ -386,8 +431,8 @@
         {
           "module_id": "M18",
           "dir": "m18-health-check",
-          "files": 0,
-          "has_readme": false
+          "files": 3,
+          "has_readme": true
         }
       ],
       "item_count": 10
@@ -629,13 +674,22 @@
       ],
       "shelves": [
         {
+          "file": "CNAME"
+        },
+        {
           "file": "HoloLake-Era-OS-Modules.md"
         },
         {
+          "file": "README.md"
+        },
+        {
           "file": "index.html"
+        },
+        {
+          "file": "使用指南.md"
         }
       ],
-      "item_count": 2
+      "item_count": 5
     },
     {
       "zone_id": "TESTS",
@@ -848,6 +902,9 @@
     "growth-log": [
       "BRAIN::growth-log.md"
     ],
+    "module-protocol": [
+      "BRAIN::module-protocol.md"
+    ],
     "repo-map": [
       "BRAIN::repo-map.json"
     ],
@@ -903,6 +960,10 @@
     "cron": [
       "WORKFLOWS"
     ],
+    "bingshuo-deploy-agent": [
+      "WORKFLOWS::bingshuo-deploy-agent.yml",
+      "SCRIPTS::bingshuo-deploy-agent.js"
+    ],
     "brain-sync": [
       "WORKFLOWS::brain-sync.yml"
     ],
@@ -918,6 +979,9 @@
     "deploy-pages": [
       "WORKFLOWS::deploy-pages.yml"
     ],
+    "deploy-to-server": [
+      "WORKFLOWS::deploy-to-server.yml"
+    ],
     "distribute-broadcasts": [
       "WORKFLOWS::distribute-broadcasts.yml",
       "SCRIPTS::distribute-broadcasts.js"
@@ -932,8 +996,14 @@
     "hli-contract-check": [
       "WORKFLOWS::hli-contract-check.yml"
     ],
+    "notion-poll": [
+      "WORKFLOWS::notion-poll.yml"
+    ],
     "psp-daily-inspection": [
       "WORKFLOWS::psp-daily-inspection.yml"
+    ],
+    "staging-preview": [
+      "WORKFLOWS::staging-preview.yml"
     ],
     "syslog-pipeline": [
       "WORKFLOWS::syslog-pipeline.yml"
@@ -986,6 +1056,9 @@
     "notion-bridge": [
       "SCRIPTS::notion-bridge.js"
     ],
+    "notion-signal-bridge": [
+      "SCRIPTS::notion-signal-bridge.js"
+    ],
     "process-broadcasts": [
       "SCRIPTS::process-broadcasts.js"
     ],
@@ -1000,6 +1073,9 @@
     ],
     "update-memory": [
       "SCRIPTS::update-memory.js"
+    ],
+    "zhuyuan-module-protocol": [
+      "SCRIPTS::zhuyuan-module-protocol.js"
     ],
     "hli": [
       "SRC"
@@ -1224,7 +1300,8 @@
       "SYSLOG"
     ],
     "readme": [
-      "SYSLOG::README.md"
+      "SYSLOG::README.md",
+      "DOCS::README.md"
     ],
     "docs": [
       "DOCS"
@@ -1247,8 +1324,14 @@
     "助手": [
       "DOCS"
     ],
+    "cname": [
+      "DOCS::CNAME"
+    ],
     "hololake-era-os-modules": [
       "DOCS::HoloLake-Era-OS-Modules.md"
+    ],
+    "使用指南": [
+      "DOCS::使用指南.md"
     ],
     "test": [
       "TESTS"

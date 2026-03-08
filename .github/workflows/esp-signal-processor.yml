@@ -1,9 +1,11 @@
-name: 铸渊 · ESP 邮件信号处理器
+# ⚠️ 已暂停：邮件通信已迁移到 Notion API 直连（见 notion-poll.yml）
+# 保留文件备用，不删除。邮件格式规范文档和 signal-log/ 结构继续沿用。
+name: 铸渊 · ESP 邮件信号处理器（已暂停）
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'   # 每30分钟执行一次
-  workflow_dispatch:           # 手动触发
+  # schedule:
+  #   - cron: '*/30 * * * *'   # 每30分钟执行一次（已暂停）
+  workflow_dispatch:           # 手动触发（保留，紧急时可手动运行）
 
 jobs:
   esp-process:

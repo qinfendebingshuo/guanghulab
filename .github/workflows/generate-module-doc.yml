@@ -49,7 +49,12 @@ jobs:
             echo "📋 文档无变化，跳过提交"
           else
             git commit -m "📋 自动更新 HoloLake Era 模块文档 · $(date -u +%Y-%m-%d\ %H:%M\ UTC)"
-            git push
+            git pull --rebase origin main || echo "⚠️ rebase 失败（可能有冲突），尝试直接推送..."
+            git push || {
+              echo "⚠️ 推送失败，尝试重新拉取后再推送..."
+              git pull --rebase origin main
+              git push
+            }
           fi
 
   notify-collaborator:
