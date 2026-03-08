@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake 动态漫制作系统 - 环节5</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部工具栏 -->
+        <header id="toolbar">
+            <h1>🎬 HoloLake 动态漫制作系统</h1>
+            <div class="toolbar-actions">
+                <button onclick="exportScene()">📤 导出JSON</button>
+                <button onclick="importScene()">📥 导入JSON</button>
+                <button onclick="exportScreenshot()">📷 截图</button>
+                <input type="file" id="import-file" style="display:none" accept=".json">
+            </div>
+        </header>
+
+        <!-- 主工作区 -->
+        <main id="workspace">
+            <!-- 左侧素材面板 -->
+            <aside id="assets-panel">
+                <h3>🎨 素材库</h3>
+                <div class="asset-category">
+                    <h4>角色</h4>
+                    <div class="asset-items">
+                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😊">😊 开心</div>
+                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😢">😢 难过</div>
+                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😠">😠 生气</div>
+                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😴">😴 睡觉</div>
+                    </div>
+                </div>
+                <div class="asset-category">
+                    <h4>物品</h4>
+                    <div class="asset-items">
+                        <div class="asset-item" draggable="true" data-type="item" data-emoji="🌸">🌸 花</div>
+                        <div class="asset-item" draggable="true" data-type="item" data-emoji="⭐">⭐ 星星</div>
+                        <div class="asset-item" draggable="true" data-type="item" data-emoji="💎">💎 宝石</div>
+                        <div class="asset-item" draggable="true" data-type="item" data-emoji="📖">📖 书</div>
+                    </div>
+                </div>
+                <div class="asset-category">
+                    <h4>场景</h4>
+                    <div class="asset-items">
+                        <div class="asset-item" draggable="true" data-type="background" data-emoji="🏠">🏠 房子</div>
+                        <div class="asset-item" draggable="true" data-type="background" data-emoji="🌳">🌳 树林</div>
+                        <div class="asset-item" draggable="true" data-type="background" data-emoji="🏔️">🏔️ 山</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 中间画布区域 -->
+            <section id="canvas-container">
+                <div id="scene-tabs">
+                    <div id="tabs-list"></div>
+                    <button onclick="addScene()" id="add-scene-btn">+ 新场景</button>
+                </div>
+                <div id="canvas-wrapper">
+                    <canvas id="main-canvas" width="800" height="600"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部时间轴面板 -->
+        <footer id="timeline-panel">
+            <div id="playback-controls">
+                <button onclick="stopAnimation()" title="停止(回到第1帧)">⏹️</button>
+                <button onclick="togglePlayback()" id="btn-play" title="播放/暂停">▶️</button>
+                <span id="frame-counter">帧 1/1</span>
+                <label>速度:
+                    <input type="range" id="fps-slider" min="1" max="12" value="4" oninput="setFPS(this.value)">
+                    <span id="fps-display">4 FPS</span>
+                </label>
+            </div>
+            <div id="timeline-frames"></div>
+            <div id="timeline-actions">
+                <button onclick="addFrame()" title="添加新帧(复制当前帧)">➕ 新帧</button>
+                <button onclick="deleteFrame()" title="删除当前帧">🗑️ 删帧</button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
