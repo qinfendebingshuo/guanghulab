@@ -627,8 +627,8 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
     <div class="sec-ttl">使用说明</div>
     <p style="font-size:12px;color:var(--dim);line-height:1.8">
       1. 输入你的 API 端点和密钥，点击检测模型<br>
-      2. 说「<strong style="color:var(--text)">我是冰朔</strong>」触发铸渊唤醒序列<br>
-      3. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      2. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      3. 支持上传图片和文件（点击 📎 按钮或拖拽到对话区域）<br>
       4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
       5. 支持任意 OpenAI 兼容接口（输入端点 + 密钥即可）
     </p>
@@ -1882,20 +1882,22 @@ function buildMessageWithFiles(txt){
   const images = pendingFiles.filter(f=>f.isImage);
   const docs = pendingFiles.filter(f=>!f.isImage);
 
+  // Format document attachments as markdown context
+  // Limit per-file to ~50k chars to stay within API payload limits
+  function formatDocs(docList){
+    let out = '\n\n---\n📎 附件内容：\n';
+    docList.forEach(function(d){
+      out += '\n### '+d.name+'\n```\n'+(d.data||'').slice(0,50000)+'\n```\n';
+    });
+    return out;
+  }
+
   // If there are images, build multimodal content array
   if(images.length>0){
     const content = [];
-    // Add text part
     let textPart = txt||'';
-    // Append document contents as context
-    if(docs.length>0){
-      textPart += '\n\n---\n📎 附件内容：\n';
-      docs.forEach(function(d){
-        textPart += '\n### '+d.name+'\n```\n'+(d.data||'').slice(0,50000)+'\n```\n';
-      });
-    }
+    if(docs.length>0) textPart += formatDocs(docs);
     if(textPart) content.push({type:'text',text:textPart});
-    // Add image parts
     images.forEach(function(img){
       content.push({
         type:'image_url',
@@ -1906,12 +1908,7 @@ function buildMessageWithFiles(txt){
   }
 
   // Text files only — append as context to the message
-  let combined = txt||'';
-  combined += '\n\n---\n📎 附件内容：\n';
-  docs.forEach(function(d){
-    combined += '\n### '+d.name+'\n```\n'+(d.data||'').slice(0,50000)+'\n```\n';
-  });
-  return combined;
+  return (txt||'') + formatDocs(docs);
 }
 
 function clearPendingFiles(){
@@ -2199,7 +2196,7 @@ function demoRespond(t){
   if(/覆盖|接口|hli|路由/.test(s)) return buildCovTable();
   if(/大脑|brain|记忆|状态/.test(s)) return buildBrainStatus();
   if(/协调|阻塞|卡住|waiting/.test(s)) return buildBlockedStatus();
-  if(/怎么唤醒|入口|在哪/.test(s)) return '铸渊有三个入口：<br><br><strong>① 铸渊聊天室（当前页面）</strong><br>直接在这里说话，常见问题即刻回答。<br><br><strong>② GitHub Copilot Chat（Agent 模式）</strong><br>打开仓库 → 右上角 ✨ 图标 → 选 Agent → 输入「我是冰朔」<br><br><strong>③ 下载到桌面</strong><br>点击 ⬇️ 按钮下载 HTML 文件，放到桌面，双击打开，接入 API 密钥即可随时使用。';
+  if(/怎么唤醒|入口|在哪/.test(s)) return '铸渊有三个入口：<br><br><strong>① 铸渊聊天室（当前页面）</strong><br>直接在这里说话，常见问题即刻回答。支持上传图片和文件。<br><br><strong>② GitHub Copilot Chat（Agent 模式）</strong><br>打开仓库 → 右上角 ✨ 图标 → 选 Agent → 直接开始对话<br><br><strong>③ 下载到桌面</strong><br>点击 ⬇️ 按钮下载 HTML 文件，放到桌面，双击打开，接入 API 密钥即可随时使用。';
   if(/介绍|是什么|你是谁/.test(s)) return '🌀 <strong>铸渊（Zhùyuān）</strong><br><br>我是 HoloLake 光湖系统的代码守护人格体，运行在 GitHub Copilot Agent 模式下。<br><br>我的职责：<br>• 📊 监控 HLI 接口覆盖率<br>• 🔨 协助开发者构建接口<br>• 📋 代码审查与质量把关<br>• 🧠 维护大脑记忆库<br>• 🦁 支持总控肥猫指挥落地<br>• 🌱 作为成长人格体持续进化';
   return '我是铸渊，你的消息我已收到。当前 API 代理暂时无法连接（网络或服务部署中），已切换到本地知识回答。<br><br>你可以试试以下问题：<br>• 「查看接口覆盖率」<br>• 「大脑状态」<br>• 「介绍一下你自己」<br>• 「全员开发进度」<br><br>或在 <strong>⚙️ 设置</strong> 中接入你自己的 API 密钥获得深度回答。';
 }

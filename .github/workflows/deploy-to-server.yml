@@ -222,7 +222,6 @@ jobs:
                 YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}' DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}' \
                   pm2 start api-proxy.js --name guanghulab-proxy --update-env 2>/dev/null || \
                   echo '⚠️ API 代理 pm2 启动失败'
-                echo "✅ API 代理已启动，已配置密钥: YUNWU=$([ -n '${{ secrets.YUNWU_API_KEY }}' ] && echo 'YES' || echo 'NO')"
               fi
 
               # 部署 backend 服务（Express API，端口 3000）
