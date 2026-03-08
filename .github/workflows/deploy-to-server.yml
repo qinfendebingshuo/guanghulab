@@ -219,7 +219,8 @@ jobs:
                 export YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}'
                 export DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}'
                 pm2 delete guanghulab-proxy 2>/dev/null || true
-                pm2 start api-proxy.js --name guanghulab-proxy 2>/dev/null || \
+                YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}' DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}' \
+                  pm2 start api-proxy.js --name guanghulab-proxy --update-env 2>/dev/null || \
                   echo '⚠️ API 代理 pm2 启动失败'
               fi
 
