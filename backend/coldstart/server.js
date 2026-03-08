@@ -195,6 +195,31 @@ app.get("/warmup/history", (req, res) => {
     res.json({ code: 500, msg: "fail", error: error.message });
   }
 });
+// 环节5新增：读取当前运行配置API
+app.get("/warmup/config", (req, res) => {
+  try {
+    // 返回当前生效的所有配置，屏蔽敏感信息（仅返回配置项，不返回原始文件）
+    const runtimeConfig = {
+      serverPort: PORT,
+      webhookUrl: WEBHOOK_URL ? "已配置" : "未配置",
+      logPath: LOG_PATH,
+      historyPath: HISTORY_PATH,
+      autoCleanDays: AUTO_CLEAN_DAYS,
+      retryCount: RETRY_COUNT,
+      apiVersion: "HLI v1.0",
+      serverDomain: "guanghulab.com"
+    };
+    res.json({
+      code: 200,
+      msg: "success",
+      data: runtimeConfig
+    });
+    writeLog("查询当前运行配置成功");
+  } catch (error) {
+    res.json({ code: 500, msg: "fail", error: error.message });
+    writeLog(`查询配置失败：${error.message}`);
+  }
+});
 // 启动服务+自动热身
 app.listen(PORT, () => {
   console.log(`冷启动热身服务启动成功，端口：${PORT}`);
