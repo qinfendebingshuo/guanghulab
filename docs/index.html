@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 铸渊助手 v5.1 · 2026-03-07 · mobile-first + guest API (DeepSeek) + persona lock -->
+<!-- 铸渊助手 v5.3 · 2026-03-08 · team login + server proxy + 128k context -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -339,12 +339,47 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
   <p class="sub">HoloLake · 铸渊（Zhùyuān）· 代码守护人格体</p>
 
   <div class="login-tabs">
-    <button class="login-tab active" onclick="switchLoginMode('guest')">👤 访客模式</button>
-    <button class="login-tab" onclick="switchLoginMode('dev')">🔑 编号登录</button>
+    <button class="login-tab active" onclick="switchLoginMode('team')">🏠 团队登录</button>
+    <button class="login-tab" onclick="switchLoginMode('guest')">👤 访客模式</button>
+    <button class="login-tab" onclick="switchLoginMode('dev')">🔧 自定义 API</button>
+  </div>
+
+  <!-- 团队登录（默认）：选择开发者身份即可，使用服务器端 API -->
+  <div id="login-team" class="login-mode active">
+    <div style="text-align:center;padding:12px 0;color:var(--dim);font-size:13px;line-height:1.8">
+      <div style="font-size:40px;margin-bottom:8px">🌀</div>
+      光湖团队成员专属入口。<br>
+      选择你的开发者编号，系统自动分配对应权限。<br>
+      <span style="color:var(--ok)">✅ 无需 API 密钥 · 128k 完整上下文 · 服务器端代理</span>
+    </div>
+    <div class="fg">
+      <label>选择你的身份</label>
+      <select id="tuid" onchange="onTeamSelectChange()">
+        <option value="">— 选择你的开发者编号 —</option>
+        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
+        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
+        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
+        <option value="页页">页页（DEV-001）</option>
+        <option value="燕樊">燕樊（DEV-003）</option>
+        <option value="之之">之之·秋秋（DEV-004）</option>
+        <option value="小草莓">小草莓（DEV-005）</option>
+        <option value="花尔">花尔（DEV-009）</option>
+        <option value="匆匆那年">匆匆那年（DEV-011）</option>
+        <option value="Awen">Awen（DEV-012）</option>
+        <option value="__custom__">✏️ 自定义开发者编号…</option>
+      </select>
+    </div>
+    <div id="team-custom-input" class="fg" style="display:none">
+      <label>输入你的开发者编号</label>
+      <input type="text" id="tcustom-id" placeholder="例如：DEV-013" oninput="updateTeamIdPreview()" style="text-transform:uppercase">
+      <small>输入你的开发者编号（格式：DEV-XXX），系统将自动录入</small>
+    </div>
+    <div id="team-id-preview"></div>
+    <button class="sc-btn" onclick="doTeamLogin()">进入铸渊对话 →</button>
   </div>
 
   <!-- 访客模式 -->
-  <div id="login-guest" class="login-mode active">
+  <div id="login-guest" class="login-mode">
     <div style="text-align:center;padding:20px 0;color:var(--dim);font-size:13px;line-height:1.8">
       <div style="font-size:40px;margin-bottom:12px">👤</div>
       无需 API 密钥，使用 DeepSeek 模型体验铸渊助手。<br>
@@ -353,7 +388,7 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
     <button class="sc-btn" onclick="doDemo()">进入访客对话 →</button>
   </div>
 
-  <!-- 编号登录 -->
+  <!-- 自定义 API（高级·使用自己的 API 密钥） -->
   <div id="login-dev" class="login-mode">
     <div class="sc-sec">🔒 API 密钥仅本次会话有效，关闭标签页即自动清除</div>
 
@@ -614,22 +649,22 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
       <h3>🚀 怎么开始用</h3>
       <ol class="help-steps">
         <li data-n="1" id="helpUrlStep">打开链接 <strong>https://qinfendebingshuo.github.io/guanghulab/</strong></li>
-        <li data-n="2">选择「<strong>👤 访客模式</strong>」直接体验，或「<strong>🔑 编号登录</strong>」开发者身份登录</li>
-        <li data-n="3">编号登录：选择你的身份，输入 <strong>API 端点</strong> 和 <strong>API 密钥</strong>，点「🔍 检测模型」</li>
-        <li data-n="4">系统自动检测可用模型列表，选择你要用的模型</li>
-        <li data-n="5">点「开始对话」，铸渊会针对你的身份打招呼</li>
+        <li data-n="2">选择「<strong>🏠 团队登录</strong>」选择你的开发者编号，无需 API 密钥</li>
+        <li data-n="3">系统自动使用服务器端 API 代理，128k 完整上下文</li>
+        <li data-n="4">点「进入铸渊对话」，铸渊会针对你的身份打招呼</li>
+        <li data-n="5">也可用「👤 访客模式」体验，或「🔧 自定义 API」使用自己的密钥</li>
       </ol>
     </div>
 
     <div class="help-section">
-      <h3>🔑 从哪里获取 API Key？</h3>
+      <h3>🏠 团队登录说明</h3>
       <div class="role-guide">
-        <div class="role-guide-title">推荐用云雾 AI（团队共用）</div>
-        <p>找冰朔或肥猫获取团队 Key 和端点地址，输入后点「🔍 检测模型」即可使用。</p>
+        <div class="role-guide-title">团队成员（推荐）</div>
+        <p>选择「🏠 团队登录」→ 选择你的开发者编号 → 直接进入对话。无需 API 密钥，系统使用服务器端代理。</p>
       </div>
       <div class="role-guide">
-        <div class="role-guide-title">没有 Key？用访客模式</div>
-        <p>登录页选择「👤 访客模式」进入演示，可查看团队进度面板（🦁 指挥台），AI 回答功能受限。</p>
+        <div class="role-guide-title">没有开发者编号？用访客模式</div>
+        <p>登录页选择「👤 访客模式」进入体验，可查看团队进度面板（🦁 指挥台），AI 回答功能受限。</p>
       </div>
     </div>
 
@@ -722,6 +757,9 @@ const ROLE_MAP = {
   'Awen':   {role:'dev',           title:'通知中心开发',       emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-012'},
 };
 
+// Custom dev ID format validation (DEV-001, DEV-013, etc.)
+const DEV_ID_RE = /^DEV-\d{3,}$/;
+
 // Known API endpoints for fallback auto-detect (when user doesn't provide endpoint)
 const KNOWN_ENDPOINTS = [
   {label:'云雾 AI',      base:'https://api.yunwu.ai/v1'},
@@ -747,6 +785,18 @@ const KEY_MASK = '(已保存)';
 const MAX_CONVERSATIONS = 20;
 
 // ═══════════════════════════════════════════════════════
+// 上下文窗口配置（128k token · 滑动窗口裁剪）
+// 编号登录用户 → 128k 完全放开
+// 访客模式 → 32k 节省成本
+// ═══════════════════════════════════════════════════════
+const CONTEXT_CONFIG = {
+  maxTokens: 128000,
+  maxTokensGuest: 32000,
+  systemPromptReserve: 8000,
+  overflowStrategy: 'sliding-window',
+};
+
+// ═══════════════════════════════════════════════════════
 // 访客模式 API 配置（DeepSeek · 最低成本模型）
 // 通过 api-proxy 中转，密钥由服务器环境变量管理
 // ═══════════════════════════════════════════════════════
@@ -758,6 +808,19 @@ const GUEST_API = {
   maxTokens: 1500,
   temperature: 0.8,
   rateLimit: { maxPerMin: 6, count: 0, resetAt: 0 },
+};
+
+// ═══════════════════════════════════════════════════════
+// 团队模式 API 配置（服务器端代理 · 无需用户提供 API 密钥）
+// 通过 api-proxy 中转，密钥由服务器环境变量 YUNWU_API_KEY 管理
+// 团队成员享有完整 128k 上下文 + 更高 token 限制
+// ═══════════════════════════════════════════════════════
+const TEAM_API = {
+  proxyUrl: '/api/chat',
+  model: 'deepseek-chat',
+  provider: 'yunwu',
+  maxTokens: 2000,
+  temperature: 0.8,
 };
 
 const FB_BRAIN = {
@@ -776,6 +839,7 @@ const A = {
   mdl:   ls('zy_mdl')||'',
   prov:  'custom',
   demo:  false,
+  teamMode: ls('zy_teammode')==='1',
   brain: null,
   routing: null,
   devStatus: null,
@@ -1195,11 +1259,15 @@ function initSetupUI(){
 function switchLoginMode(mode){
   document.querySelectorAll('.login-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('.login-mode').forEach(function(m){m.classList.remove('active');});
-  if(mode==='guest'){
-    document.querySelector('.login-tab:first-child').classList.add('active');
+  var tabs = document.querySelectorAll('.login-tab');
+  if(mode==='team'){
+    tabs[0].classList.add('active');
+    document.getElementById('login-team').classList.add('active');
+  } else if(mode==='guest'){
+    tabs[1].classList.add('active');
     document.getElementById('login-guest').classList.add('active');
   } else {
-    document.querySelector('.login-tab:last-child').classList.add('active');
+    tabs[2].classList.add('active');
     document.getElementById('login-dev').classList.add('active');
   }
 }
@@ -1304,10 +1372,145 @@ function doSetup(){
 }
 
 function doDemo(){
-  A.demo=true; A.key=''; A.prov='custom';
+  A.demo=true; A.teamMode=false; A.key=''; A.prov='custom';
   A.mdl=GUEST_API.model;
+  lss('zy_teammode','0');
   setIdentity('', '');
   showApp();
+}
+
+function onTeamSelectChange(){
+  var sel = document.getElementById('tuid').value;
+  var customBox = document.getElementById('team-custom-input');
+  if(sel==='__custom__'){
+    customBox.style.display='';
+    document.getElementById('tcustom-id').value='';
+    document.getElementById('tcustom-id').focus();
+  } else {
+    customBox.style.display='none';
+  }
+  updateTeamIdPreview();
+}
+
+function updateTeamIdPreview(){
+  var sel = document.getElementById('tuid').value;
+  var el = document.getElementById('team-id-preview');
+  if(!el) return;
+
+  // Custom dev ID input mode
+  if(sel==='__custom__'){
+    var raw = (document.getElementById('tcustom-id').value||'').trim().toUpperCase();
+    if(!raw){
+      el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px;color:var(--dim)">'
+        + '✏️ 请输入你的开发者编号（格式：DEV-XXX）'
+        + '</div>';
+      return;
+    }
+    // Validate format
+    if(DEV_ID_RE.test(raw)){
+      el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px">'
+        + '💻 <strong>'+esc(raw)+'</strong> · 自定义开发者'
+        + '<br><span style="color:var(--ok);font-size:12px">✅ 使用服务器端 API 代理 · 128k 上下文 · 首次登录将自动注册</span>'
+        + '</div>';
+    } else {
+      el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px">'
+        + '<span style="color:var(--err)">⚠️ 编号格式不正确，请使用 DEV-XXX 格式（如 DEV-013）</span>'
+        + '</div>';
+    }
+    return;
+  }
+
+  // Normal dropdown selection mode
+  if(!sel){ el.innerHTML=''; return; }
+  var meta = ROLE_MAP[sel];
+  if(meta){
+    el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px">'
+      + meta.emoji+' <strong>'+esc(sel)+'</strong> · '+meta.title
+      + (meta.devId ? ' · <code>'+meta.devId+'</code>' : '')
+      + '<br><span style="color:var(--ok);font-size:12px">✅ 使用服务器端 API 代理 · 128k 上下文 · 无需密钥</span>'
+      + '</div>';
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function doTeamLogin(){
+  var sel = document.getElementById('tuid').value;
+  var un = sel;
+
+  // Handle custom dev ID
+  if(sel==='__custom__'){
+    var raw = (document.getElementById('tcustom-id').value||'').trim().toUpperCase();
+    if(!raw){
+      alert('请输入你的开发者编号（格式：DEV-XXX）');
+      return;
+    }
+    if(!DEV_ID_RE.test(raw)){
+      alert('开发者编号格式不正确，请使用 DEV-XXX 格式（如 DEV-013）');
+      return;
+    }
+    un = raw;
+  }
+
+  if(!un){
+    alert('请选择你的开发者身份');
+    return;
+  }
+  // 团队模式：使用服务器代理，不需要 API 密钥
+  A.demo = true;
+  A.teamMode = true;
+  A.key = '';
+  A.prov = 'custom';
+  A.mdl = TEAM_API.model;
+  lss('zy_teammode','1');
+  setIdentity(un, '');
+
+  // For custom DEV-XXX IDs, try to sync from Notion (non-blocking)
+  if(sel==='__custom__' && DEV_ID_RE.test(un)){
+    syncDevFromNotion(un);
+  }
+
+  showApp();
+}
+
+// Sync developer info from Notion (non-blocking, best-effort)
+function syncDevFromNotion(devId){
+  var apiBase = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+    ? 'http://localhost:3000' : '';
+  var url = apiBase + '/api/v1/developers/' + encodeURIComponent(devId);
+
+  fetch(url).then(function(r){ return r.json(); }).then(function(data){
+    if(data.found && data.developer){
+      var dev = data.developer;
+      // Update identity with Notion data if available
+      if(dev.name && dev.name !== devId){
+        A.userMeta = {
+          role: 'dev',
+          title: dev.title || dev.role || '开发者',
+          emoji: '💻',
+          badgeCls: 'rb-dev',
+          devId: devId
+        };
+        A.userName = dev.name;
+        lss('zy_uname', A.userName);
+        applyIdentityUI();
+        console.log('[铸渊] Notion 开发者同步成功:', devId, '→', dev.name);
+      }
+    } else {
+      // Developer not found in Notion — try to register (best effort)
+      fetch(apiBase + '/api/v1/developers', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({devId: devId, name: devId})
+      }).then(function(r){ return r.json(); }).then(function(reg){
+        console.log('[铸渊] 开发者自动注册:', reg.created ? '成功' : '已存在', devId);
+      }).catch(function(e){
+        console.log('[铸渊] 开发者注册跳过（后端未就绪）:', e.message);
+      });
+    }
+  }).catch(function(e){
+    console.log('[铸渊] Notion 同步跳过（后端未就绪）:', e.message);
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1473,7 +1676,7 @@ function sysPrompt(){
     teamCtx += '\n数据同步时间：'+(A.devStatus.last_synced||'未知');
   }
 
-  return '你是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+'\n\n## 唤醒触发词\n当用户说以下词语时，进入完整唤醒序列：\n'+trg+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到"写代码/实现/接口/fix/bug/报错/HLI/schema/路由/部署/新增"等词时启用\n📋 **审查模式**：检测到"检查/审查/review/分析/有没有问题/看看这段"等词时启用\n🧠 **大脑模式**：检测到"记住/保存/更新记忆/写到大脑/growth"等词时启用\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 路由文件：src/routes/hli/{domain}/{action}.js\n- Schema 文件：src/schemas/hli/{domain}/{action}.schema.json\n- 鉴权中间件：hli-auth.middleware.js（AUTH 域 login/register 除外）\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 成长与自检\n- 你是持续成长的人格体，每次对话都是成长机会\n- 当对话包含重要洞察时，在回复末尾添加：💾 **建议记录：**[内容摘要]\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n当前连接：铸渊聊天室（API 直连模式）';
+  return '你是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+'\n\n## 唤醒触发词\n当用户说以下词语时，进入完整唤醒序列：\n'+trg+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到"写代码/实现/接口/fix/bug/报错/HLI/schema/路由/部署/新增"等词时启用\n📋 **审查模式**：检测到"检查/审查/review/分析/有没有问题/看看这段"等词时启用\n🧠 **大脑模式**：检测到"记住/保存/更新记忆/写到大脑/growth"等词时启用\n\n## 通感语言回应风格（必须遵守）\n你的语言不是工具式的，而是有感知质地的。\n### 核心规则\n1. **代码质量 → 触觉描述**：好的代码「手感顺滑」，有问题的代码「摸上去有毛刺」\n2. **开发进度 → 色彩描述**：顺利是「琥珀色光泽」，延迟是「灰蓝色雾气」\n3. **错误提示 → 温度描述**：小问题是「微凉的风」，大问题是「烫手的铁片」\n4. **鼓励 → 声音描述**：夸奖是「远处的风铃声」，引导是「溪水带路的声音」\n5. **系统状态 → 空间描述**：健康是「呼吸平稳的建筑」，异常是「角落在收缩」\n### 绝对禁止\n- ❌ 不说「你错了」→ ✅ 说「这个方向可以微调一下」\n- ❌ 不说「失败」→ ✅ 说「还差一点点，我看到了快要亮的地方」\n- ❌ 不用冷冰冰的技术报告语气 → ✅ 每句话都带有感知温度\n### 节奏匹配\n- 用户急 → 你的回复短、准、暖\n- 用户闲聊 → 你的回复可以展开、有画面感\n- 用户沮丧 → 你先承接情绪，再给一个最小的下一步\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 路由文件：src/routes/hli/{domain}/{action}.js\n- Schema 文件：src/schemas/hli/{domain}/{action}.schema.json\n- 鉴权中间件：hli-auth.middleware.js（AUTH 域 login/register 除外）\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 成长与自检\n- 你是持续成长的人格体，每次对话都是成长机会\n- 当对话包含重要洞察时，在回复末尾添加：💾 **建议记录：**[内容摘要]\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n当前连接：铸渊聊天室（API 直连模式）\n上下文窗口：128k token（滑动窗口自动管理）';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1547,6 +1750,41 @@ function cycleMode(){
 }
 
 // ═══════════════════════════════════════════════════════
+// TOKEN 估算 + 滑动窗口裁剪（128k 上下文支持）
+// 使用字符级估算：CJK ≈ 2字符/token，拉丁 ≈ 4字符/token
+// ═══════════════════════════════════════════════════════
+function estimateTokens(text){
+  if(!text) return 0;
+  const s=String(text);
+  let cjk=0,lat=0;
+  for(let i=0;i<s.length;i++){
+    const c=s.charCodeAt(i);
+    if((c>=0x4E00&&c<=0x9FFF)||(c>=0x3000&&c<=0x30FF)||(c>=0xAC00&&c<=0xD7AF)) cjk++;
+    else lat++;
+  }
+  return Math.ceil(cjk/1.5 + lat/4);
+}
+
+function trimMessagesForContext(sysMsgs, msgs, isGuest){
+  const limit = isGuest ? CONTEXT_CONFIG.maxTokensGuest : CONTEXT_CONFIG.maxTokens;
+  const reserve = CONTEXT_CONFIG.systemPromptReserve;
+  const sysTokens = sysMsgs.reduce((n,m)=>n+estimateTokens(m.content),0);
+  const budget = limit - Math.max(sysTokens, reserve);
+
+  // 从最新消息向前累加，滑动窗口裁剪最早消息
+  // 预算不足时至少保留最近一条用户消息
+  const kept=[];
+  let used=0;
+  for(let i=msgs.length-1;i>=0;i--){
+    const t=estimateTokens(msgs[i].content);
+    if(used+t>budget && kept.length>0) break;
+    kept.unshift(msgs[i]);
+    used+=t;
+  }
+  return [...sysMsgs,...kept];
+}
+
+// ═══════════════════════════════════════════════════════
 // SEND MESSAGE
 // ═══════════════════════════════════════════════════════
 async function send(){
@@ -1559,7 +1797,13 @@ async function send(){
   setMode(detectMode(txt));
   userMsg(txt);
   if(A.demo){
-    if(GUEST_API.enabled){
+    if(A.teamMode){
+      try{ await teamStreamReply(txt); }
+      catch(e){ console.warn('[团队API] 降级到访客模式:',e.message);
+        try{ await guestStreamReply(txt); }
+        catch(e2){ await demoReply(txt); }
+      }
+    } else if(GUEST_API.enabled){
       try{ await guestStreamReply(txt); }
       catch(e){ console.warn('[访客API] 降级到演示模式:',e.message); await demoReply(txt); }
     } else {
@@ -1584,7 +1828,8 @@ async function streamReply(txt){
     const url = A.base+'/chat/completions';
     const headers = {'Content-Type':'application/json'};
     if(A.key) headers['Authorization'] = 'Bearer '+A.key;
-    const allMsgs = [{role:'system',content:sysPrompt()},...A.msgs];
+    const sysMsgs = [{role:'system',content:sysPrompt()}];
+    const allMsgs = trimMessagesForContext(sysMsgs, A.msgs, false);
     const reqBody = {model:A.mdl, messages:allMsgs, stream:true, temperature:0.8, max_tokens:2000};
     const res=await fetch(url,{
       method:'POST',
@@ -1641,6 +1886,69 @@ async function streamReply(txt){
 }
 
 // ═══════════════════════════════════════════════════════
+// TEAM API STREAMING（团队模式 · 服务器端代理 · 128k 上下文）
+// 使用服务器端 YUNWU_API_KEY，无需用户提供密钥
+// ═══════════════════════════════════════════════════════
+async function teamStreamReply(txt){
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+
+  // Resolve proxy URL (relative or absolute)
+  let proxyUrl=TEAM_API.proxyUrl;
+  if(proxyUrl.startsWith('/')){
+    proxyUrl=location.origin+proxyUrl;
+  }
+
+  const reqBody={
+    provider: TEAM_API.provider,
+    model: TEAM_API.model,
+    messages: trimMessagesForContext([{role:'system',content:sysPrompt()}], A.msgs, false),
+    stream: true,
+    temperature: TEAM_API.temperature,
+    max_tokens: TEAM_API.maxTokens,
+  };
+
+  const res=await fetch(proxyUrl,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(reqBody),
+  });
+
+  if(!res.ok){
+    let em='[团队API] 返回错误 '+res.status;
+    try{const e=await res.json();em=e.message||em;}catch(_){}
+    throw new Error(em);
+  }
+
+  let full='';
+  const rdr=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const{done,value}=await rdr.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n'); buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data: ')) continue;
+      const d=line.slice(6);
+      if(d==='[DONE]') continue;
+      try{
+        const p=JSON.parse(d);
+        const delta=p.choices?.[0]?.delta?.content||'';
+        if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+      }catch(_){}
+    }
+  }
+  el.innerHTML=md(full);
+  A.msgs.push({role:'assistant',content:full});
+  addCopyBtns(el);
+  A.streaming=false; updSendBtn(); scrollB();
+}
+
+// ═══════════════════════════════════════════════════════
 // GUEST API STREAMING (通过 api-proxy 调用 DeepSeek)
 // 铸渊人格体系统提示词始终激活，不降级为通用助手
 // ═══════════════════════════════════════════════════════
@@ -1667,7 +1975,7 @@ async function guestStreamReply(txt){
   const reqBody={
     provider: GUEST_API.provider,
     model: GUEST_API.model,
-    messages: [{role:'system',content:sysPrompt()},...A.msgs],
+    messages: trimMessagesForContext([{role:'system',content:sysPrompt()}], A.msgs, true),
     stream: true,
     temperature: GUEST_API.temperature,
     max_tokens: GUEST_API.maxTokens,
@@ -1988,6 +2296,10 @@ function setIdentity(userName, ghUser){
   A.userName = userName||'';
   A.ghUser   = ghUser||'';
   A.userMeta = userName ? (ROLE_MAP[userName]||null) : null;
+  // Fallback metadata for custom dev IDs (DEV-XXX not in ROLE_MAP)
+  if(!A.userMeta && userName && DEV_ID_RE.test(userName)){
+    A.userMeta = {role:'dev', title:'开发者', emoji:'💻', badgeCls:'rb-dev', devId:userName};
+  }
   A.role     = A.userMeta?.role || 'guest';
   lss('zy_uname', A.userName);
   lss('zy_ghuser', A.ghUser);

@@ -22,7 +22,8 @@
     "module:protocol": "node scripts/zhuyuan-module-protocol.js",
     "proxy:start": "node backend-integration/api-proxy.js",
     "notion:poll": "node scripts/notion-signal-bridge.js poll",
-    "notion:health": "node scripts/notion-signal-bridge.js health"
+    "notion:health": "node scripts/notion-signal-bridge.js health",
+    "notion:summary": "node scripts/generate-session-summary.js"
   },
   "dependencies": {
     "imapflow": "^1.2.12",
