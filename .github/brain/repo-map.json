@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-08T13:07:56.041Z",
+  "generated_at": "2026-03-08T13:12:42.579Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 18,
-    "total_scripts": 18,
+    "total_workflows": 19,
+    "total_scripts": 19,
     "total_dev_nodes": 8,
     "hli_interfaces": 17,
     "hli_implemented": 3,
@@ -196,6 +196,13 @@
           ]
         },
         {
+          "file": "notion-connectivity-test.yml",
+          "name": "铸渊 · Notion 连通性测试",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
           "file": "notion-poll.yml",
           "name": "铸渊 · Notion 工单轮询",
           "triggers": [
@@ -252,7 +259,7 @@
           ]
         }
       ],
-      "item_count": 18
+      "item_count": 19
     },
     {
       "zone_id": "SCRIPTS",
@@ -297,6 +304,9 @@
           "file": "notion-bridge.js"
         },
         {
+          "file": "notion-connectivity-test.js"
+        },
+        {
           "file": "notion-signal-bridge.js"
         },
         {
@@ -324,7 +334,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 18
+      "item_count": 19
     },
     {
       "zone_id": "SRC",
@@ -995,6 +1005,10 @@
     ],
     "hli-contract-check": [
       "WORKFLOWS::hli-contract-check.yml"
+    ],
+    "notion-connectivity-test": [
+      "WORKFLOWS::notion-connectivity-test.yml",
+      "SCRIPTS::notion-connectivity-test.js"
     ],
     "notion-poll": [
       "WORKFLOWS::notion-poll.yml"

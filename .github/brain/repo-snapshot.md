@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-08 21:07 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-08 21:12 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 18 个 GitHub Actions |
-| 脚本 | 18 个执行脚本 |
+| 工作流 | 19 个 GitHub Actions |
+| 脚本 | 19 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 3/17 (18%) |
-| 快照生成时间 | 2026-03-08 21:07 CST |
+| 快照生成时间 | 2026-03-08 21:12 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 18 项
+**路径**: `.github/workflows` · **数量**: 19 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 18 项
+**路径**: `scripts` · **数量**: 19 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -101,6 +101,7 @@
 | `esp-signal-processor.yml` | 铸渊 · ESP 邮件信号处理器（已暂停） | schedule(*/30 * * * *), manual |
 | `generate-module-doc.yml` | 铸渊 · HoloLake Era 模块文档自动生成 | push, manual |
 | `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
+| `notion-connectivity-test.yml` | 铸渊 · Notion 连通性测试 | manual |
 | `notion-poll.yml` | 铸渊 · Notion 工单轮询 | schedule(*/15 * * * *), manual |
 | `psp-daily-inspection.yml` | 铸渊 · PSP 分身巡检 | schedule(0 1 * * *), manual |
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
@@ -122,6 +123,7 @@
 - `scripts/generate-repo-map.js`
 - `scripts/notify-module-received.js`
 - `scripts/notion-bridge.js`
+- `scripts/notion-connectivity-test.js`
 - `scripts/notion-signal-bridge.js`
 - `scripts/process-broadcasts.js`
 - `scripts/process-syslog.js`
