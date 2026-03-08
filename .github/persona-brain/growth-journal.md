@@ -44,3 +44,10 @@
 - 累计自检次数：5
 - 累计CI运行：1次
 - HLI覆盖率：17.6%
+
+## 2026-03-08 · 每日自检
+- 大脑文件完整性：⚠️ 缺失 identity.md, routing-map.json, responsibility.md, decision-log.md
+- 知识库条目：4条
+- 累计自检次数：6
+- 累计CI运行：1次
+- HLI覆盖率：17.6%

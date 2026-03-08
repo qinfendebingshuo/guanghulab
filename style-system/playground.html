@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake Design System - Playground</title>
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="playground.css">
+</head>
+<body>
+    <header id="pg-header">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h1>HoloLake Design System</h1>
+        <span class="subtitle">Playground · 组件交互演示</span>
+        <button id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </header>
+
+    <div id="pg-layout">
+        <nav id="pg-sidebar">
+            <!-- 导航列表由 JS 动态生成 -->
+        </nav>
+        <main id="pg-content">
+            <!-- 组件区块由 JS 动态生成 -->
+        </main>
+    </div>
+
+    <script src="components.js"></script>
+    <script src="playground.js"></script>
+</body>
+</html>

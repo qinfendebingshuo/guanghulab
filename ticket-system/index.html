@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工单管理 · HoloLake · 视觉优化版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ========== 基础样式（深蓝渐变保持不变） ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 50%, #0d1f3c 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 导航栏（增加图标） */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .logo i {
+            color: #4fc3f7;
+            font-size: 28px;
+        }
+
+        .nav-links a {
+            margin-left: 24px;
+            text-decoration: none;
+            color: #8899aa;
+            font-size: 14px;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-links a i {
+            font-size: 16px;
+        }
+
+        .nav-links a.active {
+            color: #4fc3f7;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        /* 统计卡片区（微调圆角与阴影） */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card.active {
+            border: 2px solid #4fc3f7;
+            background: rgba(79, 195, 247, 0.15);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #8899aa;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .stat-label i {
+            color: #4fc3f7;
+            font-size: 16px;
+        }
+
+        /* 工单列表头部 */
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ticket-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ticket-header h2 i {
+            color: #4fc3f7;
+        }
+
+        .btn-primary {
+            background: #4fc3f7;
+            color: #0a1628;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
+        }
+
+        .btn-primary i {
+            font-size: 16px;
+        }
+
+        .btn-primary:hover {
+            background: #81d4fa;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.5);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            color: #4fc3f7;
+            cursor: pointer;
+            font-weight: 500;
+            user-select: none;
+            padding: 6px 12px;
+            border-radius: 30px;
+            transition: all 0.2s;
+            background: rgba(79, 195, 247, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sort-btn:hover {
+            background: rgba(79, 195, 247, 0.2);
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e0e6ed;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(2px);
+        }
+
+        .tool-btn i {
+            font-size: 14px;
+            color: #4fc3f7;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4fc3f7;
+        }
+
+        /* 工单列表容器 */
+        .ticket-list {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+        }
+
+        /* 单个工单项（优化悬停与图标） */
+        .ticket-item {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 100px 60px;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            line-height: 1.6;
+            letter-spacing: 0.3px;
+        }
+
+        .ticket-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ticket-item:last-child {
+            border-bottom: none;
+        }
+
+        .ticket-id {
+            color: #8899aa;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ticket-id i {
+            color: #4fc3f7;
+            font-size: 14px;
+        }
+
+        .ticket-title {
+            font-weight: 400;
+            color: #fff;
+            text-shadow: 0 0 8px rgba(79,195,247,0.2);
+        }
+
+        .ticket-assignee {
+            color: #8899aa;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.9;
+        }
+
+        .ticket-assignee i {
+            color: #4fc3f7;
+            font-size: 12px;
+        }
+
+        .ticket-status {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .ticket-status:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        .status-进行中 {
+            background: rgba(79, 195, 247, 0.2);
+            color: #4fc3f7;
+        }
+
+        .status-进行中 i {
+            color: #4fc3f7;
+        }
+
+        .status-已完成 {
+            background: rgba(76, 175, 80, 0.2);
+            color: #81c784;
+        }
+
+        .status-已完成 i {
+            color: #81c784;
+        }
+
+        .status-待开始 {
+            background: rgba(255, 255, 255, 0.1);
+            color: #b0bec5;
+        }
+
+        .status-待开始 i {
+            color: #b0bec5;
+        }
+
+        /* 删除按钮 */
+        .delete-btn {
+            color: #f44336;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        /* 底部版权 */
+        .footer {
+            text-align: center;
+            color: #62748c;
+            font-size: 14px;
+            padding: 32px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .footer i {
+            color: #4fc3f7;
+        }
+
+        /* ========== 模态框（弹窗）优化 ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e2a3a;
+            border-radius: 32px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            color: #e0e6ed;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #4fc3f7;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-content h3 i {
+            font-size: 24px;
+        }
+
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 8px 0 20px;
+            background: #0f1a2b;
+            border: 1px solid #2a3a4a;
+            color: #e0e6ed;
+            border-radius: 16px;
+            font-size: 14px;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-content input:focus,
+        .modal-content select:focus,
+        .modal-content textarea:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+        }
+
+        .modal-content button {
+            background: #4fc3f7;
+            color: #0a1628;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-right: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+        }
+
+        .modal-content button.cancel {
+            background: #3a4a5a;
+            color: #e0e6ed;
+            box-shadow: none;
+        }
+
+        .modal-content button.cancel:hover {
+            background: #4a5a6a;
+        }
+
+        .modal-content button:hover {
+            background: #81d4fa;
+            transform: translateY(-2px);
+        }
+
+        .modal-content button i {
+            font-size: 16px;
+        }
+
+        /* 响应式微调 */
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .ticket-item {
+                grid-template-columns: 60px 1fr 100px 80px 40px;
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+            .ticket-status {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .nav-links a {
+                margin-left: 0;
+                margin-right: 16px;
+            }
+            .ticket-item {
+                grid-template-columns: 50px 1fr 80px 70px 35px;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .toolbar {
+                justify-content: flex-start;
+            }
+        }
+    .page-title {
+  color: #003366; /* 深蓝色示例 */
+}</style>
+</head>
+<body>
+    <div class="app">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-water"></i> HoloLake
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active"><i class="fas fa-tasks"></i> 工单管理</a>
+                <a href="#"><i class="fas fa-chart-pie"></i> 统计</a>
+                <a href="#"><i class="fas fa-cog"></i> 设置</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="stats">
+                <div class="stat-card" data-status="全部">
+                    <div class="stat-number" id="stat-all">5</div>
+                    <div class="stat-label"><i class="fas fa-clipboard-list"></i> 总工单</div>
+                </div>
+                <div class="stat-card" data-status="进行中">
+                    <div class="stat-number" id="stat-progress">3</div>
+                    <div class="stat-label"><i class="fas fa-spinner"></i> 进行中</div>
+                </div>
+                <div class="stat-card" data-status="已完成">
+                    <div class="stat-number" id="stat-done">1</div>
+                    <div class="stat-label"><i class="fas fa-check-circle"></i> 已完成</div>
+                </div>
+                <div class="stat-card" data-status="待开始">
+                    <div class="stat-number" id="stat-todo">1</div>
+                    <div class="stat-label"><i class="fas fa-clock"></i> 待分配</div>
+                </div>
+            </div>
+
+            <div class="ticket-header">
+                <h2><i class="fas fa-list-ul"></i> 工单列表</h2>
+                <button class="btn-primary" id="new-ticket-btn"><i class="fas fa-plus-circle"></i> 新建工单</button>
+            </div>
+
+            <div class="toolbar">
+                <span id="sort-btn" class="sort-btn"><i class="fas fa-sort-amount-down-alt"></i> 编号↑</span>
+                <button class="tool-btn" id="export-btn"><i class="fas fa-download"></i> 导出CSV</button>
+                <button class="tool-btn" id="reset-btn"><i class="fas fa-undo-alt"></i> 重置</button>
+            </div>
+
+            <div id="ticket-list" class="ticket-list"></div>
+        </main>
+
+        <footer class="footer">
+            <i class="fas fa-water"></i> HoloLake Era · AGE OS v1.0 · <i class="fas fa-heart" style="color: #f44336;"></i> 光湖团队
+        </footer>
+    </div>
+
+    <!-- 新建工单模态框 -->
+    <div id="ticket-modal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-pen-alt"></i> 新建工单</h3>
+            <input type="text" id="ticket-title" placeholder="工单标题" required>
+            <input type="text" id="ticket-assignee" placeholder="负责人 (如: 肥猫·M01)" required>
+            <select id="ticket-status">
+                <option value="进行中">进行中</option>
+                <option value="已完成">已完成</option>
+                <option value="待开始">待开始</option>
+            </select>
+            <textarea id="ticket-desc" placeholder="详情描述（选填）" rows="3"></textarea>
+            <div style="text-align: right;">
+                <button class="cancel" id="cancel-modal"><i class="fas fa-times"></i> 取消</button>
+                <button id="save-ticket"><i class="fas fa-check"></i> 确认创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- 数据持久化 ----------
+        let tickets = [];
+
+        const DEFAULT_TICKETS = [
+            { id: '#001', title: '用户登录界面开发', assignee: '肥猫·M01', status: '进行中', desc: '' },
+            { id: '#002', title: '后端服务器部署上线', assignee: '页页·后端', status: '已完成', desc: '' },
+            { id: '#003', title: '系统状态看板搭建', assignee: '小草莓·M-DASHBOARD', status: '进行中', desc: '' },
+            { id: '#004', title: '网站云盘系统', assignee: '燕樊·M15', status: '进行中', desc: '' },
+            { id: '#005', title: '用户中心界面', assignee: '花尔·M05', status: '待开始', desc: '' }
+        ];
+
+        function loadTickets() {
+            const stored = localStorage.getItem('hololake_tickets');
+            if (stored) {
+                tickets = JSON.parse(stored);
+            } else {
+                tickets = [...DEFAULT_TICKETS];
+                saveTickets();
+            }
+        }
+
+        function saveTickets() {
+            localStorage.setItem('hololake_tickets', JSON.stringify(tickets));
+        }
+
+        function generateNewId() {
+            if (tickets.length === 0) return '#001';
+            const maxNum = Math.max(...tickets.map(t => parseInt(t.id.slice(1))));
+            return '#' + String(maxNum + 1).padStart(3, '0');
+        }
+
+        // ---------- 渲染 ----------
+        let currentFilter = '全部';
+        let currentSort = 'asc';
+
+        function renderTickets() {
+            let filtered = tickets;
+            if (currentFilter !== '全部') {
+                filtered = tickets.filter(t => t.status === currentFilter);
+            }
+            filtered.sort((a, b) => {
+                const numA = parseInt(a.id.slice(1));
+                const numB = parseInt(b.id.slice(1));
+                return currentSort === 'asc' ? numA - numB : numB - numA;
+            });
+
+            const listHtml = filtered.map(t => {
+                let statusIcon = '';
+                if (t.status === '进行中') statusIcon = '<i class="fas fa-sync-alt fa-spin"></i>';
+                else if (t.status === '已完成') statusIcon = '<i class="fas fa-check-circle"></i>';
+                else if (t.status === '待开始') statusIcon = '<i class="fas fa-hourglass-start"></i>';
+
+                return `
+                    <div class="ticket-item" data-id="${t.id}">
+                        <span class="ticket-id"><i class="fas fa-hashtag"></i> ${t.id.slice(1)}</span>
+                        <span class="ticket-title">${t.title}</span>
+                        <span class="ticket-assignee"><i class="fas fa-user"></i> ${t.assignee}</span>
+                        <span class="ticket-status status-${t.status}" data-id="${t.id}">${statusIcon} ${t.status}</span>
+                        <span class="delete-btn" data-id="${t.id}"><i class="fas fa-trash-alt"></i></span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('ticket-list').innerHTML = listHtml;
+
+            document.getElementById('stat-all').innerText = tickets.length;
+            document.getElementById('stat-progress').innerText = tickets.filter(t => t.status === '进行中').length;
+            document.getElementById('stat-done').innerText = tickets.filter(t => t.status === '已完成').length;
+            document.getElementById('stat-todo').innerText = tickets.filter(t => t.status === '待开始').length;
+        }
+
+        function exportToCSV() {
+            let filtered = tickets;
+            if (currentFilter !== '全部') {
+                filtered = tickets.filter(t => t.status === currentFilter);
+            }
+            filtered.sort((a, b) => {
+                const numA = parseInt(a.id.slice(1));
+                const numB = parseInt(b.id.slice(1));
+                return currentSort === 'asc' ? numA - numB : numB - numA;
+            });
+
+            let csv = "编号,标题,负责人,状态,描述\n";
+            filtered.forEach(t => {
+                const desc = (t.desc || '').replace(/,/g, '，').replace(/\n/g, ' ');
+                csv += `${t.id},${t.title},${t.assignee},${t.status},${desc}\n`;
+            });
+
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.setAttribute('download', '工单数据.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function resetToDefault() {
+            if (confirm('重置将恢复默认工单，当前所有自定义工单会被清除。确定吗？')) {
+                tickets = DEFAULT_TICKETS.map(t => ({ ...t }));
+                saveTickets();
+                currentFilter = '全部';
+                currentSort = 'asc';
+                document.getElementById('sort-btn').innerHTML = '<i class="fas fa-sort-amount-down-alt"></i> 编号↑';
+                document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+                renderTickets();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTickets();
+            renderTickets();
+
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const status = card.getAttribute('data-status');
+                    currentFilter = status === '全部' ? '全部' : status;
+                    renderTickets();
+                    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                });
+            });
+
+            const sortBtn = document.getElementById('sort-btn');
+            if (sortBtn) {
+                sortBtn.addEventListener('click', () => {
+                    currentSort = currentSort === 'asc' ? 'desc' : 'asc';
+                    sortBtn.innerHTML = currentSort === 'asc' 
+                        ? '<i class="fas fa-sort-amount-down-alt"></i> 编号↑' 
+                        : '<i class="fas fa-sort-amount-up-alt"></i> 编号↓';
+                    renderTickets();
+                });
+            }
+
+            document.getElementById('new-ticket-btn').addEventListener('click', () => {
+                document.getElementById('ticket-modal').classList.add('show');
+                document.getElementById('ticket-title').focus();
+            });
+
+            document.getElementById('cancel-modal').addEventListener('click', () => {
+                document.getElementById('ticket-modal').classList.remove('show');
+            });
+
+            document.getElementById('ticket-modal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('ticket-modal')) {
+                    document.getElementById('ticket-modal').classList.remove('show');
+                }
+            });
+
+            document.getElementById('save-ticket').addEventListener('click', () => {
+                const title = document.getElementById('ticket-title').value.trim();
+                const assignee = document.getElementById('ticket-assignee').value.trim();
+                const status = document.getElementById('ticket-status').value;
+                const desc = document.getElementById('ticket-desc').value.trim();
+
+                if (!title || !assignee) {
+                    alert('请填写标题和负责人');
+                    return;
+                }
+
+                const newTicket = {
+                    id: generateNewId(),
+                    title: title,
+                    assignee: assignee,
+                    status: status,
+                    desc: desc
+                };
+                tickets.push(newTicket);
+                saveTickets();
+                renderTickets();
+                document.getElementById('ticket-modal').classList.remove('show');
+                document.getElementById('ticket-title').value = '';
+                document.getElementById('ticket-assignee').value = '';
+                document.getElementById('ticket-status').value = '进行中';
+                document.getElementById('ticket-desc').value = '';
+            });
+
+            document.getElementById('ticket-list').addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    const id = deleteBtn.getAttribute('data-id');
+                    tickets = tickets.filter(t => t.id !== id);
+                    saveTickets();
+                    renderTickets();
+                    return;
+                }
+
+                const statusSpan = e.target.closest('.ticket-status');
+                if (statusSpan) {
+                    const id = statusSpan.getAttribute('data-id');
+                    const ticket = tickets.find(t => t.id === id);
+                    if (ticket) {
+                        if (ticket.status === '进行中') ticket.status = '已完成';
+                        else if (ticket.status === '已完成') ticket.status = '进行中';
+                        else if (ticket.status === '待开始') ticket.status = '进行中';
+                        saveTickets();
+                        renderTickets();
+                    }
+                    return;
+                }
+
+                const item = e.target.closest('.ticket-item');
+                if (item && !e.target.closest('.delete-btn') && !e.target.closest('.ticket-status')) {
+                    const id = item.getAttribute('data-id');
+                    const ticket = tickets.find(t => t.id === id);
+                    alert(`工单详情\n编号：${ticket.id}\n标题：${ticket.title}\n负责人：${ticket.assignee}\n状态：${ticket.status}\n描述：${ticket.desc || '无'}`);
+                }
+            });
+
+            document.getElementById('export-btn').addEventListener('click', exportToCSV);
+            document.getElementById('reset-btn').addEventListener('click', resetToDefault);
+        });
+    </script>
+background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 50%, #0d1f3c 100%);</body>
+</html>

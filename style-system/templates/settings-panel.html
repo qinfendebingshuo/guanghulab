@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置面板 - HoloLake Design System</title>
+    <link rel="stylesheet" href="../components.css">
+    <style>
+        body {
+            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 2rem 1rem;
+            color: var(--text-primary);
+        }
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .breadcrumb {
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-default);
+            padding-bottom: 0.5rem;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .setting-label {
+            color: var(--text-secondary);
+        }
+        .progress-container {
+            margin: 1rem 0;
+        }
+        .progress {
+            margin-bottom: 0.5rem;
+        }
+        .avatar-group {
+            margin: 1rem 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .alert {
+            margin-top: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <!-- 面包屑 -->
+        <nav class="breadcrumb">
+            <a href="#">首页</a> /
+            <a href="#">设置</a> /
+            <span>显示设置</span>
+        </nav>
+
+        <!-- 卡片：外观设置 -->
+        <div class="card">
+            <h3>外观</h3>
+            <div class="setting-item">
+                <span class="setting-label">深色模式</span>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span class="setting-label">通知</span>
+                <label class="switch">
+                    <input type="checkbox" id="notificationToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span class="setting-label">自动保存</span>
+                <label class="switch">
+                    <input type="checkbox" id="autoSaveToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 卡片：存储空间 -->
+        <div class="card">
+            <h3>存储空间</h3>
+            <div class="progress-container">
+                <div class="progress">
+                    <div class="progress-bar" style="width: 65%;" id="storageBar">65%</div>
+                </div>
+                <p class="setting-label">已使用 6.5GB / 总空间 10GB</p>
+            </div>
+        </div>
+
+        <!-- 卡片：团队成员 -->
+        <div class="card">
+            <h3>团队成员</h3>
+            <div class="avatar-group">
+                <div class="avatar">A</div>
+                <div class="avatar">B</div>
+                <div class="avatar">C</div>
+                <div class="avatar">+2</div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="button-group">
+            <button class="btn btn-outline" id="resetBtn">重置默认</button>
+            <button class="btn btn-primary" id="saveBtn">保存设置</button>
+        </div>
+
+        <div id="messageArea" class="alert hidden"></div>
+    </div>
+
+    <script src="../components.js"></script>
+    <script>
+        (function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const notificationToggle = document.getElementById('notificationToggle');
+            const autoSaveToggle = document.getElementById('autoSaveToggle');
+            const saveBtn = document.getElementById('saveBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const messageArea = document.getElementById('messageArea');
+            const html = document.documentElement;
+
+            // 加载本地存储的状态
+            darkModeToggle.checked = localStorage.getItem('darkMode') === 'true' || false;
+            notificationToggle.checked = localStorage.getItem('notifications') === 'true' || false;
+            autoSaveToggle.checked = localStorage.getItem('autoSave') === 'true' || false;
+
+            // 深色模式开关联动全局主题
+            darkModeToggle.addEventListener('change', function() {
+                html.setAttribute('data-theme', this.checked ? 'dark' : 'light');
+                localStorage.setItem('darkMode', this.checked);
+            });
+
+            // 初始化主题
+            if (darkModeToggle.checked) {
+                html.setAttribute('data-theme', 'dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
+            }
+
+            function showMessage(type, text) {
+                messageArea.className = `alert alert-${type}`;
+                messageArea.textContent = text;
+                messageArea.classList.remove('hidden');
+                setTimeout(() => {
+                    messageArea.classList.add('hidden');
+                }, 3000);
+            }
+
+            // 保存设置
+            saveBtn.addEventListener('click', function() {
+                localStorage.setItem('darkMode', darkModeToggle.checked);
+                localStorage.setItem('notifications', notificationToggle.checked);
+                localStorage.setItem('autoSave', autoSaveToggle.checked);
+                showMessage('success', '设置已保存');
+            });
+
+            // 重置默认
+            resetBtn.addEventListener('click', function() {
+                if (confirm('确定要恢复默认设置吗？')) {
+                    darkModeToggle.checked = true; // 默认深色
+                    notificationToggle.checked = false;
+                    autoSaveToggle.checked = false;
+
+                    // 应用默认
+                    html.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('darkMode', 'true');
+                    localStorage.setItem('notifications', 'false');
+                    localStorage.setItem('autoSave', 'false');
+
+                    showMessage('info', '已恢复默认设置');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
