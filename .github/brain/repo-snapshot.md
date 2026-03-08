@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-08 21:12 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-08 22:55 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 19 个 GitHub Actions |
-| 脚本 | 19 个执行脚本 |
+| 工作流 | 21 个 GitHub Actions |
+| 脚本 | 20 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 3/17 (18%) |
-| 快照生成时间 | 2026-03-08 21:12 CST |
+| 快照生成时间 | 2026-03-08 22:55 CST |
 
 ---
 
@@ -25,17 +25,17 @@
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
 ### 🎭 人格大脑（PERSONA_BRAIN）
-**路径**: `.github/persona-brain` · **数量**: 4 项
+**路径**: `.github/persona-brain` · **数量**: 6 项
 **描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 19 项
+**路径**: `.github/workflows` · **数量**: 21 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 19 项
+**路径**: `scripts` · **数量**: 20 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -93,6 +93,7 @@
 | `bingshuo-deploy-agent.yml` | "🧊 冰朔人格体 · 自动部署诊断" | issues, issue_comment, manual |
 | `brain-sync.yml` | 铸渊 Brain Sync | push, schedule(0 8 * * *), manual |
 | `bridge-changes-to-notion.yml` | 铸渊 · Bridge E · GitHub Changes → Notion | push, pull_request |
+| `bridge-session-summary.yml` | Generate Session Summary for Notion | schedule(50 23 * * *), manual |
 | `bridge-syslog-to-notion.yml` | 铸渊 · Bridge A · SYSLOG → Notion | push, manual |
 | `check-structure.yml` | 模块结构检查 | push, pull_request |
 | `deploy-pages.yml` | 🌀 部署铸渊聊天室 (GitHub Pages) | push, manual |
@@ -103,6 +104,7 @@
 | `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
 | `notion-connectivity-test.yml` | 铸渊 · Notion 连通性测试 | manual |
 | `notion-poll.yml` | 铸渊 · Notion 工单轮询 | schedule(*/15 * * * *), manual |
+| `process-notion-orders.yml` | Process Notion Work Orders | push, manual |
 | `psp-daily-inspection.yml` | 铸渊 · PSP 分身巡检 | schedule(0 1 * * *), manual |
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `syslog-pipeline.yml` | 铸渊 · SYSLOG Pipeline (A/D/E) | push, manual |
@@ -121,6 +123,7 @@
 - `scripts/esp-email-processor.js`
 - `scripts/generate-module-doc.js`
 - `scripts/generate-repo-map.js`
+- `scripts/generate-session-summary.js`
 - `scripts/notify-module-received.js`
 - `scripts/notion-bridge.js`
 - `scripts/notion-connectivity-test.js`

@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-08T13:12:42.579Z",
+  "generated_at": "2026-03-08T14:55:20.443Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 19,
-    "total_scripts": 19,
+    "total_workflows": 21,
+    "total_scripts": 20,
     "total_dev_nodes": 8,
     "hli_interfaces": 17,
     "hli_implemented": 3,
@@ -85,9 +85,15 @@
         },
         {
           "file": "memory.json"
+        },
+        {
+          "file": "style-config.json"
+        },
+        {
+          "file": "system-prompt.md"
         }
       ],
-      "item_count": 4
+      "item_count": 6
     },
     {
       "zone_id": "WORKFLOWS",
@@ -129,6 +135,14 @@
           "triggers": [
             "push",
             "pull_request"
+          ]
+        },
+        {
+          "file": "bridge-session-summary.yml",
+          "name": "Generate Session Summary for Notion",
+          "triggers": [
+            "schedule(50 23 * * *)",
+            "manual"
           ]
         },
         {
@@ -211,6 +225,14 @@
           ]
         },
         {
+          "file": "process-notion-orders.yml",
+          "name": "Process Notion Work Orders",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
           "file": "psp-daily-inspection.yml",
           "name": "铸渊 · PSP 分身巡检",
           "triggers": [
@@ -259,7 +281,7 @@
           ]
         }
       ],
-      "item_count": 19
+      "item_count": 21
     },
     {
       "zone_id": "SCRIPTS",
@@ -298,6 +320,9 @@
           "file": "generate-repo-map.js"
         },
         {
+          "file": "generate-session-summary.js"
+        },
+        {
           "file": "notify-module-received.js"
         },
         {
@@ -334,7 +359,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 19
+      "item_count": 20
     },
     {
       "zone_id": "SRC",
@@ -949,6 +974,12 @@
     "knowledge-base": [
       "PERSONA_BRAIN::knowledge-base.json"
     ],
+    "style-config": [
+      "PERSONA_BRAIN::style-config.json"
+    ],
+    "system-prompt": [
+      "PERSONA_BRAIN::system-prompt.md"
+    ],
     "workflow": [
       "WORKFLOWS"
     ],
@@ -979,6 +1010,9 @@
     ],
     "bridge-changes-to-notion": [
       "WORKFLOWS::bridge-changes-to-notion.yml"
+    ],
+    "bridge-session-summary": [
+      "WORKFLOWS::bridge-session-summary.yml"
     ],
     "bridge-syslog-to-notion": [
       "WORKFLOWS::bridge-syslog-to-notion.yml"
@@ -1012,6 +1046,9 @@
     ],
     "notion-poll": [
       "WORKFLOWS::notion-poll.yml"
+    ],
+    "process-notion-orders": [
+      "WORKFLOWS::process-notion-orders.yml"
     ],
     "psp-daily-inspection": [
       "WORKFLOWS::psp-daily-inspection.yml"
@@ -1063,6 +1100,9 @@
     ],
     "generate-repo-map": [
       "SCRIPTS::generate-repo-map.js"
+    ],
+    "generate-session-summary": [
+      "SCRIPTS::generate-session-summary.js"
     ],
     "notify-module-received": [
       "SCRIPTS::notify-module-received.js"
