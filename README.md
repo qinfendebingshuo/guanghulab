@@ -63,6 +63,7 @@
 <!-- BULLETIN_START -->
 | 时间 | 事件 | 详情 |
 |------|------|------|
+| 03-09 17:15 | 📦 铸渊 (Copilot) | 模块更新: `scripts/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `backend-integration/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `backend/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `cloud-drive/` |
@@ -80,7 +81,6 @@
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `m15-cloud-drive/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `m18-health-check/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `notification/` |
-| 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `scripts/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `status-board/` |
 | 03-09 17:01 | 📦 铸渊 (ZhùYuān) | 模块更新: `ticket-system/` |
 <!-- BULLETIN_END -->

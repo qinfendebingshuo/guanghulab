@@ -20,6 +20,7 @@ const MEMORY_PATH = path.join(__dirname, '..', '.github', 'brain', 'memory.json'
 const BULLETIN_START = '<!-- BULLETIN_START -->';
 const BULLETIN_END = '<!-- BULLETIN_END -->';
 const MAX_ENTRIES = 20;
+const MAX_GIT_LOG_COMMITS = 30;
 
 /* ── 开发者名册 ─────────────────────────── */
 const DEV_MAP = {
@@ -54,12 +55,17 @@ function formatTime(ts) {
   if (!ts) return '—';
   const d = new Date(ts);
   if (isNaN(d.getTime())) return ts;
-  const bj = new Date(d.getTime() + 8 * 3600000);
-  const mm = String(bj.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(bj.getUTCDate()).padStart(2, '0');
-  const hh = String(bj.getUTCHours()).padStart(2, '0');
-  const mi = String(bj.getUTCMinutes()).padStart(2, '0');
-  return `${mm}-${dd} ${hh}:${mi}`;
+  const fmt = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(d);
+  const get = (type) => (parts.find(p => p.type === type) || {}).value || '';
+  return `${get('month')}-${get('day')} ${get('hour')}:${get('minute')}`;
 }
 
 function statusIcon(result) {
@@ -177,7 +183,7 @@ function detectRecentModulePushes() {
 
   try {
     const log = execSync(
-      'git log --oneline --name-only --since="7 days ago" -30 2>/dev/null || true',
+      `git log --oneline --name-only --since="7 days ago" -${MAX_GIT_LOG_COMMITS} 2>/dev/null || true`,
       { encoding: 'utf8', cwd: path.join(__dirname, '..') }
     );
 
@@ -219,7 +225,9 @@ function detectRecentModulePushes() {
           detail: `模块更新: \`${mod}/\``,
           sortKey: new Date(ts).getTime(),
         });
-      } catch (_) { /* skip */ }
+      } catch (err) {
+        console.log(`⚠️  读取模块 ${mod} 提交信息失败: ${err.message}`);
+      }
     }
   } catch (err) {
     console.log(`⚠️  Git 日志读取失败: ${err.message}`);
