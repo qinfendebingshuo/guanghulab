@@ -1,18 +1,3 @@
-<div align="center">
-
-# 🌊 HoloLake 光湖系统
-
-**人格语言操作系统（AGE OS） · 壳-核分离架构**
-
-[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml)
-[![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml)
-
-`guanghulab.com` · Node.js 20 + Express + PM2 + Nginx
-
-</div>
-
----
-
 ## 📖 系统简介
 
 **光湖（HoloLake）** 是一个基于 **人格语言操作系统（AGE OS）** 的智能协作平台，采用 **壳-核分离** 设计理念：
@@ -132,6 +117,21 @@
 
 ---
 
+<div align="center">
+
+# 🌊 HoloLake 光湖系统
+
+**人格语言操作系统（AGE OS） · 壳-核分离架构**
+
+[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml)
+[![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml)
+
+`guanghulab.com` · Node.js 20 + Express + PM2 + Nginx
+
+</div>
+
+---
+
 ## ⚒️ 铸渊工作区
 
 > 💡 **如何使用铸渊工作区：**
@@ -168,6 +168,7 @@
 | DEV-010 | 🍊 桔子 | 前端主力 | m06-ticket, ticket-system |
 | DEV-011 | ✍️ 匆匆那年 | 写作工坊 | — |
 | DEV-012 | 🌟 Awen | 通知中心 | notification |
+
 
 ---
 
