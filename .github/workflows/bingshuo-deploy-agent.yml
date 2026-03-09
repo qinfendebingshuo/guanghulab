@@ -4,6 +4,7 @@ name: "🧊 冰朔人格体 · 自动部署诊断"
 # 1. 手动触发（workflow_dispatch）
 # 2. Issue 评论包含触发关键词
 # 3. 新 Issue 带有 bingshuo-deploy 标签
+# 4. 合作者推送模块后，模块文档工作流完成时自动触发
 on:
   workflow_dispatch:
     inputs:
@@ -27,6 +28,11 @@ on:
   issues:
     types: [opened]
 
+  # 合作者推送模块后，模块文档工作流完成时自动触发冰朔人格体部署诊断
+  workflow_run:
+    workflows: ["铸渊 · HoloLake Era 模块文档自动生成"]
+    types: [completed]
+
 permissions:
   contents: write
   issues: write
@@ -42,6 +48,7 @@ jobs:
     # 3. 新 Issue 带有 bingshuo-deploy 标签
     if: |
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_run' ||
       (github.event_name == 'issue_comment' && (
         contains(github.event.comment.body, '启动冰朔人格体') ||
         contains(github.event.comment.body, '冰朔人格体') ||

@@ -1,0 +1,87 @@
+# 光湖系统公告区自动更新工作流 v2.0
+#
+# 分离为冰朔公告栏 + 合作者公告栏 + 铸渊自动提醒
+#
+# 触发条件:
+#   1. 推送到 main 分支 (模块代码变更)
+#   2. 其他工作流完成后 (CI/部署/巡检结果)
+#   3. 每日定时更新 (北京时间 09:00 / 21:00)
+#   4. 手动触发
+#
+# 功能:
+#   - 冰朔公告栏：自检/轮询/数据库状态
+#   - 合作者公告栏：模块上传状态
+#   - 铸渊自动提醒：红色标记 + 邮件通知
+
+name: 📢 更新系统公告区
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'  # 避免自身更新触发循环
+
+  workflow_run:
+    workflows:
+      - "铸渊 · 每日自检与自进化"
+      - "📦 Module Doc + Notify"
+      - "🚀 CD: Deploy to guanghulab.com"
+      - "铸渊 PSP 巡检"
+    types: [completed]
+
+  schedule:
+    # 北京时间 09:00 (UTC 01:00)
+    - cron: '0 1 * * *'
+    # 北京时间 21:00 (UTC 13:00)
+    - cron: '0 13 * * *'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-bulletin
+  cancel-in-progress: true
+
+jobs:
+  update-bulletin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 安装邮件依赖
+        run: npm install nodemailer --no-save 2>/dev/null || true
+
+      - name: 📢 更新公告区
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          BINGSHUO_EMAIL: ${{ secrets.BINGSHUO_EMAIL }}
+        run: node scripts/update-readme-bulletin.js
+
+      - name: 📝 提交更新
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "📢 公告区无变化，跳过提交"
+          else
+            git commit -m "📢 自动更新系统公告区 [skip ci]"
+            git push
+            echo "✅ 公告区已更新并推送"
+          fi

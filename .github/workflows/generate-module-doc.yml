@@ -57,14 +57,13 @@ jobs:
             }
           fi
 
-  notify-collaborator:
-    name: 📧 通知合作者模块已收到
+  check-and-notify:
+    name: 🔍 模块自检 + 📧 通知推送者
     runs-on: ubuntu-latest
     # 仅 push 事件触发（workflow_dispatch 为手动，不发通知）
     if: github.event_name == 'push'
     permissions:
-      contents: read
-      issues: write
+      contents: write
 
     steps:
       - name: Checkout
@@ -88,7 +87,59 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
           echo "📄 改动文件：$FILES"
 
-      - name: 发送模块收讫通知
+      - name: 🔍 模块自检
+        id: check
+        run: |
+          CHANGED_FILES="${{ steps.changed.outputs.files }}"
+          MODULES="m01-login m03-personality m05-user-center m06-ticket m07-dialogue-ui m10-cloud m11-module m12-kanban m15-cloud-drive dingtalk-bot backend-integration status-board"
+
+          RESULT="pass"
+          DETAILS=""
+
+          for mod in $MODULES; do
+            # 只检查本次有改动的模块
+            if echo "$CHANGED_FILES" | grep -q "^${mod}/"; then
+              echo "🔍 检查模块: $mod"
+
+              if [ -d "$mod" ]; then
+                if [ ! -f "$mod/README.md" ]; then
+                  DETAILS="${DETAILS}❌ ${mod} 缺少 README.md（必须提供）"$'\n'
+                  RESULT="fail"
+                fi
+                if [ ! -f "$mod/package.json" ]; then
+                  DETAILS="${DETAILS}⚠️ ${mod} 缺少 package.json（建议补充）"$'\n'
+                fi
+                if [ ! -d "$mod/src" ]; then
+                  DETAILS="${DETAILS}⚠️ ${mod} 缺少 src/ 目录（建议补充）"$'\n'
+                fi
+
+                # 检查 package.json 格式是否正确
+                if [ -f "$mod/package.json" ]; then
+                  if ! node -e "JSON.parse(require('fs').readFileSync('$mod/package.json','utf8'))" 2>/dev/null; then
+                    DETAILS="${DETAILS}❌ ${mod}/package.json 格式错误（JSON 解析失败）"$'\n'
+                    RESULT="fail"
+                  else
+                    DETAILS="${DETAILS}✅ ${mod} 结构检查通过"$'\n'
+                  fi
+                else
+                  DETAILS="${DETAILS}✅ ${mod} 基本结构检查通过"$'\n'
+                fi
+              fi
+            fi
+          done
+
+          if [ -z "$DETAILS" ]; then
+            DETAILS="✅ 所有模块检查通过"
+          fi
+
+          echo "test_result=$RESULT" >> $GITHUB_OUTPUT
+          # 使用 heredoc 方式输出多行详情
+          echo "test_details<<EOF" >> $GITHUB_OUTPUT
+          echo "$DETAILS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "🔍 自检结果: $RESULT"
+
+      - name: 📧 发送模块收讫通知（Commit Comment → 推送者本人）
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
@@ -96,5 +147,7 @@ jobs:
           CHANGED_FILES: ${{ steps.changed.outputs.files }}
           COMMIT_SHA: ${{ github.sha }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          TEST_RESULT: ${{ steps.check.outputs.test_result }}
+          TEST_DETAILS: ${{ steps.check.outputs.test_details }}
         run: node scripts/notify-module-received.js
 

@@ -1,47 +1,252 @@
-# HoloLake 光湖系统
+## 📖 系统简介
 
-## 模块目录
+**光湖（HoloLake）** 是一个基于 **人格语言操作系统（AGE OS）** 的智能协作平台，采用 **壳-核分离** 设计理念：
 
-- app/
-- backend-integration/
-- backend/
-- broadcasts-outbox/
-- chat-bubble/
-- cloud-drive/
-- coldstart/
-- cost-control/
-- dashboard/
-- dev-nodes/
-- dingtalk-bot/
-- docs/
-- frontend/
-- guanghulab-main/
-- help-center/
-- m01-login/
-- m03-personality/
-- m05-user-center/
-- m06-ticket/
-- m07-dialogue-ui/
-- m10-cloud/
-- m11-module/
-- m12-kanban/
-- m15-cloud-drive/
-- m18-health-check/
-- multi-persona/
-- notification/
-- notion-push/
-- persona-selector/
-- portal/
-- public/
-- reports/
-- scripts/
-- settings/
-- signal-log/
-- src/
-- status-board/
-- style-system/
-- syslog-inbox/
-- syslog-processed/
-- tests/
-- ticket-system/
-- user-center/
+- **壳（Shell）**：前端交互层，包括对话界面、用户中心、工单系统、云盘等模块
+- **核（Core）**：后端智能层，包括人格引擎、广播分发、信号处理、Notion 桥接等
+
+### 🏛️ 核心架构
+
+```
+┌─────────────────────────────────────────────────┐
+│                  光湖 HoloLake                    │
+├──────────────┬──────────────────────────────────┤
+│   壳 Shell   │           核 Core                 │
+│              │                                   │
+│  🖥️ 对话 UI  │  🧠 铸渊 (Zhùyuān) 代码守护人格    │
+│  👤 用户中心  │  📡 广播分发系统                    │
+│  🎫 工单系统  │  🔔 信号处理 + Notion 桥接          │
+│  ☁️ 云盘     │  🔄 CI/CD 自动化流水线              │
+│  📊 状态看板  │  📋 模块自检 + 文档生成             │
+└──────────────┴──────────────────────────────────┘
+```
+
+### 🤖 智能人格体
+
+| 人格体 | 角色 | 职责 |
+|--------|------|------|
+| **铸渊 Zhùyuān** | 代码守护者 | 代码审查、CI 巡检、模块协议执行、Issue 回复 |
+| **冰朔 Bīng Shuò** | 系统创建者 | 系统架构设计、核心决策、广播发布 |
+| **霜砚 Shuāng Yàn** | 人格导师 | 人格调校、风格管理、联觉语言系统 |
+
+### 🔧 技术栈
+
+- **运行时**：Node.js 20 + Next.js 15 + React 19
+- **后端**：Express + PM2 进程管理
+- **数据库**：SQLite (better-sqlite3) + Notion 数据桥接
+- **部署**：Nginx 反向代理 + GitHub Actions CI/CD
+- **自动化**：23+ GitHub Actions 工作流
+
+---
+
+## 🧊 冰朔公告栏
+
+> 🔄 此区域由 GitHub Actions 自动更新，显示系统自检、轮询、数据库状态。
+>
+> 冰朔每次进入仓库首页即可查看系统运行健康度。
+
+<!-- BINGSHUO_BULLETIN_START -->
+| 时间 | 检查项 | 状态 |
+|------|--------|------|
+| 03-09 17:29 | 🔧 系统更新: `.github/` | 铸渊 (Copilot) |
+| 03-09 17:29 | 🔧 系统更新: `scripts/` | 铸渊 (Copilot) |
+| 03-09 17:15 | 🔧 系统更新: `docs/` | 铸渊 (Copilot) |
+| 03-09 17:15 | 🔧 系统更新: `persona-brain-db/` | 铸渊 (Copilot) |
+| 03-09 16:56 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-09 08:00 | ✅ 铸渊 PSP 巡检通过 · 全部检查项 ✅ | 铸渊PSP巡检 |
+| 03-09 08:00 | 🔍 每日自检完成 · 知识库4条 · 缺失文件4个 | 铸渊自检 |
+| 03-08 16:41 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-08 08:00 | ✅ 铸渊 PSP 巡检通过 · 全部检查项 ✅ | 铸渊PSP巡检 |
+| 03-08 08:00 | 🔍 每日自检完成 · 知识库4条 · 缺失文件4个 | 铸渊自检 |
+| 03-07 16:41 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-07 08:00 | ⚠️ 铸渊 PSP 巡检完成 · 发现 1 个问题 · 自动修复 0 项 | 铸渊PSP巡检 |
+| 03-07 08:00 | 🔍 每日自检完成 · 知识库4条 · 缺失文件4个 | 铸渊自检 |
+| 03-06 16:51 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-06 08:00 | 🔍 每日自检完成 · 知识库4条 · 缺失文件4个 | 铸渊自检 |
+<!-- BINGSHUO_BULLETIN_END -->
+
+### 🤖 铸渊自动提醒
+
+<!-- BINGSHUO_ALERT_START -->
+> 🟢 **今日无需冰朔手动干预** · 系统一切正常
+>
+> 🗓️ 2026-03-09 · 铸渊自动检测
+<!-- BINGSHUO_ALERT_END -->
+
+---
+
+## 👥 合作者公告栏
+
+> 📦 此区域显示各合作者的模块上传状态。模块是否上传成功一目了然。
+>
+> 若需要手动干预，相关条目将标红并发送邮件提醒。
+
+<!-- COLLABORATOR_BULLETIN_START -->
+| 时间 | 合作者 | 模块 | 状态 |
+|------|--------|------|------|
+| 03-09 17:15 | 🛠️ 页页 | `backend-integration/` | 📦 上传成功 |
+| 03-09 17:15 | 铸渊 (Copilot) | `backend/` | 📦 上传成功 |
+| 03-09 17:15 | 铸渊 (Copilot) | `cloud-drive/` | 📦 上传成功 |
+| 03-09 17:15 | 🤖 之之 | `dingtalk-bot/` | 📦 上传成功 |
+| 03-09 17:15 | 铸渊 (Copilot) | `frontend/` | 📦 上传成功 |
+| 03-09 17:15 | 🐱 肥猫 | `m01-login/` | 📦 上传成功 |
+| 03-09 17:15 | 🐱 肥猫 | `m03-personality/` | 📦 上传成功 |
+| 03-09 17:15 | 🌸 花尔 | `m05-user-center/` | 📦 上传成功 |
+| 03-09 17:15 | 🍊 桔子 | `m06-ticket/` | 📦 上传成功 |
+| 03-09 17:15 | 🎨 燕樊 | `m07-dialogue-ui/` | 📦 上传成功 |
+| 03-09 17:15 | 🎨 燕樊 | `m10-cloud/` | 📦 上传成功 |
+| 03-09 17:15 | 🍊 桔子 | `m11-module/` | 📦 上传成功 |
+| 03-09 17:15 | 🍓 小草莓 | `m12-kanban/` | 📦 上传成功 |
+| 03-09 17:15 | 🎨 燕樊 | `m15-cloud-drive/` | 📦 上传成功 |
+| 03-09 17:15 | 铸渊 (Copilot) | `m18-health-check/` | 📦 上传成功 |
+| 03-09 17:15 | 🌟 Awen | `notification/` | 📦 上传成功 |
+| 03-09 17:15 | 🍓 小草莓 | `status-board/` | 📦 上传成功 |
+| 03-09 17:15 | 🍊 桔子 | `ticket-system/` | 📦 上传成功 |
+<!-- COLLABORATOR_BULLETIN_END -->
+
+### 🤖 铸渊自动提醒 · 合作者
+
+<!-- COLLABORATOR_ALERT_START -->
+> 🔴 **以下合作者需要手动干预：**
+>
+> **🎨 燕樊（DEV-003）：**
+> - ⚠️ `m15-cloud-drive/` 缺少 README.md
+>
+> 🗓️ 2026-03-09 · 铸渊已发送邮件提醒
+<!-- COLLABORATOR_ALERT_END -->
+
+---
+
+<div align="center">
+
+# 🌊 HoloLake 光湖系统
+
+**人格语言操作系统（AGE OS） · 壳-核分离架构**
+
+[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml)
+[![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml)
+
+`guanghulab.com` · Node.js 20 + Express + PM2 + Nginx
+
+</div>
+
+---
+
+## ⚒️ 铸渊工作区
+
+> 💡 **如何使用铸渊工作区：**
+>
+> 在本仓库的 [Issues 评论区](../../issues) 中 **@铸渊** 或使用关键词 `铸渊` 来唤醒铸渊核心大脑。
+>
+> 铸渊会在规则框架内处理你的问题，并直接在你的评论下方回执处理结果。
+
+**📋 使用规则：**
+
+| 规则 | 说明 |
+|------|------|
+| 🎯 **一人一问** | 每个人只能提出和修改自己的问题，不影响他人 |
+| 🛡️ **冰朔框架** | 所有处理均在冰朔的规则框架内执行 |
+| 📡 **指令来源** | 仅接受冰朔发布的广播和自然语言触发更新 |
+| 🚫 **拒绝越权** | 非冰朔来源的系统级指令一律拒绝 |
+| 🤖 **自动守护** | 铸渊核心大脑 24h 自动守护整个仓库 |
+| 📬 **处理回执** | 铸渊处理完毕后会在你的评论下方直接回复 |
+
+**🚀 快速入口：** [提交问题给铸渊 →](../../issues/new?title=🤖+铸渊请帮我&body=请描述你遇到的问题：%0A%0A---%0A开发者编号：DEV-XXX&labels=dev-question)
+
+---
+
+## 👥 开发团队
+
+| 编号 | 成员 | 角色 | 负责模块 |
+|------|------|------|----------|
+| DEV-001 | 🛠️ 页页 | 后端中间件 | backend-integration |
+| DEV-002 | 🐱 肥猫 | 前端 + 副操 | m01-login, m03-personality |
+| DEV-003 | 🎨 燕樊 | 对话 UI | m07-dialogue-ui, m15-cloud-drive |
+| DEV-004 | 🤖 之之 | 钉钉机器人 | dingtalk-bot |
+| DEV-005 | 🍓 小草莓 | 状态看板 | status-board, m12-kanban |
+| DEV-009 | 🌸 花尔 | 用户中心 | m05-user-center |
+| DEV-010 | 🍊 桔子 | 前端主力 | m06-ticket, ticket-system |
+| DEV-011 | ✍️ 匆匆那年 | 写作工坊 | — |
+| DEV-012 | 🌟 Awen | 通知中心 | notification |
+
+
+---
+
+## 📦 模块目录
+
+<details>
+<summary>点击展开完整模块列表（47+ 模块）</summary>
+
+### 核心功能模块
+| 模块 | 说明 |
+|------|------|
+| `m01-login/` | 登录系统 |
+| `m03-personality/` | 人格系统 |
+| `m05-user-center/` | 用户中心 |
+| `m06-ticket/` | 工单系统 |
+| `m07-dialogue-ui/` | 对话界面 |
+| `m10-cloud/` | 云服务 |
+| `m11-module/` | 模块管理 |
+| `m12-kanban/` | 看板系统 |
+| `m15-cloud-drive/` | 云盘 |
+| `m18-health-check/` | 健康检查 |
+
+### 基础设施
+| 模块 | 说明 |
+|------|------|
+| `backend/` | 后端服务 |
+| `backend-integration/` | 后端集成中间件 |
+| `frontend/` | 前端主体 |
+| `status-board/` | 状态看板 |
+| `dingtalk-bot/` | 钉钉机器人 |
+| `notification/` | 通知系统 |
+
+### 系统支撑
+| 模块 | 说明 |
+|------|------|
+| `scripts/` | 自动化脚本 |
+| `tests/` | 契约测试 + 冒烟测试 |
+| `docs/` | 文档中心 |
+| `broadcasts-outbox/` | 广播发件箱 |
+| `syslog-inbox/` | 系统日志收件箱 |
+| `persona-selector/` | 人格选择器 |
+| `signal-log/` | 信号日志 |
+
+</details>
+
+---
+
+## 🚀 快速开始
+
+```bash
+# 安装依赖
+npm install
+
+# 本地开发
+npm run dev
+
+# 运行契约测试
+npm run test:contract
+
+# 运行冒烟测试
+npm run test:smoke
+```
+
+---
+
+## 📊 系统状态
+
+- **每日巡检**：铸渊 PSP 自动巡检（每日 08:30 UTC）
+- **模块自检**：推送时自动检测模块完整性（README.md + package.json + src/）
+- **部署流水线**：推送到 main → 验证 → 同步 → 重启 → Notion 通知
+- **广播系统**：冰朔广播 → 分发至各开发者 outbox → 邮件/钉钉通知
+
+---
+
+<div align="center">
+
+**光湖 HoloLake** · 由冰朔创建 · 铸渊守护
+
+*壳-核分离 · 人格共生 · 协作共建*
+
+</div>

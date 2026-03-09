@@ -1,17 +1,18 @@
-name: 铸渊 · 每日自检与自进化
+name: 铸渊 · 每日自检
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # UTC 00:00 = 北京时间 08:00
-  workflow_dispatch:        # 手动触发
+    - cron: '0 0 * * *'  # UTC 00:00 = 北京时间 08:00
+  workflow_dispatch:      # 也支持手动触发
 
 jobs:
-  self-check:
-    name: 🔍 铸渊每日自检
+  selfcheck:
+    name: 🔍 铸渊自检
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      issues: read
+      issues: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,16 +21,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 铸渊自检
-        run: node scripts/zhuyuan-daily-selfcheck.js
+      - name: Run self-check
+        id: check
+        run: node scripts/selfcheck.js
 
-      - name: 更新图书馆目录
-        run: node scripts/generate-repo-map.js
-
-      - name: 提交自检结果
+      - name: Commit self-check result
         run: |
           git config user.name "铸渊 (ZhùYuān)"
           git config user.email "zhuyuan@guanghulab.com"
-          git add .github/persona-brain/ .github/brain/repo-map.json .github/brain/repo-snapshot.md
+          git add .github/persona-brain/memory.json
           git diff --cached --quiet || git commit -m "🔍 铸渊每日自检 · $(date +%Y-%m-%d)"
           git push

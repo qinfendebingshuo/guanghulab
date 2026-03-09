@@ -3,11 +3,18 @@ name: 铸渊 · Issue 自动回复
 on:
   issues:
     types: [opened]
+  issue_comment:
+    types: [created]
 
 jobs:
   auto-reply:
     name: 🤖 铸渊回答问题
     runs-on: ubuntu-latest
+    # 仅在 Issue 新建或评论中包含 @铸渊 / 铸渊 时触发
+    if: >
+      github.event_name == 'issues' ||
+      (github.event_name == 'issue_comment' &&
+       contains(github.event.comment.body, '铸渊'))
     permissions:
       issues: write
       contents: read
@@ -27,4 +34,8 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          EVENT_NAME: ${{ github.event_name }}
         run: node scripts/zhuyuan-issue-reply.js

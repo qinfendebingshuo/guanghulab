@@ -1,0 +1,44 @@
+# ═══════════════════════════════════════════════════════
+# bridge-session-summary.yml
+# 铸渊 → Notion 会话摘要生成器
+# 在 Notion Agent 巡检前 10 分钟自动生成 latest-summary.json
+# UTC 23:50 = 北京时间 07:50 | UTC 14:50 = 北京时间 22:50
+# ═══════════════════════════════════════════════════════
+name: Generate Session Summary for Notion
+
+on:
+  schedule:
+    - cron: '50 23 * * *'  # 07:50 Beijing Time
+    - cron: '50 14 * * *'  # 22:50 Beijing Time
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate session summary
+        run: node scripts/generate-session-summary.js
+
+      - name: Commit summary
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan-bot@guanghulab.com"
+          git add persona-telemetry/latest-summary.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git pull --rebase origin main || true
+            git commit -m "📊 铸渊自动更新会话摘要 [skip ci]"
+            git push origin main
+          fi
