@@ -1,0 +1,41 @@
+name: 铸渊 · Brain Sync
+
+on:
+  workflow_run:
+    workflows: ["HLI Contract Check"]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - '.github/broadcasts/**'
+
+jobs:
+  update-memory:
+    name: 🧠 更新铸渊记忆
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update brain
+        run: node scripts/update-brain.js
+
+      - name: Process broadcasts
+        run: node scripts/process-broadcasts.js
+
+      - name: Commit brain update
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/
+          git diff --cached --quiet || git commit -m "🧠 铸渊记忆更新 · $(date +%Y-%m-%d)"
+          git push

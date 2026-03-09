@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,5 +32,5 @@ jobs:
           git config user.name "铸渊 (ZhùYuān)"
           git config user.email "zhuyuan@guanghulab.com"
           git add .
-          git diff --cached --quiet || git commit -m "📡 铸渊广播分发 · $(date -u +%Y-%m-%d\ %H:%M\ UTC)"
+          git diff --cached --quiet || git commit -m "📡 铸渊广播分发 · $(date +%Y-%m-%d)"
           git push
