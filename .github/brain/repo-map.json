@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-09T09:01:22.162Z",
+  "generated_at": "2026-03-09T09:14:23.704Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 22,
-    "total_scripts": 20,
+    "total_workflows": 24,
+    "total_scripts": 22,
     "total_dev_nodes": 8,
     "hli_interfaces": 17,
     "hli_implemented": 3,
@@ -75,10 +75,16 @@
       ],
       "shelves": [
         {
+          "file": "decision-log.md"
+        },
+        {
           "file": "dev-status.json"
         },
         {
           "file": "growth-journal.md"
+        },
+        {
+          "file": "identity.md"
         },
         {
           "file": "knowledge-base.json"
@@ -87,13 +93,19 @@
           "file": "memory.json"
         },
         {
+          "file": "responsibility.md"
+        },
+        {
+          "file": "routing-map.json"
+        },
+        {
           "file": "style-config.json"
         },
         {
           "file": "system-prompt.md"
         }
       ],
-      "item_count": 6
+      "item_count": 10
     },
     {
       "zone_id": "WORKFLOWS",
@@ -274,8 +286,15 @@
           ]
         },
         {
+          "file": "zhuyuan-brain-sync.yml",
+          "name": "铸渊 · Brain Sync",
+          "triggers": [
+            "push"
+          ]
+        },
+        {
           "file": "zhuyuan-daily-selfcheck.yml",
-          "name": "铸渊 · 每日自检与自进化",
+          "name": "铸渊 · 每日自检",
           "triggers": [
             "schedule(0 0 * * *)",
             "manual"
@@ -287,9 +306,16 @@
           "triggers": [
             "issues"
           ]
+        },
+        {
+          "file": "zhuyuan-pr-review.yml",
+          "name": "铸渊 · PR Review",
+          "triggers": [
+            "pull_request"
+          ]
         }
       ],
-      "item_count": 22
+      "item_count": 24
     },
     {
       "zone_id": "SCRIPTS",
@@ -355,6 +381,12 @@
           "file": "route-align-check.js"
         },
         {
+          "file": "selfcheck.js"
+        },
+        {
+          "file": "update-brain.js"
+        },
+        {
           "file": "update-memory.js"
         },
         {
@@ -367,7 +399,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 20
+      "item_count": 22
     },
     {
       "zone_id": "SRC",
@@ -955,7 +987,8 @@
       "BRAIN::repo-snapshot.md"
     ],
     "routing-map": [
-      "BRAIN::routing-map.json"
+      "BRAIN::routing-map.json",
+      "PERSONA_BRAIN::routing-map.json"
     ],
     "wake-protocol": [
       "BRAIN::wake-protocol.md"
@@ -964,7 +997,8 @@
       "PERSONA_BRAIN"
     ],
     "identity": [
-      "PERSONA_BRAIN"
+      "PERSONA_BRAIN",
+      "PERSONA_BRAIN::identity.md"
     ],
     "dev-status": [
       "PERSONA_BRAIN",
@@ -976,11 +1010,17 @@
     "开发者状态": [
       "PERSONA_BRAIN"
     ],
+    "decision-log": [
+      "PERSONA_BRAIN::decision-log.md"
+    ],
     "growth-journal": [
       "PERSONA_BRAIN::growth-journal.md"
     ],
     "knowledge-base": [
       "PERSONA_BRAIN::knowledge-base.json"
+    ],
+    "responsibility": [
+      "PERSONA_BRAIN::responsibility.md"
     ],
     "style-config": [
       "PERSONA_BRAIN::style-config.json"
@@ -1073,6 +1113,9 @@
     "update-repo-map": [
       "WORKFLOWS::update-repo-map.yml"
     ],
+    "zhuyuan-brain-sync": [
+      "WORKFLOWS::zhuyuan-brain-sync.yml"
+    ],
     "zhuyuan-daily-selfcheck": [
       "WORKFLOWS::zhuyuan-daily-selfcheck.yml",
       "SCRIPTS::zhuyuan-daily-selfcheck.js"
@@ -1080,6 +1123,9 @@
     "zhuyuan-issue-reply": [
       "WORKFLOWS::zhuyuan-issue-reply.yml",
       "SCRIPTS::zhuyuan-issue-reply.js"
+    ],
+    "zhuyuan-pr-review": [
+      "WORKFLOWS::zhuyuan-pr-review.yml"
     ],
     "script": [
       "SCRIPTS"
@@ -1135,6 +1181,12 @@
     ],
     "route-align-check": [
       "SCRIPTS::route-align-check.js"
+    ],
+    "selfcheck": [
+      "SCRIPTS::selfcheck.js"
+    ],
+    "update-brain": [
+      "SCRIPTS::update-brain.js"
     ],
     "update-memory": [
       "SCRIPTS::update-memory.js"
