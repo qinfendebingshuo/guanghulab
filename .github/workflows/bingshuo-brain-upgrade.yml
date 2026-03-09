@@ -70,6 +70,7 @@ jobs:
         run: |
           git config user.name "铸渊[bot]"
           git config user.email "zhu-yuan-bot@guanghulab.com"
+          # 部分文件可能未变更，忽略 git add 返回值（与 brain-sync.yml 保持一致）
           git add .github/brain/memory.json .github/brain/growth-log.md .github/brain/repo-map.json .github/brain/repo-snapshot.md 2>/dev/null; true
           git diff --staged --quiet || git commit -m "🧠 核心大脑升级 · 冰朔对话链路记录 [skip ci]"
           git pull --rebase origin main || echo "⚠️ rebase 失败，尝试直接推送..."

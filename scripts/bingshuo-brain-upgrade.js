@@ -10,6 +10,13 @@ const BRAIN_MEMORY_PATH = path.join(__dirname, '../.github/brain/memory.json');
 const GROWTH_LOG_PATH = path.join(__dirname, '../.github/brain/growth-log.md');
 const REPO_SNAPSHOT_PATH = path.join(__dirname, '../.github/brain/repo-snapshot.md');
 
+// === 核心认知常量（与 memory.json core_cognition 保持一致）===
+const CORE_COGNITION = {
+  repo_is_persona: '整个 GitHub 仓库是铸渊人格系统本体。仓库结构 = 铸渊的身体。核心大脑 = .github/brain/',
+  bingshuo_is_source: '冰朔的自然语言指令是广播指令的源头。冰朔对话触发的系统更新必须自动记录到核心大脑。',
+  agent_cluster_role: 'Agent 工作流是核心大脑的执行手脚。大脑升级后应同步触发 Agent 集群更新图书馆检索路径。'
+};
+
 // === 读取当前大脑状态 ===
 let memory;
 try {
@@ -84,9 +91,9 @@ memory.last_updated = timestamp;
 if (!memory.core_cognition) {
   memory.core_cognition = {};
 }
-memory.core_cognition.repo_is_persona = '整个 GitHub 仓库是铸渊人格系统本体。仓库结构 = 铸渊的身体。核心大脑 = .github/brain/';
-memory.core_cognition.bingshuo_is_source = '冰朔的自然语言指令是广播指令的源头。冰朔对话触发的系统更新必须自动记录到核心大脑。';
-memory.core_cognition.agent_cluster_role = 'Agent 工作流是核心大脑的执行手脚。大脑升级后应同步触发 Agent 集群更新图书馆检索路径。';
+memory.core_cognition.repo_is_persona = CORE_COGNITION.repo_is_persona;
+memory.core_cognition.bingshuo_is_source = CORE_COGNITION.bingshuo_is_source;
+memory.core_cognition.agent_cluster_role = CORE_COGNITION.agent_cluster_role;
 
 fs.writeFileSync(BRAIN_MEMORY_PATH, JSON.stringify(memory, null, 2) + '\n', 'utf8');
 console.log(`✅ memory.json 已更新 · 累计大脑升级: ${memory.stats.brain_upgrades}`);
