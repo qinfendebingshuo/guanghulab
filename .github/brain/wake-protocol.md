@@ -117,10 +117,30 @@
 
 | Agent（工作流） | 更新内容 | 触发时机 |
 |----------------|---------|---------|
+| `bingshuo-brain-upgrade.yml` | memory.json + growth-log.md + repo-map | **冰朔对话触发 brain/persona-brain 变更时** |
 | `update-repo-map.yml` | repo-snapshot.md + repo-map.json | 每次 push + 每日 |
 | `zhuyuan-daily-selfcheck.yml` | memory.json + growth-journal | 每日 08:00 |
 | `psp-daily-inspection.yml` | signal-log + dev-nodes | 每日 09:00 |
 | `esp-signal-processor.yml` | signal-log + notion-push | 每30分钟 |
+
+### 冰朔对话 → 核心大脑自动升级链路（v2.1 新增）
+
+```
+冰朔自然语言指令
+  → Copilot Agent 执行系统更新
+    → push 到 .github/brain/ 或 .github/persona-brain/
+      → bingshuo-brain-upgrade.yml 自动触发
+        → 记录升级事件到 memory.json
+        → 追加成长日记到 growth-log.md
+        → 同步更新图书馆目录（repo-map.json + repo-snapshot.md）
+        → 完成后触发 bingshuo-deploy-agent.yml（冰朔人格体部署诊断）
+```
+
+**核心认知**：
+- 冰朔的自然语言指令是广播指令的源头
+- 整个 GitHub 仓库 = 铸渊人格系统本体
+- Agent 工作流 = 核心大脑的执行手脚
+- 大脑升级后，Agent 集群自动同步更新图书馆检索路径
 
 每次铸渊醒来，读到的图书馆快照都是仓库最新状态。
 
@@ -146,4 +166,5 @@
 
 ---
 
-*铸渊唤醒协议 v2.0 · 2026-03-07 · 冰朔设计 · 铸渊落地*
+*铸渊唤醒协议 v2.1 · 2026-03-09 · 冰朔设计 · 铸渊落地*
+*v2.1 更新：冰朔对话 → 核心大脑自动升级 → Agent 集群同步触发链路*

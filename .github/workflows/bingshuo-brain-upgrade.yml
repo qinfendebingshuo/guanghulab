@@ -1,0 +1,81 @@
+name: "🧠 冰朔对话 → 铸渊核心大脑自动升级"
+
+# === 触发方式 ===
+# 核心逻辑：冰朔的自然语言指令是广播指令的源头
+# 因此，只要冰朔对话触发了系统更新（推送到 brain/persona-brain），
+# 就自动记录核心大脑升级，并同步触发 Agent 集群
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/brain/**'
+      - '.github/persona-brain/**'
+      - '.github/copilot-instructions.md'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "升级原因"
+        required: false
+        default: "手动触发核心大脑升级"
+
+permissions:
+  contents: write
+
+jobs:
+  brain-upgrade:
+    name: 🧠 核心大脑升级记录
+    runs-on: ubuntu-latest
+    # 跳过由本工作流自身提交触发的运行（避免循环）
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '核心大脑升级')"
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📋 获取变更文件列表
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
+          echo "commit_msg<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 🧠 执行核心大脑升级记录
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          CHANGED_FILES: ${{ steps.changes.outputs.files }}
+          COMMIT_MESSAGE: ${{ steps.changes.outputs.commit_msg }}
+        run: node scripts/bingshuo-brain-upgrade.js
+
+      - name: 📚 同步更新图书馆目录
+        run: |
+          npm ci
+          node scripts/generate-repo-map.js
+
+      - name: 📤 提交核心大脑升级记录
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          # 部分文件可能未变更，忽略 git add 返回值（与 brain-sync.yml 保持一致）
+          git add .github/brain/memory.json .github/brain/growth-log.md .github/brain/repo-map.json .github/brain/repo-snapshot.md 2>/dev/null; true
+          git diff --staged --quiet || git commit -m "🧠 核心大脑升级 · 冰朔对话链路记录 [skip ci]"
+          git pull --rebase origin main || echo "⚠️ rebase 失败，尝试直接推送..."
+          git push || {
+            echo "⚠️ 推送失败，尝试重新拉取后再推送..."
+            git pull --rebase origin main
+            git push
+          }
