@@ -5,6 +5,8 @@ on:
     branches: [main, dev]
     paths:
       - '.github/broadcasts/**'
+      - '.github/brain/**'
+      - '.github/persona-brain/**'
   schedule:
     # 每天 08:00 UTC 自检
     - cron: '0 8 * * *'
