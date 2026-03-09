@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-09T09:14:23.704Z",
+  "generated_at": "2026-03-09T09:38:25.864Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 24,
-    "total_scripts": 22,
+    "total_workflows": 25,
+    "total_scripts": 23,
     "total_dev_nodes": 8,
     "hli_interfaces": 17,
     "hli_implemented": 3,
@@ -277,6 +277,15 @@
           ]
         },
         {
+          "file": "update-readme-bulletin.yml",
+          "name": "📢 更新系统公告区",
+          "triggers": [
+            "push",
+            "schedule(0 1 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "update-repo-map.yml",
           "name": "铸渊 · 图书馆目录自动更新",
           "triggers": [
@@ -304,7 +313,8 @@
           "file": "zhuyuan-issue-reply.yml",
           "name": "铸渊 · Issue 自动回复",
           "triggers": [
-            "issues"
+            "issues",
+            "issue_comment"
           ]
         },
         {
@@ -315,7 +325,7 @@
           ]
         }
       ],
-      "item_count": 24
+      "item_count": 25
     },
     {
       "zone_id": "SCRIPTS",
@@ -390,6 +400,9 @@
           "file": "update-memory.js"
         },
         {
+          "file": "update-readme-bulletin.js"
+        },
+        {
           "file": "zhuyuan-daily-selfcheck.js"
         },
         {
@@ -399,7 +412,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 22
+      "item_count": 23
     },
     {
       "zone_id": "SRC",
@@ -1109,6 +1122,10 @@
     ],
     "test-notion-bridge": [
       "WORKFLOWS::test-notion-bridge.yml"
+    ],
+    "update-readme-bulletin": [
+      "WORKFLOWS::update-readme-bulletin.yml",
+      "SCRIPTS::update-readme-bulletin.js"
     ],
     "update-repo-map": [
       "WORKFLOWS::update-repo-map.yml"

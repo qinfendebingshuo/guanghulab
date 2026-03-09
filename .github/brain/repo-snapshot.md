@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-09 17:14 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-09 17:38 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 24 个 GitHub Actions |
-| 脚本 | 22 个执行脚本 |
+| 工作流 | 25 个 GitHub Actions |
+| 脚本 | 23 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 3/17 (18%) |
-| 快照生成时间 | 2026-03-09 17:14 CST |
+| 快照生成时间 | 2026-03-09 17:38 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 24 项
+**路径**: `.github/workflows` · **数量**: 25 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 22 项
+**路径**: `scripts` · **数量**: 23 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -109,10 +109,11 @@
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `syslog-pipeline.yml` | 铸渊 · SYSLOG Pipeline (A/D/E) | push, manual |
 | `test-notion-bridge.yml` | "🧪 Notion Bridge Connectivity Test" | push, manual |
+| `update-readme-bulletin.yml` | 📢 更新系统公告区 | push, schedule(0 1 * * *), manual |
 | `update-repo-map.yml` | 铸渊 · 图书馆目录自动更新 | push, schedule(0 0 * * *), manual |
 | `zhuyuan-brain-sync.yml` | 铸渊 · Brain Sync | push |
 | `zhuyuan-daily-selfcheck.yml` | 铸渊 · 每日自检 | schedule(0 0 * * *), manual |
-| `zhuyuan-issue-reply.yml` | 铸渊 · Issue 自动回复 | issues |
+| `zhuyuan-issue-reply.yml` | 铸渊 · Issue 自动回复 | issues, issue_comment |
 | `zhuyuan-pr-review.yml` | 铸渊 · PR Review | pull_request |
 
 ---
@@ -138,6 +139,7 @@
 - `scripts/selfcheck.js`
 - `scripts/update-brain.js`
 - `scripts/update-memory.js`
+- `scripts/update-readme-bulletin.js`
 - `scripts/zhuyuan-daily-selfcheck.js`
 - `scripts/zhuyuan-issue-reply.js`
 - `scripts/zhuyuan-module-protocol.js`
