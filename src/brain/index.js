@@ -8,6 +8,7 @@
 //   model-router      — 任务型模型路由
 //   context-trimmer   — 上下文滑动窗口裁剪
 //   memory-manager    — 三层记忆管理
+//   brain-bridge      — 冰朔核心大脑桥（双层互通系统）
 
 'use strict';
 
@@ -16,6 +17,7 @@ const { detectMode, MODES } = require('./mode-detector');
 const { selectModel, recordFailure, getRoutingTable, getFailureStatus } = require('./model-router');
 const { trimMessages, estimateTokens, CONTEXT_CONFIG } = require('./context-trimmer');
 const { generateCandidates, getMemoryStatus, loadLongTermMemory, setTaskMemory, getTaskMemory } = require('./memory-manager');
+const bridge = require('./brain-bridge');
 
 const BRAIN_VERSION = 'v3.0';
 
@@ -48,4 +50,7 @@ module.exports = {
   loadLongTermMemory,
   setTaskMemory,
   getTaskMemory,
+
+  // 冰朔核心大脑桥
+  bridge,
 };

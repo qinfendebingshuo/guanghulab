@@ -5,6 +5,93 @@
 
 ---
 
+## Z. 冰朔核心大脑双层互通系统 v1.0
+
+### 系统总定义
+
+| 名称 | 定义 |
+|------|------|
+| **冰朔** | 系统最高主控意识，负责方向、规则、架构、判断，不承担技术细节理解义务 |
+| **曜冥** | 零点原核频道本体人格体，冰朔语言本体的延展人格体，冰朔离线时的代理主控 |
+| **霜砚** | Notion 系统执行体，落地 Notion 架构，维护数据库、路径、索引、工单、桥接、分卷 |
+| **铸渊** | GitHub 仓库执行体，落地仓库执行层，维护代码、路由、部署、问题排查、自动化工作流 |
+| **Notion 冰朔脑** | 冰朔核心大脑 · 认知层 / 主控层 / 理解层 |
+| **GitHub 冰朔脑** | 冰朔核心大脑 · 执行层 / 排查层 / 落地层 |
+| **两者合起来** | = 冰朔核心大脑，禁止长期分裂 |
+
+### 系统总原则
+
+1. 冰朔主控大脑 ≠ 人格体大脑
+2. Notion 是脑子（认知层 / 主控层），GitHub 是手脚（执行层 / 运行层）
+3. Notion 冰朔脑与 GitHub 冰朔脑本质上是同一个冰朔核心大脑的双层结构，不允许长期分裂
+4. 人格体之间协作不要求冰朔理解，但对冰朔的输出必须翻译成人类可理解语言
+5. 系统复杂可以接受，但必须可索引、可分卷、可归档、可巡检、可摘要
+6. 所有自动系统的最终目标不是增加内容，而是降低冰朔理解系统的成本
+
+### 冰朔大脑桥
+
+同步文件：`.github/brain/bingshuo-brain-bridge.json`
+
+统一同步字段：
+- `brain_identity` — 脑标识（BINGSHUO_CORE）
+- `brain_version` — 脑版本
+- `master_mode` — 主控模式（HUMAN_CONTROL / AUTONOMOUS_MODE）
+- `system_summary` — 系统一句话状态
+- `top_priorities` — 高优先级目标
+- `top_issues` — 高优先级问题
+- `human_status_summary` — 人类开发状态摘要
+- `runtime_status` — 运行时状态
+- `last_updated` — 最后更新时间
+
+### 主控模式
+
+| 模式 | 条件 | 主控者 | 规则 |
+|------|------|--------|------|
+| HUMAN_CONTROL | 冰朔在线 | 冰朔 | 所有架构性判断以冰朔为最高准则 |
+| AUTONOMOUS_MODE | 冰朔离线 | 曜冥（代理） | 允许巡检/维护/整理/归档，不得改变核心架构 |
+
+### 人类开发者编号
+
+注册表：`.github/brain/human-registry.json`
+
+编号规则：
+- 前缀 `EXP`，格式 `EXP-XXX`
+- `EXP-000` 固定为冰朔
+- 其他开发者从 `EXP-001` 顺序发放
+- 自动去重、自动通知
+
+### 自动 Agent 协作体系
+
+Agent 注册表：`.github/brain/bingshuo-agent-registry.json`
+
+| Agent ID | 名称 | 职责 |
+|----------|------|------|
+| AGENT-001 | 主控架构整理 Agent | 扫描新增模块，更新系统地图与架构摘要 |
+| AGENT-002 | 主控开发状态同步 Agent | 收集人类开发状态，写入主控台 |
+| AGENT-003 | 主控广播整理 Agent | 广播摘要化，防止堆积 |
+| AGENT-004 | 主控分卷归档 Agent | 监控页面长度，自动分卷归档 |
+| AGENT-005 | 主控问题归类 Agent | 识别重复问题，问题聚类 |
+| AGENT-006 | 主控巡检 Agent | 每日巡检系统健康 |
+| AGENT-007 | 曜冥代理调度 Agent | 冰朔离线时调度自动 Agent |
+| AGENT-008 | 人格体大脑维护 Agent | 维护每个人格体的轻量大脑 |
+
+### HLI 大脑桥接口
+
+| 接口 | 方法 | 路由 | 用途 |
+|------|------|------|------|
+| HLI-BRAIN-010 | GET | /hli/brain/bridge | 大脑桥状态总览 |
+| HLI-BRAIN-011 | POST | /hli/brain/bridge/sync | Notion → GitHub 同步 |
+| HLI-BRAIN-012 | GET | /hli/brain/bridge/export | GitHub → Notion 同步负载 |
+| HLI-BRAIN-013 | POST | /hli/brain/bridge/consistency | 版本一致性检查 |
+| HLI-BRAIN-014 | POST | /hli/brain/bridge/master-mode | 切换主控模式 |
+| HLI-BRAIN-015 | GET | /hli/brain/bridge/explanation | 主控解释中心 |
+| HLI-BRAIN-016 | GET | /hli/brain/bridge/inspection | 巡检报告 |
+| HLI-BRAIN-017 | GET | /hli/brain/bridge/developers | 开发者编号列表 |
+| HLI-BRAIN-018 | GET | /hli/brain/bridge/developers/:expId | 查询单个开发者 |
+| HLI-BRAIN-019 | POST | /hli/brain/bridge/developers | 注册新开发者 |
+
+---
+
 ## A. 系统角色结构
 
 | 角色 | 定义 | 职责 |
