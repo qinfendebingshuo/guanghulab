@@ -86,6 +86,38 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     steps:
+      - name: 🔐 检查必需 Secrets
+        run: |
+          MISSING=""
+          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            MISSING="${MISSING} DEPLOY_HOST"
+          fi
+          if [ -z "${{ secrets.DEPLOY_USER }}" ]; then
+            MISSING="${MISSING} DEPLOY_USER"
+          fi
+          if [ -z "${{ secrets.DEPLOY_KEY }}" ]; then
+            MISSING="${MISSING} DEPLOY_KEY"
+          fi
+          if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
+            MISSING="${MISSING} DEPLOY_PATH"
+          fi
+          if [ -n "$MISSING" ]; then
+            echo "❌ 以下必需的 GitHub Secrets 未配置：${MISSING}"
+            echo ""
+            echo "请在仓库 Settings → Secrets and variables → Actions 中添加："
+            echo "  DEPLOY_HOST  — 服务器 IP 或域名"
+            echo "  DEPLOY_USER  — SSH 用户名"
+            echo "  DEPLOY_KEY   — SSH 私钥（完整 PEM 内容）"
+            echo "  DEPLOY_PATH  — 网站根目录（如 /var/www/guanghulab）"
+            echo ""
+            echo "### ❌ 部署失败：缺少必需 Secrets" >> $GITHUB_STEP_SUMMARY
+            echo "未配置：\`${MISSING}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "请在 **Settings → Secrets → Actions** 中添加以上 Secrets。" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✅ 所有必需 Secrets 已配置"
+
       - name: 📥 检出代码
         uses: actions/checkout@v4
 
@@ -101,7 +133,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
+            echo "⚠️ ssh-keyscan 失败，尝试使用 StrictHostKeyChecking=no 作为后备"
+          }
 
       - name: 📦 确保远程服务器 rsync 已安装
         run: |
