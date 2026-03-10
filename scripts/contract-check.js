@@ -15,8 +15,8 @@ domains.forEach(domain => {
   const routeDir = path.join(ROUTE_DIR, domain);
   const schemaDir = path.join(SCHEMA_DIR, domain);
 
-  // 扫描路由文件
-  const routeFiles = fs.readdirSync(routeDir).filter(f => f.endsWith('.js'));
+  // 扫描路由文件（排除 index.js 路由聚合文件）
+  const routeFiles = fs.readdirSync(routeDir).filter(f => f.endsWith('.js') && f !== 'index.js');
   
   routeFiles.forEach(routeFile => {
     const name = path.basename(routeFile, '.js');
