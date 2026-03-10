@@ -131,4 +131,176 @@ router.get('/status', (req, res) => {
   });
 });
 
+// ══════════════════════════════════════════════════════════
+// 冰朔核心大脑桥接口 (Brain Bridge)
+// ══════════════════════════════════════════════════════════
+
+// GET /hli/brain/bridge — 冰朔大脑桥状态总览
+router.get('/bridge', (req, res) => {
+  const bridge = brain.bridge;
+
+  res.json({
+    hli_id: 'HLI-BRAIN-010',
+    sync_state: bridge.getSyncSnapshot(),
+    master_mode: bridge.getMasterMode(),
+    runtime_status: bridge.collectRuntimeStatus(),
+    developers: bridge.listDevelopers(),
+    auto_agents: bridge.listAutoAgents(),
+    explanation: bridge.generateExplanationCenter(),
+  });
+});
+
+// POST /hli/brain/bridge/sync — 接收 Notion → GitHub 同步
+router.post('/bridge/sync', (req, res) => {
+  const bridge = brain.bridge;
+  const result = bridge.receiveNotionToGitHubPayload(req.body);
+
+  res.json({
+    hli_id: 'HLI-BRAIN-011',
+    ...result,
+  });
+});
+
+// GET /hli/brain/bridge/export — 生成 GitHub → Notion 同步负载
+router.get('/bridge/export', (req, res) => {
+  const bridge = brain.bridge;
+
+  res.json({
+    hli_id: 'HLI-BRAIN-012',
+    ...bridge.generateGitHubToNotionPayload(),
+  });
+});
+
+// POST /hli/brain/bridge/consistency — 版本一致性检查
+router.post('/bridge/consistency', (req, res) => {
+  const bridge = brain.bridge;
+  const notionState = req.body;
+
+  if (!notionState || typeof notionState !== 'object') {
+    return res.status(400).json({
+      error: true,
+      code: 'MISSING_NOTION_STATE',
+      message: '缺少 Notion 侧同步状态',
+    });
+  }
+
+  const result = bridge.checkConsistency(notionState);
+
+  res.json({
+    hli_id: 'HLI-BRAIN-013',
+    ...result,
+  });
+});
+
+// POST /hli/brain/bridge/master-mode — 切换主控模式
+router.post('/bridge/master-mode', (req, res) => {
+  const bridge = brain.bridge;
+  const { mode } = req.body;
+
+  if (!mode) {
+    return res.status(400).json({
+      error: true,
+      code: 'MISSING_MODE',
+      message: '缺少 mode 参数，可选: HUMAN_CONTROL, AUTONOMOUS_MODE',
+    });
+  }
+
+  try {
+    const result = bridge.setMasterMode(mode);
+    res.json({
+      hli_id: 'HLI-BRAIN-014',
+      ...result,
+    });
+  } catch (err) {
+    res.status(400).json({
+      error: true,
+      code: 'INVALID_MODE',
+      message: err.message,
+    });
+  }
+});
+
+// GET /hli/brain/bridge/explanation — 主控解释中心
+router.get('/bridge/explanation', (req, res) => {
+  const bridge = brain.bridge;
+
+  res.json({
+    hli_id: 'HLI-BRAIN-015',
+    ...bridge.generateExplanationCenter(),
+  });
+});
+
+// GET /hli/brain/bridge/inspection — 巡检报告
+router.get('/bridge/inspection', (req, res) => {
+  const bridge = brain.bridge;
+
+  res.json({
+    hli_id: 'HLI-BRAIN-016',
+    ...bridge.generateInspectionReport(),
+  });
+});
+
+// GET /hli/brain/bridge/developers — 人类开发者编号列表
+router.get('/bridge/developers', (req, res) => {
+  const bridge = brain.bridge;
+
+  res.json({
+    hli_id: 'HLI-BRAIN-017',
+    developers: bridge.listDevelopers(),
+    pending_notifications: bridge.getPendingNotifications(),
+  });
+});
+
+// GET /hli/brain/bridge/developers/:expId — 查询单个开发者
+router.get('/bridge/developers/:expId', (req, res) => {
+  const bridge = brain.bridge;
+  const dev = bridge.findDeveloper(req.params.expId);
+
+  if (!dev) {
+    return res.status(404).json({
+      error: true,
+      code: 'DEVELOPER_NOT_FOUND',
+      message: `开发者 ${req.params.expId} 不存在`,
+    });
+  }
+
+  const notification = bridge.generateDeveloperNotification(req.params.expId);
+
+  res.json({
+    hli_id: 'HLI-BRAIN-018',
+    developer: dev,
+    notification: notification.notification,
+  });
+});
+
+// POST /hli/brain/bridge/developers — 注册新开发者
+router.post('/bridge/developers', (req, res) => {
+  const bridge = brain.bridge;
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({
+      error: true,
+      code: 'MISSING_NAME',
+      message: '缺少 name 参数',
+    });
+  }
+
+  const result = bridge.registerDeveloper(req.body);
+
+  if (result.duplicate) {
+    return res.status(409).json({
+      error: true,
+      code: 'DUPLICATE_DEVELOPER',
+      message: `开发者已存在: ${result.existing.exp_id} (${result.existing.name})`,
+      existing: result.existing,
+    });
+  }
+
+  res.status(201).json({
+    hli_id: 'HLI-BRAIN-019',
+    ...result,
+  });
+});
+
 module.exports = router;
