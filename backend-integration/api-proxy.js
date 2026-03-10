@@ -413,15 +413,17 @@ async function handleChat(req, res) {
       recordProxyFailure(curProv);
       console.error(`[代理] ${curProv} 请求失败: ${err.message}`);
 
-      if (isLastAttempt && !res.headersSent) {
+      // If headers already sent (partial streaming started), can't switch provider
+      if (res.headersSent) return;
+
+      if (isLastAttempt) {
         jsonResponse(res, 502, {
           error: true,
           code: 'ALL_PROVIDERS_FAILED',
           message: '所有模型提供商均请求失败，请稍后重试'
         });
       }
-      // If not last attempt and headers not sent, try next provider
-      if (res.headersSent) return;
+      // Otherwise continue to next provider
     }
   }
 }

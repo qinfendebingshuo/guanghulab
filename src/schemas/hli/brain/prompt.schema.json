@@ -13,6 +13,7 @@
       "ghUser": { "type": "string", "description": "GitHub 用户名" },
       "role": { "type": "string", "enum": ["founder", "supreme", "main", "dev", "guest"] },
       "mode": { "type": "string", "enum": ["chat", "build", "review", "brain"] },
+      "text": { "type": "string", "description": "当前用户输入文本（用于自动检测模式）" },
       "devStatus": { "type": "object", "description": "开发者状态" }
     }
   },

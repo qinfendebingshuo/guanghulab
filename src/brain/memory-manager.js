@@ -55,8 +55,8 @@ function generateCandidates(text, source = 'user') {
       const end = Math.min(text.length, idx + 80);
       const excerpt = text.slice(start, end).replace(/\n/g, ' ').trim();
 
-      // 检查中期记忆中的出现次数
-      const memKey = type + ':' + excerpt.slice(0, 20);
+      // 检查中期记忆中的出现次数（使用类型+摘要前40字符作为键，降低碰撞风险）
+      const memKey = type + ':' + excerpt.slice(0, 40).replace(/\s+/g, '_');
       const taskEntry = taskMemory.get(memKey) || { count: 0 };
       taskEntry.count++;
       taskEntry.lastSeen = Date.now();

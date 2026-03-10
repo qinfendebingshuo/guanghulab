@@ -100,7 +100,7 @@ function isInCooldown(provider, model) {
     failureLog.delete(key);
     return false;
   }
-  return entry.count >= 3; // 5分钟内失败3次以上才冷却
+  return entry.count >= 3; // 5分钟内失败3次及以上才冷却
 }
 
 /**
