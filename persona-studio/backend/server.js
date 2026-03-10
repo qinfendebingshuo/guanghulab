@@ -33,6 +33,16 @@ app.get('/api/ps/health', (_req, res) => {
   });
 });
 
+// 兼容 /api/health 路径
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'persona-studio',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ── 根路由 ──
 app.get('/', (_req, res) => {
   res.json({
