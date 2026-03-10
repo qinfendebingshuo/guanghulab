@@ -1,7 +1,7 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-10T09:35:55.686Z",
+  "generated_at": "2026-03-10T10:28:12.472Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
@@ -10,11 +10,11 @@
     "total_workflows": 30,
     "total_scripts": 24,
     "total_dev_nodes": 8,
-    "hli_interfaces": 17,
-    "hli_implemented": 3,
-    "hli_coverage_pct": "18%",
+    "hli_interfaces": 21,
+    "hli_implemented": 7,
+    "hli_coverage_pct": "33%",
     "last_ci_run": "2026-03-05T16:07:24.070Z",
-    "memory_last_updated": "2026-03-10T08:56:23.978Z"
+    "memory_last_updated": "2026-03-10T09:43:00.000Z"
   },
   "zones": [
     {
@@ -55,10 +55,13 @@
           "file": "routing-map.json"
         },
         {
+          "file": "truth-source.md"
+        },
+        {
           "file": "wake-protocol.md"
         }
       ],
-      "item_count": 8
+      "item_count": 9
     },
     {
       "zone_id": "PERSONA_BRAIN",
@@ -471,6 +474,9 @@
       ],
       "shelves": [
         {
+          "file": "brain"
+        },
+        {
           "file": "index.js"
         },
         {
@@ -483,7 +489,7 @@
           "file": "schemas"
         }
       ],
-      "item_count": 4
+      "item_count": 5
     },
     {
       "zone_id": "MODULES",
@@ -844,8 +850,8 @@
     }
   ],
   "hli_interfaces": {
-    "total": 17,
-    "implemented": 3,
+    "total": 21,
+    "implemented": 7,
     "pending": 14,
     "domains": [
       {
@@ -995,12 +1001,42 @@
             "status": "pending"
           }
         ]
+      },
+      {
+        "name": "BRAIN",
+        "module": "CORE",
+        "prefix": "/hli/brain",
+        "total": 4,
+        "implemented": 4,
+        "interfaces": [
+          {
+            "id": "HLI-BRAIN-001",
+            "path": "/hli/brain/prompt",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-BRAIN-002",
+            "path": "/hli/brain/route",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-BRAIN-003",
+            "path": "/hli/brain/context",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-BRAIN-004",
+            "path": "/hli/brain/memory",
+            "status": "implemented"
+          }
+        ]
       }
     ]
   },
   "routing_index": {
     "brain": [
-      "BRAIN"
+      "BRAIN",
+      "SRC::brain"
     ],
     "memory": [
       "BRAIN",
@@ -1041,6 +1077,9 @@
     "routing-map": [
       "BRAIN::routing-map.json",
       "PERSONA_BRAIN::routing-map.json"
+    ],
+    "truth-source": [
+      "BRAIN::truth-source.md"
     ],
     "wake-protocol": [
       "BRAIN::wake-protocol.md"

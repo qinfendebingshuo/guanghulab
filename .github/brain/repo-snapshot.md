@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-10 17:35 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-10 18:28 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -12,15 +12,15 @@
 | 工作流 | 30 个 GitHub Actions |
 | 脚本 | 24 个执行脚本 |
 | 开发者节点 | 8 人 |
-| HLI 接口覆盖率 | 3/17 (18%) |
-| 快照生成时间 | 2026-03-10 17:35 CST |
+| HLI 接口覆盖率 | 7/21 (33%) |
+| 快照生成时间 | 2026-03-10 18:28 CST |
 
 ---
 
 ## 🗺️ 图书馆全区地图
 
 ### 🧠 铸渊大脑（BRAIN）
-**路径**: `.github/brain` · **数量**: 8 项
+**路径**: `.github/brain` · **数量**: 9 项
 **描述**: 铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
@@ -40,7 +40,7 @@
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
 ### 💻 HLI 接口源码（SRC）
-**路径**: `src` · **数量**: 4 项
+**路径**: `src` · **数量**: 5 项
 **描述**: HoloLake Interface 路由 · 中间件 · Schema
 **关键词**: hli · route · middleware · schema · api · src
 
@@ -152,7 +152,7 @@
 
 ---
 
-## 💻 HLI 接口地图（3/17 (18%)）
+## 💻 HLI 接口地图（7/21 (33%)）
 
 ✅ **AUTH** (M01) `/hli/auth` — 3/3
   ✓ `HLI-AUTH-001` → `/hli/auth/login`
@@ -178,6 +178,11 @@
 ⬜ **DASHBOARD** (M12) `/hli/dashboard` — 0/2
   ○ `HLI-DASHBOARD-001` → `/hli/dashboard/status`
   ○ `HLI-DASHBOARD-002` → `/hli/dashboard/realtime`
+✅ **BRAIN** (CORE) `/hli/brain` — 4/4
+  ✓ `HLI-BRAIN-001` → `/hli/brain/prompt`
+  ✓ `HLI-BRAIN-002` → `/hli/brain/route`
+  ✓ `HLI-BRAIN-003` → `/hli/brain/context`
+  ✓ `HLI-BRAIN-004` → `/hli/brain/memory`
 
 ---
 
@@ -220,6 +225,7 @@
 - `.github/brain/repo-map.json`
 - `.github/brain/repo-snapshot.md`
 - `.github/brain/routing-map.json`
+- `.github/brain/truth-source.md`
 - `.github/brain/wake-protocol.md`
 
 ---
