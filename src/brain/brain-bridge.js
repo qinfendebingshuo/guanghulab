@@ -325,7 +325,7 @@ function registerDeveloper(info) {
   // 去重检查：按 name 或 github_username 去重
   const existing = devs.find(d =>
     (info.name && d.name === info.name) ||
-    (info.github_username && info.github_username && d.github_username === info.github_username)
+    (info.github_username && d.github_username && d.github_username === info.github_username)
   );
 
   if (existing) {
