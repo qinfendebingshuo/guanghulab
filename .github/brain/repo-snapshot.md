@@ -9,8 +9,8 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 30 个 GitHub Actions |
-| 脚本 | 24 个执行脚本 |
+| 工作流 | 31 个 GitHub Actions |
+| 脚本 | 25 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
 | 快照生成时间 | 2026-03-10 18:28 CST |
@@ -20,7 +20,7 @@
 ## 🗺️ 图书馆全区地图
 
 ### 🧠 铸渊大脑（BRAIN）
-**路径**: `.github/brain` · **数量**: 9 项
+**路径**: `.github/brain` · **数量**: 16 项
 **描述**: 铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 30 项
+**路径**: `.github/workflows` · **数量**: 31 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 24 项
+**路径**: `scripts` · **数量**: 25 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -91,6 +91,7 @@
 | 文件 | 名称 | 触发方式 |
 |------|------|----------|
 | `bingshuo-deploy-agent.yml` | "🧊 冰朔人格体 · 自动部署诊断" | issues, issue_comment, manual |
+| `bingshuo-neural-system.yml` | 冰朔主控神经系统 · 自动维护 | push, schedule(0 0 * * *), manual |
 | `brain-sync.yml` | 铸渊 Brain Sync | push, schedule(0 8 * * *), manual |
 | `bridge-changes-to-notion.yml` | 铸渊 · Bridge E · GitHub Changes → Notion | push, pull_request |
 | `bridge-session-summary.yml` | Generate Session Summary for Notion | schedule(50 23 * * *), manual |
@@ -126,6 +127,7 @@
 ## 🔧 执行脚本库（铸渊的工作人员）
 
 - `scripts/bingshuo-deploy-agent.js`
+- `scripts/bingshuo-neural-sync.js`
 - `scripts/contract-check.js`
 - `scripts/cross-repo-sync.js`
 - `scripts/daily-check.js`
@@ -218,6 +220,13 @@
 
 ## 🧠 铸渊大脑文件速查（.github/brain/）
 
+- `.github/brain/bingshuo-agent-registry.json`
+- `.github/brain/bingshuo-growth-log.md`
+- `.github/brain/bingshuo-issues-index.json`
+- `.github/brain/bingshuo-master-brain.md`
+- `.github/brain/bingshuo-read-order.md`
+- `.github/brain/bingshuo-routing-index.json`
+- `.github/brain/bingshuo-system-health.json`
 - `.github/brain/collaborators.json`
 - `.github/brain/growth-log.md`
 - `.github/brain/memory.json`

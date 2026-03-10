@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-10T10:28:12.472Z",
+  "generated_at": "2026-03-10T10:28:56.461Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 30,
-    "total_scripts": 24,
+    "total_workflows": 31,
+    "total_scripts": 25,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -33,6 +33,27 @@
         "路由"
       ],
       "shelves": [
+        {
+          "file": "bingshuo-agent-registry.json"
+        },
+        {
+          "file": "bingshuo-growth-log.md"
+        },
+        {
+          "file": "bingshuo-issues-index.json"
+        },
+        {
+          "file": "bingshuo-master-brain.md"
+        },
+        {
+          "file": "bingshuo-read-order.md"
+        },
+        {
+          "file": "bingshuo-routing-index.json"
+        },
+        {
+          "file": "bingshuo-system-health.json"
+        },
         {
           "file": "collaborators.json"
         },
@@ -61,7 +82,7 @@
           "file": "wake-protocol.md"
         }
       ],
-      "item_count": 9
+      "item_count": 16
     },
     {
       "zone_id": "PERSONA_BRAIN",
@@ -132,6 +153,15 @@
           "triggers": [
             "issues",
             "issue_comment",
+            "manual"
+          ]
+        },
+        {
+          "file": "bingshuo-neural-system.yml",
+          "name": "冰朔主控神经系统 · 自动维护",
+          "triggers": [
+            "push",
+            "schedule(0 0 * * *)",
             "manual"
           ]
         },
@@ -364,7 +394,7 @@
           ]
         }
       ],
-      "item_count": 30
+      "item_count": 31
     },
     {
       "zone_id": "SCRIPTS",
@@ -383,6 +413,9 @@
       "shelves": [
         {
           "file": "bingshuo-deploy-agent.js"
+        },
+        {
+          "file": "bingshuo-neural-sync.js"
         },
         {
           "file": "contract-check.js"
@@ -454,7 +487,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 24
+      "item_count": 25
     },
     {
       "zone_id": "SRC",
@@ -1059,6 +1092,27 @@
       "BRAIN",
       "SRC"
     ],
+    "bingshuo-agent-registry": [
+      "BRAIN::bingshuo-agent-registry.json"
+    ],
+    "bingshuo-growth-log": [
+      "BRAIN::bingshuo-growth-log.md"
+    ],
+    "bingshuo-issues-index": [
+      "BRAIN::bingshuo-issues-index.json"
+    ],
+    "bingshuo-master-brain": [
+      "BRAIN::bingshuo-master-brain.md"
+    ],
+    "bingshuo-read-order": [
+      "BRAIN::bingshuo-read-order.md"
+    ],
+    "bingshuo-routing-index": [
+      "BRAIN::bingshuo-routing-index.json"
+    ],
+    "bingshuo-system-health": [
+      "BRAIN::bingshuo-system-health.json"
+    ],
     "collaborators": [
       "BRAIN::collaborators.json"
     ],
@@ -1143,6 +1197,9 @@
     "bingshuo-deploy-agent": [
       "WORKFLOWS::bingshuo-deploy-agent.yml",
       "SCRIPTS::bingshuo-deploy-agent.js"
+    ],
+    "bingshuo-neural-system": [
+      "WORKFLOWS::bingshuo-neural-system.yml"
     ],
     "brain-sync": [
       "WORKFLOWS::brain-sync.yml"
@@ -1255,6 +1312,9 @@
     ],
     "runner": [
       "SCRIPTS"
+    ],
+    "bingshuo-neural-sync": [
+      "SCRIPTS::bingshuo-neural-sync.js"
     ],
     "contract-check": [
       "SCRIPTS::contract-check.js"
