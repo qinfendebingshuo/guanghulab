@@ -87,9 +87,9 @@
     /* ---- 开发编号登录 ---- */
     async function handleLogin(e) {
       e.preventDefault();
-      var devId = document.getElementById('devIdInput').value.trim().toUpperCase();
-      var errorEl = document.getElementById('errorMsg');
-      var btn = document.getElementById('loginBtn');
+      const devId = document.getElementById('devIdInput').value.trim().toUpperCase();
+      const errorEl = document.getElementById('errorMsg');
+      const btn = document.getElementById('loginBtn');
 
       errorEl.style.display = 'none';
 
@@ -103,13 +103,13 @@
       btn.textContent = '验证中…';
 
       try {
-        var res = await fetch(API_BASE + '/api/ps/auth/login', {
+        const res = await fetch(API_BASE + '/api/ps/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dev_id: devId })
         });
 
-        var data = await res.json();
+        const data = await res.json();
 
         if (!res.ok || data.error) {
           errorEl.textContent = data.message || '登录失败，请检查编号';
@@ -138,12 +138,12 @@
 
     /* ---- API Key 模型检测 ---- */
     async function handleDetectModels() {
-      var apiBase = document.getElementById('apiBaseInput').value.trim();
-      var apiKey = document.getElementById('apiKeyInput').value.trim();
-      var errorEl = document.getElementById('errorMsg');
-      var statusEl = document.getElementById('detectStatus');
-      var modelContainer = document.getElementById('modelListContainer');
-      var btn = document.getElementById('detectBtn');
+      const apiBase = document.getElementById('apiBaseInput').value.trim();
+      const apiKey = document.getElementById('apiKeyInput').value.trim();
+      const errorEl = document.getElementById('errorMsg');
+      const statusEl = document.getElementById('detectStatus');
+      const modelContainer = document.getElementById('modelListContainer');
+      const btn = document.getElementById('detectBtn');
 
       errorEl.style.display = 'none';
       modelContainer.style.display = 'none';
@@ -167,13 +167,13 @@
       statusEl.style.display = 'block';
 
       try {
-        var res = await fetch(API_BASE + '/api/ps/apikey/detect-models', {
+        const res = await fetch(API_BASE + '/api/ps/apikey/detect-models', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ api_base: apiBase, api_key: apiKey })
         });
 
-        var data = await res.json();
+        const data = await res.json();
 
         if (!res.ok || data.error) {
           statusEl.textContent = data.message || '未检测到模型，请检查 API Key';
@@ -183,7 +183,7 @@
           return;
         }
 
-        var models = data.models || [];
+        const models = data.models || [];
         if (models.length === 0) {
           statusEl.textContent = '未检测到可用模型';
           statusEl.className = 'detect-status detect-error';

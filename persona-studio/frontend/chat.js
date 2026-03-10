@@ -105,15 +105,15 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   try {
-    var data;
+    let data;
 
     if (LOGIN_MODE === 'apikey') {
       // API Key 模式：通过后端代理调用用户的 API
-      var apiMessages = conversationHistory.slice(-20).map(function (msg) {
+      const apiMessages = conversationHistory.slice(-20).map(function (msg) {
         return { role: msg.role === 'assistant' ? 'assistant' : 'user', content: msg.content };
       });
 
-      var res = await fetch(API_BASE + '/api/ps/apikey/chat', {
+      const res = await fetch(API_BASE + '/api/ps/apikey/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -127,7 +127,7 @@ async function sendMessage() {
       data = await res.json();
     } else {
       // 开发编号模式：使用原有后端接口
-      var res = await fetch(API_BASE + '/api/ps/chat/message', {
+      const res = await fetch(API_BASE + '/api/ps/chat/message', {
         method: 'POST',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({

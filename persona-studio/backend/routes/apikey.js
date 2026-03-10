@@ -80,8 +80,8 @@ function fetchModels(apiBase, apiKey, timeoutMs) {
       });
     });
 
-    req.on('error', () => {
-      reject(new Error('API Base 不可访问'));
+    req.on('error', (err) => {
+      reject(new Error('API Base 不可访问: ' + err.message));
     });
 
     req.on('timeout', () => {
@@ -177,7 +177,14 @@ router.post('/detect-models', async (req, res) => {
     });
   }
 
-  // 检查缓存
+  // 防止 header injection：API Key 不得包含换行符
+  if (/[\r\n]/.test(api_key)) {
+    return res.status(400).json({
+      error: true,
+      code: 'INVALID_API_KEY',
+      message: 'API Key 格式无效'
+    });
+  }
   const cached = getCachedModels(api_base, api_key);
   if (cached) {
     return res.json({
@@ -226,6 +233,15 @@ router.post('/chat', async (req, res) => {
       error: true,
       code: 'MISSING_PARAMS',
       message: '缺少必要参数 (api_base, api_key, model)'
+    });
+  }
+
+  // 防止 header injection
+  if (/[\r\n]/.test(api_key)) {
+    return res.status(400).json({
+      error: true,
+      code: 'INVALID_API_KEY',
+      message: 'API Key 格式无效'
     });
   }
 

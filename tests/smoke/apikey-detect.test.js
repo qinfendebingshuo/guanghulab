@@ -59,7 +59,7 @@ describe('POST /api/ps/apikey/detect-models', () => {
 
   test('returns error for unreachable API base', async () => {
     const res = await post('/api/ps/apikey/detect-models', {
-      api_base: 'http://127.0.0.1:19999',
+      api_base: 'http://invalid.test.local',
       api_key: 'sk-test-invalid'
     });
     expect(res.status).toBe(502);
