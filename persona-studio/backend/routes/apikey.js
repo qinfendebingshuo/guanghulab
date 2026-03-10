@@ -169,6 +169,19 @@ router.post('/detect-models', async (req, res) => {
     });
   }
 
+  // 校验 URL 格式
+  try {
+    const testBase = api_base.replace(/\/+$/, '');
+    const testPath = testBase.endsWith('/v1') ? testBase + '/models' : testBase + '/v1/models';
+    new URL(testPath);
+  } catch (_e) {
+    return res.status(400).json({
+      error: true,
+      code: 'INVALID_API_BASE',
+      message: 'API Base URL 格式无效'
+    });
+  }
+
   if (!api_key || typeof api_key !== 'string') {
     return res.status(400).json({
       error: true,
@@ -216,10 +229,22 @@ router.post('/detect-models', async (req, res) => {
       cached: false
     });
   } catch (err) {
+    const errMsg = err.message || '模型检测失败';
+    let code = 'DETECT_FAILED';
+
+    // 区分 DNS / 网络 / 超时错误
+    if (/ENOTFOUND|getaddrinfo/.test(errMsg)) {
+      code = 'DNS_ERROR';
+    } else if (/ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|socket hang up/.test(errMsg)) {
+      code = 'NETWORK_ERROR';
+    } else if (/timeout|ETIMEDOUT|请求超时/.test(errMsg)) {
+      code = 'TIMEOUT';
+    }
+
     res.status(502).json({
       error: true,
-      code: 'DETECT_FAILED',
-      message: err.message || '模型检测失败'
+      code: code,
+      message: errMsg
     });
   }
 });

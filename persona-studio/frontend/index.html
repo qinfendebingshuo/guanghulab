@@ -43,7 +43,7 @@
           type="text"
           id="apiBaseInput"
           class="apikey-input"
-          placeholder="API Base URL（如 https://api.openai.com）"
+          placeholder="API Base URL（可留空自动探测，如 https://api.openai.com/v1）"
           autocomplete="off"
         />
         <input
@@ -75,13 +75,36 @@
 
   <script>
     const DEV_ID_RE = /^EXP-\d{3,}$/;
+    const PROBE_TIMEOUT_MS = 8000;
     const API_BASE = getApiBase();
+
+    /* ---- 已知 API 端点列表（浏览器直连探测） ---- */
+    const KNOWN_ENDPOINTS = [
+      { label: '云雾 AI',       base: 'https://api.yunwu.ai/v1' },
+      { label: 'OpenAI',        base: 'https://api.openai.com/v1' },
+      { label: 'Google Gemini', base: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+      { label: 'DeepSeek',      base: 'https://api.deepseek.com/v1' },
+      { label: 'Moonshot',      base: 'https://api.moonshot.cn/v1' },
+      { label: '智谱 AI',       base: 'https://open.bigmodel.cn/api/paas/v4' },
+    ];
 
     function getApiBase() {
       if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         return 'http://localhost:3721';
       }
       return 'https://guanghulab.com';
+    }
+
+    /**
+     * 规范化 API Base URL
+     * 确保末尾无斜杠，并包含 /v1 路径
+     */
+    function normalizeApiBase(base) {
+      var normalized = base.replace(/\/+$/, '');
+      if (!normalized.match(/\/v\d+\b/) && !normalized.endsWith('/openai')) {
+        normalized += '/v1';
+      }
+      return normalized;
     }
 
     /* ---- 开发编号登录 ---- */
@@ -136,23 +159,17 @@
       return false;
     }
 
-    /* ---- API Key 模型检测 ---- */
+    /* ---- API Key 模型检测（浏览器直连，无需后端代理） ---- */
     async function handleDetectModels() {
-      const apiBase = document.getElementById('apiBaseInput').value.trim();
-      const apiKey = document.getElementById('apiKeyInput').value.trim();
-      const errorEl = document.getElementById('errorMsg');
-      const statusEl = document.getElementById('detectStatus');
-      const modelContainer = document.getElementById('modelListContainer');
-      const btn = document.getElementById('detectBtn');
+      var apiBase = document.getElementById('apiBaseInput').value.trim();
+      var apiKey = document.getElementById('apiKeyInput').value.trim();
+      var errorEl = document.getElementById('errorMsg');
+      var statusEl = document.getElementById('detectStatus');
+      var modelContainer = document.getElementById('modelListContainer');
+      var btn = document.getElementById('detectBtn');
 
       errorEl.style.display = 'none';
       modelContainer.style.display = 'none';
-
-      if (!apiBase) {
-        errorEl.textContent = '请输入 API Base URL';
-        errorEl.style.display = 'block';
-        return;
-      }
 
       if (!apiKey) {
         errorEl.textContent = '请输入 API Key';
@@ -161,59 +178,67 @@
       }
 
       btn.disabled = true;
-      btn.textContent = '正在检测可用模型…';
-      statusEl.textContent = '正在检测可用模型...';
+      btn.textContent = '⏳ 正在检测可用模型…';
       statusEl.className = 'detect-status detect-loading';
       statusEl.style.display = 'block';
 
-      try {
-        const res = await fetch(API_BASE + '/api/ps/apikey/detect-models', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ api_base: apiBase, api_key: apiKey })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          statusEl.textContent = data.message || '未检测到模型，请检查 API Key';
-          statusEl.className = 'detect-status detect-error';
-          btn.disabled = false;
-          btn.textContent = '🔍 检测可用模型';
-          return;
-        }
-
-        const models = data.models || [];
-        if (models.length === 0) {
-          statusEl.textContent = '未检测到可用模型';
-          statusEl.className = 'detect-status detect-error';
-          btn.disabled = false;
-          btn.textContent = '🔍 检测可用模型';
-          return;
-        }
-
-        statusEl.textContent = '检测到 ' + models.length + ' 个模型，请选择一个模型进入对话';
-        statusEl.className = 'detect-status detect-success';
-
-        renderModelList(models, apiBase, apiKey);
-        modelContainer.style.display = 'block';
-
-        btn.disabled = false;
-        btn.textContent = '🔍 重新检测';
-      } catch (fetchErr) {
-        var errMsg = '检测失败';
-        if (fetchErr instanceof TypeError) {
-          errMsg = '服务器代理未部署或不可达，请联系管理员';
-        } else if (fetchErr.name === 'AbortError') {
-          errMsg = '请求超时，请检查网络连接';
-        } else {
-          errMsg = '网络错误: ' + (fetchErr.message || '请检查网络连接');
-        }
-        statusEl.textContent = errMsg;
-        statusEl.className = 'detect-status detect-error';
-        btn.disabled = false;
-        btn.textContent = '🔍 检测可用模型';
+      /* 构建探测列表：用户端点优先，然后已知端点 */
+      var candidates = [];
+      if (apiBase) {
+        var userNorm = normalizeApiBase(apiBase);
+        candidates.push({ label: apiBase, base: userNorm });
       }
+      for (var i = 0; i < KNOWN_ENDPOINTS.length; i++) {
+        var ep = KNOWN_ENDPOINTS[i];
+        if (!apiBase || ep.base !== normalizeApiBase(apiBase)) {
+          candidates.push(ep);
+        }
+      }
+
+      var matched = false;
+      for (var ci = 0; ci < candidates.length; ci++) {
+        var candidate = candidates[ci];
+        statusEl.textContent = '🔍 探测 ' + candidate.label + '…';
+
+        try {
+          var ctrl = new AbortController();
+          var tid = setTimeout(function () { ctrl.abort(); }, PROBE_TIMEOUT_MS);
+
+          var res = await fetch(candidate.base + '/models', {
+            headers: { 'Authorization': 'Bearer ' + apiKey },
+            signal: ctrl.signal
+          });
+          clearTimeout(tid);
+
+          if (res.ok) {
+            var data = await res.json();
+            var models = (data.data || []).map(function (m) { return m.id; }).filter(Boolean).sort();
+
+            if (models.length === 0) continue;
+
+            /* 回填端点地址 */
+            document.getElementById('apiBaseInput').value = candidate.base;
+
+            statusEl.textContent = '✅ 检测成功（' + candidate.label + '）· 发现 ' + models.length + ' 个可用模型';
+            statusEl.className = 'detect-status detect-success';
+
+            renderModelList(models, candidate.base, apiKey);
+            modelContainer.style.display = 'block';
+            matched = true;
+            break;
+          }
+        } catch (probeErr) {
+          /* 单个端点探测失败，继续下一个 */
+        }
+      }
+
+      if (!matched) {
+        statusEl.textContent = '❌ 未能检测到可用模型，请检查端点地址和密钥是否正确';
+        statusEl.className = 'detect-status detect-error';
+      }
+
+      btn.disabled = false;
+      btn.textContent = '🔍 检测可用模型';
     }
 
     /* ---- 渲染模型列表 ---- */
