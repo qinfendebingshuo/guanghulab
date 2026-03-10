@@ -131,8 +131,25 @@ jobs:
       - name: 🔑 配置 SSH 连接
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+
+          # 验证 SSH 私钥格式
+          if ! head -1 ~/.ssh/deploy_key | grep -qE '^-----BEGIN .* PRIVATE KEY-----'; then
+            echo "❌ DEPLOY_KEY 格式无效：不是有效的 PEM 私钥"
+            echo "   期望以 '-----BEGIN ... PRIVATE KEY-----' 开头"
+            echo ""
+            echo "请重新生成密钥对："
+            echo "  ssh-keygen -t ed25519 -f deploy_key -N ''"
+            echo "  然后将 deploy_key 的内容粘贴到 GitHub Secrets → DEPLOY_KEY"
+            echo "  将 deploy_key.pub 的内容添加到服务器 ~/.ssh/authorized_keys"
+            echo ""
+            echo "### ❌ 部署失败：DEPLOY_KEY 格式无效" >> $GITHUB_STEP_SUMMARY
+            echo "不是有效的 PEM 私钥。请重新生成密钥对并更新 Secret。" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✅ SSH 私钥格式校验通过"
+
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
             echo "⚠️ ssh-keyscan 失败，尝试使用 StrictHostKeyChecking=no 作为后备"
           }
