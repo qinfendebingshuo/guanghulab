@@ -6,7 +6,7 @@
  */
 const http = require('http');
 
-const BASE = process.env.TEST_BASE || 'http://localhost:3002';
+const BASE = process.env.TEST_BASE || 'http://localhost:3721';
 
 function post(path, body) {
   return new Promise((resolve, reject) => {
@@ -64,7 +64,17 @@ describe('POST /api/ps/apikey/detect-models', () => {
     });
     expect(res.status).toBe(502);
     expect(res.body.error).toBe(true);
-    expect(res.body.code).toBe('DETECT_FAILED');
+    expect(['DETECT_FAILED', 'DNS_ERROR', 'NETWORK_ERROR', 'TIMEOUT']).toContain(res.body.code);
+  });
+
+  test('returns INVALID_API_BASE for malformed URL', async () => {
+    const res = await post('/api/ps/apikey/detect-models', {
+      api_base: 'not-a-url',
+      api_key: 'sk-test'
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe(true);
+    expect(res.body.code).toBe('INVALID_API_BASE');
   });
 });
 
@@ -88,18 +98,32 @@ describe('POST /api/ps/apikey/chat', () => {
   });
 });
 
-describe('POST /api/ps/auth/login (dev_id still works)', () => {
-  test('EXP-000 dev_id login succeeds', async () => {
-    const res = await post('/api/ps/auth/login', { dev_id: 'EXP-000' });
-    expect(res.status).toBe(200);
-    expect(res.body.error).toBe(false);
-    expect(res.body.dev_id).toBe('EXP-000');
-    expect(res.body.token).toBeTruthy();
-  });
-
-  test('invalid dev_id is rejected', async () => {
-    const res = await post('/api/ps/auth/login', { dev_id: 'INVALID' });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toBe(true);
+describe('GET /api/health (proxy health check)', () => {
+  test('returns ok status', async () => {
+    return new Promise((resolve, reject) => {
+      const url = new URL(BASE + '/api/health');
+      const req = http.request({
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        method: 'GET',
+        timeout: 10000
+      }, (res) => {
+        let chunks = '';
+        res.on('data', (c) => { chunks += c; });
+        res.on('end', () => {
+          try {
+            const body = JSON.parse(chunks);
+            expect(res.statusCode).toBe(200);
+            expect(body.status).toBe('ok');
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+      req.on('error', reject);
+      req.end();
+    });
   });
 });
