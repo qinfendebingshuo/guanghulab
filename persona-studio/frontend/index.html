@@ -29,6 +29,13 @@
         <button type="submit" id="loginBtn">进入对话</button>
       </form>
 
+      <div class="guest-divider">
+        <span>或</span>
+      </div>
+
+      <button id="guestBtn" class="btn-guest" onclick="handleGuestLogin()">🌊 访客体验模式</button>
+      <p class="guest-hint">无需编号，直接与知秋对话</p>
+
       <div id="errorMsg" class="error-msg" style="display:none;"></div>
     </div>
 
@@ -93,6 +100,41 @@
       }
 
       return false;
+    }
+
+    async function handleGuestLogin() {
+      const errorEl = document.getElementById('errorMsg');
+      const btn = document.getElementById('guestBtn');
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = '进入中…';
+
+      try {
+        const res = await fetch(API_BASE + '/api/ps/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dev_id: 'GUEST' })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          errorEl.textContent = data.message || '访客体验暂不可用';
+          errorEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = '🌊 访客体验模式';
+          return;
+        }
+
+        sessionStorage.setItem('dev_id', 'GUEST');
+        sessionStorage.setItem('session_token', data.token || '');
+        window.location.href = 'chat.html';
+      } catch (err) {
+        errorEl.textContent = '服务暂时不可用，请稍后再试';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '🌊 访客体验模式';
+      }
     }
   </script>
 </body>
