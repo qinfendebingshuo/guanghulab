@@ -313,7 +313,6 @@ async function main() {
   console.log('\n💾 巡检结果已写入 memory.json');
 
   // 输出 GitHub Actions 变量
-  const uniqueActions = [...new Set(actions)];
   const needBulletin = uniqueActions.includes('trigger_bulletin_update');
   const needSelfcheck = uniqueActions.includes('trigger_selfcheck');
   const outputFile = process.env.GITHUB_OUTPUT;

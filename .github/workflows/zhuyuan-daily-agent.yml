@@ -125,7 +125,7 @@ jobs:
   # ── 巡检报告 ──
   report:
     name: 📊 巡检报告
-    needs: [inspect, fix-bulletin, fix-selfcheck]
+    needs: [inspect]
     if: always()
     runs-on: ubuntu-latest
     steps:
