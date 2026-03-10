@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-10 19:36 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-10 19:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -10,17 +10,17 @@
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
 | 工作流 | 31 个 GitHub Actions |
-| 脚本 | 25 个执行脚本 |
+| 脚本 | 26 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-10 19:36 CST |
+| 快照生成时间 | 2026-03-10 19:37 CST |
 
 ---
 
 ## 🗺️ 图书馆全区地图
 
 ### 🧠 铸渊大脑（BRAIN）
-**路径**: `.github/brain` · **数量**: 16 项
+**路径**: `.github/brain` · **数量**: 18 项
 **描述**: 铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
@@ -35,7 +35,7 @@
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 25 项
+**路径**: `scripts` · **数量**: 26 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -128,6 +128,7 @@
 
 - `scripts/bingshuo-deploy-agent.js`
 - `scripts/bingshuo-neural-sync.js`
+- `scripts/brain-bridge-sync.js`
 - `scripts/contract-check.js`
 - `scripts/cross-repo-sync.js`
 - `scripts/daily-check.js`
@@ -221,6 +222,7 @@
 ## 🧠 铸渊大脑文件速查（.github/brain/）
 
 - `.github/brain/bingshuo-agent-registry.json`
+- `.github/brain/bingshuo-brain-bridge.json`
 - `.github/brain/bingshuo-growth-log.md`
 - `.github/brain/bingshuo-issues-index.json`
 - `.github/brain/bingshuo-master-brain.md`
@@ -229,6 +231,7 @@
 - `.github/brain/bingshuo-system-health.json`
 - `.github/brain/collaborators.json`
 - `.github/brain/growth-log.md`
+- `.github/brain/human-registry.json`
 - `.github/brain/memory.json`
 - `.github/brain/module-protocol.md`
 - `.github/brain/repo-map.json`
