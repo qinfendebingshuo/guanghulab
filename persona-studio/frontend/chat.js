@@ -140,87 +140,46 @@ async function sendMessage() {
   input.focus();
 }
 
-/* ---- API Key 流式响应（浏览器直连） ---- */
+/* ---- API Key 对话（通过后端代理，避免 CORS 问题） ---- */
 async function streamApiKeyReply(text) {
   var apiMessages = conversationHistory.slice(-20).map(function (msg) {
     return { role: msg.role === 'assistant' ? 'assistant' : 'user', content: msg.content };
   });
 
-  var chatUrl = USER_API_BASE + '/chat/completions';
-  var reqBody = {
-    model: SELECTED_MODEL,
-    messages: apiMessages,
-    stream: true,
-    max_tokens: 2000,
-    temperature: 0.8
-  };
-
-  var res = await fetch(chatUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + USER_API_KEY
-    },
-    body: JSON.stringify(reqBody)
-  });
-
-  if (!res.ok) {
-    var errText = '请求失败 (HTTP ' + res.status + ')';
-    try {
-      var errData = await res.json();
-      errText = errData.error?.message || errText;
-    } catch (_e) { /* ignore parse error */ }
-    appendMessage('system', '⚠️ ' + errText);
-    return;
-  }
-
-  // 流式读取响应
   var streamEl = appendStreamMessage();
-  var full = '';
-  var reader = res.body.getReader();
-  var decoder = new TextDecoder();
-  var buf = '';
 
-  while (true) {
-    var chunk = await reader.read();
-    if (chunk.done) break;
-    buf += decoder.decode(chunk.value, { stream: true });
-    var lines = buf.split('\n');
-    buf = lines.pop();
+  try {
+    var res = await fetch(API_BASE + '/api/ps/apikey/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_base: USER_API_BASE,
+        api_key: USER_API_KEY,
+        model: SELECTED_MODEL,
+        messages: apiMessages
+      })
+    });
 
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      if (!line.startsWith('data: ')) continue;
-      var d = line.slice(6);
-      if (d === '[DONE]') continue;
+    if (!res.ok) {
+      var errText = '请求失败 (HTTP ' + res.status + ')';
       try {
-        var parsed = JSON.parse(d);
-        var delta = parsed.choices && parsed.choices[0]
-          && parsed.choices[0].delta
-          && parsed.choices[0].delta.content;
-        if (delta) {
-          full += delta;
-          streamEl.textContent = full;
-        }
+        var errData = await res.json();
+        errText = errData.message || errText;
       } catch (_e) { /* ignore parse error */ }
+      streamEl.textContent = '⚠️ ' + errText;
+      return;
     }
-  }
 
-  // 如果没有流式内容，尝试非流式解析
-  if (!full && buf) {
-    try {
-      var jsonRes = JSON.parse(buf);
-      if (jsonRes.choices && jsonRes.choices[0] && jsonRes.choices[0].message) {
-        full = jsonRes.choices[0].message.content;
-        streamEl.textContent = full;
-      }
-    } catch (_e) { /* ignore */ }
-  }
+    var data = await res.json();
 
-  if (full) {
-    conversationHistory.push({ role: 'assistant', content: full });
-  } else {
-    streamEl.textContent = '（未收到有效回复）';
+    if (data.reply) {
+      streamEl.textContent = data.reply;
+      conversationHistory.push({ role: 'assistant', content: data.reply });
+    } else {
+      streamEl.textContent = '（未收到有效回复）';
+    }
+  } catch (err) {
+    streamEl.textContent = '⚠️ ' + (err.message || '请求失败，请检查网络连接');
   }
 }
 
