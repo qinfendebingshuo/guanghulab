@@ -31,7 +31,13 @@
 
 <br>
 
-### 🚀 [点击进入 Persona Studio →](https://qinfendebingshuo.github.io/guanghulab/persona-studio/)
+<a href="https://qinfendebingshuo.github.io/guanghulab/persona-studio/"><img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E7%82%B9%E5%87%BB%E8%BF%9B%E5%85%A5%20Persona%20Studio%20%E2%86%92-Click%20Here-0969da?style=for-the-badge" alt="点击进入 Persona Studio" /></a>
+
+<br>
+
+🔗 直接访问：<a href="https://qinfendebingshuo.github.io/guanghulab/persona-studio/">https://qinfendebingshuo.github.io/guanghulab/persona-studio/</a>
+
+<br>
 
 💬 自然语言对话 &nbsp;·&nbsp; 🧠 智能代码生成 &nbsp;·&nbsp; 📧 邮件推送结果 &nbsp;·&nbsp; 🔄 对话记忆
 

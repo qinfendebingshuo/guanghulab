@@ -18,6 +18,8 @@
   <a href="https://qinfendebingshuo.github.io/guanghulab/persona-studio/">
     <img src="https://img.shields.io/badge/%F0%9F%9A%80%20%E6%89%93%E5%BC%80%E4%BA%BA%E6%A0%BC%E4%BD%93%E5%AF%B9%E8%AF%9D%E7%95%8C%E9%9D%A2-Click%20Here-0969da?style=for-the-badge&logoColor=white" alt="Launch" />
   </a>
+  <br><br>
+  🔗 直接访问：<a href="https://qinfendebingshuo.github.io/guanghulab/persona-studio/">https://qinfendebingshuo.github.io/guanghulab/persona-studio/</a>
 </p>
 
 ---
