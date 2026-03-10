@@ -41,7 +41,7 @@ body {
   flex-direction: column;
 }
 
-/* ---- Guest Mode ---- */
+/* ---- Guest Mode / Divider ---- */
 .guest-divider {
   margin: 1.2rem 0;
   text-align: center;
@@ -88,6 +88,109 @@ body {
   margin-top: 0.5rem;
   font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+/* ---- API Key Login Section ---- */
+.apikey-section {
+  text-align: center;
+}
+
+.apikey-section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.apikey-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  text-align: left;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0.8rem;
+  font-family: inherit;
+}
+
+.apikey-input:focus {
+  border-color: var(--primary);
+}
+
+.btn-detect {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, var(--accent), #0969da);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-weight: 500;
+}
+
+.btn-detect:hover { opacity: 0.9; }
+.btn-detect:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.detect-status {
+  margin-top: 0.8rem;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.detect-loading {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.detect-success {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.detect-error {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ---- Model List ---- */
+.model-list-container {
+  margin-top: 1rem;
+}
+
+.model-list-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.6rem;
+}
+
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.model-item {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.model-item:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* ---- Login Page ---- */
@@ -148,7 +251,8 @@ body {
   margin-bottom: 1rem;
 }
 
-.login-box input[type="text"]:focus {
+.login-box input[type="text"]:focus,
+.login-box input[type="password"]:focus {
   border-color: var(--primary);
 }
 

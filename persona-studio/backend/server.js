@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 const buildRoutes = require('./routes/build');
 const notifyRoutes = require('./routes/notify');
+const apikeyRoutes = require('./routes/apikey');
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.use('/api/ps/auth', authRoutes);
 app.use('/api/ps/chat', chatRoutes);
 app.use('/api/ps/build', buildRoutes);
 app.use('/api/ps/notify', notifyRoutes);
+app.use('/api/ps/apikey', apikeyRoutes);
 
 // ── 健康检查 ──
 app.get('/api/ps/health', (_req, res) => {
@@ -43,6 +45,8 @@ app.get('/', (_req, res) => {
       '/api/ps/chat/history',
       '/api/ps/build/start',
       '/api/ps/notify/send',
+      '/api/ps/apikey/detect-models',
+      '/api/ps/apikey/chat',
       '/api/ps/health'
     ]
   });

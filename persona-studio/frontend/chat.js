@@ -4,6 +4,10 @@
 
 const DEV_ID = sessionStorage.getItem('dev_id');
 const SESSION_TOKEN = sessionStorage.getItem('session_token');
+const LOGIN_MODE = sessionStorage.getItem('login_mode'); // 'apikey' or null
+const USER_API_BASE = sessionStorage.getItem('user_api_base');
+const USER_API_KEY = sessionStorage.getItem('user_api_key');
+const SELECTED_MODEL = sessionStorage.getItem('selected_model');
 
 const API_BASE = (function () {
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
@@ -19,8 +23,25 @@ const API_BASE = (function () {
     return;
   }
 
-  document.getElementById('devIdDisplay').textContent = DEV_ID;
-  loadHistory();
+  // API Key 模式额外校验
+  if (LOGIN_MODE === 'apikey' && (!USER_API_BASE || !USER_API_KEY || !SELECTED_MODEL)) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  var displayId = DEV_ID;
+  if (LOGIN_MODE === 'apikey') {
+    displayId = SELECTED_MODEL;
+  }
+  document.getElementById('devIdDisplay').textContent = displayId;
+
+  if (LOGIN_MODE === 'apikey') {
+    // API Key 模式：显示欢迎信息，不加载历史
+    appendMessage('persona', '你好！当前使用模型：' + SELECTED_MODEL + '。有什么我可以帮你的？');
+    conversationHistory.push({ role: 'assistant', content: '你好！当前使用模型：' + SELECTED_MODEL + '。有什么我可以帮你的？' });
+  } else {
+    loadHistory();
+  }
 })();
 
 /* ---- State ---- */
@@ -84,17 +105,40 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   try {
-    var res = await fetch(API_BASE + '/api/ps/chat/message', {
-      method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        dev_id: DEV_ID,
-        message: text,
-        history: conversationHistory.slice(-20)
-      })
-    });
+    var data;
 
-    var data = await res.json();
+    if (LOGIN_MODE === 'apikey') {
+      // API Key 模式：通过后端代理调用用户的 API
+      var apiMessages = conversationHistory.slice(-20).map(function (msg) {
+        return { role: msg.role === 'assistant' ? 'assistant' : 'user', content: msg.content };
+      });
+
+      var res = await fetch(API_BASE + '/api/ps/apikey/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_base: USER_API_BASE,
+          api_key: USER_API_KEY,
+          model: SELECTED_MODEL,
+          messages: apiMessages
+        })
+      });
+
+      data = await res.json();
+    } else {
+      // 开发编号模式：使用原有后端接口
+      var res = await fetch(API_BASE + '/api/ps/chat/message', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          dev_id: DEV_ID,
+          message: text,
+          history: conversationHistory.slice(-20)
+        })
+      });
+
+      data = await res.json();
+    }
 
     if (data.reply) {
       appendMessage('persona', data.reply);
@@ -173,6 +217,10 @@ async function confirmBuild() {
 function handleLogout() {
   sessionStorage.removeItem('dev_id');
   sessionStorage.removeItem('session_token');
+  sessionStorage.removeItem('login_mode');
+  sessionStorage.removeItem('user_api_base');
+  sessionStorage.removeItem('user_api_key');
+  sessionStorage.removeItem('selected_model');
   window.location.href = 'index.html';
 }
 

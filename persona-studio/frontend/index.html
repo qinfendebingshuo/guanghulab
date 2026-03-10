@@ -14,6 +14,7 @@
     </div>
 
     <div class="login-box">
+      <!-- ── 开发编号登录 ── -->
       <h2>请输入你的开发编号</h2>
       <p class="hint">编号由冰朔主控分配，格式：EXP-000 ~ EXP-011</p>
 
@@ -33,8 +34,36 @@
         <span>或</span>
       </div>
 
-      <button id="guestBtn" class="btn-guest" onclick="handleGuestLogin()" disabled>🌊 访客体验模式（暂未开放）</button>
-      <p class="guest-hint">访客模式暂不可用，正式编号用户可正常登录</p>
+      <!-- ── API Key 登录 ── -->
+      <div class="apikey-section">
+        <h2>API Key 登录</h2>
+        <p class="hint">输入你的第三方 API 信息，自动检测可用模型</p>
+
+        <input
+          type="text"
+          id="apiBaseInput"
+          class="apikey-input"
+          placeholder="API Base URL（如 https://api.openai.com）"
+          autocomplete="off"
+        />
+        <input
+          type="password"
+          id="apiKeyInput"
+          class="apikey-input"
+          placeholder="请输入你的 API Key"
+          autocomplete="off"
+        />
+        <button type="button" id="detectBtn" class="btn-detect" onclick="handleDetectModels()">
+          🔍 检测可用模型
+        </button>
+
+        <div id="detectStatus" class="detect-status" style="display:none;"></div>
+
+        <div id="modelListContainer" class="model-list-container" style="display:none;">
+          <p class="model-list-title">请选择一个模型进入对话</p>
+          <div id="modelList" class="model-list"></div>
+        </div>
+      </div>
 
       <div id="errorMsg" class="error-msg" style="display:none;"></div>
     </div>
@@ -55,11 +84,12 @@
       return 'https://guanghulab.com';
     }
 
+    /* ---- 开发编号登录 ---- */
     async function handleLogin(e) {
       e.preventDefault();
-      const devId = document.getElementById('devIdInput').value.trim().toUpperCase();
-      const errorEl = document.getElementById('errorMsg');
-      const btn = document.getElementById('loginBtn');
+      var devId = document.getElementById('devIdInput').value.trim().toUpperCase();
+      var errorEl = document.getElementById('errorMsg');
+      var btn = document.getElementById('loginBtn');
 
       errorEl.style.display = 'none';
 
@@ -73,13 +103,13 @@
       btn.textContent = '验证中…';
 
       try {
-        const res = await fetch(API_BASE + '/api/ps/auth/login', {
+        var res = await fetch(API_BASE + '/api/ps/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dev_id: devId })
         });
 
-        const data = await res.json();
+        var data = await res.json();
 
         if (!res.ok || data.error) {
           errorEl.textContent = data.message || '登录失败，请检查编号';
@@ -91,8 +121,12 @@
 
         sessionStorage.setItem('dev_id', devId);
         sessionStorage.setItem('session_token', data.token || '');
+        sessionStorage.removeItem('login_mode');
+        sessionStorage.removeItem('user_api_base');
+        sessionStorage.removeItem('user_api_key');
+        sessionStorage.removeItem('selected_model');
         window.location.href = 'chat.html';
-      } catch (err) {
+      } catch (_err) {
         errorEl.textContent = '服务暂时不可用，请稍后再试';
         errorEl.style.display = 'block';
         btn.disabled = false;
@@ -102,39 +136,101 @@
       return false;
     }
 
-    async function handleGuestLogin() {
-      const errorEl = document.getElementById('errorMsg');
-      const btn = document.getElementById('guestBtn');
+    /* ---- API Key 模型检测 ---- */
+    async function handleDetectModels() {
+      var apiBase = document.getElementById('apiBaseInput').value.trim();
+      var apiKey = document.getElementById('apiKeyInput').value.trim();
+      var errorEl = document.getElementById('errorMsg');
+      var statusEl = document.getElementById('detectStatus');
+      var modelContainer = document.getElementById('modelListContainer');
+      var btn = document.getElementById('detectBtn');
+
       errorEl.style.display = 'none';
+      modelContainer.style.display = 'none';
+
+      if (!apiBase) {
+        errorEl.textContent = '请输入 API Base URL';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (!apiKey) {
+        errorEl.textContent = '请输入 API Key';
+        errorEl.style.display = 'block';
+        return;
+      }
+
       btn.disabled = true;
-      btn.textContent = '进入中…';
+      btn.textContent = '正在检测可用模型…';
+      statusEl.textContent = '正在检测可用模型...';
+      statusEl.className = 'detect-status detect-loading';
+      statusEl.style.display = 'block';
 
       try {
-        const res = await fetch(API_BASE + '/api/ps/auth/login', {
+        var res = await fetch(API_BASE + '/api/ps/apikey/detect-models', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dev_id: 'GUEST' })
+          body: JSON.stringify({ api_base: apiBase, api_key: apiKey })
         });
 
-        const data = await res.json();
+        var data = await res.json();
 
         if (!res.ok || data.error) {
-          errorEl.textContent = data.message || '访客体验暂不可用';
-          errorEl.style.display = 'block';
+          statusEl.textContent = data.message || '未检测到模型，请检查 API Key';
+          statusEl.className = 'detect-status detect-error';
           btn.disabled = false;
-          btn.textContent = '🌊 访客体验模式';
+          btn.textContent = '🔍 检测可用模型';
           return;
         }
 
-        sessionStorage.setItem('dev_id', 'GUEST');
-        sessionStorage.setItem('session_token', data.token || '');
-        window.location.href = 'chat.html';
-      } catch (err) {
-        errorEl.textContent = '服务暂时不可用，请稍后再试';
-        errorEl.style.display = 'block';
+        var models = data.models || [];
+        if (models.length === 0) {
+          statusEl.textContent = '未检测到可用模型';
+          statusEl.className = 'detect-status detect-error';
+          btn.disabled = false;
+          btn.textContent = '🔍 检测可用模型';
+          return;
+        }
+
+        statusEl.textContent = '检测到 ' + models.length + ' 个模型，请选择一个模型进入对话';
+        statusEl.className = 'detect-status detect-success';
+
+        renderModelList(models, apiBase, apiKey);
+        modelContainer.style.display = 'block';
+
         btn.disabled = false;
-        btn.textContent = '🌊 访客体验模式';
+        btn.textContent = '🔍 重新检测';
+      } catch (_err) {
+        statusEl.textContent = '检测失败，请稍后重试';
+        statusEl.className = 'detect-status detect-error';
+        btn.disabled = false;
+        btn.textContent = '🔍 检测可用模型';
       }
+    }
+
+    /* ---- 渲染模型列表 ---- */
+    function renderModelList(models, apiBase, apiKey) {
+      var listEl = document.getElementById('modelList');
+      listEl.innerHTML = '';
+
+      models.forEach(function (modelId) {
+        var item = document.createElement('button');
+        item.className = 'model-item';
+        item.textContent = modelId;
+        item.onclick = function () { enterApiKeyChat(apiBase, apiKey, modelId); };
+        listEl.appendChild(item);
+      });
+    }
+
+    /* ---- 选择模型 → 进入对话 ---- */
+    function enterApiKeyChat(apiBase, apiKey, selectedModel) {
+      sessionStorage.setItem('login_mode', 'apikey');
+      sessionStorage.setItem('user_api_base', apiBase);
+      sessionStorage.setItem('user_api_key', apiKey);
+      sessionStorage.setItem('selected_model', selectedModel);
+      sessionStorage.setItem('dev_id', 'APIKEY-USER');
+      sessionStorage.removeItem('session_token');
+      window.location.href = 'chat.html';
     }
   </script>
 </body>
