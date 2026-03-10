@@ -202,14 +202,12 @@
         btn.textContent = '🔍 重新检测';
       } catch (fetchErr) {
         var errMsg = '检测失败';
-        if (fetchErr instanceof TypeError && fetchErr.message.includes('fetch')) {
+        if (fetchErr instanceof TypeError) {
           errMsg = '服务器代理未部署或不可达，请联系管理员';
         } else if (fetchErr.name === 'AbortError') {
           errMsg = '请求超时，请检查网络连接';
-        } else if (fetchErr.message && fetchErr.message.includes('NetworkError')) {
-          errMsg = '跨域被拦截或网络不可达，请确认服务器已部署';
         } else {
-          errMsg = '检测失败: ' + (fetchErr.message || '请检查网络连接');
+          errMsg = '网络错误: ' + (fetchErr.message || '请检查网络连接');
         }
         statusEl.textContent = errMsg;
         statusEl.className = 'detect-status detect-error';

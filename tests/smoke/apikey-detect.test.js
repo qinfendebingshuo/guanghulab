@@ -64,7 +64,8 @@ describe('POST /api/ps/apikey/detect-models', () => {
     });
     expect(res.status).toBe(502);
     expect(res.body.error).toBe(true);
-    expect(['DETECT_FAILED', 'DNS_ERROR', 'NETWORK_ERROR', 'TIMEOUT']).toContain(res.body.code);
+    // DNS resolution failure returns DNS_ERROR; other network issues may return NETWORK_ERROR
+    expect(res.body.code).toMatch(/^(DNS_ERROR|NETWORK_ERROR|TIMEOUT)$/);
   });
 
   test('returns INVALID_API_BASE for malformed URL', async () => {

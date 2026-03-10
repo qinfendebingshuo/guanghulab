@@ -451,8 +451,8 @@ const userModelCache = new Map();
 const USER_MODEL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 小时
 
 function getUserCacheKey(apiBase, apiKey) {
-  const hash = crypto.createHash('sha256').update(apiKey).digest('hex').slice(0, 16);
-  return apiBase + '::' + hash;
+  const hash = crypto.createHash('sha256').update(apiBase + '\0' + apiKey).digest('hex').slice(0, 32);
+  return 'user-models::' + hash;
 }
 
 function getCachedUserModels(apiBase, apiKey) {
@@ -636,9 +636,12 @@ async function handleDetectModels(req, res) {
     return jsonResponse(res, 400, { error: true, code: 'INVALID_API_KEY', message: 'API Key 格式无效（含非法字符）' });
   }
 
-  // 校验 api_base 格式
+  // 校验 api_base 格式和协议（仅允许 http/https，防止 SSRF）
   try {
-    new URL(api_base);
+    const parsedUrl = new URL(api_base);
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return jsonResponse(res, 400, { error: true, code: 'INVALID_API_BASE', message: 'API Base URL 仅支持 http/https 协议' });
+    }
   } catch (_e) {
     return jsonResponse(res, 400, { error: true, code: 'INVALID_API_BASE', message: 'API Base URL 格式无效，请输入完整 URL（如 https://api.openai.com）' });
   }
