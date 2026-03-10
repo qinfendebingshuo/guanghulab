@@ -8,11 +8,16 @@ const router = express.Router();
 const memoryManager = require('../brain/memory-manager');
 const personaEngine = require('../brain/persona-engine');
 
+// 校验开发编号（支持 GUEST 访客模式）
+function isValidDevId(id) {
+  return id && (/^EXP-\d{3,}$/.test(id) || id === 'GUEST');
+}
+
 // POST /api/ps/chat/message
 router.post('/message', async (req, res) => {
   const { dev_id, message, history } = req.body || {};
 
-  if (!dev_id || !/^EXP-\d{3,}$/.test(dev_id)) {
+  if (!isValidDevId(dev_id)) {
     return res.status(400).json({
       error: true,
       code: 'INVALID_ID',
@@ -66,7 +71,7 @@ router.post('/message', async (req, res) => {
 router.get('/history', (req, res) => {
   const dev_id = req.query.dev_id;
 
-  if (!dev_id || !/^EXP-\d{3,}$/.test(dev_id)) {
+  if (!isValidDevId(dev_id)) {
     return res.status(400).json({
       error: true,
       code: 'INVALID_ID',

@@ -41,6 +41,55 @@ body {
   flex-direction: column;
 }
 
+/* ---- Guest Mode ---- */
+.guest-divider {
+  margin: 1.2rem 0;
+  text-align: center;
+  position: relative;
+}
+
+.guest-divider::before,
+.guest-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--border);
+}
+
+.guest-divider::before { left: 0; }
+.guest-divider::after { right: 0; }
+
+.guest-divider span {
+  background: var(--bg-card);
+  padding: 0 0.8rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.btn-guest {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, var(--accent), #0969da);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-weight: 500;
+}
+
+.btn-guest:hover { opacity: 0.9; }
+.btn-guest:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.guest-hint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
 /* ---- Login Page ---- */
 .login-container {
   justify-content: center;

@@ -22,6 +22,29 @@ function loadRegistry() {
 router.post('/login', (req, res) => {
   const { dev_id } = req.body || {};
 
+  // 访客体验模式
+  if (dev_id === 'GUEST') {
+    const registry = loadRegistry();
+    const guestConfig = registry.guest_mode || {};
+
+    if (!guestConfig.enabled) {
+      return res.status(403).json({
+        error: true,
+        code: 'GUEST_DISABLED',
+        message: '访客体验暂未开放'
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    return res.json({
+      error: false,
+      dev_id: 'GUEST',
+      name: guestConfig.name || '访客体验者',
+      status: 'guest',
+      token
+    });
+  }
+
   if (!dev_id || !/^EXP-\d{3,}$/.test(dev_id)) {
     return res.status(400).json({
       error: true,

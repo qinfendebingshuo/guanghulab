@@ -1,16 +1,31 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "id_prefix": "EXP",
-  "next_id": 2,
+  "next_id": 3,
+  "guest_mode": {
+    "enabled": true,
+    "dev_id": "GUEST",
+    "name": "访客体验者",
+    "max_conversations": 50
+  },
   "developers": {
     "EXP-001": {
-      "name": "待填写",
-      "github_username": "待主控提供",
+      "name": "冰朔",
+      "github_username": "qinfendebingshuo",
       "registered_at": "2026-03-09T23:20:00+08:00",
-      "registered_by": "冰朔（主控）",
-      "status": "pending_activation",
-      "email": null,
-      "notes": "主控的技术朋友·首位测试体验者"
+      "registered_by": "铸渊（系统初始化）",
+      "status": "active",
+      "role": "master",
+      "notes": "系统创建者·最高权限"
+    },
+    "EXP-002": {
+      "name": "体验者",
+      "github_username": "",
+      "registered_at": "2026-03-10T07:00:00+08:00",
+      "registered_by": "铸渊（主控指令）",
+      "status": "active",
+      "role": "tester",
+      "notes": "首位测试体验者"
     }
   }
 }

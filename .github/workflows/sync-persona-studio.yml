@@ -1,0 +1,54 @@
+name: 🔄 铸渊跨仓库同步 · persona-studio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'persona-studio/brain/**'
+      - 'persona-studio/backend/**'
+      - 'persona-studio/frontend/**'
+  workflow_dispatch:
+    inputs:
+      sync_target:
+        description: '同步目标（all / brain / frontend / backend）'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - brain
+          - frontend
+          - backend
+
+jobs:
+  sync:
+    name: 同步到 persona-studio 仓库
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout guanghulab
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 执行跨仓库同步
+        env:
+          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+          SYNC_TARGET: ${{ github.event.inputs.sync_target || 'all' }}
+        run: node scripts/cross-repo-sync.js
+
+      - name: 通知 persona-studio 仓库
+        if: ${{ secrets.CROSS_REPO_TOKEN != '' }}
+        env:
+          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $CROSS_REPO_TOKEN" \
+            https://api.github.com/repos/qinfendebingshuo/persona-studio/dispatches \
+            -d '{"event_type":"brain-sync","client_payload":{"source":"guanghulab","timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}' \
+            2>/dev/null || echo "⚠️ 跨仓库通知未发送（需要 CROSS_REPO_TOKEN secret）"
