@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "description": "冰朔主控问题索引库 — 记录已知问题、根因与排查路由",
+  "updated_at": "2026-03-10T10:12:45.213Z",
+  "issues": [
+    {
+      "id": "BS-001",
+      "title": "HLI 接口覆盖率仅 17.6%（3/17）",
+      "scope": "backend",
+      "status": "in_progress",
+      "root_cause_summary": "HLI 接口覆盖率 17.6%（3/17）",
+      "recommended_route": "hli_route_error",
+      "related_files": [
+        "backend/routes/",
+        "backend/schemas/",
+        ".github/brain/routing-map.json"
+      ],
+      "last_seen": "2026-03-10",
+      "source": "routing-map.json 统计"
+    },
+    {
+      "id": "BS-002",
+      "title": "collaborators.json 中 GitHub 用户名为空",
+      "scope": "collaboration",
+      "status": "open",
+      "root_cause_summary": "开发者注册时未填写 GitHub 用户名，导致无法精确关联提交与开发者",
+      "recommended_route": "brain_version_split",
+      "related_files": [
+        ".github/brain/collaborators.json"
+      ],
+      "last_seen": "2026-03-10",
+      "source": "collaborators.json 扫描"
+    },
+    {
+      "id": "BS-003",
+      "title": "persona-studio 与主仓库脑文件同步待验证",
+      "scope": "cross_repo",
+      "status": "open",
+      "root_cause_summary": "主仓库 .github/brain/ 与 persona-studio/brain/ 存在独立脑文件，同步机制尚未经过完整端到端验证",
+      "recommended_route": "brain_version_split",
+      "related_files": [
+        ".github/brain/memory.json",
+        "persona-studio/brain/",
+        ".github/workflows/brain-sync.yml",
+        ".github/workflows/sync-persona-studio.yml"
+      ],
+      "last_seen": "2026-03-10",
+      "source": "结构分析"
+    }
+  ]
+}
