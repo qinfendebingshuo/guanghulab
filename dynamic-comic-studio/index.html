@@ -3,84 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HoloLake 动态漫制作系统 - 环节5</title>
+    <title>HoloLake 动态漫制作系统 - 环节6</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="app">
-        <!-- 顶部工具栏 -->
-        <header id="toolbar">
-            <h1>🎬 HoloLake 动态漫制作系统</h1>
-            <div class="toolbar-actions">
-                <button onclick="exportScene()">📤 导出JSON</button>
-                <button onclick="importScene()">📥 导入JSON</button>
-                <button onclick="exportScreenshot()">📷 截图</button>
-                <input type="file" id="import-file" style="display:none" accept=".json">
-            </div>
-        </header>
-
-        <!-- 主工作区 -->
-        <main id="workspace">
+    <div class="container">
+        <h1>🎬 HoloLake 动态漫制作系统</h1>
+        
+        <!-- 主布局容器 -->
+        <div class="main-layout">
             <!-- 左侧素材面板 -->
-            <aside id="assets-panel">
-                <h3>🎨 素材库</h3>
-                <div class="asset-category">
-                    <h4>角色</h4>
-                    <div class="asset-items">
-                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😊">😊 开心</div>
-                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😢">😢 难过</div>
-                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😠">😠 生气</div>
-                        <div class="asset-item" draggable="true" data-type="character" data-emoji="😴">😴 睡觉</div>
-                    </div>
+            <div class="left-panel">
+                <h3>📦 素材库</h3>
+                
+                <h3>角色</h3>
+                <div class="material-grid">
+                    <div class="material-item" draggable="true" data-type="character" data-emoji="😊">😊 开心</div>
+                    <div class="material-item" draggable="true" data-type="character" data-emoji="😢">😢 难过</div>
+                    <div class="material-item" draggable="true" data-type="character" data-emoji="😠">😠 生气</div>
+                    <div class="material-item" draggable="true" data-type="character" data-emoji="😴">😴 睡觉</div>
                 </div>
-                <div class="asset-category">
-                    <h4>物品</h4>
-                    <div class="asset-items">
-                        <div class="asset-item" draggable="true" data-type="item" data-emoji="🌸">🌸 花</div>
-                        <div class="asset-item" draggable="true" data-type="item" data-emoji="⭐">⭐ 星星</div>
-                        <div class="asset-item" draggable="true" data-type="item" data-emoji="💎">💎 宝石</div>
-                        <div class="asset-item" draggable="true" data-type="item" data-emoji="📖">📖 书</div>
-                    </div>
+                
+                <h3>物品</h3>
+                <div class="material-grid">
+                    <div class="material-item" draggable="true" data-type="item" data-emoji="🌸">🌸 花</div>
+                    <div class="material-item" draggable="true" data-type="item" data-emoji="⭐">⭐ 星星</div>
+                    <div class="material-item" draggable="true" data-type="item" data-emoji="💎">💎 宝石</div>
+                    <div class="material-item" draggable="true" data-type="item" data-emoji="📖">📖 书</div>
                 </div>
-                <div class="asset-category">
-                    <h4>场景</h4>
-                    <div class="asset-items">
-                        <div class="asset-item" draggable="true" data-type="background" data-emoji="🏠">🏠 房子</div>
-                        <div class="asset-item" draggable="true" data-type="background" data-emoji="🌳">🌳 树林</div>
-                        <div class="asset-item" draggable="true" data-type="background" data-emoji="🏔️">🏔️ 山</div>
-                    </div>
+                
+                <h3>场景</h3>
+                <div class="material-grid">
+                    <div class="material-item" draggable="true" data-type="background" data-emoji="🏠">🏠 房子</div>
+                    <div class="material-item" draggable="true" data-type="background" data-emoji="🌳">🌳 树林</div>
+                    <div class="material-item" draggable="true" data-type="background" data-emoji="⛰️">⛰️ 山</div>
                 </div>
-            </aside>
-
+            </div>
+            
             <!-- 中间画布区域 -->
-            <section id="canvas-container">
-                <div id="scene-tabs">
-                    <div id="tabs-list"></div>
-                    <button onclick="addScene()" id="add-scene-btn">+ 新场景</button>
+            <div class="canvas-area">
+                <canvas id="mainCanvas" width="800" height="450"></canvas>
+                
+                <!-- 画布控制栏 -->
+                <div class="canvas-controls">
+                    <button class="btn" onclick="exportScreenshot()">📷 截图</button>
+                    <button class="btn" onclick="exportScene()">📤 导出JSON</button>
+                    <button class="btn" onclick="document.getElementById('import-file').click()">📥 导入JSON</button>
+                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importScene(event)">
+                    <button class="btn btn-primary" id="previewBtn">👁️ 预览</button>
+                    <button class="btn btn-primary" id="shareBtn">🔗 分享作品</button>
                 </div>
-                <div id="canvas-wrapper">
-                    <canvas id="main-canvas" width="800" height="600"></canvas>
+                
+                <!-- 预览模式专用控制按钮（默认隐藏） -->
+                <div class="preview-controls hidden">
+                    <button class="btn btn-primary" id="playPreviewBtn">▶️ 播放</button>
+                    <button class="btn" id="pausePreviewBtn">⏸️ 暂停</button>
+                    <button class="btn" id="stopPreviewBtn">⏹️ 停止</button>
+                    <button class="btn" id="exitPreviewBtn">✖️ 退出预览</button>
                 </div>
-            </section>
-        </main>
-
-        <!-- 底部时间轴面板 -->
-        <footer id="timeline-panel">
-            <div id="playback-controls">
-                <button onclick="stopAnimation()" title="停止(回到第1帧)">⏹️</button>
-                <button onclick="togglePlayback()" id="btn-play" title="播放/暂停">▶️</button>
-                <span id="frame-counter">帧 1/1</span>
-                <label>速度:
-                    <input type="range" id="fps-slider" min="1" max="12" value="4" oninput="setFPS(this.value)">
-                    <span id="fps-display">4 FPS</span>
-                </label>
             </div>
-            <div id="timeline-frames"></div>
-            <div id="timeline-actions">
-                <button onclick="addFrame()" title="添加新帧(复制当前帧)">➕ 新帧</button>
-                <button onclick="deleteFrame()" title="删除当前帧">🗑️ 删帧</button>
+            
+            <!-- 右侧场景面板 -->
+            <div class="right-panel">
+                <h3>🎬 场景列表</h3>
+                <div class="scene-list" id="sceneList"></div>
+                <button class="btn" onclick="addScene()" style="width:100%; margin-top:10px;">➕ 新建场景</button>
+                
+                <!-- 时间轴预览区域 -->
+                <div class="timeline">
+                    <h3>⏱️ 时间轴</h3>
+                    <div class="timeline-controls">
+                        <button class="btn" onclick="addFrame()" style="padding:5px 15px;">➕ 新帧</button>
+                        <button class="btn" onclick="deleteFrame()" style="padding:5px 15px;">🗑️ 删帧</button>
+                        <button class="btn" onclick="togglePlayback()" id="timelinePlayBtn" style="padding:5px 15px;">▶️ 播放</button>
+                    </div>
+                    <div class="frames-container" id="framesContainer"></div>
+                    <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+                        <span>速度:</span>
+                        <input type="range" id="fpsSlider" min="1" max="12" value="4" style="flex:1;">
+                        <span id="fpsValue">4 FPS</span>
+                    </div>
+                </div>
             </div>
-        </footer>
+        </div>
+    </div>
+    
+    <!-- 分享弹窗（默认隐藏） -->
+    <div id="shareOverlay" class="overlay hidden"></div>
+    <div id="sharePanel" class="share-panel hidden">
+        <h3>🔗 分享作品</h3>
+        <div>
+            <button class="btn" id="generateUrlBtn" style="margin-right:10px;">生成分享链接</button>
+            <button class="btn" id="generateEmbedBtn">生成嵌入代码</button>
+        </div>
+        <div id="shareUrlContainer" style="margin-top:20px;">
+            <div class="share-url" id="shareUrl"></div>
+            <div class="share-actions">
+                <button class="btn" id="copyShareBtn" style="display:none;">📋 复制</button>
+                <button class="btn" id="closeShareBtn">关闭</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/app.js"></script>

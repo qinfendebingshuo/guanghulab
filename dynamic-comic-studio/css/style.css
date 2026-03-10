@@ -1,348 +1,379 @@
-/* ==================== 基础重置 ==================== */
+/* === 全局重置 === */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-    background: #1a1a2e;
-    color: #eee;
-    overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #fff;
 }
 
-/* ==================== 布局框架 ==================== */
-#app {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+/* === 主容器 === */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* ==================== 顶部工具栏 ==================== */
-#toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background: #16213e;
-    border-bottom: 2px solid #0f3460;
+/* === 标题区域 === */
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 24px;
+  background: linear-gradient(45deg, #fff, #e94560);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+  letter-spacing: 2px;
 }
 
-#toolbar h1 {
-    font-size: 18px;
-    color: #e94560;
+/* === 两列布局 === */
+.main-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 20px;
+  margin-top: 20px;
 }
 
-.toolbar-actions button {
-    margin-left: 10px;
-    padding: 6px 12px;
-    background: #0f3460;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
+/* === 左侧面板通用样式 === */
+.left-panel, .right-panel {
+  background: rgba(10, 10, 20, 0.6);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
 }
 
-.toolbar-actions button:hover {
-    background: #e94560;
+/* === 素材分类标题 === */
+.left-panel h3 {
+  color: #e94560;
+  margin: 16px 0 12px 0;
+  font-size: 1.2em;
+  letter-spacing: 1px;
+  border-left: 4px solid #e94560;
+  padding-left: 12px;
 }
 
-/* ==================== 主工作区 ==================== */
-#workspace {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
+.left-panel h3:first-of-type {
+  margin-top: 0;
 }
 
-/* ==================== 左侧素材面板 ==================== */
-#assets-panel {
-    width: 200px;
-    background: #16213e;
-    border-right: 2px solid #0f3460;
-    padding: 15px;
-    overflow-y: auto;
+/* === 素材网格 === */
+.material-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-#assets-panel h3 {
-    color: #e94560;
-    margin-bottom: 15px;
-    font-size: 16px;
+/* === 素材项 === */
+.material-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #fff;
+  font-size: 0.9em;
 }
 
-.asset-category {
-    margin-bottom: 20px;
+.material-item:hover {
+  background: rgba(233, 69, 96, 0.2);
+  border-color: #e94560;
+  transform: translateY(-2px);
 }
 
-.asset-category h4 {
-    color: #533483;
-    font-size: 14px;
-    margin-bottom: 10px;
-    padding-left: 5px;
-    border-left: 3px solid #e94560;
+/* === 中间画布区域 === */
+.canvas-area {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.asset-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+/* === 画布 === */
+#mainCanvas {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16/9;
+  background: #0a0a14;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(233, 69, 96, 0.3);
+  cursor: crosshair;
 }
 
-.asset-item {
-    padding: 8px 12px;
-    background: #0f3460;
-    border-radius: 6px;
-    cursor: move;
-    font-size: 13px;
-    transition: all 0.3s;
-    user-select: none;
+/* === 画布控制栏 === */
+.canvas-controls {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.asset-item:hover {
-    background: #e94560;
-    transform: translateY(-2px);
+/* === 按钮样式 === */
+.btn {
+  background: linear-gradient(45deg, #2a1a3a, #1a1a2e);
+  border: 1px solid #533483;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-size: 0.95em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
 }
 
-/* ==================== 画布区域 ==================== */
-#canvas-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #0f0f1a;
+.btn:hover {
+  background: linear-gradient(45deg, #3a2a4a, #2a1a3a);
+  border-color: #e94560;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(233, 69, 96, 0.3);
 }
 
-#scene-tabs {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background: #16213e;
-    border-bottom: 2px solid #0f3460;
+.btn-primary {
+  background: linear-gradient(45deg, #e94560, #533483);
+  border-color: #e94560;
+  font-weight: 600;
 }
 
-#tabs-list {
-    display: flex;
-    gap: 8px;
-    flex: 1;
+.btn-primary:hover {
+  background: linear-gradient(45deg, #ff5570, #634393);
+  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5);
 }
 
-.scene-tab {
-    padding: 8px 16px;
-    background: #0f3460;
-    border-radius: 4px 4px 0 0;
-    cursor: pointer;
-    font-size: 14px;
-    position: relative;
+/* === 右侧面板 === */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.scene-tab.active {
-    background: #e94560;
+/* === 场景列表 === */
+.scene-list {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 120px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.scene-tab .close-btn {
-    margin-left: 8px;
-    opacity: 0.6;
+.scene-item {
+  background: rgba(233, 69, 96, 0.1);
+  border: 1px solid #533483;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.scene-tab .close-btn:hover {
-    opacity: 1;
+.scene-item:hover {
+  background: rgba(233, 69, 96, 0.2);
+  border-color: #e94560;
 }
 
-#add-scene-btn {
-    padding: 8px 16px;
-    background: #533483;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 10px;
+.scene-item.active {
+  background: rgba(233, 69, 96, 0.3);
+  border-color: #e94560;
+  box-shadow: 0 0 15px rgba(233, 69, 96, 0.3);
 }
 
-#canvas-wrapper {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    overflow: auto;
+/* === 时间轴 === */
+.timeline {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-#main-canvas {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    cursor: crosshair;
+.timeline h3 {
+  color: #e94560;
+  margin-bottom: 12px;
+  font-size: 1.1em;
 }
 
-/* ==================== 底部时间轴面板 ==================== */
-#timeline-panel {
-    background: #16213e;
-    border-top: 2px solid #0f3460;
-    padding: 15px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.timeline-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-/* 播放控制栏 */
-#playback-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-#playback-controls button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: #0f3460;
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#playback-controls button:hover {
-    background: #e94560;
-    transform: scale(1.1);
-}
-
-#frame-counter {
-    font-size: 14px;
-    color: #aaa;
-    min-width: 80px;
-}
-
-#playback-controls label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: #aaa;
-}
-
-#fps-slider {
-    width: 120px;
-    cursor: pointer;
-}
-
-#fps-display {
-    color: #e94560;
-    font-weight: bold;
-    min-width: 50px;
-}
-
-/* 帧缩略图时间轴 */
-#timeline-frames {
-    display: flex;
-    gap: 8px;
-    padding: 10px;
-    background: #0f0f1a;
-    border-radius: 6px;
-    overflow-x: auto;
-    min-height: 70px;
-    align-items: center;
+.frames-container {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 12px 0;
+  min-height: 100px;
 }
 
 .frame-thumb {
-    width: 80px;
-    height: 60px;
-    background: #0f3460;
-    border: 2px solid #533483;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: #aaa;
-    position: relative;
-    transition: all 0.3s;
-    flex-shrink: 0;
+  min-width: 120px;
+  height: 68px;
+  background: #0f0f1a;
+  border: 2px solid #533483;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.8em;
+  color: #aaa;
+  position: relative;
 }
 
 .frame-thumb:hover {
-    border-color: #e94560;
-    transform: translateY(-2px);
+  border-color: #e94560;
+  transform: scale(1.05);
 }
 
 .frame-thumb.active {
-    border-color: #e94560;
-    background: #533483;
-    box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+  border-color: #e94560;
+  background: rgba(233, 69, 96, 0.2);
+  box-shadow: 0 0 15px rgba(233, 69, 96, 0.3);
 }
 
-.frame-thumb::before {
-    content: attr(data-frame);
-    position: absolute;
-    top: 2px;
-    left: 4px;
-    font-size: 10px;
-    color: #fff;
-    background: rgba(0,0,0,0.5);
-    padding: 1px 4px;
-    border-radius: 2px;
+.frame-index {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #e94560;
+  margin-bottom: 4px;
 }
 
-/* 时间轴操作按钮 */
-#timeline-actions {
-    display: flex;
-    gap: 10px;
+/* === 预览模式样式 === */
+.preview-mode .left-panel,
+.preview-mode .right-panel,
+.preview-mode .timeline,
+.preview-mode .canvas-controls .btn:not(#exitPreviewBtn):not(#playPreviewBtn):not(#pausePreviewBtn):not(#stopPreviewBtn) {
+  display: none !important;
 }
 
-#timeline-actions button {
-    padding: 8px 16px;
-    background: #0f3460;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
+.preview-mode .canvas-area {
+  grid-column: 1 / -1;
+  justify-content: center;
+  min-height: 80vh;
 }
 
-#timeline-actions button:hover {
-    background: #e94560;
+.preview-mode #mainCanvas {
+  max-width: 1200px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* ==================== 画布上的素材样式 ==================== */
-.canvas-asset {
-    position: absolute;
-    cursor: move;
-    user-select: none;
-    font-size: 48px;
-    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-    transition: transform 0.1s;
+.preview-mode .preview-controls {
+  display: flex !important;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
 }
 
+/* === 分享面板样式 === */
+.share-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1a1a2e;
+  border: 2px solid #e94560;
+  border-radius: 24px;
+  padding: 30px;
+  z-index: 1000;
+  min-width: 400px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+}
+
+.share-panel h3 {
+  color: #e94560;
+  margin-bottom: 20px;
+  font-size: 1.5em;
+}
+
+.share-url {
+  background: #0a0a14;
+  border: 1px solid #533483;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 15px 0;
+  word-break: break-all;
+  font-size: 0.9em;
+  color: #fff;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.share-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* === 遮罩层 === */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 999;
+}
+
+/* === 工具类 === */
+.hidden {
+  display: none !important;
+}
+
+/* === canvas-asset（来自原来文件，保留） === */
 .canvas-asset:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .canvas-asset.selected {
-    outline: 2px dashed #e94560;
-    outline-offset: 4px;
+  outline: 2px dashed #e94560;
+  outline-offset: 4px;
 }
 
-/* ==================== 滚动条样式 ==================== */
+/* === 滚动条样式（来自原来文件，保留） === */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #0f0f1a;
+  background: #0f0f1a;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #533483;
-    border-radius: 4px;
+  background: #533483;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #e94560;
+  background: #e94560;
 }
