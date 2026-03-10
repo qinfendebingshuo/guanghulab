@@ -256,6 +256,19 @@ jobs:
                   echo '⚠️ src pm2 启动失败'
               fi
 
+              # 部署 Persona Studio 后端服务（端口 3002）
+              if [ -f '${{ secrets.DEPLOY_PATH }}/persona-studio/backend/server.js' ]; then
+                echo '📦 安装 persona-studio 依赖...'
+                cd '${{ secrets.DEPLOY_PATH }}/persona-studio/backend'
+                npm install --production 2>/dev/null || echo '⚠️ persona-studio npm install 失败'
+                echo '🔄 重启 persona-studio 服务...'
+                export MODEL_API_KEY='${{ secrets.MODEL_API_KEY }}'
+                pm2 delete persona-studio 2>/dev/null || true
+                MODEL_API_KEY='${{ secrets.MODEL_API_KEY }}' \
+                  pm2 start server.js --name persona-studio --update-env 2>/dev/null || \
+                  echo '⚠️ persona-studio pm2 启动失败'
+              fi
+
               pm2 save || echo '⚠️ pm2 save 失败，重启后进程可能不会自动启动'
 
               # 设置开机自启（仅首次需要，后续无操作）
@@ -326,6 +339,25 @@ jobs:
                   '' \
                   'location /api/health {' \
                   '    proxy_pass http://127.0.0.1:3721/api/health;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '}' \
+                  '' \
+                  '# Persona Studio API → persona-studio 后端端口 3002' \
+                  'location /api/ps/ {' \
+                  '    proxy_pass http://127.0.0.1:3002/api/ps/;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' \
+                  '    proxy_set_header X-Forwarded-Proto \$scheme;' \
+                  '    proxy_read_timeout 90s;' \
+                  '}' \
+                  '' \
+                  '# Persona Studio 前端静态文件' \
+                  'location /persona-studio/ {' \
+                  '    proxy_pass http://127.0.0.1:3002/persona-studio/;' \
                   '    proxy_http_version 1.1;' \
                   '    proxy_set_header Host \$host;' \
                   '    proxy_set_header X-Real-IP \$remote_addr;' \

@@ -1,0 +1,37 @@
+{
+  "api_source": "third_party_combined",
+  "api_key_env": "MODEL_API_KEY",
+  "base_url": "https://api.yunwu.ai/v1",
+  "auto_detect": {
+    "enabled": true,
+    "schedule": "daily_0300",
+    "test_prompts": {
+      "chat": "你好，请用中文介绍一下自己",
+      "code": "写一个JavaScript函数，输入数组返回去重后的结果",
+      "reasoning": "分析以下需求并给出技术方案：用户想做一个带搜索功能的个人博客"
+    }
+  },
+  "routing_rules": {
+    "chat": {
+      "priority": ["chinese_ability", "conversation_quality", "speed"],
+      "max_latency_ms": 5000
+    },
+    "code_generation": {
+      "priority": ["code_quality", "context_window", "reasoning"],
+      "max_latency_ms": 30000
+    },
+    "code_review": {
+      "priority": ["reasoning", "code_quality"],
+      "max_latency_ms": 15000
+    },
+    "quick_reply": {
+      "priority": ["speed", "cost"],
+      "max_latency_ms": 2000
+    }
+  },
+  "fallback": {
+    "max_retries": 3,
+    "timeout_ms": 30000,
+    "on_all_fail": "notify_master"
+  }
+}

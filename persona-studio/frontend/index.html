@@ -66,7 +66,7 @@
       btn.textContent = '验证中…';
 
       try {
-        const res = await fetch(API_BASE + '/api/auth/login', {
+        const res = await fetch(API_BASE + '/api/ps/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dev_id: devId })

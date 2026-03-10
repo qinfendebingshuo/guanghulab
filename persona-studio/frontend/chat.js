@@ -30,7 +30,7 @@ let buildReady = false;
 /* ---- Load History ---- */
 async function loadHistory() {
   try {
-    const res = await fetch(API_BASE + '/api/chat/history?dev_id=' + encodeURIComponent(DEV_ID), {
+    const res = await fetch(API_BASE + '/api/ps/chat/history?dev_id=' + encodeURIComponent(DEV_ID), {
       headers: authHeaders()
     });
     if (res.ok) {
@@ -54,7 +54,7 @@ async function loadHistory() {
 /* ---- Greeting ---- */
 async function sendGreeting() {
   try {
-    const res = await fetch(API_BASE + '/api/chat/message', {
+    const res = await fetch(API_BASE + '/api/ps/chat/message', {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ dev_id: DEV_ID, message: '__greeting__' })
@@ -84,7 +84,7 @@ async function sendMessage() {
   sendBtn.disabled = true;
 
   try {
-    var res = await fetch(API_BASE + '/api/chat/message', {
+    var res = await fetch(API_BASE + '/api/ps/chat/message', {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
@@ -155,7 +155,7 @@ async function confirmBuild() {
   appendMessage('system', '🚀 开发任务已提交，完成后会发送到 ' + email);
 
   try {
-    await fetch(API_BASE + '/api/build/start', {
+    await fetch(API_BASE + '/api/ps/build/start', {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
