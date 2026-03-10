@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const TOKEN = process.env.CROSS_REPO_TOKEN || process.env.GITHUB_TOKEN || '';
+const TOKEN = process.env.CROSS_REPO_TOKEN || '';
 const TARGET_OWNER = 'qinfendebingshuo';
 const TARGET_REPO = 'persona-studio';
 const SYNC_TARGET = process.env.SYNC_TARGET || 'all';
@@ -83,7 +83,7 @@ function githubRequest(method, apiPath, body) {
     });
 
     req.on('error', reject);
-    req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')); });
+    req.setTimeout(15000, () => { req.destroy(); reject(new Error('GitHub API request timed out after 15s')); });
 
     if (body) req.write(JSON.stringify(body));
     req.end();

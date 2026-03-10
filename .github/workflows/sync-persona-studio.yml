@@ -37,12 +37,12 @@ jobs:
 
       - name: 执行跨仓库同步
         env:
-          GITHUB_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
           SYNC_TARGET: ${{ github.event.inputs.sync_target || 'all' }}
         run: node scripts/cross-repo-sync.js
 
       - name: 通知 persona-studio 仓库
-        if: env.CROSS_REPO_TOKEN != ''
+        if: ${{ secrets.CROSS_REPO_TOKEN != '' }}
         env:
           CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
         run: |
