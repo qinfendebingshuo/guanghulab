@@ -22,6 +22,20 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const BRAIN_DIR = path.join(ROOT, '.github', 'brain');
 
+// ─── 常量定义 ───────────────────────────────────────────────
+const DEPLOY_WORKFLOWS = {
+  server: 'deploy-to-server.yml',
+  pages: 'deploy-pages.yml',
+};
+const NOTION_WORKFLOWS = [
+  'notion-poll.yml',
+  'bridge-changes-to-notion.yml',
+];
+const BRAIN_SYNC_WORKFLOWS = [
+  'brain-sync.yml',
+  'sync-persona-studio.yml',
+];
+
 // ─── 工具函数 ───────────────────────────────────────────────
 function readJSON(filepath) {
   try {
@@ -97,8 +111,8 @@ function runRuntimeChainAgent() {
   chains.ps_backend = fileExists(path.join(ROOT, 'persona-studio', 'backend'));
 
   // 检查部署 workflow
-  chains.deploy_server = fileExists(path.join(ROOT, '.github', 'workflows', 'deploy-to-server.yml'));
-  chains.deploy_pages = fileExists(path.join(ROOT, '.github', 'workflows', 'deploy-pages.yml'));
+  chains.deploy_server = fileExists(path.join(ROOT, '.github', 'workflows', DEPLOY_WORKFLOWS.server));
+  chains.deploy_pages = fileExists(path.join(ROOT, '.github', 'workflows', DEPLOY_WORKFLOWS.pages));
 
   return chains;
 }
@@ -248,11 +262,7 @@ function runSystemHealthAgent(brainCheck, runtimeChains) {
   };
 
   // Notion 桥接
-  const notionWorkflows = [
-    'notion-poll.yml',
-    'bridge-changes-to-notion.yml',
-  ];
-  const notionOk = notionWorkflows.every(f =>
+  const notionOk = NOTION_WORKFLOWS.every(f =>
     fileExists(path.join(ROOT, '.github', 'workflows', f))
   );
   health.notion_bridge_health = {
@@ -313,7 +323,7 @@ function compileMasterBrain(structureMap, runtimeChains, brainCheck, issues, hea
 
   // 生成已知问题表
   const issueRows = issues.map(i =>
-    `| ${i.id} | ${i.title} | ${i.scope} | ${i.status} | ${i.root_cause_summary.slice(0, 40)} |`
+    `| ${i.id} | ${i.title} | ${i.scope} | ${i.status} | ${i.root_cause_summary} |`
   ).join('\n');
 
   // 生成健康状态表
