@@ -1,20 +1,20 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-10T07:01:49.331Z",
+  "generated_at": "2026-03-10T07:35:28.912Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 29,
-    "total_scripts": 23,
+    "total_workflows": 30,
+    "total_scripts": 24,
     "total_dev_nodes": 8,
     "hli_interfaces": 17,
     "hli_implemented": 3,
     "hli_coverage_pct": "18%",
-    "last_ci_run": "2026-03-05T10:30:46.894Z",
-    "memory_last_updated": "2026-03-10T05:00:00.000Z"
+    "last_ci_run": "2026-03-05T16:07:24.070Z",
+    "memory_last_updated": "2026-03-10T07:05:00.000Z"
   },
   "zones": [
     {
@@ -289,6 +289,14 @@
           ]
         },
         {
+          "file": "sync-persona-studio.yml",
+          "name": "🔄 铸渊跨仓库同步 · persona-studio",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
           "file": "syslog-pipeline.yml",
           "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
           "triggers": [
@@ -353,7 +361,7 @@
           ]
         }
       ],
-      "item_count": 29
+      "item_count": 30
     },
     {
       "zone_id": "SCRIPTS",
@@ -375,6 +383,9 @@
         },
         {
           "file": "contract-check.js"
+        },
+        {
+          "file": "cross-repo-sync.js"
         },
         {
           "file": "daily-check.js"
@@ -440,7 +451,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 23
+      "item_count": 24
     },
     {
       "zone_id": "SRC",
@@ -1157,6 +1168,9 @@
     "staging-preview": [
       "WORKFLOWS::staging-preview.yml"
     ],
+    "sync-persona-studio": [
+      "WORKFLOWS::sync-persona-studio.yml"
+    ],
     "syslog-pipeline": [
       "WORKFLOWS::syslog-pipeline.yml"
     ],
@@ -1205,6 +1219,9 @@
     ],
     "contract-check": [
       "SCRIPTS::contract-check.js"
+    ],
+    "cross-repo-sync": [
+      "SCRIPTS::cross-repo-sync.js"
     ],
     "daily-check": [
       "SCRIPTS::daily-check.js"
