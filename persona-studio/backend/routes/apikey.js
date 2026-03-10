@@ -81,12 +81,16 @@ function fetchModels(apiBase, apiKey, timeoutMs) {
     });
 
     req.on('error', (err) => {
-      reject(new Error('API Base 不可访问: ' + err.message));
+      const wrapped = new Error('API Base 不可访问: ' + err.message);
+      wrapped.code = err.code;
+      reject(wrapped);
     });
 
     req.on('timeout', () => {
       req.destroy();
-      reject(new Error('API Base 不可访问（请求超时）'));
+      const err = new Error('API Base 不可访问（请求超时）');
+      err.code = 'ETIMEDOUT';
+      reject(err);
     });
 
     req.end();
@@ -230,14 +234,15 @@ router.post('/detect-models', async (req, res) => {
     });
   } catch (err) {
     const errMsg = err.message || '模型检测失败';
+    const errCode = err.code || '';
     let code = 'DETECT_FAILED';
 
-    // 区分 DNS / 网络 / 超时错误
-    if (/ENOTFOUND|getaddrinfo/.test(errMsg)) {
+    // 区分 DNS / 网络 / 超时错误（优先使用 Node.js 错误码）
+    if (errCode === 'ENOTFOUND' || errCode === 'EAI_AGAIN' || /ENOTFOUND|getaddrinfo/.test(errMsg)) {
       code = 'DNS_ERROR';
-    } else if (/ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|socket hang up/.test(errMsg)) {
+    } else if (errCode === 'ECONNREFUSED' || errCode === 'ECONNRESET' || errCode === 'EHOSTUNREACH' || errCode === 'ENETUNREACH' || /ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|socket hang up/.test(errMsg)) {
       code = 'NETWORK_ERROR';
-    } else if (/timeout|ETIMEDOUT|请求超时/.test(errMsg)) {
+    } else if (errCode === 'ETIMEDOUT' || errCode === 'ESOCKETTIMEDOUT' || /timeout|ETIMEDOUT/.test(errMsg)) {
       code = 'TIMEOUT';
     }
 

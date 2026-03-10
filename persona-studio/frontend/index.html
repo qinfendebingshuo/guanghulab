@@ -101,7 +101,7 @@
      */
     function normalizeApiBase(base) {
       var normalized = base.replace(/\/+$/, '');
-      if (!normalized.match(/\/v\d+\b/) && !normalized.endsWith('/openai')) {
+      if (!normalized.match(/\/v\d+(\/|$)/) && !normalized.endsWith('/openai')) {
         normalized += '/v1';
       }
       return normalized;
@@ -185,12 +185,12 @@
       /* 构建探测列表：用户端点优先，然后已知端点 */
       var candidates = [];
       if (apiBase) {
-        var userNorm = normalizeApiBase(apiBase);
-        candidates.push({ label: apiBase, base: userNorm });
+        var normalizedUserBase = normalizeApiBase(apiBase);
+        candidates.push({ label: apiBase, base: normalizedUserBase });
       }
       for (var i = 0; i < KNOWN_ENDPOINTS.length; i++) {
         var ep = KNOWN_ENDPOINTS[i];
-        if (!apiBase || ep.base !== normalizeApiBase(apiBase)) {
+        if (!apiBase || ep.base !== normalizedUserBase) {
           candidates.push(ep);
         }
       }

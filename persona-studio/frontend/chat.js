@@ -195,7 +195,9 @@ async function streamApiKeyReply(text) {
       if (d === '[DONE]') continue;
       try {
         var parsed = JSON.parse(d);
-        var delta = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content;
+        var delta = parsed.choices && parsed.choices[0]
+          && parsed.choices[0].delta
+          && parsed.choices[0].delta.content;
         if (delta) {
           full += delta;
           streamEl.textContent = full;
