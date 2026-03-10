@@ -735,7 +735,9 @@ function proxyToPersonaStudio(req, res, fullPath) {
     };
 
     const proxyReq = http.request(options, (proxyRes) => {
-      // Forward status and headers (preserve CORS headers already set)
+      // Forward status and headers, but skip backend's CORS headers
+      // because the api-proxy already set CORS headers via setCorsHeaders()
+      // at the top of the request handler — forwarding both would cause duplicates
       const headers = {};
       for (const [key, value] of Object.entries(proxyRes.headers)) {
         if (!key.startsWith('access-control-')) {
