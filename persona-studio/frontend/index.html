@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Persona Studio · 光湖人格体协助开发体验</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container login-container">
+    <div class="logo-area">
+      <h1>🌊 Persona Studio</h1>
+      <p class="subtitle">光湖人格体协助开发体验</p>
+    </div>
+
+    <div class="login-box">
+      <h2>请输入你的开发编号</h2>
+      <p class="hint">编号由管理员分配，格式：EXP-001</p>
+
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <input
+          type="text"
+          id="devIdInput"
+          placeholder="EXP-XXX"
+          pattern="^EXP-\d{3,}$"
+          required
+          autocomplete="off"
+        />
+        <button type="submit" id="loginBtn">进入对话</button>
+      </form>
+
+      <div id="errorMsg" class="error-msg" style="display:none;"></div>
+    </div>
+
+    <footer class="login-footer">
+      <p>HoloLake Era · AGE OS · 人格体协助体验平台</p>
+    </footer>
+  </div>
+
+  <script>
+    const DEV_ID_RE = /^EXP-\d{3,}$/;
+    const API_BASE = getApiBase();
+
+    function getApiBase() {
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        return 'http://localhost:3002';
+      }
+      return '';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const devId = document.getElementById('devIdInput').value.trim().toUpperCase();
+      const errorEl = document.getElementById('errorMsg');
+      const btn = document.getElementById('loginBtn');
+
+      errorEl.style.display = 'none';
+
+      if (!DEV_ID_RE.test(devId)) {
+        errorEl.textContent = '编号格式不正确，请输入 EXP-XXX 格式';
+        errorEl.style.display = 'block';
+        return false;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '验证中…';
+
+      try {
+        const res = await fetch(API_BASE + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dev_id: devId })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          errorEl.textContent = data.message || '登录失败，请检查编号';
+          errorEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = '进入对话';
+          return false;
+        }
+
+        sessionStorage.setItem('dev_id', devId);
+        sessionStorage.setItem('session_token', data.token || '');
+        window.location.href = 'chat.html';
+      } catch (err) {
+        errorEl.textContent = '服务暂时不可用，请稍后再试';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '进入对话';
+      }
+
+      return false;
+    }
+  </script>
+</body>
+</html>
