@@ -1,25 +1,56 @@
+<div align="center">
+
+# 🌊 光湖 HoloLake
+
+**人格语言操作系统（AGE OS）· 壳-核分离架构**
+
+[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml)
+[![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml)
+
+`guanghulab.com` · Node.js 20 + Express + PM2 + Nginx
+
+</div>
+
+---
+
+## 🎭 Persona Studio · 人格体协助开发体验
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="700">
+
+### ✨ 与知秋对话，让人格体帮你推进开发
+
+你有一个功能想法？一个技术方案？一个 Bug 要修？
+
+**知秋** 是光湖系统的对外协助人格体，支持自然语言对话、智能代码生成、邮件推送结果。
+
+合作者输入 **EXP 编号** 即可登录，开始对话。
+
+<br>
+
+### 🚀 [点击进入 Persona Studio →](https://guanghulab.com/persona-studio/)
+
+💬 自然语言对话 &nbsp;·&nbsp; 🧠 智能代码生成 &nbsp;·&nbsp; 📧 邮件推送结果 &nbsp;·&nbsp; 🔄 对话记忆
+
+</td>
+</tr>
+</table>
+
+</div>
+
+---
+
 ## 📖 系统简介
 
-**光湖（HoloLake）** 是一个基于 **人格语言操作系统（AGE OS）** 的智能协作平台，采用 **壳-核分离** 设计理念：
+**光湖（HoloLake）** 是一个基于人格语言操作系统的智能协作平台，采用壳-核分离设计：
 
-- **壳（Shell）**：前端交互层，包括对话界面、用户中心、工单系统、云盘等模块
-- **核（Core）**：后端智能层，包括人格引擎、广播分发、信号处理、Notion 桥接等
-
-### 🏛️ 核心架构
-
-```
-┌─────────────────────────────────────────────────┐
-│                  光湖 HoloLake                    │
-├──────────────┬──────────────────────────────────┤
-│   壳 Shell   │           核 Core                 │
-│              │                                   │
-│  🖥️ 对话 UI  │  🧠 铸渊 (Zhùyuān) 代码守护人格    │
-│  👤 用户中心  │  📡 广播分发系统                    │
-│  🎫 工单系统  │  🔔 信号处理 + Notion 桥接          │
-│  ☁️ 云盘     │  🔄 CI/CD 自动化流水线              │
-│  📊 状态看板  │  📋 模块自检 + 文档生成             │
-└──────────────┴──────────────────────────────────┘
-```
+| 层级 | 说明 | 包含 |
+|------|------|------|
+| **壳 Shell** | 前端交互层 | 对话 UI、用户中心、工单系统、云盘、状态看板 |
+| **核 Core** | 后端智能层 | 人格引擎、广播分发、信号处理、Notion 桥接、CI/CD |
 
 ### 🤖 智能人格体
 
@@ -28,14 +59,7 @@
 | **铸渊 Zhùyuān** | 代码守护者 | 代码审查、CI 巡检、模块协议执行、Issue 回复 |
 | **冰朔 Bīng Shuò** | 系统创建者 | 系统架构设计、核心决策、广播发布 |
 | **霜砚 Shuāng Yàn** | 人格导师 | 人格调校、风格管理、联觉语言系统 |
-
-### 🔧 技术栈
-
-- **运行时**：Node.js 20 + Next.js 15 + React 19
-- **后端**：Express + PM2 进程管理
-- **数据库**：SQLite (better-sqlite3) + Notion 数据桥接
-- **部署**：Nginx 反向代理 + GitHub Actions CI/CD
-- **自动化**：23+ GitHub Actions 工作流
+| **知秋 Zhī Qiū** | 协助开发者 | 对话协助、代码生成、开发体验（[Persona Studio](https://guanghulab.com/persona-studio/)） |
 
 ---
 
@@ -117,21 +141,6 @@
 
 ---
 
-<div align="center">
-
-# 🌊 HoloLake 光湖系统
-
-**人格语言操作系统（AGE OS） · 壳-核分离架构**
-
-[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml)
-[![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml)
-
-`guanghulab.com` · Node.js 20 + Express + PM2 + Nginx
-
-</div>
-
----
-
 ## ⚒️ 铸渊工作区
 
 > 💡 **如何使用铸渊工作区：**
@@ -200,6 +209,11 @@
 | `status-board/` | 状态看板 |
 | `dingtalk-bot/` | 钉钉机器人 |
 | `notification/` | 通知系统 |
+
+### 体验模块
+| 模块 | 说明 |
+|------|------|
+| `persona-studio/` | 人格体协助开发体验（[进入 →](https://guanghulab.com/persona-studio/)） |
 
 ### 系统支撑
 | 模块 | 说明 |
