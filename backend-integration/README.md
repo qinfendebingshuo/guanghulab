@@ -31,6 +31,8 @@ curl http://localhost:3721/api/models
 | POST | `/api/chat` | 聊天代理（SSE 流式透传） |
 | GET | `/api/models` | 列出已配置的可用模型 |
 | GET | `/api/health` | 健康检查 |
+| POST | `/api/ps/apikey/detect-models` | 用户 API Key 模型检测（Persona Studio） |
+| POST | `/api/ps/apikey/chat` | 用户 API Key 对话（Persona Studio） |
 
 ### 环境变量
 
@@ -55,3 +57,9 @@ curl http://localhost:3721/api/models
 - 在设置页面选择「🔌 后端代理」提供商
 - 自动调用 `/api/chat`，无需用户填写 API Key
 - Key 由后端环境变量管理，不暴露给前端
+
+Persona Studio（persona-studio/frontend/）复用同一套代理：
+- 用户填写第三方 API Base + API Key
+- 通过 `/api/ps/apikey/detect-models` 检测可用模型
+- 通过 `/api/ps/apikey/chat` 进行对话
+- 所有请求走同一个 Nginx → API Proxy 链路

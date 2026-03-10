@@ -34,6 +34,7 @@
 
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 // ═══════════════════════════════════════════════════════
@@ -444,6 +445,268 @@ function handleHealth(req, res) {
 }
 
 // ═══════════════════════════════════════════════════════
+// 用户 API Key 模型检测（Persona Studio 复用主站代理链路）
+// ═══════════════════════════════════════════════════════
+const userModelCache = new Map();
+const USER_MODEL_CACHE_TTL_MS = 60 * 60 * 1000; // 1 小时
+
+function getUserCacheKey(apiBase, apiKey) {
+  const hash = crypto.createHash('sha256').update(apiKey).digest('hex').slice(0, 16);
+  return apiBase + '::' + hash;
+}
+
+function getCachedUserModels(apiBase, apiKey) {
+  const key = getUserCacheKey(apiBase, apiKey);
+  const entry = userModelCache.get(key);
+  if (entry && Date.now() - entry.timestamp < USER_MODEL_CACHE_TTL_MS) {
+    return entry.models;
+  }
+  return null;
+}
+
+function setCachedUserModels(apiBase, apiKey, models) {
+  const key = getUserCacheKey(apiBase, apiKey);
+  userModelCache.set(key, { models, timestamp: Date.now() });
+}
+
+/**
+ * 请求用户指定的第三方 API 的 /v1/models 接口
+ */
+function fetchUserModels(apiBase, apiKey, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const base = apiBase.replace(/\/+$/, '');
+    const modelsPath = base.endsWith('/v1') ? base + '/models' : base + '/v1/models';
+
+    let url;
+    try {
+      url = new URL(modelsPath);
+    } catch (_e) {
+      return reject({ code: 'INVALID_API_BASE', message: 'API Base URL 格式无效' });
+    }
+
+    const isHttps = url.protocol === 'https:';
+    const mod = isHttps ? https : http;
+
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname + (url.search || ''),
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Accept': 'application/json'
+      },
+      timeout: timeoutMs || 15000
+    };
+
+    const req = mod.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          return reject({ code: 'INVALID_API_KEY', message: 'API Key 无效或权限不足 (HTTP ' + res.statusCode + ')' });
+        }
+        if (res.statusCode >= 400) {
+          return reject({ code: 'API_BASE_ERROR', message: 'API Base 返回错误 (HTTP ' + res.statusCode + ')' });
+        }
+        try {
+          const json = JSON.parse(data);
+          const models = json.data || json.models || [];
+          const modelIds = models
+            .map(function (m) { return m.id || m.name || null; })
+            .filter(Boolean);
+          resolve(modelIds);
+        } catch (_e) {
+          reject({ code: 'PARSE_ERROR', message: '当前接口不支持模型枚举（返回格式异常）' });
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      if (err.code === 'ENOTFOUND') {
+        reject({ code: 'DNS_ERROR', message: 'API Base 域名无法解析: ' + url.hostname });
+      } else if (err.code === 'ECONNREFUSED') {
+        reject({ code: 'CONN_REFUSED', message: 'API Base 连接被拒绝: ' + url.hostname });
+      } else {
+        reject({ code: 'NETWORK_ERROR', message: 'API Base 不可访问: ' + err.message });
+      }
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject({ code: 'TIMEOUT', message: '请求超时，API Base 可能不可访问或网络不稳定' });
+    });
+
+    req.end();
+  });
+}
+
+/**
+ * 调用用户指定的第三方 API 的 chat/completions 接口
+ */
+function callUserApiChat({ apiBase, apiKey, model, messages, maxTokens, temperature, timeoutMs }) {
+  return new Promise((resolve, reject) => {
+    const base = apiBase.replace(/\/+$/, '');
+    const chatPath = base.endsWith('/v1') ? base + '/chat/completions' : base + '/v1/chat/completions';
+
+    let url;
+    try {
+      url = new URL(chatPath);
+    } catch (_e) {
+      return reject(new Error('API Base URL 格式无效'));
+    }
+
+    const isHttps = url.protocol === 'https:';
+    const mod = isHttps ? https : http;
+
+    const body = JSON.stringify({
+      model: model,
+      messages: messages,
+      max_tokens: maxTokens || 2000,
+      temperature: temperature != null ? temperature : 0.8
+    });
+
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Length': Buffer.byteLength(body)
+      },
+      timeout: timeoutMs || 60000
+    };
+
+    const req = mod.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.choices && json.choices[0] && json.choices[0].message) {
+            resolve(json.choices[0].message.content);
+          } else if (json.error) {
+            reject(new Error(json.error.message || 'API 调用失败'));
+          } else {
+            reject(new Error('API 返回格式异常'));
+          }
+        } catch (_e) {
+          reject(new Error('API 返回解析失败'));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(new Error('API 请求失败: ' + err.message));
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('API 请求超时'));
+    });
+
+    req.write(body);
+    req.end();
+  });
+}
+
+// POST /api/ps/apikey/detect-models — 检测用户第三方 API 可用模型
+async function handleDetectModels(req, res) {
+  let body;
+  try {
+    body = await parseBody(req);
+  } catch (err) {
+    return jsonResponse(res, 400, { error: true, code: 'INVALID_BODY', message: err.message });
+  }
+
+  const { api_base, api_key } = body;
+
+  if (!api_base || typeof api_base !== 'string') {
+    return jsonResponse(res, 400, { error: true, code: 'MISSING_API_BASE', message: '请输入 API Base URL' });
+  }
+
+  if (!api_key || typeof api_key !== 'string') {
+    return jsonResponse(res, 400, { error: true, code: 'MISSING_API_KEY', message: '请输入 API Key' });
+  }
+
+  // 防止 header injection
+  if (/[\r\n]/.test(api_key)) {
+    return jsonResponse(res, 400, { error: true, code: 'INVALID_API_KEY', message: 'API Key 格式无效（含非法字符）' });
+  }
+
+  // 校验 api_base 格式
+  try {
+    new URL(api_base);
+  } catch (_e) {
+    return jsonResponse(res, 400, { error: true, code: 'INVALID_API_BASE', message: 'API Base URL 格式无效，请输入完整 URL（如 https://api.openai.com）' });
+  }
+
+  // 检查缓存
+  const cached = getCachedUserModels(api_base, api_key);
+  if (cached) {
+    return jsonResponse(res, 200, { error: false, models: cached, count: cached.length, cached: true });
+  }
+
+  try {
+    const models = await fetchUserModels(api_base, api_key, 15000);
+
+    if (!models || models.length === 0) {
+      return jsonResponse(res, 404, { error: true, code: 'NO_MODELS', message: '未检测到可用模型，该 API 可能不支持模型枚举' });
+    }
+
+    setCachedUserModels(api_base, api_key, models);
+
+    jsonResponse(res, 200, { error: false, models: models, count: models.length, cached: false });
+  } catch (err) {
+    const code = err.code || 'DETECT_FAILED';
+    const message = err.message || '模型检测失败';
+    jsonResponse(res, 502, { error: true, code: code, message: message });
+  }
+}
+
+// POST /api/ps/apikey/chat — 通过用户 API Key 对话
+async function handleApiKeyChat(req, res) {
+  let body;
+  try {
+    body = await parseBody(req);
+  } catch (err) {
+    return jsonResponse(res, 400, { error: true, code: 'INVALID_BODY', message: err.message });
+  }
+
+  const { api_base, api_key, model, messages } = body;
+
+  if (!api_base || !api_key || !model) {
+    return jsonResponse(res, 400, { error: true, code: 'MISSING_PARAMS', message: '缺少必要参数 (api_base, api_key, model)' });
+  }
+
+  if (/[\r\n]/.test(api_key)) {
+    return jsonResponse(res, 400, { error: true, code: 'INVALID_API_KEY', message: 'API Key 格式无效' });
+  }
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return jsonResponse(res, 400, { error: true, code: 'MISSING_MESSAGES', message: '缺少消息内容' });
+  }
+
+  try {
+    const reply = await callUserApiChat({
+      apiBase: api_base,
+      apiKey: api_key,
+      model: model,
+      messages: messages,
+      maxTokens: 2000,
+      temperature: 0.8,
+      timeoutMs: 60000
+    });
+
+    jsonResponse(res, 200, { error: false, reply: reply, model: model });
+  } catch (err) {
+    jsonResponse(res, 502, { error: true, code: 'CHAT_FAILED', message: err.message || '对话请求失败' });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // HTTP 服务器
 // ═══════════════════════════════════════════════════════
 const server = http.createServer(async (req, res) => {
@@ -467,11 +730,15 @@ const server = http.createServer(async (req, res) => {
       handleGetModels(req, res);
     } else if (path === '/api/health' && req.method === 'GET') {
       handleHealth(req, res);
+    } else if (path === '/api/ps/apikey/detect-models' && req.method === 'POST') {
+      await handleDetectModels(req, res);
+    } else if (path === '/api/ps/apikey/chat' && req.method === 'POST') {
+      await handleApiKeyChat(req, res);
     } else {
       jsonResponse(res, 404, {
         error: true,
         code: 'NOT_FOUND',
-        message: '接口不存在。可用接口: POST /api/chat, GET /api/models, GET /api/health'
+        message: '接口不存在。可用接口: POST /api/chat, GET /api/models, GET /api/health, POST /api/ps/apikey/detect-models, POST /api/ps/apikey/chat'
       });
     }
   } catch (err) {
@@ -512,8 +779,10 @@ server.listen(PORT, () => {
   }
 
   console.log('\n   可用接口:');
-  console.log('   POST /api/chat    — 聊天代理（SSE 流式）');
-  console.log('   GET  /api/models  — 列出可用模型');
-  console.log('   GET  /api/health  — 健康检查');
+  console.log('   POST /api/chat                      — 聊天代理（SSE 流式）');
+  console.log('   GET  /api/models                    — 列出可用模型');
+  console.log('   GET  /api/health                    — 健康检查');
+  console.log('   POST /api/ps/apikey/detect-models   — 用户 API Key 模型检测');
+  console.log('   POST /api/ps/apikey/chat            — 用户 API Key 对话');
   console.log('');
 });

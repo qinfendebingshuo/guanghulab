@@ -79,7 +79,7 @@
 
     function getApiBase() {
       if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        return 'http://localhost:3002';
+        return 'http://localhost:3721';
       }
       return 'https://guanghulab.com';
     }
@@ -200,8 +200,18 @@
 
         btn.disabled = false;
         btn.textContent = '🔍 重新检测';
-      } catch (_err) {
-        statusEl.textContent = '检测失败，请稍后重试';
+      } catch (fetchErr) {
+        var errMsg = '检测失败';
+        if (fetchErr instanceof TypeError && fetchErr.message.includes('fetch')) {
+          errMsg = '服务器代理未部署或不可达，请联系管理员';
+        } else if (fetchErr.name === 'AbortError') {
+          errMsg = '请求超时，请检查网络连接';
+        } else if (fetchErr.message && fetchErr.message.includes('NetworkError')) {
+          errMsg = '跨域被拦截或网络不可达，请确认服务器已部署';
+        } else {
+          errMsg = '检测失败: ' + (fetchErr.message || '请检查网络连接');
+        }
+        statusEl.textContent = errMsg;
         statusEl.className = 'detect-status detect-error';
         btn.disabled = false;
         btn.textContent = '🔍 检测可用模型';
