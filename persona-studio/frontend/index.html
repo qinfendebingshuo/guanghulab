@@ -130,6 +130,7 @@
   <script>
     const DEV_ID_RE = /^EXP-\d{3,}$/;
     const PROBE_TIMEOUT_MS = 8000;
+    const AUTH_TIMEOUT_MS = 10000;
     const API_BASE = getApiBase();
 
     /* ---- State ---- */
@@ -219,7 +220,7 @@
 
       try {
         var controller = new AbortController();
-        var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+        var timeoutId = setTimeout(function() { controller.abort(); }, AUTH_TIMEOUT_MS);
 
         var res = await fetch(API_BASE + '/api/ps/auth/login', {
           method: 'POST',
@@ -250,7 +251,8 @@
         showStep('step2');
         document.getElementById('apiKeyInput').focus();
       } catch (_err) {
-        // 后端不可达时：使用本地格式验证放行，允许用户继续
+        // 后端不可达时：devId 已通过上方 DEV_ID_RE 格式校验，放行至 API Key 步骤
+        // 真正的安全验证由用户自行提供的 API Key 完成
         verifiedDevId = devId;
         verifiedDevName = devId;
         sessionStorage.setItem('dev_id', devId);
