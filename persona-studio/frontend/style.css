@@ -1,6 +1,6 @@
 /* ========================================
    Persona Studio · HoloLake Visual Style
-   铸渊（Zhùyuān）· Dark Theme
+   铸渊（Zhùyuān）· Dark Theme · v2.0
    ======================================== */
 
 :root {
@@ -13,6 +13,7 @@
   --bg-surface: #1e293b;
   --bg-card: #1e293b;
   --bg-card-hover: #334155;
+  --bg-sidebar: #0c1322;
   --text: #e2e8f0;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
@@ -25,6 +26,7 @@
   --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
   --gradient-accent: linear-gradient(135deg, #3b82f6, #22d3ee);
   --gradient-card: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.6));
+  --sidebar-width: 280px;
 }
 
 * {
@@ -129,6 +131,89 @@ body {
   font-size: 1rem;
 }
 
+/* ---- Intro Card (Login Page) ---- */
+.intro-card {
+  background: var(--gradient-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.intro-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.intro-icon {
+  font-size: 1.5rem;
+}
+
+.intro-header h3 {
+  font-size: 1.1rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.intro-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.intro-text strong {
+  color: var(--accent);
+}
+
+.intro-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.feature-tag {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  background: var(--primary-light);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+/* ---- Supported Platforms (API Key Step) ---- */
+.supported-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.platform-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-right: 0.3rem;
+}
+
+.platform-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
 .login-box {
   background: var(--gradient-card);
   backdrop-filter: blur(20px);
@@ -136,7 +221,7 @@ body {
   border-radius: 16px;
   padding: 2.5rem;
   width: 100%;
-  max-width: 460px;
+  max-width: 520px;
   box-shadow: var(--shadow-lg), var(--shadow-glow);
   text-align: center;
 }
@@ -483,9 +568,240 @@ body {
   margin-top: 2rem;
   color: var(--text-muted);
   font-size: 0.85rem;
+  text-align: center;
 }
 
-/* ---- Chat Page ---- */
+.footer-version {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--border-light);
+}
+
+/* ============================================
+   Chat Page — Sidebar Layout
+   ============================================ */
+
+.chat-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- Sidebar ---- */
+.chat-sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  font-size: 1.5rem;
+}
+
+.sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.sidebar-toggle-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+  display: none;
+}
+
+.sidebar-toggle-close:hover {
+  color: var(--text);
+  background: var(--bg-card-hover);
+}
+
+/* ---- Sidebar Sections ---- */
+.sidebar-section {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.6rem;
+}
+
+/* ---- Persona Info Card ---- */
+.persona-info-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+}
+
+.persona-info-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.2rem;
+}
+
+.persona-info-role {
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.persona-info-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ---- Sidebar Info List ---- */
+.sidebar-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sidebar-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+
+.info-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.info-value {
+  font-size: 0.8rem;
+  color: var(--text);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* ---- Sidebar History ---- */
+.sidebar-history-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-bottom: none;
+}
+
+.sidebar-history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sidebar-history::-webkit-scrollbar {
+  width: 3px;
+}
+
+.sidebar-history::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.sidebar-history-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
+
+.history-item {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.history-item:hover {
+  background: var(--bg-surface);
+}
+
+.history-item-active {
+  background: var(--primary-light);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.history-title {
+  font-size: 0.85rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-date {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.btn-new-chat {
+  margin-top: 0.5rem;
+  padding: 0.6rem;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn-new-chat:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ---- Chat Main Area ---- */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+}
+
 .chat-container {
   padding: 0;
   background: var(--bg);
@@ -508,6 +824,23 @@ body {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  display: none;
+}
+
+.sidebar-toggle:hover {
+  color: var(--primary);
+  background: var(--primary-light);
 }
 
 .persona-name {
@@ -661,6 +994,62 @@ body {
   padding: 0.8rem 1.2rem;
   background: var(--bg-surface);
   border-top: 1px solid var(--border);
+}
+
+/* ---- Input Toolbar (file/image upload) ---- */
+.input-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1.1rem;
+}
+
+.toolbar-btn:hover {
+  background: var(--primary-light);
+}
+
+/* ---- Upload Preview ---- */
+.upload-preview {
+  flex: 1;
+  margin-left: 0.5rem;
+}
+
+.preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--primary-light);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.preview-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0.2rem;
+  transition: color 0.2s;
+}
+
+.preview-remove:hover {
+  color: #f87171;
 }
 
 .input-row {
@@ -844,6 +1233,39 @@ body {
 }
 
 /* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .chat-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 50;
+    margin-left: calc(-1 * var(--sidebar-width));
+    box-shadow: none;
+  }
+
+  .chat-sidebar.sidebar-open {
+    margin-left: 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar-toggle {
+    display: block;
+  }
+
+  .sidebar-toggle-close {
+    display: block;
+  }
+
+  .intro-card {
+    max-width: 100%;
+  }
+
+  .login-box {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .logo-area h1 {
     font-size: 1.8rem;
@@ -856,6 +1278,10 @@ body {
   .login-box {
     padding: 1.5rem;
     max-width: 100%;
+  }
+
+  .intro-card {
+    padding: 1rem 1.2rem;
   }
 
   .chat-header {

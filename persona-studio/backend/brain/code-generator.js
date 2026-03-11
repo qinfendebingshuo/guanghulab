@@ -78,7 +78,7 @@ async function generate({ dev_id, conversation }) {
         requirements.substring(0, 500),
         '',
         '## 生成说明',
-        '由光湖 Persona Studio 知秋自动生成',
+        '由光湖 Persona Studio 铸渊自动生成',
         '生成时间：' + new Date().toISOString()
       ].join('\n'), 'utf-8');
       files.push('README.md');

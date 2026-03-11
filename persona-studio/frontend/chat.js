@@ -21,8 +21,125 @@ const API_BASE = (function () {
 /* ---- State ---- */
 let conversationHistory = [];
 let buildReady = false;
+let pendingFile = null; // { name, type, dataUrl }
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const isGuest = (DEV_ID === 'GUEST');
 const isDeveloper = (DEV_ID && DEV_ID !== 'GUEST' && /^EXP-\d{3,}$/.test(DEV_ID));
+
+/* ---- Chat Sessions (localStorage) ---- */
+const SESSIONS_KEY = 'ps_chat_sessions_' + (DEV_ID || 'anon');
+const ACTIVE_SESSION_KEY = 'ps_active_session_' + (DEV_ID || 'anon');
+
+function loadSessions() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSIONS_KEY)) || [];
+  } catch (_e) { return []; }
+}
+
+function saveSessions(sessions) {
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+}
+
+function getActiveSessionId() {
+  return localStorage.getItem(ACTIVE_SESSION_KEY) || null;
+}
+
+function setActiveSessionId(id) {
+  localStorage.setItem(ACTIVE_SESSION_KEY, id);
+}
+
+function createNewSession() {
+  var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  var session = {
+    id: id,
+    title: '新对话',
+    created_at: new Date().toISOString(),
+    messages: []
+  };
+  var sessions = loadSessions();
+  sessions.unshift(session);
+  if (sessions.length > 20) sessions = sessions.slice(0, 20);
+  saveSessions(sessions);
+  setActiveSessionId(id);
+  return session;
+}
+
+function updateSessionMessages(sessionId, messages, title) {
+  var sessions = loadSessions();
+  var session = sessions.find(function(s) { return s.id === sessionId; });
+  if (session) {
+    session.messages = messages.slice(-100);
+    if (title) session.title = title;
+  }
+  saveSessions(sessions);
+}
+
+function renderSidebarHistory() {
+  var container = document.getElementById('sidebarHistory');
+  if (!container) return;
+  var sessions = loadSessions();
+  var activeId = getActiveSessionId();
+
+  if (sessions.length === 0) {
+    container.innerHTML = '<div class="sidebar-history-empty">暂无对话记录</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  sessions.forEach(function(s) {
+    var item = document.createElement('div');
+    item.className = 'history-item' + (s.id === activeId ? ' history-item-active' : '');
+    item.innerHTML = '<span class="history-title">' + escapeHtml(s.title) + '</span>' +
+      '<span class="history-date">' + new Date(s.created_at).toLocaleDateString('zh-CN') + '</span>';
+    item.onclick = function() { switchSession(s.id); };
+    container.appendChild(item);
+  });
+}
+
+function switchSession(sessionId) {
+  var sessions = loadSessions();
+  var session = sessions.find(function(s) { return s.id === sessionId; });
+  if (!session) return;
+
+  // Save current session first
+  var currentId = getActiveSessionId();
+  if (currentId) {
+    updateSessionMessages(currentId, conversationHistory);
+  }
+
+  setActiveSessionId(sessionId);
+  conversationHistory = (session.messages || []).slice();
+
+  // Re-render chat
+  var chatBody = document.getElementById('chatBody');
+  chatBody.innerHTML = '';
+
+  if (conversationHistory.length === 0) {
+    showWelcomeMessage();
+  } else {
+    conversationHistory.forEach(function(msg) {
+      var role = msg.role === 'assistant' ? 'persona' : (msg.role === 'user' ? 'user' : 'system');
+      appendMessage(role, msg.content);
+    });
+  }
+
+  renderSidebarHistory();
+}
+
+function startNewChat() {
+  // Save current session
+  var currentId = getActiveSessionId();
+  if (currentId) {
+    updateSessionMessages(currentId, conversationHistory);
+  }
+
+  conversationHistory = [];
+  var session = createNewSession();
+  var chatBody = document.getElementById('chatBody');
+  chatBody.innerHTML = '';
+  showWelcomeMessage();
+  renderSidebarHistory();
+}
 
 /**
  * 铸渊核心大脑系统提示词
@@ -103,9 +220,43 @@ function buildContextPrompt() {
     modelBadge.textContent = SELECTED_MODEL;
   }
 
-  // Show welcome message
-  showWelcomeMessage();
+  // Update sidebar info
+  var sidebarModel = document.getElementById('sidebarModel');
+  var sidebarUser = document.getElementById('sidebarUser');
+  if (sidebarModel) sidebarModel.textContent = SELECTED_MODEL || '-';
+  if (sidebarUser) sidebarUser.textContent = displayId;
+
+  // Initialize session
+  var activeId = getActiveSessionId();
+  var sessions = loadSessions();
+  var activeSession = activeId ? sessions.find(function(s) { return s.id === activeId; }) : null;
+
+  if (activeSession && activeSession.messages && activeSession.messages.length > 0) {
+    // Resume existing session
+    conversationHistory = activeSession.messages.slice();
+    conversationHistory.forEach(function(msg) {
+      var role = msg.role === 'assistant' ? 'persona' : (msg.role === 'user' ? 'user' : 'system');
+      appendMessage(role, msg.content);
+    });
+  } else {
+    // Create new session
+    if (!activeSession) createNewSession();
+    showWelcomeMessage();
+  }
+
+  renderSidebarHistory();
+
+  // For developers, also try to load history
+  if (isDeveloper) {
+    loadHistory();
+  }
 })();
+
+/* ---- Sidebar Toggle ---- */
+function toggleSidebar() {
+  var sidebar = document.getElementById('chatSidebar');
+  sidebar.classList.toggle('sidebar-open');
+}
 
 /* ---- Welcome Message ---- */
 function showWelcomeMessage() {
@@ -121,11 +272,6 @@ function showWelcomeMessage() {
 
   appendMessage('persona', welcome);
   conversationHistory.push({ role: 'assistant', content: welcome });
-
-  // For developers, also try to load history
-  if (isDeveloper) {
-    loadHistory();
-  }
 }
 
 /* ---- Load History ---- */
@@ -149,25 +295,108 @@ async function loadHistory() {
   }
 }
 
+/* ---- File / Image Upload ---- */
+function handleFileSelect(event, type) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_FILE_SIZE) {
+    appendMessage('system', '⚠️ 文件过大，最大支持 5MB');
+    event.target.value = '';
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    pendingFile = {
+      name: file.name,
+      type: type,
+      mimeType: file.type,
+      size: file.size,
+      dataUrl: e.target.result
+    };
+    showUploadPreview();
+  };
+
+  reader.readAsDataURL(file);
+
+  event.target.value = '';
+}
+
+function showUploadPreview() {
+  var preview = document.getElementById('uploadPreview');
+  if (!pendingFile) {
+    preview.style.display = 'none';
+    return;
+  }
+
+  var sizeStr = (pendingFile.size / 1024).toFixed(1) + ' KB';
+  var icon = pendingFile.type === 'image' ? '🖼️' : '📎';
+
+  preview.innerHTML =
+    '<div class="preview-item">' +
+    '<span>' + icon + ' ' + escapeHtml(pendingFile.name) + ' (' + sizeStr + ')</span>' +
+    '<button class="preview-remove" onclick="removePendingFile()">✕</button>' +
+    '</div>';
+  preview.style.display = 'block';
+}
+
+function removePendingFile() {
+  pendingFile = null;
+  document.getElementById('uploadPreview').style.display = 'none';
+}
+
 /* ---- Send Message ---- */
 async function sendMessage() {
   var input = document.getElementById('msgInput');
   var text = input.value.trim();
-  if (!text) return;
+
+  // Allow sending with file even if text is empty
+  if (!text && !pendingFile) return;
 
   input.value = '';
   autoResizeTextarea(input);
-  appendMessage('user', text);
-  conversationHistory.push({ role: 'user', content: text });
+
+  var displayText = text;
+  var fullText = text;
+
+  // If there's a pending file, include it in the message
+  if (pendingFile) {
+    var fileInfo = (pendingFile.type === 'image' ? '🖼️' : '📎') + ' [' + pendingFile.name + ']';
+    displayText = displayText ? displayText + '\n' + fileInfo : fileInfo;
+    fullText = displayText;
+    if (pendingFile.type === 'image') {
+      fullText += '\n[用户上传了一张图片：' + pendingFile.name + ']';
+    } else {
+      fullText += '\n[用户上传了一个文件：' + pendingFile.name + '，类型：' + pendingFile.mimeType + ']';
+    }
+    removePendingFile();
+  }
+
+  appendMessage('user', displayText);
+  conversationHistory.push({ role: 'user', content: fullText });
+
+  // Update session title from first message
+  var activeId = getActiveSessionId();
+  if (activeId && conversationHistory.length <= 2) {
+    var title = text.substring(0, 30) || '新对话';
+    updateSessionMessages(activeId, conversationHistory, title);
+    renderSidebarHistory();
+  }
 
   var sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true;
 
   try {
     // All modes now use API Key for real AI — ZhuYuan is awake
-    await streamApiKeyReply(text);
+    await streamApiKeyReply(fullText);
   } catch (_err) {
     appendMessage('system', '消息发送失败，请检查网络连接后再试');
+  }
+
+  // Save to session
+  if (activeId) {
+    updateSessionMessages(activeId, conversationHistory);
   }
 
   sendBtn.disabled = false;
@@ -387,6 +616,12 @@ async function confirmBuild() {
 
 /* ---- Logout ---- */
 function handleLogout() {
+  // Save current session before logout
+  var activeId = getActiveSessionId();
+  if (activeId) {
+    updateSessionMessages(activeId, conversationHistory);
+  }
+
   sessionStorage.removeItem('dev_id');
   sessionStorage.removeItem('dev_name');
   sessionStorage.removeItem('session_token');

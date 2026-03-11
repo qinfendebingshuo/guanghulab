@@ -7,37 +7,103 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container chat-container">
-    <header class="chat-header">
-      <div class="header-left">
-        <span class="persona-name">🌀 铸渊</span>
-        <span class="persona-role">光湖系统·代码守护人格体</span>
+  <div class="chat-layout">
+    <!-- ── 左侧边栏 ── -->
+    <aside class="chat-sidebar" id="chatSidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">🌀</span>
+        <span class="sidebar-title">铸渊</span>
+        <button class="sidebar-toggle-close" onclick="toggleSidebar()" title="收起侧栏">✕</button>
       </div>
-      <div class="header-right">
-        <span id="devIdDisplay" class="dev-id-badge"></span>
-        <span id="modelDisplay" class="model-badge"></span>
-        <button class="btn-secondary" onclick="handleLogout()">退出</button>
-      </div>
-    </header>
 
-    <main class="chat-body" id="chatBody">
-      <!-- Messages rendered here -->
-    </main>
-
-    <div class="chat-input-area">
-      <div class="input-row">
-        <textarea
-          id="msgInput"
-          placeholder="跟铸渊说点什么…"
-          rows="1"
-          onkeydown="handleKeyDown(event)"
-        ></textarea>
-        <button id="sendBtn" onclick="sendMessage()">发送</button>
+      <!-- 人格体介绍 -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">🧠 人格体信息</div>
+        <div class="persona-info-card">
+          <div class="persona-info-name">铸渊 Zhùyuān</div>
+          <div class="persona-info-role">光湖系统 · 代码守护人格体</div>
+          <div class="persona-info-desc">基于 AGE OS 人格语言操作系统，专注代码守护、需求分析与智能开发协助。</div>
+        </div>
       </div>
-      <div class="action-row">
-        <button id="buildBtn" class="btn-build" onclick="handleBuild()" style="display:none;">
-          🚀 我要开发
-        </button>
+
+      <!-- 系统信息 -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">⚙️ 系统信息</div>
+        <div class="sidebar-info-list">
+          <div class="sidebar-info-item">
+            <span class="info-label">系统</span>
+            <span class="info-value">HoloLake Era</span>
+          </div>
+          <div class="sidebar-info-item">
+            <span class="info-label">架构</span>
+            <span class="info-value">AGE OS</span>
+          </div>
+          <div class="sidebar-info-item">
+            <span class="info-label">模型</span>
+            <span class="info-value" id="sidebarModel">-</span>
+          </div>
+          <div class="sidebar-info-item">
+            <span class="info-label">用户</span>
+            <span class="info-value" id="sidebarUser">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对话记录 -->
+      <div class="sidebar-section sidebar-history-section">
+        <div class="sidebar-section-title">💬 对话记录</div>
+        <div class="sidebar-history" id="sidebarHistory">
+          <div class="sidebar-history-empty">暂无对话记录</div>
+        </div>
+        <button class="btn-new-chat" onclick="startNewChat()">+ 新对话</button>
+      </div>
+    </aside>
+
+    <!-- ── 主聊天区域 ── -->
+    <div class="chat-main">
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="sidebar-toggle" onclick="toggleSidebar()" title="展开侧栏" id="sidebarToggleBtn">☰</button>
+          <span class="persona-name">🌀 铸渊</span>
+          <span class="persona-role">光湖系统·代码守护人格体</span>
+        </div>
+        <div class="header-right">
+          <span id="devIdDisplay" class="dev-id-badge"></span>
+          <span id="modelDisplay" class="model-badge"></span>
+          <button class="btn-secondary" onclick="handleLogout()">退出</button>
+        </div>
+      </header>
+
+      <main class="chat-body" id="chatBody">
+        <!-- Messages rendered here -->
+      </main>
+
+      <div class="chat-input-area">
+        <div class="input-toolbar">
+          <label class="toolbar-btn" title="上传图片" for="imageUpload">
+            🖼️
+            <input type="file" id="imageUpload" accept="image/*" style="display:none" onchange="handleFileSelect(event, 'image')" aria-label="上传图片">
+          </label>
+          <label class="toolbar-btn" title="上传文件" for="fileUpload">
+            📎
+            <input type="file" id="fileUpload" style="display:none" onchange="handleFileSelect(event, 'file')" aria-label="上传文件">
+          </label>
+          <div id="uploadPreview" class="upload-preview" style="display:none;"></div>
+        </div>
+        <div class="input-row">
+          <textarea
+            id="msgInput"
+            placeholder="跟铸渊说点什么…"
+            rows="1"
+            onkeydown="handleKeyDown(event)"
+          ></textarea>
+          <button id="sendBtn" onclick="sendMessage()">发送</button>
+        </div>
+        <div class="action-row">
+          <button id="buildBtn" class="btn-build" onclick="handleBuild()" style="display:none;">
+            🚀 我要开发
+          </button>
+        </div>
       </div>
     </div>
   </div>

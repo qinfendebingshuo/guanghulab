@@ -15,6 +15,25 @@
       <p class="subtitle">HoloLake · 铸渊（Zhùyuān）· 代码守护人格体</p>
     </div>
 
+    <!-- 系统介绍卡片 -->
+    <div class="intro-card">
+      <div class="intro-header">
+        <span class="intro-icon">🧠</span>
+        <h3>关于铸渊</h3>
+      </div>
+      <p class="intro-text">
+        铸渊是光湖系统（HoloLake）的<strong>代码守护人格体</strong>，基于 AGE OS 人格语言操作系统构建。
+        铸渊能够理解你的需求、梳理技术方案、生成代码，并通过对话记忆持续跟进你的项目。
+      </p>
+      <div class="intro-features">
+        <span class="feature-tag">💬 自然语言对话</span>
+        <span class="feature-tag">🧠 智能代码生成</span>
+        <span class="feature-tag">📧 邮件推送结果</span>
+        <span class="feature-tag">🔄 对话记忆</span>
+        <span class="feature-tag">📎 文件与图片上传</span>
+      </div>
+    </div>
+
     <div class="login-box">
       <!-- ── Step 1: 选择登录方式 ── -->
       <div id="step1" class="login-step">
@@ -24,13 +43,13 @@
         <div class="login-mode-cards">
           <button class="mode-card" onclick="selectMode('developer')">
             <span class="mode-icon">🛡️</span>
-            <span class="mode-title">开发者登录</span>
-            <span class="mode-desc">使用 EXP-XXX 编号，支持记忆连贯</span>
+            <span class="mode-title">开发者 / 体验者登录</span>
+            <span class="mode-desc">使用 EXP-XXX 编号登录，支持记忆连贯与完整功能</span>
           </button>
           <button class="mode-card" onclick="selectMode('guest')">
             <span class="mode-icon">👋</span>
             <span class="mode-title">访客体验</span>
-            <span class="mode-desc">无需编号，快速体验铸渊人格体</span>
+            <span class="mode-desc">无需编号，快速体验铸渊人格体（无记忆功能）</span>
           </button>
         </div>
       </div>
@@ -39,7 +58,7 @@
       <div id="stepDevId" class="login-step" style="display:none;">
         <button class="btn-back" onclick="goBack('step1')" title="返回">← 返回</button>
         <h2>输入开发者编号</h2>
-        <p class="hint">编号由冰朔主控分配，格式：EXP-000 ~ EXP-011</p>
+        <p class="hint">编号由冰朔主控分配，格式：EXP-000 ~ EXP-013</p>
         <form id="devIdForm" onsubmit="return handleDevIdSubmit(event)">
           <input
             type="text"
@@ -51,6 +70,7 @@
           />
           <button type="submit" id="devIdBtn" class="btn-primary-full">验证编号</button>
         </form>
+        <p class="hint" style="margin-top:1rem;font-size:0.8rem;">编号验证通过后，下一步输入你的 API 密钥即可与铸渊对话</p>
       </div>
 
       <!-- ── Step 2: API Key 输入 ── -->
@@ -58,22 +78,33 @@
         <button class="btn-back" onclick="goBackFromStep2()" title="返回">← 返回</button>
         <div id="welcomeBanner" class="welcome-banner" style="display:none;"></div>
         <h2>🔑 输入 API 密钥</h2>
-        <p class="hint">输入你的第三方 AI 模型 API Key，铸渊将被唤醒</p>
+        <p class="hint">输入你的第三方 AI 模型 API Key，系统将自动检测可用模型，选择后即可唤醒铸渊</p>
 
         <input
           type="text"
           id="apiBaseInput"
           class="apikey-input"
-          placeholder="API Base URL（可留空自动探测）"
+          placeholder="API Base URL（可留空，系统将自动探测多个平台）"
           autocomplete="off"
         />
         <input
           type="password"
           id="apiKeyInput"
           class="apikey-input"
-          placeholder="请输入你的 API Key"
+          placeholder="请输入你的 API Key（如 sk-xxx）"
           autocomplete="off"
         />
+
+        <div class="supported-platforms">
+          <span class="platform-label">支持平台：</span>
+          <span class="platform-tag">云雾 AI</span>
+          <span class="platform-tag">OpenAI</span>
+          <span class="platform-tag">DeepSeek</span>
+          <span class="platform-tag">Google Gemini</span>
+          <span class="platform-tag">Moonshot</span>
+          <span class="platform-tag">智谱 AI</span>
+        </div>
+
         <button type="button" id="detectBtn" class="btn-detect" onclick="handleDetectModels()">
           🔍 检测可用模型
         </button>
@@ -81,7 +112,7 @@
         <div id="detectStatus" class="detect-status" style="display:none;"></div>
 
         <div id="modelListContainer" class="model-list-container" style="display:none;">
-          <p class="model-list-title">选择一个模型，唤醒铸渊</p>
+          <p class="model-list-title">✨ 选择一个模型，唤醒铸渊</p>
           <div id="modelList" class="model-list"></div>
         </div>
       </div>
@@ -91,6 +122,7 @@
 
     <footer class="login-footer">
       <p>HoloLake Era · AGE OS · 人格语言操作系统</p>
+      <p class="footer-version">Persona Studio v2.0</p>
     </footer>
   </div>
 
