@@ -247,9 +247,14 @@ async function fetchRecentWorkflowRuns() {
 
     // 冰朔关注的系统工作流
     const systemWorkflows = [
-      '铸渊每日自检', '铸渊 · 每日自检与自进化', '铸渊 PSP 巡检',
-      '📢 更新系统公告区', '🚀 CD: Deploy to guanghulab.com',
-      'brain-sync', 'notion-poll', 'bridge-syslog',
+      '铸渊 · 每日自检',
+      '铸渊 · PSP 分身巡检',
+      '铸渊巡检 Agent',
+      '更新系统公告区',
+      '铸渊 CD · 自动部署',
+      'Brain Sync',
+      'Notion',
+      'SYSLOG',
     ];
 
     for (const run of runs) {
