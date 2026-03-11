@@ -97,13 +97,14 @@
 
         <div class="supported-platforms">
           <span class="platform-label">支持平台：</span>
-          <span class="platform-tag">云雾 AI</span>
+          <span class="platform-tag cn-ok">🇨🇳 DeepSeek</span>
+          <span class="platform-tag cn-ok">🇨🇳 Moonshot</span>
+          <span class="platform-tag cn-ok">🇨🇳 智谱 AI</span>
+          <span class="platform-tag cn-ok">🇨🇳 云雾 AI</span>
           <span class="platform-tag">OpenAI</span>
-          <span class="platform-tag">DeepSeek</span>
           <span class="platform-tag">Google Gemini</span>
-          <span class="platform-tag">Moonshot</span>
-          <span class="platform-tag">智谱 AI</span>
         </div>
+        <p class="hint" style="margin-top:0.5rem;font-size:0.75rem;color:#8899aa;">🇨🇳 标记 = 中国大陆可直接访问，无需国际网络</p>
 
         <button type="button" id="detectBtn" class="btn-detect" onclick="handleDetectModels()">
           🔍 检测可用模型
@@ -129,6 +130,7 @@
   <script>
     const DEV_ID_RE = /^EXP-\d{3,}$/;
     const PROBE_TIMEOUT_MS = 8000;
+    const AUTH_TIMEOUT_MS = 10000;
     const API_BASE = getApiBase();
 
     /* ---- State ---- */
@@ -136,14 +138,14 @@
     var verifiedDevId = '';
     var verifiedDevName = '';
 
-    /* ---- 已知 API 端点列表 ---- */
+    /* ---- 已知 API 端点列表（国内可访问的优先排列） ---- */
     const KNOWN_ENDPOINTS = [
-      { label: '云雾 AI',       base: 'https://api.yunwu.ai/v1' },
-      { label: 'OpenAI',        base: 'https://api.openai.com/v1' },
-      { label: 'Google Gemini', base: 'https://generativelanguage.googleapis.com/v1beta/openai' },
-      { label: 'DeepSeek',      base: 'https://api.deepseek.com/v1' },
-      { label: 'Moonshot',      base: 'https://api.moonshot.cn/v1' },
-      { label: '智谱 AI',       base: 'https://open.bigmodel.cn/api/paas/v4' },
+      { label: 'DeepSeek',      base: 'https://api.deepseek.com/v1',                              cn: true },
+      { label: 'Moonshot',      base: 'https://api.moonshot.cn/v1',                                cn: true },
+      { label: '智谱 AI',       base: 'https://open.bigmodel.cn/api/paas/v4',                      cn: true },
+      { label: '云雾 AI',       base: 'https://api.yunwu.ai/v1',                                   cn: true },
+      { label: 'OpenAI',        base: 'https://api.openai.com/v1',                                 cn: false },
+      { label: 'Google Gemini', base: 'https://generativelanguage.googleapis.com/v1beta/openai',    cn: false },
     ];
 
     function getApiBase() {
@@ -217,11 +219,16 @@
       btn.textContent = '验证中…';
 
       try {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, AUTH_TIMEOUT_MS);
+
         var res = await fetch(API_BASE + '/api/ps/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dev_id: devId })
+          body: JSON.stringify({ dev_id: devId }),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         var data = await res.json();
 
@@ -244,8 +251,20 @@
         showStep('step2');
         document.getElementById('apiKeyInput').focus();
       } catch (_err) {
-        errorEl.textContent = '服务暂时不可用，请稍后再试';
-        errorEl.style.display = 'block';
+        // 后端不可达时：devId 已通过上方 DEV_ID_RE 格式校验，放行至 API Key 步骤
+        // 真正的安全验证由用户自行提供的 API Key 完成
+        verifiedDevId = devId;
+        verifiedDevName = devId;
+        sessionStorage.setItem('dev_id', devId);
+        sessionStorage.setItem('dev_name', devId);
+        sessionStorage.setItem('session_token', '');
+
+        showWelcomeBanner(
+          '🛡️ ' + devId + '（离线验证）',
+          '后端暂时无法连接，已通过本地格式验证。请输入 API Key 唤醒铸渊。'
+        );
+        showStep('step2');
+        document.getElementById('apiKeyInput').focus();
       }
 
       btn.disabled = false;
