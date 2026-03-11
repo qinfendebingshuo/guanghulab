@@ -1,0 +1,28 @@
+{
+  "hli_id": "HLI-BRAIN-004",
+  "version": "v0.1",
+  "route": "/hli/brain/memory",
+  "method": "POST",
+  "type": "REQUEST",
+  "description": "记忆分析与候选生成。分析文本中是否包含值得记录的信息。",
+  "input": {
+    "type": "object",
+    "required": ["text"],
+    "properties": {
+      "text": { "type": "string", "description": "要分析的文本" },
+      "source": { "type": "string", "enum": ["user", "assistant", "system"] }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "candidates"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "candidates": { "type": "array" },
+      "memory_status": { "type": "object" }
+    }
+  },
+  "changelog": [
+    { "date": "2026-03-10", "note": "核心大脑升级 v3.0 — 记忆候选生成" }
+  ]
+}

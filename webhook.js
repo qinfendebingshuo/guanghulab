@@ -1,77 +1,80 @@
-// 钉钉 Webhook + AI 集成
-const express = require('express');
-const crypto = require('crypto');
-require('dotenv').config();
+// 之秋秋机器人 - webhook处理器
+const { queryDeveloper, queryModule, queryRecentSyslogs, queryStats } = require('./utils/queryApi');
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+module.exports = async (req, res) => {
+    try {
+        const { text, senderStaffId, conversationId } = req.body;
 
-// 调用 Kimi API
-async function callKimiAPI(content) {
-  const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.KIMI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'moonshot-v1-8k',
-      messages: [
-        { role: 'system', content: '你是之之秋秋，光湖纪元的钉钉机器人助手。' },
-        { role: 'user', content: content }
-      ]
-    })
-  });
-  
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
-// AI 处理函数
-async function processWithAI(content) {
-  // 这里接入 Kimi API
-  // 暂时返回测试回复
-   return await callKimiAPI(content);
-}
+        if (text && text.content) {
+            // 先处理查询指令
+            const command = text.content.trim();
+            let reply = null;
+            
+            // 查询指令判断
+            if (command.startsWith('查DEV-')) {
+                const match = command.match(/DEV-\d+/);
+                if (match) {
+                    const result = await queryDeveloper(match[0]);
+                    reply = result.message;
+                } else {
+                    reply = '❌ 格式不对，试试：查DEV-004';
+                }
+            }
+            else if (command.startsWith('查M-')) {
+                const match = command.match(/M-[A-Z]+/);
+                if (match) {
+                    const result = await queryModule(match[0]);
+                    reply = result.message;
+                } else {
+                    reply = '❌ 格式不对，试试：查M-DINGTALK';
+                }
+            }
+            else if (command === '查最近') {
+                const result = await queryRecentSyslogs(5);
+                reply = result.message;
+            }
+            else if (command === '查全部' || command === '全局统计') {
+                const result = await queryStats();
+                reply = result.message;
+            }
+            else if (command === '帮助' || command === 'help') {
+                reply = `📚 秋秋机器人指令帮助：
+• 查DEV-004 - 查询开发者状态
+• 查M-DINGTALK - 查询模块进度
+• 查最近 - 查看最近5条SYSLOG
+• 查全部 / 全局统计 - 查看全局统计
+• 帮助 - 显示本帮助`;
+            }
+            
+            // 如果不是查询指令，才交给AI处理
+            if (!reply) {
+                // 这里调用原来的AI处理函数
+                const { processWithAI } = require('./ai');
+                reply = await processWithAI(text.content);
+            }
 
-// 验证签名
-function verifySign(timestamp, sign) {
-  const secret = process.env.DINGTALK_APP_SECRET;
-  const stringToSign = `${timestamp}\n${secret}`;
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(stringToSign);
-  return hmac.digest('base64') === sign;
-}
-
-// Webhook 接收消息
-app.post('/webhook', async (req, res) => {
-  console.log('收到消息:', req.body);
-  
-  const { text, senderStaffId, conversationId } = req.body;
-  
-  if (text && text.content) {
-    // 调用 AI 处理
-    const reply = await processWithAI(text.content);
-    
-    // 返回回复
-    res.json({
-      msgtype: 'text',
-      text: {
-        content: reply
-      }
-    });
-  } else {
-    res.json({ msgtype: 'text', text: { content: '收到' } });
-  }
-});
-
-// 健康检查
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🤖 之之秋秋机器人启动: http://localhost:${PORT}`);
-  console.log(`Webhook: http://localhost:${PORT}/webhook`);
-});
+            // 返回回复
+            res.json({
+                msgtype: 'text',
+                text: {
+                    content: reply
+                }
+            });
+        } else {
+            res.json({ 
+                msgtype: 'text', 
+                text: { 
+                    content: '收到' 
+                } 
+            });
+        }
+    } catch (error) {
+        console.error('webhook处理错误:', error);
+        res.json({
+            msgtype: 'text',
+            text: {
+                content: '❌ 服务器开小差了，稍后再试'
+            }
+        });
+    }
+};

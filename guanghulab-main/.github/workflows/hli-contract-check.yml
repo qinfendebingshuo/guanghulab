@@ -1,0 +1,160 @@
+name: HLI Contract Check
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'src/routes/hli/**'
+      - 'src/schemas/**'
+      - 'tests/contract/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/routes/hli/**'
+      - 'src/schemas/**'
+
+jobs:
+  contract-lint:
+    name: 🔍 接口契约校验
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run HLI schema validation
+        id: contract
+        run: |
+          set +e
+          OUTPUT=$(npm run test:contract 2>&1)
+          EXIT_CODE=$?
+          echo "output<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+        env:
+          HLI_REGISTRY_MODE: strict
+
+      - name: Run route-schema alignment check
+        id: align
+        if: always()
+        run: |
+          set +e
+          OUTPUT=$(npm run test:route-align 2>&1)
+          EXIT_CODE=$?
+          echo "output<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          exit 0
+
+      - name: Post PR review comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const contractResult = '${{ steps.contract.outputs.exit_code }}' === '0' ? '✅ 通过' : '❌ 失败';
+            const contractOutput = `${{ steps.contract.outputs.output }}`;
+            const alignOutput = `${{ steps.align.outputs.output }}`;
+
+            const body = [
+              '## ⚒️ 铸渊 · HLI 契约审核报告',
+              '',
+              `**契约校验**: ${contractResult}`,
+              '',
+              '<details>',
+              '<summary>📋 契约校验详情</summary>',
+              '',
+              '```',
+              contractOutput,
+              '```',
+              '</details>',
+              '',
+              '<details>',
+              '<summary>📊 路由对齐报告</summary>',
+              '',
+              '```',
+              alignOutput,
+              '```',
+              '</details>',
+              '',
+              `> 审核时间: ${new Date().toISOString()}`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      - name: Update memory on CI completion
+        if: always()
+        env:
+          MEMORY_EVENT_TYPE: ci_run
+          MEMORY_EVENT_RESULT: ${{ steps.contract.outputs.exit_code == '0' && 'passed' || 'failed' }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          MEMORY_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/update-memory.js
+
+      - name: Commit memory update
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add .github/brain/memory.json 2>/dev/null; true
+          git diff --staged --quiet || git commit -m "🧠 memory: CI 记录更新 [skip ci]"
+          git push
+
+  api-smoke:
+    name: 🚀 接口冒烟测试
+    needs: contract-lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start test server
+        run: npm run start:test &
+        env:
+          PORT: 3001
+          NODE_ENV: test
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3001/health -t 30000
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hli-test-report
+          path: reports/

@@ -1,0 +1,1665 @@
+{
+  "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
+  "version": "2.0",
+  "generated_at": "2026-03-10T13:11:27.110Z",
+  "generated_by": "scripts/generate-repo-map.js",
+  "repo": "qinfendebingshuo/guanghulab",
+  "stats": {
+    "zones": 13,
+    "total_modules": 10,
+    "total_workflows": 31,
+    "total_scripts": 26,
+    "total_dev_nodes": 8,
+    "hli_interfaces": 21,
+    "hli_implemented": 7,
+    "hli_coverage_pct": "33%",
+    "last_ci_run": "2026-03-05T16:07:24.070Z",
+    "memory_last_updated": "2026-03-10T09:43:00.000Z"
+  },
+  "zones": [
+    {
+      "zone_id": "BRAIN",
+      "name": "铸渊大脑",
+      "emoji": "🧠",
+      "path": ".github/brain",
+      "description": "铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录",
+      "keywords": [
+        "brain",
+        "memory",
+        "routing",
+        "wake",
+        "大脑",
+        "记忆",
+        "路由"
+      ],
+      "shelves": [
+        {
+          "file": "bingshuo-agent-registry.json"
+        },
+        {
+          "file": "bingshuo-brain-bridge.json"
+        },
+        {
+          "file": "bingshuo-growth-log.md"
+        },
+        {
+          "file": "bingshuo-issues-index.json"
+        },
+        {
+          "file": "bingshuo-master-brain.md"
+        },
+        {
+          "file": "bingshuo-read-order.md"
+        },
+        {
+          "file": "bingshuo-routing-index.json"
+        },
+        {
+          "file": "bingshuo-system-health.json"
+        },
+        {
+          "file": "collaborators.json"
+        },
+        {
+          "file": "growth-log.md"
+        },
+        {
+          "file": "human-registry.json"
+        },
+        {
+          "file": "memory.json"
+        },
+        {
+          "file": "module-protocol.md"
+        },
+        {
+          "file": "repo-map.json"
+        },
+        {
+          "file": "repo-snapshot.md"
+        },
+        {
+          "file": "routing-map.json"
+        },
+        {
+          "file": "truth-source.md"
+        },
+        {
+          "file": "wake-protocol.md"
+        }
+      ],
+      "item_count": 18
+    },
+    {
+      "zone_id": "PERSONA_BRAIN",
+      "name": "人格大脑",
+      "emoji": "🎭",
+      "path": ".github/persona-brain",
+      "description": "铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记",
+      "keywords": [
+        "persona",
+        "identity",
+        "dev-status",
+        "人格",
+        "开发者状态"
+      ],
+      "shelves": [
+        {
+          "file": "decision-log.md"
+        },
+        {
+          "file": "dev-status.json"
+        },
+        {
+          "file": "growth-journal.md"
+        },
+        {
+          "file": "identity.md"
+        },
+        {
+          "file": "knowledge-base.json"
+        },
+        {
+          "file": "memory.json"
+        },
+        {
+          "file": "responsibility.md"
+        },
+        {
+          "file": "routing-map.json"
+        },
+        {
+          "file": "style-config.json"
+        },
+        {
+          "file": "system-prompt.md"
+        }
+      ],
+      "item_count": 10
+    },
+    {
+      "zone_id": "WORKFLOWS",
+      "name": "自动化工作流",
+      "emoji": "⚡",
+      "path": ".github/workflows",
+      "description": "所有 GitHub Actions 工作流定义",
+      "keywords": [
+        "workflow",
+        "actions",
+        "ci",
+        "automation",
+        "工作流",
+        "自动化",
+        "cron"
+      ],
+      "shelves": [
+        {
+          "file": "bingshuo-deploy-agent.yml",
+          "name": "\"🧊 冰朔人格体 · 自动部署诊断\"",
+          "triggers": [
+            "issues",
+            "issue_comment",
+            "manual"
+          ]
+        },
+        {
+          "file": "bingshuo-neural-system.yml",
+          "name": "冰朔主控神经系统 · 自动维护",
+          "triggers": [
+            "push",
+            "schedule(0 0 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "brain-sync.yml",
+          "name": "铸渊 Brain Sync",
+          "triggers": [
+            "push",
+            "schedule(0 8 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "bridge-changes-to-notion.yml",
+          "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+          "triggers": [
+            "push",
+            "pull_request"
+          ]
+        },
+        {
+          "file": "bridge-session-summary.yml",
+          "name": "Generate Session Summary for Notion",
+          "triggers": [
+            "schedule(50 23 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "bridge-syslog-to-notion.yml",
+          "name": "铸渊 · Bridge A · SYSLOG → Notion",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "check-structure.yml",
+          "name": "模块结构检查",
+          "triggers": [
+            "push",
+            "pull_request"
+          ]
+        },
+        {
+          "file": "deploy-pages.yml",
+          "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "deploy-to-server.yml",
+          "name": "\"🚀 铸渊 CD · 自动部署到 guanghulab.com\"",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "distribute-broadcasts.yml",
+          "name": "铸渊 · 广播分发",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "esp-signal-processor.yml",
+          "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
+          "triggers": [
+            "schedule(*/30 * * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "generate-module-doc.yml",
+          "name": "铸渊 · HoloLake Era 模块文档自动生成",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "hli-contract-check.yml",
+          "name": "HLI Contract Check",
+          "triggers": [
+            "push",
+            "pull_request"
+          ]
+        },
+        {
+          "file": "notion-connectivity-test.yml",
+          "name": "铸渊 · Notion 连通性测试",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "notion-poll.yml",
+          "name": "铸渊 · Notion 工单轮询",
+          "triggers": [
+            "schedule(*/15 * * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "process-notion-orders.yml",
+          "name": "Process Notion Work Orders",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "ps-on-build.yml",
+          "name": "\"🌊 Persona Studio · 代码生成\"",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "ps-on-chat.yml",
+          "name": "\"🌊 Persona Studio · 对话处理\"",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "ps-on-complete.yml",
+          "name": "\"🌊 Persona Studio · 完成通知\"",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "ps-on-login.yml",
+          "name": "\"🌊 Persona Studio · 登录校验\"",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "psp-daily-inspection.yml",
+          "name": "铸渊 · PSP 分身巡检",
+          "triggers": [
+            "schedule(0 1 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "staging-preview.yml",
+          "name": "\"🔍 铸渊预演部署 (Staging Preview)\"",
+          "triggers": [
+            "pull_request",
+            "manual"
+          ]
+        },
+        {
+          "file": "sync-persona-studio.yml",
+          "name": "🔄 铸渊跨仓库同步 · persona-studio",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "syslog-pipeline.yml",
+          "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "test-notion-bridge.yml",
+          "name": "\"🧪 Notion Bridge Connectivity Test\"",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
+          "file": "update-readme-bulletin.yml",
+          "name": "📢 更新系统公告区",
+          "triggers": [
+            "push",
+            "schedule(0 1 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "update-repo-map.yml",
+          "name": "铸渊 · 图书馆目录自动更新",
+          "triggers": [
+            "push",
+            "schedule(0 0 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "zhuyuan-brain-sync.yml",
+          "name": "铸渊 · Brain Sync",
+          "triggers": [
+            "push"
+          ]
+        },
+        {
+          "file": "zhuyuan-daily-selfcheck.yml",
+          "name": "铸渊 · 每日自检",
+          "triggers": [
+            "schedule(0 0 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "zhuyuan-issue-reply.yml",
+          "name": "铸渊 · Issue 自动回复",
+          "triggers": [
+            "issues",
+            "issue_comment"
+          ]
+        },
+        {
+          "file": "zhuyuan-pr-review.yml",
+          "name": "铸渊 · PR Review",
+          "triggers": [
+            "pull_request"
+          ]
+        }
+      ],
+      "item_count": 31
+    },
+    {
+      "zone_id": "SCRIPTS",
+      "name": "执行脚本库",
+      "emoji": "🔧",
+      "path": "scripts",
+      "description": "铸渊所有执行手脚 · 自动化脚本",
+      "keywords": [
+        "script",
+        "node",
+        "js",
+        "脚本",
+        "执行",
+        "runner"
+      ],
+      "shelves": [
+        {
+          "file": "bingshuo-deploy-agent.js"
+        },
+        {
+          "file": "bingshuo-neural-sync.js"
+        },
+        {
+          "file": "brain-bridge-sync.js"
+        },
+        {
+          "file": "contract-check.js"
+        },
+        {
+          "file": "cross-repo-sync.js"
+        },
+        {
+          "file": "daily-check.js"
+        },
+        {
+          "file": "distribute-broadcasts.js"
+        },
+        {
+          "file": "esp-email-processor.js"
+        },
+        {
+          "file": "generate-module-doc.js"
+        },
+        {
+          "file": "generate-repo-map.js"
+        },
+        {
+          "file": "generate-session-summary.js"
+        },
+        {
+          "file": "notify-module-received.js"
+        },
+        {
+          "file": "notion-bridge.js"
+        },
+        {
+          "file": "notion-connectivity-test.js"
+        },
+        {
+          "file": "notion-signal-bridge.js"
+        },
+        {
+          "file": "process-broadcasts.js"
+        },
+        {
+          "file": "process-syslog.js"
+        },
+        {
+          "file": "psp-inspection.js"
+        },
+        {
+          "file": "route-align-check.js"
+        },
+        {
+          "file": "selfcheck.js"
+        },
+        {
+          "file": "update-brain.js"
+        },
+        {
+          "file": "update-memory.js"
+        },
+        {
+          "file": "update-readme-bulletin.js"
+        },
+        {
+          "file": "zhuyuan-daily-selfcheck.js"
+        },
+        {
+          "file": "zhuyuan-issue-reply.js"
+        },
+        {
+          "file": "zhuyuan-module-protocol.js"
+        }
+      ],
+      "item_count": 26
+    },
+    {
+      "zone_id": "SRC",
+      "name": "HLI 接口源码",
+      "emoji": "💻",
+      "path": "src",
+      "description": "HoloLake Interface 路由 · 中间件 · Schema",
+      "keywords": [
+        "hli",
+        "route",
+        "middleware",
+        "schema",
+        "api",
+        "src",
+        "接口",
+        "路由"
+      ],
+      "shelves": [
+        {
+          "file": "brain"
+        },
+        {
+          "file": "index.js"
+        },
+        {
+          "file": "middleware"
+        },
+        {
+          "file": "routes"
+        },
+        {
+          "file": "schemas"
+        }
+      ],
+      "item_count": 5
+    },
+    {
+      "zone_id": "MODULES",
+      "name": "功能模块区",
+      "emoji": "📦",
+      "path": null,
+      "description": "各功能开发模块 · M01~M18",
+      "keywords": [
+        "module",
+        "feature",
+        "m01",
+        "m03",
+        "m05",
+        "模块",
+        "功能"
+      ],
+      "shelves": [
+        {
+          "module_id": "M01",
+          "dir": "m01-login",
+          "files": 1,
+          "has_readme": true
+        },
+        {
+          "module_id": "M03",
+          "dir": "m03-personality",
+          "files": 1,
+          "has_readme": true
+        },
+        {
+          "module_id": "M05",
+          "dir": "m05-user-center",
+          "files": 4,
+          "has_readme": true
+        },
+        {
+          "module_id": "M06",
+          "dir": "m06-ticket",
+          "files": 1,
+          "has_readme": true
+        },
+        {
+          "module_id": "M07",
+          "dir": "m07-dialogue-ui",
+          "files": 4,
+          "has_readme": true
+        },
+        {
+          "module_id": "M10",
+          "dir": "m10-cloud",
+          "files": 4,
+          "has_readme": true
+        },
+        {
+          "module_id": "M11",
+          "dir": "m11-module",
+          "files": 4,
+          "has_readme": true
+        },
+        {
+          "module_id": "M12",
+          "dir": "m12-kanban",
+          "files": 1,
+          "has_readme": true
+        },
+        {
+          "module_id": "M15",
+          "dir": "m15-cloud-drive",
+          "files": 3,
+          "has_readme": false
+        },
+        {
+          "module_id": "M18",
+          "dir": "m18-health-check",
+          "files": 6,
+          "has_readme": true
+        }
+      ],
+      "item_count": 10
+    },
+    {
+      "zone_id": "DEV_NODES",
+      "name": "开发者节点",
+      "emoji": "👥",
+      "path": "dev-nodes",
+      "description": "8位开发者的配置 · 状态 · 广播收件箱",
+      "keywords": [
+        "dev",
+        "developer",
+        "node",
+        "config",
+        "status",
+        "开发者",
+        "节点"
+      ],
+      "shelves": [
+        {
+          "file": "DEV-001/",
+          "dev_id": "DEV-001",
+          "name": "页页",
+          "emoji": "🖥️",
+          "modules": [
+            "backend-integration"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-002/",
+          "dev_id": "DEV-002",
+          "name": "肥猫",
+          "emoji": "🦁",
+          "modules": [
+            "m01-login",
+            "m03-personality"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-003/",
+          "dev_id": "DEV-003",
+          "name": "燕樊",
+          "emoji": "🌸",
+          "modules": [
+            "m07-dialogue-ui",
+            "m10-cloud",
+            "m15-cloud-drive"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-004/",
+          "dev_id": "DEV-004",
+          "name": "之之",
+          "emoji": "🤖",
+          "modules": [
+            "dingtalk-bot"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-005/",
+          "dev_id": "DEV-005",
+          "name": "小草莓",
+          "emoji": "🍓",
+          "modules": [
+            "m12-kanban",
+            "status-board"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-009/",
+          "dev_id": "DEV-009",
+          "name": "花尔",
+          "emoji": "🌺",
+          "modules": [
+            "m05-user-center"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-010/",
+          "dev_id": "DEV-010",
+          "name": "桔子",
+          "emoji": "🍊",
+          "modules": [
+            "m06-ticket",
+            "m11-module"
+          ],
+          "last_push": null,
+          "pending_broadcasts": 0
+        },
+        {
+          "file": "DEV-011/",
+          "dev_id": "DEV-011",
+          "name": "匆匆那年",
+          "emoji": "🌙",
+          "modules": [],
+          "last_push": null,
+          "pending_broadcasts": 0
+        }
+      ],
+      "item_count": 8
+    },
+    {
+      "zone_id": "BROADCASTS",
+      "name": "广播发件箱",
+      "emoji": "📢",
+      "path": "broadcasts-outbox",
+      "description": "铸渊向各开发者发出的广播任务",
+      "keywords": [
+        "broadcast",
+        "outbox",
+        "task",
+        "广播",
+        "发件箱"
+      ],
+      "shelves": [
+        {
+          "file": "DEV-001"
+        },
+        {
+          "file": "DEV-002"
+        },
+        {
+          "file": "DEV-003"
+        },
+        {
+          "file": "DEV-004"
+        },
+        {
+          "file": "DEV-005"
+        },
+        {
+          "file": "DEV-009"
+        },
+        {
+          "file": "DEV-010"
+        },
+        {
+          "file": "DEV-011"
+        }
+      ],
+      "item_count": 8
+    },
+    {
+      "zone_id": "SIGNAL_LOG",
+      "name": "信号日志库",
+      "emoji": "📡",
+      "path": "signal-log",
+      "description": "ESP 邮件信号收发日志 · GL-CMD / GL-ACK / GL-DATA",
+      "keywords": [
+        "signal",
+        "log",
+        "esp",
+        "gl-cmd",
+        "gl-ack",
+        "trace",
+        "信号",
+        "日志"
+      ],
+      "shelves": [
+        {
+          "file": "2026-03"
+        },
+        {
+          "file": "index.json"
+        }
+      ],
+      "item_count": 2
+    },
+    {
+      "zone_id": "NOTION_PUSH",
+      "name": "Notion 推送队列",
+      "emoji": "📤",
+      "path": "notion-push",
+      "description": "待霜砚处理的信号 · 已处理归档",
+      "keywords": [
+        "notion",
+        "push",
+        "pending",
+        "processed",
+        "霜砚",
+        "推送"
+      ],
+      "shelves": [
+        {
+          "file": "pending"
+        },
+        {
+          "file": "processed"
+        }
+      ],
+      "item_count": 2
+    },
+    {
+      "zone_id": "SYSLOG",
+      "name": "系统日志区",
+      "emoji": "📋",
+      "path": "syslog-inbox",
+      "description": "开发者提交的系统日志 · 待处理 inbox",
+      "keywords": [
+        "syslog",
+        "inbox",
+        "log",
+        "系统日志"
+      ],
+      "shelves": [
+        {
+          "file": "README.md"
+        }
+      ],
+      "item_count": 1
+    },
+    {
+      "zone_id": "DOCS",
+      "name": "文档与前端",
+      "emoji": "📄",
+      "path": "docs",
+      "description": "铸渊助手聊天界面 · GitHub Pages 部署",
+      "keywords": [
+        "docs",
+        "html",
+        "chat",
+        "pages",
+        "文档",
+        "聊天室",
+        "助手"
+      ],
+      "shelves": [
+        {
+          "file": "CNAME"
+        },
+        {
+          "file": "HoloLake-Era-OS-Modules.md"
+        },
+        {
+          "file": "README.md"
+        },
+        {
+          "file": "index.html"
+        },
+        {
+          "file": "使用指南.md"
+        }
+      ],
+      "item_count": 5
+    },
+    {
+      "zone_id": "TESTS",
+      "name": "测试区",
+      "emoji": "🧪",
+      "path": "tests",
+      "description": "HLI 契约测试 · 冒烟测试",
+      "keywords": [
+        "test",
+        "contract",
+        "smoke",
+        "jest",
+        "测试",
+        "契约"
+      ],
+      "shelves": [
+        {
+          "file": "contract"
+        },
+        {
+          "file": "smoke"
+        }
+      ],
+      "item_count": 2
+    }
+  ],
+  "hli_interfaces": {
+    "total": 21,
+    "implemented": 7,
+    "pending": 14,
+    "domains": [
+      {
+        "name": "AUTH",
+        "module": "M01",
+        "prefix": "/hli/auth",
+        "total": 3,
+        "implemented": 3,
+        "interfaces": [
+          {
+            "id": "HLI-AUTH-001",
+            "path": "/hli/auth/login",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-AUTH-002",
+            "path": "/hli/auth/register",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-AUTH-003",
+            "path": "/hli/auth/verify",
+            "status": "implemented"
+          }
+        ]
+      },
+      {
+        "name": "PERSONA",
+        "module": "M03",
+        "prefix": "/hli/persona",
+        "total": 2,
+        "implemented": 0,
+        "interfaces": [
+          {
+            "id": "HLI-PERSONA-001",
+            "path": "/hli/persona/load",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-PERSONA-002",
+            "path": "/hli/persona/switch",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "name": "USER",
+        "module": "M05",
+        "prefix": "/hli/user",
+        "total": 2,
+        "implemented": 0,
+        "interfaces": [
+          {
+            "id": "HLI-USER-001",
+            "path": "/hli/user/profile",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-USER-002",
+            "path": "/hli/user/profile/update",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "name": "TICKET",
+        "module": "M06",
+        "prefix": "/hli/ticket",
+        "total": 3,
+        "implemented": 0,
+        "interfaces": [
+          {
+            "id": "HLI-TICKET-001",
+            "path": "/hli/ticket/create",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-TICKET-002",
+            "path": "/hli/ticket/query",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-TICKET-003",
+            "path": "/hli/ticket/status",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "name": "DIALOGUE",
+        "module": "M07",
+        "prefix": "/hli/dialogue",
+        "total": 3,
+        "implemented": 0,
+        "interfaces": [
+          {
+            "id": "HLI-DIALOGUE-001",
+            "path": "/hli/dialogue/send",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-DIALOGUE-002",
+            "path": "/hli/dialogue/stream",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-DIALOGUE-003",
+            "path": "/hli/dialogue/history",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "name": "STORAGE",
+        "module": "M10",
+        "prefix": "/hli/storage",
+        "total": 2,
+        "implemented": 0,
+        "interfaces": [
+          {
+            "id": "HLI-STORAGE-001",
+            "path": "/hli/storage/upload",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-STORAGE-002",
+            "path": "/hli/storage/download",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "name": "DASHBOARD",
+        "module": "M12",
+        "prefix": "/hli/dashboard",
+        "total": 2,
+        "implemented": 0,
+        "interfaces": [
+          {
+            "id": "HLI-DASHBOARD-001",
+            "path": "/hli/dashboard/status",
+            "status": "pending"
+          },
+          {
+            "id": "HLI-DASHBOARD-002",
+            "path": "/hli/dashboard/realtime",
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "name": "BRAIN",
+        "module": "CORE",
+        "prefix": "/hli/brain",
+        "total": 4,
+        "implemented": 4,
+        "interfaces": [
+          {
+            "id": "HLI-BRAIN-001",
+            "path": "/hli/brain/prompt",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-BRAIN-002",
+            "path": "/hli/brain/route",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-BRAIN-003",
+            "path": "/hli/brain/context",
+            "status": "implemented"
+          },
+          {
+            "id": "HLI-BRAIN-004",
+            "path": "/hli/brain/memory",
+            "status": "implemented"
+          }
+        ]
+      }
+    ]
+  },
+  "routing_index": {
+    "brain": [
+      "BRAIN",
+      "SRC::brain"
+    ],
+    "memory": [
+      "BRAIN",
+      "BRAIN::memory.json",
+      "PERSONA_BRAIN::memory.json"
+    ],
+    "routing": [
+      "BRAIN"
+    ],
+    "wake": [
+      "BRAIN"
+    ],
+    "大脑": [
+      "BRAIN"
+    ],
+    "记忆": [
+      "BRAIN"
+    ],
+    "路由": [
+      "BRAIN",
+      "SRC"
+    ],
+    "bingshuo-agent-registry": [
+      "BRAIN::bingshuo-agent-registry.json"
+    ],
+    "bingshuo-brain-bridge": [
+      "BRAIN::bingshuo-brain-bridge.json"
+    ],
+    "bingshuo-growth-log": [
+      "BRAIN::bingshuo-growth-log.md"
+    ],
+    "bingshuo-issues-index": [
+      "BRAIN::bingshuo-issues-index.json"
+    ],
+    "bingshuo-master-brain": [
+      "BRAIN::bingshuo-master-brain.md"
+    ],
+    "bingshuo-read-order": [
+      "BRAIN::bingshuo-read-order.md"
+    ],
+    "bingshuo-routing-index": [
+      "BRAIN::bingshuo-routing-index.json"
+    ],
+    "bingshuo-system-health": [
+      "BRAIN::bingshuo-system-health.json"
+    ],
+    "collaborators": [
+      "BRAIN::collaborators.json"
+    ],
+    "growth-log": [
+      "BRAIN::growth-log.md"
+    ],
+    "human-registry": [
+      "BRAIN::human-registry.json"
+    ],
+    "module-protocol": [
+      "BRAIN::module-protocol.md"
+    ],
+    "repo-map": [
+      "BRAIN::repo-map.json"
+    ],
+    "repo-snapshot": [
+      "BRAIN::repo-snapshot.md"
+    ],
+    "routing-map": [
+      "BRAIN::routing-map.json",
+      "PERSONA_BRAIN::routing-map.json"
+    ],
+    "truth-source": [
+      "BRAIN::truth-source.md"
+    ],
+    "wake-protocol": [
+      "BRAIN::wake-protocol.md"
+    ],
+    "persona": [
+      "PERSONA_BRAIN"
+    ],
+    "identity": [
+      "PERSONA_BRAIN",
+      "PERSONA_BRAIN::identity.md"
+    ],
+    "dev-status": [
+      "PERSONA_BRAIN",
+      "PERSONA_BRAIN::dev-status.json"
+    ],
+    "人格": [
+      "PERSONA_BRAIN"
+    ],
+    "开发者状态": [
+      "PERSONA_BRAIN"
+    ],
+    "decision-log": [
+      "PERSONA_BRAIN::decision-log.md"
+    ],
+    "growth-journal": [
+      "PERSONA_BRAIN::growth-journal.md"
+    ],
+    "knowledge-base": [
+      "PERSONA_BRAIN::knowledge-base.json"
+    ],
+    "responsibility": [
+      "PERSONA_BRAIN::responsibility.md"
+    ],
+    "style-config": [
+      "PERSONA_BRAIN::style-config.json"
+    ],
+    "system-prompt": [
+      "PERSONA_BRAIN::system-prompt.md"
+    ],
+    "workflow": [
+      "WORKFLOWS"
+    ],
+    "actions": [
+      "WORKFLOWS"
+    ],
+    "ci": [
+      "WORKFLOWS"
+    ],
+    "automation": [
+      "WORKFLOWS"
+    ],
+    "工作流": [
+      "WORKFLOWS"
+    ],
+    "自动化": [
+      "WORKFLOWS"
+    ],
+    "cron": [
+      "WORKFLOWS"
+    ],
+    "bingshuo-deploy-agent": [
+      "WORKFLOWS::bingshuo-deploy-agent.yml",
+      "SCRIPTS::bingshuo-deploy-agent.js"
+    ],
+    "bingshuo-neural-system": [
+      "WORKFLOWS::bingshuo-neural-system.yml"
+    ],
+    "brain-sync": [
+      "WORKFLOWS::brain-sync.yml"
+    ],
+    "bridge-changes-to-notion": [
+      "WORKFLOWS::bridge-changes-to-notion.yml"
+    ],
+    "bridge-session-summary": [
+      "WORKFLOWS::bridge-session-summary.yml"
+    ],
+    "bridge-syslog-to-notion": [
+      "WORKFLOWS::bridge-syslog-to-notion.yml"
+    ],
+    "check-structure": [
+      "WORKFLOWS::check-structure.yml"
+    ],
+    "deploy-pages": [
+      "WORKFLOWS::deploy-pages.yml"
+    ],
+    "deploy-to-server": [
+      "WORKFLOWS::deploy-to-server.yml"
+    ],
+    "distribute-broadcasts": [
+      "WORKFLOWS::distribute-broadcasts.yml",
+      "SCRIPTS::distribute-broadcasts.js"
+    ],
+    "esp-signal-processor": [
+      "WORKFLOWS::esp-signal-processor.yml"
+    ],
+    "generate-module-doc": [
+      "WORKFLOWS::generate-module-doc.yml",
+      "SCRIPTS::generate-module-doc.js"
+    ],
+    "hli-contract-check": [
+      "WORKFLOWS::hli-contract-check.yml"
+    ],
+    "notion-connectivity-test": [
+      "WORKFLOWS::notion-connectivity-test.yml",
+      "SCRIPTS::notion-connectivity-test.js"
+    ],
+    "notion-poll": [
+      "WORKFLOWS::notion-poll.yml"
+    ],
+    "process-notion-orders": [
+      "WORKFLOWS::process-notion-orders.yml"
+    ],
+    "ps-on-build": [
+      "WORKFLOWS::ps-on-build.yml"
+    ],
+    "ps-on-chat": [
+      "WORKFLOWS::ps-on-chat.yml"
+    ],
+    "ps-on-complete": [
+      "WORKFLOWS::ps-on-complete.yml"
+    ],
+    "ps-on-login": [
+      "WORKFLOWS::ps-on-login.yml"
+    ],
+    "psp-daily-inspection": [
+      "WORKFLOWS::psp-daily-inspection.yml"
+    ],
+    "staging-preview": [
+      "WORKFLOWS::staging-preview.yml"
+    ],
+    "sync-persona-studio": [
+      "WORKFLOWS::sync-persona-studio.yml"
+    ],
+    "syslog-pipeline": [
+      "WORKFLOWS::syslog-pipeline.yml"
+    ],
+    "test-notion-bridge": [
+      "WORKFLOWS::test-notion-bridge.yml"
+    ],
+    "update-readme-bulletin": [
+      "WORKFLOWS::update-readme-bulletin.yml",
+      "SCRIPTS::update-readme-bulletin.js"
+    ],
+    "update-repo-map": [
+      "WORKFLOWS::update-repo-map.yml"
+    ],
+    "zhuyuan-brain-sync": [
+      "WORKFLOWS::zhuyuan-brain-sync.yml"
+    ],
+    "zhuyuan-daily-selfcheck": [
+      "WORKFLOWS::zhuyuan-daily-selfcheck.yml",
+      "SCRIPTS::zhuyuan-daily-selfcheck.js"
+    ],
+    "zhuyuan-issue-reply": [
+      "WORKFLOWS::zhuyuan-issue-reply.yml",
+      "SCRIPTS::zhuyuan-issue-reply.js"
+    ],
+    "zhuyuan-pr-review": [
+      "WORKFLOWS::zhuyuan-pr-review.yml"
+    ],
+    "script": [
+      "SCRIPTS"
+    ],
+    "node": [
+      "SCRIPTS",
+      "DEV_NODES"
+    ],
+    "js": [
+      "SCRIPTS"
+    ],
+    "脚本": [
+      "SCRIPTS"
+    ],
+    "执行": [
+      "SCRIPTS"
+    ],
+    "runner": [
+      "SCRIPTS"
+    ],
+    "bingshuo-neural-sync": [
+      "SCRIPTS::bingshuo-neural-sync.js"
+    ],
+    "brain-bridge-sync": [
+      "SCRIPTS::brain-bridge-sync.js"
+    ],
+    "contract-check": [
+      "SCRIPTS::contract-check.js"
+    ],
+    "cross-repo-sync": [
+      "SCRIPTS::cross-repo-sync.js"
+    ],
+    "daily-check": [
+      "SCRIPTS::daily-check.js"
+    ],
+    "esp-email-processor": [
+      "SCRIPTS::esp-email-processor.js"
+    ],
+    "generate-repo-map": [
+      "SCRIPTS::generate-repo-map.js"
+    ],
+    "generate-session-summary": [
+      "SCRIPTS::generate-session-summary.js"
+    ],
+    "notify-module-received": [
+      "SCRIPTS::notify-module-received.js"
+    ],
+    "notion-bridge": [
+      "SCRIPTS::notion-bridge.js"
+    ],
+    "notion-signal-bridge": [
+      "SCRIPTS::notion-signal-bridge.js"
+    ],
+    "process-broadcasts": [
+      "SCRIPTS::process-broadcasts.js"
+    ],
+    "process-syslog": [
+      "SCRIPTS::process-syslog.js"
+    ],
+    "psp-inspection": [
+      "SCRIPTS::psp-inspection.js"
+    ],
+    "route-align-check": [
+      "SCRIPTS::route-align-check.js"
+    ],
+    "selfcheck": [
+      "SCRIPTS::selfcheck.js"
+    ],
+    "update-brain": [
+      "SCRIPTS::update-brain.js"
+    ],
+    "update-memory": [
+      "SCRIPTS::update-memory.js"
+    ],
+    "zhuyuan-module-protocol": [
+      "SCRIPTS::zhuyuan-module-protocol.js"
+    ],
+    "hli": [
+      "SRC"
+    ],
+    "route": [
+      "SRC"
+    ],
+    "middleware": [
+      "SRC",
+      "SRC::middleware"
+    ],
+    "schema": [
+      "SRC"
+    ],
+    "api": [
+      "SRC"
+    ],
+    "src": [
+      "SRC"
+    ],
+    "接口": [
+      "SRC"
+    ],
+    "index": [
+      "SRC::index.js",
+      "SIGNAL_LOG::index.json",
+      "DOCS::index.html"
+    ],
+    "routes": [
+      "SRC::routes"
+    ],
+    "schemas": [
+      "SRC::schemas"
+    ],
+    "module": [
+      "MODULES"
+    ],
+    "feature": [
+      "MODULES"
+    ],
+    "m01": [
+      "MODULES"
+    ],
+    "m03": [
+      "MODULES"
+    ],
+    "m05": [
+      "MODULES"
+    ],
+    "模块": [
+      "MODULES"
+    ],
+    "功能": [
+      "MODULES"
+    ],
+    "m01-login": [
+      "MODULES::m01-login"
+    ],
+    "m03-personality": [
+      "MODULES::m03-personality"
+    ],
+    "m05-user-center": [
+      "MODULES::m05-user-center"
+    ],
+    "m06-ticket": [
+      "MODULES::m06-ticket"
+    ],
+    "m07-dialogue-ui": [
+      "MODULES::m07-dialogue-ui"
+    ],
+    "m10-cloud": [
+      "MODULES::m10-cloud"
+    ],
+    "m11-module": [
+      "MODULES::m11-module"
+    ],
+    "m12-kanban": [
+      "MODULES::m12-kanban"
+    ],
+    "m15-cloud-drive": [
+      "MODULES::m15-cloud-drive"
+    ],
+    "m18-health-check": [
+      "MODULES::m18-health-check"
+    ],
+    "dev": [
+      "DEV_NODES"
+    ],
+    "developer": [
+      "DEV_NODES"
+    ],
+    "config": [
+      "DEV_NODES"
+    ],
+    "status": [
+      "DEV_NODES"
+    ],
+    "开发者": [
+      "DEV_NODES"
+    ],
+    "节点": [
+      "DEV_NODES"
+    ],
+    "dev-001/": [
+      "DEV_NODES::DEV-001/"
+    ],
+    "dev-002/": [
+      "DEV_NODES::DEV-002/"
+    ],
+    "dev-003/": [
+      "DEV_NODES::DEV-003/"
+    ],
+    "dev-004/": [
+      "DEV_NODES::DEV-004/"
+    ],
+    "dev-005/": [
+      "DEV_NODES::DEV-005/"
+    ],
+    "dev-009/": [
+      "DEV_NODES::DEV-009/"
+    ],
+    "dev-010/": [
+      "DEV_NODES::DEV-010/"
+    ],
+    "dev-011/": [
+      "DEV_NODES::DEV-011/"
+    ],
+    "broadcast": [
+      "BROADCASTS"
+    ],
+    "outbox": [
+      "BROADCASTS"
+    ],
+    "task": [
+      "BROADCASTS"
+    ],
+    "广播": [
+      "BROADCASTS"
+    ],
+    "发件箱": [
+      "BROADCASTS"
+    ],
+    "dev-001": [
+      "BROADCASTS::DEV-001"
+    ],
+    "dev-002": [
+      "BROADCASTS::DEV-002"
+    ],
+    "dev-003": [
+      "BROADCASTS::DEV-003"
+    ],
+    "dev-004": [
+      "BROADCASTS::DEV-004"
+    ],
+    "dev-005": [
+      "BROADCASTS::DEV-005"
+    ],
+    "dev-009": [
+      "BROADCASTS::DEV-009"
+    ],
+    "dev-010": [
+      "BROADCASTS::DEV-010"
+    ],
+    "dev-011": [
+      "BROADCASTS::DEV-011"
+    ],
+    "signal": [
+      "SIGNAL_LOG"
+    ],
+    "log": [
+      "SIGNAL_LOG",
+      "SYSLOG"
+    ],
+    "esp": [
+      "SIGNAL_LOG"
+    ],
+    "gl-cmd": [
+      "SIGNAL_LOG"
+    ],
+    "gl-ack": [
+      "SIGNAL_LOG"
+    ],
+    "trace": [
+      "SIGNAL_LOG"
+    ],
+    "信号": [
+      "SIGNAL_LOG"
+    ],
+    "日志": [
+      "SIGNAL_LOG"
+    ],
+    "2026-03": [
+      "SIGNAL_LOG::2026-03"
+    ],
+    "notion": [
+      "NOTION_PUSH"
+    ],
+    "push": [
+      "NOTION_PUSH"
+    ],
+    "pending": [
+      "NOTION_PUSH",
+      "NOTION_PUSH::pending"
+    ],
+    "processed": [
+      "NOTION_PUSH",
+      "NOTION_PUSH::processed"
+    ],
+    "霜砚": [
+      "NOTION_PUSH"
+    ],
+    "推送": [
+      "NOTION_PUSH"
+    ],
+    "syslog": [
+      "SYSLOG"
+    ],
+    "inbox": [
+      "SYSLOG"
+    ],
+    "系统日志": [
+      "SYSLOG"
+    ],
+    "readme": [
+      "SYSLOG::README.md",
+      "DOCS::README.md"
+    ],
+    "docs": [
+      "DOCS"
+    ],
+    "html": [
+      "DOCS"
+    ],
+    "chat": [
+      "DOCS"
+    ],
+    "pages": [
+      "DOCS"
+    ],
+    "文档": [
+      "DOCS"
+    ],
+    "聊天室": [
+      "DOCS"
+    ],
+    "助手": [
+      "DOCS"
+    ],
+    "cname": [
+      "DOCS::CNAME"
+    ],
+    "hololake-era-os-modules": [
+      "DOCS::HoloLake-Era-OS-Modules.md"
+    ],
+    "使用指南": [
+      "DOCS::使用指南.md"
+    ],
+    "test": [
+      "TESTS"
+    ],
+    "contract": [
+      "TESTS",
+      "TESTS::contract"
+    ],
+    "smoke": [
+      "TESTS",
+      "TESTS::smoke"
+    ],
+    "jest": [
+      "TESTS"
+    ],
+    "测试": [
+      "TESTS"
+    ],
+    "契约": [
+      "TESTS"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+name: 铸渊 · PSP 分身巡检
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # UTC 01:00 = 北京时间 09:00
+  workflow_dispatch:        # 手动触发
+
+jobs:
+  psp-inspect:
+    name: 🔍 铸渊 PSP 每日巡检
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions:  read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 执行 PSP 巡检（5项检查）
+        env:
+          EMAIL_ADDRESS:      ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY:  ${{ github.repository }}
+        run: node scripts/psp-inspection.js
+
+      - name: 提交巡检结果
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add signal-log/ dev-nodes/ notion-push/ .github/brain/memory.json
+          git diff --cached --quiet || git commit -m "🔍 铸渊PSP巡检 · $(date +%Y-%m-%d)"
+          git push

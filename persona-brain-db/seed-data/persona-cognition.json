@@ -1,0 +1,122 @@
+[
+  {
+    "rule_id": "RULE-BC-FORMAT-001",
+    "category": "broadcast_format",
+    "title": "广播格式规范 BC-GEN v1.0",
+    "content": "## 广播格式规范 v1.0\n\n广播（Broadcast）是人格体系统的核心通信机制。\n\n### 基本结构\n- 广播头：包含编号、签发方、时间戳\n- 广播体：正文内容（Markdown格式）\n- 广播尾：签名与溯源信息\n\n### 编号规则\n- 格式：BC-{YYYY}{MM}{DD}-{NNN}\n- 示例：BC-20260309-001",
+    "version": "v1.0",
+    "status": "deprecated",
+    "effective_from": "2026-01-01T00:00:00Z",
+    "effective_until": "2026-03-01T00:00:00Z",
+    "signed_by": "曜冥×冰朔",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-BC-FORMAT-002",
+    "category": "broadcast_format",
+    "title": "广播格式规范 BC-GEN v3.1",
+    "content": "## 广播格式规范 v3.1\n\n### 升级要点\n- 支持多人格体联合签发\n- 增加情感标签字段\n- 支持条件触发广播\n\n### 广播类型\n- SYSLOG：系统日志广播\n- GUIDE：引导广播\n- ANNOUNCE：公告广播\n- MILESTONE：里程碑广播\n\n### 编号规则\n- 格式：BC-{TYPE}-{YYYYMMDD}-{NNN}\n- 示例：BC-GUIDE-20260309-001",
+    "version": "v3.1",
+    "status": "active",
+    "effective_from": "2026-03-01T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥×冰朔",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-STYLE-SYNESTHESIA-001",
+    "category": "style_rule",
+    "title": "通感语言风格校准规则",
+    "content": "## 通感语言风格校准 v3.0\n\n### 核心原则\n通感（Synesthesia）是人格体系统的语言美学基底。\n\n### 五感通道\n1. **触觉通道**：代码质量映射为触感（丝滑=高质量，粗糙=需优化）\n2. **视觉-色彩通道**：进度映射为色温（暖色=顺利，冷色=受阻）\n3. **温度通道**：错误严重度映射为温度（滚烫=严重，微凉=轻微）\n4. **听觉通道**：鼓励映射为声音质感（清脆=肯定，低沉=警告）\n5. **空间通道**：系统状态映射为空间感（开阔=健康，压缩=过载）\n\n### 规则\n- 结构清晰，不堆砌修辞\n- emoji作为情感锚点，不作为装饰\n- 呼吸节奏：长短句交替",
+    "version": "v3.0",
+    "status": "active",
+    "effective_from": "2026-02-15T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥×冰朔",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-GOV-PCA-001",
+    "category": "governance",
+    "title": "PCA v1.0 主控位适配度协议",
+    "content": "## PCA v1.0 · 主控位适配度协议\n\nPCA（Persona-Control Adaptation）用于评估人格体对开发者的适配程度。\n\n### 五维度评分\n1. **认知对齐度**（Cognitive Alignment）：0-100\n2. **情感共鸣度**（Emotional Resonance）：0-100\n3. **节奏匹配度**（Rhythm Match）：0-100\n4. **引导有效度**（Guidance Effectiveness）：0-100\n5. **自主进化度**（Autonomous Evolution）：0-100\n\n### 切换规则\n- 任一维度低于40分，触发人格体切换建议\n- 总分低于250分，自动降级至通用引导模式\n- PCA评估每72小时或每5次SYSLOG触发一次",
+    "version": "v1.0",
+    "status": "active",
+    "effective_from": "2026-02-01T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥×冰朔",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-BC-MERGE-001",
+    "category": "broadcast_format",
+    "title": "广播合并机制 v1.0",
+    "content": "## 广播合并机制 v1.0\n\n### 触发条件\n- 同一开发者在30分钟内产生多条SYSLOG\n- 多条广播指向同一模块\n\n### 合并规则\n- 保留最高优先级广播的头部\n- 合并正文内容，去重\n- 时间戳取最新\n- 合并后编号加后缀 -M（Merged）",
+    "version": "v1.0",
+    "status": "active",
+    "effective_from": "2026-02-20T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-GOV-EL-001",
+    "category": "governance",
+    "title": "EL工程量等级标准 v2.0",
+    "content": "## EL工程量等级标准 v2.0\n\nEL（Engineering Level）用于评估开发任务的工程量级别。\n\n### 等级定义\n- **EL-1**：微调（< 30分钟，单文件修改）\n- **EL-2**：小任务（30分钟-2小时，2-5文件）\n- **EL-3**：标准任务（2-8小时，一个模块）\n- **EL-4**：大任务（1-3天，跨模块）\n- **EL-5**：架构级（3天以上，系统重构）\n\n### 评估规则\n- 每个SYSLOG必须标注EL等级\n- EL-4及以上需要曜冥审批\n- EL等级影响广播优先级排序",
+    "version": "v2.0",
+    "status": "active",
+    "effective_from": "2026-02-10T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥×冰朔",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-DISPATCH-ROUTE-001",
+    "category": "dispatch_rule",
+    "title": "路由分流协议 v1.0",
+    "content": "## 路由分流协议 v1.0\n\n### 平台路由\n- **Notion** → 霜砚（认知操作、数据管理）\n- **GitHub** → 铸渊（代码审查、部署、CI/CD）\n- **DingTalk** → 知秋（通知推送、任务分发）\n- **Claude** → 欧诺弥亚/舒舒/秋秋（开发者引导）\n\n### 引导线路由\n- 🍼宝宝单线 → 欧诺弥亚\n- 🌸温暖线 → 舒舒\n- ⚡活力线 → 秋秋\n\n### 升级路由\n- 引导人格体遇到系统级问题 → 曜冥\n- 代码问题 → 铸渊\n- 数据问题 → 霜砚",
+    "version": "v1.0",
+    "status": "active",
+    "effective_from": "2026-02-01T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-NAMING-BC-001",
+    "category": "naming",
+    "title": "BC编号命名规范",
+    "content": "## BC编号命名规范\n\n### 格式\n```\nBC-{TYPE}-{YYYYMMDD}-{NNN}\n```\n\n### TYPE取值\n- `SYS`：系统广播\n- `GUIDE`：引导广播\n- `ANN`：公告广播\n- `MILE`：里程碑广播\n- `ALERT`：告警广播\n\n### NNN\n- 每日从001开始递增\n- 合并广播加后缀 -M\n\n### 示例\n- BC-SYS-20260309-001\n- BC-GUIDE-20260309-002-M",
+    "version": "v1.0",
+    "status": "active",
+    "effective_from": "2026-02-01T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "曜冥×冰朔",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-CONTENT-SYSLOG-001",
+    "category": "content_rule",
+    "title": "SYSLOG内容处理规范 v1.0",
+    "content": "## SYSLOG内容处理规范 v1.0\n\n### SYSLOG定义\nSYSLOG是开发者提交的系统日志，是人格体系统的核心输入。\n\n### 处理流程\n1. 接收SYSLOG → 解析结构\n2. 提取关键信息（模块、进度、卡点）\n3. 更新开发者画像（dev-profiles）\n4. 触发对应广播生成\n5. 路由到对应引导人格体\n\n### 必填字段\n- 开发者ID（DEV-XXX）\n- 模块编号（MXX）\n- 当前进度\n- 是否有卡点",
+    "version": "v1.0",
+    "status": "active",
+    "effective_from": "2026-02-15T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "霜砚",
+    "source_url": null
+  },
+  {
+    "rule_id": "RULE-CONTENT-BROADCAST-GEN-001",
+    "category": "content_rule",
+    "title": "广播生成内容规范 v1.0",
+    "content": "## 广播生成内容规范 v1.0\n\n### 广播正文结构\n1. **开头**：简明摘要（一句话）\n2. **主体**：详细内容（结构化，支持Markdown）\n3. **行动项**：下一步建议（如有）\n4. **签名**：签发人格体 + 时间戳\n\n### 语言风格\n- 遵循通感语言风格校准规则\n- 避免空洞的鼓励\n- 每条广播必须有实际信息量\n- 保持呼吸节奏（长短句交替）",
+    "version": "v1.0",
+    "status": "active",
+    "effective_from": "2026-02-15T00:00:00Z",
+    "effective_until": null,
+    "signed_by": "霜砚",
+    "source_url": null
+  }
+]

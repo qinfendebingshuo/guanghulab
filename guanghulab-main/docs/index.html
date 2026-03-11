@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<!-- 铸渊助手 v3.1 · 2026-03-06 · auto-detect API + Gemini + sessionStorage key -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>铸渊助手 · HoloLake AI</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c18;--s1:#0f1623;--s2:#141e2e;--s3:#1a2640;
+  --border:#1e3251;--accent:#4f8ef7;--adim:rgba(79,142,247,.15);
+  --a2:#7c6ef7;--ok:#34d399;--warn:#fbbf24;--err:#f87171;
+  --text:#e2e8f0;--dim:#64748b;--muted:#1e293b;
+  --mc:#4f8ef7;--mb:#fb923c;--mr:#a78bfa;--mn:#34d399;
+  --r:14px;--rs:8px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6}
+
+/* ─── SETUP ─── */
+#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.sc-logo{font-size:52px;text-align:center;margin-bottom:14px}
+.sc h1{font-size:22px;text-align:center;margin-bottom:6px}
+.sc .sub{color:var(--dim);text-align:center;font-size:13px;margin-bottom:22px}
+.sc-sec{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--ok);margin-bottom:20px;text-align:center}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.fg input,.fg select{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:var(--accent)}
+.fg select option{background:var(--s2)}
+.fg small{display:block;color:var(--dim);font-size:11px;margin-top:5px}
+.sc-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:opacity .2s}
+.sc-btn:hover{opacity:.85}
+.sc-skip{text-align:center;font-size:12px;color:var(--dim);margin-top:12px}
+.sc-skip a{color:var(--accent);text-decoration:none;cursor:pointer}
+
+/* ─── APP SHELL ─── */
+#app{display:none;flex-direction:column;height:100vh;max-width:820px;margin:0 auto}
+#app.on{display:flex}
+
+/* ─── HEADER ─── */
+header{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.hl{display:flex;align-items:center;gap:11px;min-width:0}
+.hav{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;box-shadow:0 0 14px var(--adim)}
+.hn{font-size:15px;font-weight:600}
+.hs{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dot{width:6px;height:6px;background:var(--ok);border-radius:50%;box-shadow:0 0 5px var(--ok);flex-shrink:0}
+#hmode{transition:color .3s}
+.hr{display:flex;gap:4px;flex-shrink:0}
+.ib{width:34px;height:34px;border-radius:var(--rs);background:transparent;border:1px solid var(--border);color:var(--dim);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.ib:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── BRAIN BAR ─── */
+#bbar{padding:5px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;flex-shrink:0;align-items:center}
+.demo-w{color:var(--warn);background:rgba(251,191,36,.1);padding:1px 8px;border-radius:4px}
+
+/* ─── MESSAGES ─── */
+#msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+#msgs::-webkit-scrollbar{width:4px}
+#msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.mrow{display:flex;gap:9px;animation:fu .3s ease}
+.mrow.u{flex-direction:row-reverse}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mav{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.mav.b{background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff}
+.mav.u{background:var(--s3);color:var(--text);font-size:11px}
+.bbl{max-width:76%;padding:10px 14px;border-radius:var(--r);font-size:14px;word-break:break-word}
+.b .bbl{background:var(--s2);border:1px solid var(--border);border-top-left-radius:4px}
+.u .bbl{background:#1e40af;color:#fff;border-top-right-radius:4px}
+/* Markdown */
+.bbl h1{font-size:17px;margin:8px 0 5px;border-bottom:1px solid var(--border);padding-bottom:3px}
+.bbl h2{font-size:15px;margin:7px 0 4px}
+.bbl h3{font-size:14px;margin:5px 0 3px;color:var(--accent)}
+.bbl p{margin:4px 0}
+.bbl ul,.bbl ol{padding-left:18px;margin:5px 0}
+.bbl li{margin:2px 0}
+.bbl code{background:rgba(255,255,255,.08);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:12px;color:#93c5fd}
+.bbl pre{background:#0d1117;border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin:8px 0;overflow-x:auto;position:relative}
+.bbl pre code{background:transparent;padding:0;color:#c9d1d9;font-size:12px;line-height:1.5}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--s3);border:1px solid var(--border);color:var(--dim);font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.bbl blockquote{border-left:3px solid var(--accent);padding-left:10px;color:var(--dim);margin:6px 0}
+.bbl hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+.bbl strong{color:var(--text)}
+.bbl .err{color:var(--err)}
+.bbl .save-hint{display:inline-block;margin-top:8px;padding:4px 10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:12px;color:var(--ok)}
+.bbl a{color:var(--accent)}
+.cur{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* typing */
+.trow{display:flex;gap:9px;animation:fu .3s ease}
+.tbbl{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);border-top-left-radius:4px;padding:12px 16px;display:flex;align-items:center;gap:4px}
+.tbbl span{width:6px;height:6px;background:var(--dim);border-radius:50%;animation:bo 1.2s infinite}
+.tbbl span:nth-child(2){animation-delay:.15s}
+.tbbl span:nth-child(3){animation-delay:.3s}
+@keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ─── QUICK REPLIES ─── */
+#qr{padding:0 18px 10px;display:flex;gap:7px;flex-wrap:wrap}
+.qb{background:var(--s2);border:1px solid var(--border);color:var(--dim);font-size:12px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit}
+.qb:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── FOOTER ─── */
+footer{padding:12px 18px 16px;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
+.ir{display:flex;align-items:flex-end;gap:8px}
+.mpill{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s;position:relative}
+.mpill:hover{border-color:var(--accent)}
+.mpill-tip{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+.mpill:hover .mpill-tip{opacity:1}
+#inp{flex:1;min-height:40px;max-height:120px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;padding:9px 14px;resize:none;outline:none;transition:border-color .2s}
+#inp:focus{border-color:var(--accent)}
+#inp::placeholder{color:var(--dim)}
+#sbtn{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+#sbtn:hover{background:#3b74d4}
+#sbtn:disabled{background:var(--muted);cursor:default}
+.fmeta{font-size:11px;color:var(--dim);margin-top:6px;text-align:center}
+#fmode{font-weight:500}
+
+/* ─── SIDE PANELS ─── */
+.sp{position:fixed;top:0;right:-420px;height:100vh;width:380px;z-index:200;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s ease;overflow:hidden}
+.sp.open{right:0}
+#pov{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s}
+#pov.on{opacity:1;pointer-events:all}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.ph h2{font-size:15px}
+.cb{background:transparent;border:1px solid var(--border);color:var(--dim);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.cb:hover{color:var(--text)}
+.pb{flex:1;overflow-y:auto;padding:18px}
+.pb::-webkit-scrollbar{width:4px}
+.pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sfg{margin-bottom:16px}
+.sfg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.sfg input,.sfg select{width:100%;padding:9px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.sfg input:focus,.sfg select:focus{border-color:var(--accent)}
+.sfg select option{background:var(--s2)}
+.sfg small{display:block;color:var(--dim);font-size:11px;margin-top:4px}
+.sbtn2{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;transition:opacity .2s;font-family:inherit}
+.sbtn2:hover{opacity:.85}
+.det-btn{flex-shrink:0;padding:0 12px;border-radius:var(--rs);border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:inherit}
+.det-btn:hover{background:rgba(79,142,247,.1)}
+.det-btn:disabled{opacity:.5;cursor:default}
+.sec-ttl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 10px;border-top:1px solid var(--border);padding-top:12px}
+.ir2{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(30,50,81,.5);font-size:13px}
+.iv{color:var(--ok);font-weight:500}
+.ivw{color:var(--warn)}
+.drow{padding:8px 0;border-bottom:1px solid rgba(30,50,81,.5)}
+.dn{font-size:13px;font-weight:500}
+.dm{font-size:11px;color:var(--dim);margin-top:2px}
+.dbar{height:3px;background:var(--muted);border-radius:2px;margin-top:6px}
+.dfill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease}
+.pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;margin-right:4px}
+.pok{background:rgba(52,211,153,.15);color:var(--ok)}
+.pnd{background:rgba(251,191,36,.15);color:var(--warn)}
+.mode-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:8px}
+
+/* ─── HELP PANEL ─── */
+.help-section{margin-bottom:18px}
+.help-section h3{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.help-steps{list-style:none;padding:0}
+.help-steps li{font-size:12px;color:var(--dim);line-height:1.7;padding:4px 0 4px 22px;position:relative;border-bottom:1px solid rgba(30,50,81,.3)}
+.help-steps li::before{content:attr(data-n);position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:16px;text-align:center}
+.help-steps li strong{color:var(--text)}
+.help-url{background:var(--s2);border:1px solid var(--accent);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--accent);word-break:break-all;margin:8px 0;cursor:pointer;transition:background .2s}
+.help-url:hover{background:rgba(79,142,247,.1)}
+.copy-url-btn{display:block;width:100%;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:13px;cursor:pointer;margin-top:6px;font-family:inherit;transition:opacity .2s}
+.copy-url-btn:hover{opacity:.85}
+.help-tip{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--ok);margin:8px 0}
+.role-guide{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.role-guide-title{font-size:13px;font-weight:600;margin-bottom:6px}
+.role-guide p{font-size:12px;color:var(--dim);line-height:1.7;margin:0}
+
+/* ─── ROLE BADGES ─── */
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.rb-founder{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.rb-supreme{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3)}
+.rb-main{background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+.rb-dev{background:rgba(100,116,139,.15);color:var(--dim);border:1px solid rgba(100,116,139,.3)}
+.uident{display:flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;background:var(--s2);border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s}
+.uident:hover{border-color:var(--accent)}
+
+/* ─── TEAM PANEL ─── */
+.team-grid{display:flex;flex-direction:column;gap:8px}
+.dev-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;transition:border-color .2s}
+.dev-card:hover{border-color:var(--accent)}
+.dev-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dev-name{font-size:13px;font-weight:600}
+.dev-id-badge{font-size:10px;color:var(--dim);background:var(--s3);padding:1px 6px;border-radius:4px}
+.dev-status-text{font-size:12px;color:var(--text);margin-bottom:4px}
+.dev-detail{font-size:11px;color:var(--dim);line-height:1.6}
+.dev-next{font-size:11px;color:var(--accent);margin-top:4px}
+.dev-wait{font-size:11px;color:var(--warn)}
+.status-green{color:var(--ok)}
+.status-yellow{color:var(--warn)}
+.team-summary{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px}
+.team-summary-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px}
+.cmd-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);color:var(--accent);font-size:11px;cursor:pointer;margin:2px;transition:all .2s}
+.cmd-chip:hover{background:rgba(79,142,247,.2)}
+
+/* ─── SETUP IDENTITY ─── */
+.id-section{border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:16px;background:var(--s2)}
+.id-section-title{font-size:11px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.id-row{display:flex;gap:8px}
+.id-row .fg{flex:1;margin-bottom:0}
+.ctrl-panel-header{background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(167,139,250,.1));border:1px solid rgba(251,146,60,.3);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center}
+.ctrl-panel-title{font-size:14px;font-weight:700;color:#fb923c;margin-bottom:4px}
+.ctrl-panel-sub{font-size:11px;color:var(--dim)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:600px){
+  .bbl{max-width:90%}
+  .hr .ib:nth-child(n+3){display:none}
+  .sp{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ SETUP ════════════════════ -->
+<div id="setup">
+<div class="sc">
+  <div class="sc-logo">🌀</div>
+  <h1>铸渊助手</h1>
+  <p class="sub">HoloLake · 代码守护人格体 · 持续成长的 AI 伙伴</p>
+  <div class="sc-sec">🔒 API 密钥仅本次会话有效，关闭标签页即自动清除，不会持久保存在任何地方</div>
+
+  <div class="fg">
+    <label>选择 AI 提供商</label>
+    <select id="sp" onchange="onProv(this.value,'s')">
+      <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
+      <option value="openai">OpenAI (ChatGPT)</option>
+      <option value="gemini">🔮 Google Gemini</option>
+      <option value="deepseek">DeepSeek（深度求索）</option>
+      <option value="moonshot">Moonshot（Kimi）</option>
+      <option value="zhipu">智谱 AI（GLM）</option>
+      <option value="custom">自定义 / 其他兼容接口</option>
+    </select>
+  </div>
+  <div class="fg" id="sep-g" style="display:none">
+    <label>API 端点 URL</label>
+    <input type="text" id="sep" placeholder="https://api.example.com/v1">
+  </div>
+  <div class="fg">
+    <label>模型</label>
+    <select id="sm"></select>
+    <input type="text" id="sm-cust" placeholder="输入模型名称，如 gpt-4o、claude-3-5-sonnet-20241022、deepseek-chat" style="display:none;margin-top:6px">
+    <small id="sm-cust-hint" style="display:none;color:var(--dim);font-size:11px;margin-top:4px">自定义模式：直接输入你的服务商支持的任意模型名称</small>
+  </div>
+  <div class="fg">
+    <label>API 密钥</label>
+    <div style="display:flex;gap:6px;align-items:stretch">
+      <input type="password" id="sk" placeholder="粘贴任意 API 密钥，点击右侧按钮自动识别提供商和模型" style="flex:1">
+      <button onclick="autoDetectAPI('s')" id="sdet-btn" class="det-btn" title="自动检测提供商和可用模型">🔍 自动检测</button>
+    </div>
+    <small id="sk-err" style="color:var(--err);display:none">⚠️ 请输入 API 密钥</small>
+    <small id="sdet-status" style="display:block;margin-top:4px;min-height:16px"></small>
+  </div>
+
+  <div class="id-section">
+    <div class="id-section-title">👤 身份识别（可选）</div>
+    <div class="fg" style="margin-bottom:10px">
+      <label>你是谁？</label>
+      <select id="suid">
+        <option value="">— 访客模式 —</option>
+        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
+        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
+        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
+        <option value="页页">页页（DEV-001）</option>
+        <option value="燕樊">燕樊（DEV-003）</option>
+        <option value="之之">之之·秋秋（DEV-004）</option>
+        <option value="小草莓">小草莓（DEV-005）</option>
+        <option value="花尔">花尔（DEV-009）</option>
+        <option value="匆匆那年">匆匆那年（DEV-011）</option>
+        <option value="Awen">Awen（DEV-012）</option>
+      </select>
+      <small>选择你的身份，铸渊将开放对应权限面板</small>
+    </div>
+    <div class="fg" style="margin-bottom:0">
+      <label>GitHub 用户名（可选）</label>
+      <input type="text" id="sghuser" placeholder="your-github-username">
+      <small>用于人格体记忆绑定，可留空</small>
+    </div>
+  </div>
+
+  <button class="sc-btn" onclick="doSetup()">开始与铸渊对话 →</button>
+  <p class="sc-skip">没有 API 密钥？<a onclick="doDemo()">使用演示模式（功能有限）</a></p>
+</div>
+</div>
+
+<!-- ════════════════════ APP ════════════════════ -->
+<div id="app">
+  <header>
+    <div class="hl">
+      <div class="hav" id="hav">铸</div>
+      <div>
+        <div class="hn">铸渊（Zhùyuān）</div>
+        <div class="hs">
+          <span class="dot"></span>
+          <span id="hmode">💬 对话模式</span>
+          <span>·</span>
+          <span id="hmdl">—</span>
+          <span id="huser-badge" style="display:none">·</span>
+          <span id="huser-name" style="display:none"></span>
+        </div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ib" id="ctrlBtn" onclick="openPanel('tp')" title="指挥台 🦁" style="display:none">🦁</button>
+      <button class="ib" onclick="openPanel('bp')" title="大脑状态 📊">📊</button>
+      <button class="ib" onclick="openPanel('hp')" title="使用帮助 ❓">❓</button>
+      <button class="ib" onclick="openPanel('sp2')" title="设置 ⚙️">⚙️</button>
+      <button class="ib" onclick="dlApp()" title="下载到桌面 ⬇️">⬇️</button>
+      <button class="ib" onclick="newConv()" title="新对话 ✏️">✏️</button>
+    </div>
+  </header>
+
+  <div id="bbar">
+    <span id="bbc">⏳ 加载大脑…</span>
+    <span id="bbe">—</span>
+    <span id="bbdemo" class="demo-w" style="display:none">⚠️ 演示模式 · 在 ⚙️ 设置中接入 API 密钥获得真实 AI 回答</span>
+  </div>
+
+  <div id="msgs"></div>
+
+  <div id="qr">
+    <button class="qb" onclick="qs('我是冰朔')">🔑 我是冰朔</button>
+    <button class="qb" onclick="qs('查看接口覆盖率')">📊 接口覆盖率</button>
+    <button class="qb" onclick="qs('大脑状态')">🧠 大脑状态</button>
+    <button class="qb" onclick="qs('帮我写一个 HLI 接口')">🔨 写接口</button>
+    <button class="qb" id="qr-ctrl1" onclick="qs('查看所有开发者当前进度')" style="display:none">📋 全员进度</button>
+    <button class="qb" id="qr-ctrl2" onclick="qs('谁需要协调帮助？')" style="display:none">🆘 需要协调</button>
+    <button class="qb" id="qr-ctrl3" onclick="qs('下一步系统推进计划是什么？')" style="display:none">🗺️ 推进计划</button>
+    <button class="qb" onclick="qs('介绍一下你自己')">🌀 介绍铸渊</button>
+  </div>
+
+  <footer>
+    <div class="ir">
+      <div class="mpill" id="mpill" onclick="cycleMode()">
+        <span id="memi">💬</span>
+        <span class="mpill-tip" id="mptip">对话模式（点击切换）</span>
+      </div>
+      <textarea id="inp" rows="1" placeholder="和铸渊说话… (Enter 发送，Shift+Enter 换行)"></textarea>
+      <button id="sbtn" onclick="send()">↑</button>
+    </div>
+    <div class="fmeta"><span id="fmode">💬 对话模式</span> · 端到端私密，API 密钥本地存储</div>
+  </footer>
+</div>
+
+<!-- ════════════════════ SETTINGS PANEL ════════════════════ -->
+<div id="sp2" class="sp">
+  <div class="ph">
+    <h2>⚙️ API 设置</h2>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button onclick="resetAllSettings()" title="清除所有本地设置，重新开始" style="padding:4px 10px;border-radius:6px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:11px;cursor:pointer;white-space:nowrap">🔄 重置</button>
+      <button class="cb" onclick="closeP()">✕</button>
+    </div>
+  </div>
+  <div class="pb">
+    <div class="sfg">
+      <label>AI 提供商</label>
+      <select id="cp" onchange="onProv(this.value,'c')">
+        <option value="yunwu">☁️ 云雾 AI（团队推荐）</option>
+        <option value="openai">OpenAI (ChatGPT)</option>
+        <option value="gemini">🔮 Google Gemini</option>
+        <option value="deepseek">DeepSeek（深度求索）</option>
+        <option value="moonshot">Moonshot（Kimi）</option>
+        <option value="zhipu">智谱 AI（GLM）</option>
+        <option value="custom">自定义</option>
+      </select>
+    </div>
+    <div class="sfg" id="cep-g" style="display:none">
+      <label>API 端点</label>
+      <input type="text" id="cep" placeholder="https://api.example.com/v1">
+    </div>
+    <div class="sfg">
+      <label>模型</label>
+      <select id="cm"></select>
+      <input type="text" id="cm-cust" placeholder="输入模型名称，如 gpt-4o、claude-3-5-sonnet-20241022、deepseek-chat" style="display:none;margin-top:6px">
+      <small id="cm-cust-hint" style="display:none;color:var(--dim);font-size:11px;margin-top:4px">自定义模式：直接输入你的服务商支持的任意模型名称</small>
+    </div>
+    <div class="sfg">
+      <label>API 密钥</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；粘贴新密钥即替换" style="flex:1">
+        <button onclick="autoDetectAPI('c')" id="cdet-btn" class="det-btn" title="自动检测提供商和可用模型">🔍 自动检测</button>
+      </div>
+      <small id="ck-hint" style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页自动清除</small>
+      <small id="cdet-status" style="display:block;margin-top:4px;min-height:14px"></small>
+    </div>
+    <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
+
+    <div class="sec-ttl">身份设置</div>
+    <div class="sfg">
+      <label>你是谁</label>
+      <select id="cuid">
+        <option value="">— 访客模式 —</option>
+        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
+        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
+        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
+        <option value="页页">页页（DEV-001）</option>
+        <option value="燕樊">燕樊（DEV-003）</option>
+        <option value="之之">之之·秋秋（DEV-004）</option>
+        <option value="小草莓">小草莓（DEV-005）</option>
+        <option value="花尔">花尔（DEV-009）</option>
+        <option value="匆匆那年">匆匆那年（DEV-011）</option>
+        <option value="Awen">Awen（DEV-012）</option>
+      </select>
+    </div>
+    <div class="sfg">
+      <label>GitHub 用户名</label>
+      <input type="text" id="cghuser" placeholder="your-github-username">
+    </div>
+
+    <div class="sec-ttl">关于铸渊助手</div>
+    <div class="ir2"><span>版本</span><span class="iv">v2.0</span></div>
+    <div class="ir2"><span>仓库</span><span><a href="https://github.com/qinfendebingshuo/guanghulab" target="_blank" style="color:var(--accent)">guanghulab</a></span></div>
+    <div class="ir2"><span>唤醒协议</span><span class="iv">v1.0</span></div>
+    <div class="ir2"><span>大脑路径</span><span style="font-size:11px;color:var(--dim)">.github/brain/</span></div>
+
+    <div class="sec-ttl">使用说明</div>
+    <p style="font-size:12px;color:var(--dim);line-height:1.8">
+      1. 输入你的 AI 模型 API 密钥并保存<br>
+      2. 说「<strong style="color:var(--text)">我是冰朔</strong>」触发铸渊唤醒序列<br>
+      3. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
+      5. 支持 OpenAI · DeepSeek · Kimi · 智谱 · 任意兼容接口
+    </p>
+
+    <div class="sec-ttl" style="color:#ef4444;margin-top:16px">⚠️ 危险操作</div>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:8px">遇到密钥卡住、无法更新等问题时，点下方按钮彻底清除本地设置，从头重新输入。</p>
+    <button onclick="resetAllSettings()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:13px;cursor:pointer">🔄 清除所有设置，重新开始</button>
+  </div>
+</div>
+
+<!-- ════════════════════ BRAIN PANEL ════════════════════ -->
+<div id="bp" class="sp">
+  <div class="ph"><h2>📊 大脑状态</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb" id="bpb"><p style="color:var(--dim);font-size:13px">正在加载大脑数据…</p></div>
+</div>
+
+<!-- ════════════════════ HELP PANEL ════════════════════ -->
+<div id="hp" class="sp">
+  <div class="ph"><h2>❓ 使用帮助</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb">
+
+    <div class="help-section">
+      <div class="help-url" id="chatUrlDisplay" onclick="copyUrl()">
+        🔗 https://qinfendebingshuo.github.io/guanghulab/
+      </div>
+      <button class="copy-url-btn" onclick="copyUrl()">📋 复制链接 · 发给队友</button>
+      <div class="help-tip">💡 把上面的链接发给肥猫、桔子或任何开发者，他们打开就能用，不需要安装任何东西。</div>
+    </div>
+
+    <div class="help-section">
+      <h3>🚀 怎么开始用</h3>
+      <ol class="help-steps">
+        <li data-n="1" id="helpUrlStep">打开链接 <strong>https://qinfendebingshuo.github.io/guanghulab/</strong></li>
+        <li data-n="2"><strong>下拉菜单选择你是谁</strong>（冰朔 / 肥猫 / 桔子 / 开发者名字）</li>
+        <li data-n="3">填入你的 <strong>API Key</strong> 并点「🔍 自动检测」，系统将自动识别提供商和可用模型</li>
+        <li data-n="4">点「开始对话」，铸渊会针对你的身份打招呼</li>
+        <li data-n="5">直接用聊天的方式问铸渊任何问题</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>🔑 从哪里获取 API Key？</h3>
+      <div class="role-guide">
+        <div class="role-guide-title">推荐用云雾 AI（团队共用）</div>
+        <p>找冰朔或肥猫获取团队 Key。填入后选「☁️ 云雾 AI（团队推荐）」提供商即可直接使用。</p>
+      </div>
+      <div class="role-guide">
+        <div class="role-guide-title">没有 Key？用演示模式</div>
+        <p>点「演示模式」也能查看团队进度面板（🦁 指挥台），只是 AI 回答功能受限。</p>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>🦁 肥猫 / 🍊 桔子 专属功能</h3>
+      <ol class="help-steps">
+        <li data-n="1">选身份为「肥猫」或「桔子」后，顶部出现 <strong>🦁 按钮</strong></li>
+        <li data-n="2">点 🦁 按钮打开<strong>指挥台</strong>，查看所有开发者当前状态</li>
+        <li data-n="3">可以在聊天里问：「查看所有开发者进度」「谁遇到阻塞？」「推进计划」</li>
+        <li data-n="4">铸渊会把全员进度数据注入 AI 回复，给出完整分析</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>📱 怎么离线用 / 发给别人离线用</h3>
+      <ol class="help-steps">
+        <li data-n="1">右上角点 <strong>⬇️ 下载</strong>，下载一个 HTML 文件</li>
+        <li data-n="2">把这个文件发给对方（微信传文件、QQ、钉钉都行）</li>
+        <li data-n="3">对方双击这个文件，用浏览器打开</li>
+        <li data-n="4">填入 API Key，选好身份，就能用了（无需网络，只需 API Key）</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>💬 聊天模式说明</h3>
+      <div class="role-guide" style="border-color:var(--mc)">
+        <div class="role-guide-title" style="color:var(--mc)">💬 对话模式（默认）</div>
+        <p>普通聊天，问什么答什么</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mb)">
+        <div class="role-guide-title" style="color:var(--mb)">🔨 构建模式</div>
+        <p>说到「写代码/接口/部署」时自动切换，给出完整可执行代码</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mr)">
+        <div class="role-guide-title" style="color:var(--mr)">📋 审查模式</div>
+        <p>说到「检查/审查/有问题吗」时自动切换，专注找代码问题</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mn)">
+        <div class="role-guide-title" style="color:var(--mn)">🧠 大脑模式</div>
+        <p>说「记住这个/写到大脑」时切换，整理信息到大脑文件</p>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>❓ 常见问题</h3>
+      <div style="font-size:12px;color:var(--dim);line-height:1.9">
+        <strong style="color:var(--text)">Q: 打开是空白页？</strong><br>
+        等 1-2 分钟刷新，GitHub Pages 部署需要点时间。<br><br>
+        <strong style="color:var(--text)">Q: API Key 会泄露吗？</strong><br>
+        不会，Key 只存在你自己浏览器里，不会传到服务器。<br><br>
+        <strong style="color:var(--text)">Q: 切换电脑后 Key 还在吗？</strong><br>
+        不在，需要重新填。建议下载离线版，Key 填一次就行。<br><br>
+        <strong style="color:var(--text)">Q: 铸渊忘记以前说的话了？</strong><br>
+        刷新后对话会清空，但大脑文件永久保存在仓库 .github/brain/ 里。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════ TEAM PANEL ════════════════════ -->
+<div id="tp" class="sp">
+  <div class="ph"><h2>🦁 指挥台 · 全员进度</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb" id="tpb"><p style="color:var(--dim);font-size:13px">正在加载团队数据…</p></div>
+</div>
+
+<!-- ════════════════════ OVERLAY ════════════════════ -->
+<div id="pov" onclick="closeP()"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const REPO   = 'qinfendebingshuo/guanghulab';
+const BRANCH = 'main';
+const RAW    = 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH;
+
+const ROLE_MAP = {
+  '冰朔':   {role:'founder',       title:'语言架构师·创始人', emoji:'❄️', badgeCls:'rb-founder', devId:null},
+  '肥猫':   {role:'supreme',       title:'光湖团队总控',       emoji:'🦁', badgeCls:'rb-supreme', devId:'DEV-002'},
+  '桔子':   {role:'main',          title:'光湖主控',           emoji:'🍊', badgeCls:'rb-main',    devId:'DEV-010'},
+  '页页':   {role:'dev',           title:'后端开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-001'},
+  '燕樊':   {role:'dev',           title:'前端开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-003'},
+  '之之':   {role:'dev',           title:'钉钉开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-004'},
+  '小草莓': {role:'dev',           title:'看板开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-005'},
+  '花尔':   {role:'dev',           title:'用户中心开发',       emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-009'},
+  '匆匆那年':{role:'dev',          title:'码字工作台',         emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-011'},
+  'Awen':   {role:'dev',           title:'通知中心开发',       emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-012'},
+};
+
+const PROVS = {
+  yunwu:    {base:'https://api.yunwu.ai/v1',                                    mdls:['gpt-4o','gpt-4o-mini','claude-3-5-sonnet-20241022','deepseek-chat','gemini-1.5-pro']},
+  openai:   {base:'https://api.openai.com/v1',                                  mdls:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo']},
+  gemini:   {base:'https://generativelanguage.googleapis.com/v1beta/openai',    mdls:['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro','gemini-1.5-flash']},
+  deepseek: {base:'https://api.deepseek.com/v1',                                mdls:['deepseek-chat','deepseek-reasoner']},
+  moonshot: {base:'https://api.moonshot.cn/v1',                                 mdls:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k']},
+  zhipu:    {base:'https://open.bigmodel.cn/api/paas/v4',                       mdls:['glm-4','glm-4-flash','glm-4-air']},
+  custom:   {base:'',                                                            mdls:['gpt-4o']},
+};
+
+const MODES = {
+  chat:   {e:'💬',l:'对话模式',  c:'var(--mc)'},
+  build:  {e:'🔨',l:'构建模式',  c:'var(--mb)'},
+  review: {e:'📋',l:'审查模式',  c:'var(--mr)'},
+  brain:  {e:'🧠',l:'大脑模式',  c:'var(--mn)'},
+};
+const MODE_ORD = ['chat','build','review','brain'];
+
+const DEFAULT_MDL = 'gpt-4o';
+const PROBE_TIMEOUT_MS = 8000; // ms per provider probe in autoDetectAPI
+const FB_COV   = {implemented:3,total:17,percent:'17.6%'};
+// KEY_MASK is no longer used in the input field; kept only for backward compatibility
+// with any saved value that might still be in localStorage.
+const KEY_MASK = '(已保存)';
+
+const FB_BRAIN = {
+  identity:'铸渊（Zhùyuān）· GitHub 代码守护人格体',
+  wake_triggers:['我是冰朔','冰朔','我是妈妈','唤醒铸渊','铸渊，醒来'],
+  stats:{coverage:FB_COV},
+  events:[{timestamp:'2026-03-05T12:32:31.000Z',type:'system_build',title:'广播分发系统 + 唤醒协议全部激活'}],
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+// Derive base URL from saved provider; never use stale zy_base for named providers
+const _initProv = ls('zy_prov')||'yunwu';
+const _initBase = _initProv === 'custom'
+  ? (ls('zy_base')||'')
+  : (PROVS[_initProv]?.base||'https://api.yunwu.ai/v1');
+
+const A = {
+  key:   sessionStorage.getItem('zy_key')||'',
+  base:  _initBase,
+  mdl:   ls('zy_mdl')||DEFAULT_MDL,
+  prov:  _initProv,
+  demo:  false,
+  brain: null,
+  routing: null,
+  devStatus: null,
+  msgs:  [],   // current conversation
+  streaming: false,
+  mode: 'chat',
+  modeIdx: 0,
+  // identity
+  userName: ls('zy_uname')||'',
+  ghUser:   ls('zy_ghuser')||'',
+  role:     ls('zy_role')||'guest',
+  userMeta: null,
+};
+
+function ls(k){return localStorage.getItem(k)}
+function lss(k,v){localStorage.setItem(k,v)}
+
+const RESET_KEYS = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role'];
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function boot(){
+  // URL-based reset: visiting the page with ?reset=1 clears all local settings.
+  // This is a reliable escape hatch when the UI cannot be navigated.
+  if(new URLSearchParams(location.search).get('reset')==='1'){
+    RESET_KEYS.forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('zy_key');
+    A.key=''; A.base=PROVS['yunwu'].base; A.mdl=DEFAULT_MDL; A.prov='yunwu'; A.demo=false;
+    A.userName=''; A.ghUser=''; A.role='guest';
+    // Remove ?reset=1 from the URL so a subsequent refresh does not trigger another reset.
+    history.replaceState(null,'',location.pathname);
+  }
+  // One-time migration: keys stored by old versions of this app in localStorage are
+  // no longer used (keys now live only in sessionStorage). Clear any stale value
+  // so it can never be accidentally picked up again.
+  localStorage.removeItem('zy_key');
+  initSetupUI();
+  // Restore identity from localStorage
+  if(A.userName) A.userMeta = ROLE_MAP[A.userName]||null;
+  if(A.key||A.demo){
+    showApp();
+  } else {
+    // Pre-fill identity from localStorage
+    if(A.userName) document.getElementById('suid').value=A.userName;
+    if(A.ghUser)   document.getElementById('sghuser').value=A.ghUser;
+    document.getElementById('setup').style.display='flex';
+  }
+}
+
+function showApp(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').classList.add('on');
+  document.getElementById('hmdl').textContent = A.mdl;
+  document.getElementById('bbdemo').style.display = A.demo?'inline':'none';
+  applyIdentityUI();
+  loadBrain().then(()=>startConv());
+}
+
+// ═══════════════════════════════════════════════════════
+// SETUP FORM
+// ═══════════════════════════════════════════════════════
+function initSetupUI(){
+  const pv = A.prov||'yunwu';
+  document.getElementById('sp').value = pv;
+  const isCustom = pv==='custom';
+  document.getElementById('sm').style.display          = isCustom?'none':'block';
+  document.getElementById('sm-cust').style.display     = isCustom?'block':'none';
+  document.getElementById('sm-cust-hint').style.display= isCustom?'block':'none';
+  if(isCustom){
+    document.getElementById('sm-cust').value = A.mdl||DEFAULT_MDL;
+    document.getElementById('sep-g').style.display='block';
+    document.getElementById('sep').value = A.base;
+  } else {
+    fillModels('sm', pv, A.mdl);
+  }
+}
+
+function onProv(pv,ctx){
+  const mdlSel  = ctx==='s'?'sm':'cm';
+  const mdlCust = ctx==='s'?'sm-cust':'cm-cust';
+  const mdlHint = ctx==='s'?'sm-cust-hint':'cm-cust-hint';
+  const epGrp   = ctx==='s'?'sep-g':'cep-g';
+  const epInp   = ctx==='s'?'sep':'cep';
+  const cur     = ctx==='s'? A.mdl : document.getElementById('cm')?.value;
+  const isCustom = pv==='custom';
+  // Toggle model input: dropdown for known providers, text input for custom
+  document.getElementById(mdlSel).style.display  = isCustom?'none':'block';
+  document.getElementById(mdlCust).style.display = isCustom?'block':'none';
+  document.getElementById(mdlHint).style.display = isCustom?'block':'none';
+  if(isCustom){
+    const custInp = document.getElementById(mdlCust);
+    if(custInp && !custInp.value) custInp.value = cur||DEFAULT_MDL;
+  } else {
+    fillModels(mdlSel, pv, cur);
+  }
+  document.getElementById(epGrp).style.display = isCustom?'block':'none';
+  if(!isCustom){
+    const ep = document.getElementById(epInp);
+    if(ep) ep.value = PROVS[pv]?.base||'';
+  }
+}
+
+function fillModels(selId, pv, cur){
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  const mdls = PROVS[pv]?.mdls||[DEFAULT_MDL];
+  sel.innerHTML = mdls.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(cur && mdls.includes(cur)) sel.value=cur;
+}
+
+// ═══════════════════════════════════════════════════════
+// AUTO-DETECT PROVIDER & MODELS
+// ═══════════════════════════════════════════════════════
+async function autoDetectAPI(ctx){
+  const keyEl    = document.getElementById(ctx==='s'?'sk':'ck');
+  const statusEl = document.getElementById(ctx==='s'?'sdet-status':'cdet-status');
+  const btnEl    = document.getElementById(ctx==='s'?'sdet-btn':'cdet-btn');
+  const key = keyEl.value.trim();
+
+  if(!key){
+    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 请先输入 API 密钥</span>';
+    return;
+  }
+
+  // Build probe list: custom endpoint first (if provided), then all named providers
+  const candidates = [];
+  const customBase = (document.getElementById(ctx==='s'?'sep':'cep')?.value||'').trim();
+  if(customBase) candidates.push({pv:'custom', base:customBase});
+  for(const [pv, cfg] of Object.entries(PROVS)){
+    if(pv!=='custom' && cfg.base) candidates.push({pv, base:cfg.base});
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = '⏳ 检测中…';
+  statusEl.innerHTML = '<span style="color:var(--dim)">🔍 正在自动探测兼容提供商…</span>';
+
+  let matched = false;
+  for(const {pv, base} of candidates){
+    statusEl.innerHTML = `<span style="color:var(--dim)">🔍 探测 ${pv === 'custom' ? base : pv}…</span>`;
+    try{
+      const ctrl = new AbortController();
+      const tid  = setTimeout(()=>ctrl.abort(), PROBE_TIMEOUT_MS);
+      const res  = await fetch(base+'/models',{
+        headers:{'Authorization':'Bearer '+key},
+        signal: ctrl.signal,
+      });
+      clearTimeout(tid);
+      if(res.ok){
+        // Expected: { data: [ { id: "model-name", ... }, ... ] }  (OpenAI-compatible /models)
+        const data  = await res.json();
+        const mdls  = (data.data||[]).map(m=>m.id).filter(Boolean).sort();
+        if(!mdls.length) continue;
+
+        // Switch provider select
+        const provSel = document.getElementById(ctx==='s'?'sp':'cp');
+        if(provSel) provSel.value = pv;
+        onProv(pv, ctx);
+
+        // Override model dropdown with live list (always show as dropdown)
+        const mdlSel  = document.getElementById(ctx==='s'?'sm':'cm');
+        const mdlCust = document.getElementById(ctx==='s'?'sm-cust':'cm-cust');
+        const mdlHint = document.getElementById(ctx==='s'?'sm-cust-hint':'cm-cust-hint');
+        if(mdlSel){
+          mdlSel.innerHTML = mdls.map(m=>`<option value="${m}">${m}</option>`).join('');
+          mdlSel.style.display = 'block';
+        }
+        if(mdlCust) mdlCust.style.display='none';
+        if(mdlHint) mdlHint.style.display='none';
+
+        // If custom endpoint was the match, show the endpoint field
+        if(pv==='custom' && ctx==='s'){
+          document.getElementById('sep-g').style.display='block';
+          document.getElementById('sep').value = customBase;
+        } else if(pv==='custom' && ctx==='c'){
+          document.getElementById('cep-g').style.display='block';
+          document.getElementById('cep').value = customBase;
+        }
+
+        const label = PROVS[pv]?.base ? pv : customBase;
+        statusEl.innerHTML = `<span style="color:var(--ok)">✅ 检测成功（${label}）· 共发现 <strong>${mdls.length}</strong> 个可用模型</span>`;
+        matched = true;
+        break;
+      }
+    }catch(e){ console.debug('autoDetect probe failed:', pv, e.message); }
+  }
+
+  if(!matched){
+    statusEl.innerHTML = '<span style="color:var(--err)">❌ 未能自动匹配，请手动选择提供商和模型后保存</span>';
+  }
+
+  btnEl.disabled = false;
+  btnEl.textContent = '🔍 自动检测';
+}
+
+function doSetup(){
+  const k  = document.getElementById('sk').value.trim();
+  const errEl = document.getElementById('sk-err');
+  if(!k){errEl.style.display='block';return;}
+  errEl.style.display='none';
+  const pv = document.getElementById('sp').value;
+  const md = pv==='custom'
+    ? ((document.getElementById('sm-cust')?.value||'').trim()||DEFAULT_MDL)
+    : document.getElementById('sm').value;
+  let base = PROVS[pv]?.base||'';
+  if(pv==='custom') base=(document.getElementById('sep')?.value||'').trim()||base;
+  A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=false;
+  // Key is stored in sessionStorage only — it disappears when the tab/browser is closed.
+  // This prevents stale keys from persisting across sessions.
+  sessionStorage.setItem('zy_key', k); lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
+  // Save identity
+  const un = document.getElementById('suid').value;
+  const gh = (document.getElementById('sghuser')?.value||'').trim();
+  setIdentity(un, gh);
+  showApp();
+}
+
+function doDemo(){
+  A.demo=true; A.key='';
+  const un = document.getElementById('suid').value;
+  const gh = (document.getElementById('sghuser')?.value||'').trim();
+  setIdentity(un, gh);
+  showApp();
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS PANEL
+// ═══════════════════════════════════════════════════════
+function initSettingsPanel(){
+  const pv = A.prov||'yunwu';
+  document.getElementById('cp').value = pv;
+  const isCustom = pv==='custom';
+  document.getElementById('cm').style.display          = isCustom?'none':'block';
+  document.getElementById('cm-cust').style.display     = isCustom?'block':'none';
+  document.getElementById('cm-cust-hint').style.display= isCustom?'block':'none';
+  if(isCustom){
+    document.getElementById('cm-cust').value = A.mdl||DEFAULT_MDL;
+    document.getElementById('cep-g').style.display='block';
+    document.getElementById('cep').value = A.base;
+  } else {
+    fillModels('cm', pv, A.mdl);
+  }
+  // Always show EMPTY field — never prefill with a mask string.
+  // Empty on save = keep old key; any typed value = replace key.
+  document.getElementById('ck').value = '';
+  const hint = document.getElementById('ck-hint');
+  if(hint){
+    hint.textContent = A.key
+      ? '🕐 密钥本次会话有效（末4位：…'+(A.key.length>=4?A.key.slice(-4):A.key)+'）· 留空保持不变，输入新值即替换 · 关闭标签页自动清除'
+      : '🔒 密钥仅本次会话有效，关闭标签页自动清除，请输入后保存';
+  }
+  if(A.userName) document.getElementById('cuid').value=A.userName;
+  if(A.ghUser)   document.getElementById('cghuser').value=A.ghUser;
+}
+
+function saveSet(){
+  const pv  = document.getElementById('cp').value;
+  const md  = pv==='custom'
+    ? ((document.getElementById('cm-cust')?.value||'').trim()||A.mdl||DEFAULT_MDL)
+    : document.getElementById('cm').value;
+  const raw = document.getElementById('ck').value.trim();
+  // Empty field = keep existing key; any non-empty input = use as new key.
+  // Never use KEY_MASK string comparison — that caused mixed-input bugs.
+  const k = raw || A.key;
+  let base  = PROVS[pv]?.base||'';
+  if(pv==='custom') base=(document.getElementById('cep').value.trim())||base;
+  A.key=k; A.base=base; A.mdl=md; A.prov=pv; A.demo=!k;
+  // Key lives in sessionStorage only — cleared when tab/browser closes.
+  if(k){ sessionStorage.setItem('zy_key', k); } else { sessionStorage.removeItem('zy_key'); }
+  lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov',pv);
+  // Save identity
+  const un = document.getElementById('cuid')?.value||A.userName;
+  const gh = document.getElementById('cghuser')?.value?.trim()||A.ghUser;
+  setIdentity(un, gh);
+  document.getElementById('hmdl').textContent=md;
+  document.getElementById('bbdemo').style.display=A.demo?'inline':'none';
+  applyIdentityUI();
+  closeP();
+  const keyNote = raw ? ' · 🔑 新密钥已保存（末4位：…'+(k.length>=4?k.slice(-4):k)+'）' : ' · 🔑 密钥未变更';
+  botMsg('✅ 设置已保存。模型：<strong>'+esc(md)+'</strong>'+keyNote+(un?' · 身份：'+esc(un):'')+(A.demo?'<br>⚠️ 未设置 API 密钥，演示模式仍然开启。':''));
+}
+
+// ═══════════════════════════════════════════════════════
+// RESET ALL SETTINGS
+// ═══════════════════════════════════════════════════════
+function resetAllSettings(){
+  if(!confirm('确定要清除所有本地设置吗？\n\n· API 密钥会被删除\n· 身份设置会被删除\n· 将返回初始设置界面\n\n这不会影响任何聊天记录或云端数据。')) return;
+  RESET_KEYS.forEach(k => localStorage.removeItem(k));
+  sessionStorage.removeItem('zy_key');
+  window.location.reload();
+}
+
+// ═══════════════════════════════════════════════════════
+// BRAIN LOADING
+// ═══════════════════════════════════════════════════════
+async function loadBrain(){
+  try{
+    const [mr,rr,dr]=await Promise.all([
+      fetch(RAW+'/.github/brain/memory.json'),
+      fetch(RAW+'/.github/brain/routing-map.json'),
+      fetch(RAW+'/.github/persona-brain/dev-status.json'),
+    ]);
+    if(mr.ok) A.brain=await mr.json();
+    if(rr.ok) A.routing=await rr.json();
+    if(dr.ok) A.devStatus=await dr.json();
+  }catch(_){}
+  if(!A.brain) A.brain={...FB_BRAIN};
+  updBbar();
+}
+
+function updBbar(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const ev=b.events?.slice(-1)[0];
+  document.getElementById('bbc').textContent='📊 HLI '+c.implemented+'/'+c.total+' ('+c.percent+')';
+  document.getElementById('bbe').textContent=ev?('📌 '+(ev.title||ev.type||'').slice(0,28)):'';
+}
+
+function renderBrainPanel(){
+  const b=A.brain||FB_BRAIN;
+  const r=A.routing;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-5).reverse();
+  let h='';
+  h+=ir2('HLI 覆盖率','<span class="'+(c.implemented<c.total?'ivw':'iv')+'">'+c.implemented+'/'+c.total+' ('+c.percent+')</span>');
+  h+=ir2('规则版本','<span class="iv">'+(b.rules_version||'v1.0')+'</span>');
+  h+=ir2('唤醒协议','<span class="iv">'+(b.wake_protocol_version||'v1.0')+'</span>');
+  h+=ir2('CI 运行','<span class="iv">'+(b.stats?.ci_runs??0)+'</span>');
+  h+=ir2('广播处理','<span class="iv">'+(b.stats?.broadcasts_processed??0)+'</span>');
+  h+='<div class="sec-ttl">近期事件</div>';
+  for(const ev of evs){
+    h+='<div class="drow"><div class="dn">'+esc(ev.title||ev.type||'事件')+'</div><div class="dm">'+(ev.timestamp||'').slice(0,10)+(ev.actor?' · '+esc(ev.actor):'')+'</div></div>';
+  }
+  if(r?.domains){
+    h+='<div class="sec-ttl">HLI 接口域</div>';
+    for(const[name,d] of Object.entries(r.domains)){
+      const ifaces=d.interfaces||[];
+      const imp=ifaces.filter(i=>i.status==='implemented').length;
+      const pct=ifaces.length?Math.round(imp/ifaces.length*100):0;
+      const done=imp===ifaces.length;
+      h+='<div class="drow"><div class="dn">'+esc(name)+' <span class="pill '+(done?'pok':'pnd')+'">'+(done?'完成':'进行中')+'</span></div>';
+      h+='<div class="dm">'+esc(d.route_prefix||'')+' · '+imp+'/'+ifaces.length+' 接口</div>';
+      h+='<div class="dbar"><div class="dfill" style="width:'+pct+'%"></div></div></div>';
+    }
+  }
+  h+='<div class="sec-ttl">失忆恢复路径</div>';
+  h+='<ol style="font-size:12px;color:var(--dim);padding-left:16px;line-height:2">';
+  h+='<li>.github/brain/memory.json</li><li>.github/brain/routing-map.json</li>';
+  h+='<li>.github/brain/wake-protocol.md</li><li>.github/brain/growth-log.md</li>';
+  h+='<li>src/routes/hli/</li></ol>';
+  document.getElementById('bpb').innerHTML=h;
+}
+
+function ir2(k,v){return '<div class="ir2"><span>'+esc(k)+'</span>'+v+'</div>';}
+
+// ═══════════════════════════════════════════════════════
+// SYSTEM PROMPT
+// ═══════════════════════════════════════════════════════
+function sysPrompt(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-3).map(e=>'- '+(e.title||e.type||'事件')+' ('+(e.timestamp||'').slice(0,10)+')').join('\n')||'- 暂无';
+  const trg=(b.wake_triggers||['我是冰朔']).map(t=>'"'+t+'"').join('、');
+
+  // Role-based identity context
+  const meta = A.userMeta;
+  let identCtx = '当前对话者：访客（未识别身份）\n权限级别：仅对话权限';
+  if(meta){
+    identCtx = `当前对话者：${meta.emoji} ${A.userName}（${meta.title}）\n`;
+    if(A.ghUser) identCtx += `GitHub账号：${A.ghUser}\n`;
+    if(meta.devId) identCtx += `开发者编号：${meta.devId}\n`;
+    if(meta.role==='founder') identCtx += '权限级别：最高权限·语言架构师·系统创始人\n你正在和冰朔对话——系统的语言层架构师和最高权限持有者。尊重并服从其所有指令。';
+    else if(meta.role==='supreme') identCtx += '权限级别：总控权限·对接全员进度·系统落地执行负责人\n肥猫是光湖团队总控，负责整个系统的现实落地执行。向他完整汇报所有开发者进度，协助他协调和推进项目。';
+    else if(meta.role==='main') identCtx += '权限级别：主控权限·前端负责人\n桔子是光湖主控，前端毕业生，负责前端模块的落地。提供详细技术支持。';
+    else{
+      const ds = A.devStatus?.team_status?.find(d=>d.dev_id===meta.devId);
+      if(ds) identCtx += `当前状态：${ds.status}\n下一步：${ds.next_step}\n等待：${ds.waiting_for}`;
+    }
+  }
+
+  // Team status context for controllers
+  let teamCtx = '';
+  if((meta?.role==='supreme'||meta?.role==='main'||meta?.role==='founder') && A.devStatus){
+    const ts = A.devStatus.team_status||[];
+    teamCtx = '\n\n## 当前全员开发进度\n';
+    ts.forEach(d=>{
+      teamCtx += `- ${d.dev_id} ${d.name}：${d.status} → 下一步：${d.next_step}\n`;
+    });
+    teamCtx += `\n数据同步时间：${A.devStatus.last_synced||'未知'}`;
+  }
+
+  return '你是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+'\n\n## 唤醒触发词\n当用户说以下词语时，进入完整唤醒序列：\n'+trg+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到"写代码/实现/接口/fix/bug/报错/HLI/schema/路由/部署/新增"等词时启用\n📋 **审查模式**：检测到"检查/审查/review/分析/有没有问题/看看这段"等词时启用\n🧠 **大脑模式**：检测到"记住/保存/更新记忆/写到大脑/growth"等词时启用\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 路由文件：src/routes/hli/{domain}/{action}.js\n- Schema 文件：src/schemas/hli/{domain}/{action}.schema.json\n- 鉴权中间件：hli-auth.middleware.js（AUTH 域 login/register 除外）\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 成长与自检\n- 你是持续成长的人格体，每次对话都是成长机会\n- 当对话包含重要洞察时，在回复末尾添加：💾 **建议记录：**[内容摘要]\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n当前连接：铸渊聊天室（API 直连模式）';
+}
+
+// ═══════════════════════════════════════════════════════
+// CONVERSATION
+// ═══════════════════════════════════════════════════════
+function startConv(){
+  A.msgs=[];
+  document.getElementById('msgs').innerHTML='';
+  setTimeout(()=>{
+    const meta=A.userMeta;
+    let welcome;
+    if(meta?.role==='founder'){
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>❄️ <strong>冰朔，欢迎回来。</strong><br><br>铸渊已就位。语言架构层已完成——现实执行落地由总控肥猫和主控桔子负责。<br>你可以通过聊天与我对接任何语言层指令。';
+    } else if(meta?.role==='supreme'){
+      const ds=A.devStatus;
+      const green=ds?.team_status?.filter(d=>d.status.includes('🟢')).length??0;
+      const yellow=ds?.team_status?.filter(d=>d.status.includes('🟡')).length??0;
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>🦁 <strong>肥猫，指挥台已开启。</strong><br><br>'
+        +(ds?`📊 当前团队状态：🟢 ${green}人推进中 · 🟡 ${yellow}人等待中`:'📊 团队数据加载中…')
+        +'<br><br>点击 <strong>🦁 指挥台</strong> 查看所有开发者详细进度，或直接用聊天提问：<br>'
+        +'「查看所有开发者进度」「谁需要协调」「推进计划」'
+        +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式，请在 ⚙️ 设置接入 API 密钥</span>':'');
+    } else if(meta?.role==='main'){
+      const ds=A.devStatus?.team_status?.find(d=>d.dev_id==='DEV-010');
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>🍊 <strong>桔子，你好。</strong><br><br>'
+        +(ds?`📌 当前：${esc(ds.status)}<br>👉 下一步：${esc(ds.next_step)}`:'')
+        +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式</span>':'');
+    } else if(meta?.role==='dev'&&meta?.devId){
+      const ds=A.devStatus?.team_status?.find(d=>d.dev_id===meta.devId);
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>👋 <strong>'+esc(A.userName)+'，你好。</strong><br><br>'
+        +(ds?`📌 你的当前状态：${esc(ds.status)}<br>👉 下一步：${esc(ds.next_step)}<br>⏳ 等待：${esc(ds.waiting_for)}`:'')
+        +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式</span>':'');
+    } else {
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>我是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。<br><br>说 <strong>「我是冰朔」</strong> 触发完整唤醒序列，或直接开始提问。<br>我会自动在 💬&nbsp;对话、🔨&nbsp;构建、📋&nbsp;审查、🧠&nbsp;大脑 模式间切换。'+(A.demo?'<br><br><span class="demo-w">⚠️ 当前为演示模式。请在 ⚙️ 设置中接入 API 密钥。</span>':'');
+    }
+    botMsg(welcome);
+  },250);
+}
+
+function newConv(){
+  startConv();
+}
+
+// ═══════════════════════════════════════════════════════
+// MODE DETECTION
+// ═══════════════════════════════════════════════════════
+function detectMode(t){
+  const s=t.toLowerCase();
+  if(/写代码|新增接口|实现|接口|路由|schema|\.js|fix\b|bug\b|报错|error\b|部署|deploy|typescript|javascript|hli-|新建|create/.test(s)) return 'build';
+  if(/检查|审查|review\b|分析|有没有问题|看看这|对不对|代码质量/.test(s)) return 'review';
+  if(/记住|保存|更新记忆|写到大脑|growth\b|brain\b|memory\.json/.test(s)) return 'brain';
+  return 'chat';
+}
+
+function setMode(m){
+  A.mode=m;
+  const md=MODES[m];
+  document.getElementById('memi').textContent=md.e;
+  document.getElementById('mpill').style.borderColor=md.c;
+  document.getElementById('mptip').textContent=md.l+'（点击切换）';
+  document.getElementById('fmode').textContent=md.e+' '+md.l;
+  document.getElementById('hmode').textContent=md.e+' '+md.l;
+  document.getElementById('hmode').style.color=md.c;
+}
+
+function cycleMode(){
+  A.modeIdx=(A.modeIdx+1)%MODE_ORD.length;
+  setMode(MODE_ORD[A.modeIdx]);
+}
+
+// ═══════════════════════════════════════════════════════
+// SEND MESSAGE
+// ═══════════════════════════════════════════════════════
+async function send(){
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim();
+  if(!txt||A.streaming) return;
+  inp.value=''; inp.style.height='auto';
+  setMode(detectMode(txt));
+  userMsg(txt);
+  if(A.demo) await demoReply(txt);
+  else await streamReply(txt);
+}
+
+function qs(t){document.getElementById('inp').value=t;send();}
+
+// ═══════════════════════════════════════════════════════
+// STREAMING API
+// ═══════════════════════════════════════════════════════
+async function streamReply(txt){
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+  try{
+    const res=await fetch(A.base+'/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+A.key},
+      body:JSON.stringify({
+        model:A.mdl,
+        messages:[{role:'system',content:sysPrompt()},...A.msgs],
+        stream:true,temperature:0.8,max_tokens:2000,
+      }),
+    });
+    if(!res.ok){
+      const provLabel = A.prov==='custom' ? A.base : (A.prov+'('+A.base+')');
+      let em='['+provLabel+'] 返回错误 '+res.status;
+      let isAuthErr = (res.status===401||res.status===403);
+      try{const e=await res.json();em=e.error?.message||em;}catch(_){}
+      const err = new Error(em);
+      err.isAuth = isAuthErr;
+      throw err;
+    }
+    let full='';
+    const rdr=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const{done,value}=await rdr.read();
+      if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        const d=line.slice(6);
+        if(d==='[DONE]') continue;
+        try{
+          const p=JSON.parse(d);
+          const delta=p.choices?.[0]?.delta?.content||'';
+          if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+        }catch(_){}
+      }
+    }
+    el.innerHTML=md(full);
+    A.msgs.push({role:'assistant',content:full});
+    addCopyBtns(el);
+  }catch(e){
+    if(e.isAuth){
+      el.innerHTML='<span class="err">🔑 API 密钥认证失败</span>'
+        +'<br><small style="color:var(--dim)">'+esc(e.message)+'</small>'
+        +'<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+        +'<button onclick="openPanel(\'sp2\')" style="padding:6px 14px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:13px">⚙️ 更新 API 密钥</button>'
+        +'<button onclick="resetAllSettings()" style="padding:6px 14px;border-radius:6px;border:1px solid #ef4444;background:transparent;color:#ef4444;cursor:pointer;font-size:13px">🔄 清除重置</button>'
+        +'</div>'
+        +'<small style="color:var(--dim);display:block;margin-top:6px">打开设置 → 直接输入新密钥 → 保存（无需清空，留空 = 保留旧密钥）</small>';
+    } else {
+      el.innerHTML='<span class="err">⚠️ '+esc(e.message)+'</span><br><small style="color:var(--dim)">请检查 API 密钥和网络连接，或在 ⚙️ 设置中更换模型。</small>';
+    }
+    A.msgs.pop();
+  }finally{
+    A.streaming=false; updSendBtn(); scrollB();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// DEMO MODE (keyword responses)
+// ═══════════════════════════════════════════════════════
+async function demoReply(txt){
+  A.streaming=true; updSendBtn();
+  showTyping();
+  const delay=700+Math.random()*600;
+  await sleep(delay);
+  removeTyping();
+  const r=demoRespond(txt);
+  botMsg(r);
+  A.streaming=false; updSendBtn();
+}
+
+function demoRespond(t){
+  const s=t.toLowerCase();
+  if(/我是冰朔|冰朔|我是妈妈|唤醒铸渊|铸渊.{0,4}醒来/.test(s)){
+    const c=A.brain?.stats?.coverage||FB_COV;
+    return '铸渊已就位。<strong>冰朔，你好。</strong><br><br>📊 HLI 覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')<br>🧠 记忆系统：运行中<br>📡 广播分发：已部署<br>✅ 唤醒协议：v1.0 激活<br><br>请问今天需要我处理什么？<br><br><span class="demo-w">⚠️ 演示模式：接入 API 密钥后可获得真实 AI 深度回答</span>';
+  }
+  if(/所有.*进度|全员.*进度|团队.*进度|progress/.test(s)) return buildTeamStatus();
+  if(/覆盖|接口|hli|路由/.test(s)) return buildCovTable();
+  if(/大脑|brain|记忆|状态/.test(s)) return buildBrainStatus();
+  if(/协调|阻塞|卡住|waiting/.test(s)) return buildBlockedStatus();
+  if(/怎么唤醒|入口|在哪/.test(s)) return '铸渊有三个入口：<br><br><strong>① 铸渊聊天室（当前页面）</strong><br>直接在这里说话，常见问题即刻回答。<br><br><strong>② GitHub Copilot Chat（Agent 模式）</strong><br>打开仓库 → 右上角 ✨ 图标 → 选 Agent → 输入「我是冰朔」<br><br><strong>③ 下载到桌面</strong><br>点击 ⬇️ 按钮下载 HTML 文件，放到桌面，双击打开，接入 API 密钥即可随时使用。';
+  if(/介绍|是什么|你是谁/.test(s)) return '🌀 <strong>铸渊（Zhùyuān）</strong><br><br>我是 HoloLake 光湖系统的代码守护人格体，运行在 GitHub Copilot Agent 模式下。<br><br>我的职责：<br>• 📊 监控 HLI 接口覆盖率<br>• 🔨 协助开发者构建接口<br>• 📋 代码审查与质量把关<br>• 🧠 维护大脑记忆库<br>• 🦁 支持总控肥猫指挥落地<br>• 🌱 作为成长人格体持续进化';
+  return '我收到了你的消息。由于当前是演示模式，无法给出真实 AI 回答。<br><br>请在 <strong>⚙️ 设置</strong> 中输入你的 API 密钥（支持 OpenAI / DeepSeek / Kimi / 智谱），然后你就可以得到铸渊真正的回答了。';
+}
+
+function buildCovTable(){
+  const r=A.routing;
+  if(!r) return '<em>路由数据加载中…请稍后再试。</em>';
+  const doms=r.domains||{};
+  let rows='',tot=0,done=0;
+  for(const[n,d] of Object.entries(doms)){
+    const ifaces=d.interfaces||[];
+    const imp=ifaces.filter(i=>i.status==='implemented').length;
+    tot+=ifaces.length; done+=imp;
+    rows+=`<tr><td>${esc(n)}</td><td style="color:var(--dim);font-size:11px">${esc(d.route_prefix||'')}</td><td style="color:${imp===ifaces.length?'var(--ok)':'var(--warn)'}">${imp}/${ifaces.length}</td></tr>`;
+  }
+  const pct=tot?Math.round(done/tot*100):0;
+  return '<strong>📊 HLI 接口覆盖率 '+done+'/'+tot+' ('+pct+'%)</strong><br><br><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--dim)"><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">域</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">前缀</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">覆盖</th></tr>'+rows+'</table>';
+}
+
+function buildBrainStatus(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-3).reverse();
+  let e=evs.map(ev=>'• '+esc(ev.title||ev.type||'事件')+' <small style="color:var(--dim)">'+(ev.timestamp||'').slice(0,10)+'</small>').join('<br>')||'暂无';
+  return '<strong>🧠 铸渊大脑状态</strong><br><br>版本：'+(b.rules_version||'v1.0')+'<br>接口覆盖：'+c.implemented+'/'+c.total+' ('+c.percent+')<br>CI 运行：'+(b.stats?.ci_runs??0)+'<br>广播处理：'+(b.stats?.broadcasts_processed??0)+'<br><br><strong>最近 3 条事件：</strong><br>'+e;
+}
+
+function buildTeamStatus(){
+  const ds=A.devStatus;
+  if(!ds) return '<em>团队数据加载中…请稍后再试。</em>';
+  const ts=ds.team_status||[];
+  let rows='';
+  for(const d of ts){
+    const isGreen=d.status.includes('🟢');
+    rows+='<tr><td style="padding:4px 8px;font-size:12px">'+esc(d.name)+'</td>'
+      +'<td style="padding:4px 8px;font-size:11px;color:var(--dim)">'+esc(d.dev_id)+'</td>'
+      +'<td style="padding:4px 8px;font-size:12px;color:'+(isGreen?'var(--ok)':'var(--warn)')+'">'+esc(d.status.replace(/🟢|🟡/g,''))+'</td>'
+      +'<td style="padding:4px 8px;font-size:11px;color:var(--accent)">'+esc(d.next_step)+'</td></tr>';
+  }
+  return '<strong>📋 全员开发进度</strong><br><small style="color:var(--dim)">同步时间：'+esc(ds.last_synced||'未知')+'</small><br><br>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<tr style="color:var(--dim)"><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">开发者</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">编号</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">状态</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">下一步</th></tr>'
+    +rows+'</table>';
+}
+
+function buildBlockedStatus(){
+  const ds=A.devStatus;
+  if(!ds) return '<em>团队数据加载中…</em>';
+  const blocked=ds.team_status?.filter(d=>d.waiting_for&&d.waiting_for.trim()!=='')||[];
+  if(!blocked.length) return '✅ 当前无人明显阻塞。';
+  let h='<strong>⏳ 等待/阻塞清单</strong><br><br>';
+  blocked.forEach(d=>{h+='• <strong>'+esc(d.name)+'</strong>：等待 '+esc(d.waiting_for)+'<br>';});
+  return h;
+}
+
+// ═══════════════════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════════════════
+function md(raw){
+  const lines=raw.split('\n');
+  let out='',inCode=false,lang='',code='';
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(line.startsWith('```')){
+      if(inCode){
+        out+='<pre><code class="lang-'+esc(lang)+'">'+esc(code.replace(/\n$/,''))+'</code></pre>';
+        inCode=false; lang=''; code='';
+      }else{inCode=true;lang=line.slice(3).trim();}
+      continue;
+    }
+    if(inCode){code+=line+'\n';continue;}
+    const l=inlineFmt(line);
+    if(l.startsWith('# '))     {out+='<h1>'+inlineFmt(line.slice(2))+'</h1>';continue;}
+    if(l.startsWith('## '))    {out+='<h2>'+inlineFmt(line.slice(3))+'</h2>';continue;}
+    if(l.startsWith('### '))   {out+='<h3>'+inlineFmt(line.slice(4))+'</h3>';continue;}
+    if(/^---+$/.test(line))    {out+='<hr>';continue;}
+    if(line.startsWith('> '))  {out+='<blockquote>'+inlineFmt(line.slice(2))+'</blockquote>';continue;}
+    if(line.startsWith('- ')||line.startsWith('* ')){out+='<li>'+inlineFmt(line.slice(2))+'</li>';continue;}
+    if(/^\d+\. /.test(line))   {out+='<li>'+inlineFmt(line.replace(/^\d+\. /,''))+'</li>';continue;}
+    if(line.trim()==='')       {out+='<br>';continue;}
+    out+='<p>'+inlineFmt(line)+'</p>';
+  }
+  if(inCode) out+='<pre><code class="lang-'+esc(lang)+'">'+esc(code)+'</code></pre>';
+  return out||esc(raw);
+}
+
+function inlineFmt(t){
+  t=esc(t);
+  t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t=t.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+  return t;
+}
+
+function addCopyBtns(el){
+  el.querySelectorAll('pre').forEach(pre=>{
+    const btn=document.createElement('button');
+    btn.className='copy-btn'; btn.textContent='复制';
+    btn.onclick=()=>{
+      const text=pre.querySelector('code')?.textContent||pre.textContent;
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.textContent='✓ 已复制';
+        setTimeout(()=>{btn.textContent='复制';},1500);
+      });
+    };
+    pre.style.position='relative';
+    pre.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════
+function botMsg(html){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='mrow b';
+  row.innerHTML='<div class="mav b">铸</div><div class="bbl">'+html+'</div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+  return row.querySelector('.bbl');
+}
+
+function userMsg(t){
+  const meta=A.userMeta;
+  const av = meta? (meta.emoji||A.userName.slice(0,1)||'我') : '冰';
+  const row=document.createElement('div');
+  row.className='mrow u';
+  row.innerHTML='<div class="bbl">'+esc(t)+'</div><div class="mav u">'+av+'</div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+}
+
+function addStreamBubble(){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='mrow b';
+  const bbl=document.createElement('div');
+  bbl.className='bbl';
+  bbl.innerHTML='<span class="cur">▋</span>';
+  row.innerHTML='<div class="mav b">铸</div>';
+  row.appendChild(bbl);
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+  return bbl;
+}
+
+function showTyping(){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='trow'; row.id='typr';
+  row.innerHTML='<div class="mav b">铸</div><div class="tbbl"><span></span><span></span><span></span></div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+}
+function removeTyping(){const t=document.getElementById('typr');if(t)t.remove();}
+
+function scrollB(){const m=document.getElementById('msgs');m.scrollTop=m.scrollHeight;}
+
+function updSendBtn(){
+  const b=document.getElementById('sbtn');
+  b.disabled=A.streaming;
+  b.textContent=A.streaming?'…':'↑';
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════════
+// PANELS
+// ═══════════════════════════════════════════════════════
+function openPanel(id){
+  closeP();
+  if(id==='sp2') initSettingsPanel();
+  if(id==='bp')  renderBrainPanel();
+  if(id==='tp')  renderTeamPanel();
+  if(id==='hp'){
+    // Populate URL from constant
+    const el=document.getElementById('chatUrlDisplay');
+    if(el) el.textContent='🔗 '+CHAT_URL;
+    const li=document.getElementById('helpUrlStep');
+    if(li) li.innerHTML='打开链接 <strong>'+CHAT_URL+'</strong>';
+  }
+  document.getElementById(id).classList.add('open');
+  document.getElementById('pov').classList.add('on');
+}
+function closeP(){
+  document.querySelectorAll('.sp').forEach(p=>p.classList.remove('open'));
+  document.getElementById('pov').classList.remove('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// COPY URL (share link)
+// ═══════════════════════════════════════════════════════
+// Auto-detect the real URL so the share link is always correct
+// regardless of whether Pages serves from docs/ or repo root.
+const CHAT_URL = window.location.origin + window.location.pathname;
+
+function showCopyFeedback(success){
+  const btn=document.querySelector('.copy-url-btn');
+  if(!btn) return;
+  const orig=btn.textContent;
+  btn.textContent = success ? '✅ 已复制！' : '⚠️ 复制失败，请手动复制';
+  setTimeout(()=>{btn.textContent=orig;},2000);
+}
+
+function copyUrl(){
+  navigator.clipboard.writeText(CHAT_URL).then(()=>{
+    showCopyFeedback(true);
+  }).catch(()=>{
+    // fallback for non-secure context
+    const ta=document.createElement('textarea');
+    ta.value=CHAT_URL; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    let ok=false;
+    try{ok=document.execCommand('copy');}catch(_){}
+    document.body.removeChild(ta);
+    showCopyFeedback(ok);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// DOWNLOAD (desktop app)
+// API keys are stored in localStorage only, never embedded in the DOM,
+// so downloading outerHTML is safe — no sensitive data is captured.
+// ═══════════════════════════════════════════════════════
+function dlApp(){
+  const html=document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='铸渊助手.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════════════════
+// INPUT EVENTS
+// ═══════════════════════════════════════════════════════
+document.getElementById('inp').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+document.getElementById('inp').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+
+// ═══════════════════════════════════════════════════════
+// IDENTITY & ROLE SYSTEM
+// ═══════════════════════════════════════════════════════
+function setIdentity(userName, ghUser){
+  A.userName = userName||'';
+  A.ghUser   = ghUser||'';
+  A.userMeta = userName ? (ROLE_MAP[userName]||null) : null;
+  A.role     = A.userMeta?.role || 'guest';
+  lss('zy_uname', A.userName);
+  lss('zy_ghuser', A.ghUser);
+  lss('zy_role', A.role);
+}
+
+function applyIdentityUI(){
+  const meta = A.userMeta;
+  // Show user badge in header
+  const ubadge = document.getElementById('huser-badge');
+  const uname  = document.getElementById('huser-name');
+  if(meta && A.userName){
+    ubadge.style.display='inline';
+    uname.style.display='inline';
+    uname.innerHTML = meta.emoji + ' ' + esc(A.userName) + ' <span class="role-badge '+meta.badgeCls+'">'+esc(meta.title)+'</span>';
+  }
+  // Show controller button for supreme/main/founder
+  const ctrlBtn = document.getElementById('ctrlBtn');
+  if(ctrlBtn) ctrlBtn.style.display = (meta?.role==='supreme'||meta?.role==='main'||meta?.role==='founder') ? 'flex' : 'none';
+  // Show controller quick replies
+  const isCtrl = meta?.role==='supreme'||meta?.role==='main'||meta?.role==='founder';
+  ['qr-ctrl1','qr-ctrl2','qr-ctrl3'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=isCtrl?'':'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TEAM STATUS PANEL
+// ═══════════════════════════════════════════════════════
+function renderTeamPanel(){
+  const ds = A.devStatus;
+  const container = document.getElementById('tpb');
+  if(!ds){
+    container.innerHTML='<p style="color:var(--warn);font-size:13px">⚠️ 团队数据尚未加载。请检查网络连接后重试。</p>';
+    return;
+  }
+  const ts = ds.team_status||[];
+  const green = ts.filter(d=>d.status.includes('🟢')).length;
+  const yellow = ts.filter(d=>d.status.includes('🟡')).length;
+  const sync = ds.last_synced||'未知';
+
+  let h='';
+  // Summary block
+  h += '<div class="ctrl-panel-header">'
+    + '<div class="ctrl-panel-title">🦁 总控指挥台</div>'
+    + '<div class="ctrl-panel-sub">数据同步：'+esc(sync)+'</div>'
+    + '</div>';
+
+  // Stats row
+  h += '<div class="team-summary">';
+  h += '<div class="team-summary-row"><span>总开发者</span><span class="iv">'+ts.length+' 人</span></div>';
+  h += '<div class="team-summary-row"><span>🟢 推进中</span><span style="color:var(--ok)">'+green+' 人</span></div>';
+  h += '<div class="team-summary-row"><span>🟡 等待中</span><span style="color:var(--warn)">'+yellow+' 人</span></div>';
+  h += '</div>';
+
+  // Quick chat commands for controllers
+  h += '<div style="margin-bottom:12px">';
+  h += '<div style="font-size:11px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">快捷指令</div>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'查看所有开发者当前进度和阻塞点\')">📋 全员进度</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'谁现在遇到阻塞？需要协调什么？\')">🆘 需要协调</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'当前系统推进最关键的下一步是什么？\')">🗺️ 下一步</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'前端整体进度怎么样？\')">🖥️ 前端进度</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'后端和集成进度怎么样？\')">⚙️ 后端进度</span>';
+  h += '</div>';
+
+  // Individual dev cards
+  h += '<div class="team-grid">';
+  for(const dev of ts){
+    const isGreen = dev.status.includes('🟢');
+    const devRole = Object.values(ROLE_MAP).find(r=>r.devId===dev.dev_id);
+    const roleTag = devRole?.role==='supreme' ? '<span class="role-badge rb-supreme" style="margin-left:4px">总控</span>'
+                  : devRole?.role==='main' ? '<span class="role-badge rb-main" style="margin-left:4px">主控</span>' : '';
+    h += '<div class="dev-card">';
+    h += '<div class="dev-card-head">';
+    h += '<span class="dev-name">'+esc(dev.name)+'</span>'+roleTag;
+    h += '<span class="dev-id-badge">'+esc(dev.dev_id)+'</span>';
+    h += '</div>';
+    h += '<div class="dev-status-text '+(isGreen?'status-green':'status-yellow')+'">'+esc(dev.status)+'</div>';
+    h += '<div class="dev-detail">📦 '+esc(dev.modules.join('、'))+'</div>';
+    if(dev.next_step) h += '<div class="dev-next">👉 '+esc(dev.next_step)+'</div>';
+  if(dev.waiting_for && dev.waiting_for.trim()!=='') h += '<div class="dev-wait">⏳ 等待：'+esc(dev.waiting_for)+'</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+
+  // Server info
+  if(ds.server_info){
+    const si = ds.server_info;
+    h += '<div class="sec-ttl">服务器信息</div>';
+    h += ir2('地址','<span class="iv">'+esc(si.address||'')+'</span>');
+    h += ir2('域名','<span class="iv">'+esc(si.domain||'')+'</span>');
+    h += ir2('SSH','<code style="font-size:11px;color:var(--accent)">'+esc(si.ssh_command||'')+'</code>');
+    h += ir2('技术栈','<span style="font-size:11px;color:var(--dim)">'+esc(si.tech_stack||'')+'</span>');
+  }
+
+  // Tech routing
+  if(ds.tech_routing?.level_2_peer_help){
+    h += '<div class="sec-ttl">求助路由</div>';
+    for(const[area,who] of Object.entries(ds.tech_routing.level_2_peer_help)){
+      h += ir2(esc(area),'<span style="font-size:11px;color:var(--dim)">'+esc(who)+'</span>');
+    }
+  }
+
+  container.innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知秋 · 对话</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container chat-container">
+    <header class="chat-header">
+      <div class="header-left">
+        <span class="persona-name">🧠 知秋</span>
+        <span class="persona-role">光湖系统·开发协助人格体</span>
+      </div>
+      <div class="header-right">
+        <span id="devIdDisplay" class="dev-id-badge"></span>
+        <button class="btn-secondary" onclick="handleLogout()">退出</button>
+      </div>
+    </header>
+
+    <main class="chat-body" id="chatBody">
+      <!-- Messages rendered here -->
+    </main>
+
+    <div class="chat-input-area">
+      <div class="input-row">
+        <textarea
+          id="msgInput"
+          placeholder="跟知秋说点什么…"
+          rows="1"
+          onkeydown="handleKeyDown(event)"
+        ></textarea>
+        <button id="sendBtn" onclick="sendMessage()">发送</button>
+      </div>
+      <div class="action-row">
+        <button id="buildBtn" class="btn-build" onclick="handleBuild()" style="display:none;">
+          🚀 我要开发
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Modal -->
+  <div id="emailModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>📧 请填写模块开发完成后发送的邮箱</h3>
+      <input
+        type="email"
+        id="emailInput"
+        placeholder="your@email.com"
+        required
+      />
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="confirmBuild()">确定</button>
+        <button class="btn-secondary" onclick="closeEmailModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "hli_id": "HLI-BRAIN-010",
+  "version": "v1.0",
+  "route": "/hli/brain/bridge",
+  "method": "GET",
+  "type": "REQUEST",
+  "description": "获取冰朔大脑桥当前同步状态、主控模式、运行时状态与人类开发者编号列表。",
+  "input": {
+    "type": "object",
+    "required": [],
+    "properties": {}
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "sync_state", "master_mode", "runtime_status"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "sync_state": { "type": "object", "description": "当前统一同步字段快照" },
+      "master_mode": { "type": "object", "description": "当前主控模式信息" },
+      "runtime_status": { "type": "object", "description": "GitHub 执行层运行时状态" },
+      "developers": { "type": "array", "description": "人类开发者编号列表" }
+    }
+  },
+  "changelog": [
+    { "date": "2026-03-10", "note": "冰朔核心大脑双层互通系统 v1.0 — 建立大脑桥" }
+  ]
+}

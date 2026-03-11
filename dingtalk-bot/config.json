@@ -1,0 +1,27 @@
+{
+  "server": {
+    "port": 3000
+  },
+  "dingtalk": {
+    "webhook": "https://oapi.dingtalk.com/robot/send?access_token=YOUR_BOT_TOKEN",
+    "appKey": "YOUR_APP_KEY",
+    "appSecret": "YOUR_APP_SECRET"
+  },
+  "modelApi": {
+    "url": "https://api.openai.com/v1/chat/completions",
+    "key": "YOUR_MODEL_API_KEY",
+    "model": "gpt-3.5-turbo"
+  },
+  "bitable": {
+    "appId": "YOUR_BITABLE_APP_ID",
+    "tableId": "YOUR_BITABLE_TABLE_ID"
+  },
+  "broadcastTemplates": {
+    "completed": "BC-{bcNumber}-{nextPhase}-ZZ · DEV-{devId} · {moduleName} · 环节{phaseNum} · {statusEmoji} · {summary}",
+    "partial": "BC-{bcNumber}-{nextPhase}-ZZ · DEV-{devId} · {moduleName} · 环节{phaseNum} · ⚠️ 部分完成 · {summary}",
+    "blocked": "BC-{bcNumber}-{nextPhase}-ZZ · DEV-{devId} · {moduleName} · 环节{phaseNum} · 🔴 阻塞 · {summary}"
+  },
+  "syslog": {
+    "keywords": ["SYSLOG", "BC-", "completed", "partial", "blocked"]
+  }
+}

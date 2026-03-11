@@ -1,0 +1,40 @@
+const express = require('express');
+const config = require('./config');
+const { handleWebhook } = require('./webhook');
+
+const app = express();
+app.use(express.json());
+
+// 健康检查接口
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'dingtalk-bot',
+    config_loaded: !!config.DINGTALK_APP_KEY,
+    webhook_path: '/webhook',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 原有根路径
+app.get('/', (req, res) => {
+  res.json({
+    message: '钉钉机器人服务运行中',
+    mode: 'webhook',
+    time: new Date().toLocaleString('zh-CN')
+  });
+});
+
+// 在文件开头添加这一行（和其他require放在一起）
+const handleWebhook = require('./webhook');
+
+// ... 中间代码不变 ...
+
+
+// 启动服务
+app.listen(config.PORT, () => {
+  console.log(`🤖 钉钉机器人服务启动成功！`);
+  console.log(`📡 HTTP服务: http://localhost:${config.PORT}`);
+  console.log(`🔗 Webhook地址: http://localhost:${config.PORT}/webhook`);
+  console.log(`🏥 健康检查: http://localhost:${config.PORT}/health`);
+});

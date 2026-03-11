@@ -1,0 +1,26 @@
+{
+  "hli_id": "HLI-REGISTRY-001",
+  "title": "开发者编号查询",
+  "description": "查询指定 EXP 编号的开发者信息（仅返回当前用户可见数据）",
+  "input": {
+    "type": "object",
+    "properties": {
+      "exp_id": {
+        "type": "string",
+        "pattern": "^EXP-\\d{3,}$",
+        "description": "开发者编号，格式 EXP-XXX"
+      }
+    },
+    "required": ["exp_id"]
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "exp_id": { "type": "string" },
+      "name": { "type": "string" },
+      "status": { "type": "string" },
+      "role": { "type": "string" },
+      "registered_at": { "type": "string" }
+    }
+  }
+}

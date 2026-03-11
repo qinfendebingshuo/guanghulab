@@ -1,37 +1,34 @@
+require('dotenv').config();
 const express = require('express');
-const config = require('./config');
-const { handleWebhook } = require('./webhook');
+const path = require('path');
+const handleWebhook = require('./webhook');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// 健康检查接口
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'dingtalk-bot',
-    config_loaded: !!config.DINGTALK_APP_KEY,
-    webhook_path: '/webhook',
-    timestamp: new Date().toISOString()
-  });
+    res.json({
+        status: 'ok',
+        time: new Date().toISOString(),
+        webhook_path: '/webhook'
+    });
 });
 
-// 原有根路径
 app.get('/', (req, res) => {
-  res.json({
-    message: '钉钉机器人服务运行中',
-    mode: 'webhook',
-    time: new Date().toLocaleString('zh-CN')
-  });
+    res.json({
+        message: '钉钉机器人服务运行中',
+        mode: 'webhook',
+        time: new Date().toLocaleString('zh-CN')
+    });
 });
 
-// Webhook 路由 - 接收钉钉消息
 app.post('/webhook', handleWebhook);
 
-// 启动服务
-app.listen(config.PORT, () => {
-  console.log(`🤖 钉钉机器人服务启动成功！`);
-  console.log(`📡 HTTP服务: http://localhost:${config.PORT}`);
-  console.log(`🔗 Webhook地址: http://localhost:${config.PORT}/webhook`);
-  console.log(`🏥 健康检查: http://localhost:${config.PORT}/health`);
+app.listen(PORT, () => {
+    console.log(`之之秋秋机器人启动：http://localhost:${PORT}`);
+    console.log(`Webhook: http://localhost:${PORT}/webhook`);
 });

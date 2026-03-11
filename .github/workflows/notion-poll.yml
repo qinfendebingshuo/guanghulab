@@ -1,0 +1,38 @@
+name: 铸渊 · Notion 工单轮询
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # 每15分钟轮询一次
+  workflow_dispatch:           # 手动触发
+
+jobs:
+  notion-poll:
+    name: 📡 轮询 Notion 工单簿
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 轮询工单簿 + 处理 + 回写
+        id: poll
+        env:
+          NOTION_API_TOKEN:  ${{ secrets.NOTION_API_TOKEN }}
+          WORKORDER_DB_ID:   ${{ vars.WORKORDER_DB_ID }}
+          SIGNAL_LOG_DB_ID:  ${{ vars.SIGNAL_LOG_DB_ID }}
+        run: node scripts/notion-signal-bridge.js poll
+
+      - name: 提交信号日志
+        if: success()
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add signal-log/ broadcasts-outbox/
+          git diff --cached --quiet || git commit -m "📡 Notion 信号处理 · $(date +%Y-%m-%dT%H:%M)"
+          git push

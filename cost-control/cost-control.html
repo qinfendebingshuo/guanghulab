@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake · 成本控制系统</title>
+    <link rel="stylesheet" href="cost-control-style.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="logo">HoloLake</div>
+        <h1>成本控制系统</h1>
+        <div class="header-actions">
+            <span class="status-badge">系统运行中</span>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- 成本概览卡片区 -->
+        <section class="cost-overview">
+            <div class="stat-card">
+                <div class="card-icon">💰</div>
+                <div class="card-info">
+                    <span class="card-label">今日消耗</span>
+                    <span class="card-value">¥12.80</span>
+                    <span class="card-trend up">↑8%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="card-icon">📊</div>
+                <div class="card-info">
+                    <span class="card-label">本月累计</span>
+                    <span class="card-value">¥386.50</span>
+                    <span class="card-trend down">↓3%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="card-icon">⏳</div>
+                <div class="card-info">
+                    <span class="card-label">预算剩余</span>
+                    <span class="card-value">¥613.50</span>
+                    <div class="card-progress">
+                        <div class="progress-bar" style="width: 61%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="card-icon">📉</div>
+                <div class="card-info">
+                    <span class="card-label">节省率</span>
+                    <span class="card-value">23%</span>
+                    <span class="card-trend up">↑5%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 模型用量明细 + 趋势图 -->
+        <section class="model-usage">
+            <h2>模型用量明细</h2>
+            <div class="tab-bar">
+                <button class="tab active" data-tab="today">今日</button>
+                <button class="tab" data-tab="week">本周</button>
+                <button class="tab" data-tab="month">本月</button>
+            </div>
+            <table class="usage-table">
+                <thead>
+                    <tr>
+                        <th>模型名称</th>
+                        <th>调用次数</th>
+                        <th>Token用量</th>
+                        <th>费用(¥)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="status-dot green"></span> GPT-4o</td>
+                        <td>1,284</td>
+                        <td>2.3M</td>
+                        <td>8.40</td>
+                    </tr>
+                    <tr>
+                        <td><span class="status-dot green"></span> 通义千问-Max</td>
+                        <td>3,902</td>
+                        <td>5.1M</td>
+                        <td>3.12</td>
+                    </tr>
+                    <tr>
+                        <td><span class="status-dot green"></span> Kimi</td>
+                        <td>876</td>
+                        <td>1.8M</td>
+                        <td>1.28</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 成本趋势图（柱状图占位） -->
+            <div class="chart-area">
+                <div class="chart-placeholder">
+                    <div class="bar" style="height: 80px;"><span>一</span></div>
+                    <div class="bar" style="height: 120px;"><span>二</span></div>
+                    <div class="bar" style="height: 90px;"><span>三</span></div>
+                    <div class="bar" style="height: 150px;"><span>四</span></div>
+                    <div class="bar" style="height: 110px;"><span>五</span></div>
+                    <div class="bar active" style="height: 130px;"><span>六</span></div>
+                    <div class="bar" style="height: 70px;"><span>日</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 预算设置区域 -->
+        <section class="budget-settings">
+            <h2>预算设置</h2>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label>月度预算</label>
+                    <div class="input-group">
+                        <span class="prefix">¥</span>
+                        <input type="text" value="1000" readonly>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>告警阈值</label>
+                    <div class="input-group">
+                        <span class="prefix">%</span>
+                        <input type="text" value="80" readonly>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label>超限策略</label>
+                    <select class="select" disabled>
+                        <option>降级到低成本模型</option>
+                        <option>暂停服务</option>
+                        <option selected>仅通知不限制</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- 告警日志区域 -->
+        <section class="alert-log">
+            <h2>告警日志</h2>
+            <div class="alert-list">
+                <div class="alert-item warning">
+                    <span class="alert-icon">⚠️</span>
+                    <div class="alert-content">
+                        <span class="alert-title">GPT-4o 单日调用量接近预警线</span>
+                        <span class="alert-time">今天 14:30</span>
+                    </div>
+                </div>
+                <div class="alert-item info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div class="alert-content">
+                        <span class="alert-title">本月预算使用率达到 38%</span>
+                        <span class="alert-time">今天 09:00</span>
+                    </div>
+                </div>
+                <div class="alert-item success">
+                    <span class="alert-icon">✅</span>
+                    <div class="alert-content">
+                        <span class="alert-title">通义千问降价生效，预计月省 ¥45</span>
+                        <span class="alert-time">昨天 20:00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="cost-control.js"></script>
+</body>
+</html>

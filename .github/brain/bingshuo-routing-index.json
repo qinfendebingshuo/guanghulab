@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "description": "冰朔主控路由索引 — 问题类型 → 推荐读取路径 → 推荐排查顺序",
+  "updated_at": "2026-03-10T10:00:00+08:00",
+  "routes": {
+    "persona_studio_chat_failure": {
+      "label": "Persona Studio 无法对话",
+      "entry": [
+        "persona-studio/frontend/index.html",
+        "persona-studio/frontend/chat.js"
+      ],
+      "backend": [
+        "persona-studio/backend/routes/auth.js",
+        "persona-studio/backend/routes/chat.js"
+      ],
+      "infra": [
+        ".github/workflows/deploy-pages.yml",
+        ".github/workflows/sync-persona-studio.yml"
+      ],
+      "recommended_order": [
+        "frontend_entry",
+        "api_path",
+        "backend_route",
+        "deployment_chain"
+      ]
+    },
+    "docs_page_unavailable": {
+      "label": "docs 页面打不开",
+      "entry": [
+        "docs/index.html",
+        "docs/CNAME"
+      ],
+      "backend": [],
+      "infra": [
+        ".github/workflows/deploy-pages.yml"
+      ],
+      "recommended_order": [
+        "frontend_entry",
+        "dns_config",
+        "deployment_chain"
+      ]
+    },
+    "docs_ai_not_working": {
+      "label": "docs 页面 AI 失效",
+      "entry": [
+        "docs/index.html"
+      ],
+      "backend": [
+        "backend/index.js",
+        "backend/routes/"
+      ],
+      "infra": [
+        ".github/workflows/deploy-to-server.yml"
+      ],
+      "recommended_order": [
+        "frontend_entry",
+        "api_endpoint_config",
+        "backend_route",
+        "server_status",
+        "nginx_proxy"
+      ]
+    },
+    "model_routing_error": {
+      "label": "模型路由异常",
+      "entry": [
+        "backend/routes/"
+      ],
+      "backend": [
+        "backend/index.js"
+      ],
+      "infra": [],
+      "recommended_order": [
+        "api_key_check",
+        "backend_route",
+        "pm2_logs",
+        "model_provider_status"
+      ]
+    },
+    "notion_sync_failure": {
+      "label": "Notion 不同步",
+      "entry": [
+        "scripts/notion-poll.js",
+        "scripts/bridge-changes-to-notion.js"
+      ],
+      "backend": [],
+      "infra": [
+        ".github/workflows/notion-poll.yml",
+        ".github/workflows/bridge-changes-to-notion.yml",
+        ".github/workflows/bridge-syslog-to-notion.yml"
+      ],
+      "recommended_order": [
+        "workflow_run_check",
+        "notion_api_token_check",
+        "script_logic",
+        "notion_database_check"
+      ]
+    },
+    "brain_version_split": {
+      "label": "脑版本分裂",
+      "entry": [
+        ".github/brain/memory.json",
+        "persona-studio/brain/"
+      ],
+      "backend": [],
+      "infra": [
+        ".github/workflows/brain-sync.yml",
+        ".github/workflows/sync-persona-studio.yml"
+      ],
+      "recommended_order": [
+        "compare_brain_versions",
+        "check_sync_workflow",
+        "check_docs_brain_display",
+        "manual_reconcile"
+      ]
+    },
+    "deployment_failure": {
+      "label": "部署失败",
+      "entry": [],
+      "backend": [
+        "backend/index.js"
+      ],
+      "infra": [
+        ".github/workflows/deploy-to-server.yml",
+        ".github/workflows/deploy-pages.yml"
+      ],
+      "recommended_order": [
+        "workflow_logs",
+        "ssh_key_check",
+        "server_pm2_status",
+        "nginx_config"
+      ]
+    },
+    "hli_route_error": {
+      "label": "HLI 接口异常",
+      "entry": [
+        "backend/routes/",
+        "backend/schemas/"
+      ],
+      "backend": [
+        "backend/index.js",
+        "backend/middleware/"
+      ],
+      "infra": [
+        ".github/workflows/hli-contract-check.yml"
+      ],
+      "recommended_order": [
+        "schema_check",
+        "route_registration",
+        "middleware_auth",
+        "contract_test"
+      ]
+    }
+  }
+}

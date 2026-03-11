@@ -1,0 +1,64 @@
+name: 铸渊 · PR Review
+
+on:
+  pull_request:
+    branches: [main, dev]
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    name: 🔍 铸渊审核
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run contract check
+        id: contract
+        continue-on-error: true
+        run: node scripts/contract-check.js 2>&1 | tee /tmp/contract-result.txt
+
+      - name: Run route alignment
+        id: alignment
+        run: node scripts/route-align-check.js 2>&1 | tee /tmp/align-result.txt
+
+      - name: 铸渊 writes review comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const contractResult = fs.readFileSync('/tmp/contract-result.txt', 'utf8');
+            const alignResult = fs.readFileSync('/tmp/align-result.txt', 'utf8');
+            
+            const contractPassed = contractResult.includes('PASSED');
+            const alignPassed = alignResult.includes('PASSED');
+            
+            let body = '## 🤖 铸渊审核报告\n\n';
+            
+            if (contractPassed && alignPassed) {
+              body += '✅ **审核通过** - 所有契约校验均符合规范\n\n';
+            } else {
+              body += '❌ **审核不通过** - 请查看下方问题\n\n';
+            }
+            
+            body += '### 📋 契约校验结果\n';
+            body += '```\n' + contractResult + '\n```\n\n';
+            body += '### 🗺️ 路由对齐结果\n';
+            body += '```\n' + alignResult + '\n```\n\n';
+            body += '---\n';
+            body += '> 「无 Schema 不上线，无契约不合并。」— 铸渊';
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

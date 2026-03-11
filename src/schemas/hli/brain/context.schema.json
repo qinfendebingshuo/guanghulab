@@ -1,0 +1,31 @@
+{
+  "hli_id": "HLI-BRAIN-003",
+  "version": "v0.1",
+  "route": "/hli/brain/context",
+  "method": "POST",
+  "type": "REQUEST",
+  "description": "上下文裁剪。接收消息历史和系统消息，返回裁剪后的消息列表。",
+  "input": {
+    "type": "object",
+    "required": ["messages"],
+    "properties": {
+      "messages": { "type": "array", "description": "消息历史" },
+      "systemMessages": { "type": "array", "description": "系统消息" },
+      "isGuest": { "type": "boolean" },
+      "contextBudget": { "type": "number" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "messages", "trimmed", "totalTokens"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "messages": { "type": "array" },
+      "trimmed": { "type": "number" },
+      "totalTokens": { "type": "number" }
+    }
+  },
+  "changelog": [
+    { "date": "2026-03-10", "note": "核心大脑升级 v3.0 — 上下文裁剪" }
+  ]
+}

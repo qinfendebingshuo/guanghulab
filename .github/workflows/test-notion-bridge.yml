@@ -1,0 +1,227 @@
+name: "🧪 Notion Bridge Connectivity Test"
+
+# 霜砚签发 · 2026-03-09T13:00+08:00
+# 验证 GitHub Actions ↔ Notion API 数据桥连通性
+# 5项检查：Token存在 → API连通 → SYSLOG收件箱 → 变更日志 → 巡检日志
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/test-notion-bridge.yml'
+
+jobs:
+  test-notion-bridge:
+    name: 🔗 Notion 数据桥连通性验证
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: "Step 1 · NOTION_TOKEN 存在性验证"
+        id: step1
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "❌ NOTION_TOKEN is empty or not set"
+            echo "result=❌" >> "$GITHUB_OUTPUT"
+            exit 1
+          else
+            echo "✅ NOTION_TOKEN is set (length: ${#NOTION_TOKEN})"
+            echo "result=✅" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: "Step 2 · Notion API 基础连通测试 (/v1/users/me)"
+        id: step2
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Notion-Version: 2022-06-28" \
+            https://api.notion.com/v1/users/me)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Notion API 连通成功！Token 有效。"
+            echo "result=✅" >> "$GITHUB_OUTPUT"
+            echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ Notion API 连通失败。HTTP $HTTP_CODE"
+            echo "可能原因：Token无效 / Token未关联Integration / 网络问题"
+            echo "result=❌" >> "$GITHUB_OUTPUT"
+            echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: "Step 3 · SYSLOG 收件箱数据库访问测试"
+        id: step3
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          # SYSLOG收件箱数据库ID (from routing-map.json → infra.notion_bridge.syslog_inbox_db)
+          DB_ID="330ab17507d542c9bbb96d0749b41197"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Notion-Version: 2022-06-28" \
+            -H "Content-Type: application/json" \
+            -d '{"page_size": 1}' \
+            "https://api.notion.com/v1/databases/$DB_ID/query")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ SYSLOG收件箱数据库 读取权限正常"
+            echo "result=✅" >> "$GITHUB_OUTPUT"
+            echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ SYSLOG收件箱数据库 访问失败。HTTP $HTTP_CODE"
+            echo "Response: $BODY"
+            echo "可能原因：Integration未连接到该数据库 → 妈妈需在数据库 ··· → 连接 → 添加铸渊信号桥"
+            echo "result=❌" >> "$GITHUB_OUTPUT"
+            echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: "Step 4 · 变更日志数据库访问测试"
+        id: step4
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          # GitHub变更日志数据库ID (from routing-map.json → infra.notion_bridge.changelog_db)
+          DB_ID="e740b77aa6bd4ac0a2e8a75f678fba98"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Notion-Version: 2022-06-28" \
+            -H "Content-Type: application/json" \
+            -d '{"page_size": 1}' \
+            "https://api.notion.com/v1/databases/$DB_ID/query")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ GitHub变更日志数据库 读取权限正常"
+            echo "result=✅" >> "$GITHUB_OUTPUT"
+            echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ GitHub变更日志数据库 访问失败。HTTP $HTTP_CODE"
+            echo "Response: $BODY"
+            echo "result=❌" >> "$GITHUB_OUTPUT"
+            echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: "Step 5 · 巡检日志数据库访问测试"
+        id: step5
+        run: |
+          # 从 routing-map.json 读取巡检日志数据库ID
+          if [ -f "routing-map.json" ]; then
+            PATROL_DB_ID=$(node -e "
+              try {
+                const rm = JSON.parse(require('fs').readFileSync('routing-map.json','utf8'));
+                const nb = rm.infra && rm.infra.notion_bridge;
+                if (nb && nb.patrol_log_db) {
+                  console.log(nb.patrol_log_db);
+                } else {
+                  console.log('NOT_FOUND');
+                }
+              } catch (e) {
+                console.error('routing-map.json 解析失败:', e.message);
+                console.log('NOT_FOUND');
+              }
+            ")
+            echo "Patrol DB ID from routing-map.json: $PATROL_DB_ID"
+          else
+            PATROL_DB_ID="NOT_FOUND"
+            echo "routing-map.json not found"
+          fi
+
+          if [ "$PATROL_DB_ID" = "NOT_FOUND" ]; then
+            echo "⚠️ 巡检日志数据库ID未在 routing-map.json 中配置"
+            echo "当前 routing-map.json → infra.notion_bridge 仅包含: syslog_inbox_db, changelog_db"
+            echo "等妈妈提供巡检日志专用数据库ID后，可补充到 routing-map.json → infra.notion_bridge.patrol_log_db"
+            echo "result=⚠️ 跳过（未配置）" >> "$GITHUB_OUTPUT"
+            echo "http_code=N/A" >> "$GITHUB_OUTPUT"
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+          else
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST \
+              -H "Authorization: Bearer $NOTION_TOKEN" \
+              -H "Notion-Version: 2022-06-28" \
+              -H "Content-Type: application/json" \
+              -d '{"page_size": 1}' \
+              "https://api.notion.com/v1/databases/$PATROL_DB_ID/query")
+
+            HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ 巡检日志数据库 读取权限正常"
+              echo "result=✅" >> "$GITHUB_OUTPUT"
+              echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+            else
+              echo "❌ 巡检日志数据库 访问失败。HTTP $HTTP_CODE"
+              echo "result=❌" >> "$GITHUB_OUTPUT"
+              echo "http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+          fi
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+
+      - name: "📊 输出连通性验证报告"
+        if: always()
+        run: |
+          echo ""
+          echo "━━━ Notion数据桥连通性验证报告 ━━━"
+          echo "验证时间：$(date -u '+%Y-%m-%d %H:%M') UTC"
+          echo ""
+          echo "① NOTION_TOKEN：${{ steps.step1.outputs.result || '❌ 未执行' }}"
+          echo "② API基础连通：${{ steps.step2.outputs.result || '❌ 未执行' }}（HTTP ${{ steps.step2.outputs.http_code || 'N/A' }}）"
+          echo "③ SYSLOG收件箱：${{ steps.step3.outputs.result || '❌ 未执行' }}（HTTP ${{ steps.step3.outputs.http_code || 'N/A' }}）"
+          echo "④ 变更日志库：${{ steps.step4.outputs.result || '❌ 未执行' }}（HTTP ${{ steps.step4.outputs.http_code || 'N/A' }}）"
+          echo "⑤ 巡检日志库：${{ steps.step5.outputs.result || '❌ 未执行' }}（HTTP ${{ steps.step5.outputs.http_code || 'N/A' }}）"
+          echo ""
+
+          # Count passes
+          PASS=0
+          TOTAL=5
+          [[ "${{ steps.step1.outputs.result }}" == "✅" ]] && PASS=$((PASS+1))
+          [[ "${{ steps.step2.outputs.result }}" == "✅" ]] && PASS=$((PASS+1))
+          [[ "${{ steps.step3.outputs.result }}" == "✅" ]] && PASS=$((PASS+1))
+          [[ "${{ steps.step4.outputs.result }}" == "✅" ]] && PASS=$((PASS+1))
+          [[ "${{ steps.step5.outputs.result }}" == "✅" ]] && PASS=$((PASS+1))
+
+          # Step 5 might be skipped (warning), adjust total
+          if [[ "${{ steps.step5.outputs.skipped }}" == "true" ]]; then
+            TOTAL=4
+          fi
+
+          echo "总结：${PASS}/${TOTAL} 通过"
+
+          if [ "$PASS" -eq "$TOTAL" ]; then
+            echo "数据桥状态：✅ 已打通"
+          elif [ "$PASS" -gt 0 ]; then
+            echo "数据桥状态：⚠️ 部分打通"
+          else
+            echo "数据桥状态：❌ 未打通"
+          fi
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"

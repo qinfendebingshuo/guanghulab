@@ -1,0 +1,77 @@
+name: "🧊 冰朔人格体 · 自动部署诊断"
+
+# === 触发方式 ===
+# 1. 手动触发（workflow_dispatch）
+# 2. Issue 评论包含触发关键词
+# 3. 新 Issue 带有 bingshuo-deploy 标签
+# 4. 合作者推送模块后，模块文档工作流完成时自动触发
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "执行模式"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - check
+          - rerun
+      hours_back:
+        description: "检查最近多少小时"
+        required: false
+        default: "24"
+
+  issue_comment:
+    types: [created]
+
+  issues:
+    types: [opened]
+
+  # 合作者推送模块后，模块文档工作流完成时自动触发冰朔人格体部署诊断
+  workflow_run:
+    workflows: ["铸渊 · HoloLake Era 模块文档自动生成"]
+    types: [completed]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  # === 冰朔人格体核心任务 ===
+  deploy-agent:
+    runs-on: ubuntu-latest
+    # 触发条件：
+    # 1. workflow_dispatch 直接触发
+    # 2. Issue 评论包含触发关键词（仅限仓库成员）
+    # 3. 新 Issue 带有 bingshuo-deploy 标签
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_run' ||
+      (github.event_name == 'issue_comment' && (
+        contains(github.event.comment.body, '启动冰朔人格体') ||
+        contains(github.event.comment.body, '冰朔人格体') ||
+        contains(github.event.comment.body, '部署诊断') ||
+        contains(github.event.comment.body, '检查部署')
+      )) ||
+      (github.event_name == 'issues' && contains(join(github.event.issue.labels.*.name, ','), 'bingshuo-deploy'))
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 🧊 启动冰朔人格体
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || '' }}
+          ISSUE_BODY: ${{ github.event.issue.body || github.event.comment.body || '' }}
+          DEPLOY_ACTION: ${{ github.event.inputs.action || '' }}
+          HOURS_BACK: ${{ github.event.inputs.hours_back || '' }}
+        run: node scripts/bingshuo-deploy-agent.js

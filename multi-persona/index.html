@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake · 多人格体协作调度</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-left">
+                <span class="logo">🌊</span>
+                <h1>多人格体协作调度</h1>
+            </div>
+            <div class="header-right">
+                <span class="status-badge online">系统运行中</span>
+                <span class="timestamp" id="currentTime">--:--:--</span>
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value">8</div>
+                <div class="stat-label">在线人格体</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">活跃任务</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">协作进行中</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">99%</div>
+                <div class="stat-label">调度成功率</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 左侧：人格体状态面板 -->
+            <div class="panel persona-panel">
+                <div class="panel-header">
+                    <h2>人格体状态</h2>
+                    <button class="btn-refresh" id="btnRefresh">刷新</button>
+                </div>
+                <div class="persona-list">
+                    <div class="persona-card online">
+                        <div class="persona-avatar">🧠</div>
+                        <div class="persona-info">
+                            <div class="persona-name">知秋</div>
+                            <div class="persona-role">主脑执行体</div>
+                            <div class="persona-task">正在调度M13</div>
+                        </div>
+                        <div class="persona-status-dot"></div>
+                    </div>
+                    <div class="persona-card online">
+                        <div class="persona-avatar">❄️</div>
+                        <div class="persona-info">
+                            <div class="persona-name">霜砚</div>
+                            <div class="persona-role">监控体</div>
+                            <div class="persona-task">负载均衡中</div>
+                        </div>
+                        <div class="persona-status-dot"></div>
+                    </div>
+                    <div class="persona-card dormant">
+                        <div class="persona-avatar">🌙</div>
+                        <div class="persona-info">
+                            <div class="persona-name">望舒</div>
+                            <div class="persona-role">缓存人格</div>
+                            <div class="persona-task">休眠待唤醒</div>
+                        </div>
+                        <div class="persona-status-dot"></div>
+                    </div>
+                    <div class="persona-card offline">
+                        <div class="persona-avatar">🤖</div>
+                        <div class="persona-info">
+                            <div class="persona-name">Robot</div>
+                            <div class="persona-role">执行体</div>
+                            <div class="persona-task">离线</div>
+                        </div>
+                        <div class="persona-status-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：协作任务看板 -->
+            <div class="panel task-panel">
+                <div class="panel-header">
+                    <h2>协作任务看板</h2>
+                    <div class="tab-group">
+                        <button class="tab active">全部</button>
+                        <button class="tab">我的</button>
+                        <button class="tab">待分配</button>
+                    </div>
+                </div>
+                <div class="task-board">
+                    <!-- 待分配列 -->
+                    <div class="task-column">
+                        <div class="column-header pending">待分配 <span class="count">2</span></div>
+                        <div class="task-item">
+                            <div class="task-title">M14 人格体通信协议</div>
+                            <div class="task-meta">优先级: 中</div>
+                            <div class="task-assignee">待领取</div>
+                        </div>
+                        <div class="task-item">
+                            <div class="task-title">M15 心跳监控面板</div>
+                            <div class="task-meta">优先级: 高</div>
+                            <div class="task-assignee">待领取</div>
+                        </div>
+                    </div>
+                    <!-- 进行中列 -->
+                    <div class="task-column">
+                        <div class="column-header in-progress">进行中 <span class="count">3</span></div>
+                        <div class="task-item active">
+                            <div class="task-title">M12 成本控制系统</div>
+                            <div class="task-meta">DEV-005 小草莓</div>
+                            <div class="task-progress"><div class="progress-bar" style="width:80%"></div></div>
+                        </div>
+                        <div class="task-item active">
+                            <div class="task-title">M04 消息气泡界面</div>
+                            <div class="task-meta">DEV-002 肥猫</div>
+                            <div class="task-progress"><div class="progress-bar" style="width:45%"></div></div>
+                        </div>
+                        <div class="task-item active">
+                            <div class="task-title">M07 设置页面</div>
+                            <div class="task-meta">DEV-003 燕樊</div>
+                            <div class="task-progress"><div class="progress-bar" style="width:60%"></div></div>
+                        </div>
+                    </div>
+                    <!-- 已完成列 -->
+                    <div class="task-column">
+                        <div class="column-header completed">已完成 <span class="count">6</span></div>
+                        <div class="task-item done">
+                            <div class="task-title">M03 人格体选择器</div>
+                            <div class="task-meta">DEV-002 肥猫</div>
+                        </div>
+                        <div class="task-item done">
+                            <div class="task-title">M01 系统状态看板</div>
+                            <div class="task-meta">DEV-005 小草莓</div>
+                        </div>
+                        <div class="task-item done">
+                            <div class="task-title">M02 对话界面</div>
+                            <div class="task-meta">DEV-003 燕樊</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部区域：通信时间线 + 资源分配 -->
+        <div class="bottom-section">
+            <div class="panel comm-panel">
+                <div class="panel-header">
+                    <h2>通信时间线</h2>
+                </div>
+                <div class="comm-timeline" id="commTimeline">
+                    <div class="comm-item system">
+                        <div class="comm-avatar">🧠</div>
+                        <div class="comm-content">
+                            <div class="comm-sender">知秋 → 全体</div>
+                            <div class="comm-text">M12 SYSLOG已处理·小草莓空闲·分配M13多人格体协作调度</div>
+                            <div class="comm-time">10:21</div>
+                        </div>
+                    </div>
+                    <div class="comm-item">
+                        <div class="comm-avatar">❄️</div>
+                        <div class="comm-content">
+                            <div class="comm-sender">霜砚 → 望舒</div>
+                            <div class="comm-text">缓存人格体进入休眠，资源释放</div>
+                            <div class="comm-time">09:47</div>
+                        </div>
+                    </div>
+                    <div class="comm-item">
+                        <div class="comm-avatar">🌙</div>
+                        <div class="comm-content">
+                            <div class="comm-sender">望舒 → 知秋</div>
+                            <div class="comm-text">唤醒请求已排队，预计3分钟后恢复</div>
+                            <div class="comm-time">09:12</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel resource-panel">
+                <div class="panel-header">
+                    <h2>资源分配总览</h2>
+                </div>
+                <div class="resource-grid">
+                    <div class="resource-item">
+                        <span class="resource-label">知秋</span>
+                        <div class="resource-bar-wrap"><div class="resource-bar high" style="width:78%">78%</div></div>
+                    </div>
+                    <div class="resource-item">
+                        <span class="resource-label">霜砚</span>
+                        <div class="resource-bar-wrap"><div class="resource-bar mid" style="width:43%">43%</div></div>
+                    </div>
+                    <div class="resource-item">
+                        <span class="resource-label">望舒</span>
+                        <div class="resource-bar-wrap"><div class="resource-bar low" style="width:12%">12%</div></div>
+                    </div>
+                    <div class="resource-item">
+                        <span class="resource-label">Robot</span>
+                        <div class="resource-bar-wrap"><div class="resource-bar off" style="width:0%">0%</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span>HoloLake Era · 多人格体协作调度系统 v1.0</span>
+            <span>曜冥纪元</span>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

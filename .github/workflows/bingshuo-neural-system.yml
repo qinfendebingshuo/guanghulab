@@ -1,0 +1,58 @@
+# ───────────────────────────────────────────────────────
+# 冰朔主控神经系统 · 自动维护 Workflow v1.0
+# Bingshuo Master Neural System — Auto Maintenance
+#
+# 触发条件：
+#   1. push 到 main 分支时关键路径变化
+#   2. 每日 08:00 北京时间（UTC 00:00）定时巡检
+#   3. 手动触发
+# ───────────────────────────────────────────────────────
+
+name: 冰朔主控神经系统 · 自动维护
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/brain/**'
+      - 'docs/**'
+      - 'persona-studio/**'
+      - 'backend/**'
+      - 'src/**'
+      - '.github/workflows/**'
+      - 'scripts/**'
+
+  schedule:
+    - cron: '0 0 * * *'   # 每日 UTC 00:00（北京时间 08:00）
+
+  workflow_dispatch:       # 手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  neural-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 运行冰朔神经系统编译
+        run: node scripts/bingshuo-neural-sync.js
+
+      - name: 提交更新
+        run: |
+          git config user.name "bingshuo-neural-system"
+          git config user.email "bingshuo-neural-system@guanghulab.com"
+          git add .github/brain/bingshuo-*.json .github/brain/bingshuo-*.md
+          if git diff --cached --quiet; then
+            echo "无变化，跳过提交"
+          else
+            git commit -m "🧠 冰朔主控神经系统自动编译 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi

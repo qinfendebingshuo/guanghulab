@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake公告栏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <h1>公告栏</h1>
+            <div class="header-actions">
+                <span class="pinned-badge">2条置顶</span>
+                <button class="subscribe-btn">订阅</button>
+            </div>
+        </div>
+
+        <!-- 频道标签栏 -->
+        <div class="channel-bar">
+            <span class="channel active">全部</span>
+            <span class="channel">系统公告</span>
+            <span class="channel">开发动态</span>
+            <span class="channel">团队消息</span>
+        </div>
+
+        <!-- 公告列表 -->
+        <div class="bulletin-list">
+            <!-- 置顶公告1 -->
+            <div class="bulletin-card pinned">
+                <div class="pin-indicator">置顶</div>
+                <div class="bulletin-icon system"></div>
+                <div class="bulletin-content">
+                    <div class="bulletin-header">
+                        <span class="bulletin-title">光湖系统MVP v0.4.0发布公告</span>
+                        <span class="bulletin-time">2小时前</span>
+                    </div>
+                    <p class="bulletin-summary">主域公告栏与频道过渡系统（M22）正式进入环节0开发。新增公告置顶、频道分类、时间线展示功能，信息展示层逐步完善。</p>
+                    <div class="bulletin-footer">
+                        <span class="bulletin-tag tag-system">系统公告</span>
+                        <span class="bulletin-author">发布者：曜冥主控</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 置顶公告2 -->
+            <div class="bulletin-card pinned">
+                <div class="pin-indicator">置顶</div>
+                <div class="bulletin-icon dev"></div>
+                <div class="bulletin-content">
+                    <div class="bulletin-header">
+                        <span class="bulletin-title">SYSLOG提交流程v2上线通知</span>
+                        <span class="bulletin-time">5小时前</span>
+                    </div>
+                    <p class="bulletin-summary">SYSLOG生成方式已更新为「知秋主动提问制」完成任务后由知秋引导填写，无需手动套用模板。即日起生效。</p>
+                    <div class="bulletin-footer">
+                        <span class="bulletin-tag tag-dev">开发动态</span>
+                        <span class="bulletin-author">发布者：知秋</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 普通公告1 -->
+            <div class="bulletin-card">
+                <div class="bulletin-icon team"></div>
+                <div class="bulletin-content">
+                    <div class="bulletin-header">
+                        <span class="bulletin-title">欢迎Awen加入光湖团队！</span>
+                        <span class="bulletin-time">1天前</span>
+                    </div>
+                    <p class="bulletin-summary">DEV-012 Awen正式加入光湖开发团队，成为第12位协作者。首个模块M09消息通知中心已全通关！</p>
+                </div>
+            </div>
+
+            <!-- 普通公告2 -->
+            <div class="bulletin-card">
+                <div class="bulletin-icon dev"></div>
+                <div class="bulletin-content">
+                    <div class="bulletin-header">
+                        <span class="bulletin-title">M08数据统计面板全通关</span>
+                        <span class="bulletin-time">2天前</span>
+                    </div>
+                    <p class="bulletin-summary">完成M08全部环节，七连胜达成！响应式布局+SVG环形图+CSV导出一次通过，正式前端毕业</p>
+                    <div class="bulletin-footer">
+                        <span class="bulletin-tag tag-dev">开发动态</span>
+                        <span class="bulletin-author">发布者：霜砚</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 普通公告3 -->
+            <div class="bulletin-card">
+                <div class="bulletin-icon system"></div>
+                <div class="bulletin-content">
+                    <div class="bulletin-header">
+                        <span class="bulletin-title">HTTPS配置与飞书Webhook联调完成</span>
+                        <span class="bulletin-time">3天前</span>
+                    </div>
+                    <p class="bulletin-summary">光湖主域已完成HTTPS配置与飞书Webhook全链路联调，Nginx+PM2+Certbot部署完毕，系统脊梁正式贯通。</p>
+                    <div class="bulletin-footer">
+                        <span class="bulletin-tag tag-system">系统公告</span>
+                        <span class="bulletin-author">发布者：页页</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 普通公告4 -->
+            <div class="bulletin-card">
+                <div class="bulletin-icon team"></div>
+                <div class="bulletin-content">
+                    <div class="bulletin-header">
+                        <span class="bulletin-title">本周开发者进度总览</span>
+                        <span class="bulletin-time">3天前</span>
+                    </div>
+                    <p class="bulletin-summary">12位开发者中8位活跃，累计完成30+个环节。肥猫五连胜、桔子七连胜、小草莓五连胜、Awen四连胜团队势头强劲！</p>
+                    <div class="bulletin-footer">
+                        <span class="bulletin-tag tag-team">团队消息</span>
+                        <span class="bulletin-author">发布者：曜冥主控</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部状态栏 -->
+        <div class="footer">
+            <span>共6条公告2条置顶</span>
+            <span class="footer-brand">HoloLake光湖系统</span>
+        </div>
+    </div>
+    <script src="storage.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

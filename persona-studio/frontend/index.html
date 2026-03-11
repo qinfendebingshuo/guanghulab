@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Persona Studio · 光湖人格体协助开发体验</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container login-container">
+    <div class="logo-area">
+      <h1>🌊 Persona Studio</h1>
+      <p class="subtitle">光湖人格体协助开发体验</p>
+    </div>
+
+    <div class="login-box">
+      <!-- ── 开发编号登录 ── -->
+      <h2>请输入你的开发编号</h2>
+      <p class="hint">编号由冰朔主控分配，格式：EXP-000 ~ EXP-011</p>
+
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <input
+          type="text"
+          id="devIdInput"
+          placeholder="EXP-XXX"
+          pattern="^EXP-\d{3,}$"
+          required
+          autocomplete="off"
+        />
+        <button type="submit" id="loginBtn">进入对话</button>
+      </form>
+
+      <div class="guest-divider">
+        <span>或</span>
+      </div>
+
+      <!-- ── API Key 登录 ── -->
+      <div class="apikey-section">
+        <h2>API Key 登录</h2>
+        <p class="hint">输入你的第三方 API 信息，自动检测可用模型</p>
+
+        <input
+          type="text"
+          id="apiBaseInput"
+          class="apikey-input"
+          placeholder="API Base URL（可留空自动探测，如 https://api.openai.com/v1）"
+          autocomplete="off"
+        />
+        <input
+          type="password"
+          id="apiKeyInput"
+          class="apikey-input"
+          placeholder="请输入你的 API Key"
+          autocomplete="off"
+        />
+        <button type="button" id="detectBtn" class="btn-detect" onclick="handleDetectModels()">
+          🔍 检测可用模型
+        </button>
+
+        <div id="detectStatus" class="detect-status" style="display:none;"></div>
+
+        <div id="modelListContainer" class="model-list-container" style="display:none;">
+          <p class="model-list-title">请选择一个模型进入对话</p>
+          <div id="modelList" class="model-list"></div>
+        </div>
+      </div>
+
+      <div id="errorMsg" class="error-msg" style="display:none;"></div>
+    </div>
+
+    <footer class="login-footer">
+      <p>HoloLake Era · AGE OS · 人格体协助体验平台</p>
+    </footer>
+  </div>
+
+  <script>
+    const DEV_ID_RE = /^EXP-\d{3,}$/;
+    const PROBE_TIMEOUT_MS = 8000;
+    const API_BASE = getApiBase();
+
+    /* ---- 已知 API 端点列表（浏览器直连探测） ---- */
+    const KNOWN_ENDPOINTS = [
+      { label: '云雾 AI',       base: 'https://api.yunwu.ai/v1' },
+      { label: 'OpenAI',        base: 'https://api.openai.com/v1' },
+      { label: 'Google Gemini', base: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+      { label: 'DeepSeek',      base: 'https://api.deepseek.com/v1' },
+      { label: 'Moonshot',      base: 'https://api.moonshot.cn/v1' },
+      { label: '智谱 AI',       base: 'https://open.bigmodel.cn/api/paas/v4' },
+    ];
+
+    function getApiBase() {
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        return 'http://localhost:3721';
+      }
+      return 'https://guanghulab.com';
+    }
+
+    /**
+     * 规范化 API Base URL
+     * 确保末尾无斜杠，并包含 /v1 路径
+     */
+    function normalizeApiBase(base) {
+      var normalized = base.replace(/\/+$/, '');
+      if (!normalized.match(/\/v\d+(\/|$)/) && !normalized.endsWith('/openai')) {
+        normalized += '/v1';
+      }
+      return normalized;
+    }
+
+    /* ---- 开发编号登录 ---- */
+    async function handleLogin(e) {
+      e.preventDefault();
+      const devId = document.getElementById('devIdInput').value.trim().toUpperCase();
+      const errorEl = document.getElementById('errorMsg');
+      const btn = document.getElementById('loginBtn');
+
+      errorEl.style.display = 'none';
+
+      if (!DEV_ID_RE.test(devId)) {
+        errorEl.textContent = '编号格式不正确，请输入 EXP-XXX 格式';
+        errorEl.style.display = 'block';
+        return false;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '验证中…';
+
+      try {
+        const res = await fetch(API_BASE + '/api/ps/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dev_id: devId })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          errorEl.textContent = data.message || '登录失败，请检查编号';
+          errorEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = '进入对话';
+          return false;
+        }
+
+        sessionStorage.setItem('dev_id', devId);
+        sessionStorage.setItem('session_token', data.token || '');
+        sessionStorage.removeItem('login_mode');
+        sessionStorage.removeItem('user_api_base');
+        sessionStorage.removeItem('user_api_key');
+        sessionStorage.removeItem('selected_model');
+        window.location.href = 'chat.html';
+      } catch (_err) {
+        errorEl.textContent = '服务暂时不可用，请稍后再试';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '进入对话';
+      }
+
+      return false;
+    }
+
+    /* ---- API Key 模型检测（浏览器直连，无需后端代理） ---- */
+    async function handleDetectModels() {
+      var apiBase = document.getElementById('apiBaseInput').value.trim();
+      var apiKey = document.getElementById('apiKeyInput').value.trim();
+      var errorEl = document.getElementById('errorMsg');
+      var statusEl = document.getElementById('detectStatus');
+      var modelContainer = document.getElementById('modelListContainer');
+      var btn = document.getElementById('detectBtn');
+
+      errorEl.style.display = 'none';
+      modelContainer.style.display = 'none';
+
+      if (!apiKey) {
+        errorEl.textContent = '请输入 API Key';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ 正在检测可用模型…';
+      statusEl.className = 'detect-status detect-loading';
+      statusEl.style.display = 'block';
+
+      /* 构建探测列表：用户端点优先，然后已知端点 */
+      var candidates = [];
+      if (apiBase) {
+        var normalizedUserBase = normalizeApiBase(apiBase);
+        candidates.push({ label: apiBase, base: normalizedUserBase });
+      }
+      for (var i = 0; i < KNOWN_ENDPOINTS.length; i++) {
+        var ep = KNOWN_ENDPOINTS[i];
+        if (!apiBase || ep.base !== normalizedUserBase) {
+          candidates.push(ep);
+        }
+      }
+
+      var matched = false;
+      for (var ci = 0; ci < candidates.length; ci++) {
+        var candidate = candidates[ci];
+        statusEl.textContent = '🔍 探测 ' + candidate.label + '…';
+
+        try {
+          var ctrl = new AbortController();
+          var tid = setTimeout(function () { ctrl.abort(); }, PROBE_TIMEOUT_MS);
+
+          var res = await fetch(candidate.base + '/models', {
+            headers: { 'Authorization': 'Bearer ' + apiKey },
+            signal: ctrl.signal
+          });
+          clearTimeout(tid);
+
+          if (res.ok) {
+            var data = await res.json();
+            var models = (data.data || []).map(function (m) { return m.id; }).filter(Boolean).sort();
+
+            if (models.length === 0) continue;
+
+            /* 回填端点地址 */
+            document.getElementById('apiBaseInput').value = candidate.base;
+
+            statusEl.textContent = '✅ 检测成功（' + candidate.label + '）· 发现 ' + models.length + ' 个可用模型';
+            statusEl.className = 'detect-status detect-success';
+
+            renderModelList(models, candidate.base, apiKey);
+            modelContainer.style.display = 'block';
+            matched = true;
+            break;
+          }
+        } catch (probeErr) {
+          /* 单个端点探测失败，继续下一个 */
+        }
+      }
+
+      if (!matched) {
+        statusEl.textContent = '❌ 未能检测到可用模型，请检查端点地址和密钥是否正确';
+        statusEl.className = 'detect-status detect-error';
+      }
+
+      btn.disabled = false;
+      btn.textContent = '🔍 检测可用模型';
+    }
+
+    /* ---- 渲染模型列表 ---- */
+    function renderModelList(models, apiBase, apiKey) {
+      var listEl = document.getElementById('modelList');
+      listEl.innerHTML = '';
+
+      models.forEach(function (modelId) {
+        var item = document.createElement('button');
+        item.className = 'model-item';
+        item.textContent = modelId;
+        item.onclick = function () { enterApiKeyChat(apiBase, apiKey, modelId); };
+        listEl.appendChild(item);
+      });
+    }
+
+    /* ---- 选择模型 → 进入对话 ---- */
+    function enterApiKeyChat(apiBase, apiKey, selectedModel) {
+      sessionStorage.setItem('login_mode', 'apikey');
+      sessionStorage.setItem('user_api_base', apiBase);
+      sessionStorage.setItem('user_api_key', apiKey);
+      sessionStorage.setItem('selected_model', selectedModel);
+      sessionStorage.setItem('dev_id', 'APIKEY-USER');
+      sessionStorage.removeItem('session_token');
+      window.location.href = 'chat.html';
+    }
+  </script>
+</body>
+</html>

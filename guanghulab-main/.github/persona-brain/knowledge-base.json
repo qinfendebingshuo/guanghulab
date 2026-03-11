@@ -1,0 +1,30 @@
+{
+  "last_updated": "2026-03-06",
+  "faq": [
+    {
+      "category": "SSH/服务器",
+      "q": "SSH私钥文件是什么？怎么连接服务器？",
+      "a": "SSH是远程连接服务器的工具。连接命令：ssh root@8.155.62.235，密码找肥猫（副控·有root权限）。Windows用PowerShell自带SSH，macOS终端自带。",
+      "related_broadcast": "BC-M01-003"
+    },
+    {
+      "category": "环境配置",
+      "q": "npm install 报错怎么办？",
+      "a": "先试 npm install --legacy-peer-deps。如果还不行试 npm cache clean --force 再装。Windows下如果证书报错加 --strict-ssl=false。",
+      "related_broadcast": "BC-钉钉-001-ZZ-002"
+    },
+    {
+      "category": "Git",
+      "q": "怎么推送代码到GitHub？",
+      "a": "git add . → git commit -m '描述' → git push。第一次push需要设置远程仓库：git remote add origin 仓库地址。",
+      "related_broadcast": "BC-集成-003"
+    },
+    {
+      "category": "广播",
+      "q": "广播里的步骤看不懂怎么办？",
+      "a": "广播每一步都是可直接复制粘贴的命令。从Step 1开始，一步一步做，做完一步截图，再做下一步。不要跳步。如果某一步报错，先把报错信息贴到这里提Issue。",
+      "related_broadcast": "通用"
+    }
+  ],
+  "auto_grow_rule": "每次霜砚补充回答后，铸渊自动把该问答对追加到faq数组中，下次遇到类似问题直接回答"
+}
