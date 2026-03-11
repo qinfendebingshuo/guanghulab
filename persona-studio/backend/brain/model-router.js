@@ -53,9 +53,26 @@ function selectModel(taskType) {
   const benchmark = loadBenchmark();
   const apiKey = process.env.MODEL_API_KEY || '';
   const baseUrl = config.base_url || 'https://api.yunwu.ai/v1';
+  const contextTarget = config.context_window_target || 200000;
 
   // 如果有 benchmark 且有路由表，使用路由表
   if (benchmark && benchmark.routing_table && benchmark.routing_table[taskType]) {
+    // 优先选择 context_window >= contextTarget 的模型
+    if (benchmark.benchmark) {
+      const preferred = benchmark.benchmark.find(function (m) {
+        return m.available &&
+          m.scores &&
+          m.scores.context_window >= contextTarget;
+      });
+      if (preferred) {
+        return {
+          model: preferred.model_id,
+          baseUrl,
+          apiKey
+        };
+      }
+    }
+
     return {
       model: benchmark.routing_table[taskType],
       baseUrl,
@@ -92,6 +109,7 @@ function selectModel(taskType) {
 async function callModel({ model, baseUrl, apiKey, messages, maxTokens = 2000, temperature = 0.8 }) {
   const config = loadConfig();
   const fallbackConfig = config.fallback || { max_retries: 3, timeout_ms: 30000 };
+  const contextWindowTarget = config.context_window_target || 200000;
 
   // 尝试调用，支持降级
   const benchmark = loadBenchmark();
@@ -227,10 +245,13 @@ async function autoDetect() {
     });
 
     // 生成基准测试结果
+    const contextTarget = config.context_window_target || 200000;
     const benchmarkData = {
       last_updated: new Date().toISOString(),
       models_detected: modelsList.length,
+      context_window_target: contextTarget,
       benchmark: modelsList.slice(0, 10).map(function (m) {
+        const ctxWindow = m.context_window || m.context_length || 32000;
         return {
           model_id: m.id,
           available: true,
@@ -240,9 +261,10 @@ async function autoDetect() {
             code_quality: 80,
             reasoning: 80,
             speed_ms: 2000,
-            context_window: m.context_window || 32000,
+            context_window: ctxWindow,
             cost_per_1k_tokens: 0.002
           },
+          meets_context_target: ctxWindow >= contextTarget,
           best_for: ['chat']
         };
       }),

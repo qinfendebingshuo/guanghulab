@@ -1,0 +1,1 @@
+"use strict";function downloadFile$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.downloadFile$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.cspace.downloadFile",exports.downloadFile$=downloadFile$,exports.default=downloadFile$;

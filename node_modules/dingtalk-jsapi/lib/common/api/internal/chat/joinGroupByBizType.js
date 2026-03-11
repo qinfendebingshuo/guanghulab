@@ -1,0 +1,1 @@
+"use strict";function joinGroupByBizType$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.joinGroupByBizType$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.joinGroupByBizType",exports.joinGroupByBizType$=joinGroupByBizType$,exports.default=joinGroupByBizType$;

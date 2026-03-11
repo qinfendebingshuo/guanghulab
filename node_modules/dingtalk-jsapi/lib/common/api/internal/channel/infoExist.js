@@ -1,0 +1,1 @@
+"use strict";function infoExist$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.infoExist$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.channel.infoExist",exports.infoExist$=infoExist$,exports.default=infoExist$;

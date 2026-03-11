@@ -1,0 +1,1 @@
+"use strict";function getWifiStatus$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getWifiStatus$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.getWifiStatus",exports.getWifiStatus$=getWifiStatus$,exports.default=getWifiStatus$;

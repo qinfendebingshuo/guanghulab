@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-10 23:36 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-11 22:39 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -13,7 +13,7 @@
 | 脚本 | 27 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-10 23:36 CST |
+| 快照生成时间 | 2026-03-11 22:39 CST |
 
 ---
 
@@ -25,7 +25,7 @@
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
 ### 🎭 人格大脑（PERSONA_BRAIN）
-**路径**: `.github/persona-brain` · **数量**: 10 项
+**路径**: `.github/persona-brain` · **数量**: 11 项
 **描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
@@ -101,7 +101,7 @@
 | `deploy-to-server.yml` | "🚀 铸渊 CD · 自动部署到 guanghulab.com" | push, manual |
 | `distribute-broadcasts.yml` | 铸渊 · 广播分发 | push, manual |
 | `esp-signal-processor.yml` | 铸渊 · ESP 邮件信号处理器（已暂停） | schedule(*/30 * * * *), manual |
-| `generate-module-doc.yml` | 铸渊 · HoloLake Era 模块文档自动生成 | push, manual |
+| `generate-module-doc.yml` | 铸渊 · 光湖纪元 模块文档自动生成 | push, manual |
 | `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
 | `notion-connectivity-test.yml` | 铸渊 · Notion 连通性测试 | manual |
 | `notion-poll.yml` | 铸渊 · Notion 工单轮询 | schedule(*/15 * * * *), manual |
@@ -246,9 +246,9 @@
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-11T08:55:43.347Z` · daily_check — passed
 - `2026-03-10T08:56:23.978Z` · daily_check — passed
 - `2026-03-09T08:56:49.158Z` · daily_check — passed
-- `2026-03-05T16:07:24.070Z` · ci_run — passed
 
 ---
 

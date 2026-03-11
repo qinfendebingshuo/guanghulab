@@ -1,0 +1,1 @@
+"use strict";function rotateView$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.rotateView$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.screen.rotateView",exports.rotateView$=rotateView$,exports.default=rotateView$;

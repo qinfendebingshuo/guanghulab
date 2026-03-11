@@ -1,0 +1,1 @@
+"use strict";function scanPlugin$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.scanPlugin$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.safe.scanPlugin",exports.scanPlugin$=scanPlugin$,exports.default=scanPlugin$;

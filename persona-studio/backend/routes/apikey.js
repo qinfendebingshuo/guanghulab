@@ -39,8 +39,8 @@ function fetchModels(apiBase, apiKey, timeoutMs) {
   return new Promise((resolve, reject) => {
     // 规范化 apiBase：去除末尾斜杠
     const base = apiBase.replace(/\/+$/, '');
-    // 支持 base 已带 /v1 或不带的情况
-    const modelsPath = base.endsWith('/v1') ? base + '/models' : base + '/v1/models';
+    // 直接拼接 /models，因为 apiBase 已经由前端规范化
+    const modelsPath = base + '/models';
     const url = new URL(modelsPath);
     const isHttps = url.protocol === 'https:';
     const mod = isHttps ? https : http;
@@ -103,7 +103,9 @@ function fetchModels(apiBase, apiKey, timeoutMs) {
 function callUserApi({ apiBase, apiKey, model, messages, maxTokens, temperature, timeoutMs }) {
   return new Promise((resolve, reject) => {
     const base = apiBase.replace(/\/+$/, '');
-    const chatPath = base.endsWith('/v1') ? base + '/chat/completions' : base + '/v1/chat/completions';
+    // 直接拼接 /chat/completions，因为 apiBase 已经由前端规范化
+    // 包含完整版本路径（如 /v1, /v1beta/openai, /v4 等）
+    const chatPath = base + '/chat/completions';
     const url = new URL(chatPath);
     const isHttps = url.protocol === 'https:';
     const mod = isHttps ? https : http;
@@ -176,8 +178,7 @@ router.post('/detect-models', async (req, res) => {
   // 校验 URL 格式
   try {
     const testBase = api_base.replace(/\/+$/, '');
-    const testPath = testBase.endsWith('/v1') ? testBase + '/models' : testBase + '/v1/models';
-    new URL(testPath);
+    new URL(testBase + '/models');
   } catch (_e) {
     return res.status(400).json({
       error: true,

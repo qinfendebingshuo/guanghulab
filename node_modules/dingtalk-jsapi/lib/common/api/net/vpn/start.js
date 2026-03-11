@@ -1,0 +1,1 @@
+"use strict";function start$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.start$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="net.vpn.start",exports.start$=start$,exports.default=start$;

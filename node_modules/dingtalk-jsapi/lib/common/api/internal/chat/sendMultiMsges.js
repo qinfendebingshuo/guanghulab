@@ -1,0 +1,1 @@
+"use strict";function sendMultiMsges$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.sendMultiMsges$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.sendMultiMsges",exports.sendMultiMsges$=sendMultiMsges$,exports.default=sendMultiMsges$;

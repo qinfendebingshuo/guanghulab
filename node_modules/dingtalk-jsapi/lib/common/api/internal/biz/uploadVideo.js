@@ -1,0 +1,1 @@
+"use strict";function uploadVideo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.uploadVideo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.biz.uploadVideo",exports.uploadVideo$=uploadVideo$,exports.default=uploadVideo$;

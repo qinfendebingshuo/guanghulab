@@ -1,0 +1,1 @@
+"use strict";function openSelectUserWnd$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openSelectUserWnd$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.contact.openSelectUserWnd",exports.openSelectUserWnd$=openSelectUserWnd$,exports.default=openSelectUserWnd$;

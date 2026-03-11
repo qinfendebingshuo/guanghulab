@@ -1,0 +1,1 @@
+"use strict";function nav2RedPacket$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.nav2RedPacket$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.redpacket.nav2RedPacket",exports.nav2RedPacket$=nav2RedPacket$,exports.default=nav2RedPacket$;

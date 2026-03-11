@@ -1,0 +1,1 @@
+"use strict";function reportMemberState$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.reportMemberState$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.studyroom.reportMemberState",exports.reportMemberState$=reportMemberState$,exports.default=reportMemberState$;

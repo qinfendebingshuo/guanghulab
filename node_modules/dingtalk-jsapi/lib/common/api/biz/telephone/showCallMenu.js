@@ -1,0 +1,1 @@
+"use strict";function showCallMenu$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.showCallMenu$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.telephone.showCallMenu",exports.showCallMenu$=showCallMenu$,exports.default=showCallMenu$;

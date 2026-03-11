@@ -1,0 +1,1 @@
+"use strict";function addDesktopShortcuts$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.addDesktopShortcuts$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.addDesktopShortcuts",exports.addDesktopShortcuts$=addDesktopShortcuts$,exports.default=addDesktopShortcuts$;

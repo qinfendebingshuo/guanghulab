@@ -1,0 +1,1 @@
+"use strict";function listCorpInfo$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.listCorpInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.corps.listCorpInfo",exports.listCorpInfo$=listCorpInfo$,exports.default=listCorpInfo$;

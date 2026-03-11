@@ -1,0 +1,1 @@
+"use strict";function uids2UserInfos$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.uids2UserInfos$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.user.uids2UserInfos",exports.uids2UserInfos$=uids2UserInfos$,exports.default=uids2UserInfos$;

@@ -1,0 +1,1 @@
+"use strict";function updateDrawingCache$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.updateDrawingCache$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.updateDrawingCache",exports.updateDrawingCache$=updateDrawingCache$,exports.default=updateDrawingCache$;

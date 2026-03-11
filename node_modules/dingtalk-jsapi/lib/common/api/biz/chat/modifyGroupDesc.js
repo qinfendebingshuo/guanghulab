@@ -1,0 +1,1 @@
+"use strict";function modifyGroupDesc$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.modifyGroupDesc$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.chat.modifyGroupDesc",exports.modifyGroupDesc$=modifyGroupDesc$,exports.default=modifyGroupDesc$;

@@ -1,0 +1,1 @@
+"use strict";function externalEditForm$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.externalEditForm$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.contact.externalEditForm",exports.externalEditForm$=externalEditForm$,exports.default=externalEditForm$;

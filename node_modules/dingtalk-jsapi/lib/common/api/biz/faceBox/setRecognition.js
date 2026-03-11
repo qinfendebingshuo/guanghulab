@@ -1,0 +1,1 @@
+"use strict";function setRecognition$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setRecognition$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.faceBox.setRecognition",exports.setRecognition$=setRecognition$,exports.default=setRecognition$;

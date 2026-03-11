@@ -1,0 +1,1 @@
+"use strict";function keyboardAccessory$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.keyboardAccessory$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.alidoc.keyboardAccessory",exports.keyboardAccessory$=keyboardAccessory$,exports.default=keyboardAccessory$;

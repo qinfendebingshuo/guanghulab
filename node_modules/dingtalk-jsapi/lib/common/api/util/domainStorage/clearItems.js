@@ -1,0 +1,1 @@
+"use strict";function clearItems$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.clearItems$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="util.domainStorage.clearItems",exports.clearItems$=clearItems$,exports.default=clearItems$;

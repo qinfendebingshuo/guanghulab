@@ -1,0 +1,1 @@
+"use strict";function changeMode$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.changeMode$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.inputPanel.changeMode",exports.changeMode$=changeMode$,exports.default=changeMode$;

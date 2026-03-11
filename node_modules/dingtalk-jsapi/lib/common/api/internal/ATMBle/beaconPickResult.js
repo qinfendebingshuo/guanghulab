@@ -1,0 +1,1 @@
+"use strict";function beaconPickResult$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.beaconPickResult$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.ATMBle.beaconPickResult",exports.beaconPickResult$=beaconPickResult$,exports.default=beaconPickResult$;

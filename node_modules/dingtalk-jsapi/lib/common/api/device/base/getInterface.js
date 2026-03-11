@@ -1,0 +1,1 @@
+"use strict";function getInterface$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getInterface$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.getInterface",exports.getInterface$=getInterface$,exports.default=getInterface$;

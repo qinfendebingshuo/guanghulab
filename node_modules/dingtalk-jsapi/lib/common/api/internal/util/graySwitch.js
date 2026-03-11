@@ -1,0 +1,1 @@
+"use strict";function graySwitch$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.graySwitch$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.graySwitch",exports.graySwitch$=graySwitch$,exports.default=graySwitch$;

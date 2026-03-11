@@ -1,0 +1,1 @@
+"use strict";function getTodaysStep$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getTodaysStep$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.health.getTodaysStep",exports.getTodaysStep$=getTodaysStep$,exports.default=getTodaysStep$;

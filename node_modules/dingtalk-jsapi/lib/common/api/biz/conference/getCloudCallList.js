@@ -1,0 +1,1 @@
+"use strict";function getCloudCallList$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getCloudCallList$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.conference.getCloudCallList",exports.getCloudCallList$=getCloudCallList$,exports.default=getCloudCallList$;

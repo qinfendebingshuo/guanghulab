@@ -1,0 +1,1 @@
+"use strict";function openPrintWnd$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openPrintWnd$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.openPrintWnd",exports.openPrintWnd$=openPrintWnd$,exports.default=openPrintWnd$;

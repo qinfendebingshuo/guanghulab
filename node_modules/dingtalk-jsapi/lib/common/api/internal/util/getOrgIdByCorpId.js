@@ -1,0 +1,1 @@
+"use strict";function getOrgIdByCorpId$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getOrgIdByCorpId$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.getOrgIdByCorpId",exports.getOrgIdByCorpId$=getOrgIdByCorpId$,exports.default=getOrgIdByCorpId$;

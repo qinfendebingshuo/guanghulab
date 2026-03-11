@@ -1,0 +1,1 @@
+"use strict";function stepCount$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.stepCount$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.health.stepCount",exports.stepCount$=stepCount$,exports.default=stepCount$;

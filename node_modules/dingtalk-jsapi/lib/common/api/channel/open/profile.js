@@ -1,0 +1,1 @@
+"use strict";function profile$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.profile$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="channel.open.profile",exports.profile$=profile$,exports.default=profile$;

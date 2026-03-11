@@ -1,0 +1,1 @@
+"use strict";function getWua$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getWua$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.getWua",exports.getWua$=getWua$,exports.default=getWua$;

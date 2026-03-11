@@ -1,0 +1,1 @@
+"use strict";function usability$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.usability$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="runtime.monitor.usability",exports.usability$=usability$,exports.default=usability$;

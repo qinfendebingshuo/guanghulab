@@ -1,0 +1,1 @@
+"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.on=void 0;var eventArr=new Map;exports.on=function(e,t){if(eventArr.has(e)){eventArr.get(e).forEach(function(t){document.removeEventListener(e,t)})}eventArr.set(e,[t]),document.addEventListener(e,t)};

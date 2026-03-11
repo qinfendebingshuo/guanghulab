@@ -1,0 +1,1 @@
+"use strict";function add$(d){return ddSdk_1.ddSdk.invokeAPI(apiName,d)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.add$=void 0;var ddSdk_1=require("../../../lib/ddSdk"),apiName="biz.phoneContact.add";ddSdk_1.ddSdk.setAPI(apiName,{}),exports.add$=add$,exports.default=add$;

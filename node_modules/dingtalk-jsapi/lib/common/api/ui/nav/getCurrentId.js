@@ -1,0 +1,1 @@
+"use strict";function getCurrentId$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getCurrentId$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="ui.nav.getCurrentId",exports.getCurrentId$=getCurrentId$,exports.default=getCurrentId$;

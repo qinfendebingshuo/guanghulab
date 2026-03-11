@@ -1,0 +1,1 @@
+"use strict";function openSlidePanel$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openSlidePanel$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.openSlidePanel",exports.openSlidePanel$=openSlidePanel$,exports.default=openSlidePanel$;

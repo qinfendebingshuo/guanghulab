@@ -1,0 +1,1 @@
+"use strict";function requestAuthCode$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.requestAuthCode$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.auth.requestAuthCode",exports.requestAuthCode$=requestAuthCode$,exports.default=requestAuthCode$;

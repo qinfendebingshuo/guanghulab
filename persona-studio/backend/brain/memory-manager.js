@@ -4,6 +4,9 @@
  */
 const fs = require('fs');
 const path = require('path');
+const profileLearner = require('./profile-learner');
+const knowledgeExtractor = require('./knowledge-extractor');
+const evolutionLogger = require('./evolution-logger');
 
 const BRAIN_DIR = path.join(__dirname, '..', '..', 'brain');
 const MEMORY_DIR = path.join(BRAIN_DIR, 'memory');
@@ -125,6 +128,43 @@ function loadProfile(devId) {
   }
 }
 
+/**
+ * 更新用户画像（调用 profile-learner）
+ * @param {string} devId - 开发编号
+ * @param {string} userMessage - 用户消息
+ * @param {string} assistantReply - 助手回复
+ */
+function updateProfile(devId, userMessage, assistantReply) {
+  if (!devId || devId === 'GUEST') return;
+  try {
+    const result = profileLearner.updateProfile(devId, userMessage, assistantReply);
+    if (result) {
+      evolutionLogger.logProfileUpdate(devId, Object.keys(result));
+    }
+  } catch (err) {
+    console.error('Profile update error:', err.message);
+  }
+}
+
+/**
+ * 自动提取知识（调用 knowledge-extractor）
+ * @param {string} devId - 开发编号
+ * @param {Array} conversation - 对话历史
+ * @param {string} projectName - 项目名
+ */
+function autoExtractKnowledge(devId, conversation, projectName) {
+  try {
+    const count = knowledgeExtractor.autoExtractKnowledge(devId, conversation, projectName);
+    if (count > 0) {
+      evolutionLogger.logKnowledgeExtract(devId, count, projectName);
+    }
+    return count;
+  } catch (err) {
+    console.error('Knowledge extraction error:', err.message);
+    return 0;
+  }
+}
+
 module.exports = {
   loadMemory,
   saveMemory,
@@ -132,5 +172,7 @@ module.exports = {
   updateLastTopic,
   loadProjects,
   addProject,
-  loadProfile
+  loadProfile,
+  updateProfile,
+  autoExtractKnowledge
 };

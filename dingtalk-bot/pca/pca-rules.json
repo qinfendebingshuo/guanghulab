@@ -1,0 +1,58 @@
+{
+    "version": "1.0",
+    "dimensions": {
+        "EXE": {
+            "name": "执行力",
+            "weight": 20,
+            "factors": {
+                "streak_rate": 30,
+                "completion_rate": 30,
+                "rhythm_score": 20,
+                "friction_recovery": 20
+            }
+        },
+        "TEC": {
+            "name": "技术纵深",
+            "weight": 25,
+            "factors": {
+                "el_level": 40,
+                "code_lines": 30,
+                "tech_breadth": 30
+            }
+        },
+        "SYS": {
+            "name": "系统理解力",
+            "weight": 30,
+            "factors": {
+                "cross_module": 35,
+                "system_tasks": 35,
+                "engineering_mind": 30
+            }
+        },
+        "COL": {
+            "name": "协作力",
+            "weight": 15,
+            "factors": {
+                "syslog_quality": 40,
+                "git_collab": 30,
+                "persona_sync": 30
+            }
+        },
+        "INI": {
+            "name": "主动性",
+            "weight": 10,
+            "factors": {
+                "will_signal": 40,
+                "self_initiative": 30,
+                "response_72h": 30
+            }
+        }
+    },
+    "grade_thresholds": {
+        "S": 85,
+        "A": 70,
+        "B": 55,
+        "C": 40,
+        "D": 0
+    }
+}

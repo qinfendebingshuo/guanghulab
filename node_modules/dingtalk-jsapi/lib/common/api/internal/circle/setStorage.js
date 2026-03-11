@@ -1,0 +1,1 @@
+"use strict";function setStorage$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setStorage$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.circle.setStorage",exports.setStorage$=setStorage$,exports.default=setStorage$;

@@ -1,0 +1,1 @@
+"use strict";function friendsByRoom$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.friendsByRoom$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.bizcard.friendsByRoom",exports.friendsByRoom$=friendsByRoom$,exports.default=friendsByRoom$;

@@ -1,0 +1,1 @@
+"use strict";function recordShortVideo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.recordShortVideo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.recordShortVideo",exports.recordShortVideo$=recordShortVideo$,exports.default=recordShortVideo$;

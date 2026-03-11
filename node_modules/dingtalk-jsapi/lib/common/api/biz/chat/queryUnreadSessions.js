@@ -1,0 +1,1 @@
+"use strict";function queryUnreadSessions$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.queryUnreadSessions$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.chat.queryUnreadSessions",exports.queryUnreadSessions$=queryUnreadSessions$,exports.default=queryUnreadSessions$;

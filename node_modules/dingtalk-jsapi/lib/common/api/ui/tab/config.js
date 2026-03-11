@@ -1,0 +1,1 @@
+"use strict";function config$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.config$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="ui.tab.config",exports.config$=config$,exports.default=config$;

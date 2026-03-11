@@ -18,7 +18,7 @@
 - **主控**：桔子（DEV-010），前端负责人
 - **项目**：HoloLake (光湖) MVP，运行于 guanghulab.com
 - **技术栈**：Node.js 20 + Express + PM2 + Nginx + Next.js 15
-- **运行环境**：HoloLake Era AGE OS
+- **运行环境**：光湖纪元·AGE-5
 
 ## 通感语言回应风格（替换旧版·立即生效）
 

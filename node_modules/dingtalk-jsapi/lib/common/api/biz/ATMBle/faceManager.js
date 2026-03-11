@@ -1,0 +1,1 @@
+"use strict";function faceManager$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.faceManager$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.ATMBle.faceManager",exports.faceManager$=faceManager$,exports.default=faceManager$;

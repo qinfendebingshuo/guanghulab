@@ -1,0 +1,1 @@
+"use strict";function setTitle$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setTitle$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.setTitle",exports.setTitle$=setTitle$,exports.default=setTitle$;

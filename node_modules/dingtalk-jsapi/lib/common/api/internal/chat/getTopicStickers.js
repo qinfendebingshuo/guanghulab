@@ -1,0 +1,1 @@
+"use strict";function getTopicStickers$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getTopicStickers$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.getTopicStickers",exports.getTopicStickers$=getTopicStickers$,exports.default=getTopicStickers$;

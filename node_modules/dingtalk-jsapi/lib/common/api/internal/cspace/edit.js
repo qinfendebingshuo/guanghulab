@@ -1,0 +1,1 @@
+"use strict";function edit$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.edit$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.cspace.edit",exports.edit$=edit$,exports.default=edit$;

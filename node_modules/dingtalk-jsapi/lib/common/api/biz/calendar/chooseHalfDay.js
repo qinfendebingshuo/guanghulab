@@ -1,0 +1,1 @@
+"use strict";function chooseHalfDay$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.chooseHalfDay$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.calendar.chooseHalfDay",exports.chooseHalfDay$=chooseHalfDay$,exports.default=chooseHalfDay$;

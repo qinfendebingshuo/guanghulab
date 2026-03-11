@@ -1,0 +1,1 @@
+"use strict";function departmentsPicker$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.departmentsPicker$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.contact.departmentsPicker",exports.departmentsPicker$=departmentsPicker$,exports.default=departmentsPicker$;

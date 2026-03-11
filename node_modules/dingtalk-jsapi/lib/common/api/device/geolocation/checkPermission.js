@@ -1,0 +1,1 @@
+"use strict";function checkPermission$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.checkPermission$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.geolocation.checkPermission",exports.checkPermission$=checkPermission$,exports.default=checkPermission$;

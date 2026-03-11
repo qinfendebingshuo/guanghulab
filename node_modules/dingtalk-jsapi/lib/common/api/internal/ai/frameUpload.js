@@ -1,0 +1,1 @@
+"use strict";function frameUpload$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.frameUpload$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.ai.frameUpload",exports.frameUpload$=frameUpload$,exports.default=frameUpload$;

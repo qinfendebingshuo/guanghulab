@@ -1,0 +1,1 @@
+"use strict";function onRecordEnd$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.onRecordEnd$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.audio.onRecordEnd",exports.onRecordEnd$=onRecordEnd$,exports.default=onRecordEnd$;

@@ -1,0 +1,1 @@
+"use strict";function takePhoto$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.takePhoto$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.certify.takePhoto",exports.takePhoto$=takePhoto$,exports.default=takePhoto$;

@@ -1,0 +1,25 @@
+﻿{
+  "module": "M-BRIDGE",
+  "version": "1.0",
+  "port": 3020,
+  "logPath": "./logs",
+  "eventLogFile": "./bridge-events.json",
+  "nodeTimeout": 3000,
+  "eventRetainDays": 30,
+  "nodes": [
+    {
+      "name": "M14冷启动热身服务",
+      "url": "http://localhost:3000",
+      "type": "web"
+    },
+    {
+      "name": "M18健康检查服务",
+      "url": "http://localhost:3010",
+      "type": "web"
+    }
+  ],
+  "secrets": {
+    "githubWebhookSecret": "GITHUB_WEBHOOK_SECRET_PLACEHOLDER",
+    "syslogAuthToken": "SYSLOG_AUTH_TOKEN_PLACEHOLDER"
+  }
+}

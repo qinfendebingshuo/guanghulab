@@ -1,0 +1,1 @@
+"use strict";function getPayUrl$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getPayUrl$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.store.getPayUrl",exports.getPayUrl$=getPayUrl$,exports.default=getPayUrl$;

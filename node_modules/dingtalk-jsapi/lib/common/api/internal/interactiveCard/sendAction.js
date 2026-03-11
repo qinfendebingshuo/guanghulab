@@ -1,0 +1,1 @@
+"use strict";function sendAction$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.sendAction$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.interactiveCard.sendAction",exports.sendAction$=sendAction$,exports.default=sendAction$;

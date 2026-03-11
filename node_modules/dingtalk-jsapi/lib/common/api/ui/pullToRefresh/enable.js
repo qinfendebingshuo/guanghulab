@@ -1,0 +1,1 @@
+"use strict";function enable$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.enable$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="ui.pullToRefresh.enable",exports.enable$=enable$,exports.default=enable$;

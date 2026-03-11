@@ -1,0 +1,1 @@
+"use strict";function setMenu$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setMenu$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.setMenu",exports.setMenu$=setMenu$,exports.default=setMenu$;

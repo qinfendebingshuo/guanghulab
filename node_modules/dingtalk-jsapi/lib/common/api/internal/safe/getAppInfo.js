@@ -1,0 +1,1 @@
+"use strict";function getAppInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getAppInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.safe.getAppInfo",exports.getAppInfo$=getAppInfo$,exports.default=getAppInfo$;

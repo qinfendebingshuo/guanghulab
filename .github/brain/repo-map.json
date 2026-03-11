@@ -1,7 +1,7 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-10T15:36:07.840Z",
+  "generated_at": "2026-03-11T14:39:52.896Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
@@ -14,7 +14,7 @@
     "hli_implemented": 7,
     "hli_coverage_pct": "33%",
     "last_ci_run": "2026-03-05T16:07:24.070Z",
-    "memory_last_updated": "2026-03-10T09:43:00.000Z"
+    "memory_last_updated": "2026-03-11T08:55:43.347Z"
   },
   "zones": [
     {
@@ -133,9 +133,12 @@
         },
         {
           "file": "system-prompt.md"
+        },
+        {
+          "file": "tcs-ml"
         }
       ],
-      "item_count": 10
+      "item_count": 11
     },
     {
       "zone_id": "WORKFLOWS",
@@ -246,7 +249,7 @@
         },
         {
           "file": "generate-module-doc.yml",
-          "name": "铸渊 · HoloLake Era 模块文档自动生成",
+          "name": "铸渊 · 光湖纪元 模块文档自动生成",
           "triggers": [
             "push",
             "manual"
@@ -1198,6 +1201,9 @@
     ],
     "system-prompt": [
       "PERSONA_BRAIN::system-prompt.md"
+    ],
+    "tcs-ml": [
+      "PERSONA_BRAIN::tcs-ml"
     ],
     "workflow": [
       "WORKFLOWS"

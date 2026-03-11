@@ -1,0 +1,212 @@
+[
+  {
+    "filename": "README.md",
+    "title": "光湖知识库文档",
+    "sections": [
+      {
+        "heading": "光湖知识库文档",
+        "level": 1,
+        "content": "\n这个目录存放所有知识库文档（Markdown格式）。知识库管理器会自动扫描这里的所有.md文件并建立索引。\n\n",
+        "keywords": [
+          "这个目录存放所有知识库文档",
+          "Markdown",
+          "格式",
+          "知识库管理器会自动扫描这里的所有",
+          "文件并建立索引"
+        ]
+      },
+      {
+        "heading": "文档命名规范",
+        "level": 2,
+        "content": "\n- age-os-architecture.md - AGE OS整体架构\n- module-specs.md - 各模块功能说明\n- dev-guide.md - 开发环境配置指南\n- git-guide-zero.md - Git零基础操作指南\n- faq.md - 常见问题手册\n- broadcast-rules.md - 广播格式规范\n\n",
+        "keywords": [
+          "age",
+          "architecture",
+          "AGE",
+          "整体架构",
+          "module",
+          "specs",
+          "各模块功能说明",
+          "dev",
+          "guide",
+          "开发环境配置指南",
+          "git",
+          "zero",
+          "Git",
+          "零基础操作指南",
+          "faq",
+          "常见问题手册",
+          "broadcast",
+          "rules",
+          "广播格式规范"
+        ]
+      }
+    ]
+  },
+  {
+    "filename": "broadcast-rules.md",
+    "title": "广播格式规范 v1.0",
+    "sections": [
+      {
+        "heading": "广播格式规范 v1.0",
+        "level": 1,
+        "content": "\n",
+        "keywords": []
+      },
+      {
+        "heading": "BC编号格式",
+        "level": 2,
+        "content": "BC-{模块号}-{序号}-{开发者代号}\n示例：\n- BC-M17-005-ZZ（M17模块第5个广播，之之）\n- BC-M22-007-AW（M22模块第7个广播，Awen）\n- BC-M-DINGTALK-003-ZZ（M-DINGTALK模块第3个广播，之之）\n\n",
+        "keywords": [
+          "模块号",
+          "序号",
+          "开发者代号",
+          "示例",
+          "模块第",
+          "个广播",
+          "之之",
+          "Awen",
+          "DINGTALK"
+        ]
+      },
+      {
+        "heading": "广播结构",
+        "level": 2,
+        "content": "1. 广播头（编号/开发者/模块/环节/EL等级/时间）\n2. 人格体引导语（奶瓶线/直接线/本体线）\n3. 任务概述（做什么+为什么）\n4. Step分步引导（终端命令+完整代码）\n5. 验收标准（二元：全✅或继续改）\n6. SYSLOG模板\n\n",
+        "keywords": [
+          "广播头",
+          "编号",
+          "开发者",
+          "模块",
+          "环节",
+          "等级",
+          "时间",
+          "人格体引导语",
+          "奶瓶线",
+          "直接线",
+          "本体线",
+          "任务概述",
+          "做什么",
+          "为什么",
+          "Step",
+          "分步引导",
+          "终端命令",
+          "完整代码",
+          "验收标准",
+          "二元",
+          "或继续改",
+          "SYSLOG",
+          "模板"
+        ]
+      },
+      {
+        "heading": "合并规则",
+        "level": 2,
+        "content": "- 每个广播包含2-3个环节\n- 单次广播超4000字自动分卷\n\n",
+        "keywords": [
+          "每个广播包含",
+          "个环节",
+          "单次广播超",
+          "字自动分卷"
+        ]
+      },
+      {
+        "heading": "EL等级",
+        "level": 2,
+        "content": "- EL-1~3：基础配置/简单页面\n- EL-4~5：中等功能模块\n- EL-6~7：系统级/多模块联动\n- EL-8~10：架构级/全链路\n\n",
+        "keywords": [
+          "基础配置",
+          "简单页面",
+          "中等功能模块",
+          "系统级",
+          "多模块联动",
+          "架构级",
+          "全链路"
+        ]
+      }
+    ]
+  },
+  {
+    "filename": "faq.md",
+    "title": "常见问题手册",
+    "sections": [
+      {
+        "heading": "常见问题手册",
+        "level": 1,
+        "content": "\n",
+        "keywords": []
+      },
+      {
+        "heading": "Q: 我怎么查看自己的进度？",
+        "level": 2,
+        "content": "A: 在钉钉群里发送「查进度」或「我做到哪了」，机器人会自动查询并回复。\n\n",
+        "keywords": [
+          "在钉钉群里发送",
+          "查进度",
+          "我做到哪了",
+          "机器人会自动查询并回复"
+        ]
+      },
+      {
+        "heading": "Q: SYSLOG怎么提交？",
+        "level": 2,
+        "content": "A: 完成每个阶段后，按照广播末尾的SYSLOG模板填写，发到钉钉群里。\n\n",
+        "keywords": [
+          "完成每个阶段后",
+          "按照广播末尾的",
+          "SYSLOG",
+          "模板填写",
+          "发到钉钉群里"
+        ]
+      },
+      {
+        "heading": "Q: Git怎么提交？",
+        "level": 2,
+        "content": "A: \n1. cd ~/Desktop/guanghulab（或你的项目目录）\n2. git add .\n3. git commit -m \"DEV-你的编号：描述\"\n4. git push\n\n",
+        "keywords": [
+          "Desktop",
+          "guanghulab",
+          "或你的项目目录",
+          "git",
+          "add",
+          "commit",
+          "DEV",
+          "你的编号",
+          "描述",
+          "push"
+        ]
+      },
+      {
+        "heading": "Q: 报错了怎么办？",
+        "level": 2,
+        "content": "A: 截图发给你的引导人格体！不用怕，每个报错都有解决方案。\n\n",
+        "keywords": [
+          "截图发给你的引导人格体",
+          "不用怕",
+          "每个报错都有解决方案"
+        ]
+      },
+      {
+        "heading": "Q: 什么是连胜？",
+        "level": 2,
+        "content": "A: 每次任务一次通过就是一次胜利，连续通过就是连胜！当前最高纪录是13连胜。\n\n",
+        "keywords": [
+          "每次任务一次通过就是一次胜利",
+          "连续通过就是连胜",
+          "当前最高纪录是",
+          "连胜"
+        ]
+      },
+      {
+        "heading": "Q: 72小时启动窗口是什么？",
+        "level": 2,
+        "content": "A: 广播签发后72小时内必须开始执行，超时系统会自动提醒。\n\n",
+        "keywords": [
+          "广播签发后",
+          "小时内必须开始执行",
+          "超时系统会自动提醒"
+        ]
+      }
+    ]
+  }
+]

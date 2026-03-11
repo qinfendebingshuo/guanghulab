@@ -1,0 +1,1 @@
+"use strict";function createEditor$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.createEditor$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.createEditor",exports.createEditor$=createEditor$,exports.default=createEditor$;

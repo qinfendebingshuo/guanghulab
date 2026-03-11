@@ -1,0 +1,1 @@
+"use strict";function doLogin$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.doLogin$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.uic.doLogin",exports.doLogin$=doLogin$,exports.default=doLogin$;

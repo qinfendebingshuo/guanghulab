@@ -1,0 +1,1 @@
+"use strict";function checkIn$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.checkIn$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.ATMBle.checkIn",exports.checkIn$=checkIn$,exports.default=checkIn$;

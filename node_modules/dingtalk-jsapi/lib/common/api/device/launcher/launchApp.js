@@ -1,0 +1,1 @@
+"use strict";function launchApp$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.launchApp$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.launcher.launchApp",exports.launchApp$=launchApp$,exports.default=launchApp$;

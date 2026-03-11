@@ -1,0 +1,1 @@
+"use strict";function dns$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.dns$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.dns",exports.dns$=dns$,exports.default=dns$;

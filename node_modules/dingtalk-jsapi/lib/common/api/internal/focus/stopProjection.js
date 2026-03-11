@@ -1,0 +1,1 @@
+"use strict";function stopProjection$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.stopProjection$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.focus.stopProjection",exports.stopProjection$=stopProjection$,exports.default=stopProjection$;

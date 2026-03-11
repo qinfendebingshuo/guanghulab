@@ -1,0 +1,1 @@
+"use strict";function destroyPlayer$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.destroyPlayer$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.destroyPlayer",exports.destroyPlayer$=destroyPlayer$,exports.default=destroyPlayer$;

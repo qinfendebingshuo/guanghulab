@@ -1,0 +1,1 @@
+"use strict";function write$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.write$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="util.cookies.write",exports.write$=write$,exports.default=write$;

@@ -1,0 +1,1 @@
+"use strict";function qrcode$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.qrcode$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.qrcode",exports.qrcode$=qrcode$,exports.default=qrcode$;

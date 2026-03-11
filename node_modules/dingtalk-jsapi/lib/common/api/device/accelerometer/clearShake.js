@@ -1,0 +1,1 @@
+"use strict";function clearShake$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.clearShake$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.accelerometer.clearShake",exports.clearShake$=clearShake$,exports.default=clearShake$;

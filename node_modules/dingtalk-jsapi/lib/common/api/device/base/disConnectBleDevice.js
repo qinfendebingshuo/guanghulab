@@ -1,0 +1,1 @@
+"use strict";function disConnectBleDevice$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.disConnectBleDevice$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.disConnectBleDevice",exports.disConnectBleDevice$=disConnectBleDevice$,exports.default=disConnectBleDevice$;

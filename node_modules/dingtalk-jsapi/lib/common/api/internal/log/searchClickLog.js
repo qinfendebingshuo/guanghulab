@@ -1,0 +1,1 @@
+"use strict";function searchClickLog$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.searchClickLog$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.log.searchClickLog",exports.searchClickLog$=searchClickLog$,exports.default=searchClickLog$;

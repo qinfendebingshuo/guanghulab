@@ -6,6 +6,9 @@
 const fs = require('fs');
 const path = require('path');
 const modelRouter = require('./model-router');
+const knowledgeExtractor = require('./knowledge-extractor');
+const patternAnalyzer = require('./pattern-analyzer');
+const evolutionLogger = require('./evolution-logger');
 
 const WORKSPACE_DIR = path.join(__dirname, '..', '..', 'workspace');
 
@@ -31,6 +34,7 @@ async function generate({ dev_id, conversation }) {
   const requirements = extractRequirements(conversation);
   const projectName = 'project-' + Date.now();
   const projectDir = path.join(WORKSPACE_DIR, dev_id, projectName);
+  const startTime = Date.now();
 
   // 确保工作目录存在
   fs.mkdirSync(projectDir, { recursive: true });
@@ -39,7 +43,9 @@ async function generate({ dev_id, conversation }) {
 
   if (!apiKey) {
     // 无 API 密钥时生成模板项目
-    return generateTemplate(projectDir, projectName, requirements);
+    const result = generateTemplate(projectDir, projectName, requirements);
+    triggerPostBuildEvolution(dev_id, conversation, result, startTime, true);
+    return result;
   }
 
   try {
@@ -78,20 +84,53 @@ async function generate({ dev_id, conversation }) {
         requirements.substring(0, 500),
         '',
         '## 生成说明',
-        '由光湖 Persona Studio 知秋自动生成',
+        '由光湖 Persona Studio 铸渊自动生成',
         '生成时间：' + new Date().toISOString()
       ].join('\n'), 'utf-8');
       files.push('README.md');
     }
 
-    return {
+    const result = {
       projectName,
       files,
       summary: `项目 ${projectName} 已生成，包含 ${files.length} 个文件。`
     };
+    triggerPostBuildEvolution(dev_id, conversation, result, startTime, true);
+    return result;
   } catch (err) {
     console.error('Code generation failed:', err.message);
-    return generateTemplate(projectDir, projectName, requirements);
+    const result = generateTemplate(projectDir, projectName, requirements);
+    triggerPostBuildEvolution(dev_id, conversation, result, startTime, false);
+    return result;
+  }
+}
+
+/**
+ * 项目完成后触发自进化：知识提取 + 模式识别
+ */
+function triggerPostBuildEvolution(devId, conversation, result, startTime, success) {
+  try {
+    const buildTimeMs = Date.now() - startTime;
+
+    // 知识提取
+    knowledgeExtractor.autoExtractKnowledge(devId, conversation, result.projectName);
+
+    // 模式识别
+    const patterns = patternAnalyzer.analyzeAndUpdatePatterns(
+      devId, conversation, result.files, buildTimeMs, success
+    );
+
+    // 进化日志
+    evolutionLogger.logEvent('build_complete', '项目构建完成: ' + result.projectName, {
+      dev_id: devId,
+      project: result.projectName,
+      files_count: (result.files || []).length,
+      build_time_ms: buildTimeMs,
+      success: success,
+      patterns_detected: patterns
+    });
+  } catch (err) {
+    console.error('Post-build evolution error:', err.message);
   }
 }
 

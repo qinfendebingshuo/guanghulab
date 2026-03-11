@@ -1,0 +1,1 @@
+"use strict";function getLocalErrorMsg$(r){return common_1.ddSdk.invokeAPI(exports.apiName,r)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getLocalErrorMsg$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.diagnostic.getLocalErrorMsg",exports.getLocalErrorMsg$=getLocalErrorMsg$,exports.default=getLocalErrorMsg$;
