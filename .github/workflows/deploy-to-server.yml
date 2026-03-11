@@ -86,8 +86,6 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     steps:
-<<<<<<< HEAD
-=======
       - name: 🔐 检查必需 Secrets
         run: |
           MISSING=""
@@ -120,7 +118,6 @@ jobs:
           fi
           echo "✅ 所有必需 Secrets 已配置"
 
->>>>>>> origin/main
       - name: 📥 检出代码
         uses: actions/checkout@v4
 
@@ -136,13 +133,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-<<<<<<< HEAD
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-=======
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
             echo "⚠️ ssh-keyscan 失败，尝试使用 StrictHostKeyChecking=no 作为后备"
           }
->>>>>>> origin/main
 
       - name: 📦 确保远程服务器 rsync 已安装
         run: |

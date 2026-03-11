@@ -82,10 +82,6 @@ jobs:
             echo "📢 公告区无变化，跳过提交"
           else
             git commit -m "📢 自动更新系统公告区 [skip ci]"
-<<<<<<< HEAD
-            git push
-            echo "✅ 公告区已更新并推送"
-=======
             # 带重试的推送（避免并发推送导致 rejected）
             for i in 1 2 3; do
               if git push; then
@@ -99,5 +95,4 @@ jobs:
                 exit 1
               fi
             done
->>>>>>> origin/main
           fi
