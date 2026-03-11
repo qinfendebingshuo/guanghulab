@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宫·廷·纪 — 动态人格宫廷生成系统</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="start-page">
+
+    <div class="start-icon">🏯</div>
+    <h1 class="start-title">宫 · 廷 · 纪</h1>
+    <p class="start-subtitle">动态人格宫廷生成系统</p>
+
+    <div class="start-card">
+      <div class="form-group">
+        <label for="worldview">选择你的世界观</label>
+        <select id="worldview">
+          <option value="古代中国">古代中国</option>
+          <option value="架空王朝">架空王朝</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="role">选择你的身份</label>
+        <select id="role">
+          <option value="随机">随机</option>
+          <option value="妃子">妃子</option>
+          <option value="皇帝">皇帝</option>
+          <option value="重臣">重臣</option>
+          <option value="奸臣">奸臣</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="btn-start">🏯 踏入宫廷</button>
+    </div>
+
+    <div class="load-section">
+      <div class="divider"></div>
+      <p class="divider-text">
+        <a href="../index.html" style="color:var(--gold);text-decoration:none;">← 返回 Persona Studio</a>
+      </p>
+    </div>
+
+    <p class="start-footer">🏮 HoloLake Era · M-PALACE · 光湖语言人格系统</p>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var API_BASE = sessionStorage.getItem('user_api_base') || '';
+      var API_KEY = sessionStorage.getItem('user_api_key') || '';
+      var MODEL = sessionStorage.getItem('selected_model') || '';
+
+      if (!API_KEY || !MODEL) {
+        alert('请先在 Persona Studio 登录页选择模型后再进入宫廷纪');
+        window.location.href = '../index.html';
+        return;
+      }
+
+      var SYSTEM_PROMPT = [
+        '你是"宫·廷·纪"动态人格宫廷叙事引擎。',
+        '你负责根据玩家选择的世界观和身份，生成沉浸式古风宫廷叙事。',
+        '',
+        '规则：',
+        '1. 每次回复必须是且仅是有效的 JSON（不要包含 ```json 代码块标记）',
+        '2. 叙事风格：古风文学，优美细腻，富有画面感，200-400字',
+        '3. 每次提供3个选项，每个选项都会导致不同的剧情走向',
+        '4. 维护四个数值维度(0-100)：权力power、地位status、情感emotion、冲突conflict',
+        '5. 角色心理刻画深入，NPC有鲜明个性',
+        '6. 剧情要有张力，包含政治斗争、情感纠葛、权谋博弈',
+        '',
+        'JSON 输出格式（严格遵守）：',
+        '{',
+        '  "chapter_title": "第X章 · 标题",',
+        '  "narrative": "叙事文本",',
+        '  "choices": ["选项1", "选项2", "选项3"],',
+        '  "four_dimensions": { "power": 50, "status": 50, "emotion": 50, "conflict": 50 }',
+        '}'
+      ].join('\n');
+
+      document.getElementById('btn-start').addEventListener('click', function () {
+        var worldview = document.getElementById('worldview').value;
+        var role = document.getElementById('role').value;
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '正在生成宫廷世界…';
+
+        if (role === '随机') {
+          var roles = ['妃子', '皇帝', '重臣', '奸臣'];
+          role = roles[Math.floor(Math.random() * roles.length)];
+        }
+
+        var userPrompt = [
+          '开始一局新的宫廷叙事游戏。',
+          '世界观：' + worldview,
+          '玩家身份：' + role,
+          '',
+          '请生成第一章开篇：',
+          '- 描述王朝背景、宫廷氛围',
+          '- 介绍玩家角色的处境',
+          '- 引入1-2个关键NPC',
+          '- 给出3个行动选项',
+          '- 设定初始四维数值'
+        ].join('\n');
+
+        callAI([
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt }
+        ])
+          .then(function (data) {
+            sessionStorage.setItem('palace_game_state', JSON.stringify({
+              worldview: worldview,
+              role: role,
+              chapter: 1,
+              paragraph: 1,
+              history: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'user', content: userPrompt },
+                { role: 'assistant', content: JSON.stringify(data) }
+              ],
+              current: data
+            }));
+            window.location.href = 'game.html';
+          })
+          .catch(function (err) {
+            showToast('生成失败：' + err.message);
+            btn.disabled = false;
+            btn.textContent = '🏯 踏入宫廷';
+          });
+      });
+
+      function callAI(messages) {
+        return fetch(API_BASE + '/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + API_KEY
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            messages: messages,
+            temperature: 0.9
+          })
+        })
+          .then(function (r) {
+            if (!r.ok) throw new Error('AI 模型调用失败 (' + r.status + ')');
+            return r.json();
+          })
+          .then(function (resp) {
+            var content = (resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content) || '';
+            content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+            return JSON.parse(content);
+          });
+      }
+
+      function showToast(msg) {
+        var old = document.querySelector('.toast');
+        if (old) old.remove();
+        var el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 3000);
+      }
+    })();
+  </script>
+</body>
+</html>
