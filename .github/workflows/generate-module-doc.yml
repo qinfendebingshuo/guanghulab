@@ -13,9 +13,14 @@ on:
       - 'm11-module/**'
       - 'm12-kanban/**'
       - 'm15-cloud-drive/**'
+      - 'm18-health-check/**'
       - 'dingtalk-bot/**'
       - 'backend-integration/**'
       - 'status-board/**'
+      - 'backend/**'
+      - 'frontend/**'
+      - 'notification/**'
+      - 'ticket-system/**'
       - 'scripts/generate-module-doc.js'
   workflow_dispatch:
 
@@ -91,7 +96,7 @@ jobs:
         id: check
         run: |
           CHANGED_FILES="${{ steps.changed.outputs.files }}"
-          MODULES="m01-login m03-personality m05-user-center m06-ticket m07-dialogue-ui m10-cloud m11-module m12-kanban m15-cloud-drive dingtalk-bot backend-integration status-board"
+          MODULES="m01-login m03-personality m05-user-center m06-ticket m07-dialogue-ui m10-cloud m11-module m12-kanban m15-cloud-drive m18-health-check dingtalk-bot backend-integration status-board backend frontend notification ticket-system"
 
           RESULT="pass"
           DETAILS=""
