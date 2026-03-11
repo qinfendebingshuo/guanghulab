@@ -85,6 +85,13 @@ const MODULE_PREFIXES = [
 /* ── 冰朔系统相关路径（非模块） ─────────────────────────── */
 const SYSTEM_PREFIXES = ['scripts', 'docs', '.github', 'persona-brain-db'];
 
+/* ── 工作流模块名提取正则 ─────────────────────────── */
+const MODULE_NAME_PATTERNS = [
+  /(?:Module Doc|模块)[:\s·]*(\S+)/,
+  /(?:模块|module)[:\s·]*([a-zA-Z0-9_-]+)/i,
+  /^(?:📦\s*)?([a-zA-Z][\w-]*)\//m,
+];
+
 /* ── 工具函数 ─────────────────────────── */
 
 function formatTime(ts) {
@@ -285,12 +292,13 @@ async function fetchRecentWorkflowRuns() {
 
       // 模块相关工作流 → 合作者（仅在能提取模块名时添加）
       if (wfName.includes('Module Doc') || wfName.includes('模块')) {
-        // 尝试从工作流名称提取模块名
-        const moduleMatch = wfName.match(/(?:Module Doc|模块)[:\s·]*(\S+)/);
+        // 尝试从工作流名称或提交信息提取模块名
         const headMsg = run.head_commit?.message || '';
-        const msgMatch = headMsg.match(/(?:模块|module)[:\s·]*([a-zA-Z0-9_-]+)/i)
-          || headMsg.match(/^(?:📦\s*)?([a-zA-Z][\w-]*)\//m);
-        const moduleName = moduleMatch?.[1] || msgMatch?.[1] || null;
+        let moduleName = null;
+        for (const pattern of MODULE_NAME_PATTERNS) {
+          const m = wfName.match(pattern) || headMsg.match(pattern);
+          if (m) { moduleName = m[1]; break; }
+        }
         if (moduleName) {
           collabRuns.push({ ...entry, module: moduleName });
         }
