@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宫·廷·纪 — 动态人格宫廷生成系统</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="start-page">
+
+    <div class="start-icon">🏯</div>
+    <h1 class="start-title">宫 · 廷 · 纪</h1>
+    <p class="start-subtitle">动态人格宫廷生成系统</p>
+
+    <div class="start-card">
+      <div class="form-group">
+        <label for="worldview">选择你的世界观</label>
+        <select id="worldview">
+          <option value="古代中国">古代中国</option>
+          <option value="架空王朝">架空王朝</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="role">选择你的身份</label>
+        <select id="role">
+          <option value="随机">随机</option>
+          <option value="妃子">妃子</option>
+          <option value="皇帝">皇帝</option>
+          <option value="重臣">重臣</option>
+          <option value="奸臣">奸臣</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="btn-start">🏯 踏入宫廷</button>
+    </div>
+
+    <div class="load-section">
+      <div class="divider"></div>
+      <p class="divider-text">已有存档？输入编号继续</p>
+      <div class="load-row">
+        <input type="text" id="save-id-input" placeholder="PAL-20260311-A3K9">
+        <button class="btn btn-small" id="btn-load">读档</button>
+      </div>
+    </div>
+
+    <p class="start-footer">🏮 HoloLake Era · 光湖语言人格系统</p>
+  </div>
+
+  <script>
+    (function () {
+      var API_BASE = window.location.origin;
+
+      document.getElementById('btn-start').addEventListener('click', function () {
+        var worldview = document.getElementById('worldview').value;
+        var role = document.getElementById('role').value;
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '正在生成宫廷世界…';
+
+        fetch(API_BASE + '/api/palace/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ worldview: worldview, role: role })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.error) {
+              showToast('生成失败：' + data.message);
+              btn.disabled = false;
+              btn.textContent = '🏯 踏入宫廷';
+              return;
+            }
+            sessionStorage.setItem('palace_save_id', data.save_id);
+            sessionStorage.setItem('palace_state', JSON.stringify(data));
+            window.location.href = 'game.html';
+          })
+          .catch(function (err) {
+            showToast('网络错误：' + err.message);
+            btn.disabled = false;
+            btn.textContent = '🏯 踏入宫廷';
+          });
+      });
+
+      document.getElementById('btn-load').addEventListener('click', function () {
+        var saveId = document.getElementById('save-id-input').value.trim();
+        if (!saveId) { showToast('请输入存档编号'); return; }
+
+        fetch(API_BASE + '/api/palace/save/load', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ save_id: saveId })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.error) {
+              showToast(data.message || '读档失败');
+              return;
+            }
+            sessionStorage.setItem('palace_save_id', saveId);
+            sessionStorage.setItem('palace_loaded', JSON.stringify(data));
+            window.location.href = 'game.html';
+          })
+          .catch(function (err) {
+            showToast('网络错误：' + err.message);
+          });
+      });
+
+      function showToast(msg) {
+        var old = document.querySelector('.toast');
+        if (old) old.remove();
+        var el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(function () { if (el.parentNode) el.remove(); }, 3000);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "id": "ancient-china",
+  "name": "古代中国",
+  "description": "大周王朝·正统朝堂·后宫嫔妃·权臣博弈",
+  "setting": {
+    "dynasty": "大周",
+    "era_prefix": ["永安", "承平", "天启", "景和", "元丰"],
+    "capital": "长安",
+    "palace_name": "未央宫",
+    "inner_palace": "长乐宫"
+  },
+  "roles": {
+    "妃子": {
+      "title_options": ["淑妃", "德妃", "贤妃", "丽嫔", "婉嫔"],
+      "family_options": ["书香门第", "武将世家", "寒门出身", "没落贵族"],
+      "starting_rank": "嫔",
+      "intro_template": "你是{family}出身的{title}，入宫{years}年。{situation}"
+    },
+    "皇帝": {
+      "title_options": ["新帝", "少年天子", "中兴之主"],
+      "situation_options": ["初登大宝·朝局未稳", "亲政在即·太后干政", "盛世之君·暗流涌动"],
+      "intro_template": "你是{dynasty}的{title}，{situation}。"
+    },
+    "重臣": {
+      "title_options": ["丞相", "御史大夫", "太傅", "兵部尚书"],
+      "faction_options": ["清流派", "保皇派", "中立派"],
+      "intro_template": "你是{dynasty}{title}，{faction}中流砥柱。{situation}"
+    },
+    "奸臣": {
+      "title_options": ["内阁首辅", "司礼监掌印", "锦衣卫指挥使"],
+      "ambition_options": ["权倾朝野", "挟天子以令诸侯", "暗中培植势力"],
+      "intro_template": "你是{title}，表面忠良，实则{ambition}。"
+    }
+  },
+  "atmosphere": {
+    "time_of_day": ["寅时·天未亮", "辰时·早朝", "午时·日正中", "酉时·暮色", "亥时·深夜"],
+    "weather": ["细雨绵绵", "月朗星稀", "寒风凛冽", "春光明媚", "大雪纷飞"],
+    "locations": ["御书房", "太和殿", "长乐宫", "御花园", "冷宫", "密道", "城墙"]
+  }
+}
