@@ -1,10 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-<<<<<<< HEAD
-> 生成于 2026-03-10 21:11 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
-=======
 > 生成于 2026-03-11 10:03 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
->>>>>>> origin/main
-
 ---
 
 ## 📊 仓库总览（一眼全局）
@@ -13,20 +8,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-<<<<<<< HEAD
-| 工作流 | 31 个 GitHub Actions |
-| 脚本 | 26 个执行脚本 |
-| 开发者节点 | 8 人 |
-| HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-10 21:11 CST |
-=======
 | 工作流 | 32 个 GitHub Actions |
 | 脚本 | 27 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
 | 快照生成时间 | 2026-03-11 10:03 CST |
->>>>>>> origin/main
-
 ---
 
 ## 🗺️ 图书馆全区地图
@@ -42,20 +28,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-<<<<<<< HEAD
-**路径**: `.github/workflows` · **数量**: 31 项
-=======
 **路径**: `.github/workflows` · **数量**: 32 项
->>>>>>> origin/main
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-<<<<<<< HEAD
-**路径**: `scripts` · **数量**: 26 项
-=======
 **路径**: `scripts` · **数量**: 27 项
->>>>>>> origin/main
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -138,10 +116,7 @@
 | `update-readme-bulletin.yml` | 📢 更新系统公告区 | push, schedule(0 1 * * *), manual |
 | `update-repo-map.yml` | 铸渊 · 图书馆目录自动更新 | push, schedule(0 0 * * *), manual |
 | `zhuyuan-brain-sync.yml` | 铸渊 · Brain Sync | push |
-<<<<<<< HEAD
-=======
 | `zhuyuan-daily-agent.yml` | 🤖 铸渊巡检 Agent · 每日自动巡检与修复 | schedule(0 14 * * *), manual |
->>>>>>> origin/main
 | `zhuyuan-daily-selfcheck.yml` | 铸渊 · 每日自检 | schedule(0 0 * * *), manual |
 | `zhuyuan-issue-reply.yml` | 铸渊 · Issue 自动回复 | issues, issue_comment |
 | `zhuyuan-pr-review.yml` | 铸渊 · PR Review | pull_request |
@@ -173,10 +148,7 @@
 - `scripts/update-brain.js`
 - `scripts/update-memory.js`
 - `scripts/update-readme-bulletin.js`
-<<<<<<< HEAD
-=======
 - `scripts/zhuyuan-daily-agent.js`
->>>>>>> origin/main
 - `scripts/zhuyuan-daily-selfcheck.js`
 - `scripts/zhuyuan-issue-reply.js`
 - `scripts/zhuyuan-module-protocol.js`
@@ -242,11 +214,7 @@
 - `m10-cloud/` — 4 个文件 (有README)
 - `m11-module/` — 4 个文件 (有README)
 - `m12-kanban/` — 1 个文件 (有README)
-<<<<<<< HEAD
-- `m15-cloud-drive/` — 3 个文件
-=======
 - `m15-cloud-drive/` — 4 个文件 (有README)
->>>>>>> origin/main
 - `m18-health-check/` — 6 个文件 (有README)
 
 ---
