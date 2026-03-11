@@ -51,6 +51,11 @@
             <span class="mode-title">访客体验</span>
             <span class="mode-desc">无需编号，快速体验铸渊人格体（无记忆功能）</span>
           </button>
+          <button class="mode-card mode-card-palace" onclick="selectMode('palace')">
+            <span class="mode-icon">🏯</span>
+            <span class="mode-title">宫·廷·纪 — 宫斗模块</span>
+            <span class="mode-desc">M-PALACE 动态人格宫廷生成系统 · 输入 API 即可踏入宫廷</span>
+          </button>
         </div>
       </div>
 
@@ -190,6 +195,12 @@
       if (mode === 'developer') {
         showStep('stepDevId');
         document.getElementById('devIdInput').focus();
+      } else if (mode === 'palace') {
+        verifiedDevId = 'PALACE';
+        verifiedDevName = '宫廷玩家';
+        showWelcomeBanner('🏯 宫·廷·纪', '选择模型后即可踏入宫廷世界，开启你的宫斗之旅。');
+        showStep('step2');
+        document.getElementById('apiKeyInput').focus();
       } else {
         // Guest → go directly to step 2
         verifiedDevId = 'GUEST';
@@ -378,6 +389,13 @@
       sessionStorage.setItem('user_api_base', apiBase);
       sessionStorage.setItem('user_api_key', apiKey);
       sessionStorage.setItem('selected_model', selectedModel);
+
+      if (currentMode === 'palace') {
+        sessionStorage.setItem('dev_id', 'PALACE');
+        sessionStorage.removeItem('session_token');
+        window.location.href = 'palace/index.html';
+        return;
+      }
 
       if (currentMode === 'guest') {
         sessionStorage.setItem('dev_id', 'GUEST');
