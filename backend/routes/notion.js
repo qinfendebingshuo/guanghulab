@@ -1,60 +1,54 @@
 const express = require('express');
 const axios = require('axios');
+const https = require('https');
+
 const router = express.Router();
 
+// 读取环境变量
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
-const NOTION_VERSION = '2022-06-28';
-const BASE_URL = 'https://api.notion.com/v1';
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
-const headers = () => ({
-  'Authorization': 'Bearer ' + NOTION_TOKEN,
-  'Content-Type': 'application/json',
-  'Notion-Version': NOTION_VERSION
+// 创建忽略证书验证的 httpsAgent
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
 });
 
+// 测试路由
 router.get('/test', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Notion 路由正常', 
-    token_configured: !!NOTION_TOKEN 
+  res.json({
+    status: 'ok',
+    message: 'Notion 路由正常',
+    token_configured: !!NOTION_TOKEN
   });
 });
 
-router.get('/database/:id', async (req, res) => {
+// 读取数据库
+router.get('/database/:databaseId', async (req, res) => {
   try {
-    const response = await axios.post(
-      BASE_URL + '/databases/' + req.params.id + '/query',
-      {},
-      { headers: headers() }
-    );
-    res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: err.message, detail: err.response ? err.response.data : null });
-  }
-});
+    const databaseId = req.params.databaseId;
+    
+    if (!NOTION_TOKEN) {
+      return res.status(500).json({ error: 'NOTION_TOKEN 未配置' });
+    }
 
-router.get('/page/:id', async (req, res) => {
-  try {
     const response = await axios.get(
-      BASE_URL + '/pages/' + req.params.id,
-      { headers: headers() }
+      `https://api.notion.com/v1/databases/${databaseId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${NOTION_TOKEN}`,
+          'Notion-Version': '2022-06-28'
+        },
+        httpsAgent: httpsAgent
+      }
     );
-    res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: err.message, detail: err.response ? err.response.data : null });
-  }
-});
 
-router.post('/page', async (req, res) => {
-  try {
-    const response = await axios.post(
-      BASE_URL + '/pages',
-      req.body,
-      { headers: headers() }
-    );
     res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: err.message, detail: err.response ? err.response.data : null });
+  } catch (error) {
+    console.error('Notion API 错误:', error.message);
+    res.status(500).json({ 
+      error: error.message,
+      detail: error.response?.data || null
+    });
   }
 });
 

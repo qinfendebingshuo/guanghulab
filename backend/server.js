@@ -40,3 +40,11 @@ app.post('/webhook/feishu', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 服务启动成功，端口：${PORT}`);
 });
+
+// 挂载看板 API
+const dashboardApi = require('./routes/dashboard-api');
+app.use('/api/dashboard', dashboardApi);
+
+// 挂载 SYSLOG API
+const syslogApi = require('./routes/syslog-api');
+app.use('/api/syslog', syslogApi);
