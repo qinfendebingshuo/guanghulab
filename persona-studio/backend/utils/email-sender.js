@@ -63,7 +63,7 @@ async function sendCompletion({ to, dev_id, projectName, summary }) {
     '<hr>',
     '<p style="color:#656d76;font-size:12px">',
     '光湖语言人格系统 · HoloLake Era · AGE OS<br>',
-    '此邮件由知秋自动发送',
+    '此邮件由铸渊自动发送',
     '</p>',
     '</div>'
   ].join('\n');
