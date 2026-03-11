@@ -166,8 +166,8 @@
   }
 
   function trimHistory(history) {
-    if (history.length <= 12) return history.slice();
-    // Keep system prompt + last 10 messages
+    // Keep system prompt (first message) + last 10 exchange messages
+    if (history.length <= 11) return history.slice();
     return [history[0]].concat(history.slice(-10));
   }
 
