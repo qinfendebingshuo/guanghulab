@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宫廷纪 · 叙事</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="game-page">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <span class="top-bar-title" id="top-title">🏯 宫廷纪</span>
+      <div class="top-bar-actions">
+        <button class="btn btn-small" id="btn-save">存档</button>
+        <button class="btn btn-small" id="btn-exit" onclick="window.location.href='index.html'">退出</button>
+      </div>
+    </div>
+
+    <!-- Narrative Area -->
+    <div class="narrative-area fade-in">
+      <h2 class="chapter-title" id="chapter-title">第一章 · 序幕</h2>
+      <div class="narrative-text serif" id="narrative-text">
+        <span class="loading">
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+          <span class="loading-dot"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Choices Area -->
+    <div class="choices-area" id="choices-area">
+      <p class="choices-label">┌ 选项区 ─</p>
+      <div id="choices-container"></div>
+      <div class="free-input-row">
+        <input type="text" id="free-input" placeholder="④ 自由输入你的回应…">
+        <button class="btn btn-small" id="btn-free-submit">发送</button>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="status-bar">
+      <div class="status-toggle" id="status-toggle">▼ 状态栏</div>
+      <div class="status-grid" id="status-grid">
+        <div class="stat-row">
+          <span class="stat-icon">🔴</span>
+          <span class="stat-label">权力值</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill power" id="bar-power" style="width:50%"></div></div>
+          <span class="stat-value" id="val-power">50</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">💜</span>
+          <span class="stat-label">地位值</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill status" id="bar-status" style="width:50%"></div></div>
+          <span class="stat-value" id="val-status">50</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">💛</span>
+          <span class="stat-label">情感值</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill emotion" id="bar-emotion" style="width:50%"></div></div>
+          <span class="stat-value" id="val-emotion">50</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⚔️</span>
+          <span class="stat-label">冲突值</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill conflict" id="bar-conflict" style="width:50%"></div></div>
+          <span class="stat-value" id="val-conflict">50</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+      <span id="progress-info">📖 第1章 · 第1段</span>
+      <span id="save-id-display">存档号: —</span>
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
