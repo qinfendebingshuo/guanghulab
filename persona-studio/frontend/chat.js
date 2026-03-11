@@ -104,9 +104,13 @@ async function sendMessage() {
   var sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true;
 
+  // 显示"思考中"状态
+  var thinkingEl = appendThinking();
+
   try {
     if (LOGIN_MODE === 'apikey') {
-      // API Key 模式：浏览器直连用户 API（无需后端代理）
+      // API Key 模式：通过后端代理调用用户 API
+      removeThinking(thinkingEl);
       await streamApiKeyReply(text);
     } else {
       // 开发编号模式：使用原有后端接口
@@ -120,11 +124,25 @@ async function sendMessage() {
         })
       });
 
-      var data = await res.json();
+      removeThinking(thinkingEl);
+
+      var data;
+      try {
+        data = await res.json();
+      } catch (_parseErr) {
+        appendMessage('system', '服务器返回异常，请稍后再试');
+        sendBtn.disabled = false;
+        input.focus();
+        return;
+      }
 
       if (data.reply) {
         appendMessage('persona', data.reply);
         conversationHistory.push({ role: 'assistant', content: data.reply });
+      } else if (data.error) {
+        appendMessage('system', '⚠️ ' + (data.message || '对话服务暂时不可用'));
+      } else {
+        appendMessage('system', '未收到有效回复，请稍后再试');
       }
 
       if (data.build_ready) {
@@ -133,7 +151,8 @@ async function sendMessage() {
       }
     }
   } catch (_err) {
-    appendMessage('system', '消息发送失败，请稍后再试');
+    removeThinking(thinkingEl);
+    appendMessage('system', '消息发送失败，请检查网络连接后再试');
   }
 
   sendBtn.disabled = false;
@@ -191,6 +210,23 @@ async function streamApiKeyReply(text) {
     }
   } catch (err) {
     streamEl.textContent = '⚠️ ' + (err.message || '请求失败，请检查网络连接');
+  }
+}
+
+/* ---- 思考中状态 ---- */
+function appendThinking() {
+  var chatBody = document.getElementById('chatBody');
+  var msgDiv = document.createElement('div');
+  msgDiv.className = 'message message-persona thinking';
+  msgDiv.innerHTML = '<span class="avatar">🧠</span><div class="msg-content">思考中…</div>';
+  chatBody.appendChild(msgDiv);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  return msgDiv;
+}
+
+function removeThinking(el) {
+  if (el && el.parentNode) {
+    el.parentNode.removeChild(el);
   }
 }
 

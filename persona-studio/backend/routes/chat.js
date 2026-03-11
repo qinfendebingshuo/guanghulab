@@ -62,7 +62,8 @@ router.post('/message', async (req, res) => {
     res.status(500).json({
       error: true,
       code: 'CHAT_ERROR',
-      message: '对话服务暂时不可用'
+      message: '对话服务暂时不可用',
+      reply: '抱歉，我现在遇到了一些技术问题，暂时无法正常回复。请稍后再试 🙏'
     });
   }
 });
