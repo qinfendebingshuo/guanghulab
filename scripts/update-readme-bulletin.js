@@ -60,6 +60,9 @@ const DEV_MAP = {
 const ACTOR_MAP = {
   'qinfendebingshuo': '冰朔',
   'copilot-swe-agent[bot]': '铸渊 (Copilot)',
+  'Copilot': '铸渊 (Copilot)',
+  'github-actions[bot]': 'GitHub Actions',
+  '冰朔': '冰朔',
 };
 
 /* ── 模块 → 开发者 映射 ─────────────────────────── */
@@ -162,7 +165,7 @@ function classifyEvents(events) {
 
     // 冰朔系统级事件
     if (['daily_check', 'daily_selfcheck', 'psp_inspection', 'system_build',
-         'brain_upgrade', 'ci_run'].includes(type)) {
+         'brain_upgrade', 'brain_restore', 'ci_run', 'architecture_upgrade'].includes(type)) {
       let icon, detail;
       switch (type) {
         case 'daily_check':
@@ -188,6 +191,14 @@ function classifyEvents(events) {
         case 'brain_upgrade':
           icon = '🧠';
           detail = ev.title || ev.description || '大脑升级';
+          break;
+        case 'brain_restore':
+          icon = '🔄';
+          detail = ev.description || '核心大脑恢复';
+          break;
+        case 'architecture_upgrade':
+          icon = '🏗️';
+          detail = ev.description || '架构升级';
           break;
         default:
           icon = '📋';
@@ -272,9 +283,18 @@ async function fetchRecentWorkflowRuns() {
         bingshuoRuns.push(entry);
       }
 
-      // 模块相关工作流 → 合作者
+      // 模块相关工作流 → 合作者（仅在能提取模块名时添加）
       if (wfName.includes('Module Doc') || wfName.includes('模块')) {
-        collabRuns.push(entry);
+        // 尝试从工作流名称提取模块名
+        const moduleMatch = wfName.match(/(?:Module Doc|模块)[:\s·]*(\S+)/);
+        const headMsg = run.head_commit?.message || '';
+        const msgMatch = headMsg.match(/(?:模块|module)[:\s·]*([a-zA-Z0-9_-]+)/i)
+          || headMsg.match(/^(?:📦\s*)?([a-zA-Z][\w-]*)\//m);
+        const moduleName = moduleMatch?.[1] || msgMatch?.[1] || null;
+        if (moduleName) {
+          collabRuns.push({ ...entry, module: moduleName });
+        }
+        // 不添加无模块名的条目到合作者公告栏
       }
     }
 
@@ -342,12 +362,14 @@ function detectRecentModulePushes() {
         ).trim();
         const [ts, author] = info.split('|');
         const devInfo = MODULE_TO_DEV[mod];
+        const actorName = resolveActor(author) || author;
+        const ownerNote = devInfo ? ` (${devInfo.name})` : '';
         collabEntries.push({
           ts,
           icon: '📦',
-          actor: devInfo ? devInfo.name : (resolveActor(author) || author),
+          actor: actorName,
           module: mod,
-          detail: `\`${mod}/\` · 更新推送`,
+          detail: `\`${mod}/\`${ownerNote} · 更新推送`,
           result: 'success',
           devId: devInfo?.devId || null,
           sortKey: new Date(ts).getTime(),
