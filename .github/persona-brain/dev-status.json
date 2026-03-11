@@ -1,130 +1,118 @@
 {
-  "last_synced": "2026-03-05T23:00:00+08:00",
-  "synced_by": "霜砚巡检引擎",
-  "team_status": [
+  "last_sync": "2026-03-11T10:45:00+08:00",
+  "sync_source": "notion-master-console",
+  "team": [
     {
       "dev_id": "DEV-001",
       "name": "页页",
-      "modules": ["后端中间层", "BC-集成-001"],
-      "current_broadcast": "BC-集成-002",
-      "status": "🟢 环节1–5全✅ · HTTPS+飞书Webhook全链路打通",
-      "waiting_for": "看板API路由部署",
-      "next_step": "完成看板API静态版v1.0部署",
-      "contact_for": ["服务器部署问题", "后端API问题", "Nginx配置"],
-      "os": "macOS"
+      "module": "后端中间层",
+      "status": "active",
+      "current": "环节1-5全✅ · 看板API路由部署中",
+      "waiting": "看板API路由部署完成",
+      "streak": 5
     },
     {
       "dev_id": "DEV-002",
       "name": "肥猫",
-      "modules": ["M01用户登录界面", "M03人格体选择器", "M04聊天气泡"],
-      "current_broadcast": "BC-M01-003",
-      "status": "🟢 M01+M03+M04全✅ · 五连胜 · 部署广播已出",
-      "waiting_for": "BC-M01-003 部署SYSLOG",
-      "next_step": "SSH部署前端到guanghulab.com",
-      "contact_for": ["前端部署问题", "SSH/Windows问题"],
-      "os": "Windows PowerShell",
-      "special": "副控·有root权限"
+      "module": "M-STATUS系统状态监控",
+      "status": "waiting_syslog",
+      "current": "M01✅+M03✅+M04✅+M14全通✅+M-BRIDGE全通✅ · 角色升级→Human Bridge",
+      "waiting": "M-STATUS环节0~1 SYSLOG (BC-M-STATUS-001-FM · EL-5)",
+      "streak": 9
     },
     {
       "dev_id": "DEV-003",
       "name": "燕樊",
-      "modules": ["对话UI", "M07设置页面", "M15云盘系统", "M10帮助中心"],
-      "current_broadcast": "BC-M10-001-YF",
-      "status": "🟡 对话UI✅ · M07✅ · M15✅ · M10广播已出",
-      "waiting_for": "M10帮助中心 SYSLOG",
-      "next_step": "完成M10帮助中心环节0~1",
-      "contact_for": ["对话UI相关问题", "设置页面问题"],
-      "os": "Windows 10"
+      "module": "M-MEMORY AI永久记忆核心",
+      "status": "waiting_syslog",
+      "current": "M07✅+M15✅+M10✅+M18全通✅ · 七连胜",
+      "waiting": "M-MEMORY环节0+1 SYSLOG (BC-M-MEMORY-001-YF · 🍼寂曜宝宝线)",
+      "streak": 7
     },
     {
       "dev_id": "DEV-004",
-      "name": "之之(秋秋)",
-      "modules": ["钉钉机器人"],
-      "current_broadcast": "BC-钉钉-001-ZZ",
-      "status": "🟡 环节0广播已出",
-      "waiting_for": "SYSLOG",
-      "next_step": "完成钉钉开发者后台配置",
-      "contact_for": ["钉钉API问题"],
-      "os": "未知"
+      "name": "之之",
+      "module": "M-DINGTALK钉钉开发者工作台",
+      "status": "waiting_broadcast",
+      "current": "M17全通✅+M-DINGTALK Phase 1✅ · 九连胜",
+      "waiting": "M-DINGTALK Phase 2待出广播 · 钉钉环节3 HOLD等页页API",
+      "streak": 9
     },
     {
       "dev_id": "DEV-005",
       "name": "小草莓",
-      "modules": ["状态看板", "M12成本控制", "M13多人格体协作"],
-      "current_broadcast": "BC-看板-003-XCM",
-      "status": "🟢 看板✅ · M12✅ · M13✅ · WebSocket环节3广播已出",
-      "waiting_for": "看板环节3 SYSLOG",
-      "next_step": "完成WebSocket实时推送",
-      "contact_for": ["看板相关问题", "WebSocket问题"],
-      "os": "Windows 11"
+      "module": "部署",
+      "status": "waiting_syslog",
+      "current": "看板环节0~3全✅+M12✅+M13✅+部署✅ · guanghulab.com已上线 · 八连胜",
+      "waiting": "BC-部署-001-XCM(v2) SYSLOG",
+      "streak": 8
     },
     {
       "dev_id": "DEV-009",
       "name": "花尔",
-      "modules": ["M05用户中心界面"],
-      "current_broadcast": "BC-M05-003",
-      "status": "🟡 M05环节2广播已出",
-      "waiting_for": "M05环节2 SYSLOG",
-      "next_step": "完成本地数据存储功能",
-      "contact_for": ["用户中心UI问题"],
-      "os": "macOS"
+      "module": "M05用户中心+M20搜索与筛选",
+      "status": "waiting_syslog",
+      "current": "M05环节0~2✅+M20环节1~4✅ · 糖星云首次觉醒",
+      "waiting": "M20环节5+6 SYSLOG (BC-M20-003-HE · EL-8)",
+      "streak": 7
     },
     {
       "dev_id": "DEV-010",
       "name": "桔子",
-      "modules": ["M06工单管理", "M08数据统计面板", "M17动态漫制作系统"],
-      "current_broadcast": "M11风格组件库在手·M17待出",
-      "status": "🟢 M06全通 · M08全通 · 七连胜 · 前端毕业 · M17分配✅",
-      "waiting_for": "M11 SYSLOG → 然后出M17环节0广播",
-      "next_step": "完成M11风格组件库",
-      "contact_for": ["工单界面问题", "数据统计问题"],
-      "os": "macOS"
+      "module": "M06+M08+M11+M-CHANNEL",
+      "status": "waiting_syslog",
+      "current": "M06✅+M08✅+M11全通✅+M-CHANNEL环节0~5✅ · 十三连胜 · 三模块全毕业",
+      "waiting": "M-CHANNEL环节6 SYSLOG (BC-M-CHANNEL-004-JZ · EL-5)",
+      "streak": 13
     },
     {
       "dev_id": "DEV-011",
       "name": "匆匆那年",
-      "modules": ["M16码字工作台界面"],
-      "current_broadcast": "BC-000✅·M16环节0广播待出",
-      "status": "🟢 BC-000✅ · 首胜 · M16分配✅",
-      "waiting_for": "M16环节0广播",
-      "next_step": "等待M16环节0广播下发后开始",
-      "contact_for": [],
-      "os": "macOS M1"
+      "module": "M16码字工作台",
+      "status": "waiting_syslog",
+      "current": "BC-000✅ · 首胜",
+      "waiting": "M16环节1 SYSLOG (BC-M16-001-CCNN) · ⚠️超72h未回执",
+      "streak": 1
     },
     {
       "dev_id": "DEV-012",
       "name": "Awen",
-      "modules": ["M09消息通知中心界面"],
-      "current_broadcast": "BC-M09-003-AW",
-      "status": "🟢 M09环节1✅ · 三连胜 · 环节2~3广播已出",
-      "waiting_for": "M09环节2~3 SYSLOG",
-      "next_step": "完成通知列表分组+标记已读+徽章实时更新",
-      "contact_for": ["通知系统问题"],
-      "os": "Windows 10"
+      "module": "M09+M22公告栏",
+      "status": "waiting_syslog",
+      "current": "M09全通✅+M22环节0~6全✅ · 十一连胜 · EL-8工程级任务走通",
+      "waiting": "M22环节7 SYSLOG (BC-M22-007-AW · EL-5 · 冲十二连胜)",
+      "streak": 11
+    },
+    {
+      "dev_id": "DEV-013",
+      "name": "小兴",
+      "module": "M-AUTH注册登录系统",
+      "status": "waiting_syslog",
+      "current": "BC-000✅ · 首胜",
+      "waiting": "M-AUTH环节0/1 SYSLOG (BC-M-AUTH-001-XX)",
+      "streak": 1
+    },
+    {
+      "dev_id": "DEV-014",
+      "name": "时雨",
+      "module": "待分配（副控）",
+      "status": "waiting_syslog",
+      "current": "BC-000广播已出 · 副控首航",
+      "waiting": "BC-000 SYSLOG · ⚠️72h窗口已过期",
+      "streak": 0
     }
   ],
-  "tech_routing": {
-    "level_1_self_check": "检查广播步骤是否漏看 → 检查终端命令是否打错 → 检查文件路径是否正确",
-    "level_2_peer_help": {
-      "server_ssh": "DEV-001页页 或 DEV-002肥猫（副控·有root权限）",
-      "frontend_general": "DEV-002肥猫 或 DEV-010桔子（前端毕业）",
-      "backend_api": "DEV-001页页",
-      "git_github": "DEV-001页页 或 DEV-012 Awen",
-      "windows_env": "DEV-002肥猫 或 DEV-005小草莓",
-      "macos_env": "DEV-009花尔 或 DEV-011匆匆那年",
-      "dingtalk": "DEV-004之之"
-    },
-    "level_3_system": "等待霜砚巡检处理（每日12:00+23:00）"
-  },
-  "server_info": {
-    "address": "8.155.62.235",
-    "user": "root",
-    "domain": "guanghulab.com",
-    "ssh_command": "ssh root@8.155.62.235",
-    "tech_stack": "Node.js 20 + Express + PM2 + Nginx + Certbot(HTTPS)"
-  },
-  "api_info": {
-    "primary": "云雾API",
-    "note": "API Key 存放在仓库 Secrets → YUNWU_API_KEY，不在此文件中硬编码"
+  "summary": {
+    "total_devs": 14,
+    "active_waiting_syslog": 8,
+    "active_normal": 2,
+    "recovered": 2,
+    "not_started": 1,
+    "pending_assignment": 1,
+    "top_streak": "DEV-010 桔子 13连胜",
+    "alerts": [
+      "DEV-011 匆匆那年: M16环节1超72h未回执",
+      "DEV-014 时雨: BC-000 72h启动窗口已过期"
+    ]
   }
 }

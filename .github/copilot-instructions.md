@@ -32,3 +32,7 @@
 - 禁止跳过 schema 直接写路由
 - 禁止在生产代码中使用 console.log (使用项目 logger)
 - 禁止硬编码 persona_id 或 user_id
+
+## memory.json 写入规则
+- 写入 `memory.json` 前必须检查 `broadcast_id`（或同类型+同描述+同日期的事件）是否已存在，已存在则跳过，避免重复事件循环
+- 同一个 `broadcast_id` 只保留时间戳最新的一条记录
