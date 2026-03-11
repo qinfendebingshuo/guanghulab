@@ -1,3 +1,4 @@
+<!-- 🚀 YM-COLLAB-20260307-001 · CD 端到端验证标记 · 铸渊部署 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -177,13 +178,7 @@
         </footer>
     </div>
 
-    <!-- 环节2新增：三个核心脚本 -->
-    <script src="api-config.js"></script>
-    <script src="api.js"></script>
-    <script src="render.js"></script>
-    <!-- 原有的交互脚本 -->
-    <script src="script.js"></script>
-        <!-- 环节2新增：三个核心脚本 -->
+    <!-- 核心脚本 -->
     <script src="api-config.js"></script>
     <script src="api.js"></script>
     <script src="render.js"></script>
@@ -191,23 +186,27 @@
     <!-- 原有的交互脚本 -->
     <script src="script.js"></script>
 
-    <!-- ===== 新加的初始化脚本 ===== -->
+    <!-- ===== WebSocket 实时推送初始化 ===== -->
     <script>
-    // ===== WebSocket 实时推送初始化 =====
     (function() {
-      const wsUrl = 'ws://localhost:8080';
-      const wsClient = new WebSocketClient(wsUrl, {
-        onMessage: (data) => {
+      // 自动检测 WebSocket 地址：生产环境走 Nginx 反向代理，本地开发直连 8080
+      var wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      var wsUrl = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+        ? 'ws://localhost:8080'
+        : wsProtocol + '//' + location.host + '/ws';
+
+      var wsClient = new WebSocketClient(wsUrl, {
+        onMessage: function(data) {
           if (data.type === 'dashboard_update' && data.data) {
             if (data.data.system) renderSystemStatus(data.data.system);
             if (data.data.developers) renderDevelopers(data.data.developers);
             if (data.data.broadcasts) renderBroadcasts(data.data.broadcasts);
           }
         },
-        onStatusChange: (status) => {
-          const el = document.getElementById('conn-status');
+        onStatusChange: function(status) {
+          var el = document.getElementById('conn-status');
           if (!el) return;
-          let text = '', className = '';
+          var text = '', className = '';
           switch(status) {
             case 'connected':
               text = '🔵 实时连接 (WebSocket)';
@@ -229,14 +228,12 @@
               if (typeof refreshDashboard === 'function') refreshDashboard();
               break;
           }
-          el.innerHTML = `<span class="${className}"></span> ${text}`;
+          el.innerHTML = '<span class="' + className + '"></span> ' + text;
         }
       });
       wsClient.connect();
-      window.addEventListener('beforeunload', () => wsClient.disconnect());
+      window.addEventListener('beforeunload', function() { wsClient.disconnect(); });
     })();
     </script>
-</body>
-</html>
 </body>
 </html>

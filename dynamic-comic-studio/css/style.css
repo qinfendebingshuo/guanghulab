@@ -1,0 +1,348 @@
+/* ==================== 基础重置 ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    overflow: hidden;
+}
+
+/* ==================== 布局框架 ==================== */
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* ==================== 顶部工具栏 ==================== */
+#toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+}
+
+#toolbar h1 {
+    font-size: 18px;
+    color: #e94560;
+}
+
+.toolbar-actions button {
+    margin-left: 10px;
+    padding: 6px 12px;
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toolbar-actions button:hover {
+    background: #e94560;
+}
+
+/* ==================== 主工作区 ==================== */
+#workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ==================== 左侧素材面板 ==================== */
+#assets-panel {
+    width: 200px;
+    background: #16213e;
+    border-right: 2px solid #0f3460;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+#assets-panel h3 {
+    color: #e94560;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.asset-category {
+    margin-bottom: 20px;
+}
+
+.asset-category h4 {
+    color: #533483;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding-left: 5px;
+    border-left: 3px solid #e94560;
+}
+
+.asset-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.asset-item {
+    padding: 8px 12px;
+    background: #0f3460;
+    border-radius: 6px;
+    cursor: move;
+    font-size: 13px;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.asset-item:hover {
+    background: #e94560;
+    transform: translateY(-2px);
+}
+
+/* ==================== 画布区域 ==================== */
+#canvas-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #0f0f1a;
+}
+
+#scene-tabs {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+}
+
+#tabs-list {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.scene-tab {
+    padding: 8px 16px;
+    background: #0f3460;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    font-size: 14px;
+    position: relative;
+}
+
+.scene-tab.active {
+    background: #e94560;
+}
+
+.scene-tab .close-btn {
+    margin-left: 8px;
+    opacity: 0.6;
+}
+
+.scene-tab .close-btn:hover {
+    opacity: 1;
+}
+
+#add-scene-btn {
+    padding: 8px 16px;
+    background: #533483;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#canvas-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: auto;
+}
+
+#main-canvas {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    cursor: crosshair;
+}
+
+/* ==================== 底部时间轴面板 ==================== */
+#timeline-panel {
+    background: #16213e;
+    border-top: 2px solid #0f3460;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 播放控制栏 */
+#playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#playback-controls button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #0f3460;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#playback-controls button:hover {
+    background: #e94560;
+    transform: scale(1.1);
+}
+
+#frame-counter {
+    font-size: 14px;
+    color: #aaa;
+    min-width: 80px;
+}
+
+#playback-controls label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #aaa;
+}
+
+#fps-slider {
+    width: 120px;
+    cursor: pointer;
+}
+
+#fps-display {
+    color: #e94560;
+    font-weight: bold;
+    min-width: 50px;
+}
+
+/* 帧缩略图时间轴 */
+#timeline-frames {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: #0f0f1a;
+    border-radius: 6px;
+    overflow-x: auto;
+    min-height: 70px;
+    align-items: center;
+}
+
+.frame-thumb {
+    width: 80px;
+    height: 60px;
+    background: #0f3460;
+    border: 2px solid #533483;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #aaa;
+    position: relative;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.frame-thumb:hover {
+    border-color: #e94560;
+    transform: translateY(-2px);
+}
+
+.frame-thumb.active {
+    border-color: #e94560;
+    background: #533483;
+    box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+.frame-thumb::before {
+    content: attr(data-frame);
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 10px;
+    color: #fff;
+    background: rgba(0,0,0,0.5);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+/* 时间轴操作按钮 */
+#timeline-actions {
+    display: flex;
+    gap: 10px;
+}
+
+#timeline-actions button {
+    padding: 8px 16px;
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+#timeline-actions button:hover {
+    background: #e94560;
+}
+
+/* ==================== 画布上的素材样式 ==================== */
+.canvas-asset {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    font-size: 48px;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+    transition: transform 0.1s;
+}
+
+.canvas-asset:hover {
+    transform: scale(1.1);
+}
+
+.canvas-asset.selected {
+    outline: 2px dashed #e94560;
+    outline-offset: 4px;
+}
+
+/* ==================== 滚动条样式 ==================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f0f1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #533483;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #e94560;
+}

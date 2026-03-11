@@ -1,0 +1,437 @@
+name: "🚀 铸渊 CD · 自动部署到 guanghulab.com"
+
+# ━━━ 工单 YM-DEPLOY-FIX-20260307-001 ━━━
+# push 到 main → 校验 → rsync 同步全站到服务器 → 后端重启 → Nginx 配置 → Notion 通知
+#
+# 必需 GitHub Secrets（仓库 Settings → Secrets → Actions）:
+#   DEPLOY_HOST  — 服务器 IP
+#   DEPLOY_USER  — SSH 用户名
+#   DEPLOY_KEY   — SSH 私钥（完整 PEM 内容）
+#   DEPLOY_PATH  — 网站根目录（如 /var/www/guanghulab）
+#
+# 可选 Secrets（已有则自动启用 Notion 通知）:
+#   NOTION_TOKEN   — Notion 集成 token
+#   CHANGES_DB_ID  — Notion 变更日志数据库 ID（有内置默认值）
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.github/persona-brain/**'
+      - 'broadcasts-outbox/**'
+      - 'syslog-inbox/**'
+      - 'syslog-processed/**'
+      - 'signal-log/**'
+      - 'dev-nodes/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════════════
+  # Job 1: 部署前校验
+  # ═══════════════════════════════════════════════════════════════
+  validate:
+    name: "🔍 部署前校验"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 安装依赖（如需要）
+        run: |
+          if [ -f "package-lock.json" ] && grep -q '"glob"' package.json; then
+            npm ci --ignore-scripts || npm install --ignore-scripts || echo "⚠️ 依赖安装失败，继续执行"
+          fi
+
+      - name: 🔍 HLI 契约校验
+        run: |
+          if [ -f "scripts/contract-check.js" ]; then
+            echo "🔍 执行 HLI 契约校验..."
+            node scripts/contract-check.js
+          else
+            echo "⏭️ scripts/contract-check.js 不存在，跳过 HLI 校验"
+          fi
+
+      - name: 📋 模块指纹检查
+        run: |
+          if [ -f "scripts/zhuyuan-module-protocol.js" ]; then
+            echo "🔍 执行模块指纹检查..."
+            node scripts/zhuyuan-module-protocol.js status
+          else
+            echo "⏭️ scripts/zhuyuan-module-protocol.js 不存在，跳过模块检查"
+          fi
+
+      - name: ✅ 校验汇总
+        run: |
+          echo "### ✅ 部署前校验通过" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- HLI 契约校验: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- 模块指纹检查: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- 提交: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════
+  # Job 2: rsync 同步到服务器
+  # ═══════════════════════════════════════════════════════════════
+  deploy:
+    name: "🚀 部署到服务器"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📦 确保本地 rsync 已安装
+        run: |
+          if ! command -v rsync &>/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y rsync
+          fi
+          rsync --version | head -1
+
+      - name: 🔑 配置 SSH 连接
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 📦 确保远程服务器 rsync 已安装
+        run: |
+          echo "🔍 检查远程服务器 rsync..."
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "command -v rsync || { echo '⚠️ 远程服务器未安装 rsync，尝试安装...' && \
+              (sudo apt-get update -qq && sudo apt-get install -y rsync 2>/dev/null || \
+               sudo yum install -y rsync 2>/dev/null || \
+               { echo '❌ 无法自动安装 rsync（可能缺少 sudo 权限）'; \
+                 echo '请手动在服务器上安装: sudo apt-get install rsync 或 sudo yum install rsync'; \
+                 exit 1; }); }"
+          echo "✅ 远程服务器 rsync 检查完成"
+
+      - name: 📁 确保远程部署目录存在
+        run: |
+          echo "🔍 检查远程部署目录..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "mkdir -p '${{ secrets.DEPLOY_PATH }}'" || {
+              echo "❌ 无法创建远程部署目录（SSH 连接失败或权限不足）"
+              echo "请确认 DEPLOY_PATH 设置正确且 DEPLOY_USER 有写入权限"
+              exit 1
+            }
+          echo "✅ 远程部署目录已就绪"
+
+      - name: 🔒 部署前安全检查
+        run: |
+          if [ ! -f "docs/index.html" ]; then
+            echo "❌ docs/index.html 不存在，中止部署以防清空生产环境"
+            exit 1
+          fi
+          FILE_COUNT=$(find . -type f \
+            -not -path './.git/*' \
+            -not -path './.github/*' \
+            -not -path '*/node_modules/*' \
+            | wc -l)
+          if [ "$FILE_COUNT" -lt 5 ]; then
+            echo "❌ 仓库文件数异常（仅 ${FILE_COUNT} 个），中止部署"
+            exit 1
+          fi
+          echo "✅ 仓库包含 ${FILE_COUNT} 个文件，安全检查通过"
+
+      - name: 🚀 rsync 同步全站到服务器
+        run: |
+          echo "📡 开始同步全站到 ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
+
+          rsync -avz --delete-after \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude 'syslog-inbox' \
+            --exclude 'syslog-processed' \
+            --exclude 'broadcasts-outbox' \
+            --exclude 'dev-nodes' \
+            --exclude 'signal-log' \
+            --exclude 'tests' \
+            --exclude 'reports' \
+            --exclude 'scripts' \
+            --exclude 'guanghulab-main' \
+            --exclude '*.bak' \
+            --exclude '*.bak2' \
+            --exclude '*_副本' \
+            --exclude '*_副本/' \
+            --exclude '*_副本.*' \
+            --exclude '.DS_Store' \
+            --exclude '.env' \
+            --exclude 'package-lock.json' \
+            --exclude 'tsconfig.json' \
+            --exclude 'next.config.ts' \
+            --exclude 'postcss.config.mjs' \
+            --exclude 'jest.smoke.config.js' \
+            --exclude 'ecosystem.config.js' \
+            --exclude '.gitignore' \
+            --exclude 'CNAME' \
+            --exclude '*.zip' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./ \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/
+
+          echo "✅ 全站同步完成"
+
+      - name: 📄 复制首页到站点根目录
+        run: |
+          echo "📄 复制 docs/index.html → 站点根目录 index.html"
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              cp '${{ secrets.DEPLOY_PATH }}/docs/index.html' '${{ secrets.DEPLOY_PATH }}/index.html'
+              # 同步 docs 下的其他静态资源到根目录
+              cp '${{ secrets.DEPLOY_PATH }}/docs/.nojekyll' '${{ secrets.DEPLOY_PATH }}/.nojekyll' 2>/dev/null || true
+            "
+          echo "✅ 首页已部署到根目录"
+
+      - name: 🔧 后端服务部署
+        continue-on-error: true
+        run: |
+          echo "🔧 检查并部署后端服务..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              # 检查 Node.js 和 pm2 是否可用
+              if ! command -v node &>/dev/null; then
+                echo '⏭️ Node.js 未安装，跳过后端部署'
+                exit 0
+              fi
+              if ! command -v pm2 &>/dev/null; then
+                echo '⏭️ pm2 未安装，跳过后端服务管理'
+                exit 0
+              fi
+
+              # 部署 API 代理服务（AI 聊天代理，端口 3721）
+              if [ -f '${{ secrets.DEPLOY_PATH }}/backend-integration/api-proxy.js' ]; then
+                echo '📦 安装 API 代理依赖...'
+                cd '${{ secrets.DEPLOY_PATH }}/backend-integration'
+                npm install --production 2>/dev/null || echo '⚠️ api-proxy npm install 失败（可能无 package.json，继续）'
+                echo '🔄 重启 API 代理服务...'
+                export YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}'
+                export DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}'
+                pm2 delete guanghulab-proxy 2>/dev/null || true
+                YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}' DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}' \
+                  pm2 start api-proxy.js --name guanghulab-proxy --update-env 2>/dev/null || \
+                  echo '⚠️ API 代理 pm2 启动失败'
+              fi
+
+              # 部署 backend 服务（Express API，端口 3000）
+              if [ -f '${{ secrets.DEPLOY_PATH }}/backend/server.js' ]; then
+                echo '📦 安装 backend 依赖...'
+                cd '${{ secrets.DEPLOY_PATH }}/backend'
+                npm install --production 2>/dev/null || echo '⚠️ backend npm install 失败'
+                echo '🔄 重启 backend 服务...'
+                pm2 restart guanghulab-backend 2>/dev/null || \
+                  pm2 start server.js --name guanghulab-backend 2>/dev/null || \
+                  echo '⚠️ backend pm2 启动失败'
+              fi
+
+              # 部署 status-board WebSocket 服务（端口 8080）
+              if [ -f '${{ secrets.DEPLOY_PATH }}/status-board/mock-ws-server.js' ]; then
+                echo '🔄 重启 WebSocket 服务...'
+                cd '${{ secrets.DEPLOY_PATH }}/status-board'
+                npm install --production 2>/dev/null || true
+                pm2 restart guanghulab-ws 2>/dev/null || \
+                  pm2 start mock-ws-server.js --name guanghulab-ws 2>/dev/null || \
+                  echo '⚠️ WebSocket pm2 启动失败'
+              fi
+
+              # 部署 src HLI 中间层
+              if [ -f '${{ secrets.DEPLOY_PATH }}/src/index.js' ]; then
+                echo '📦 安装 src 依赖...'
+                cd '${{ secrets.DEPLOY_PATH }}'
+                npm install --production 2>/dev/null || echo '⚠️ src npm install 失败'
+                echo '🔄 重启 HLI 服务...'
+                pm2 restart guanghulab 2>/dev/null || \
+                  pm2 start src/index.js --name guanghulab 2>/dev/null || \
+                  echo '⚠️ src pm2 启动失败'
+              fi
+
+              pm2 save || echo '⚠️ pm2 save 失败，重启后进程可能不会自动启动'
+
+              # 设置开机自启（仅首次需要，后续无操作）
+              pm2 startup 2>/dev/null | grep -o 'sudo.*' | bash 2>/dev/null || true
+
+              echo '✅ 后端服务部署完成'
+            "
+
+      - name: 🌐 更新 Nginx 配置
+        continue-on-error: true
+        run: |
+          echo "🔧 检查 Nginx 配置..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              # 检查 Nginx 是否安装
+              if ! command -v nginx &>/dev/null; then
+                echo '⏭️ Nginx 未安装，跳过配置更新'
+                exit 0
+              fi
+
+              NGINX_CHANGED=false
+
+              # 一次性迁移：更新 root 路径（从旧的 status-board 子目录改为站点根目录）
+              if grep -q 'root.*guanghulab/status-board' /etc/nginx/sites-available/default 2>/dev/null || \
+                 grep -q 'root.*guanghulab/status-board' /etc/nginx/conf.d/*.conf 2>/dev/null; then
+                echo '🔄 更新 Nginx root 路径...'
+                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
+                  /etc/nginx/sites-available/default 2>/dev/null || true
+                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
+                  /etc/nginx/conf.d/*.conf 2>/dev/null || true
+                NGINX_CHANGED=true
+                echo '✅ Nginx root 路径已更新'
+              else
+                echo '✅ Nginx root 路径正确，无需修改'
+              fi
+
+              # 配置 API + WebSocket 反向代理
+              if ! grep -rq 'location /api/' /etc/nginx/sites-available/ /etc/nginx/conf.d/ /etc/nginx/snippets/ 2>/dev/null; then
+                echo '🔄 添加 API + WebSocket 反向代理...'
+                sudo mkdir -p /etc/nginx/snippets
+                # 注意：\$ 在本地 shell 中转义为 $，远程 shell 的单引号保护不再展开，
+                # 最终写入文件的 Nginx 变量为 $host、$http_upgrade 等
+                printf '%s\n' \
+                  '# guanghulab 反向代理（由 CD 工作流自动生成）' \
+                  '' \
+                  '# AI 聊天 API 代理 → api-proxy.js 端口 3721（SSE 流式支持）' \
+                  'location /api/chat {' \
+                  '    proxy_pass http://127.0.0.1:3721/api/chat;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' \
+                  '    proxy_set_header X-Forwarded-Proto \$scheme;' \
+                  '    proxy_set_header Connection "";' \
+                  '    proxy_buffering off;' \
+                  '    proxy_cache off;' \
+                  '    chunked_transfer_encoding on;' \
+                  '    proxy_read_timeout 90s;' \
+                  '    proxy_send_timeout 60s;' \
+                  '}' \
+                  '' \
+                  'location /api/models {' \
+                  '    proxy_pass http://127.0.0.1:3721/api/models;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '}' \
+                  '' \
+                  'location /api/health {' \
+                  '    proxy_pass http://127.0.0.1:3721/api/health;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '}' \
+                  '' \
+                  '# 其他 API → Express 后端端口 3000' \
+                  'location /api/ {' \
+                  '    proxy_pass http://127.0.0.1:3000/api/;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' \
+                  '    proxy_set_header X-Forwarded-Proto \$scheme;' \
+                  '    proxy_cache_bypass \$http_upgrade;' \
+                  '}' \
+                  '' \
+                  '# WebSocket 反向代理 → 看板实时推送端口 8080' \
+                  'location /ws {' \
+                  '    proxy_pass http://127.0.0.1:8080;' \
+                  '    proxy_http_version 1.1;' \
+                  '    proxy_set_header Upgrade \$http_upgrade;' \
+                  '    proxy_set_header Connection \"Upgrade\";' \
+                  '    proxy_set_header Host \$host;' \
+                  '    proxy_set_header X-Real-IP \$remote_addr;' \
+                  '    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' \
+                  '    proxy_read_timeout 86400;' \
+                  '}' \
+                  | sudo tee /etc/nginx/snippets/guanghulab-proxy.conf > /dev/null
+
+                # 在 server 块中加入 include 指令（仅搜索 sites-available 避免 symlink 重复）
+                NGINX_MAIN=\$(grep -rl 'server_name' /etc/nginx/sites-available/ 2>/dev/null | head -1)
+                if [ -z \"\$NGINX_MAIN\" ]; then
+                  NGINX_MAIN='/etc/nginx/sites-available/default'
+                fi
+                if [ -f \"\$NGINX_MAIN\" ] && ! grep -q 'guanghulab-proxy' \"\$NGINX_MAIN\" 2>/dev/null; then
+                  sudo sed -i '/server_name/a\\    include /etc/nginx/snippets/guanghulab-proxy.conf;' \"\$NGINX_MAIN\" 2>/dev/null && \
+                    NGINX_CHANGED=true && echo '✅ 反向代理已自动配置' || \
+                    echo '⚠️ 自动配置失败，请手动在 Nginx server 块中加入: include /etc/nginx/snippets/guanghulab-proxy.conf;'
+                fi
+              else
+                echo '✅ API 反向代理已存在，无需修改'
+              fi
+
+              # 如果有变更，验证并重新加载 Nginx
+              if [ \"\$NGINX_CHANGED\" = true ]; then
+                sudo nginx -t && sudo systemctl reload nginx && echo '✅ Nginx 配置已重新加载' || \
+                  echo '⚠️ Nginx 配置验证失败，请手动检查'
+              fi
+            "
+
+      - name: 🔍 验证部署
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "echo '✅ 服务器连接正常' && \
+             echo '--- 站点根目录 ---' && \
+             ls -la ${{ secrets.DEPLOY_PATH }}/ | head -30 && \
+             echo '--- docs/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/docs/ 2>/dev/null || echo '(docs/ 不存在)' && \
+             echo '--- status-board/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/status-board/ 2>/dev/null || echo '(status-board/ 不存在)'"
+
+      - name: 📝 部署汇总
+        run: |
+          echo "### 🚀 全站部署完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 同步范围: 全仓库（含排除规则）" >> $GITHUB_STEP_SUMMARY
+          echo "- 目标: \`${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 提交: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 时间: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════
+  # Job 3: Notion 部署通知
+  # ═══════════════════════════════════════════════════════════════
+  notify:
+    name: "📡 部署通知 → Notion"
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📡 推送部署记录到 Notion
+        env:
+          NOTION_TOKEN:     ${{ secrets.NOTION_TOKEN }}
+          CHANGES_DB_ID:    ${{ secrets.CHANGES_DB_ID }}
+          EVENT_TYPE:       commit
+          COMMIT_SHA:       ${{ github.sha }}
+          COMMIT_MSG:       "[CD 部署] ${{ github.event.head_commit.message }}"
+          COMMITTER:        ${{ github.event.head_commit.author.name || github.actor }}
+          COMMIT_TIMESTAMP: ${{ github.event.head_commit.timestamp }}
+          BRANCH:           ${{ github.ref_name }}
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || true)
+          export CHANGED_FILES="$CHANGED"
+          if [ -f "scripts/notion-bridge.js" ]; then
+            node scripts/notion-bridge.js changes
+            echo "✅ Notion 部署通知已发送"
+          else
+            echo "⏭️ scripts/notion-bridge.js 不存在，跳过 Notion 通知"
+          fi

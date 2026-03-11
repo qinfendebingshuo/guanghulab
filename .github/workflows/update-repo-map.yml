@@ -34,4 +34,10 @@ jobs:
           git config user.email "zhuyuan@guanghulab.com"
           git add .github/brain/repo-map.json .github/brain/repo-snapshot.md
           git diff --cached --quiet || git commit -m "📚 铸渊图书馆目录更新 · $(date +%Y-%m-%dT%H:%M)"
-          git push
+          # 拉取远端最新更改后再推送，避免竞态条件
+          git pull --rebase origin main || echo "⚠️ rebase 失败（可能有冲突），尝试直接推送..."
+          git push || {
+            echo "⚠️ 推送失败，尝试重新拉取后再推送..."
+            git pull --rebase origin main
+            git push
+          }

@@ -17,13 +17,16 @@
     "broadcast:distribute": "node scripts/distribute-broadcasts.js",
     "esp:process": "node scripts/esp-email-processor.js",
     "psp:inspect": "node scripts/psp-inspection.js",
-    "repo:map": "node scripts/generate-repo-map.js"
+    "repo:map": "node scripts/generate-repo-map.js",
+    "deploy:agent": "node scripts/bingshuo-deploy-agent.js",
+    "module:protocol": "node scripts/zhuyuan-module-protocol.js",
+    "proxy:start": "node backend-integration/api-proxy.js",
+    "notion:poll": "node scripts/notion-signal-bridge.js poll",
+    "notion:health": "node scripts/notion-signal-bridge.js health",
+    "notion:summary": "node scripts/generate-session-summary.js"
   },
   "dependencies": {
-    "axios": "^1.13.6",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
+    "better-sqlite3": "^12.6.2",
     "imapflow": "^1.2.12",
     "next": "15.3.8",
     "nodemailer": "^8.0.1",

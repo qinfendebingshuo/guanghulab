@@ -1,0 +1,527 @@
+/* ============================================
+ HoloLake · M06 工单管理界面 · 样式表
+ 环节3：响应式布局 · 深蓝主题
+ DEV-010 桔子
+ ============================================ */
+/* === 全局变量 === */
+:root {
+ --bg-primary: #0a0e27;
+ --bg-secondary: #111638;
+ --bg-card: #161b4a;
+ --bg-hover: #1e2460;
+ --border-color: #2a3070;
+ --text-primary: #e8eaff;
+ --text-secondary: #8b90c0;
+ --accent-blue: #4a6cf7;
+ --accent-blue-hover: #5b7bf8;
+ --accent-green: #22c55e;
+ --accent-yellow: #eab308;
+ --accent-red: #ef4444;
+ --accent-purple: #a855f7;
+ --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+ --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+ --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+ --radius-sm: 6px;
+ --radius-md: 10px;
+ --radius-lg: 14px;
+}
+/* === 基础重置 === */
+* {
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 2
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+}
+body {
+ font-family: -apple-system, BlinkMacSystemFont, "Segoe U
+I", "PingFang SC", "Microsoft YaHei", sans-serif;
+ background: var(--bg-primary);
+ color: var(--text-primary);
+ min-height: 100vh;
+ line-height: 1.6;
+}
+/* === 主容器 === */
+.app-container {
+ max-width: 900px;
+ margin: 0 auto;
+ padding: 20px 24px;
+}
+/* === 顶部标题栏 === */
+.app-header {
+ text-align: center;
+ padding: 24px 0 20px;
+ border-bottom: 1px solid var(--border-color);
+ margin-bottom: 24px;
+}
+.app-header h1 {
+ font-size: 22px;
+ font-weight: 700;
+ color: var(--text-primary);
+ letter-spacing: 1px;
+}
+.app-header .subtitle {
+ font-size: 13px;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 3
+ color: var(--text-secondary);
+ margin-top: 4px;
+}
+/* === 操作栏（新建 + 导出） === */
+.header-actions {
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ gap: 12px;
+ margin-bottom: 24px;
+ flex-wrap: wrap;
+}
+.btn {
+ display: inline-flex;
+ align-items: center;
+ gap: 6px;
+ padding: 10px 20px;
+ border: none;
+ border-radius: var(--radius-sm);
+ font-size: 14px;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ white-space: nowrap;
+}
+.btn-primary {
+ background: var(--accent-blue);
+ color: #fff;
+}
+.btn-primary:hover {
+ background: var(--accent-blue-hover);
+ box-shadow: var(--shadow-sm);
+}
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 4
+.btn-secondary {
+ background: var(--bg-card);
+ color: var(--text-primary);
+ border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+ background: var(--bg-hover);
+}
+/* === 导出下拉菜单 === */
+.export-wrapper {
+ position: relative;
+}
+.export-dropdown {
+ display: none;
+ position: absolute;
+ top: calc(100% + 6px);
+ left: 50%;
+ transform: translateX(-50%);
+ background: var(--bg-card);
+ border: 1px solid var(--border-color);
+ border-radius: var(--radius-sm);
+ box-shadow: var(--shadow-md);
+ z-index: 100;
+ min-width: 160px;
+ overflow: hidden;
+}
+.export-dropdown.show {
+ display: block;
+}
+.export-dropdown .export-item {
+ display: block;
+ width: 100%;
+ padding: 10px 16px;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 5
+ background: none;
+ border: none;
+ color: var(--text-primary);
+ font-size: 14px;
+ text-align: left;
+ cursor: pointer;
+ transition: background 0.15s;
+}
+.export-dropdown .export-item:hover {
+ background: var(--bg-hover);
+}
+.export-dropdown .export-item + .export-item {
+ border-top: 1px solid var(--border-color);
+}
+/* === 统计卡片 === */
+.stats-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 12px;
+ margin-bottom: 24px;
+}
+.stat-card {
+ background: var(--bg-card);
+ border: 1px solid var(--border-color);
+ border-radius: var(--radius-md);
+ padding: 16px;
+ text-align: center;
+ transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover {
+ transform: translateY(-2px);
+ box-shadow: var(--shadow-sm);
+}
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 6
+.stat-card .stat-number {
+ font-size: 28px;
+ font-weight: 700;
+ line-height: 1.2;
+}
+.stat-card .stat-label {
+ font-size: 12px;
+ color: var(--text-secondary);
+ margin-top: 4px;
+}
+.stat-card.total .stat-number { color: var(--accent-blue);
+}
+.stat-card.pending .stat-number { color: var(--accent-yello
+w); }
+.stat-card.active .stat-number { color: var(--accent-gree
+n); }
+.stat-card.done .stat-number { color: var(--accent-purple);
+}
+/* === 筛选排序栏 === */
+.filter-bar {
+ display: flex;
+ gap: 10px;
+ margin-bottom: 20px;
+ flex-wrap: wrap;
+}
+.filter-bar select {
+ flex: 1;
+ min-width: 120px;
+ padding: 8px 12px;
+ background: var(--bg-card);
+ color: var(--text-primary);
+ border: 1px solid var(--border-color);
+ border-radius: var(--radius-sm);
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 7
+ font-size: 13px;
+ cursor: pointer;
+ appearance: none;
+ -webkit-appearance: none;
+ background-image: url("data:image/svg+xml,%3Csvg xmlns='h
+ttp://www.w3.org/2000/svg' width='12' height='12' fill='%23
+8b90c0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+ background-repeat: no-repeat;
+ background-position: right 10px center;
+ padding-right: 30px;
+}
+.filter-bar select:focus {
+ outline: none;
+ border-color: var(--accent-blue);
+}
+/* === 工单列表 === */
+.ticket-list {
+ display: flex;
+ flex-direction: column;
+ gap: 10px;
+}
+.ticket-item {
+ background: var(--bg-card);
+ border: 1px solid var(--border-color);
+ border-radius: var(--radius-md);
+ padding: 16px;
+ display: flex;
+ align-items: center;
+ gap: 14px;
+ transition: background 0.15s;
+}
+.ticket-item:hover {
+ background: var(--bg-hover);
+}
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 8
+.ticket-id {
+ font-size: 12px;
+ color: var(--text-secondary);
+ font-family: "SF Mono", "Fira Code", monospace;
+ min-width: 60px;
+}
+.ticket-info {
+ flex: 1;
+ min-width: 0;
+}
+.ticket-title {
+ font-size: 15px;
+ font-weight: 600;
+ color: var(--text-primary);
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+}
+.ticket-meta {
+ font-size: 12px;
+ color: var(--text-secondary);
+ margin-top: 2px;
+}
+.ticket-actions {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ flex-shrink: 0;
+}
+/* === 状态标签（可点击切换） === */
+.status-badge {
+ display: inline-block;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 9
+ padding: 4px 12px;
+ border-radius: 20px;
+ font-size: 12px;
+ font-weight: 600;
+ cursor: pointer;
+ transition: opacity 0.2s;
+ white-space: nowrap;
+}
+.status-badge:hover {
+ opacity: 0.85;
+}
+.status-badge.pending {
+ background: rgba(234, 179, 8, 0.15);
+ color: var(--accent-yellow);
+ border: 1px solid rgba(234, 179, 8, 0.3);
+}
+.status-badge.active {
+ background: rgba(34, 197, 94, 0.15);
+ color: var(--accent-green);
+ border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.status-badge.done {
+ background: rgba(168, 85, 247, 0.15);
+ color: var(--accent-purple);
+ border: 1px solid rgba(168, 85, 247, 0.3);
+}
+/* === 删除按钮 === */
+.btn-delete {
+ background: none;
+ border: 1px solid transparent;
+ color: var(--text-secondary);
+ font-size: 16px;
+ cursor: pointer;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 10
+ padding: 4px 8px;
+ border-radius: var(--radius-sm);
+ transition: all 0.2s;
+}
+.btn-delete:hover {
+ color: var(--accent-red);
+ background: rgba(239, 68, 68, 0.1);
+ border-color: rgba(239, 68, 68, 0.3);
+}
+/* === 空状态 === */
+.empty-state {
+ text-align: center;
+ padding: 60px 20px;
+ color: var(--text-secondary);
+}
+.empty-state .empty-icon {
+ font-size: 48px;
+ margin-bottom: 12px;
+}
+.empty-state .empty-text {
+ font-size: 15px;
+}
+/* === 弹窗遮罩 === */
+.modal-overlay {
+ display: none;
+ position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
+ background: rgba(0, 0, 0, 0.6);
+ z-index: 1000;
+ justify-content: center;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 11
+ align-items: center;
+ padding: 20px;
+}
+.modal-overlay.show {
+ display: flex;
+}
+/* === 弹窗 === */
+.modal {
+ background: var(--bg-secondary);
+ border: 1px solid var(--border-color);
+ border-radius: var(--radius-lg);
+ padding: 28px;
+ width: 100%;
+ max-width: 480px;
+ box-shadow: var(--shadow-lg);
+}
+.modal h2 {
+ font-size: 18px;
+ margin-bottom: 20px;
+ color: var(--text-primary);
+}
+.modal .form-group {
+ margin-bottom: 16px;
+}
+.modal label {
+ display: block;
+ font-size: 13px;
+ color: var(--text-secondary);
+ margin-bottom: 6px;
+}
+.modal input,
+.modal select,
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 12
+.modal textarea {
+ width: 100%;
+ padding: 10px 12px;
+ background: var(--bg-card);
+ color: var(--text-primary);
+ border: 1px solid var(--border-color);
+ border-radius: var(--radius-sm);
+ font-size: 14px;
+}
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+ outline: none;
+ border-color: var(--accent-blue);
+}
+.modal textarea {
+ resize: vertical;
+ min-height: 80px;
+}
+.modal .form-actions {
+ display: flex;
+ gap: 10px;
+ justify-content: flex-end;
+ margin-top: 20px;
+}
+/* === 点击外部关闭下拉菜单的辅助层 === */
+.click-away {
+ display: none;
+ position: fixed;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
+ z-index: 99;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 13
+}
+.click-away.show {
+ display: block;
+}
+/* ============================================
+ 响应式布局 · 平板端（481px ~ 768px）
+ ============================================ */
+@media screen and (max-width: 768px) {
+ .app-container {
+ padding: 16px;
+ }
+ .app-header h1 {
+ font-size: 20px;
+ }
+ .stats-grid {
+ grid-template-columns: repeat(4, 1fr);
+ gap: 8px;
+ }
+ .stat-card {
+ padding: 12px 8px;
+ }
+ .stat-card .stat-number {
+ font-size: 24px;
+ }
+ .stat-card .stat-label {
+ font-size: 11px;
+ }
+ .ticket-item {
+ padding: 12px;
+ gap: 10px;
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 14
+ }
+}
+/* ============================================
+ 响应式布局 · 手机端（<=480px）
+ ============================================ */
+@media screen and (max-width: 480px) {
+ .app-container {
+ padding: 12px;
+ }
+ .app-header {
+ padding: 16px 0 14px;
+ margin-bottom: 16px;
+ }
+ .app-header h1 {
+ font-size: 18px;
+ }
+ /* 统计卡片手机端变2列 */
+ .stats-grid {
+ grid-template-columns: repeat(2, 1fr);
+ gap: 8px;
+ }
+ .stat-card {
+ padding: 12px 10px;
+ }
+ .stat-card .stat-number {
+ font-size: 22px;
+ }
+ /* 操作按钮自适应 */
+ .header-actions {
+ gap: 8px;
+ }
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 15
+ .btn {
+ padding: 8px 14px;
+ font-size: 13px;
+ }
+ /* 筛选栏纵向排列 */
+ .filter-bar {
+ flex-direction: column;
+ gap: 8px;
+ }
+ .filter-bar select {
+ width: 100%;
+ }
+ /* 工单卡片纵向排列 */
+ .ticket-item {
+ flex-direction: column;
+ align-items: flex-start;
+ gap: 8px;
+ padding: 14px;
+ }
+ .ticket-id {
+ min-width: auto;
+ }
+ .ticket-info {
+ width: 100%;
+ }
+ .ticket-title {
+ white-space: normal;
+ word-break: break-all;
+ }
+ .ticket-actions {
+📡 BC-M06-001 · DEV-010桔子 · 工单管理界面·环节3·响应式布局+数据导出 16
+ width: 100%;
+ justify-content: space-between;
+ }
+ /* 导出下拉菜单手机端定位优化 */
+ .export-dropdown {
+ left: auto;
+ right: 0;
+ transform: none;
+ }
+ /* 弹窗手机端全屏 */
+ .modal-overlay {
+ padding: 0;
+ align-items: flex-end;
+ }
+ .modal {
+ max-width: 100%;
+ border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+ padding: 24px 20px;
+ max-height: 90vh;
+ overflow-y: auto;
+ }
+ .modal .form-actions {
+ flex-direction: column;
+ }
+ .modal .form-actions .btn {
+ width: 100%;
+ justify-content: center;
+ }
+}
