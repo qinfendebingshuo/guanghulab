@@ -77,10 +77,13 @@
 <!-- BINGSHUO_BULLETIN_START -->
 | 时间 | 检查项 | 状态 |
 |------|--------|------|
+| 03-12 00:02 | ❌ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 失败 | 冰朔 |
+| 03-12 00:02 | ✅ 📢 更新系统公告区 · 成功 | 冰朔 |
+| 03-12 00:02 | 🔧 系统更新: `.github/` | 铸渊 (ZhùYuān) |
 | 03-12 00:02 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | 冰朔 |
+| 03-12 00:01 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | 冰朔 |
 | 03-11 23:46 | ❌ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 失败 | WENZHUOXI |
 | 03-11 23:45 | ✅ 📢 更新系统公告区 · 成功 | WENZHUOXI |
-| 03-11 23:45 | 🔧 系统更新: `.github/` | 铸渊 (ZhùYuān) |
 | 03-11 23:45 | ❌ 铸渊 · Bridge E · GitHub Changes → Notion · 失败 | WENZHUOXI |
 | 03-11 23:34 | ✅ Generate Session Summary for Notion · 成功 | 冰朔 |
 | 03-11 23:32 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
@@ -89,9 +92,6 @@
 | 03-10 16:56 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
 | 03-10 08:00 | 🧠 核心大脑升级 v3.0 · 壳-核分离架构 · 前端壳(UI/IO) + 后端脑(prompt/routing/memory/context) · BRAIN域4接口上线 · 覆盖率 7/21 (33.3%) | 铸渊（冰朔指令） |
 | 03-10 08:00 | ⚠️ 铸渊 PSP 巡检完成 · 发现 3 个问题 · 自动修复 0 项 | 铸渊PSP巡检 |
-| 03-10 08:00 | 🔵 CI 构建 失败 | GitHub Actions |
-| 03-09 16:56 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
-| 03-09 08:00 | ✅ 铸渊 PSP 巡检通过 · 全部检查项 ✅ | 铸渊PSP巡检 |
 <!-- BINGSHUO_BULLETIN_END -->
 
 ### 🤖 铸渊自动提醒
@@ -116,8 +116,6 @@
 | 03-12 00:01 | 冰朔 | `—/` | ✅ 上传成功 |
 | 03-12 00:01 | Copilot | `—/` | ✅ 上传成功 |
 | 03-11 23:45 | WENZHUOXI | `—/` | ✅ 上传成功 |
-| 03-11 23:02 | Copilot | `—/` | ✅ 上传成功 |
-| 03-11 23:01 | Copilot | `—/` | ✅ 上传成功 |
 | 03-11 22:35 | 飞毛嘴帅气爱 | `frontend/` | 📦 上传成功 |
 | 03-09 21:21 | 飞毛嘴帅气爱 | `backend/` | 📦 上传成功 |
 <!-- COLLABORATOR_BULLETIN_END -->
