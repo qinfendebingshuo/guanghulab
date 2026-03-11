@@ -101,7 +101,7 @@
 | `deploy-to-server.yml` | "🚀 铸渊 CD · 自动部署到 guanghulab.com" | push, manual |
 | `distribute-broadcasts.yml` | 铸渊 · 广播分发 | push, manual |
 | `esp-signal-processor.yml` | 铸渊 · ESP 邮件信号处理器（已暂停） | schedule(*/30 * * * *), manual |
-| `generate-module-doc.yml` | 铸渊 · HoloLake Era 模块文档自动生成 | push, manual |
+| `generate-module-doc.yml` | 铸渊 · 光湖纪元 模块文档自动生成 | push, manual |
 | `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
 | `notion-connectivity-test.yml` | 铸渊 · Notion 连通性测试 | manual |
 | `notion-poll.yml` | 铸渊 · Notion 工单轮询 | schedule(*/15 * * * *), manual |

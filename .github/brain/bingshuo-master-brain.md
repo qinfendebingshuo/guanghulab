@@ -24,7 +24,7 @@
 
 ## B. 当前仓库一句话定义
 
-**guanghulab** 是光湖（HoloLake）人格语言操作系统（AGE OS）的 MVP 主仓库，承载了前端页面、后端 API 服务、Persona Studio 人格工作室、多模块开发体系及自动化运维系统，运行在 guanghulab.com。
+**guanghulab** 是光湖（HoloLake）人格语言操作系统（光湖纪元·AGE-5）的 MVP 主仓库，承载了前端页面、后端 API 服务、Persona Studio 人格工作室、多模块开发体系及自动化运维系统，运行在 guanghulab.com。
 
 ---
 
