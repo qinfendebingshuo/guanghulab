@@ -1,4 +1,4 @@
-﻿/* ===== CSS 变量定义（浅色/深色主题）===== */
+/* ===== CSS 变量定义（浅色/深色主题）===== */
 :root {
     --bg-primary: #ffffff;
     --bg-secondary: #f5f7fa;
@@ -137,41 +137,50 @@ body {
     background: var(--bg-tertiary);
 }
 
-/* ===== 骨架屏样式 ===== */
-.skeleton-wrapper {
+/* ===== 骨架屏样式（加强版）===== */
+#skeleton-container {
+    display: block;
     margin: 20px 0;
 }
 
 .skeleton-card {
     background: var(--bg-secondary);
     border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
 }
 
 .skeleton {
-    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        #d1d5db 25%,
+        var(--bg-tertiary) 50%,
+        #d1d5db 75%,
+        var(--bg-tertiary) 100%
+    );
     background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 4px;
+    animation: skeleton-loading 1.2s infinite ease-in-out;
+    border-radius: 8px;
 }
 
-@keyframes loading {
+@keyframes skeleton-loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
 
 .skeleton-title {
     width: 60%;
-    height: 24px;
-    margin-bottom: 12px;
+    height: 28px;
+    margin-bottom: 16px;
 }
 
 .skeleton-text {
     width: 100%;
-    height: 16px;
-    margin-bottom: 8px;
+    height: 18px;
+    margin-bottom: 12px;
 }
 
 .skeleton-text.short {
@@ -181,7 +190,7 @@ body {
 /* ===== 公告列表样式 ===== */
 .bulletin-container {
     margin: 20px 0;
-    min-height: 200px;
+    min-height: 300px;
 }
 
 .bulletin-item {
@@ -191,6 +200,12 @@ body {
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border-color);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .bulletin-title {
@@ -234,22 +249,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* ===== EL-6 新增样式 ===== */
-/* 骨架屏平滑淡出 */
-.bulletin-container.data-loaded .bulletin-skeleton {
-    display: none;
-}
-
-.bulletin-item {
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* 错误状态 */
+/* ===== 错误状态 ===== */
 .error-state {
     text-align: center;
     padding: 4rem 2rem;
@@ -297,7 +297,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* 离线标记 */
+/* ===== 离线标记 ===== */
 .offline-badge {
     background: #ffd966;
     color: #856404;
@@ -308,7 +308,7 @@ body {
     margin-bottom: 1rem;
 }
 
-/* 空状态 */
+/* ===== 空状态 ===== */
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
@@ -331,5 +331,4 @@ body {
 
 .empty-desc {
     color: var(--text-tertiary);
-}
 }
