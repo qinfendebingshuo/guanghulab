@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-12T12:22:11.961Z",
+  "generated_at": "2026-03-12T13:22:25.424Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 32,
-    "total_scripts": 27,
+    "total_workflows": 35,
+    "total_scripts": 32,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -323,10 +323,31 @@
           ]
         },
         {
+          "file": "push-broadcast.yml",
+          "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "receive-syslog.yml",
+          "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+          "triggers": [
+            "unknown"
+          ]
+        },
+        {
           "file": "staging-preview.yml",
           "name": "\"🔍 铸渊预演部署 (Staging Preview)\"",
           "triggers": [
             "pull_request",
+            "manual"
+          ]
+        },
+        {
+          "file": "sync-login-entry.yml",
+          "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+          "triggers": [
             "manual"
           ]
         },
@@ -411,7 +432,7 @@
           ]
         }
       ],
-      "item_count": 32
+      "item_count": 35
     },
     {
       "zone_id": "SCRIPTS",
@@ -483,10 +504,25 @@
           "file": "psp-inspection.js"
         },
         {
+          "file": "push-broadcast.js"
+        },
+        {
+          "file": "receive-syslog.js"
+        },
+        {
           "file": "route-align-check.js"
         },
         {
+          "file": "save-collaboration-log.js"
+        },
+        {
           "file": "selfcheck.js"
+        },
+        {
+          "file": "send-feishu-alert.js"
+        },
+        {
+          "file": "sync-login-entry.js"
         },
         {
           "file": "update-brain.js"
@@ -510,7 +546,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 27
+      "item_count": 32
     },
     {
       "zone_id": "SRC",
@@ -1293,8 +1329,20 @@
     "psp-daily-inspection": [
       "WORKFLOWS::psp-daily-inspection.yml"
     ],
+    "push-broadcast": [
+      "WORKFLOWS::push-broadcast.yml",
+      "SCRIPTS::push-broadcast.js"
+    ],
+    "receive-syslog": [
+      "WORKFLOWS::receive-syslog.yml",
+      "SCRIPTS::receive-syslog.js"
+    ],
     "staging-preview": [
       "WORKFLOWS::staging-preview.yml"
+    ],
+    "sync-login-entry": [
+      "WORKFLOWS::sync-login-entry.yml",
+      "SCRIPTS::sync-login-entry.js"
     ],
     "sync-persona-studio": [
       "WORKFLOWS::sync-persona-studio.yml"
@@ -1394,8 +1442,14 @@
     "route-align-check": [
       "SCRIPTS::route-align-check.js"
     ],
+    "save-collaboration-log": [
+      "SCRIPTS::save-collaboration-log.js"
+    ],
     "selfcheck": [
       "SCRIPTS::selfcheck.js"
+    ],
+    "send-feishu-alert": [
+      "SCRIPTS::send-feishu-alert.js"
     ],
     "update-brain": [
       "SCRIPTS::update-brain.js"
