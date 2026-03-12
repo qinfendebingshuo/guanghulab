@@ -37,10 +37,10 @@ jobs:
       - name: 🧪 执行连通性测试
         id: test
         env:
-          NOTION_TOKEN:      ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN:      ${{ secrets.NOTION_API_TOKEN }}
           SIGNAL_LOG_DB_ID:  ${{ vars.SIGNAL_LOG_DB_ID }}
-          CHANGES_DB_ID:     ${{ secrets.CHANGES_DB_ID }}
-          SYSLOG_DB_ID:      ${{ secrets.SYSLOG_DB_ID }}
+          CHANGES_DB_ID:     ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
+          SYSLOG_DB_ID:      ${{ secrets.NOTION_SYSLOG_DB_ID }}
         run: node scripts/notion-connectivity-test.js
 
       - name: 提交信号日志

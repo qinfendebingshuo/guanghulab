@@ -37,8 +37,8 @@ jobs:
       - name: 📡 同步 commit 变更到 Notion
         if: github.event_name == 'push'
         env:
-          NOTION_TOKEN:     ${{ secrets.NOTION_TOKEN }}
-          CHANGES_DB_ID:    ${{ secrets.CHANGES_DB_ID }}
+          NOTION_TOKEN:     ${{ secrets.NOTION_API_TOKEN }}
+          CHANGES_DB_ID:    ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
           EVENT_TYPE:       commit
           COMMIT_SHA:       ${{ github.sha }}
           COMMIT_MSG:       ${{ github.event.head_commit.message }}
@@ -56,8 +56,8 @@ jobs:
       - name: 📡 同步 PR 变更到 Notion
         if: github.event_name == 'pull_request'
         env:
-          NOTION_TOKEN:     ${{ secrets.NOTION_TOKEN }}
-          CHANGES_DB_ID:    ${{ secrets.CHANGES_DB_ID }}
+          NOTION_TOKEN:     ${{ secrets.NOTION_API_TOKEN }}
+          CHANGES_DB_ID:    ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
           EVENT_TYPE:       pr
           PR_NUMBER:        ${{ github.event.pull_request.number }}
           PR_TITLE:         ${{ github.event.pull_request.title }}

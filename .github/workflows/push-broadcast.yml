@@ -39,7 +39,7 @@ jobs:
 
       - name: 📡 推送广播 → 飞书文档B
         env:
-          NOTION_TOKEN:      ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN:      ${{ secrets.NOTION_API_TOKEN }}
           BROADCAST_PAGE_ID: ${{ github.event.client_payload.broadcast_page_id || github.event.inputs.broadcast_page_id }}
           FEISHU_APP_ID:     ${{ secrets.FEISHU_APP_ID }}
           FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}

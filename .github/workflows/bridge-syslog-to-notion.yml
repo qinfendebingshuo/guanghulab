@@ -34,7 +34,7 @@ jobs:
 
       - name: 🔗 同步 syslog-inbox 到 Notion
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          SYSLOG_DB_ID: ${{ secrets.SYSLOG_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
           COMMIT_SHA:   ${{ github.sha }}
         run: node scripts/notion-bridge.js syslog

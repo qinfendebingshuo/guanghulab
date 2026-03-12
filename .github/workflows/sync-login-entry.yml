@@ -33,7 +33,7 @@ jobs:
 
       - name: 🔗 同步 Notion 登录入口 → 飞书文档A
         env:
-          NOTION_TOKEN:          ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN:          ${{ secrets.NOTION_API_TOKEN }}
           NOTION_LOGIN_PAGE_ID:  ${{ secrets.NOTION_LOGIN_PAGE_ID }}
           FEISHU_APP_ID:         ${{ secrets.FEISHU_APP_ID }}
           FEISHU_APP_SECRET:     ${{ secrets.FEISHU_APP_SECRET }}

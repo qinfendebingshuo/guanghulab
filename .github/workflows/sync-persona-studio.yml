@@ -20,6 +20,10 @@ on:
           - frontend
           - backend
 
+concurrency:
+  group: sync-persona-studio
+  cancel-in-progress: true
+
 jobs:
   sync:
     name: 同步到 persona-studio 仓库
@@ -42,7 +46,7 @@ jobs:
         run: node scripts/cross-repo-sync.js
 
       - name: 通知 persona-studio 仓库
-        if: ${{ secrets.CROSS_REPO_TOKEN != '' }}
+        if: env.CROSS_REPO_TOKEN != ''
         env:
           CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
         run: |

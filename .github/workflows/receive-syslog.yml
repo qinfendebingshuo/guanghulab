@@ -34,7 +34,7 @@ jobs:
       - name: 📥 处理 SYSLOG
         env:
           SYSLOG_JSON:          ${{ toJSON(github.event.client_payload.syslog) }}
-          NOTION_TOKEN:         ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN:         ${{ secrets.NOTION_API_TOKEN }}
           NOTION_SYSLOG_DB_ID:  ${{ secrets.NOTION_SYSLOG_DB_ID }}
           NOTION_TICKET_DB_ID:  ${{ secrets.NOTION_TICKET_DB_ID }}
         run: node scripts/receive-syslog.js
