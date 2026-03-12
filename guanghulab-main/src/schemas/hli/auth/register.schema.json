@@ -1,0 +1,28 @@
+{
+  "hli_id": "HLI-AUTH-002",
+  "version": "v0.1",
+  "route": "/hli/auth/register",
+  "method": "POST",
+  "type": "REQUEST",
+  "input": {
+    "type": "object",
+    "required": ["username", "password", "email"],
+    "properties": {
+      "username": { "type": "string", "minLength": 1 },
+      "password": { "type": "string", "minLength": 6 },
+      "email": { "type": "string", "format": "email" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["user_id"],
+    "properties": {
+      "user_id": { "type": "string" },
+      "created_at": { "type": "string", "format": "date-time" }
+    }
+  },
+  "dependencies": [],
+  "changelog": [
+    { "date": "2026-03-05", "note": "初始创建" }
+  ]
+}

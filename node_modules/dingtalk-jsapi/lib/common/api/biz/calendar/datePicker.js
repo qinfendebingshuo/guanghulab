@@ -1,0 +1,1 @@
+"use strict";function datePicker$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.datePicker$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.calendar.datePicker",exports.datePicker$=datePicker$,exports.default=datePicker$;

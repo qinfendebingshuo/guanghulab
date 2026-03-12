@@ -1,0 +1,142 @@
+# 铸渊 · 每日巡检 Agent
+#
+# 每天定时巡检仓库健康状况，自动检查今天遗漏的任务，
+# 发现问题后自动触发对应的修复工作流。
+#
+# 触发条件：
+#   1. 每日定时（北京时间 22:00 = UTC 14:00）
+#   2. 手动触发
+#
+# 巡检项：
+#   CHK-1: 公告栏是否已更新
+#   CHK-2: 每日自检是否已执行
+#   CHK-3: 大脑文件完整性
+#   CHK-4: CI 最近状态
+#   CHK-5: 关键模块 README
+#   CHK-6: 公告栏工作流健康
+
+name: 🤖 铸渊巡检 Agent · 每日自动巡检与修复
+
+on:
+  schedule:
+    # 北京时间 22:00 (UTC 14:00) — 每天收工前巡检
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: zhuyuan-daily-agent
+  cancel-in-progress: true
+
+jobs:
+  inspect:
+    name: 🔍 铸渊巡检 Agent
+    runs-on: ubuntu-latest
+    outputs:
+      has_issues: ${{ steps.agent.outputs.has_issues }}
+      need_bulletin_update: ${{ steps.agent.outputs.need_bulletin_update }}
+      need_selfcheck: ${{ steps.agent.outputs.need_selfcheck }}
+      summary: ${{ steps.agent.outputs.summary }}
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 执行巡检
+        id: agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/zhuyuan-daily-agent.js
+
+      - name: 📝 提交巡检结果
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/brain/memory.json
+          if git diff --cached --quiet; then
+            echo "📋 无变化，跳过提交"
+          else
+            git commit -m "🤖 铸渊巡检Agent · $(date +%Y-%m-%d) [skip ci]"
+            for i in 1 2 3; do
+              if git push; then
+                echo "✅ 巡检结果已推送"
+                break
+              fi
+              echo "⚠️ 推送失败（第 $i 次），拉取后重试..."
+              git pull --rebase origin main
+              if [ $i -eq 3 ]; then
+                echo "⚠️ 推送失败 3 次，跳过"
+              fi
+            done
+          fi
+
+  # ── 自动修复：触发公告栏更新 ──
+  fix-bulletin:
+    name: 🔧 自动修复 · 公告栏更新
+    needs: inspect
+    if: needs.inspect.outputs.need_bulletin_update == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔄 触发公告栏更新工作流
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'update-readme-bulletin.yml',
+              ref: 'main',
+            });
+            console.log('✅ 已触发公告栏更新工作流');
+
+  # ── 自动修复：触发每日自检 ──
+  fix-selfcheck:
+    name: 🔧 自动修复 · 每日自检
+    needs: inspect
+    if: needs.inspect.outputs.need_selfcheck == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔄 触发每日自检工作流
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'zhuyuan-daily-selfcheck.yml',
+              ref: 'main',
+            });
+            console.log('✅ 已触发每日自检工作流');
+
+  # ── 巡检报告 ──
+  report:
+    name: 📊 巡检报告
+    needs: [inspect]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 输出巡检摘要
+        run: |
+          echo "═══════════════════════════════════════════"
+          echo "🤖 铸渊巡检 Agent · 每日报告"
+          echo "═══════════════════════════════════════════"
+          echo ""
+          echo "📋 巡检结果: ${{ needs.inspect.outputs.summary }}"
+          echo "🔧 公告栏修复: ${{ needs.fix-bulletin.result || '未触发' }}"
+          echo "🔧 自检修复: ${{ needs.fix-selfcheck.result || '未触发' }}"
+          echo ""
+          echo "✅ 巡检 Agent 流程结束"

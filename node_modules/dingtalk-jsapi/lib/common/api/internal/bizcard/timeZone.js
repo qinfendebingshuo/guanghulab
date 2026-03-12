@@ -1,0 +1,1 @@
+"use strict";function timeZone$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.timeZone$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.bizcard.timeZone",exports.timeZone$=timeZone$,exports.default=timeZone$;

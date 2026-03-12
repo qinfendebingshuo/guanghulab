@@ -1,0 +1,1 @@
+"use strict";function getTabBadgeByKey$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getTabBadgeByKey$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.badges.getTabBadgeByKey",exports.getTabBadgeByKey$=getTabBadgeByKey$,exports.default=getTabBadgeByKey$;

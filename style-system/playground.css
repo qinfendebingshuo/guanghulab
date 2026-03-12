@@ -1,0 +1,238 @@
+/* playground.css - 完整版 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-color, #f5f5f5);
+  color: var(--text-color, #333);
+}
+
+#pg-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background-color: var(--header-bg, #fff);
+  border-bottom: 1px solid var(--border-color, #ddd);
+}
+
+#pg-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--text-secondary, #666);
+  font-size: 0.9rem;
+}
+
+#theme-toggle {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+#pg-layout {
+  display: flex;
+  min-height: calc(100vh - 70px);
+}
+
+#pg-sidebar {
+  width: 200px;
+  padding: 1rem 0;
+  background-color: var(--sidebar-bg, #fafafa);
+  border-right: 1px solid var(--border-color, #ddd);
+}
+
+#pg-sidebar ul {
+  list-style: none;
+}
+
+#pg-sidebar li {
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  color: var(--text-color, #333);
+}
+
+#pg-sidebar li:hover {
+  background-color: var(--hover-bg, #eee);
+}
+
+#pg-sidebar li.active {
+  background-color: var(--primary-light, #e3f2fd);
+  border-right: 3px solid var(--primary-color, #2196f3);
+}
+
+#pg-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.comp-section {
+  margin-bottom: 3rem;
+  scroll-margin-top: 1rem;
+}
+
+.comp-section h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+}
+
+.comp-desc {
+  color: var(--text-secondary, #666);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.comp-preview {
+  padding: 1.5rem;
+  background-color: var(--preview-bg, #fff);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.comp-code {
+  background-color: var(--code-bg, #f8f8f8);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  position: relative;
+  display: none; /* 默认隐藏 */
+}
+
+.comp-code pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 0.9rem;
+}
+
+.toggle-code-btn {
+  margin-top: 0.5rem;
+  background: none;
+  border: 1px solid var(--border-color, #ccc);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--button-bg, #fff);
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+/* ===== 响应式断点 ===== */
+
+/* 默认隐藏汉堡菜单（桌面和平板） */
+.menu-toggle {
+  display: none;
+}
+
+/* 桌面端 (>1024px) */
+@media (min-width: 1025px) {
+  #pg-sidebar {
+    width: 200px;
+  }
+  /* 卡片三列（如果预览区用 grid 会自动适应，这里放一个 fallback） */
+  .comp-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .comp-preview > * {
+    flex: 1 1 calc(33.333% - 1rem);
+  }
+}
+
+/* 平板端 (769px ~ 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #pg-sidebar {
+    width: 150px;  /* 侧边栏变窄 */
+  }
+  .comp-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .comp-preview > * {
+    flex: 1 1 calc(50% - 1rem); /* 卡片双列 */
+  }
+}
+
+/* 手机端 (<768px) */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: inline-block;  /* 显示汉堡菜单 */
+  }
+  #pg-sidebar {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 200px;
+    height: calc(100vh - 70px);
+    background: var(--sidebar-bg, #fafafa);
+    border-right: 1px solid var(--border-color, #ddd);
+    z-index: 100;
+    overflow-y: auto;
+  }
+  #pg-sidebar.active {
+    display: block;
+  }
+
+  #pg-header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  #pg-header h1 {
+    font-size: 1.2rem;
+  }
+  .subtitle {
+    display: none;  /* 隐藏副标题 */
+  }
+
+  /* 按钮、输入框全宽 */
+  .comp-preview button,
+  .comp-preview .btn,
+  .comp-preview input,
+  .comp-preview .input {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  /* 卡片单列 */
+  .comp-preview {
+    display: block;
+  }
+  .comp-preview .card {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  /* 模态框示例手机全屏 */
+  .comp-preview .modal {
+    width: 100%;
+    max-width: none;
+    border-radius: 0;
+  }
+
+  /* 面包屑手机折叠（只显示首尾） */
+  .breadcrumb span:nth-child(n+2):nth-last-child(n+2) {
+    display: none;
+  }
+}

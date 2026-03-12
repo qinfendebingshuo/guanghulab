@@ -1,0 +1,1 @@
+"use strict";function finishEditor$(i){return common_1.ddSdk.invokeAPI(exports.apiName,i)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.finishEditor$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.finishEditor",exports.finishEditor$=finishEditor$,exports.default=finishEditor$;

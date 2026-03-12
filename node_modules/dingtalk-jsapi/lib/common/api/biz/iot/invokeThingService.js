@@ -1,0 +1,1 @@
+"use strict";function invokeThingService$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.invokeThingService$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.iot.invokeThingService",exports.invokeThingService$=invokeThingService$,exports.default=invokeThingService$;

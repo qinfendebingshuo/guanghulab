@@ -1,0 +1,1 @@
+"use strict";function chooseImage$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.chooseImage$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.chooseImage",exports.chooseImage$=chooseImage$,exports.default=chooseImage$;

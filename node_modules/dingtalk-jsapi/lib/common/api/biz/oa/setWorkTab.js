@@ -1,0 +1,1 @@
+"use strict";function setWorkTab$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setWorkTab$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.oa.setWorkTab",exports.setWorkTab$=setWorkTab$,exports.default=setWorkTab$;

@@ -1,0 +1,406 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecf2 100%);
+    min-height: 100vh;
+    padding: 30px 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 32px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    padding: 40px;
+}
+
+h1 {
+    font-size: 2.2rem;
+    color: #1a2639;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.subtitle {
+    color: #5d6d7e;
+    margin-bottom: 40px;
+    font-size: 1rem;
+    border-left: 4px solid #ffd166;
+    padding-left: 16px;
+}
+
+/* 搜索区域 */
+.search-section {
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.search-input-wrapper {
+    display: flex;
+    gap: 12px;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 16px 20px;
+    border: 2px solid #e0e4e9;
+    border-radius: 60px;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    outline: none;
+}
+
+#searchInput:focus {
+    border-color: #ffb347;
+    box-shadow: 0 0 0 4px rgba(255, 180, 70, 0.15);
+}
+
+#searchBtn {
+    padding: 0 32px;
+    background: #1a2639;
+    color: white;
+    border: none;
+    border-radius: 60px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#searchBtn:hover {
+    background: #2c3e50;
+    transform: scale(1.02);
+}
+
+/* 历史面板 */
+.history-panel {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    padding: 20px;
+    z-index: 100;
+    border: 1px solid #eef2f6;
+}
+
+.history-panel.hidden {
+    display: none;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: #4a5b6e;
+    font-weight: 600;
+}
+
+.small-btn {
+    padding: 6px 12px;
+    background: #f1f3f5;
+    border: none;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.small-btn:hover {
+    background: #e2e6ea;
+}
+
+.history-list {
+    list-style: none;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f3f7;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.history-item:hover {
+    background: #f8fafd;
+}
+
+.history-item .keyword {
+    font-weight: 500;
+    color: #1a2639;
+}
+
+.delete-history {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 8px;
+}
+
+.delete-history:hover {
+    color: #dc3545;
+}
+
+/* 筛选区域 */
+.filter-section {
+    background: #f8fafd;
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 40px;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filter-header h3 {
+    color: #1a2639;
+}
+
+.secondary-btn {
+    padding: 8px 18px;
+    background: white;
+    border: 1.5px solid #d0d9e2;
+    border-radius: 40px;
+    color: #2c3e50;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    background: #eef2f6;
+    border-color: #adb5bd;
+}
+
+.filter-options {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #2c3e50;
+}
+
+.price-range {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.price-range input {
+    width: 120px;
+    padding: 10px 15px;
+    border: 1.5px solid #d0d9e2;
+    border-radius: 40px;
+    outline: none;
+}
+
+/* 预设列表 */
+.presets-panel h4 {
+    color: #5d6d7e;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.presets-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.preset-item {
+    background: white;
+    border: 1.5px solid #e0e4e9;
+    border-radius: 40px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preset-item:hover {
+    border-color: #ffb347;
+    background: #fff9f0;
+}
+
+.preset-name {
+    color: #1a2639;
+}
+
+.delete-preset {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 4px;
+}
+
+.delete-preset:hover {
+    color: #dc3545;
+}
+
+/* 搜索结果区域 */
+.results-section h3 {
+    margin-bottom: 20px;
+    color: #1a2639;
+}
+
+.results-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.result-item {
+    background: white;
+    border: 1.5px solid #eef2f6;
+    border-radius: 20px;
+    padding: 20px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+}
+
+.result-item:hover {
+    border-color: #ffd166;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+}
+
+.result-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1a2639;
+    font-size: 1.1rem;
+}
+
+.result-price {
+    color: #e67e22;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.result-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.tag {
+    background: #f1f3f5;
+    padding: 4px 10px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    color: #4a5b6e;
+}
+
+.highlight {
+    background-color: #ffeb99;
+    padding: 2px 0;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #b85e00;
+}
+
+/* 弹窗 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 32px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.modal-content h3 {
+    margin-bottom: 20px;
+    color: #1a2639;
+}
+
+#presetNameInput {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid #e0e4e9;
+    border-radius: 60px;
+    margin-bottom: 25px;
+    font-size: 1rem;
+    outline: none;
+}
+
+#presetNameInput:focus {
+    border-color: #ffb347;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#cancelPresetBtn {
+    background: #f1f3f5;
+    color: #495057;
+}
+
+#confirmPresetBtn {
+    background: #1a2639;
+    color: white;
+}

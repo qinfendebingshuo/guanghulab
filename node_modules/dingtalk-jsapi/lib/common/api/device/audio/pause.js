@@ -1,0 +1,1 @@
+"use strict";function pause$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.pause$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.audio.pause",exports.pause$=pause$,exports.default=pause$;

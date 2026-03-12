@@ -1,0 +1,1 @@
+"use strict";function getBatteryInfo$(e){return ddSdk_1.ddSdk.invokeAPI(apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getBatteryInfo$=void 0;var ddSdk_1=require("../../../lib/ddSdk"),apiName="device.base.getBatteryInfo";ddSdk_1.ddSdk.setAPI(apiName,{}),exports.getBatteryInfo$=getBatteryInfo$,exports.default=getBatteryInfo$;

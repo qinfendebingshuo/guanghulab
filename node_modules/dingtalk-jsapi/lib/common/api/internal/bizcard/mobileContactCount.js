@@ -1,0 +1,1 @@
+"use strict";function mobileContactCount$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.mobileContactCount$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.bizcard.mobileContactCount",exports.mobileContactCount$=mobileContactCount$,exports.default=mobileContactCount$;

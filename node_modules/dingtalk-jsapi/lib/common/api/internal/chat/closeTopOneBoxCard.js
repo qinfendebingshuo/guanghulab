@@ -1,0 +1,1 @@
+"use strict";function closeTopOneBoxCard$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.closeTopOneBoxCard$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.closeTopOneBoxCard",exports.closeTopOneBoxCard$=closeTopOneBoxCard$,exports.default=closeTopOneBoxCard$;

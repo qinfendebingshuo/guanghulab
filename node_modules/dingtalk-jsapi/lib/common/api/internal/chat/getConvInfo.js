@@ -1,0 +1,1 @@
+"use strict";function getConvInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getConvInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.getConvInfo",exports.getConvInfo$=getConvInfo$,exports.default=getConvInfo$;

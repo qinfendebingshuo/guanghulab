@@ -1,0 +1,1 @@
+"use strict";function operateMusic$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.operateMusic$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.studyroom.operateMusic",exports.operateMusic$=operateMusic$,exports.default=operateMusic$;

@@ -1,0 +1,1 @@
+"use strict";function stop$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.stop$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.geolocation.stop",exports.stop$=stop$,exports.default=stop$;

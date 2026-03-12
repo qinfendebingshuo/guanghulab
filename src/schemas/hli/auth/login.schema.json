@@ -1,0 +1,29 @@
+{
+  "hli_id": "HLI-AUTH-001",
+  "version": "v0.1",
+  "route": "/hli/auth/login",
+  "method": "POST",
+  "type": "REQUEST",
+  "input": {
+    "type": "object",
+    "required": ["username", "password"],
+    "properties": {
+      "username": { "type": "string", "minLength": 1 },
+      "password": { "type": "string", "minLength": 6 }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["token", "user_id", "persona_id"],
+    "properties": {
+      "token": { "type": "string" },
+      "user_id": { "type": "string" },
+      "persona_id": { "type": "string" },
+      "expires_at": { "type": "string", "format": "date-time" }
+    }
+  },
+  "dependencies": [],
+  "changelog": [
+    { "date": "2026-03-05", "note": "初始创建" }
+  ]
+}

@@ -1,0 +1,1 @@
+"use strict";function encrySHA1Data$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.encrySHA1Data$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.encrySHA1Data",exports.encrySHA1Data$=encrySHA1Data$,exports.default=encrySHA1Data$;

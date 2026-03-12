@@ -1,0 +1,1 @@
+"use strict";function chooseInvoice$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.chooseInvoice$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.invoice.chooseInvoice",exports.chooseInvoice$=chooseInvoice$,exports.default=chooseInvoice$;

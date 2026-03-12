@@ -1,0 +1,565 @@
+﻿/* HoloLake公告栏系统深色科技风 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: #0a1628;
+    color: #e0e6ed;
+    min-height: 100vh;
+}
+
+.app-container {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* ========== 顶部标题栏 ========== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e0e6ed;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pinned-badge {
+    background: rgba(255, 183, 77, 0.15);
+    color: #ffb74d;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.subscribe-btn {
+    background: rgba(79, 195, 247, 0.1);
+    color: #4fc3f7;
+    border: 1px solid rgba(79, 195, 247, 0.2);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.subscribe-btn:hover {
+    background: rgba(79, 195, 247, 0.2);
+}
+
+/* ========== 频道栏 ========== */
+.channel-tab-bar {
+    display: flex;
+    gap: 8px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    overflow-x: auto;
+}
+
+.channel-tab {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: #8899aa;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.channel-tab:hover {
+    border-color: rgba(255, 183, 77, 0.3);
+    color: #b0bec5;
+}
+
+.channel-tab.active {
+    background: rgba(255,183,77,0.15);
+    border-color: #ffb74d;
+    color: #ffb74d;
+    font-weight: 600;
+}
+
+/* ========== 公告列表 ========== */
+.bulletin-list {
+    padding: 16px 0;
+}
+
+.bulletin-card {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(20, 30, 45, 0.6);
+    border: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.bulletin-card.pinned {
+    border: 1px solid rgba(255, 183, 77, 0.3);
+    background: rgba(255, 183, 77, 0.02);
+}
+
+.pin-indicator {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 11px;
+    color: #ffb74d;
+    font-weight: 600;
+}
+
+/* 公告图标 */
+.bulletin-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.bulletin-icon.system { background: rgba(156,39,176,0.12); }
+.bulletin-icon.dev { background: rgba(76,175,80,0.12); }
+.bulletin-icon.team { background: rgba(79,195,247,0.12); }
+
+/* 公告内容 */
+.bulletin-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bulletin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.bulletin-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e0e6ed;
+}
+
+.bulletin-time {
+    font-size: 12px;
+    color: #556677;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.bulletin-summary {
+    font-size: 13px;
+    color: #8899aa;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+/* 公告底部 */
+.bulletin-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bulletin-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.tag-system { background: rgba(156,39,176,0.12); color: #ce93d8; }
+.tag-dev { background: rgba(76,175,80,0.12); color: #81c784; }
+.tag-team { background: rgba(79,195,247,0.12); color: #4fc3f7; }
+
+.bulletin-author {
+    font-size: 11px;
+    color: #556677;
+}
+
+/* ========== 底部状态栏 ========== */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 12px;
+    color: #556677;
+}
+
+.footer-brand {
+    color: rgba(255, 183, 77, 0.5);
+}
+
+/* ========================= 环节2：响应式布局 ========================= */
+
+/* 平板（宽度 768px 以下） */
+@media (max-width: 768px) {
+  .app-container {
+    max-width: 100%;
+    padding: 0 12px;
+  }
+  header h1 {
+    font-size: 18px;
+  }
+  .channel-tab-bar {
+    gap: 6px;
+    padding: 12px 0;
+  }
+  .channel-tab {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+  .bulletin-card {
+    padding: 12px 10px;
+  }
+  .channel-tab-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .channel-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .bulletin-card {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bulletin-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  .bulletin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .bulletin-time {
+    margin-left: 0;
+  }
+  .pin-indicator {
+    top: 6px;
+    right: 8px;
+    font-size: 10px;
+  }
+  .footer {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+}
+
+/* 已读公告样式 */
+.bulletin-card.read {
+  opacity: 0.6;
+}
+.bulletin-card.read .bulletin-title {
+  color: #8899aa;
+}
+
+/* 订阅按钮激活状态 */
+.subscribe-btn.active {
+  background: rgba(79, 195, 247, 0.25);
+  border-color: #4fc3f7;
+  color: #4fc3f7;
+}
+/* ========== 响应式断点 ========== */
+
+/* 已读公告样式 */
+.bulletin-card.read {
+    opacity: 0.7;
+}
+.bulletin-card.read h3 {
+    color: #888;
+    text-decoration: line-through 1px rgba(0,0,0,0.2);
+}
+
+/* 订阅按钮激活状态 */
+.subscribe-btn.active {
+    border: 2px solid #0066ff;
+    background-color: #e6f0ff;
+    color: #0066ff;
+    font-weight: bold;
+}
+
+/* 平板设备 ≤ 768px */
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 0 20px;
+    }
+    
+    .bulletin-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .bulletin-grid {
+        gap: 12px;
+    }
+    
+    .bulletin-card {
+        padding: 12px;
+    }
+    
+    .bulletin-card .icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .channel-tab-tabs {
+        gap: 8px;
+    }
+    
+    .channel-tab-tab {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* 手机设备 ≤ 480px */
+@media (max-width: 480px) {
+    .bulletin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .bulletin-header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+    
+    .subscribe-btn {
+        align-self: flex-start;
+    }
+    
+    .bulletin-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .bulletin-card .icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 4px;
+    }
+    
+    .channel-tab-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        flex-wrap: nowrap;
+        gap: 10px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox隐藏滚动条 */
+    }
+    
+    .channel-tab-tabs::-webkit-scrollbar {
+        display: none; /* Chrome/Safari隐藏滚动条 */
+    }
+    
+    .channel-tab-tab {
+        display: inline-block;
+        float: none;
+        white-space: nowrap;
+    }
+    
+    .bulletin-footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+}/* ===== 知秋：loading/error/empty 状态样式 ===== */
+
+/* loading */
+.loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 15px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* error */
+.error-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #e74c3c;
+}
+
+.retry-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+
+.retry-btn:hover {
+    background: #2980b9;
+}
+
+/* empty */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 16px;
+}
+
+/* 响应式适配 */
+@media (max-width: 600px) {
+    .loading-state, .error-state, .empty-state {
+        padding: 30px 15px;
+    }
+    
+    .spinner {
+        width: 30px;
+        height: 30px;
+    }
+}/* ===== 频道栏和公告列表的间距 ===== */
+.channel-bar {
+    margin-bottom: 20px;  /* 给频道栏加下边距 */
+}
+
+/* 或者也可以给公告容器加上边距 */
+.bulletin-container {
+    margin-top: 10px;
+}
+/* ===== 频道栏与上方标题栏的间距 ===== */
+.channel-bar {
+    margin-top: 15px;     /* 给频道栏顶部增加间距，让它和上面的内容分开 */
+}
+
+/* 也可以调整标题栏的底部间距 */
+.header-actions {
+    margin-bottom: 5px;   /* 或者给标题栏底部加点间距 */
+}
+/* ===== 语言切换器样式 ===== */
+.lang-switcher {
+    display: inline-flex;
+    margin-right: 15px;
+    gap: 5px;
+}
+
+.lang-btn {
+    background: #f0f0f0;        /* 改成浅灰色背景 */
+    border: 1px solid #999;      /* 深一点的边框 */
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+    color: #333;                 /* 文字颜色深灰色，保证看得见 */
+}
+
+.lang-btn:hover {
+    background: #f0f0f0;
+}
+
+.lang-btn.active {
+    background: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+/* 焦点样式（键盘导航用） */
+.lang-btn:focus,
+.channel-tab:focus,
+.retry-btn:focus,
+.bulletin-card:focus {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* 高对比度适配（可选） */
+@media (prefers-contrast: high) {
+    .lang-btn.active {
+        background: black;
+        border-color: black;
+    }
+}
+/* ========== 骨架屏样式 ========== */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+    width: 80%;
+}
+
+.skeleton-text.short {
+    width: 40%;
+}
+
+.skeleton-title {
+    height: 24px;
+    margin-bottom: 12px;
+    width: 60%;
+}
+
+.skeleton-card {
+    padding: 16px;
+    border-radius: 8px;
+    background: var(--card-bg, #fff);
+    margin-bottom: 12px;
+}
+
+/* 暗色主题适配 */
+[data-theme="dark"] .skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}

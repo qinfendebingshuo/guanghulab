@@ -1,0 +1,1 @@
+"use strict";function checkBizCall$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.checkBizCall$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.telephone.checkBizCall",exports.checkBizCall$=checkBizCall$,exports.default=checkBizCall$;

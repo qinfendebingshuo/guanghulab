@@ -1,0 +1,1 @@
+"use strict";function watchShake$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.watchShake$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.accelerometer.watchShake",exports.watchShake$=watchShake$,exports.default=watchShake$;

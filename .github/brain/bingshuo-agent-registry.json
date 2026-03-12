@@ -1,0 +1,237 @@
+{
+  "version": "1.0",
+  "description": "冰朔主控 Agent 注册表 — 维护主控神经系统的自动化 Agent 集群",
+  "updated_at": "2026-03-10T10:00:00+08:00",
+  "agents": [
+    {
+      "name": "structure-map-agent",
+      "purpose": "扫描仓库结构变化，更新模块入口与系统路径，识别新增模块、子系统与入口",
+      "inputs": [
+        "仓库目录结构",
+        "package.json",
+        ".github/workflows/*.yml"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-master-brain.md（C 区块）",
+        ".github/brain/bingshuo-routing-index.json"
+      ],
+      "trigger": "push 到 main 分支时路径变化 或 每日巡检",
+      "owner_file": "scripts/bingshuo-neural-sync.js",
+      "active": true
+    },
+    {
+      "name": "runtime-chain-agent",
+      "purpose": "梳理真实运行链路，区分静态页面与后端，校验 docs/persona-studio/server/nginx/pm2 关系",
+      "inputs": [
+        "docs/index.html",
+        "backend/index.js",
+        "persona-studio/",
+        ".github/workflows/deploy-*.yml"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-master-brain.md（C 区块）",
+        ".github/brain/bingshuo-system-health.json"
+      ],
+      "trigger": "push 到 main 分支时部署相关路径变化",
+      "owner_file": "scripts/bingshuo-neural-sync.js",
+      "active": true
+    },
+    {
+      "name": "brain-consistency-agent",
+      "purpose": "检查 memory.json / wake-protocol.md / routing-map.json 等脑文件一致性，识别版本分裂与语义冲突",
+      "inputs": [
+        ".github/brain/memory.json",
+        ".github/brain/wake-protocol.md",
+        ".github/brain/routing-map.json",
+        "persona-studio/brain/"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-system-health.json（brain_consistency）",
+        ".github/brain/bingshuo-issues-index.json"
+      ],
+      "trigger": "脑文件变化 或 每日巡检",
+      "owner_file": "scripts/bingshuo-neural-sync.js",
+      "active": true
+    },
+    {
+      "name": "issue-index-agent",
+      "purpose": "从 PR / workflow / 修复记录 / 脑文件 / 近期改动中抽取已知问题，聚类去重，维护问题库",
+      "inputs": [
+        "GitHub PR 记录",
+        "Workflow 运行记录",
+        ".github/brain/*",
+        "近期 commit 信息"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-issues-index.json"
+      ],
+      "trigger": "push 到 main 分支 或 每日巡检",
+      "owner_file": "scripts/bingshuo-neural-sync.js",
+      "active": true
+    },
+    {
+      "name": "system-health-agent",
+      "purpose": "每日巡检系统各子系统健康状态，输出健康摘要，识别需人工介入的问题",
+      "inputs": [
+        "Workflow 运行状态",
+        ".github/brain/*.json",
+        "仓库结构快照"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-system-health.json",
+        ".github/brain/bingshuo-master-brain.md（F 区块）"
+      ],
+      "trigger": "每日 08:00 巡检",
+      "owner_file": "scripts/bingshuo-neural-sync.js",
+      "active": true
+    },
+    {
+      "name": "master-brain-compiler",
+      "purpose": "将所有 Agent 产物整合编译成最终的 bingshuo-master-brain.md，自动去噪，保留高优先级信息",
+      "inputs": [
+        ".github/brain/bingshuo-routing-index.json",
+        ".github/brain/bingshuo-issues-index.json",
+        ".github/brain/bingshuo-system-health.json",
+        ".github/brain/bingshuo-agent-registry.json",
+        ".github/brain/memory.json",
+        ".github/brain/repo-snapshot.md"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-master-brain.md"
+      ],
+      "trigger": "其他 Agent 完成后触发 或 每日巡检",
+      "owner_file": "scripts/bingshuo-neural-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-001",
+      "name": "master-architecture-agent",
+      "purpose": "主控架构整理 Agent — 扫描系统新增模块/页面/数据库/子系统，更新主控系统地图与架构摘要",
+      "inputs": [
+        "仓库目录结构",
+        ".github/brain/bingshuo-brain-bridge.json",
+        ".github/brain/repo-map.json"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-brain-bridge.json（architecture 区块）",
+        ".github/brain/bingshuo-master-brain.md（C 区块）"
+      ],
+      "trigger": "push 到 main 分支时路径变化 或 每日巡检",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-002",
+      "name": "dev-status-sync-agent",
+      "purpose": "主控开发状态同步 Agent — 收集人类开发状态，从广播、日志、工单中提取有效进度，写入人类开发状态主控台",
+      "inputs": [
+        ".github/brain/human-registry.json",
+        ".github/brain/collaborators.json",
+        "broadcasts-outbox/",
+        "syslog-inbox/"
+      ],
+      "outputs": [
+        ".github/brain/human-registry.json",
+        "Notion 人类开发状态主控台"
+      ],
+      "trigger": "广播推送后 或 日志提交后 或 每日巡检",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-003",
+      "name": "broadcast-cleanup-agent",
+      "purpose": "主控广播整理 Agent — 将广播自动摘要化，标记有效/已执行/已过期/已归档，防止广播堆积",
+      "inputs": [
+        "broadcasts-outbox/",
+        "broadcasts-archive/"
+      ],
+      "outputs": [
+        "broadcasts-archive/（归档）",
+        "广播摘要台更新"
+      ],
+      "trigger": "广播推送后 或 每日巡检",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-004",
+      "name": "volume-archive-agent",
+      "purpose": "主控分卷归档 Agent — 监控页面长度，超阈值自动分卷，自动建立卷索引，保持主页面轻量",
+      "inputs": [
+        "所有脑文件",
+        "所有日志文件"
+      ],
+      "outputs": [
+        "分卷文件",
+        "卷索引"
+      ],
+      "trigger": "每日巡检",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-005",
+      "name": "issue-classification-agent",
+      "purpose": "主控问题归类 Agent — 识别重复问题，问题聚类，进入主控问题索引库",
+      "inputs": [
+        ".github/brain/bingshuo-issues-index.json",
+        "GitHub Issues",
+        "工单日志"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-issues-index.json"
+      ],
+      "trigger": "新问题产生时 或 每日巡检",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-006",
+      "name": "daily-inspection-agent",
+      "purpose": "主控巡检 Agent — 每日巡检系统健康，检查同步、路径、状态漂移、分卷状态、脑子维护状态、桥接状态",
+      "inputs": [
+        ".github/brain/bingshuo-brain-bridge.json",
+        ".github/brain/bingshuo-system-health.json",
+        ".github/brain/human-registry.json",
+        "所有脑文件"
+      ],
+      "outputs": [
+        ".github/brain/bingshuo-system-health.json",
+        "巡检报告"
+      ],
+      "trigger": "每日 08:00",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-007",
+      "name": "yaoming-dispatch-agent",
+      "purpose": "曜冥代理调度 Agent — 冰朔离线时协助曜冥调度其他自动 Agent，保证自动更新循环不中断",
+      "inputs": [
+        ".github/brain/bingshuo-brain-bridge.json（master_mode）"
+      ],
+      "outputs": [
+        "Agent 调度指令"
+      ],
+      "trigger": "master_mode 为 AUTONOMOUS_MODE 时激活",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    },
+    {
+      "agent_id": "AGENT-008",
+      "name": "persona-brain-maintenance-agent",
+      "purpose": "人格体大脑维护 Agent — 维护每个人格体的轻量大脑：职责摘要、任务摘要、规则摘要、历史分卷入口",
+      "inputs": [
+        ".github/persona-brain/",
+        "persona-studio/brain/"
+      ],
+      "outputs": [
+        "各人格体大脑维护状态"
+      ],
+      "trigger": "人格体状态变化时 或 每日巡检",
+      "owner_file": "scripts/brain-bridge-sync.js",
+      "active": true
+    }
+  ]
+}

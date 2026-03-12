@@ -1,0 +1,1 @@
+"use strict";function detectFace$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.detectFace$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.ATMBle.detectFace",exports.detectFace$=detectFace$,exports.default=detectFace$;

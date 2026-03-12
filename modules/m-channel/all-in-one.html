@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光湖频道 · 一体化版</title>
+    <style>
+        .channel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .channel-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .channel-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .channel-btn:hover {
+            background: #e5e7eb;
+        }
+        .channel-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .channel-btn.visited {
+            position: relative;
+        }
+        .channel-btn.visited::after {
+            content: "✓";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .channel-content {
+            min-height: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .channel-content.fade-out {
+            opacity: 0;
+        }
+        .channel-content.fade-in {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="channel-container">
+        <nav class="channel-nav">
+            <button class="channel-btn active" data-channel="home">🏠 首页</button>
+            <button class="channel-btn" data-channel="module-a">📦 模块A</button>
+            <button class="channel-btn" data-channel="module-b">📦 模块B</button>
+            <button class="channel-btn" data-channel="module-c">📦 模块C</button>
+            <button class="channel-btn" data-channel="debug">🐞 调试面板</button>
+        </nav>
+        <main id="channel-content" class="channel-content">
+            <!-- 动态内容会加载到这里 -->
+        </main>
+    </div>
+
+    <script>
+        // ==================== 所有代码整合在一个文件里 ====================
+
+        // ---------- 模块注册表 ----------
+        window.ModuleRegistry = {
+            modules: {},
+            register: function(name, module) {
+                this.modules[name] = module;
+                console.log(`[registry] 模块 ${name} 已注册`);
+            },
+            get: function(name) {
+                return this.modules[name];
+            },
+            list: function() {
+                return Object.keys(this.modules);
+            }
+        };
+
+        // ---------- 事件总线 ----------
+        window.EventBus = {
+            listeners: {},
+            on: function(event, callback) {
+                if (!this.listeners[event]) this.listeners[event] = [];
+                this.listeners[event].push(callback);
+                console.log(`[事件总线] 订阅事件: ${event}`);
+            },
+            off: function(event, callback) {
+                if (!this.listeners[event]) return;
+                if (!callback) delete this.listeners[event];
+                else this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                console.log(`[事件总线] 取消订阅: ${event}`);
+            },
+            emit: function(event, data) {
+                console.log(`[事件总线] 发送事件: ${event}`, data);
+                if (!this.listeners[event]) return;
+                this.listeners[event].forEach(callback => {
+                    try { callback(data); } catch (e) { console.error(`[事件总线] 执行回调出错: ${e}`); }
+                });
+            }
+        };
+
+        // ---------- 模块生命周期 ----------
+        window.ModuleLifecycle = {
+            activeModules: new Set(),
+            onLoad: function(moduleName) {
+                this.activeModules.add(moduleName);
+                console.log(`[生命周期] 模块加载: ${moduleName}`);
+                EventBus.emit('module:loaded', { module: moduleName, time: Date.now() });
+            },
+            onUnload: function(moduleName) {
+                this.activeModules.delete(moduleName);
+                console.log(`[生命周期] 模块卸载: ${moduleName}`);
+                EventBus.emit('module:unloaded', { module: moduleName, time: Date.now() });
+            },
+            getActiveModules: function() {
+                return Array.from(this.activeModules);
+            }
+        };
+
+        // ---------- 频道状态 ----------
+        window.ChannelState = {
+            STORAGE_KEY: 'hololake_channel_state',
+            saveState: function(state) {
+                const data = { ...state, timestamp: Date.now(), visited: state.visited || [] };
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+                console.log('[state] 保存状态:', data);
+            },
+            restoreState: function() {
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (!saved) return null;
+                try {
+                    const state = JSON.parse(saved);
+                    console.log('[state] 恢复状态:', state);
+                    return state;
+                } catch (e) {
+                    console.error('[state] 解析失败:', e);
+                    return null;
+                }
+            },
+            markVisited: function(channel) {
+                const state = this.restoreState() || { visited: [] };
+                if (!state.visited.includes(channel)) {
+                    state.visited.push(channel);
+                    this.saveState(state);
+                }
+            },
+            clearState: function() {
+                localStorage.removeItem(this.STORAGE_KEY);
+                console.log('[state] 已清除');
+            }
+        };
+
+        // ---------- 模块加载器 ----------
+        window.ModuleLoader = {
+            loadModule: function(moduleName, containerId) {
+                console.log(`[loader] 加载模块: ${moduleName}`);
+                const module = ModuleRegistry.get(moduleName);
+                if (!module) {
+                    console.error(`[loader] 模块 ${moduleName} 未注册`);
+                    return;
+                }
+                const container = document.getElementById(containerId);
+                if (!container) {
+                    console.error(`[loader] 容器 ${containerId} 不存在`);
+                    return;
+                }
+                if (module.init && typeof module.init === 'function') {
+                    module.init(container);
+                } else {
+                    container.innerHTML = `<div>模块 ${moduleName} 内容</div>`;
+                }
+                ModuleLifecycle.onLoad(moduleName);
+            },
+            unloadModule: function(moduleName) {
+                console.log(`[loader] 卸载模块: ${moduleName}`);
+                const module = ModuleRegistry.get(moduleName);
+                if (module && module.destroy && typeof module.destroy === 'function') {
+                    module.destroy();
+                }
+                ModuleLifecycle.onUnload(moduleName);
+            }
+        };
+
+        // ---------- 路由 ----------
+        window.ChannelRouter = {
+            currentChannel: 'home',
+            contentEl: null,
+            init: function(contentElement) {
+                this.contentEl = contentElement;
+                console.log('[router] 初始化');
+                const savedState = ChannelState.restoreState();
+                if (savedState && savedState.currentChannel) {
+                    this.currentChannel = savedState.currentChannel;
+                }
+                this.loadChannel(this.currentChannel);
+                if (savedState && savedState.visited) {
+                    savedState.visited.forEach(channel => {
+                        document.querySelectorAll('.channel-btn').forEach(btn => {
+                            if (btn.dataset.channel === channel) btn.classList.add('visited');
+                        });
+                    });
+                }
+            },
+            navigateTo: function(channel) {
+                if (channel === this.currentChannel) return;
+                console.log(`[router] 导航到: ${channel}`);
+                this.contentEl.classList.add('fade-out');
+                setTimeout(() => {
+                    this.loadChannel(channel);
+                    this.contentEl.classList.remove('fade-out');
+                    this.contentEl.classList.add('fade-in');
+                    setTimeout(() => { this.contentEl.classList.remove('fade-in'); }, 300);
+                }, 300);
+                this.currentChannel = channel;
+                document.querySelectorAll('.channel-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.channel === channel) btn.classList.add('active');
+                });
+                ChannelState.saveState({ currentChannel: channel, visited: this.getVisitedChannels() });
+            },
+            loadChannel: function(channel) {
+                if (!this.contentEl) return;
+                let content = '';
+                switch(channel) {
+                    case 'home':
+                        content = '<h2>🏠 首页</h2><p>欢迎来到光湖频道</p>';
+                        break;
+                    case 'module-a':
+                        content = '<h2>📦 模块A</h2><button id="sendMsgBtn">发送消息给模块B</button><div id="msgDisplay"></div>';
+                        break;
+                    case 'module-b':
+                        content = '<h2>📦 模块B</h2><div id="receivedMsg">等待消息...</div>';
+                        break;
+                    case 'module-c':
+                        content = '<h2>📦 模块C</h2><p>这是模块C的内容</p>';
+                        break;
+                    case 'debug':
+                        this.loadDebugPanel();
+                        return;
+                    default:
+                        content = '<h2>未知频道</h2>';
+                }
+                this.contentEl.innerHTML = content;
+                ModuleLifecycle.onLoad(channel);
+                if (channel === 'module-a') {
+                    setTimeout(() => {
+                        const btn = document.getElementById('sendMsgBtn');
+                        if (btn) {
+                            btn.addEventListener('click', () => {
+                                EventBus.emit('module-a:message', { text: '你好，模块B！', from: '模块A' });
+                                document.getElementById('msgDisplay').innerHTML = '✅ 消息已发送';
+                            });
+                        }
+                    }, 100);
+                }
+                if (channel === 'module-b') {
+                    this.subscribeModuleB();
+                }
+            },
+            loadDebugPanel: function() {
+                // 调试面板直接用内嵌 HTML，避免 fetch 问题
+                this.contentEl.innerHTML = `
+                    <div class="debug-panel">
+                        <h2>🐞 调试面板</h2>
+                        <div class="module-list"><strong>当前活跃模块:</strong> <span id="active-modules">加载中...</span></div>
+                        <h3>事件总线聊天记录</h3>
+                        <ul class="message-list" id="debug-messages" style="border:1px solid #ccc; padding:10px; height:200px; overflow-y:auto; background:#f9f9f9;"></ul>
+                        <div style="display:flex; gap:10px; margin:10px 0;">
+                            <input type="text" id="debug-input" placeholder="输入要发送的消息..." style="flex:1; padding:8px;">
+                            <button id="debug-send" style="padding:8px 16px; background:#3b82f6; color:white; border:none; border-radius:4px;">发送测试消息</button>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button id="debug-clear" style="padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:4px;">清除状态</button>
+                            <button id="debug-refresh" onclick="location.reload()" style="padding:8px 16px; background:#6b7280; color:white; border:none; border-radius:4px;">刷新页面</button>
+                        </div>
+                        <p><small>消息会广播给所有订阅的模块</small></p>
+                    </div>
+                `;
+                ModuleLifecycle.onLoad('debug');
+                this.initDebugPanel();
+            },
+            initDebugPanel: function() {
+                const msgList = document.getElementById('debug-messages');
+                if (msgList && window.debugMessages) {
+                    window.debugMessages.forEach(msg => {
+                        const li = document.createElement('li');
+                        li.textContent = `[${msg.time}] ${msg.event}: ${JSON.stringify(msg.data)}`;
+                        msgList.appendChild(li);
+                    });
+                }
+                const sendBtn = document.getElementById('debug-send');
+                const input = document.getElementById('debug-input');
+                if (sendBtn && input) {
+                    sendBtn.addEventListener('click', () => {
+                        const text = input.value.trim();
+                        if (text) {
+                            EventBus.emit('debug:message', { text, from: '调试面板' });
+                            input.value = '';
+                        }
+                    });
+                }
+                const clearBtn = document.getElementById('debug-clear');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        ChannelState.clearState();
+                        alert('状态已清除，刷新页面生效');
+                    });
+                }
+                // 更新活跃模块
+                const updateActive = () => {
+                    const span = document.getElementById('active-modules');
+                    if (span) {
+                        const modules = ModuleLifecycle.getActiveModules();
+                        span.textContent = modules.length ? modules.join('、') : '无';
+                    }
+                };
+                EventBus.on('module:loaded', updateActive);
+                EventBus.on('module:unloaded', updateActive);
+                updateActive();
+            },
+            subscribeModuleB: function() {
+                const handleMessage = (data) => {
+                    const display = document.getElementById('receivedMsg');
+                    if (display) {
+                        display.innerHTML = `📩 收到消息: ${data.text} (来自 ${data.from})`;
+                    }
+                };
+                EventBus.off('module-a:message');
+                EventBus.on('module-a:message', handleMessage);
+            },
+            getVisitedChannels: function() {
+                const visited = [];
+                document.querySelectorAll('.channel-btn.visited').forEach(btn => visited.push(btn.dataset.channel));
+                return visited;
+            }
+        };
+
+        // ---------- 应用启动 ----------
+        console.log('[app] 启动中...');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[app] DOM 已加载');
+            const contentEl = document.getElementById('channel-content');
+            if (!contentEl) {
+                console.error('[app] 找不到 #channel-content');
+                return;
+            }
+            if (window.ChannelRouter) {
+                ChannelRouter.init(contentEl);
+            }
+            document.querySelectorAll('.channel-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const channel = this.dataset.channel;
+                    if (channel && window.ChannelRouter) {
+                        ChannelRouter.navigateTo(channel);
+                        this.classList.add('visited');
+                        ChannelState.markVisited(channel);
+                    }
+                });
+            });
+        });
+
+        // 拦截事件总线消息用于调试
+        const originalEmit = EventBus.emit;
+        EventBus.emit = function(event, data) {
+            if (!window.debugMessages) window.debugMessages = [];
+            window.debugMessages.push({ event, data, time: new Date().toLocaleTimeString() });
+            originalEmit.call(this, event, data);
+        };
+        console.log('[app] 事件总线拦截器已安装');
+    </script>
+</body>
+</html>

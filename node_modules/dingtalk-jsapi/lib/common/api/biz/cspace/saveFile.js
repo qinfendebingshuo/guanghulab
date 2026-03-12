@@ -1,0 +1,1 @@
+"use strict";function saveFile$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.saveFile$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.cspace.saveFile",exports.saveFile$=saveFile$,exports.default=saveFile$;

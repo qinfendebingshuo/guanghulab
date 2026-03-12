@@ -1,0 +1,1 @@
+"use strict";function getPhoneInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getPhoneInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.getPhoneInfo",exports.getPhoneInfo$=getPhoneInfo$,exports.default=getPhoneInfo$;

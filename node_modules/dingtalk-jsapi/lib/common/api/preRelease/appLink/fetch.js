@@ -1,0 +1,1 @@
+"use strict";function fetch$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.fetch$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="preRelease.appLink.fetch",exports.fetch$=fetch$,exports.default=fetch$;

@@ -1,0 +1,178 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-03-09T13:00:00+08:00",
+  "updated_by": "霜砚",
+  "description": "HoloLake Interface 路由映射表 · 模块→目录→路由对照",
+  "modules": {
+    "M01": {
+      "name": "用户登录界面",
+      "dir": "portal",
+      "dev": "DEV-002",
+      "status": "completed",
+      "routes": ["/login", "/register"]
+    },
+    "M03": {
+      "name": "侧边栏导航",
+      "dir": "guanghulab-main",
+      "dev": "DEV-002",
+      "status": "completed",
+      "routes": ["/nav"]
+    },
+    "M04": {
+      "name": "顶部状态栏",
+      "dir": "guanghulab-main",
+      "dev": "DEV-002",
+      "status": "completed",
+      "routes": ["/header"]
+    },
+    "M05": {
+      "name": "用户中心界面",
+      "dir": "dev-nodes/DEV-009",
+      "dev": "DEV-009",
+      "status": "in_progress",
+      "routes": ["/user-center"]
+    },
+    "M06": {
+      "name": "工单管理界面",
+      "dir": "dev-nodes/DEV-010",
+      "dev": "DEV-010",
+      "status": "completed",
+      "routes": ["/tickets"]
+    },
+    "M07": {
+      "name": "设置页面",
+      "dir": "dev-nodes/DEV-003",
+      "dev": "DEV-003",
+      "status": "completed",
+      "routes": ["/settings"]
+    },
+    "M08": {
+      "name": "数据统计面板",
+      "dir": "dev-nodes/DEV-010",
+      "dev": "DEV-010",
+      "status": "completed",
+      "routes": ["/dashboard/stats"]
+    },
+    "M09": {
+      "name": "消息通知中心",
+      "dir": "dev-nodes/DEV-012",
+      "dev": "DEV-012",
+      "status": "completed",
+      "routes": ["/notifications"]
+    },
+    "M10": {
+      "name": "帮助中心与反馈",
+      "dir": "dev-nodes/DEV-003",
+      "dev": "DEV-003",
+      "status": "completed",
+      "routes": ["/help", "/feedback"]
+    },
+    "M11": {
+      "name": "系统风格组件库",
+      "dir": "dev-nodes/DEV-010",
+      "dev": "DEV-010",
+      "status": "completed",
+      "routes": ["/components"]
+    },
+    "M12": {
+      "name": "成本控制系统",
+      "dir": "dev-nodes/DEV-005",
+      "dev": "DEV-005",
+      "status": "completed",
+      "routes": ["/cost"]
+    },
+    "M13": {
+      "name": "多人格体协作调度",
+      "dir": "dev-nodes/DEV-005",
+      "dev": "DEV-005",
+      "status": "completed",
+      "routes": ["/persona-dispatch"]
+    },
+    "M14": {
+      "name": "冷启动热身系统",
+      "dir": "dev-nodes/DEV-002",
+      "dev": "DEV-002",
+      "status": "in_progress",
+      "routes": ["/api/warmup", "/api/warmup/log"]
+    },
+    "M15": {
+      "name": "网站云盘系统",
+      "dir": "dev-nodes/DEV-003",
+      "dev": "DEV-003",
+      "status": "completed",
+      "routes": ["/drive"]
+    },
+    "M16": {
+      "name": "码字工作台",
+      "dir": "dev-nodes/DEV-011",
+      "dev": "DEV-011",
+      "status": "in_progress",
+      "routes": ["/editor"]
+    },
+    "M17": {
+      "name": "动态漫制作系统",
+      "dir": "dev-nodes/DEV-004",
+      "dev": "DEV-004",
+      "status": "in_progress",
+      "routes": ["/comic-maker"]
+    },
+    "M18": {
+      "name": "系统健康检查",
+      "dir": "dev-nodes/DEV-003",
+      "dev": "DEV-003",
+      "status": "in_progress",
+      "routes": ["/api/health", "/api/patrol", "/api/patrol/history"]
+    },
+    "M20": {
+      "name": "搜索与筛选界面",
+      "dir": "dev-nodes/DEV-009",
+      "dev": "DEV-009",
+      "status": "in_progress",
+      "routes": ["/search"]
+    },
+    "M22": {
+      "name": "主域公告栏与频道过渡系统",
+      "dir": "dev-nodes/DEV-012",
+      "dev": "DEV-012",
+      "status": "in_progress",
+      "routes": ["/bulletin", "/channel-transition"]
+    },
+    "M-CHANNEL": {
+      "name": "用户频道动态渲染引擎",
+      "dir": "dev-nodes/DEV-010",
+      "dev": "DEV-010",
+      "status": "in_progress",
+      "routes": ["/channel/:id"]
+    },
+    "M-AUTH": {
+      "name": "注册登录系统",
+      "dir": "dev-nodes/DEV-013",
+      "dev": "DEV-013",
+      "status": "in_progress",
+      "routes": ["/auth/register", "/auth/login"]
+    },
+    "M-DASHBOARD": {
+      "name": "状态看板",
+      "dir": "dashboard",
+      "dev": "DEV-005",
+      "status": "completed",
+      "routes": ["/dashboard"]
+    },
+    "BACKEND": {
+      "name": "后端中间层",
+      "dir": "backend-integration",
+      "dev": "DEV-001",
+      "status": "completed",
+      "routes": ["/api/*"]
+    }
+  },
+  "infra": {
+    "repo": "qinfendebingshuo/guanghulab",
+    "domain": "guanghulab.com",
+    "deployment_status": "pending",
+    "notion_bridge": {
+      "syslog_inbox_db": "330ab17507d542c9bbb96d0749b41197",
+      "changelog_db": "e740b77aa6bd4ac0a2e8a75f678fba98"
+    }
+  }
+}

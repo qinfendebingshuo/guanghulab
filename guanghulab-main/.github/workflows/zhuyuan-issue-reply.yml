@@ -1,0 +1,30 @@
+name: 铸渊 · Issue 自动回复
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  auto-reply:
+    name: 🤖 铸渊回答问题
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 铸渊处理Issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          YUNWU_API_KEY: ${{ secrets.YUNWU_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+        run: node scripts/zhuyuan-issue-reply.js

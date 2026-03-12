@@ -1,0 +1,1 @@
+"use strict";function mtop$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.mtop$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="service.request.mtop",exports.mtop$=mtop$,exports.default=mtop$;

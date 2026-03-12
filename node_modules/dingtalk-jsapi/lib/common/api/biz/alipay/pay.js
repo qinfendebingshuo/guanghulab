@@ -1,0 +1,1 @@
+"use strict";function pay$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.pay$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.alipay.pay",exports.pay$=pay$,exports.default=pay$;

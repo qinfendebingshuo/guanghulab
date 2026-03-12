@@ -1,0 +1,1 @@
+"use strict";function openApp$(p){return common_1.ddSdk.invokeAPI(exports.apiName,p)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openApp$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.microApp.openApp",exports.openApp$=openApp$,exports.default=openApp$;

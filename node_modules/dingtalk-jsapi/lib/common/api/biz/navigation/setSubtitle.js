@@ -1,0 +1,1 @@
+"use strict";function setSubtitle$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setSubtitle$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.setSubtitle",exports.setSubtitle$=setSubtitle$,exports.default=setSubtitle$;

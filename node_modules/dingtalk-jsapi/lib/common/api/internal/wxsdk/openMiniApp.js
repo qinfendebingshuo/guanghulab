@@ -1,0 +1,1 @@
+"use strict";function openMiniApp$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openMiniApp$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.wxsdk.openMiniApp",exports.openMiniApp$=openMiniApp$,exports.default=openMiniApp$;

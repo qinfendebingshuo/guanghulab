@@ -1,0 +1,52 @@
+name: "❓ 开发问题"
+description: "遇到技术问题？铸渊会自动回答你"
+title: "[问题] "
+labels: ["dev-question", "pending"]
+assignees: []
+body:
+  - type: input
+    id: dev_id
+    attributes:
+      label: "你的开发者编号"
+      description: "例如 DEV-001"
+      placeholder: "DEV-00X"
+    validations:
+      required: true
+  - type: input
+    id: module
+    attributes:
+      label: "相关模块"
+      description: "你当前在做的模块，例如 M01、M05"
+      placeholder: "M01"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: "问题分类"
+      options:
+        - 环境配置（Node/npm/终端）
+        - SSH/服务器连接
+        - 代码报错
+        - 广播步骤看不懂
+        - 想知道当前进度
+        - Git操作
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "问题描述"
+      description: "尽量说清楚：做到哪一步了、报了什么错、截图（如果有）"
+      placeholder: "我在执行 npm install 的时候报错了..."
+    validations:
+      required: true
+  - type: textarea
+    id: error_log
+    attributes:
+      label: "错误日志（可选）"
+      description: "终端里报的错误，复制粘贴过来"
+      render: shell
+    validations:
+      required: false

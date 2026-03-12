@@ -1,0 +1,1 @@
+"use strict";function uploadException$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.uploadException$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.log.uploadException",exports.uploadException$=uploadException$,exports.default=uploadException$;

@@ -1,0 +1,1 @@
+"use strict";function listItems$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.listItems$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="util.domainStorage.listItems",exports.listItems$=listItems$,exports.default=listItems$;

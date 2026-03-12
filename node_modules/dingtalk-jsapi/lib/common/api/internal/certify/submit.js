@@ -1,0 +1,1 @@
+"use strict";function submit$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.submit$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.certify.submit",exports.submit$=submit$,exports.default=submit$;

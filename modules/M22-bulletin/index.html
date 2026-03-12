@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake公告栏</title>
+    <!-- 关键资源预加载 -->
+    <link rel="preload" href="style.css" as="style">
+    <link rel="preload" href="i18n.js" as="script">
+    <link rel="preload" href="script.js" as="script">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <h1 data-i18n="title">公告栏</h1>
+            <div class="header-actions">
+                <!-- 语言切换器 -->
+                <div class="lang-switcher">
+                    <button class="lang-btn" data-lang="zh-CN" aria-label="切换到中文">中</button>
+                    <button class="lang-btn" data-lang="en-US" aria-label="Switch to English">EN</button>
+                </div>
+                <span class="pinned-badge" data-i18n="pinned">条置顶</span>
+                <button class="subscribe-btn" data-i18n="subscribe">订阅</button>
+            </div>
+        </header>
+
+        <!-- 频道标签栏 -->
+        <nav class="channel-bar" role="tablist">
+            <button class="channel-tab active" data-channel="全部" role="tab" data-i18n="all">全部</button>
+            <button class="channel-tab" data-channel="系统" role="tab" data-i18n="system">系统公告</button>
+            <button class="channel-tab" data-channel="知秋" role="tab" data-i18n="dev">开发动态</button>
+            <button class="channel-tab" data-channel="技术" role="tab" data-i18n="team">团队消息</button>
+        </nav>
+
+        <!-- 骨架屏容器（独立于公告容器） -->
+        <div id="skeleton-container" class="skeleton-wrapper">
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+            </div>
+        </div>
+
+        <!-- 公告主内容区 -->
+        <main class="bulletin-container" role="list"></main>
+
+        <!-- 底部状态栏 -->
+        <footer class="footer">
+            <span>共 <span id="totalCount">6</span> 条公告 <span id="pinnedCount">2</span> <span data-i18n="pinned">条置顶</span></span>
+            <span class="footer-brand" data-i18n="footer">HoloLake光湖系统</span>
+        </footer>
+    </div>
+
+    <!-- JS 文件 -->
+    <script src="i18n.js"></script>
+    <script src="api.js"></script>
+    <script src="storage.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

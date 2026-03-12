@@ -1,0 +1,1 @@
+"use strict";function saveToWiki$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.saveToWiki$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.wiki.saveToWiki",exports.saveToWiki$=saveToWiki$,exports.default=saveToWiki$;

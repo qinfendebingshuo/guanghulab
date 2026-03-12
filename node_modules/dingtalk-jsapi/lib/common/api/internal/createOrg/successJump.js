@@ -1,0 +1,1 @@
+"use strict";function successJump$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.successJump$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.createOrg.successJump",exports.successJump$=successJump$,exports.default=successJump$;

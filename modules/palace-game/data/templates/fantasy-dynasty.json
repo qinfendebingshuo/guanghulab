@@ -1,0 +1,40 @@
+{
+  "id": "fantasy-dynasty",
+  "name": "架空王朝",
+  "description": "九霄帝国·灵力与权谋交织·玄幻宫廷",
+  "setting": {
+    "dynasty": "九霄",
+    "era_prefix": ["灵元", "天衍", "混沌", "太初", "紫极"],
+    "capital": "天枢城",
+    "palace_name": "凌霄殿",
+    "inner_palace": "瑶光阁"
+  },
+  "roles": {
+    "妃子": {
+      "title_options": ["星妃", "月嫔", "霜华夫人", "云裳贵人"],
+      "family_options": ["上古灵族后裔", "剑修世家", "炼丹宗门", "凡人修仙"],
+      "starting_rank": "嫔",
+      "intro_template": "你是{family}出身的{title}，入宫{years}年。{situation}"
+    },
+    "皇帝": {
+      "title_options": ["灵帝", "天选之主", "末代帝君"],
+      "situation_options": ["灵力觉醒·诸族觊觎", "仙魔大战后·百废待兴", "天命将尽·寻找继承"],
+      "intro_template": "你是{dynasty}的{title}，{situation}。"
+    },
+    "重臣": {
+      "title_options": ["星辰阁大长老", "天机院主", "护国神将", "灵枢司正"],
+      "faction_options": ["仙道派", "人道派", "中立长老会"],
+      "intro_template": "你是{dynasty}{title}，{faction}核心。{situation}"
+    },
+    "奸臣": {
+      "title_options": ["暗影阁主", "禁术研究者", "外域使者"],
+      "ambition_options": ["窃取帝国灵脉", "复活远古邪神", "暗中操控傀儡帝"],
+      "intro_template": "你是{title}，表面忠良，实则{ambition}。"
+    }
+  },
+  "atmosphere": {
+    "time_of_day": ["灵潮初涌·黎明", "日中·灵力最盛", "黄昏·阴阳交替", "子夜·暗灵活跃"],
+    "weather": ["灵雨飘洒", "星河低垂", "雷灵暴动", "万里晴空·灵气充沛", "迷雾笼罩"],
+    "locations": ["灵枢大殿", "星象台", "瑶光阁", "灵兽园", "封印之地", "虚空裂缝", "万灵池"]
+  }
+}

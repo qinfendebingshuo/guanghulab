@@ -1,0 +1,57 @@
+# CODEOWNERS · 光湖仓库 · 协作者权限保护
+#
+# 作用：保护核心文件，修改时需要仓库所有者审批。
+# 配合 Branch Protection Rules 使用效果最佳（Settings → Branches → 开启分支保护）。
+#
+# 设计原则：
+#   只列出需要保护的核心目录/文件，模块目录（m01-* ~ m18-*）和 dev-nodes/
+#   不在此文件中列出，因此协作者可以自由提交到模块目录。
+#
+# 注意：此文件需要配合 Branch Protection Rules 才能真正生效。
+#   操作方法见 docs/使用指南.md 第五节。
+#
+# 开发者 GitHub 用户名映射见 .github/brain/collaborators.json
+
+# ═══════════════════════════════════════════════════════
+# 核心基础设施 —— 需要仓库所有者审批
+# ═══════════════════════════════════════════════════════
+
+# GitHub 工作流与自动化配置
+/.github/                        @qinfendebingshuo
+
+# 自动化脚本
+/scripts/                        @qinfendebingshuo
+
+# 铸渊聊天室前端
+/docs/                           @qinfendebingshuo
+
+# 后端集成 / API 代理
+/backend-integration/            @qinfendebingshuo
+
+# 信号日志
+/signal-log/                     @qinfendebingshuo
+
+# 根目录配置文件
+/package.json                    @qinfendebingshuo
+/package-lock.json               @qinfendebingshuo
+/next.config.ts                  @qinfendebingshuo
+/tsconfig.json                   @qinfendebingshuo
+/README.md                       @qinfendebingshuo
+
+# ═══════════════════════════════════════════════════════
+# 以下目录【不受保护】—— 协作者可以自由提交
+# （因为未在此文件中列出，所以没有审批要求）
+#
+#   /m01-login/         肥猫
+#   /m03-personality/   肥猫
+#   /m05-user-center/   花尔
+#   /m06-ticket/        桔子
+#   /m07-dialogue-ui/   燕樊
+#   /m10-cloud/         燕樊
+#   /m11-module/        桔子
+#   /m12-kanban/        小草莓
+#   /m15-cloud-drive/   燕樊
+#   /m18-health-check/  （待分配）
+#   /multi-persona/     （待分配）
+#   /dev-nodes/         所有开发者个人工作区
+# ═══════════════════════════════════════════════════════

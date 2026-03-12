@@ -1,0 +1,1 @@
+"use strict";function teamScaleSelect$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.teamScaleSelect$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.contact.teamScaleSelect",exports.teamScaleSelect$=teamScaleSelect$,exports.default=teamScaleSelect$;

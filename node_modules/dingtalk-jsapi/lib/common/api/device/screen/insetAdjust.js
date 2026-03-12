@@ -1,0 +1,1 @@
+"use strict";function insetAdjust$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.insetAdjust$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.screen.insetAdjust",exports.insetAdjust$=insetAdjust$,exports.default=insetAdjust$;

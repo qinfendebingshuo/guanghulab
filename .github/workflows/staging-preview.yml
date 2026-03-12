@@ -1,0 +1,180 @@
+name: "🔍 铸渊预演部署 (Staging Preview)"
+
+# === 触发方式 ===
+# 1. PR 到 main 分支（含 docs/ 变更时自动触发）
+# 2. 手动触发（workflow_dispatch）
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'm*/**'
+      - '.github/brain/**'
+
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR 编号（可选）"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  staging-preview:
+    name: "🔍 预演检查"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 🔍 模块完整性检查
+        id: module_check
+        run: |
+          echo "## 🔍 铸渊预演报告" > /tmp/preview-report.md
+          echo "" >> /tmp/preview-report.md
+          echo "📅 检查时间: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')" >> /tmp/preview-report.md
+          echo "" >> /tmp/preview-report.md
+
+          # 检查 docs/index.html 是否存在
+          if [ -f "docs/index.html" ]; then
+            SIZE=$(wc -c < docs/index.html)
+            LINES=$(wc -l < docs/index.html)
+            echo "### ✅ 前端文件" >> /tmp/preview-report.md
+            echo "- \`docs/index.html\`: ${LINES} 行, ${SIZE} 字节" >> /tmp/preview-report.md
+          else
+            echo "### ❌ 前端文件缺失" >> /tmp/preview-report.md
+            echo "- \`docs/index.html\` 不存在!" >> /tmp/preview-report.md
+          fi
+          echo "" >> /tmp/preview-report.md
+
+          # 检查 CNAME
+          if [ -f "docs/CNAME" ]; then
+            DOMAIN=$(cat docs/CNAME | tr -d '[:space:]')
+            echo "### 🌐 自定义域名" >> /tmp/preview-report.md
+            echo "- 域名: \`${DOMAIN}\`" >> /tmp/preview-report.md
+          else
+            echo "### ⚠️ 未配置自定义域名" >> /tmp/preview-report.md
+            echo "- 将使用默认 GitHub Pages 域名" >> /tmp/preview-report.md
+          fi
+          echo "" >> /tmp/preview-report.md
+
+          # 检查模块目录
+          echo "### 📦 模块状态" >> /tmp/preview-report.md
+          echo "| 模块 | 文件数 | README | 状态 |" >> /tmp/preview-report.md
+          echo "|------|--------|--------|------|" >> /tmp/preview-report.md
+
+          MODULE_OK=0
+          MODULE_WARN=0
+          MODULE_EMPTY=0
+          MAX_EMPTY_MODULES=5   # 允许的最大空模块数
+
+          for dir in m[0-9][0-9]-*/; do
+            if [ -d "$dir" ]; then
+              NAME=$(basename "$dir")
+              FILE_COUNT=$(find "$dir" -type f | wc -l)
+              HAS_README="❌"
+              STATUS="⚠️ 无文件"
+
+              if [ -f "${dir}README.md" ]; then
+                HAS_README="✅"
+              fi
+
+              if [ "$FILE_COUNT" -gt 0 ]; then
+                if [ -f "${dir}README.md" ]; then
+                  STATUS="✅ 正常"
+                  MODULE_OK=$((MODULE_OK + 1))
+                else
+                  STATUS="⚠️ 缺少 README"
+                  MODULE_WARN=$((MODULE_WARN + 1))
+                fi
+              else
+                MODULE_EMPTY=$((MODULE_EMPTY + 1))
+              fi
+
+              echo "| \`${NAME}\` | ${FILE_COUNT} | ${HAS_README} | ${STATUS} |" >> /tmp/preview-report.md
+            fi
+          done
+
+          echo "" >> /tmp/preview-report.md
+          echo "**汇总**: ✅ ${MODULE_OK} 正常 · ⚠️ ${MODULE_WARN} 告警 · 📭 ${MODULE_EMPTY} 空模块" >> /tmp/preview-report.md
+          echo "" >> /tmp/preview-report.md
+
+          # 检查关键工作流
+          echo "### ⚙️ 工作流检查" >> /tmp/preview-report.md
+          WORKFLOW_COUNT=$(ls -1 .github/workflows/*.yml 2>/dev/null | wc -l)
+          echo "- 工作流文件: ${WORKFLOW_COUNT} 个" >> /tmp/preview-report.md
+
+          if [ -f ".github/workflows/deploy-pages.yml" ]; then
+            echo "- 部署工作流: ✅ 存在" >> /tmp/preview-report.md
+          else
+            echo "- 部署工作流: ❌ 缺失" >> /tmp/preview-report.md
+          fi
+          echo "" >> /tmp/preview-report.md
+
+          # 预演结论
+          echo "### 🎯 预演结论" >> /tmp/preview-report.md
+          if [ -f "docs/index.html" ] && [ "$MODULE_EMPTY" -lt "$MAX_EMPTY_MODULES" ]; then
+            echo "✅ **预演通过** — 可以合并到 main 分支触发正式部署" >> /tmp/preview-report.md
+            echo "" >> /tmp/preview-report.md
+            echo "合并后将自动触发 \`deploy-pages.yml\` 部署到生产环境。" >> /tmp/preview-report.md
+            echo "如需人工确认，请评论「启动冰朔人格体」触发部署诊断。" >> /tmp/preview-report.md
+          else
+            echo "⚠️ **预演告警** — 请检查上述问题后再合并" >> /tmp/preview-report.md
+          fi
+
+          echo "" >> /tmp/preview-report.md
+          echo "---" >> /tmp/preview-report.md
+          echo "*🌀 铸渊预演系统 · 自动生成*" >> /tmp/preview-report.md
+
+          cat /tmp/preview-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: 📎 上传预演构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-preview-${{ github.sha }}
+          path: docs/
+          retention-days: 7
+
+      - name: 💬 在 PR 中发布预演报告
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('/tmp/preview-report.md', 'utf8');
+
+            // 查找已有的预演评论
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.data.find(c =>
+              c.body.includes('🔍 铸渊预演报告') && c.user.type === 'Bot'
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: report,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: report,
+              });
+            }

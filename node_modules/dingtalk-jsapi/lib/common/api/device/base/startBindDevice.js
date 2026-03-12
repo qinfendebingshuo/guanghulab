@@ -1,0 +1,1 @@
+"use strict";function startBindDevice$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.startBindDevice$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.startBindDevice",exports.startBindDevice$=startBindDevice$,exports.default=startBindDevice$;

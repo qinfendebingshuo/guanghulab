@@ -1,0 +1,1 @@
+"use strict";function locate$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.locate$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.map.locate",exports.locate$=locate$,exports.default=locate$;

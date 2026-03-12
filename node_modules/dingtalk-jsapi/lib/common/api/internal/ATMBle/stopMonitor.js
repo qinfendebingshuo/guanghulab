@@ -1,0 +1,1 @@
+"use strict";function stopMonitor$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.stopMonitor$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.ATMBle.stopMonitor",exports.stopMonitor$=stopMonitor$,exports.default=stopMonitor$;

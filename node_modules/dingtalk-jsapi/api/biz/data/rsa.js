@@ -1,0 +1,1 @@
+"use strict";function rsa$(d){return ddSdk_1.ddSdk.invokeAPI(apiName,d)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.rsa$=void 0;var ddSdk_1=require("../../../lib/ddSdk"),apiName="biz.data.rsa";ddSdk_1.ddSdk.setAPI(apiName,{}),exports.rsa$=rsa$,exports.default=rsa$;

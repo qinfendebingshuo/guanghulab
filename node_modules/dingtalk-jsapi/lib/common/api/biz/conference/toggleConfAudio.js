@@ -1,0 +1,1 @@
+"use strict";function toggleConfAudio$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.toggleConfAudio$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.conference.toggleConfAudio",exports.toggleConfAudio$=toggleConfAudio$,exports.default=toggleConfAudio$;

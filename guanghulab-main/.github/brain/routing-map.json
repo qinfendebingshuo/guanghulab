@@ -1,0 +1,134 @@
+{
+  "version": "v1.0",
+  "last_updated": "2026-03-05",
+  "updated_by": "init",
+  "domains": {
+    "AUTH": {
+      "module": "M01",
+      "route_prefix": "/hli/auth",
+      "interfaces": [
+        {
+          "id": "HLI-AUTH-001",
+          "path": "/hli/auth/login",
+          "status": "implemented"
+        },
+        {
+          "id": "HLI-AUTH-002",
+          "path": "/hli/auth/register",
+          "status": "implemented"
+        },
+        {
+          "id": "HLI-AUTH-003",
+          "path": "/hli/auth/verify",
+          "status": "implemented"
+        }
+      ]
+    },
+    "PERSONA": {
+      "module": "M03",
+      "route_prefix": "/hli/persona",
+      "interfaces": [
+        {
+          "id": "HLI-PERSONA-001",
+          "path": "/hli/persona/load",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-PERSONA-002",
+          "path": "/hli/persona/switch",
+          "status": "pending"
+        }
+      ]
+    },
+    "USER": {
+      "module": "M05",
+      "route_prefix": "/hli/user",
+      "interfaces": [
+        {
+          "id": "HLI-USER-001",
+          "path": "/hli/user/profile",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-USER-002",
+          "path": "/hli/user/profile/update",
+          "status": "pending"
+        }
+      ]
+    },
+    "TICKET": {
+      "module": "M06",
+      "route_prefix": "/hli/ticket",
+      "interfaces": [
+        {
+          "id": "HLI-TICKET-001",
+          "path": "/hli/ticket/create",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-TICKET-002",
+          "path": "/hli/ticket/query",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-TICKET-003",
+          "path": "/hli/ticket/status",
+          "status": "pending"
+        }
+      ]
+    },
+    "DIALOGUE": {
+      "module": "M07",
+      "route_prefix": "/hli/dialogue",
+      "interfaces": [
+        {
+          "id": "HLI-DIALOGUE-001",
+          "path": "/hli/dialogue/send",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-DIALOGUE-002",
+          "path": "/hli/dialogue/stream",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-DIALOGUE-003",
+          "path": "/hli/dialogue/history",
+          "status": "pending"
+        }
+      ]
+    },
+    "STORAGE": {
+      "module": "M10",
+      "route_prefix": "/hli/storage",
+      "interfaces": [
+        {
+          "id": "HLI-STORAGE-001",
+          "path": "/hli/storage/upload",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-STORAGE-002",
+          "path": "/hli/storage/download",
+          "status": "pending"
+        }
+      ]
+    },
+    "DASHBOARD": {
+      "module": "M12",
+      "route_prefix": "/hli/dashboard",
+      "interfaces": [
+        {
+          "id": "HLI-DASHBOARD-001",
+          "path": "/hli/dashboard/status",
+          "status": "pending"
+        },
+        {
+          "id": "HLI-DASHBOARD-002",
+          "path": "/hli/dashboard/realtime",
+          "status": "pending"
+        }
+      ]
+    }
+  }
+}

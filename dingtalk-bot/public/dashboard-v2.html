@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake · 开发者仪表盘 v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #0a0e1a;
+            color: #e0e4f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #1e2a3a;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            color: #8ab2f0;
+            letter-spacing: 1px;
+        }
+        
+        .header h1 span {
+            color: #4a90e2;
+            font-weight: 300;
+            margin-left: 10px;
+            font-size: 16px;
+        }
+        
+        .status-badge {
+            background-color: #1e2a3a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #8ab2f0;
+            border-left: 3px solid #4a90e2;
+        }
+        
+        .status-badge .online {
+            color: #4cd964;
+            font-weight: bold;
+        }
+        
+        /* 卡片网格 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1e2a3a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-title {
+            font-size: 14px;
+            color: #6b7a8f;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #8ab2f0;
+            margin-bottom: 5px;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: #4a5a6e;
+        }
+        
+        /* 两列布局 */
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* 流水线可视化 */
+        .pipeline {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1e2a3a;
+        }
+        
+        .pipeline h3 {
+            font-size: 16px;
+            color: #8ab2f0;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+        
+        .pipeline-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 80px;
+        }
+        
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #1e2a3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            color: #4a5a6e;
+            font-size: 18px;
+        }
+        
+        .step.active .step-icon {
+            background-color: #4a90e2;
+            color: white;
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.5);
+        }
+        
+        .step.completed .step-icon {
+            background-color: #4cd964;
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 12px;
+            color: #6b7a8f;
+        }
+        
+        .step-value {
+            font-size: 11px;
+            color: #4a5a6e;
+            margin-top: 4px;
+        }
+        
+        .arrow {
+            color: #1e2a3a;
+            font-size: 20px;
+            margin: 0 5px;
+        }
+        
+        /* 雷达图容器 */
+        .radar-container {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1e2a3a;
+            height: 300px;
+        }
+        
+        /* 详情表格 */
+        .details {
+            background-color: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1e2a3a;
+        }
+        
+        .details h3 {
+            font-size: 16px;
+            color: #8ab2f0;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #1e2a3a;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #6b7a8f;
+        }
+        
+        .detail-value {
+            color: #8ab2f0;
+            font-weight: 500;
+        }
+        
+        .detail-value.good {
+            color: #4cd964;
+        }
+        
+        .detail-value.warn {
+            color: #ff9f0a;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- 引入 Chart.js 用于雷达图 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>HoloLake 开发者工作台 <span>v2 · 实时仪表盘</span></h1>
+            <div class="status-badge">
+                <span class="online">●</span> 实时更新 <span id="refresh-timer">30s</span>
+            </div>
+        </div>
+        
+        <!-- 系统总览卡片 -->
+        <div class="grid" id="overview-cards">
+            <div class="card">
+                <div class="card-title">已完成阶段</div>
+                <div class="card-value" id="phase-count">-</div>
+                <div class="card-label">Phase 1-4</div>
+            </div>
+            <div class="card">
+                <div class="card-title">总代码量</div>
+                <div class="card-value" id="total-code">-</div>
+                <div class="card-label">行 · JavaScript</div>
+            </div>
+            <div class="card">
+                <div class="card-title">总文件数</div>
+                <div class="card-value" id="total-files">-</div>
+                <div class="card-label">33个 · Phase4</div>
+            </div>
+            <div class="card">
+                <div class="card-title">API 端点</div>
+                <div class="card-value" id="total-apis">-</div>
+                <div class="card-label">+5 新增</div>
+            </div>
+        </div>
+        
+        <!-- 闭环流水线可视化 -->
+        <div class="pipeline">
+            <h3>闭环流水线 · 实时状态</h3>
+            <div class="pipeline-steps" id="pipeline-steps">
+                <div class="step" id="step-syslog">
+                    <div class="step-icon">📥</div>
+                    <div class="step-label">SYSLOG</div>
+                    <div class="step-value" id="syslog-status">等待</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step" id="step-portrait">
+                    <div class="step-icon">📸</div>
+                    <div class="step-label">画像</div>
+                    <div class="step-value" id="portrait-status">等待</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step" id="step-pca">
+                    <div class="step-icon">📊</div>
+                    <div class="step-label">PCA</div>
+                    <div class="step-value" id="pca-status">等待</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step" id="step-sync">
+                    <div class="step-icon">🔄</div>
+                    <div class="step-label">同步</div>
+                    <div class="step-value" id="sync-status">等待</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="step" id="step-suggest">
+                    <div class="step-icon">💡</div>
+                    <div class="step-label">调度</div>
+                    <div class="step-value" id="suggest-status">等待</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 两列布局：雷达图 + 最近闭环详情 -->
+        <div class="row">
+            <!-- PCA雷达图 -->
+            <div class="radar-container">
+                <canvas id="pca-radar"></canvas>
+            </div>
+            
+            <!-- 最近一次闭环详情 -->
+            <div class="details">
+                <h3>最近一次闭环详情</h3>
+                <div id="loop-details">
+                    <div class="detail-item">
+                        <span class="detail-label">执行时间</span>
+                        <span class="detail-value" id="loop-time">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">耗时</span>
+                        <span class="detail-value" id="loop-duration">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">PCA得分</span>
+                        <span class="detail-value" id="loop-pca-score">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">等级</span>
+                        <span class="detail-value" id="loop-grade">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">调度建议</span>
+                        <span class="detail-value" id="loop-suggestion">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">步骤状态</span>
+                        <span class="detail-value" id="loop-steps">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 开发者画像摘要 -->
+        <div class="details" style="margin-top: 20px;">
+            <h3>开发者画像摘要 · 之之</h3>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;" id="portrait-summary">
+                <div class="detail-item" style="flex-direction: column; align-items: center; border: none;">
+                    <span class="detail-label">连胜</span>
+                    <span class="detail-value good" id="portrait-streak">-</span>
+                </div>
+                <div class="detail-item" style="flex-direction: column; align-items: center; border: none;">
+                    <span class="detail-label">情绪</span>
+                    <span class="detail-value" id="portrait-mood">-</span>
+                </div>
+                <div class="detail-item" style="flex-direction: column; align-items: center; border: none;">
+                    <span class="detail-label">节奏</span>
+                    <span class="detail-value" id="portrait-rhythm">-</span>
+                </div>
+                <div class="detail-item" style="flex-direction: column; align-items: center; border: none;">
+                    <span class="detail-label">成长信号</span>
+                    <span class="detail-value" id="portrait-growth">-</span>
+                </div>
+                <div class="detail-item" style="flex-direction: column; align-items: center; border: none;">
+                    <span class="detail-label">意愿</span>
+                    <span class="detail-value good" id="portrait-will">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 雷达图实例
+        let radarChart = null;
+        
+        // 从API获取数据
+        async function fetchData() {
+            try {
+                // 获取闭环状态
+                const loopRes = await fetch('/api/loop/status');
+                const loopData = await loopRes.json();
+                
+                // 获取所有开发者画像
+                const portraitRes = await fetch('/api/portrait/all');
+                const portraitData = await portraitRes.json();
+                
+                // 获取之之的PCA
+                const pcaRes = await fetch('/api/pca/DEV-004');
+                const pcaData = await pcaRes.json();
+                
+                updateDashboard(loopData, portraitData, pcaData);
+            } catch (err) {
+                console.error('数据加载失败，使用模拟数据', err);
+                // 使用模拟数据（便于独立预览）
+                useMockData();
+            }
+        }
+        
+        // 更新仪表盘
+        function updateDashboard(loop, portraits, pca) {
+            // 更新系统总览
+            document.getElementById('phase-count').textContent = '4';
+            document.getElementById('total-code').textContent = '4800';
+            document.getElementById('total-files').textContent = '33';
+            document.getElementById('total-apis').textContent = '8';
+            
+            // 更新流水线状态
+            if (loop.last_run) {
+                const steps = loop.last_run.steps;
+                updateStep('syslog', steps.portrait ? 'completed' : '等待');
+                updateStep('portrait', steps.portrait);
+                updateStep('pca', steps.pca);
+                updateStep('sync', steps.sync);
+                updateStep('suggest', steps.portrait && steps.pca ? 'completed' : '等待');
+            }
+            
+            // 更新最近闭环详情
+            if (loop.last_run) {
+                const last = loop.last_run;
+                document.getElementById('loop-time').textContent = new Date(last.timestamp).toLocaleString();
+                document.getElementById('loop-duration').textContent = last.duration_ms + 'ms';
+                document.getElementById('loop-pca-score').textContent = last.pca?.score || '-';
+                document.getElementById('loop-grade').textContent = last.pca?.grade || '-';
+                document.getElementById('loop-suggestion').textContent = last.suggestion || '-';
+                
+                const stepsStatus = Object.values(last.steps).join(' ');
+                document.getElementById('loop-steps').textContent = stepsStatus;
+            }
+            
+            // 更新画像摘要
+            if (portraits['DEV-004']) {
+                const dev = portraits['DEV-004'];
+                const lastSnapshot = dev.recent_snapshots?.[0] || {};
+                
+                document.getElementById('portrait-streak').textContent = dev.current_streak || 0;
+                document.getElementById('portrait-mood').textContent = lastSnapshot.mood || '-';
+                document.getElementById('portrait-rhythm').textContent = lastSnapshot.rhythm || '-';
+                document.getElementById('portrait-growth').textContent = lastSnapshot.growth?.count || 0;
+                document.getElementById('portrait-will').textContent = lastSnapshot.will || '-';
+            }
+            
+            // 更新PCA雷达图
+            if (pca && pca.dimensions) {
+                updateRadarChart(pca.dimensions);
+            }
+        }
+        
+        // 更新单个步骤状态
+        function updateStep(stepName, status) {
+            const stepEl = document.getElementById(`step-${stepName}`);
+            const valueEl = document.getElementById(`${stepName}-status`);
+            
+            stepEl.classList.remove('active', 'completed');
+            
+            if (status === true || status === '✅' || status === 'completed') {
+                stepEl.classList.add('completed');
+                valueEl.textContent = '✅ 完成';
+            } else if (status === '等待') {
+                valueEl.textContent = '⏳ 等待';
+            } else {
+                valueEl.textContent = '❌ 失败';
+            }
+        }
+        
+        // 更新雷达图
+        function updateRadarChart(dimensions) {
+            const ctx = document.getElementById('pca-radar').getContext('2d');
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['EXE执行力', 'TEC技术', 'SYS理解力', 'COL协作力', 'INI主动性'],
+                    datasets: [{
+                        label: 'PCA维度得分',
+                        data: [
+                            dimensions.EXE || 0,
+                            dimensions.TEC || 0,
+                            dimensions.SYS || 0,
+                            dimensions.COL || 0,
+                            dimensions.INI || 0
+                        ],
+                        backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                        borderColor: '#4a90e2',
+                        pointBackgroundColor: '#8ab2f0',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#4a90e2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: '#1e2a3a'
+                            },
+                            pointLabels: {
+                                color: '#6b7a8f'
+                            },
+                            ticks: {
+                                color: '#4a5a6e',
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 模拟数据（用于独立预览）
+        function useMockData() {
+            document.getElementById('phase-count').textContent = '4';
+            document.getElementById('total-code').textContent = '4800';
+            document.getElementById('total-files').textContent = '33';
+            document.getElementById('total-apis').textContent = '8';
+            
+            updateStep('syslog', 'completed');
+            updateStep('portrait', true);
+            updateStep('pca', true);
+            updateStep('sync', true);
+            updateStep('suggest', 'completed');
+            
+            document.getElementById('loop-time').textContent = new Date().toLocaleString();
+            document.getElementById('loop-duration').textContent = '7ms';
+            document.getElementById('loop-pca-score').textContent = '66';
+            document.getElementById('loop-grade').textContent = 'B';
+            document.getElementById('loop-suggestion').textContent = '巩固 Phase4 基础';
+            document.getElementById('loop-steps').textContent = '✅ ✅ ✅';
+            
+            document.getElementById('portrait-streak').textContent = '2';
+            document.getElementById('portrait-mood').textContent = '正向';
+            document.getElementById('portrait-rhythm').textContent = '快';
+            document.getElementById('portrait-growth').textContent = '2';
+            document.getElementById('portrait-will').textContent = '强烈';
+            
+            updateRadarChart({ EXE: 70, TEC: 32, SYS: 80, COL: 80, INI: 83 });
+        }
+        
+        // 自动刷新
+        let countdown = 30;
+        function startAutoRefresh() {
+            fetchData();
+            
+            setInterval(() => {
+                countdown--;
+                document.getElementById('refresh-timer').textContent = countdown + 's';
+                
+                if (countdown <= 0) {
+                    countdown = 30;
+                    fetchData();
+                }
+            }, 1000);
+        }
+        
+        // 启动
+        window.onload = () => {
+            startAutoRefresh();
+        };
+    </script>
+</body>
+</html>

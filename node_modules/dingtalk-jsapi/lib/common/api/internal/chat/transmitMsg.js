@@ -1,0 +1,1 @@
+"use strict";function transmitMsg$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.transmitMsg$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.transmitMsg",exports.transmitMsg$=transmitMsg$,exports.default=transmitMsg$;

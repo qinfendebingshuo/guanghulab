@@ -1,0 +1,1 @@
+"use strict";function nfcRead$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.nfcRead$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.nfc.nfcRead",exports.nfcRead$=nfcRead$,exports.default=nfcRead$;

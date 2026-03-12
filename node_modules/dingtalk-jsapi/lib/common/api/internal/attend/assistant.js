@@ -1,0 +1,1 @@
+"use strict";function assistant$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.assistant$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.attend.assistant",exports.assistant$=assistant$,exports.default=assistant$;

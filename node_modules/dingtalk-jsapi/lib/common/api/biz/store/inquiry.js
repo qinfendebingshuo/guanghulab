@@ -1,0 +1,1 @@
+"use strict";function inquiry$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.inquiry$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.store.inquiry",exports.inquiry$=inquiry$,exports.default=inquiry$;

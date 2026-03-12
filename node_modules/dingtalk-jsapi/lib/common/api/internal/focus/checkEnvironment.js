@@ -1,0 +1,1 @@
+"use strict";function checkEnvironment$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.checkEnvironment$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.focus.checkEnvironment",exports.checkEnvironment$=checkEnvironment$,exports.default=checkEnvironment$;

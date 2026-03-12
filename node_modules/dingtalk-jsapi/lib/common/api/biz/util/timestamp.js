@@ -1,0 +1,1 @@
+"use strict";function timestamp$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.timestamp$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.timestamp",exports.timestamp$=timestamp$,exports.default=timestamp$;

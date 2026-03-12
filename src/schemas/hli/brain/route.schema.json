@@ -1,0 +1,29 @@
+{
+  "hli_id": "HLI-BRAIN-002",
+  "version": "v0.1",
+  "route": "/hli/brain/route",
+  "method": "POST",
+  "type": "REQUEST",
+  "description": "任务型模型路由。根据检测到的模式和上下文长度，返回最优模型配置。",
+  "input": {
+    "type": "object",
+    "required": ["text"],
+    "properties": {
+      "text": { "type": "string", "description": "用户输入文本" },
+      "contextLength": { "type": "number", "description": "当前上下文 token 数" },
+      "isGuest": { "type": "boolean" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "mode", "model"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "mode": { "type": "object" },
+      "model": { "type": "object" }
+    }
+  },
+  "changelog": [
+    { "date": "2026-03-10", "note": "核心大脑升级 v3.0 — 任务型模型路由" }
+  ]
+}

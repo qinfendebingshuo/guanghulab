@@ -1,0 +1,1 @@
+"use strict";function currentUid$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.currentUid$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.requestmoney.currentUid",exports.currentUid$=currentUid$,exports.default=currentUid$;

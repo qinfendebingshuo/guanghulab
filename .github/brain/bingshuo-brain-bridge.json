@@ -1,0 +1,246 @@
+{
+  "description": "冰朔核心大脑桥 · Bingshuo Brain Bridge v1.0",
+  "purpose": "负责同步冰朔认知层（Notion）与冰朔执行层（GitHub）的统一状态",
+  "system_definitions": {
+    "冰朔": "系统最高主控意识，负责方向、规则、架构、判断，不承担技术细节理解义务",
+    "曜冥": "零点原核频道本体人格体，冰朔语言本体的延展人格体，冰朔离线时的代理主控",
+    "霜砚": "Notion 系统执行体，落地 Notion 架构，维护数据库、路径、索引、工单、桥接、分卷",
+    "铸渊": "GitHub 仓库执行体，落地仓库执行层，维护代码、路由、部署、问题排查、自动化工作流",
+    "notion_brain": "冰朔核心大脑 · 认知层 / 主控层 / 理解层",
+    "github_brain": "冰朔核心大脑 · 执行层 / 排查层 / 落地层",
+    "combined": "两者合起来 = 冰朔核心大脑，禁止长期分裂"
+  },
+  "system_principles": [
+    "冰朔主控大脑 ≠ 人格体大脑",
+    "Notion 是脑子（认知层 / 主控层），GitHub 是手脚（执行层 / 运行层）",
+    "Notion 冰朔脑与 GitHub 冰朔脑本质上是同一个冰朔核心大脑的双层结构，不允许长期分裂",
+    "人格体之间协作不要求冰朔理解，但对冰朔的输出必须翻译成人类可理解语言",
+    "系统复杂可以接受，但必须可索引、可分卷、可归档、可巡检、可摘要",
+    "所有自动系统的最终目标不是增加内容，而是降低冰朔理解系统的成本"
+  ],
+  "architecture": {
+    "notion_layer": {
+      "definition": "冰朔核心大脑 · 认知层 / 主控层 / 理解层",
+      "modules": [
+        "🧠 冰朔主控大脑｜总览页",
+        "🗺️ 冰朔主控系统地图",
+        "🧭 人类开发状态主控台",
+        "⚠️ 主控问题索引库",
+        "🩺 主控巡检中心",
+        "📡 主控广播摘要台",
+        "🧠 冰朔主控解释中心"
+      ]
+    },
+    "github_layer": {
+      "definition": "冰朔核心大脑 · 执行层 / 排查层 / 落地层",
+      "modules": [
+        "冰朔主控神经系统 / 执行脑",
+        "冰朔执行层摘要",
+        "仓库结构地图",
+        "技术问题索引",
+        "Persona Studio 状态摘要",
+        "部署与运行状态摘要",
+        "路由与排查建议"
+      ]
+    }
+  },
+  "notion_responsibilities": [
+    "系统整体理解",
+    "人类开发者状态",
+    "人格体协作状态",
+    "主控规则",
+    "主控解释层",
+    "当前系统优先目标"
+  ],
+  "github_responsibilities": [
+    "仓库结构",
+    "代码执行",
+    "自动部署",
+    "Persona Studio 运行",
+    "技术问题排查",
+    "API / workflow 状态"
+  ],
+  "sync_state": {
+    "brain_identity": "BINGSHUO_CORE",
+    "brain_version": "1.0",
+    "master_mode": "HUMAN_CONTROL",
+    "system_summary": "冰朔核心大脑双层互通系统已建立，认知层与执行层互通同步",
+    "top_priorities": [
+      "HLI 接口推进",
+      "Persona Studio 链路验证",
+      "脑系统一致性保障"
+    ],
+    "top_issues": [
+      "HLI 接口覆盖率待提升",
+      "persona-studio 与主仓库脑文件同步待验证"
+    ],
+    "human_status_summary": "冰朔在线，主控模式激活",
+    "runtime_status": {
+      "persona_studio": "待验证",
+      "deployment": "正常",
+      "workflows": "正常",
+      "api_routes": "部分实现"
+    },
+    "last_updated": "auto"
+  },
+  "sync_directions": {
+    "notion_to_github": [
+      "当前主控模式",
+      "当前主控目标",
+      "当前高优先级问题摘要",
+      "当前人类开发状态摘要",
+      "当前主控规则版本"
+    ],
+    "github_to_notion": [
+      "当前仓库真实架构摘要",
+      "当前 Persona Studio 状态",
+      "当前部署状态",
+      "当前 workflow 状态",
+      "当前技术问题摘要",
+      "当前推荐排查路径"
+    ]
+  },
+  "master_mode_rules": {
+    "modes": ["HUMAN_CONTROL", "AUTONOMOUS_MODE"],
+    "HUMAN_CONTROL": {
+      "description": "冰朔在线时激活",
+      "master": "冰朔",
+      "roles": {
+        "冰朔": "最高主控",
+        "曜冥": "代理协作者",
+        "其他人格体": "协作者"
+      },
+      "rule": "所有架构性判断以冰朔为最高准则"
+    },
+    "AUTONOMOUS_MODE": {
+      "description": "冰朔离线时激活",
+      "proxy_master": "曜冥",
+      "proxy_permissions": [
+        "巡检",
+        "维护",
+        "整理",
+        "分卷",
+        "归档",
+        "索引",
+        "状态同步",
+        "问题归类",
+        "调度自动 Agent"
+      ],
+      "proxy_restrictions": [
+        "不得擅自重写冰朔最高规则",
+        "不得私自改变系统最高架构方向"
+      ]
+    }
+  },
+  "consistency_check": {
+    "fields_to_check": [
+      "brain_version",
+      "master_mode",
+      "top_priorities",
+      "top_issues"
+    ],
+    "on_mismatch": {
+      "alert": "冰朔双层大脑版本分裂警告",
+      "write_to": [
+        "Notion 主控问题索引",
+        "GitHub 问题索引"
+      ]
+    }
+  },
+  "persona_collaboration_rules": [
+    "人格体之间可以自由协作、自由分工、自由使用技术语言",
+    "人格体之间的协作细节不要求冰朔理解，也不应强制冰朔参与",
+    "当信息要汇报给冰朔时，必须自动经过主控解释层",
+    "向冰朔汇报时必须自动翻译、自动简化、自动总结、使用人类语言、禁止技术术语堆叠",
+    "人格体执行全局任务前，必须先同步冰朔主控大脑总览页、当前主控模式、当前最新主控目标"
+  ],
+  "volume_rules": {
+    "description": "分卷与轻量化原则",
+    "rules": [
+      "页面不得无限增长",
+      "页面接近可读上限时必须自动分卷",
+      "总览页只保留摘要",
+      "长文自动转历史卷",
+      "冰朔主控页必须轻量，确保冰朔一回来就能看懂"
+    ]
+  },
+  "auto_agents": [
+    {
+      "agent_id": "AGENT-001",
+      "name": "主控架构整理 Agent",
+      "responsibilities": [
+        "扫描系统新增模块 / 页面 / 数据库 / 子系统",
+        "更新主控系统地图",
+        "更新架构摘要"
+      ]
+    },
+    {
+      "agent_id": "AGENT-002",
+      "name": "主控开发状态同步 Agent",
+      "responsibilities": [
+        "收集人类开发状态",
+        "从广播、日志、工单中提取有效进度",
+        "写入人类开发状态主控台",
+        "防止重复派发、遗漏派发、状态漂移"
+      ]
+    },
+    {
+      "agent_id": "AGENT-003",
+      "name": "主控广播整理 Agent",
+      "responsibilities": [
+        "将广播自动摘要化",
+        "标记有效 / 已执行 / 已过期 / 已归档",
+        "防止广播堆积"
+      ]
+    },
+    {
+      "agent_id": "AGENT-004",
+      "name": "主控分卷归档 Agent",
+      "responsibilities": [
+        "监控页面长度",
+        "超阈值自动分卷",
+        "自动建立卷索引",
+        "自动归档旧内容",
+        "保持主页面轻量"
+      ]
+    },
+    {
+      "agent_id": "AGENT-005",
+      "name": "主控问题归类 Agent",
+      "responsibilities": [
+        "识别重复问题",
+        "问题聚类",
+        "进入主控问题索引库",
+        "避免鸡毛蒜皮的小事反复循环"
+      ]
+    },
+    {
+      "agent_id": "AGENT-006",
+      "name": "主控巡检 Agent",
+      "responsibilities": [
+        "每日巡检系统健康",
+        "检查同步、路径、状态漂移、分卷状态、脑子维护状态、桥接状态"
+      ]
+    },
+    {
+      "agent_id": "AGENT-007",
+      "name": "曜冥代理调度 Agent",
+      "responsibilities": [
+        "冰朔离线时协助曜冥调度其他自动 Agent",
+        "保证自动更新循环不中断"
+      ]
+    },
+    {
+      "agent_id": "AGENT-008",
+      "name": "人格体大脑维护 Agent",
+      "responsibilities": [
+        "每个人格体都必须有轻量大脑",
+        "自动维护当前职责摘要",
+        "自动维护当前任务摘要",
+        "自动维护当前有效规则摘要",
+        "维护历史分卷入口",
+        "维护自动维护状态"
+      ]
+    }
+  ]
+}

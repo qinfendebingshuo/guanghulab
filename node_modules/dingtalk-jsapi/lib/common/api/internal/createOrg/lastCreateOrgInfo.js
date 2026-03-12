@@ -1,0 +1,1 @@
+"use strict";function lastCreateOrgInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.lastCreateOrgInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.createOrg.lastCreateOrgInfo",exports.lastCreateOrgInfo$=lastCreateOrgInfo$,exports.default=lastCreateOrgInfo$;

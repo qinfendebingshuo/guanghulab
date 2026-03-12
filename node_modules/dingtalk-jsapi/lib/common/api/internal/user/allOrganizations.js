@@ -1,0 +1,1 @@
+"use strict";function allOrganizations$(a){return common_1.ddSdk.invokeAPI(exports.apiName,a)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.allOrganizations$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.user.allOrganizations",exports.allOrganizations$=allOrganizations$,exports.default=allOrganizations$;

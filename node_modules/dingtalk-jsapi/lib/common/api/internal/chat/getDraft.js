@@ -1,0 +1,1 @@
+"use strict";function getDraft$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getDraft$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.getDraft",exports.getDraft$=getDraft$,exports.default=getDraft$;

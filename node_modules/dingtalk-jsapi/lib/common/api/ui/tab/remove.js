@@ -1,0 +1,1 @@
+"use strict";function remove$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.remove$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="ui.tab.remove",exports.remove$=remove$,exports.default=remove$;

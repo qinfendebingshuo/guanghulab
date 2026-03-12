@@ -1,0 +1,1 @@
+"use strict";function scanCard$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.scanCard$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.scanCard",exports.scanCard$=scanCard$,exports.default=scanCard$;

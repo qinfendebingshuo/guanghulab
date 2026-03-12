@@ -1,0 +1,1 @@
+"use strict";function openSingleChat$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openSingleChat$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.chat.openSingleChat",exports.openSingleChat$=openSingleChat$,exports.default=openSingleChat$;

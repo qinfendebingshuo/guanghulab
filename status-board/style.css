@@ -1,0 +1,488 @@
+/* 全局样式 - 深色科技风 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', 'Courier New', monospace;
+}
+
+body {
+    background-color: #0a0e17;
+    color: #e0e0e0;
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* 标题栏 */
+.header {
+    background-color: #131a2b;
+    border-radius: 16px;
+    padding: 20px 30px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #2a3440;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 0 8px #00d4ff);
+}
+
+.logo h1 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1e293b;
+    padding: 8px 16px;
+    border-radius: 40px;
+    border: 1px solid #00d4ff;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot.green {
+    background-color: #00ff9d;
+    box-shadow: 0 0 10px #00ff9d;
+}
+
+/* 团队成员卡片区 */
+.team-cards {
+    margin-bottom: 40px;
+}
+
+.team-cards h2, .broadcast-list h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #00d4ff;
+    font-weight: 300;
+    letter-spacing: 1px;
+    border-left: 4px solid #00d4ff;
+    padding-left: 16px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background-color: #131a2b;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #2a3440;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    border-color: #00d4ff;
+    box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #2a3440;
+}
+
+.dev-id {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #00d4ff;
+    font-size: 1rem;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 40px;
+    background-color: #1e293b;
+    border: 1px solid transparent;
+}
+
+.status-badge.status-active {
+    background-color: #00ff9d20;
+    color: #00ff9d;
+    border-color: #00ff9d;
+}
+
+.status-badge.status-standby {
+    background-color: #ffaa0020;
+    color: #ffaa00;
+    border-color: #ffaa00;
+}
+
+.status-badge.status-coding {
+    background-color: #00d4ff20;
+    color: #00d4ff;
+    border-color: #00d4ff;
+}
+
+.card-body .dev-name {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.card-body .dev-module {
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+.card-body .update-time {
+    font-size: 0.8rem;
+    font-family: 'Courier New', monospace;
+    color: #6b7a8f;
+}
+
+/* 广播列表区 */
+.broadcast-list {
+    margin-bottom: 40px;
+}
+
+.list-container {
+    background-color: #131a2b;
+    border-radius: 16px;
+    border: 1px solid #2a3440;
+    overflow: hidden;
+}
+
+.list-item {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px 100px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #2a3440;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.list-item:hover {
+    background-color: #1e293b;
+}
+
+.broadcast-id {
+    font-family: 'Courier New', monospace;
+    color: #00d4ff;
+    font-weight: bold;
+}
+
+.broadcast-title {
+    color: #fff;
+}
+
+.broadcast-time {
+    font-family: 'Courier New', monospace;
+    color: #a0a0a0;
+}
+
+.broadcast-status {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 40px;
+    text-align: center;
+    width: fit-content;
+}
+
+.status-done {
+    background-color: #00ff9d20;
+    color: #00ff9d;
+    border: 1px solid #00ff9d;
+}
+
+.status-progress {
+    background-color: #00d4ff20;
+    color: #00d4ff;
+    border: 1px solid #00d4ff;
+}
+
+.status-pending {
+    background-color: #ffaa0020;
+    color: #ffaa00;
+    border: 1px solid #ffaa00;
+}
+
+/* 底部信息栏 */
+.footer {
+    background-color: #131a2b;
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    border: 1px solid #2a3440;
+    color: #6b7a8f;
+}
+
+.footer-left {
+    font-family: 'Courier New', monospace;
+}
+
+.footer-right {
+    font-family: 'Courier New', monospace;
+    color: #00d4ff;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 1024px) {
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (max-width: 640px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .list-item {
+        grid-template-columns: 80px 1fr 80px 80px;
+        padding: 12px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}/* ========== 环节2新增：API数据区域样式 ========== */
+
+/* 连接状态指示器 */
+.conn-status {
+    text-align: center;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: #8899aa;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.conn-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.conn-dot.on {
+    background: #66bb6a;
+    box-shadow: 0 0 6px #66bb6a;
+}
+
+.conn-dot.off {
+    background: #ffa726;
+}
+
+/* 数据区块 */
+.data-section {
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e0e6ed;
+    margin-bottom: 16px;
+}
+
+.data-container {
+    color: #8899aa;
+    font-size: 13px;
+}
+
+/* 系统状态网格 */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.s-card {
+    background: rgba(79,195,247,0.06);
+    border: 1px solid rgba(79,195,247,0.12);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+}
+
+.s-icon {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.s-val {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    color: #4fc3f7;
+    margin-bottom: 2px;
+}
+
+.s-lbl {
+    display: block;
+    font-size: 11px;
+    color: #667788;
+}
+
+/* 开发者卡片 */
+.dev-card {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.dev-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.dev-id {
+    font-size: 11px;
+    color: #556677;
+    font-family: monospace;
+}
+
+.dev-name {
+    font-size: 14px;
+    color: #e0e6ed;
+    font-weight: 600;
+    flex: 1;
+}
+
+.dev-st {
+    font-size: 12px;
+}
+
+.dev-mod {
+    font-size: 12px;
+    color: #8899aa;
+    margin-bottom: 8px;
+}
+
+.prog-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.prog-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+}
+
+.prog-num {
+    font-size: 11px;
+    color: #8899aa;
+    text-align: right;
+}
+
+/* 广播行 */
+.bc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+}
+
+.bc-id {
+    color: #4fc3f7;
+    font-family: monospace;
+    font-size: 11px;
+    min-width: 110px;
+}
+
+.bc-dev {
+    color: #e0e6ed;
+    min-width: 55px;
+}
+
+.bc-mod {
+    color: #8899aa;
+    flex: 1;
+}
+
+.bc-st {
+    min-width: 60px;
+    text-align: center;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.bc-st.done {
+    background: rgba(102,187,106,0.15);
+    color: #66bb6a;
+}
+
+.bc-st.active {
+    background: rgba(79,195,247,0.15);
+    color: #4fc3f7;
+}
+
+.bc-st.wait {
+    background: rgba(255,167,38,0.15);
+    color: #ffa726;
+}
+
+.bc-time {
+    color: #556677;
+    font-size: 11px;
+    min-width: 80px;
+    text-align: right;
+}

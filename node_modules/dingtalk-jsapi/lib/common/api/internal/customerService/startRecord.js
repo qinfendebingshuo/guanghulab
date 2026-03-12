@@ -1,0 +1,1 @@
+"use strict";function startRecord$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.startRecord$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.customerService.startRecord",exports.startRecord$=startRecord$,exports.default=startRecord$;

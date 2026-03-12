@@ -1,0 +1,54 @@
+name: 铸渊 · Notion 连通性测试
+
+# YM-TEST-20260307-001 · 铸渊→Notion 数据桥连通性测试
+#
+# 三项测试：
+#   1. 写入「📡 跨平台信号日志」（SIGNAL_LOG_DB_ID）
+#   2. 写入「📋 GitHub 变更日志」（CHANGES_DB_ID，有默认值）
+#   3. 写入「📥 GitHub SYSLOG 收件箱」（SYSLOG_DB_ID，有默认值）
+#
+# 依赖 Secrets：
+#   NOTION_TOKEN         Notion Integration Token
+#
+# 可选 Secrets / Variables：
+#   SIGNAL_LOG_DB_ID     信号日志 database_id（Secrets 或 Variables）
+#   CHANGES_DB_ID        变更日志 database_id（有默认值，可覆盖）
+#   SYSLOG_DB_ID         SYSLOG 收件箱 database_id（有默认值，可覆盖）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  connectivity-test:
+    name: 🧪 Notion 连通性测试
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧪 执行连通性测试
+        id: test
+        env:
+          NOTION_TOKEN:      ${{ secrets.NOTION_TOKEN }}
+          SIGNAL_LOG_DB_ID:  ${{ vars.SIGNAL_LOG_DB_ID }}
+          CHANGES_DB_ID:     ${{ secrets.CHANGES_DB_ID }}
+          SYSLOG_DB_ID:      ${{ secrets.SYSLOG_DB_ID }}
+        run: node scripts/notion-connectivity-test.js
+
+      - name: 提交信号日志
+        if: always()
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add signal-log/
+          git diff --cached --quiet || git commit -m "🧪 连通性测试信号日志 · YM-TEST-20260307-001"
+          # push 可能因分支保护或无变更而失败，不影响测试结果
+          git push || echo "⚠️ 信号日志推送失败（可能无变更或分支受保护）"

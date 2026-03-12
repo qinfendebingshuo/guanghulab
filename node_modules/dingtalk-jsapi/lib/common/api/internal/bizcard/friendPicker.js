@@ -1,0 +1,1 @@
+"use strict";function friendPicker$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.friendPicker$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.bizcard.friendPicker",exports.friendPicker$=friendPicker$,exports.default=friendPicker$;

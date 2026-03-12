@@ -1,0 +1,1 @@
+"use strict";function mailTo$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.mailTo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.mailTo",exports.mailTo$=mailTo$,exports.default=mailTo$;

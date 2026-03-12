@@ -1,0 +1,1 @@
+"use strict";function fetchData$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.fetchData$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.intent.fetchData",exports.fetchData$=fetchData$,exports.default=fetchData$;

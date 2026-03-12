@@ -1,0 +1,1 @@
+"use strict";function atPick$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.atPick$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.inputPanel.atPick",exports.atPick$=atPick$,exports.default=atPick$;

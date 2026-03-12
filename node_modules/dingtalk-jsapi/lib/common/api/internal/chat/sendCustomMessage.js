@@ -1,0 +1,1 @@
+"use strict";function sendCustomMessage$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.sendCustomMessage$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.sendCustomMessage",exports.sendCustomMessage$=sendCustomMessage$,exports.default=sendCustomMessage$;

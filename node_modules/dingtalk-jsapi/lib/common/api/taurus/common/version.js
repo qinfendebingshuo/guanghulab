@@ -1,0 +1,1 @@
+"use strict";function version$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e||{})}Object.defineProperty(exports,"__esModule",{value:!0}),exports.version$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="taurus.common.version",exports.version$=version$,exports.default=version$;

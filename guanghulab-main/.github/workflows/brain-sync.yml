@@ -1,0 +1,83 @@
+name: 铸渊 Brain Sync
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - '.github/broadcasts/**'
+  schedule:
+    # 每天 08:00 UTC 自检
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  process-broadcasts:
+    name: 📡 广播接收处理
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Process broadcasts
+        run: node scripts/process-broadcasts.js
+
+      - name: Commit updated brain state
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add .github/brain/ .github/broadcasts/processed/ .github/broadcasts/failed/ .github/copilot-instructions.md 2>/dev/null; true
+          git diff --staged --quiet || git commit -m "🧠 brain: 处理广播，更新路由映射和记忆 [skip ci]"
+          git push
+
+  daily-check:
+    name: 🔍 铸渊每日自检
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run daily self-check
+        run: node scripts/daily-check.js
+
+      - name: Update memory after daily check
+        env:
+          MEMORY_EVENT_TYPE: daily_check
+          MEMORY_EVENT_RESULT: passed
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: node scripts/update-memory.js
+
+      - name: Commit memory update
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add .github/brain/memory.json || true
+          git diff --staged --quiet || git commit -m "🧠 memory: 每日自检记录 [skip ci]"
+          git push

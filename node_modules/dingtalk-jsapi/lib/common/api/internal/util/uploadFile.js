@@ -1,0 +1,1 @@
+"use strict";function uploadFile$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.uploadFile$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.uploadFile",exports.uploadFile$=uploadFile$,exports.default=uploadFile$;

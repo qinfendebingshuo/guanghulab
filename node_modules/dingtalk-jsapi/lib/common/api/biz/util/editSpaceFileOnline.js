@@ -1,0 +1,1 @@
+"use strict";function editSpaceFileOnline$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.editSpaceFileOnline$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.editSpaceFileOnline",exports.editSpaceFileOnline$=editSpaceFileOnline$,exports.default=editSpaceFileOnline$;

@@ -1,0 +1,1 @@
+"use strict";function getDevicePwd$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getDevicePwd$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.alpha.getDevicePwd",exports.getDevicePwd$=getDevicePwd$,exports.default=getDevicePwd$;

@@ -1,0 +1,1 @@
+"use strict";function getRole$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getRole$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.user.getRole",exports.getRole$=getRole$,exports.default=getRole$;

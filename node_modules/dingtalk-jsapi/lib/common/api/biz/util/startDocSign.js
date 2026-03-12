@@ -1,0 +1,1 @@
+"use strict";function startDocSign$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.startDocSign$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.startDocSign",exports.startDocSign$=startDocSign$,exports.default=startDocSign$;

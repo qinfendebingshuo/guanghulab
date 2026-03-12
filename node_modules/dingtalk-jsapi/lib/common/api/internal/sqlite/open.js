@@ -1,0 +1,1 @@
+"use strict";function open$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.open$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.sqlite.open",exports.open$=open$,exports.default=open$;

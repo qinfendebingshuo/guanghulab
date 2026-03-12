@@ -1,0 +1,1 @@
+"use strict";function query$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.query$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.groupbill.query",exports.query$=query$,exports.default=query$;
