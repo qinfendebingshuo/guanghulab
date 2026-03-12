@@ -77,6 +77,9 @@
 <!-- BINGSHUO_BULLETIN_START -->
 | 时间 | 检查项 | 状态 |
 |------|--------|------|
+| 03-13 01:37 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
+| 03-13 00:44 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
+| 03-13 00:26 | ✅ 📢 更新系统公告区 · 成功 | WENZHUOXI |
 | 03-13 00:25 | ✅ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 成功 | WENZHUOXI |
 | 03-13 00:24 | ✅ 📢 更新系统公告区 · 成功 | WENZHUOXI |
 | 03-13 00:24 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | WENZHUOXI |
@@ -87,11 +90,8 @@
 | 03-12 23:48 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | 冰朔 |
 | 03-12 23:42 | ✅ Generate Session Summary for Notion · 成功 | 冰朔 |
 | 03-12 23:42 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
-| 03-12 23:35 | ✅ 📢 更新系统公告区 · 成功 | 冰朔 |
 | 03-12 21:22 | 🔧 系统更新: `docs/` | 铸渊 (ZhùYuān) |
 | 03-12 16:55 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
-| 03-12 08:00 | ✅ 铸渊 PSP 巡检通过 · 全部检查项 ✅ | 铸渊PSP巡检 |
-| 03-11 16:55 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
 <!-- BINGSHUO_BULLETIN_END -->
 
 ### 🤖 铸渊自动提醒
