@@ -1,49 +1,53 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HoloLake 开发者实时看板</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>开发者实时看板 · 环节0~4 · 之之</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="detail.css">
 </head>
 <body>
-    <header class="navbar">
-        <div class="navbar-logo">
-            <span>◉</span>
-            <span>HoloLake · DevBoard</span>
-        </div>
-        <div class="navbar-info">
-            <span id="last-update-time">最后更新: --:--:--</span>
-            <span id="refresh-indicator">⏳ 30s</span>
-        </div>
-    </header>
-
-    <main class="main-container">
-        <aside class="sidebar-left">
-            <h3 style="color: var(--color-accent-primary);">🧠 PCA雷达图</h3>
-            <div style="text-align: center; margin: 0.5rem 0;">
-                <span id="current-dev-name">之之</span> · 点击卡片切换
+    <!-- 总览页容器 -->
+    <div id="overview-container" class="overview-grid fade-in">
+        <header class="dashboard-header">
+            <h1>⚡ 开发者实时看板 ⚡</h1>
+            <p>DEV-004 · 之之 · 十三连胜追平桔子 · EL-6</p>
+        </header>
+        
+        <!-- 搜索和筛选区 -->
+        <div class="controls-section">
+            <input type="text" id="search-input" placeholder="🔍 搜索开发者姓名/ID/模块..." class="search-box">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="active">进行中</button>
+                <button class="filter-btn" data-filter="completed">已完成</button>
             </div>
-            <canvas id="pca-canvas" width="300" height="300" style="width:100%; height:auto;"></canvas>
-        </aside>
+        </div>
         
-        <section class="main-board">
-            <div id="stats-container"></div>
-            <div id="devgrid-container"></div>
-        </section>
+        <!-- 开发者卡片网格 -->
+        <div id="developers-grid" class="developers-grid"></div>
         
-        <aside class="sidebar-right">
-            <div id="ranking-container"></div>
-        </aside>
-    </main>
+        <!-- 雷达图+排行榜区 -->
+        <div class="stats-section">
+            <div class="radar-container">
+                <h2>团队PCA雷达</h2>
+                <canvas id="team-radar" width="400" height="300"></canvas>
+            </div>
+            <div class="ranking-container">
+                <h2>连胜排行榜</h2>
+                <div id="ranking-list"></div>
+            </div>
+        </div>
+    </div>
 
-    <script src="js/utils.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/board.js"></script>
-    <script src="js/radar.js"></script>
-    <script src="js/ranking.js"></script>
-    <script src="js/app.js"></script>
+    <!-- 详情页容器 -->
+    <div id="detail-container" style="display: none;"></div>
+
+    <script src="radar.js"></script>
+    <script src="components.js"></script>
+    <script src="detail.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
