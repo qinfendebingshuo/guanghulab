@@ -106,6 +106,7 @@ function containsSystemCommand(text) {
 const isProgressQuery = issueLabels.includes('progress-query');
 const isDevQuestion = issueLabels.includes('dev-question');
 const isSyslog = issueLabels.includes('syslog')
+  // syslogVersion 是 SYSLOG v4.0 协议中的标准字段名，用于识别非模板提交的原始 SYSLOG JSON
   || /系统日志|SYSLOG|syslogVersion/i.test(issueTitle + ' ' + issueBody);
 
 // === 提取开发者编号 ===
