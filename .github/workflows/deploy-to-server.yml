@@ -279,14 +279,15 @@ jobs:
                   echo '⚠️ WebSocket pm2 启动失败'
               fi
 
-              # 部署 src HLI 中间层
+              # 部署 src HLI 中间层（端口 3001，对应 Nginx /api/v1/ 路由）
+              # 注意：guanghulab-backend 已占用端口 3000，HLI 使用 3001 避免冲突
               if [ -f '${{ secrets.DEPLOY_PATH }}/src/index.js' ]; then
                 echo '📦 安装 src 依赖...'
                 cd '${{ secrets.DEPLOY_PATH }}'
                 npm install --production 2>/dev/null || echo '⚠️ src npm install 失败'
-                echo '🔄 重启 HLI 服务...'
-                pm2 restart guanghulab 2>/dev/null || \
-                  pm2 start src/index.js --name guanghulab 2>/dev/null || \
+                echo '🔄 重启 HLI 服务（端口 3001）...'
+                pm2 delete guanghulab 2>/dev/null || true
+                PORT=3001 pm2 start src/index.js --name guanghulab --update-env 2>/dev/null || \
                   echo '⚠️ src pm2 启动失败'
               fi
 

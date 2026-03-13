@@ -1,0 +1,316 @@
+name: "🔧 铸渊 · PM2 服务诊断与健康检查"
+
+# ━━━ PM2 服务诊断 + 全系统健康检查 + Notion 报告 ━━━
+# 手动触发：对服务器 PM2 进程进行全面排查，
+# 自动处理 errored 进程，并将诊断报告写入 Notion 工单队列。
+#
+# 必需 GitHub Secrets:
+#   DEPLOY_HOST       — 服务器 IP
+#   DEPLOY_USER       — SSH 用户名
+#   DEPLOY_KEY        — SSH 私钥（完整 PEM 内容）
+#   DEPLOY_PATH       — 网站根目录（如 /var/www/guanghulab）
+#
+# 可选 Secrets（有则自动写 Notion 工单）:
+#   NOTION_API_TOKEN  — Notion 集成 token
+#   NOTION_TICKET_DB_ID — 工单队列数据库 ID（默认 84edd0640bf146a9a5a7840107013e8c）
+
+on:
+  workflow_dispatch:
+    inputs:
+      auto_cleanup:
+        description: '是否自动清理 errored 进程（删除启动路径不存在的进程）'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: "🔍 PM2 诊断 + 系统健康检查"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 🔑 配置 SSH 连接
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
+            echo "⚠️ ssh-keyscan 失败，使用 StrictHostKeyChecking=no 后备"
+          }
+
+      # ━━━ 阶段一：PM2 服务诊断 ━━━
+      - name: "🔧 阶段一 · PM2 errored 服务排查"
+        id: pm2_diagnose
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  阶段一 · PM2 errored 服务排查"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          PM2_REPORT=$(ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" '
+            echo "══════════════════════════════════════"
+            echo "  PM2 进程状态概览"
+            echo "══════════════════════════════════════"
+            pm2 status 2>/dev/null || echo "❌ pm2 未安装或不可用"
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  errored 进程详细日志"
+            echo "══════════════════════════════════════"
+
+            # 遍历所有 errored 进程
+            ERRORED_LIST=$(pm2 jlist 2>/dev/null | python3 -c "
+            import sys, json
+            try:
+                procs = json.load(sys.stdin)
+                for p in procs:
+                    if p.get(\"pm2_env\", {}).get(\"status\") == \"errored\":
+                        name = p.get(\"name\", \"unknown\")
+                        pm_id = p.get(\"pm_id\", \"?\")
+                        script = p.get(\"pm2_env\", {}).get(\"pm_exec_path\", \"unknown\")
+                        restarts = p.get(\"pm2_env\", {}).get(\"restart_time\", 0)
+                        print(f\"{pm_id}|{name}|{script}|{restarts}\")
+            except:
+                pass
+            " 2>/dev/null)
+
+            if [ -z "$ERRORED_LIST" ]; then
+              echo "✅ 没有 errored 进程"
+            else
+              echo "$ERRORED_LIST" | while IFS="|" read -r pm_id name script restarts; do
+                echo ""
+                echo "━━━ 进程: $name (PM2 ID: $pm_id) ━━━"
+                echo "  启动脚本: $script"
+                echo "  重启次数: $restarts"
+
+                # 检查脚本文件是否存在
+                if [ -f "$script" ]; then
+                  echo "  脚本文件: ✅ 存在"
+                else
+                  echo "  脚本文件: ❌ 不存在"
+                fi
+
+                # 查看最近日志
+                echo "  最近错误日志 (最后 20 行):"
+                pm2 logs "$name" --lines 20 --nostream --err 2>/dev/null || echo "  (无法读取日志)"
+                echo ""
+              done
+            fi
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  所有进程详细信息"
+            echo "══════════════════════════════════════"
+            pm2 jlist 2>/dev/null | python3 -c "
+            import sys, json
+            try:
+                procs = json.load(sys.stdin)
+                for p in procs:
+                    env = p.get(\"pm2_env\", {})
+                    print(f\"  [{p.get(\"pm_id\")}] {p.get(\"name\")} | status={env.get(\"status\")} | script={env.get(\"pm_exec_path\",\"?\")} | restarts={env.get(\"restart_time\",0)} | memory={p.get(\"monit\",{}).get(\"memory\",0)}\")
+            except Exception as e:
+                print(f\"  解析失败: {e}\")
+            " 2>/dev/null
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  端口占用情况"
+            echo "══════════════════════════════════════"
+            netstat -tlnp 2>/dev/null | grep -E "3000|3001|3002|3721|8080" || \
+              ss -tlnp 2>/dev/null | grep -E "3000|3001|3002|3721|8080" || \
+              echo "  (netstat/ss 不可用)"
+          ')
+
+          echo "$PM2_REPORT"
+
+          # 保存到文件供后续步骤使用
+          echo "$PM2_REPORT" > /tmp/pm2-report.txt
+
+          # 设置输出
+          {
+            echo "pm2_report<<REPORT_EOF"
+            echo "$PM2_REPORT"
+            echo "REPORT_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # ━━━ 阶段一 · 自动清理 ━━━
+      - name: "🧹 阶段一 · 自动清理 errored 进程"
+        if: ${{ inputs.auto_cleanup == 'true' }}
+        id: pm2_cleanup
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  自动清理 errored 进程"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          CLEANUP_REPORT=$(ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" '
+            ERRORED_LIST=$(pm2 jlist 2>/dev/null | python3 -c "
+            import sys, json
+            try:
+                procs = json.load(sys.stdin)
+                for p in procs:
+                    if p.get(\"pm2_env\", {}).get(\"status\") == \"errored\":
+                        name = p.get(\"name\", \"unknown\")
+                        script = p.get(\"pm2_env\", {}).get(\"pm_exec_path\", \"unknown\")
+                        print(f\"{name}|{script}\")
+            except:
+                pass
+            " 2>/dev/null)
+
+            CLEANED=""
+            SKIPPED=""
+
+            if [ -z "$ERRORED_LIST" ]; then
+              echo "✅ 没有需要清理的 errored 进程"
+            else
+              echo "$ERRORED_LIST" | while IFS="|" read -r name script; do
+                if [ ! -f "$script" ]; then
+                  echo "🗑️ 删除 $name（脚本 $script 不存在）"
+                  pm2 delete "$name" 2>/dev/null && echo "  ✅ 已删除" || echo "  ❌ 删除失败"
+                else
+                  echo "⚠️ 保留 $name（脚本 $script 存在，可能是运行时错误）"
+                  echo "  尝试重启..."
+                  pm2 restart "$name" 2>/dev/null && echo "  ✅ 重启成功" || echo "  ❌ 重启失败"
+                fi
+              done
+
+              echo ""
+              echo "📊 清理后 PM2 状态:"
+              pm2 status 2>/dev/null
+              pm2 save 2>/dev/null || echo "⚠️ pm2 save 失败"
+            fi
+          ')
+
+          echo "$CLEANUP_REPORT"
+          echo "$CLEANUP_REPORT" > /tmp/cleanup-report.txt
+
+          {
+            echo "cleanup_report<<CLEANUP_EOF"
+            echo "$CLEANUP_REPORT"
+            echo "CLEANUP_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # ━━━ 阶段二：全系统健康检查 ━━━
+      - name: "🏥 阶段二 · 全系统健康检查"
+        id: health_check
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  阶段二 · 全系统健康检查"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          HEALTH_REPORT=$(ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" '
+            echo "══════════════════════════════════════"
+            echo "  Nginx 状态"
+            echo "══════════════════════════════════════"
+            nginx -t 2>&1 || echo "❌ Nginx 配置检测失败"
+            systemctl status nginx --no-pager -l 2>/dev/null | head -15 || echo "⚠️ systemctl 不可用"
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  SSL 证书有效期"
+            echo "══════════════════════════════════════"
+            if [ -f "/etc/letsencrypt/live/guanghulab.com/fullchain.pem" ]; then
+              openssl x509 -in /etc/letsencrypt/live/guanghulab.com/fullchain.pem -noout -dates 2>/dev/null || echo "⚠️ 无法读取 SSL 证书"
+            else
+              echo "⚠️ SSL 证书文件不存在于默认路径"
+              # 尝试查找其他证书路径
+              find /etc/letsencrypt/live/ -name "fullchain.pem" 2>/dev/null | head -3 || echo "  未找到 Let'\''s Encrypt 证书"
+              find /etc/nginx/ -name "*.pem" -o -name "*.crt" 2>/dev/null | head -3 || echo "  未找到 Nginx SSL 文件"
+            fi
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  磁盘空间"
+            echo "══════════════════════════════════════"
+            df -h 2>/dev/null || echo "❌ df 命令不可用"
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  内存使用"
+            echo "══════════════════════════════════════"
+            free -h 2>/dev/null || echo "❌ free 命令不可用"
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  PM2 最终状态"
+            echo "══════════════════════════════════════"
+            pm2 status 2>/dev/null || echo "❌ pm2 不可用"
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  Node.js 版本"
+            echo "══════════════════════════════════════"
+            node -v 2>/dev/null || echo "❌ Node.js 未安装"
+            npm -v 2>/dev/null || echo "❌ npm 未安装"
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  网站可访问性检查"
+            echo "══════════════════════════════════════"
+            curl -sI https://guanghulab.com 2>/dev/null | head -5 || echo "⚠️ HTTPS 访问失败"
+            echo "---"
+            curl -s http://127.0.0.1:3000/health 2>/dev/null | head -c 200 || echo "⚠️ 端口 3000 无响应"
+            echo ""
+            echo "---"
+            curl -s http://127.0.0.1:3001/api/v1/ 2>/dev/null | head -c 200 || echo "⚠️ 端口 3001 无响应"
+            echo ""
+            echo "---"
+            curl -s http://127.0.0.1:3002/api/ps/ 2>/dev/null | head -c 200 || echo "⚠️ 端口 3002 无响应"
+            echo ""
+
+            echo ""
+            echo "══════════════════════════════════════"
+            echo "  系统运行时间"
+            echo "══════════════════════════════════════"
+            uptime 2>/dev/null || echo "❌ uptime 不可用"
+          ')
+
+          echo "$HEALTH_REPORT"
+          echo "$HEALTH_REPORT" > /tmp/health-report.txt
+
+          {
+            echo "health_report<<HEALTH_EOF"
+            echo "$HEALTH_REPORT"
+            echo "HEALTH_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # ━━━ 阶段三：生成 Notion 诊断报告 ━━━
+      - name: "📋 阶段三 · 写入 Notion 工单"
+        if: ${{ secrets.NOTION_API_TOKEN != '' }}
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID || '84edd0640bf146a9a5a7840107013e8c' }}
+          PM2_REPORT: ${{ steps.pm2_diagnose.outputs.pm2_report }}
+          CLEANUP_REPORT: ${{ steps.pm2_cleanup.outputs.cleanup_report }}
+          HEALTH_REPORT: ${{ steps.health_check.outputs.health_report }}
+        run: node scripts/server-diagnose-report.js
+
+      - name: "📋 阶段三 · 写入 Notion 工单（环境检查）"
+        if: ${{ secrets.NOTION_API_TOKEN == '' }}
+        run: |
+          echo "⚠️ Notion credentials 未配置，跳过工单创建"
+          echo "诊断报告仅输出到 Actions 日志"
+
+      - name: "✅ 诊断完成"
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  ✅ PM2 诊断完毕 · $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
