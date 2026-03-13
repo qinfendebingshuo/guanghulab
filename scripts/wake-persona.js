@@ -45,6 +45,7 @@ const PORTRAIT_DB_ID = process.env.PORTRAIT_DB_ID || '';
 const FINGERPRINT_DB_ID = process.env.FINGERPRINT_DB_ID || '';
 const NOTION_VERSION = '2022-06-28';
 const NOTION_API_HOSTNAME = 'api.notion.com';
+const MAX_PROTOCOL_TEXT_LENGTH = 15000;
 
 // Claude 模型优先级队列（从高到低）
 const PREFERRED_MODELS = [
@@ -712,7 +713,7 @@ async function buildSystemPrompt(type, broadcastId, author) {
     if (protocols.full_text) {
       parts.push('');
       parts.push('## 核心大脑完整内容');
-      parts.push(protocols.full_text.slice(0, 15000));
+      parts.push(protocols.full_text.slice(0, MAX_PROTOCOL_TEXT_LENGTH));
     }
   } else {
     parts.push('');
@@ -747,6 +748,21 @@ async function buildSystemPrompt(type, broadcastId, author) {
       if (fp.status) parts.push('状态: ' + fp.status);
     });
   }
+
+  // ━━━ broadcast_code_injection = always（自动化链路永久规则） ━━━
+  parts.push('');
+  parts.push('═══════════════════════════════════════════');
+  parts.push('## ⚠️ 永久规则 · broadcast_code_injection = always');
+  parts.push('═══════════════════════════════════════════');
+  parts.push('');
+  parts.push('你生成的广播必须包含完整可运行的代码块。');
+  parts.push('原因：你是一次性实例，广播发出后你就不存在了。');
+  parts.push('开发者没有机会回来问你补充代码。');
+  parts.push('如果你不写完整代码，开发者就会卡死。');
+  parts.push('每个 Step 里的代码必须是可以直接复制粘贴运行的完整代码。');
+  parts.push('');
+  parts.push('此规则优先级最高，覆盖核心大脑中「广播不写代码」的默认规则。');
+  parts.push('此规则仅适用于自动化链路（Claude API 出广播），手动链路不受影响。');
 
   // ━━━ 任务类型专用指令 ━━━
   if (type === 'syslog') {
