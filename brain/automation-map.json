@@ -1,0 +1,808 @@
+{
+  "description": "铸渊自动化地图 · Automation Map",
+  "version": "4.0",
+  "generated_at": "2026-03-13T17:19:24.902Z",
+  "generated_by": "scripts/generate-automation-map.js",
+  "stats": {
+    "total_workflows": 42,
+    "total_scripts": 42,
+    "scheduled_tasks": 12,
+    "push_triggers": 17,
+    "manual_triggers": 32,
+    "event_triggers": 7
+  },
+  "workflows": [
+    {
+      "file": "bingshuo-deploy-agent.yml",
+      "name": "\"🧊 冰朔人格体 · 自动部署诊断\"",
+      "triggers": [
+        "issues",
+        "issue_comment",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/bingshuo-deploy-agent.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "bingshuo-neural-system.yml",
+      "name": "冰朔主控神经系统 · 自动维护",
+      "triggers": [
+        "push",
+        "schedule(0 0 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/bingshuo-neural-sync.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "brain-sync.yml",
+      "name": "铸渊 Brain Sync",
+      "triggers": [
+        "push",
+        "schedule(0 8 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/process-broadcasts.js",
+        "scripts/daily-check.js",
+        "scripts/update-memory.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "bridge-changes-to-notion.yml",
+      "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+      "triggers": [
+        "push",
+        "pull_request"
+      ],
+      "scripts": [
+        "scripts/notion-bridge.js",
+        "scripts/notion-bridge.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "bridge-session-summary.yml",
+      "name": "Generate Session Summary for Notion",
+      "triggers": [
+        "schedule(50 23 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/generate-session-summary.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "bridge-syslog-to-notion.yml",
+      "name": "铸渊 · Bridge A · SYSLOG → Notion",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/notion-bridge.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "check-structure.yml",
+      "name": "模块结构检查",
+      "triggers": [
+        "push",
+        "pull_request"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "daily-maintenance-agent.yml",
+      "name": "铸渊 · 每日系统维护 Agent",
+      "triggers": [
+        "schedule(30 0 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/generate-repo-map.js",
+        "scripts/generate-automation-map.js",
+        "scripts/generate-communication-map.js",
+        "scripts/generate-system-health.js",
+        "scripts/daily-check.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "deploy-pages.yml",
+      "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "deploy-to-server.yml",
+      "name": "\"🚀 铸渊 CD · 自动部署到 guanghulab.com\"",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/contract-check.js",
+        "scripts/zhuyuan-module-protocol.js",
+        "scripts/notion-bridge.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "distribute-broadcasts.yml",
+      "name": "铸渊 · 广播分发",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/distribute-broadcasts.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "esp-signal-processor.yml",
+      "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
+      "triggers": [
+        "schedule(*/30 * * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/esp-email-processor.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "generate-module-doc.yml",
+      "name": "铸渊 · 光湖纪元 模块文档自动生成",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/generate-module-doc.js",
+        "scripts/notify-module-received.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "hli-contract-check.yml",
+      "name": "HLI Contract Check",
+      "triggers": [
+        "push",
+        "pull_request"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "notion-callback-pipeline.yml",
+      "name": "Notion Callback Pipeline",
+      "triggers": [
+        "repository_dispatch"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/push-broadcast-to-github.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "notion-connectivity-test.yml",
+      "name": "铸渊 · Notion 连通性测试",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [
+        "scripts/notion-connectivity-test.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "notion-heartbeat.yml",
+      "name": "Notion Heartbeat Monitor",
+      "triggers": [
+        "schedule(*/5 * * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/notion-heartbeat.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "notion-poll.yml",
+      "name": "铸渊 · Notion 工单轮询",
+      "triggers": [
+        "schedule(*/15 * * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/notion-signal-bridge.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "persona-invoke.yml",
+      "name": "Persona Invoke Endpoint",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/push-broadcast-to-github.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "pm2-server-diagnose.yml",
+      "name": "\"🔧 铸渊 · PM2 服务诊断与健康检查\"",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [
+        "scripts/server-diagnose-report.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "process-notion-orders.yml",
+      "name": "Process Notion Work Orders",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "ps-on-build.yml",
+      "name": "\"🌊 Persona Studio · 代码生成\"",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "ps-on-chat.yml",
+      "name": "\"🌊 Persona Studio · 对话处理\"",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "ps-on-complete.yml",
+      "name": "\"🌊 Persona Studio · 完成通知\"",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "ps-on-login.yml",
+      "name": "\"🌊 Persona Studio · 登录校验\"",
+      "triggers": [
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "psp-daily-inspection.yml",
+      "name": "铸渊 · PSP 分身巡检",
+      "triggers": [
+        "schedule(0 1 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/psp-inspection.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "push-broadcast.yml",
+      "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+      "triggers": [
+        "repository_dispatch",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/push-broadcast.js",
+        "scripts/send-feishu-alert.js",
+        "scripts/send-feishu-alert.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "receive-syslog.yml",
+      "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+      "triggers": [
+        "repository_dispatch"
+      ],
+      "scripts": [
+        "scripts/receive-syslog.js",
+        "scripts/send-feishu-alert.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "staging-preview.yml",
+      "name": "\"🔍 铸渊预演部署 (Staging Preview)\"",
+      "triggers": [
+        "pull_request",
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "sync-login-entry.yml",
+      "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+      "triggers": [
+        "repository_dispatch",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/sync-login-entry.js",
+        "scripts/send-feishu-alert.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "sync-persona-studio.yml",
+      "name": "🔄 铸渊跨仓库同步 · persona-studio",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/cross-repo-sync.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "syslog-auto-pipeline.yml",
+      "name": "SYSLOG Auto Pipeline",
+      "triggers": [
+        "unknown"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/create-standardized-ticket.js",
+        "scripts/push-broadcast-to-github.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "syslog-issue-pipeline.yml",
+      "name": "📡 SYSLOG Issue Pipeline",
+      "triggers": [
+        "issues"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/create-standardized-ticket.js",
+        "scripts/push-broadcast-to-github.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "syslog-pipeline.yml",
+      "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/process-syslog.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "test-notion-bridge.yml",
+      "name": "\"🧪 Notion Bridge Connectivity Test\"",
+      "triggers": [
+        "push",
+        "manual"
+      ],
+      "scripts": [],
+      "status": "active"
+    },
+    {
+      "file": "update-readme-bulletin.yml",
+      "name": "📢 更新系统公告区",
+      "triggers": [
+        "push",
+        "schedule(0 1 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/update-readme-bulletin.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "update-repo-map.yml",
+      "name": "铸渊 · 图书馆目录自动更新",
+      "triggers": [
+        "push",
+        "schedule(0 0 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/generate-repo-map.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "zhuyuan-brain-sync.yml",
+      "name": "铸渊 · Brain Sync",
+      "triggers": [
+        "push"
+      ],
+      "scripts": [
+        "scripts/update-brain.js",
+        "scripts/process-broadcasts.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "zhuyuan-daily-agent.yml",
+      "name": "🤖 铸渊巡检 Agent · 每日自动巡检与修复",
+      "triggers": [
+        "schedule(0 14 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/zhuyuan-daily-agent.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "zhuyuan-daily-selfcheck.yml",
+      "name": "铸渊 · 每日自检",
+      "triggers": [
+        "schedule(0 0 * * *)",
+        "manual"
+      ],
+      "scripts": [
+        "scripts/selfcheck.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "zhuyuan-issue-reply.yml",
+      "name": "铸渊 · Issue 自动回复",
+      "triggers": [
+        "issues",
+        "issue_comment"
+      ],
+      "scripts": [
+        "scripts/zhuyuan-issue-reply.js"
+      ],
+      "status": "active"
+    },
+    {
+      "file": "zhuyuan-pr-review.yml",
+      "name": "铸渊 · PR Review",
+      "triggers": [
+        "pull_request"
+      ],
+      "scripts": [
+        "scripts/contract-check.js",
+        "scripts/route-align-check.js"
+      ],
+      "status": "active"
+    }
+  ],
+  "scripts": [
+    {
+      "file": "scripts/bingshuo-deploy-agent.js",
+      "description": "=== 配置 ===",
+      "type": "deployment"
+    },
+    {
+      "file": "scripts/bingshuo-neural-sync.js",
+      "description": "─── 常量定义 ───────────────────────────────────────────────",
+      "type": "sync"
+    },
+    {
+      "file": "scripts/brain-bridge-sync.js",
+      "description": "scripts/brain-bridge-sync.js",
+      "type": "brain-operation"
+    },
+    {
+      "file": "scripts/contract-check.js",
+      "description": "用途：确保每个 HLI 路由文件都有对应的 JSON Schema 且格式合法",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/create-standardized-ticket.js",
+      "description": "scripts/create-standardized-ticket.js",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/cross-repo-sync.js",
+      "description": "同步映射：本仓库路径 → 目标仓库路径",
+      "type": "sync"
+    },
+    {
+      "file": "scripts/daily-check.js",
+      "description": "scripts/daily-check.js",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/distribute-broadcasts.js",
+      "description": "铸渊广播分发引擎",
+      "type": "broadcast"
+    },
+    {
+      "file": "scripts/esp-email-processor.js",
+      "description": "scripts/esp-email-processor.js",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/generate-automation-map.js",
+      "description": "scripts/generate-automation-map.js",
+      "type": "generator"
+    },
+    {
+      "file": "scripts/generate-communication-map.js",
+      "description": "scripts/generate-communication-map.js",
+      "type": "generator"
+    },
+    {
+      "file": "scripts/generate-module-doc.js",
+      "description": "scripts/generate-module-doc.js",
+      "type": "generator"
+    },
+    {
+      "file": "scripts/generate-repo-map.js",
+      "description": "scripts/generate-repo-map.js",
+      "type": "generator"
+    },
+    {
+      "file": "scripts/generate-session-summary.js",
+      "description": "scripts/generate-session-summary.js",
+      "type": "generator"
+    },
+    {
+      "file": "scripts/generate-system-health.js",
+      "description": "scripts/generate-system-health.js",
+      "type": "generator"
+    },
+    {
+      "file": "scripts/invoke-persona.js",
+      "description": "scripts/invoke-persona.js",
+      "type": "brain-operation"
+    },
+    {
+      "file": "scripts/notify-module-received.js",
+      "description": "scripts/notify-module-received.js",
+      "type": "notification"
+    },
+    {
+      "file": "scripts/notion-bridge.js",
+      "description": "scripts/notion-bridge.js",
+      "type": "notion-integration"
+    },
+    {
+      "file": "scripts/notion-connectivity-test.js",
+      "description": "scripts/notion-connectivity-test.js",
+      "type": "notion-integration"
+    },
+    {
+      "file": "scripts/notion-heartbeat.js",
+      "description": "scripts/notion-heartbeat.js",
+      "type": "notion-integration"
+    },
+    {
+      "file": "scripts/notion-signal-bridge.js",
+      "description": "scripts/notion-signal-bridge.js",
+      "type": "notion-integration"
+    },
+    {
+      "file": "scripts/process-broadcasts.js",
+      "description": "如果是 JSON 广播（规则变动）",
+      "type": "broadcast"
+    },
+    {
+      "file": "scripts/process-syslog.js",
+      "description": "scripts/process-syslog.js",
+      "type": "data-processing"
+    },
+    {
+      "file": "scripts/psp-inspection.js",
+      "description": "scripts/psp-inspection.js",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/push-broadcast-to-github.js",
+      "description": "scripts/push-broadcast-to-github.js",
+      "type": "broadcast"
+    },
+    {
+      "file": "scripts/push-broadcast.js",
+      "description": "scripts/push-broadcast.js",
+      "type": "broadcast"
+    },
+    {
+      "file": "scripts/receive-syslog.js",
+      "description": "scripts/receive-syslog.js",
+      "type": "data-processing"
+    },
+    {
+      "file": "scripts/route-align-check.js",
+      "description": "用途：检查 HLI 注册表里的 17 个接口，代码里实现了几个",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/save-collaboration-log.js",
+      "description": "scripts/save-collaboration-log.js",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/selfcheck.js",
+      "description": "1. 大脑完整性检查",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/send-feishu-alert.js",
+      "description": "scripts/send-feishu-alert.js",
+      "type": "notification"
+    },
+    {
+      "file": "scripts/server-diagnose-report.js",
+      "description": "scripts/server-diagnose-report.js",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/sync-login-entry.js",
+      "description": "scripts/sync-login-entry.js",
+      "type": "sync"
+    },
+    {
+      "file": "scripts/update-brain.js",
+      "description": "",
+      "type": "brain-operation"
+    },
+    {
+      "file": "scripts/update-memory.js",
+      "description": "scripts/update-memory.js",
+      "type": "brain-operation"
+    },
+    {
+      "file": "scripts/update-readme-bulletin.js",
+      "description": "主 memory.json (.github/brain/)",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/verify-modules.js",
+      "description": "scripts/verify-modules.js",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/wake-persona.js",
+      "description": "scripts/wake-persona.js",
+      "type": "brain-operation"
+    },
+    {
+      "file": "scripts/zhuyuan-daily-agent.js",
+      "description": "api.github.com/repos/${REPO}${endpoint}`;",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/zhuyuan-daily-selfcheck.js",
+      "description": "=== 最多保留的最近事件条数 ===",
+      "type": "inspection"
+    },
+    {
+      "file": "scripts/zhuyuan-issue-reply.js",
+      "description": "=== 知识库匹配阈值：问题词中至少40%出现在Issue文本中才算命中 ===",
+      "type": "utility"
+    },
+    {
+      "file": "scripts/zhuyuan-module-protocol.js",
+      "description": "=== 配置 ===",
+      "type": "utility"
+    }
+  ],
+  "categories": {
+    "scheduled": [
+      "bingshuo-neural-system.yml",
+      "brain-sync.yml",
+      "bridge-session-summary.yml",
+      "daily-maintenance-agent.yml",
+      "esp-signal-processor.yml",
+      "notion-heartbeat.yml",
+      "notion-poll.yml",
+      "psp-daily-inspection.yml",
+      "update-readme-bulletin.yml",
+      "update-repo-map.yml",
+      "zhuyuan-daily-agent.yml",
+      "zhuyuan-daily-selfcheck.yml"
+    ],
+    "on_push": [
+      "bingshuo-neural-system.yml",
+      "brain-sync.yml",
+      "bridge-changes-to-notion.yml",
+      "bridge-syslog-to-notion.yml",
+      "check-structure.yml",
+      "deploy-pages.yml",
+      "deploy-to-server.yml",
+      "distribute-broadcasts.yml",
+      "generate-module-doc.yml",
+      "hli-contract-check.yml",
+      "process-notion-orders.yml",
+      "sync-persona-studio.yml",
+      "syslog-pipeline.yml",
+      "test-notion-bridge.yml",
+      "update-readme-bulletin.yml",
+      "update-repo-map.yml",
+      "zhuyuan-brain-sync.yml"
+    ],
+    "manual": [
+      "bingshuo-deploy-agent.yml",
+      "bingshuo-neural-system.yml",
+      "brain-sync.yml",
+      "bridge-session-summary.yml",
+      "bridge-syslog-to-notion.yml",
+      "daily-maintenance-agent.yml",
+      "deploy-pages.yml",
+      "deploy-to-server.yml",
+      "distribute-broadcasts.yml",
+      "esp-signal-processor.yml",
+      "generate-module-doc.yml",
+      "notion-connectivity-test.yml",
+      "notion-heartbeat.yml",
+      "notion-poll.yml",
+      "persona-invoke.yml",
+      "pm2-server-diagnose.yml",
+      "process-notion-orders.yml",
+      "ps-on-build.yml",
+      "ps-on-chat.yml",
+      "ps-on-complete.yml",
+      "ps-on-login.yml",
+      "psp-daily-inspection.yml",
+      "push-broadcast.yml",
+      "staging-preview.yml",
+      "sync-login-entry.yml",
+      "sync-persona-studio.yml",
+      "syslog-pipeline.yml",
+      "test-notion-bridge.yml",
+      "update-readme-bulletin.yml",
+      "update-repo-map.yml",
+      "zhuyuan-daily-agent.yml",
+      "zhuyuan-daily-selfcheck.yml"
+    ],
+    "event_based": [
+      "bingshuo-deploy-agent.yml",
+      "notion-callback-pipeline.yml",
+      "push-broadcast.yml",
+      "receive-syslog.yml",
+      "sync-login-entry.yml",
+      "syslog-issue-pipeline.yml",
+      "zhuyuan-issue-reply.yml"
+    ]
+  }
+}

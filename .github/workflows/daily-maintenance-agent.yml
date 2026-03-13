@@ -1,0 +1,80 @@
+name: 铸渊 · 每日系统维护 Agent
+
+on:
+  schedule:
+    - cron: '30 0 * * *'   # UTC 00:30 = 北京时间 08:30
+  workflow_dispatch:        # 手动触发
+
+jobs:
+  daily-maintenance:
+    name: 🔧 Daily Maintenance Agent
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions:  read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 读取系统规则（master-brain.md）
+        run: |
+          echo "══════════════════════════════════════════"
+          echo "📖 读取执行层主控大脑规则..."
+          echo "══════════════════════════════════════════"
+          if [ -f brain/master-brain.md ]; then
+            echo "✅ master-brain.md 已找到"
+            head -30 brain/master-brain.md
+          else
+            echo "⚠️ master-brain.md 不存在"
+          fi
+
+      - name: 生成仓库结构地图（repo-map.json）
+        run: node scripts/generate-repo-map.js
+
+      - name: 生成自动化地图（automation-map.json）
+        run: node scripts/generate-automation-map.js
+
+      - name: 生成通信结构地图（communication-map.json）
+        run: node scripts/generate-communication-map.js
+
+      - name: 生成系统健康状态（system-health.json）
+        run: node scripts/generate-system-health.js
+
+      - name: 执行每日自检
+        run: node scripts/daily-check.js
+
+      - name: 记录维护日志
+        run: |
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          LOG_FILE="syslog/maintenance-$(date -u +%Y-%m-%d).log"
+          mkdir -p syslog
+          echo "═══════════════════════════════════════" >> "$LOG_FILE"
+          echo "Daily Maintenance Agent · $TIMESTAMP" >> "$LOG_FILE"
+          echo "System Version: 4.0" >> "$LOG_FILE"
+          echo "Status: completed" >> "$LOG_FILE"
+          echo "═══════════════════════════════════════" >> "$LOG_FILE"
+          echo "✅ 维护日志已写入 $LOG_FILE"
+
+      - name: 同步 repo-map 到 brain 目录
+        run: |
+          if [ -f .github/brain/repo-map.json ]; then
+            cp .github/brain/repo-map.json brain/repo-map.json
+            echo "✅ repo-map.json 已同步到 brain/"
+          fi
+
+      - name: 提交维护结果
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add brain/ syslog/ .github/brain/repo-map.json .github/brain/repo-snapshot.md
+          git diff --cached --quiet || git commit -m "🔧 铸渊每日维护 · $(date -u +%Y-%m-%d) · System 4.0"
+          git pull --rebase origin main || true
+          git push

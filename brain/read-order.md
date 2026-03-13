@@ -20,9 +20,11 @@
 按需读取，用于定位具体模块：
 
 4. **`brain/automation-map.json`** — 自动化工作流与脚本地图
-5. **`.github/brain/routing-map.json`** — HLI 接口路由映射
-6. **`.github/brain/memory.json`** — 铸渊核心记忆
-7. **`.github/brain/repo-snapshot.md`** — 仓库快照（人类可读）
+5. **`brain/communication-map.json`** — 系统通信结构地图
+6. **`brain/id-map.json`** — 统一编号体系
+7. **`.github/brain/routing-map.json`** — HLI 接口路由映射
+8. **`.github/brain/memory.json`** — 铸渊核心记忆
+9. **`.github/brain/repo-snapshot.md`** — 仓库快照（人类可读）
 
 ---
 
