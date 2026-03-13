@@ -1,0 +1,332 @@
+{
+  "description": "数字地球系统通信结构地图 · Communication Map",
+  "version": "4.0",
+  "generated_at": "2026-03-13T17:19:24.934Z",
+  "generated_by": "scripts/generate-communication-map.js",
+  "architecture": {
+    "layers": [
+      {
+        "id": "observation",
+        "name": "观察层",
+        "system": "零点原核频道"
+      },
+      {
+        "id": "core_brain",
+        "name": "核心大脑",
+        "system": "Notion 系统"
+      },
+      {
+        "id": "execution",
+        "name": "执行层",
+        "system": "Repository 系统"
+      }
+    ],
+    "communication_path": [
+      "零点原核（观察层）",
+      "Notion 核心大脑（调度中心）",
+      "API 通信桥",
+      "Repository 执行层",
+      "自动化执行",
+      "系统日志",
+      "回报 Notion 大脑"
+    ],
+    "principle": "观察层不直接控制执行层。所有任务必须通过核心大脑调度。"
+  },
+  "stats": {
+    "notion_channels": 37,
+    "api_bridges": 4,
+    "sync_channels": 5,
+    "total_channels": 46
+  },
+  "notion_channels": [
+    {
+      "type": "workflow",
+      "file": ".github/workflows/bridge-changes-to-notion.yml",
+      "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/bridge-syslog-to-notion.yml",
+      "name": "铸渊 · Bridge A · SYSLOG → Notion",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/deploy-to-server.yml",
+      "name": "\"🚀 铸渊 CD · 自动部署到 guanghulab.com\"",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/esp-signal-processor.yml",
+      "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/notion-callback-pipeline.yml",
+      "name": "Notion Callback Pipeline",
+      "direction": "notion→repo"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/notion-connectivity-test.yml",
+      "name": "铸渊 · Notion 连通性测试",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/notion-heartbeat.yml",
+      "name": "Notion Heartbeat Monitor",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/notion-poll.yml",
+      "name": "铸渊 · Notion 工单轮询",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/persona-invoke.yml",
+      "name": "Persona Invoke Endpoint",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/pm2-server-diagnose.yml",
+      "name": "\"🔧 铸渊 · PM2 服务诊断与健康检查\"",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/process-notion-orders.yml",
+      "name": "Process Notion Work Orders",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/psp-daily-inspection.yml",
+      "name": "铸渊 · PSP 分身巡检",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/push-broadcast.yml",
+      "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+      "direction": "notion→repo"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/receive-syslog.yml",
+      "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+      "direction": "notion→repo"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/sync-login-entry.yml",
+      "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+      "direction": "notion→repo"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/syslog-auto-pipeline.yml",
+      "name": "SYSLOG Auto Pipeline",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/syslog-issue-pipeline.yml",
+      "name": "📡 SYSLOG Issue Pipeline",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "workflow",
+      "file": ".github/workflows/test-notion-bridge.yml",
+      "name": "\"🧪 Notion Bridge Connectivity Test\"",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/bingshuo-deploy-agent.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/bingshuo-neural-sync.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/create-standardized-ticket.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/esp-email-processor.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/generate-automation-map.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/generate-communication-map.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/generate-repo-map.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/invoke-persona.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/notion-bridge.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/notion-connectivity-test.js",
+      "direction": "notion→repo"
+    },
+    {
+      "type": "script",
+      "file": "scripts/notion-heartbeat.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/notion-signal-bridge.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/psp-inspection.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/push-broadcast.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/receive-syslog.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/server-diagnose-report.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/sync-login-entry.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/wake-persona.js",
+      "direction": "repo→notion"
+    },
+    {
+      "type": "script",
+      "file": "scripts/zhuyuan-daily-selfcheck.js",
+      "direction": "repo→notion"
+    }
+  ],
+  "api_bridges": [
+    {
+      "type": "api-service",
+      "file": "backend/server.js",
+      "name": "Express 后端 API",
+      "port": 3000,
+      "status": "active"
+    },
+    {
+      "type": "api-service",
+      "file": "src/index.js",
+      "name": "HLI 中间件",
+      "port": 3001,
+      "status": "active"
+    },
+    {
+      "type": "api-service",
+      "file": "persona-studio/backend/server.js",
+      "name": "Persona Studio",
+      "port": 3002,
+      "status": "active"
+    },
+    {
+      "type": "api-service",
+      "file": "backend-integration/api-proxy.js",
+      "name": "AI Chat Proxy",
+      "port": 3721,
+      "status": "active"
+    }
+  ],
+  "sync_channels": [
+    {
+      "name": "大脑同步",
+      "workflow": "brain-sync.yml",
+      "direction": "bidirectional",
+      "data": [
+        ".github/brain/",
+        ".github/persona-brain/"
+      ]
+    },
+    {
+      "name": "信号处理",
+      "workflow": "esp-signal-processor.yml",
+      "direction": "inbound",
+      "data": [
+        "signal-log/"
+      ]
+    },
+    {
+      "name": "广播分发",
+      "workflow": "distribute-broadcasts.yml",
+      "direction": "outbound",
+      "data": [
+        "broadcasts-outbox/",
+        "dev-nodes/"
+      ]
+    },
+    {
+      "name": "SYSLOG 管线",
+      "workflow": "syslog-pipeline.yml",
+      "direction": "inbound",
+      "data": [
+        "syslog-inbox/",
+        "syslog-processed/"
+      ]
+    },
+    {
+      "name": "部署管线",
+      "workflow": "deploy-to-server.yml",
+      "direction": "outbound",
+      "data": [
+        "服务器部署"
+      ]
+    }
+  ],
+  "task_format": {
+    "description": "统一任务通信格式",
+    "fields": {
+      "task_type": "broadcast | instruction | maintenance",
+      "source": "notion | zero-point | system",
+      "target": "zhuyuan | shuangyan | system",
+      "task_name": "任务名称",
+      "id": "TASK-YYYYMMDD-NNN",
+      "timestamp": "ISO 8601"
+    }
+  }
+}

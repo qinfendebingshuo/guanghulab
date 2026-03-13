@@ -1,0 +1,171 @@
+{
+  "description": "数字地球系统健康状态 · System Health",
+  "version": "4.0",
+  "generated_at": "2026-03-13T17:19:24.964Z",
+  "generated_by": "scripts/generate-system-health.js",
+  "overall_status": "green",
+  "overall_emoji": "🟢",
+  "subsystems": {
+    "brain_integrity": {
+      "status": "green",
+      "total": 7,
+      "healthy": 7,
+      "files": [
+        {
+          "file": ".github/brain/memory.json",
+          "name": "核心记忆",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        },
+        {
+          "file": ".github/brain/routing-map.json",
+          "name": "HLI路由映射",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        },
+        {
+          "file": ".github/brain/repo-map.json",
+          "name": "仓库地图",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        },
+        {
+          "file": ".github/brain/wake-protocol.md",
+          "name": "唤醒协议",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        },
+        {
+          "file": "brain/master-brain.md",
+          "name": "执行层主控大脑",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        },
+        {
+          "file": "brain/read-order.md",
+          "name": "读取顺序",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        },
+        {
+          "file": "brain/id-map.json",
+          "name": "统一编号体系",
+          "exists": true,
+          "valid": true,
+          "status": "✅"
+        }
+      ]
+    },
+    "structure_integrity": {
+      "status": "green",
+      "total": 8,
+      "healthy": 8,
+      "directories": [
+        {
+          "path": "brain",
+          "name": "执行层核心入口",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": ".github/brain",
+          "name": "铸渊大脑",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": ".github/workflows",
+          "name": "工作流",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": "scripts",
+          "name": "执行脚本",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": "src",
+          "name": "HLI源码",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": "backend",
+          "name": "Express后端",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": "syslog",
+          "name": "系统日志",
+          "exists": true,
+          "status": "✅"
+        },
+        {
+          "path": "dev-nodes",
+          "name": "开发者节点",
+          "exists": true,
+          "status": "✅"
+        }
+      ]
+    },
+    "automation": {
+      "status": "green",
+      "total_workflows": 42,
+      "total_scripts": 42,
+      "key_workflows": {
+        "daily_maintenance": "active",
+        "repo_map_update": "active",
+        "psp_inspection": "active",
+        "deploy": "active",
+        "brain_sync": "active"
+      }
+    },
+    "communication": {
+      "status": "green",
+      "services": [
+        {
+          "name": "HLI 中间件",
+          "file": "src/index.js",
+          "port": 3001,
+          "status": "configured"
+        },
+        {
+          "name": "Express 后端",
+          "file": "backend/server.js",
+          "port": 3000,
+          "status": "configured"
+        },
+        {
+          "name": "Persona Studio",
+          "file": "persona-studio/backend/server.js",
+          "port": 3002,
+          "status": "configured"
+        },
+        {
+          "name": "AI Chat Proxy",
+          "file": "backend-integration/api-proxy.js",
+          "port": 3721,
+          "status": "configured"
+        }
+      ]
+    }
+  },
+  "system_state": {
+    "execution_layer": "synced",
+    "communication": "synced",
+    "automation": "stable",
+    "maintenance_agent": "active",
+    "system_version": "4.0"
+  },
+  "recent_checks": [],
+  "errors": []
+}

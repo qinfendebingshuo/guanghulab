@@ -17,6 +17,7 @@ const path = require('path');
 
 const ROOT         = path.join(__dirname, '..');
 const BRAIN_DIR    = path.join(ROOT, '.github/brain');
+const EXEC_BRAIN   = path.join(ROOT, 'brain');
 const MAP_PATH     = path.join(BRAIN_DIR, 'repo-map.json');
 const SNAPSHOT_PATH = path.join(BRAIN_DIR, 'repo-snapshot.md');
 
@@ -398,6 +399,10 @@ function generateRepoMap(data) {
   };
 
   fs.writeFileSync(MAP_PATH, JSON.stringify(map, null, 2));
+  // Also sync to execution layer brain entry
+  if (fs.existsSync(EXEC_BRAIN)) {
+    fs.writeFileSync(path.join(EXEC_BRAIN, 'repo-map.json'), JSON.stringify(map, null, 2));
+  }
   console.log(`✅ repo-map.json 已生成 · ${zones.length} 个区域 · ${map.stats.total_workflows} 个工作流`);
   return map;
 }

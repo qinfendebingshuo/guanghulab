@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-13 22:51 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-14 01:19 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 41 个 GitHub Actions |
-| 脚本 | 40 个执行脚本 |
+| 工作流 | 42 个 GitHub Actions |
+| 脚本 | 43 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-13 22:51 CST |
+| 快照生成时间 | 2026-03-14 01:19 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 41 项
+**路径**: `.github/workflows` · **数量**: 42 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 40 项
+**路径**: `scripts` · **数量**: 43 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -97,6 +97,7 @@
 | `bridge-session-summary.yml` | Generate Session Summary for Notion | schedule(50 23 * * *), manual |
 | `bridge-syslog-to-notion.yml` | 铸渊 · Bridge A · SYSLOG → Notion | push, manual |
 | `check-structure.yml` | 模块结构检查 | push, pull_request |
+| `daily-maintenance-agent.yml` | 铸渊 · 每日系统维护 Agent | schedule(30 0 * * *), manual |
 | `deploy-pages.yml` | 🌀 部署铸渊聊天室 (GitHub Pages) | push, manual |
 | `deploy-to-server.yml` | "🚀 铸渊 CD · 自动部署到 guanghulab.com" | push, manual |
 | `distribute-broadcasts.yml` | 铸渊 · 广播分发 | push, manual |
@@ -145,9 +146,12 @@
 - `scripts/daily-check.js`
 - `scripts/distribute-broadcasts.js`
 - `scripts/esp-email-processor.js`
+- `scripts/generate-automation-map.js`
+- `scripts/generate-communication-map.js`
 - `scripts/generate-module-doc.js`
 - `scripts/generate-repo-map.js`
 - `scripts/generate-session-summary.js`
+- `scripts/generate-system-health.js`
 - `scripts/invoke-persona.js`
 - `scripts/notify-module-received.js`
 - `scripts/notion-bridge.js`

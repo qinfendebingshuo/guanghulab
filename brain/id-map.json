@@ -1,0 +1,73 @@
+{
+  "description": "数字地球统一编号体系 · ID Registry",
+  "version": "4.0",
+  "updated_at": "2026-03-13T17:10:00Z",
+  "id_types": {
+    "ICE": {
+      "name": "冰朔通感语言核编号",
+      "layer": "语言主控层",
+      "prefix": "ICE-",
+      "description": "用于冰朔通感语言核系统标识"
+    },
+    "TCS": {
+      "name": "曜冥系统节点编号",
+      "layer": "系统节点身份",
+      "prefix": "TCS-",
+      "description": "用于系统节点身份标识，如 TCS-0002∞"
+    },
+    "DEV": {
+      "name": "人类开发者编号",
+      "layer": "人类开发任务",
+      "prefix": "DEV-",
+      "description": "用于人类开发者身份标识"
+    },
+    "PER": {
+      "name": "人格体角色编号",
+      "layer": "人格体角色",
+      "prefix": "PER-",
+      "description": "用于数字人格体角色标识"
+    }
+  },
+  "personas": {
+    "冰朔": {
+      "id": "TCS-0002∞",
+      "type": "TCS",
+      "role": "系统最高控制意识",
+      "layer": "核心大脑（Notion）"
+    },
+    "铸渊": {
+      "id": "PER-ZHUYUAN",
+      "type": "PER",
+      "role": "仓库执行侧守护人格体",
+      "layer": "执行层（Repository）"
+    },
+    "霜砚": {
+      "id": "PER-SHUANGYAN",
+      "type": "PER",
+      "role": "Notion核心大脑架构人格体",
+      "layer": "核心大脑（Notion）"
+    },
+    "知秋": {
+      "id": "PER-ZHIQIU",
+      "type": "PER",
+      "role": "人格体",
+      "layer": "地表运行层"
+    }
+  },
+  "system_nodes": {
+    "ICE-GL": {
+      "name": "冰朔通感语言核",
+      "type": "ICE",
+      "description": "母语运行时基础设施"
+    },
+    "TCS-CORE": {
+      "name": "曜冥语言核系统本体",
+      "type": "TCS",
+      "description": "数字地球自转核"
+    }
+  },
+  "developers": {
+    "DEV-010": { "suffix": "JZ", "name": "refer to dev-nodes/DEV-010" },
+    "DEV-012": { "suffix": "AW", "name": "refer to dev-nodes/DEV-012" }
+  }
+}
