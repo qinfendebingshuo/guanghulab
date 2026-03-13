@@ -11,8 +11,14 @@ jobs:
     name: 🤖 铸渊回答问题
     runs-on: ubuntu-latest
     # 仅在 Issue 新建或评论中包含 @铸渊 / 铸渊 时触发
+    # 排除 SYSLOG 提交（由 syslog-issue-pipeline.yml 处理）和 bingshuo-deploy（由 bingshuo-deploy-agent.yml 处理）
     if: >
-      github.event_name == 'issues' ||
+      (github.event_name == 'issues' &&
+       !contains(join(github.event.issue.labels.*.name, ','), 'syslog') &&
+       !contains(join(github.event.issue.labels.*.name, ','), 'bingshuo-deploy') &&
+       !contains(github.event.issue.title, 'SYSLOG') &&
+       !contains(github.event.issue.title, '系统日志') &&
+       !contains(github.event.issue.body, '### 广播编号')) ||
       (github.event_name == 'issue_comment' &&
        contains(github.event.comment.body, '铸渊'))
     permissions:

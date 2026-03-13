@@ -103,6 +103,7 @@ function containsSystemCommand(text) {
 }
 
 // === 判断Issue类型 ===
+const isSyslog = issueLabels.includes('syslog') || /SYSLOG|系统日志/.test(issueTitle) || issueBody.includes('### 广播编号');
 const isProgressQuery = issueLabels.includes('progress-query');
 const isDevQuestion = issueLabels.includes('dev-question');
 
@@ -289,6 +290,12 @@ async function handleCollaboratorComment(user) {
 // === Issue 新建处理（原有逻辑保留） ===
 async function handleIssueTrigger() {
   let reply = '';
+
+  // --- SYSLOG 提交：由 syslog-issue-pipeline 处理，此处跳过 ---
+  if (isSyslog) {
+    console.log('📡 SYSLOG Issue detected, skipping (handled by syslog-issue-pipeline)');
+    return;
+  }
 
   // --- 进度查询（指定开发者）---
   if (isProgressQuery && devInfo) {

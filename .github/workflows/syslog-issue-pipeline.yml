@@ -34,7 +34,12 @@ jobs:
   process:
     name: 📡 处理 SYSLOG 提交 / 广播提问 (Issue)
     runs-on: ubuntu-latest
-    if: contains(toJSON(github.event.issue.labels), 'syslog')
+    # 检测 SYSLOG 提交：通过标签、标题或正文模板字段识别
+    if: >
+      contains(toJSON(github.event.issue.labels), 'syslog') ||
+      contains(github.event.issue.title, 'SYSLOG') ||
+      contains(github.event.issue.title, '系统日志') ||
+      contains(github.event.issue.body, '### 广播编号')
     permissions:
       contents: write
       issues: write
