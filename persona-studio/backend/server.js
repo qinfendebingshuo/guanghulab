@@ -24,7 +24,10 @@ app.use('/api/ps/chat', chatRoutes);
 app.use('/api/ps/build', buildRoutes);
 app.use('/api/ps/notify', notifyRoutes);
 app.use('/api/ps/apikey', apikeyRoutes);
-app.use('/api/ps/preview', previewRoutes);
+
+// ── 健康检查 ──
+// ── 健康检查 ──app.use('/api/ps/preview', previewRoutes);
+app.use('/api/dashboard', require('./routes/dashboard-api'));
 
 // ── 健康检查 ──
 app.get('/api/ps/health', (_req, res) => {
