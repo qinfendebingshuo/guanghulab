@@ -63,7 +63,7 @@ function notionPost(endpoint, body) {
       res.on('end', function () {
         try {
           var parsed = JSON.parse(data);
-          if (res.status >= 200 && res.status < 300) {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve(parsed);
           } else {
             reject(new Error('Notion API ' + res.statusCode + ': ' + (parsed.message || data)));

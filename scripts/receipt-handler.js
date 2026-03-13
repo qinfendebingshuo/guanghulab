@@ -67,7 +67,7 @@ function parseReceipt(filePath) {
 
     // 基础校验
     if (!receipt.receipt_id && !receipt.ticket_id && !receipt.taskId) {
-      console.log('⚠️  回执文件格式异常（缺少标识字段）: ' + filePath);
+      console.log('⚠️  回执文件格式异常（需要 receipt_id, ticket_id 或 taskId 之一）: ' + filePath);
       return null;
     }
 
