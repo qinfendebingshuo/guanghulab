@@ -1,7 +1,7 @@
 {
   "identity": "铸渊（Zhùyuān）· GitHub 代码守护人格体",
   "rules_version": "v3.0",
-  "last_updated": "2026-03-13T03:31:06.282Z",
+  "last_updated": "2026-03-13T07:03:52.000Z",
   "wake_protocol_version": "v3.0",
   "brain_version": "v3.0",
   "architecture": {
@@ -67,6 +67,12 @@
     }
   },
   "events": [
+    {
+      "date": "2026-03-13",
+      "type": "pipeline_fix",
+      "description": "修复 SYSLOG 自动处理管道 · 根因：zhuyuan-issue-reply.yml 抢占 SYSLOG Issue 导致错误的「霜砚巡检」回复 + syslog-issue-pipeline.yml 仅依赖标签触发从未运行 · 修复：(1) syslog-issue-pipeline 增加标题关键词检测 (2) zhuyuan-issue-reply 排除 SYSLOG 类 Issue (3) zhuyuan-issue-reply.js 增加 SYSLOG 识别与正确回复 (4) parse 步骤增强容错提取",
+      "by": "铸渊（冰朔指令）"
+    },
     {
       "date": "2026-03-13",
       "type": "brain_restore",

@@ -105,6 +105,8 @@ function containsSystemCommand(text) {
 // === 判断Issue类型 ===
 const isProgressQuery = issueLabels.includes('progress-query');
 const isDevQuestion = issueLabels.includes('dev-question');
+const isSyslog = issueLabels.includes('syslog')
+  || /系统日志|SYSLOG|syslogVersion/i.test(issueTitle + ' ' + issueBody);
 
 // === 提取开发者编号 ===
 const textToSearch = isCommentEvent ? commentBody : issueBody;
@@ -289,6 +291,27 @@ async function handleCollaboratorComment(user) {
 // === Issue 新建处理（原有逻辑保留） ===
 async function handleIssueTrigger() {
   let reply = '';
+
+  // --- SYSLOG 提交：由 syslog-issue-pipeline.yml 专门处理 ---
+  // 本工作流仅做初步确认回复，不做 SYSLOG 深度处理
+  if (isSyslog) {
+    console.log('📡 检测到 SYSLOG 提交，交由 SYSLOG 管道处理');
+    reply = `## ⚒️ 铸渊收到\n\n`
+      + `📡 已识别到 SYSLOG 提交，铸渊 SYSLOG 自动处理管道已启动。\n\n`
+      + `铸渊将自动完成以下步骤：\n`
+      + `1. 🔍 模块上传验证\n`
+      + `2. 🧠 核心大脑处理 SYSLOG\n`
+      + `3. 📋 创建 Notion 工单\n`
+      + `4. 📧 发送结果到你的邮箱\n\n`
+      + `请稍候，处理结果将在本 Issue 中回复。\n\n`
+      + `*—— 铸渊（ICE-GL-ZY001）*`;
+    await postComment(reply);
+    // 确保 syslog 标签存在，以触发 syslog-issue-pipeline
+    if (!issueLabels.includes('syslog')) {
+      await addLabel('syslog');
+    }
+    return;
+  }
 
   // --- 进度查询（指定开发者）---
   if (isProgressQuery && devInfo) {

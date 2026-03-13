@@ -34,7 +34,10 @@ jobs:
   process:
     name: 📡 处理 SYSLOG 提交 / 广播提问 (Issue)
     runs-on: ubuntu-latest
-    if: contains(toJSON(github.event.issue.labels), 'syslog')
+    if: >
+      contains(toJSON(github.event.issue.labels), 'syslog') ||
+      contains(github.event.issue.title, 'SYSLOG') ||
+      contains(github.event.issue.title, '系统日志')
     permissions:
       contents: write
       issues: write
@@ -67,20 +70,43 @@ jobs:
               return match ? match[1].trim() : '';
             }
 
-            const broadcastId = extractField(body, '广播编号') || '';
+            let broadcastId = extractField(body, '广播编号') || '';
             const submitType = extractField(body, '类型') || '';
-            const email = extractField(body, '你的邮箱') || '';
+            let email = extractField(body, '你的邮箱') || '';
+
+            // Fallback: extract broadcast_id from title (e.g. "BC-M23-002-AW｜SYSLOG")
+            if (!broadcastId) {
+              const titleMatch = title.match(/\b(BC-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+)\b/i);
+              if (titleMatch) broadcastId = titleMatch[1];
+            }
+
+            // Fallback: extract broadcast_id from body (e.g. "taskId": "BC-M23-002-AW")
+            if (!broadcastId) {
+              const bodyMatch = body.match(/\b(BC-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+)\b/i);
+              if (bodyMatch) broadcastId = bodyMatch[1];
+            }
+
+            // Fallback: extract email from body if not in template field
+            if (!email) {
+              const emailMatch = body.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
+              if (emailMatch) email = emailMatch[0];
+            }
 
             // Extract content (everything after "### 内容")
             const contentMatch = body.match(/###\s*内容\s*\n+([\s\S]*?)$/i);
-            const content = contentMatch ? contentMatch[1].trim() : '';
+            const content = contentMatch ? contentMatch[1].trim() : body;
 
             // Determine type from title or body
             let type = 'question'; // default
-            if (submitType.includes('SYSLOG') || title.includes('SYSLOG')) {
+            if (submitType.includes('SYSLOG') || title.includes('SYSLOG') || title.includes('系统日志')) {
               type = 'syslog';
             } else if (submitType.includes('提问') || title.includes('提问')) {
               type = 'question';
+            }
+
+            // Also detect syslog by content structure
+            if (type === 'question' && /syslogVersion|"session"|"verification"/i.test(body)) {
+              type = 'syslog';
             }
 
             // Validate
