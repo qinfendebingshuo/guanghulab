@@ -194,11 +194,13 @@ async function createSyslogEntry(syslog, token, dbId, dateStr) {
 async function createTicket(syslog, token, dbId, dateStr) {
   const broadcastId = syslog.broadcast_id || syslog.broadcastId || 'UNKNOWN';
   const devId = syslog.dev_id || syslog.developer_id || 'UNKNOWN';
+  const devName = syslog.developer_name || syslog.dev_name || '';
+  const now = new Date().toISOString();
 
   const properties = {
-    '标题':       titleProp('SYSLOG 回传｜' + broadcastId + ' · ' + devId),
+    '标题':       titleProp('[自动] SYSLOG处理｜' + broadcastId + ' · ' + devId),
     '操作类型':   selectProp('其他'),
-    '提交者':     richTextProp('巡检引擎'),
+    '提交者':     richTextProp('铸渊Agent·自动管道'),
     '提交日期':   dateProp(dateStr),
     '状态':       selectProp('待处理'),
     '优先级':     selectProp('P1'),
@@ -207,6 +209,22 @@ async function createTicket(syslog, token, dbId, dateStr) {
   // 添加关联信息
   if (broadcastId !== 'UNKNOWN') properties['广播编号'] = richTextProp(broadcastId);
   if (devId !== 'UNKNOWN') properties['开发者编号'] = richTextProp(devId);
+
+  // Phase B1 标准化工单内容
+  const ticketContent = [
+    '## 📡 标准化工单 · Phase B1',
+    '',
+    '| 字段 | 值 |',
+    '|------|-----|',
+    '| 工单类型 | SYSLOG处理 |',
+    '| 状态 | 待处理 |',
+    '| 来源 | GitHub Actions |',
+    '| taskId | ' + broadcastId + ' |',
+    '| developer | ' + devId + ' ' + devName + ' |',
+    '| created_at | ' + now + ' |',
+    '| retry_count | 0 |',
+    '| receipt_status | pending |',
+  ].join('\n');
 
   const body = {
     parent: { database_id: dbId },
@@ -218,7 +236,7 @@ async function createTicket(syslog, token, dbId, dateStr) {
         paragraph: {
           rich_text: [{
             type: 'text',
-            text: { content: '📥 SYSLOG 回传，来自 ' + devId + '，关联广播 ' + broadcastId },
+            text: { content: ticketContent },
           }],
         },
       },
@@ -234,7 +252,7 @@ async function createTicket(syslog, token, dbId, dateStr) {
   };
 
   const result = await notionPost('/v1/pages', body, token);
-  console.log('  → 霜砚工单已创建: ' + result.id);
+  console.log('  → 标准化工单已创建: ' + result.id);
   return result;
 }
 
