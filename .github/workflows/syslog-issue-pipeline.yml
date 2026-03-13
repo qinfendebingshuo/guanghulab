@@ -56,42 +56,15 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: 📋 进度通报 · 管道已启动
-        id: progress
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const number = context.payload.issue.number;
-            const now = new Date().toISOString();
-
-            const body = [
-              '## ⚙️ SYSLOG 管道运行中',
-              '',
-              '> 管道启动时间: ' + now,
-              '',
-              '| 阶段 | 状态 | 说明 |',
-              '|------|------|------|',
-              '| ① 接收提交 | ✅ 已完成 | 系统已收到 |',
-              '| ② 解析内容 | 🔄 进行中 | 正在解析广播编号、邮箱、内容 |',
-              '| ③ 模块验证 | ⏳ 等待中 | 检测模块上传状态 |',
-              '| ④ 唤醒核心大脑 | ⏳ 等待中 | 铸渊核心大脑处理 |',
-              '| ⑤ 创建 Notion 工单 | ⏳ 等待中 | 推送霜砚工单 |',
-              '| ⑥ 生成广播 | ⏳ 等待中 | 生成新广播内容 |',
-              '| ⑦ 邮件通知 | ⏳ 等待中 | 发送结果到邮箱 |',
-              '| ⑧ 闭环确认 | ⏳ 等待中 | Issue 回复 + 关闭 |',
-              '',
-              '> *管道正在运行，请勿关闭此 Issue*'
-            ].join('\n');
-
-            const { data: comment } = await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: number,
-              body: body
-            });
-
-            core.setOutput('comment_id', comment.id);
-            console.log('📋 进度通报已发送, comment_id=' + comment.id);
+      - name: 📋 步骤 1/8 · 接收提交
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '1'
+          STEP_NAME: '接收提交'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '系统已收到您的 SYSLOG 提交，管道正在运行中…'
+        run: node scripts/pipeline-reporter.js
 
       - name: 🔍 Parse submission
         id: parse
@@ -148,6 +121,28 @@ jobs:
 
             console.log(`📡 解析完成: 广播=${broadcastId}, 类型=${type}, 邮箱=${email}`);
 
+      - name: 📋 步骤 2/8 · 解析内容（成功）
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '2'
+          STEP_NAME: '解析内容'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '广播编号: `${{ steps.parse.outputs.broadcast_id }}` · 类型: ${{ steps.parse.outputs.type }} · 邮箱: ${{ steps.parse.outputs.email }}'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 2/8 · 解析内容（失败）
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '2'
+          STEP_NAME: '解析内容'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: '解析失败，请检查提交格式是否正确（需包含广播编号、类型、邮箱、内容）'
+        run: node scripts/pipeline-reporter.js
+
       - name: 🔍 铸渊 Agent · 模块上传验证
         id: verify
         env:
@@ -155,6 +150,28 @@ jobs:
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           AUTHOR: ${{ steps.parse.outputs.author }}
         run: node scripts/verify-modules.js
+
+      - name: 📋 步骤 3/8 · 模块验证（成功）
+        if: always() && steps.verify.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '3'
+          STEP_NAME: '模块验证'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '模块上传验证已完成'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 3/8 · 模块验证（失败）
+        if: always() && steps.verify.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '3'
+          STEP_NAME: '模块验证'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: '模块验证异常（不影响闭环继续）'
+        run: node scripts/pipeline-reporter.js
 
       - name: 🧠 Auto-detect and wake up persona
         id: persona
@@ -172,6 +189,28 @@ jobs:
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
         run: node scripts/wake-persona.js
 
+      - name: 📋 步骤 4/8 · 唤醒核心大脑（成功）
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '4'
+          STEP_NAME: '唤醒核心大脑'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '铸渊核心大脑已完成处理'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 4/8 · 唤醒核心大脑（失败）
+        if: failure() && steps.parse.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '4'
+          STEP_NAME: '唤醒核心大脑'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: 'API 调用失败，请检查 Secrets: LLM_API_KEY / LLM_BASE_URL 是否配置正确'
+        run: node scripts/pipeline-reporter.js
+
       - name: 📋 创建标准化 Notion 工单（Phase B1）
         id: ticket
         if: ${{ secrets.NOTION_API_TOKEN }}
@@ -187,7 +226,41 @@ jobs:
           SYSLOG_RAW: ${{ steps.parse.outputs.content }}
         run: node scripts/create-standardized-ticket.js
 
+      - name: 📋 步骤 5/8 · 创建 Notion 工单（成功）
+        if: always() && steps.ticket.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '5'
+          STEP_NAME: '创建 Notion 工单'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '已写入霜砚工单簿'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 5/8 · 创建 Notion 工单（跳过）
+        if: always() && steps.ticket.outcome == 'skipped'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '5'
+          STEP_NAME: '创建 Notion 工单'
+          STEP_STATUS: 'skip'
+          STEP_DETAIL: 'Notion Token 未配置，跳过'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 5/8 · 创建 Notion 工单（失败）
+        if: always() && steps.ticket.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '5'
+          STEP_NAME: '创建 Notion 工单'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: 'Notion API 写入失败'
+        run: node scripts/pipeline-reporter.js
+
       - name: 📡 推送广播到 GitHub（Phase B4）
+        id: broadcast
         if: steps.persona.outcome == 'success' && steps.parse.outputs.type == 'syslog'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -196,7 +269,41 @@ jobs:
           BROADCAST_CONTENT: ${{ steps.persona.outputs.result }}
         run: node scripts/push-broadcast-to-github.js
 
+      - name: 📋 步骤 6/8 · 生成广播（成功）
+        if: always() && steps.broadcast.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '6'
+          STEP_NAME: '生成广播'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '新广播已生成并推送'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 6/8 · 生成广播（跳过）
+        if: always() && steps.broadcast.outcome == 'skipped'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '6'
+          STEP_NAME: '生成广播'
+          STEP_STATUS: 'skip'
+          STEP_DETAIL: '非 SYSLOG 类型或上游步骤未成功，跳过广播生成'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 6/8 · 生成广播（失败）
+        if: always() && steps.broadcast.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '6'
+          STEP_NAME: '生成广播'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: '广播生成或推送失败'
+        run: node scripts/pipeline-reporter.js
+
       - name: 📧 Send email to developer
+        id: email
         env:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
@@ -270,6 +377,28 @@ jobs:
           });
           "
 
+      - name: 📋 步骤 7/8 · 邮件通知（成功）
+        if: always() && steps.email.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '7'
+          STEP_NAME: '邮件通知'
+          STEP_STATUS: 'ok'
+          STEP_DETAIL: '邮件通知步骤已执行'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 7/8 · 邮件通知（失败）
+        if: always() && steps.email.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '7'
+          STEP_NAME: '邮件通知'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: '邮件发送失败，请检查 Secrets: SMTP_USER / SMTP_PASS'
+        run: node scripts/pipeline-reporter.js
+
       - name: 💬 Reply to Issue
         uses: actions/github-script@v7
         with:
@@ -280,7 +409,6 @@ jobs:
             const email = '${{ steps.parse.outputs.email }}';
             const modulesUploaded = '${{ steps.verify.outputs.modules_uploaded }}' === 'true';
             const moduleCount = '${{ steps.verify.outputs.module_count }}' || '0';
-            const progressCommentId = '${{ steps.progress.outputs.comment_id }}';
 
             const typeLabel = type === 'syslog' ? 'SYSLOG 闭环处理' : '问题解答';
             const maskedEmail = email.length > 4
@@ -290,37 +418,8 @@ jobs:
               ? 'ℹ️ 未检测到模块引用'
               : (modulesUploaded ? '✅ 全部已上传' : '⚠️ 部分模块未上传');
 
-            // Update progress comment to show all completed
-            if (progressCommentId && !isNaN(Number(progressCommentId))) {
-              try {
-                const progressBody = [
-                  '## ⚙️ SYSLOG 管道运行完成 ✅',
-                  '',
-                  '| 阶段 | 状态 | 说明 |',
-                  '|------|------|------|',
-                  '| ① 接收提交 | ✅ 已完成 | 系统已收到 |',
-                  '| ② 解析内容 | ✅ 已完成 | 广播编号: `' + broadcastId + '` |',
-                  '| ③ 模块验证 | ✅ 已完成 | ' + moduleStatus + ' |',
-                  '| ④ 唤醒核心大脑 | ✅ 已完成 | 铸渊核心大脑已处理 |',
-                  '| ⑤ 创建 Notion 工单 | ✅ 已完成 | 霜砚工单已推送 |',
-                  '| ⑥ 生成广播 | ✅ 已完成 | 新广播已生成 |',
-                  '| ⑦ 邮件通知 | ✅ 已完成 | 已发送至 `' + maskedEmail + '` |',
-                  '| ⑧ 闭环确认 | ✅ 已完成 | 见下方最终结果 |',
-                ].join('\n');
-
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: Number(progressCommentId),
-                  body: progressBody
-                });
-              } catch (e) {
-                console.log('⚠️ 更新成功进度评论失败: ' + e.message);
-              }
-            }
-
             const body = [
-              '## ✅ 已处理 · ' + typeLabel,
+              '## 🎉 闭环处理完成 · ' + typeLabel,
               '',
               '| 项目 | 内容 |',
               '|------|------|',
@@ -364,40 +463,14 @@ jobs:
             const number = context.payload.issue?.number;
             if (!number) return;
 
-            const progressCommentId = '${{ steps.progress.outputs.comment_id }}';
             const actionsUrl = 'https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions';
-
-            // Update progress comment to reflect failure
-            if (progressCommentId && !isNaN(Number(progressCommentId))) {
-              try {
-                const progressBody = [
-                  '## ⚙️ SYSLOG 管道运行异常 ❌',
-                  '',
-                  '| 阶段 | 状态 | 说明 |',
-                  '|------|------|------|',
-                  '| ① 接收提交 | ✅ 已完成 | 系统已收到 |',
-                  '| ② ~ ⑧ | ❌ 异常 | 管道处理过程中出错 |',
-                  '',
-                  '> 请检查提交格式或查看 [Actions 日志](' + actionsUrl + ')',
-                ].join('\n');
-
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: Number(progressCommentId),
-                  body: progressBody
-                });
-              } catch (e) {
-                console.log('⚠️ 更新失败进度评论失败: ' + e.message);
-              }
-            }
 
             try {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: number,
-                body: '❌ **处理失败** · 请检查提交格式是否正确，或联系管理员。\n\n> 错误详情请查看 [Actions 日志](' + actionsUrl + ')。\n>\n> *—— 铸渊（ICE-GL-ZY001）*'
+                body: '## ⚠️ 闭环处理异常\n\n❌ **处理失败** · 请检查提交格式是否正确，或联系管理员。\n\n> 部分步骤异常，已记录日志。冰朔会在下次巡检时处理。\n> 错误详情请查看 [Actions 日志](' + actionsUrl + ')。\n>\n> *—— 铸渊（ICE-GL-ZY001）*'
               });
             } catch (err) {
               console.log('⚠️ 失败告警回复失败: ' + err.message);

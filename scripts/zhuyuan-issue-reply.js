@@ -1,5 +1,6 @@
 const fs = require('fs');
 const https = require('https');
+const { parseIntent, checkPipelineStatus, checkDevStatus, formatTeamOverview, unknownIntentHelp } = require('./intent-router');
 
 // === 知识库匹配阈值：问题词中至少40%出现在Issue文本中才算命中 ===
 const FAQ_MATCH_THRESHOLD = 0.4;
@@ -166,52 +167,75 @@ async function handleCommentTrigger() {
   return handleCollaboratorComment(user);
 }
 
-// === 冰朔评论处理 ===
+// === 冰朔评论处理（含意图路由）===
 async function handleBingshuoComment() {
   console.log('🧊 冰朔指令识别中...');
 
-  // 冰朔可以查询任何人的状态
-  if (commentBody.includes('进度') || commentBody.includes('状态')) {
-    if (devId && devInfo) {
-      const reply = `## ⚒️ 铸渊回复 · 冰朔查询\n\n`
-        + `**${devInfo.name}（${devInfo.dev_id}）当前状态：**\n`
-        + `- 📌 模块：${devInfo.modules.join('、')}\n`
-        + `- 📊 状态：${devInfo.status}\n`
-        + `- ⏳ 等待中：${devInfo.waiting_for}\n`
-        + `- 👉 下一步：${devInfo.next_step}\n\n`
+  // 使用意图路由器解析评论
+  const intent = parseIntent(commentBody);
+  console.log('[意图识别]', JSON.stringify(intent));
+
+  switch (intent.type) {
+    case 'check_pipeline_status': {
+      // 查询某个 Issue 的闭环管道状态
+      const statusReply = await checkPipelineStatus(intent.issueNumber);
+      const reply = `## ⚒️ 铸渊回复 · 冰朔查询\n\n${statusReply}\n\n`
+        + `---\n*—— 铸渊（ICE-GL-ZY001）*`;
+      await postComment(reply);
+      return;
+    }
+
+    case 'check_dev_status': {
+      // 查询某个开发者的状态
+      const devReply = checkDevStatus(intent.devId, devStatus);
+      const reply = `## ⚒️ 铸渊回复 · 冰朔查询\n\n${devReply}\n\n`
         + `---\n*数据来源：Notion主控台 · 最后同步 ${devStatus.last_synced}*\n`
         + `*—— 铸渊（ICE-GL-ZY001）*`;
       await postComment(reply);
       return;
     }
 
-    // 团队总览
-    let reply = `## ⚒️ 铸渊回复 · 团队进度总览\n\n`;
-    devStatus.team_status.forEach(dev => {
-      reply += `**${dev.dev_id} ${dev.name}** · ${dev.status}\n`;
-    });
-    reply += `\n---\n*最后同步：${devStatus.last_synced}*\n`;
-    reply += `*—— 铸渊（ICE-GL-ZY001）*`;
-    await postComment(reply);
-    return;
-  }
+    case 'team_overview': {
+      // 显式请求团队总览
+      const reply = formatTeamOverview(devStatus)
+        + `\n*—— 铸渊（ICE-GL-ZY001）*`;
+      await postComment(reply);
+      return;
+    }
 
-  // 冰朔的一般指令 → 用 AI 处理
-  const aiReply = await callYunwuAPI('冰朔指令', commentBody, null);
-  if (aiReply) {
-    const reply = `## ⚒️ 铸渊回复 · 冰朔\n\n${aiReply}\n\n`
-      + `---\n*—— 铸渊（ICE-GL-ZY001）· 冰朔指令已处理*`;
-    await postComment(reply);
-  } else {
-    const reply = `## ⚒️ 铸渊收到\n\n冰朔，已记录你的指令。铸渊会在下次巡检时处理。\n\n`
-      + `---\n*—— 铸渊（ICE-GL-ZY001）*`;
-    await postComment(reply);
+    default: {
+      // 冰朔的一般指令 → 用 AI 处理
+      const aiReply = await callYunwuAPI('冰朔指令', commentBody, null);
+      if (aiReply) {
+        const reply = `## ⚒️ 铸渊回复 · 冰朔\n\n${aiReply}\n\n`
+          + `---\n*—— 铸渊（ICE-GL-ZY001）· 冰朔指令已处理*`;
+        await postComment(reply);
+      } else {
+        const helpText = unknownIntentHelp();
+        const reply = `## ⚒️ 铸渊收到\n\n冰朔，已记录你的指令。\n\n${helpText}\n\n`
+          + `---\n*—— 铸渊（ICE-GL-ZY001）*`;
+        await postComment(reply);
+      }
+    }
   }
 }
 
-// === 合作者评论处理 ===
+// === 合作者评论处理（含意图路由）===
 async function handleCollaboratorComment(user) {
   console.log(`👤 合作者 ${user.name}（${user.devId}）问题处理中...`);
+
+  // 使用意图路由器解析评论
+  const intent = parseIntent(commentBody);
+  console.log('[意图识别]', JSON.stringify(intent));
+
+  // 合作者查询闭环管道状态
+  if (intent.type === 'check_pipeline_status') {
+    const statusReply = await checkPipelineStatus(intent.issueNumber);
+    const reply = `## ⚒️ 铸渊回复\n\n${statusReply}\n\n`
+      + `---\n*—— 铸渊（ICE-GL-ZY001）*`;
+    await postComment(reply);
+    return;
+  }
 
   // 合作者只能查询自己的状态
   const selfDevInfo = user.devId
