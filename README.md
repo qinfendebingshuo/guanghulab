@@ -53,12 +53,12 @@
 
 <div align="center">
 
-[![提交系统日志](https://img.shields.io/badge/📡_提交系统日志-点这里-blue?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/discussions/new?category=📡+SYSLOG+提交区)
-[![遇到问题](https://img.shields.io/badge/❓_遇到问题-点这里提问-green?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/discussions/new?category=📡+SYSLOG+提交区)
+[![提交系统日志](https://img.shields.io/badge/📡_提交系统日志-点这里-blue?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/issues/new?template=syslog-submit.yml)
+[![遇到问题](https://img.shields.io/badge/❓_遇到问题-点这里提问-green?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/issues/new?template=dev-question.yml)
 
-> 做完了？把日志粘贴进去，填上邮箱，点提交。新广播会发到你邮箱里。
+> 做完了？点蓝色按钮，把日志粘贴进去，填上邮箱，点提交。新广播会发到你邮箱里。
 >
-> 有问题？同一个入口，选「提问」，问题解答也发到你邮箱里。
+> 有问题？点绿色按钮，填写问题描述，铸渊会自动回答你。
 
 </div>
 
