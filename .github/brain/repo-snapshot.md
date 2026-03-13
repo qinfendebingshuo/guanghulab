@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-13 21:38 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-13 22:26 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 40 个 GitHub Actions |
-| 脚本 | 39 个执行脚本 |
+| 工作流 | 41 个 GitHub Actions |
+| 脚本 | 40 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-13 21:38 CST |
+| 快照生成时间 | 2026-03-13 22:26 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 40 项
+**路径**: `.github/workflows` · **数量**: 41 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 39 项
+**路径**: `scripts` · **数量**: 40 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -108,6 +108,7 @@
 | `notion-heartbeat.yml` | Notion Heartbeat Monitor | schedule(*/5 * * * *), manual |
 | `notion-poll.yml` | 铸渊 · Notion 工单轮询 | schedule(*/15 * * * *), manual |
 | `persona-invoke.yml` | Persona Invoke Endpoint | manual |
+| `pm2-server-diagnose.yml` | "🔧 铸渊 · PM2 服务诊断与健康检查" | manual |
 | `process-notion-orders.yml` | Process Notion Work Orders | push, manual |
 | `ps-on-build.yml` | "🌊 Persona Studio · 代码生成" | manual |
 | `ps-on-chat.yml` | "🌊 Persona Studio · 对话处理" | manual |
@@ -163,6 +164,7 @@
 - `scripts/save-collaboration-log.js`
 - `scripts/selfcheck.js`
 - `scripts/send-feishu-alert.js`
+- `scripts/server-diagnose-report.js`
 - `scripts/sync-login-entry.js`
 - `scripts/update-brain.js`
 - `scripts/update-memory.js`

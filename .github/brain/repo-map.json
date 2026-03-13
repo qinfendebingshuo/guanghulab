@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-13T13:38:20.317Z",
+  "generated_at": "2026-03-13T14:26:03.295Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 40,
-    "total_scripts": 39,
+    "total_workflows": 41,
+    "total_scripts": 40,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -304,6 +304,13 @@
           ]
         },
         {
+          "file": "pm2-server-diagnose.yml",
+          "name": "\"🔧 铸渊 · PM2 服务诊断与健康检查\"",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
           "file": "process-notion-orders.yml",
           "name": "Process Notion Work Orders",
           "triggers": [
@@ -471,7 +478,7 @@
           ]
         }
       ],
-      "item_count": 40
+      "item_count": 41
     },
     {
       "zone_id": "SCRIPTS",
@@ -573,6 +580,9 @@
           "file": "send-feishu-alert.js"
         },
         {
+          "file": "server-diagnose-report.js"
+        },
+        {
           "file": "sync-login-entry.js"
         },
         {
@@ -606,7 +616,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 39
+      "item_count": 40
     },
     {
       "zone_id": "SRC",
@@ -1387,6 +1397,9 @@
     "persona-invoke": [
       "WORKFLOWS::persona-invoke.yml"
     ],
+    "pm2-server-diagnose": [
+      "WORKFLOWS::pm2-server-diagnose.yml"
+    ],
     "process-notion-orders": [
       "WORKFLOWS::process-notion-orders.yml"
     ],
@@ -1541,6 +1554,9 @@
     ],
     "send-feishu-alert": [
       "SCRIPTS::send-feishu-alert.js"
+    ],
+    "server-diagnose-report": [
+      "SCRIPTS::server-diagnose-report.js"
     ],
     "update-brain": [
       "SCRIPTS::update-brain.js"
