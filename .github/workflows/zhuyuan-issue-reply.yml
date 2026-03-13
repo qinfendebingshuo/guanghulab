@@ -10,9 +10,13 @@ jobs:
   auto-reply:
     name: 🤖 铸渊回答问题
     runs-on: ubuntu-latest
-    # 仅在 Issue 新建或评论中包含 @铸渊 / 铸渊 时触发
+    # Issue 新建（排除 SYSLOG 类）或评论中包含 @铸渊 / 铸渊 时触发
+    # SYSLOG 类 Issue 由 syslog-issue-pipeline.yml 专门处理
     if: >
-      github.event_name == 'issues' ||
+      (github.event_name == 'issues' &&
+       !contains(toJSON(github.event.issue.labels), 'syslog') &&
+       !contains(github.event.issue.title, 'SYSLOG') &&
+       !contains(github.event.issue.title, '系统日志')) ||
       (github.event_name == 'issue_comment' &&
        contains(github.event.comment.body, '铸渊'))
     permissions:
