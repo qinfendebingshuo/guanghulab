@@ -377,8 +377,8 @@ jobs:
           });
           "
 
-      - name: 📋 步骤 7/8 · 邮件通知
-        if: always() && steps.persona.outcome == 'success'
+      - name: 📋 步骤 7/8 · 邮件通知（成功）
+        if: always() && steps.email.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
@@ -386,6 +386,17 @@ jobs:
           STEP_NAME: '邮件通知'
           STEP_STATUS: 'ok'
           STEP_DETAIL: '邮件通知步骤已执行'
+        run: node scripts/pipeline-reporter.js
+
+      - name: 📋 步骤 7/8 · 邮件通知（失败）
+        if: always() && steps.email.outcome == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          STEP_NUM: '7'
+          STEP_NAME: '邮件通知'
+          STEP_STATUS: 'error'
+          STEP_DETAIL: '邮件发送失败，请检查 Secrets: SMTP_USER / SMTP_PASS'
         run: node scripts/pipeline-reporter.js
 
       - name: 💬 Reply to Issue

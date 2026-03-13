@@ -189,7 +189,7 @@ async function handleBingshuoComment() {
       // 查询某个开发者的状态
       const devReply = checkDevStatus(intent.devId, devStatus);
       const reply = `## ⚒️ 铸渊回复 · 冰朔查询\n\n${devReply}\n\n`
-        + `---\n*数据来源：Notion主控台 · 最后同步 ${devStatus.last_synced || devStatus.last_sync}*\n`
+        + `---\n*数据来源：Notion主控台 · 最后同步 ${devStatus.last_synced}*\n`
         + `*—— 铸渊（ICE-GL-ZY001）*`;
       await postComment(reply);
       return;
@@ -204,21 +204,6 @@ async function handleBingshuoComment() {
     }
 
     default: {
-      // 未识别的意图：尝试 AI 回答，或返回帮助提示
-      // 冰朔可以查询任何人的状态（兼容旧逻辑）
-      if ((commentBody.includes('进度') || commentBody.includes('状态')) && devId && devInfo) {
-        const reply = `## ⚒️ 铸渊回复 · 冰朔查询\n\n`
-          + `**${devInfo.name}（${devInfo.dev_id}）当前状态：**\n`
-          + `- 📌 模块：${devInfo.modules.join('、')}\n`
-          + `- 📊 状态：${devInfo.status}\n`
-          + `- ⏳ 等待中：${devInfo.waiting_for}\n`
-          + `- 👉 下一步：${devInfo.next_step}\n\n`
-          + `---\n*数据来源：Notion主控台 · 最后同步 ${devStatus.last_synced}*\n`
-          + `*—— 铸渊（ICE-GL-ZY001）*`;
-        await postComment(reply);
-        return;
-      }
-
       // 冰朔的一般指令 → 用 AI 处理
       const aiReply = await callYunwuAPI('冰朔指令', commentBody, null);
       if (aiReply) {

@@ -216,7 +216,7 @@ function githubAPI(method, path, data) {
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try { resolve(JSON.parse(responseBody)); }
-          catch { resolve(responseBody); }
+          catch (e) { console.error('⚠️ JSON parse error:', e.message); resolve(responseBody); }
         } else {
           reject(new Error(`GitHub API ${res.statusCode}: ${responseBody.slice(0, 200)}`));
         }
