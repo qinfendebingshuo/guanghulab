@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-13T05:02:51.266Z",
+  "generated_at": "2026-03-13T05:31:21.799Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 36,
+    "total_workflows": 37,
     "total_scripts": 33,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -370,6 +370,13 @@
           ]
         },
         {
+          "file": "syslog-issue-pipeline.yml",
+          "name": "SYSLOG Issue Pipeline",
+          "triggers": [
+            "issues"
+          ]
+        },
+        {
           "file": "syslog-pipeline.yml",
           "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
           "triggers": [
@@ -442,7 +449,7 @@
           ]
         }
       ],
-      "item_count": 36
+      "item_count": 37
     },
     {
       "zone_id": "SCRIPTS",
@@ -1368,6 +1375,9 @@
     ],
     "syslog-auto-pipeline": [
       "WORKFLOWS::syslog-auto-pipeline.yml"
+    ],
+    "syslog-issue-pipeline": [
+      "WORKFLOWS::syslog-issue-pipeline.yml"
     ],
     "syslog-pipeline": [
       "WORKFLOWS::syslog-pipeline.yml"
