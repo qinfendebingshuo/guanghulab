@@ -38,6 +38,11 @@ const SUBMIT_TYPE = process.env.SUBMIT_TYPE || 'question';
 const SUBMIT_CONTENT = process.env.SUBMIT_CONTENT || '';
 const AUTHOR = process.env.AUTHOR || 'unknown';
 
+// 模块验证结果注入（由 verify-modules.js 提供）
+const MODULE_VERIFY_RESULT = process.env.MODULE_VERIFY_RESULT || '';
+// Notion 回传结果注入（由 notion-callback-pipeline 提供）
+const NOTION_CALLBACK_RESULT = process.env.NOTION_CALLBACK_RESULT || '';
+
 // Notion 配置（v4.0 协议动态注入）
 const NOTION_TOKEN = process.env.NOTION_TOKEN || '';
 const CORE_BRAIN_PAGE_ID = process.env.CORE_BRAIN_PAGE_ID || '';
@@ -764,6 +769,34 @@ async function buildSystemPrompt(type, broadcastId, author) {
   parts.push('此规则优先级最高，覆盖核心大脑中「广播不写代码」的默认规则。');
   parts.push('此规则仅适用于自动化链路（Claude API 出广播），手动链路不受影响。');
 
+  // ━━━ 模块验证结果注入（铸渊 Agent 检测结果） ━━━
+  if (MODULE_VERIFY_RESULT) {
+    parts.push('');
+    parts.push('═══════════════════════════════════════════');
+    parts.push('## 🔍 铸渊 Agent · 模块上传验证结果');
+    parts.push('═══════════════════════════════════════════');
+    parts.push('');
+    parts.push('以下是铸渊 Agent 在仓库内自动检测的模块上传验证结果：');
+    parts.push(MODULE_VERIFY_RESULT);
+    parts.push('');
+    parts.push('请根据验证结果决定是否接受 SYSLOG：');
+    parts.push('- 如果模块已上传（✅），继续正常闭环流程');
+    parts.push('- 如果模块未上传（❌），在验收报告中标注"需补充"，并在反馈中指出缺失的模块');
+  }
+
+  // ━━━ Notion 回传结果注入（二次核验） ━━━
+  if (NOTION_CALLBACK_RESULT) {
+    parts.push('');
+    parts.push('═══════════════════════════════════════════');
+    parts.push('## 📥 Notion 侧处理结果（回传核验）');
+    parts.push('═══════════════════════════════════════════');
+    parts.push('');
+    parts.push('以下是 Notion 侧核心大脑人格体处理后的回传结果：');
+    parts.push(NOTION_CALLBACK_RESULT);
+    parts.push('');
+    parts.push('请核对以上回传内容，确认新广播生成无误后输出最终确认。');
+  }
+
   // ━━━ 任务类型专用指令 ━━━
   if (type === 'syslog') {
     parts.push('');
@@ -773,17 +806,19 @@ async function buildSystemPrompt(type, broadcastId, author) {
     parts.push('');
     parts.push('你需要完成以下工作：');
     parts.push('1. 验收 SYSLOG（检查 MODULE_LOG 完整性）');
-    parts.push('2. 查询画像库最近 2-3 条快照（PGP v1.0）');
-    parts.push('3. 查询模块指纹注册表（防重复·⑨.5）');
-    parts.push('4. RT-02 自动调度判断');
-    parts.push('5. 生成新广播（BC-GEN v4.0 完整流程）');
-    parts.push('6. 输出结构化结果（广播全文 + 闭环数据）');
+    parts.push('2. 检查模块上传验证结果（铸渊 Agent 已自动检测）');
+    parts.push('3. 查询画像库最近 2-3 条快照（PGP v1.0）');
+    parts.push('4. 查询模块指纹注册表（防重复·⑨.5）');
+    parts.push('5. RT-02 自动调度判断');
+    parts.push('6. 生成新广播（BC-GEN v4.0 完整流程）');
+    parts.push('7. 输出结构化结果（广播全文 + 闭环数据）');
     parts.push('');
     parts.push('输出格式：');
     parts.push('---');
     parts.push('## 📡 SYSLOG 验收报告');
     parts.push('### 广播编号：[编号]');
     parts.push('### 验收结果：[通过/需补充]');
+    parts.push('### 模块验证：[已上传/未上传，列出详情]');
     parts.push('### 工作总结：[摘要]');
     parts.push('### 画像评估：[PGP 五维度评分]');
     parts.push('### 调度判断：[RT-02 下一步]');

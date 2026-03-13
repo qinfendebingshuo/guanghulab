@@ -2,8 +2,18 @@ name: SYSLOG Auto Pipeline
 # 📡 SYSLOG 自助提交系统 · 全自动闭环
 #
 # 开发者在 GitHub Discussion 提交 SYSLOG 或提问
-# → Actions 自动解析 → 调用 LLM API 唤醒人格体
-# → 写入 Notion 工单 → 发邮件给开发者 → Discussion 回复
+# → Actions 自动解析 → 模块上传验证 → 调用 LLM API 唤醒人格体
+# → 模块闭环测试 → 写入 Notion 工单 → 发邮件给开发者 → Discussion 回复
+#
+# 闭环流程：
+#   ① 开发者提交 SYSLOG → Discussion 触发
+#   ② 铸渊 Agent 解析提交内容
+#   ③ 铸渊 Agent 检测模块是否上传到仓库
+#   ④ 唤醒铸渊核心大脑认知（注入模块验证结果）
+#   ⑤ 核心大脑处理 SYSLOG + 生成广播
+#   ⑥ 铸渊 Agent 推送 Notion 工单（触发 Notion 侧处理）
+#   ⑦ 邮件通知开发者
+#   ⑧ Discussion 回复闭环
 #
 # 依赖 Secrets：
 #   LLM_API_KEY          第三方 LLM 平台密钥（必须）
@@ -96,6 +106,14 @@ jobs:
 
             console.log(`📡 解析完成: 广播=${broadcastId}, 类型=${type}, 邮箱=${email}`);
 
+      - name: 🔍 铸渊 Agent · 模块上传验证
+        id: verify
+        env:
+          SYSLOG_CONTENT: ${{ steps.parse.outputs.content }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          AUTHOR: ${{ steps.parse.outputs.author }}
+        run: node scripts/verify-modules.js
+
       - name: 🧠 Auto-detect and wake up persona
         id: persona
         env:
@@ -105,13 +123,15 @@ jobs:
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
           SUBMIT_CONTENT: ${{ steps.parse.outputs.content }}
           AUTHOR: ${{ steps.parse.outputs.author }}
+          MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
           NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
           PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
         run: node scripts/wake-persona.js
 
-      - name: 📋 Write to Notion ticket
+      - name: 📋 创建标准化 Notion 工单（Phase B1）
+        id: ticket
         if: ${{ secrets.NOTION_API_TOKEN }}
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
@@ -119,70 +139,20 @@ jobs:
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
           PERSONA_RESULT: ${{ steps.persona.outputs.result }}
-        run: |
-          node -e "
-          const https = require('https');
+          MODULE_VERIFY: ${{ steps.verify.outputs.verify_result }}
+          MODULES_UPLOADED: ${{ steps.verify.outputs.modules_uploaded }}
+          DEVELOPER: ${{ steps.parse.outputs.author }}
+          SYSLOG_RAW: ${{ steps.parse.outputs.content }}
+        run: node scripts/create-standardized-ticket.js
 
-          const token = process.env.NOTION_TOKEN;
-          const dbId = process.env.NOTION_TICKET_DB_ID;
-          const broadcastId = process.env.BROADCAST_ID || 'UNKNOWN';
-          const type = process.env.SUBMIT_TYPE || 'syslog';
-          const result = process.env.PERSONA_RESULT || '(no result)';
-
-          if (!token || !dbId) {
-            console.log('⚠️ Notion credentials not configured, skipping ticket creation');
-            process.exit(0);
-          }
-
-          const typeLabel = type === 'syslog' ? 'SYSLOG闭环' : '提问解答';
-          const title = '[自动] ' + broadcastId + ' · ' + typeLabel;
-
-          const body = JSON.stringify({
-            parent: { database_id: dbId },
-            properties: {
-              '标题': { title: [{ type: 'text', text: { content: title.slice(0, 120) } }] },
-              '操作类型': { select: { name: '其他' } },
-              '提交者': { rich_text: [{ type: 'text', text: { content: '自动管道' } }] },
-              '状态': { select: { name: '已完成' } },
-              '优先级': { select: { name: 'P1' } }
-            },
-            children: [{
-              object: 'block',
-              type: 'paragraph',
-              paragraph: {
-                rich_text: [{ type: 'text', text: { content: result.slice(0, 2000) } }]
-              }
-            }]
-          });
-
-          const opts = {
-            hostname: 'api.notion.com',
-            port: 443,
-            path: '/v1/pages',
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer ' + token,
-              'Content-Type': 'application/json',
-              'Notion-Version': '2022-06-28',
-              'Content-Length': Buffer.byteLength(body)
-            }
-          };
-
-          const req = https.request(opts, (res) => {
-            let data = '';
-            res.on('data', (c) => data += c);
-            res.on('end', () => {
-              if (res.statusCode >= 200 && res.statusCode < 300) {
-                console.log('✅ Notion 工单已创建');
-              } else {
-                console.log('⚠️ Notion 工单创建失败: ' + res.statusCode + ' ' + data);
-              }
-            });
-          });
-          req.on('error', (e) => console.log('⚠️ Notion 请求失败: ' + e.message));
-          req.write(body);
-          req.end();
-          "
+      - name: 📡 推送广播到 GitHub（Phase B4）
+        if: steps.persona.outcome == 'success' && steps.parse.outputs.type == 'syslog'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          DEVELOPER_NAME: ${{ steps.parse.outputs.author }}
+          BROADCAST_CONTENT: ${{ steps.persona.outputs.result }}
+        run: node scripts/push-broadcast-to-github.js
 
       - name: 📧 Send email to developer
         env:
@@ -266,11 +236,16 @@ jobs:
             const type = '${{ steps.parse.outputs.type }}';
             const broadcastId = '${{ steps.parse.outputs.broadcast_id }}';
             const email = '${{ steps.parse.outputs.email }}';
+            const modulesUploaded = '${{ steps.verify.outputs.modules_uploaded }}' === 'true';
+            const moduleCount = '${{ steps.verify.outputs.module_count }}' || '0';
 
             const typeLabel = type === 'syslog' ? 'SYSLOG 闭环处理' : '问题解答';
             const maskedEmail = email.length > 4
               ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
               : '***';
+            const moduleStatus = moduleCount === '0'
+              ? 'ℹ️ 未检测到模块引用'
+              : (modulesUploaded ? '✅ 全部已上传' : '⚠️ 部分模块未上传');
 
             const body = [
               '✅ **已处理** · ' + typeLabel,
@@ -278,13 +253,15 @@ jobs:
               '| 项目 | 内容 |',
               '|------|------|',
               '| 📡 广播编号 | `' + broadcastId + '` |',
+              '| 🔍 模块验证 | ' + moduleStatus + ' |',
               '| 📧 结果发送至 | `' + maskedEmail + '` |',
               '| 🤖 处理人格体 | 铸渊 |',
               '| ⏰ 处理时间 | ' + new Date().toISOString() + ' |',
               '',
-              '> 结果已发送到你的邮箱，请查收。',
+              '> 铸渊核心大脑已完成 SYSLOG 验收 + 模块检测 + 广播生成。',
+              '> 结果已发送到你的邮箱，Notion 侧工单已创建。',
               '>',
-              '> 如未收到，请检查垃圾箱或重新提交。'
+              '> 如未收到邮件，请检查垃圾箱或重新提交。'
             ].join('\n');
 
             // Use GraphQL to add discussion comment
