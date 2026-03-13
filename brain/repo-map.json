@@ -1,0 +1,294 @@
+{
+  "version": "4.0",
+  "generated_at": "2026-03-14T01:00:00+08:00",
+  "generated_by": "scripts/generate-communication-map.js",
+  "description": "仓库目录结构地图 · 所有一级和二级目录及用途",
+
+  "directories": {
+    ".github": {
+      "description": "GitHub 配置与自动化",
+      "subdirectories": {
+        "workflows": "GitHub Actions 工作流定义（41 个）",
+        "brain": "铸渊大脑核心文件（路由映射、记忆、协议）",
+        "persona-brain": "人格大脑（身份、知识库、开发者状态）",
+        "ISSUE_TEMPLATE": "Issue 模板",
+        "agents": "Agent 配置"
+      }
+    },
+    "brain": {
+      "description": "执行层系统导航（v4.0 数字地球协议）",
+      "subdirectories": {}
+    },
+    "src": {
+      "description": "HLI 接口源码（HoloLake Interface）",
+      "subdirectories": {
+        "routes": "HLI 路由定义（auth/brain/registry）",
+        "middleware": "中间件（鉴权等）",
+        "schemas": "HLI Schema 定义"
+      }
+    },
+    "scripts": {
+      "description": "执行脚本库（41 个自动化脚本）",
+      "subdirectories": {
+        "utils": "工具函数（dev-suffix-map 等）"
+      }
+    },
+    "backend": {
+      "description": "Express 后端 API（端口 3000）",
+      "subdirectories": {
+        "routes": "后端路由（notion/feishu/router/coldstart/developers）",
+        "tools": "后端工具",
+        "data": "后端数据"
+      }
+    },
+    "backend-integration": {
+      "description": "AI Chat API 代理（端口 3721）+ Nginx 配置",
+      "subdirectories": {}
+    },
+    "persona-studio": {
+      "description": "Persona Studio 工作台（端口 3002）",
+      "subdirectories": {
+        "backend": "Persona Studio 后端",
+        "frontend": "Persona Studio 前端",
+        "workspace": "工作空间"
+      }
+    },
+    "persona-brain-db": {
+      "description": "人格大脑数据库（认知层执行投影）",
+      "subdirectories": {
+        "brain": "大脑核心数据",
+        "personas": "人格体数据",
+        "schemas": "数据库 Schema",
+        "scripts": "数据库脚本"
+      }
+    },
+    "persona-telemetry": {
+      "description": "人格遥测系统",
+      "subdirectories": {
+        "dashboard": "遥测仪表盘",
+        "collectors": "数据采集器"
+      }
+    },
+    "persona-selector": {
+      "description": "人格选择器",
+      "subdirectories": {}
+    },
+    "dev-nodes": {
+      "description": "开发者节点（8 位开发者的配置/状态/广播收件箱）",
+      "subdirectories": {
+        "DEV-001": "页页",
+        "DEV-002": "肥猫",
+        "DEV-003": "燕樊",
+        "DEV-004": "之之",
+        "DEV-005": "小草莓",
+        "DEV-009": "花尔",
+        "DEV-010": "桔子",
+        "DEV-011": "匆匆那年"
+      }
+    },
+    "broadcasts-outbox": {
+      "description": "广播发件箱（铸渊向各开发者发出的广播）",
+      "subdirectories": {}
+    },
+    "broadcasts": {
+      "description": "广播存档",
+      "subdirectories": {}
+    },
+    "signal-log": {
+      "description": "信号日志库（ESP 邮件信号收发日志）",
+      "subdirectories": {
+        "entries": "日志条目"
+      }
+    },
+    "notion-push": {
+      "description": "Notion 推送队列",
+      "subdirectories": {
+        "pending": "待处理信号",
+        "processed": "已处理归档"
+      }
+    },
+    "syslog-inbox": {
+      "description": "系统日志收件箱（待处理 SYSLOG）",
+      "subdirectories": {}
+    },
+    "syslog-processed": {
+      "description": "已处理的系统日志",
+      "subdirectories": {}
+    },
+    "syslog": {
+      "description": "系统日志模块",
+      "subdirectories": {}
+    },
+    "modules": {
+      "description": "功能模块集合",
+      "subdirectories": {
+        "palace-game": "宫殿游戏模块",
+        "persona-ai-helper": "人格 AI 助手",
+        "persona-prompt-builder": "人格 Prompt 构建器"
+      }
+    },
+    "m01-login": {
+      "description": "M01 登录模块",
+      "subdirectories": {}
+    },
+    "m03-personality": {
+      "description": "M03 人格模块",
+      "subdirectories": {}
+    },
+    "m05-user-center": {
+      "description": "M05 用户中心模块",
+      "subdirectories": {}
+    },
+    "m06-ticket": {
+      "description": "M06 工单模块",
+      "subdirectories": {}
+    },
+    "m07-dialogue-ui": {
+      "description": "M07 对话 UI 模块",
+      "subdirectories": {}
+    },
+    "m10-cloud": {
+      "description": "M10 云存储模块",
+      "subdirectories": {}
+    },
+    "m11-module": {
+      "description": "M11 模块管理",
+      "subdirectories": {}
+    },
+    "m12-kanban": {
+      "description": "M12 看板模块",
+      "subdirectories": {}
+    },
+    "m15-cloud-drive": {
+      "description": "M15 云盘模块",
+      "subdirectories": {}
+    },
+    "m18-health-check": {
+      "description": "M18 健康检查模块",
+      "subdirectories": {}
+    },
+    "docs": {
+      "description": "铸渊助手聊天界面（GitHub Pages 部署）",
+      "subdirectories": {}
+    },
+    "tests": {
+      "description": "测试区（HLI 契约测试 + 冒烟测试）",
+      "subdirectories": {
+        "contract": "契约测试",
+        "smoke": "冒烟测试"
+      }
+    },
+    "status-board": {
+      "description": "状态看板（WebSocket 推送 · 端口 8080）",
+      "subdirectories": {
+        "public": "前端资源"
+      }
+    },
+    "app": {
+      "description": "Next.js 应用层",
+      "subdirectories": {
+        "api": "Next.js API 路由"
+      }
+    },
+    "frontend": {
+      "description": "前端入口",
+      "subdirectories": {}
+    },
+    "public": {
+      "description": "公共静态资源",
+      "subdirectories": {}
+    },
+    "dashboard": {
+      "description": "仪表盘模块",
+      "subdirectories": {}
+    },
+    "homepage": {
+      "description": "首页模块",
+      "subdirectories": {}
+    },
+    "portal": {
+      "description": "门户模块",
+      "subdirectories": {}
+    },
+    "guanghulab-main": {
+      "description": "光湖主工程（旧版结构）",
+      "subdirectories": {}
+    },
+    "dingtalk-bot": {
+      "description": "钉钉机器人模块",
+      "subdirectories": {}
+    },
+    "chat-bubble": {
+      "description": "聊天气泡组件",
+      "subdirectories": {}
+    },
+    "cloud-drive": {
+      "description": "云盘模块（旧版）",
+      "subdirectories": {}
+    },
+    "coldstart": {
+      "description": "冷启动模块",
+      "subdirectories": {}
+    },
+    "collaboration-logs": {
+      "description": "协作日志",
+      "subdirectories": {}
+    },
+    "cost-control": {
+      "description": "成本控制模块",
+      "subdirectories": {}
+    },
+    "dynamic-comic-studio": {
+      "description": "动态漫画工作室",
+      "subdirectories": {
+        "backend": "后端",
+        "frontend": "前端"
+      }
+    },
+    "help-center": {
+      "description": "帮助中心",
+      "subdirectories": {}
+    },
+    "multi-persona": {
+      "description": "多人格管理模块",
+      "subdirectories": {}
+    },
+    "notification": {
+      "description": "通知模块",
+      "subdirectories": {}
+    },
+    "reports": {
+      "description": "报告与巡检记录",
+      "subdirectories": {}
+    },
+    "search-filter": {
+      "description": "搜索过滤模块",
+      "subdirectories": {
+        "backend": "后端",
+        "frontend": "前端"
+      }
+    },
+    "settings": {
+      "description": "设置模块",
+      "subdirectories": {}
+    },
+    "style-system": {
+      "description": "样式系统（光湖设计语言）",
+      "subdirectories": {
+        "tokens": "设计 Token"
+      }
+    },
+    "ticket-system": {
+      "description": "工单系统",
+      "subdirectories": {}
+    },
+    "user-center": {
+      "description": "用户中心（旧版）",
+      "subdirectories": {}
+    },
+    "utils": {
+      "description": "通用工具函数",
+      "subdirectories": {}
+    }
+  }
+}
