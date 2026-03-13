@@ -24,6 +24,10 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 
+// ── 常量 ──
+// 传入 LLM 的对话文本最大字符数（防止超出模型上下文窗口）
+const MAX_CONVERSATION_CHARS = 4000;
+
 // ── 核心大脑模块 ──
 const memoryManager = require('./memory-manager');
 const personaEngine = require('./persona-engine');
@@ -328,7 +332,7 @@ async function analyzeIntentWithLLM(brainContext, conversation, apiBase, apiKey,
       model: model,
       messages: [
         { role: 'system', content: systemParts.join('\n') },
-        { role: 'user', content: '以下是和开发者的完整对话，请分析意图并生成开发计划：\n\n' + conversationText.substring(0, 4000) }
+        { role: 'user', content: '以下是和开发者的完整对话，请分析意图并生成开发计划：\n\n' + conversationText.substring(0, MAX_CONVERSATION_CHARS) }
       ],
       maxTokens: 2000,
       temperature: 0.2,
@@ -442,7 +446,8 @@ async function agentExecute(developmentPlan, devId, apiBase, apiKey, model, broa
   var entries = Object.entries(files);
   for (var j = 0; j < entries.length; j++) {
     var safeName = path.basename(entries[j][0]);
-    if (!safeName || safeName.startsWith('.')) continue;
+    // 安全检查：防止路径遍历和隐藏文件
+    if (!safeName || safeName.startsWith('.') || /[/\\]/.test(entries[j][0])) continue;
     fs.writeFileSync(path.join(projectDir, safeName), entries[j][1], 'utf-8');
     fileList.push(safeName);
   }

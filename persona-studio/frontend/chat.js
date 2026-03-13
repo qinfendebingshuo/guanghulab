@@ -664,9 +664,12 @@ async function confirmBuild() {
     });
 
     if (!buildRes.ok) {
-      var errData = {};
-      try { errData = await buildRes.json(); } catch (_e) { /* ignore */ }
-      appendMessage('system', '⚠️ 铸渊代理启动失败: ' + (errData.message || 'HTTP ' + buildRes.status));
+      var errMsg = 'HTTP ' + buildRes.status + ' ' + buildRes.statusText;
+      try {
+        var errData = await buildRes.json();
+        if (errData.message) errMsg = errData.message;
+      } catch (_e) { /* use status text fallback */ }
+      appendMessage('system', '⚠️ 铸渊代理启动失败: ' + errMsg);
       updatePreviewStatus('error', '启动失败');
     }
   } catch (_err) {
