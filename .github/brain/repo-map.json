@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-13T18:50:18.312Z",
+  "generated_at": "2026-03-13T19:22:39.519Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
     "total_workflows": 41,
-    "total_scripts": 40,
+    "total_scripts": 42,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -532,6 +532,9 @@
           "file": "generate-session-summary.js"
         },
         {
+          "file": "intent-router.js"
+        },
+        {
           "file": "invoke-persona.js"
         },
         {
@@ -548,6 +551,9 @@
         },
         {
           "file": "notion-signal-bridge.js"
+        },
+        {
+          "file": "pipeline-reporter.js"
         },
         {
           "file": "process-broadcasts.js"
@@ -616,7 +622,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 40
+      "item_count": 42
     },
     {
       "zone_id": "SRC",
@@ -1519,6 +1525,9 @@
     "generate-session-summary": [
       "SCRIPTS::generate-session-summary.js"
     ],
+    "intent-router": [
+      "SCRIPTS::intent-router.js"
+    ],
     "invoke-persona": [
       "SCRIPTS::invoke-persona.js"
     ],
@@ -1530,6 +1539,9 @@
     ],
     "notion-signal-bridge": [
       "SCRIPTS::notion-signal-bridge.js"
+    ],
+    "pipeline-reporter": [
+      "SCRIPTS::pipeline-reporter.js"
     ],
     "process-broadcasts": [
       "SCRIPTS::process-broadcasts.js"
