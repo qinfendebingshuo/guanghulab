@@ -112,7 +112,7 @@ jobs:
         run: node scripts/wake-persona.js
 
       - name: 📋 Write to Notion ticket
-        if: ${{ secrets.NOTION_API_TOKEN != '' }}
+        if: ${{ secrets.NOTION_API_TOKEN }}
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
