@@ -49,6 +49,21 @@
 
 ---
 
+## 🚀 开发者入口
+
+<div align="center">
+
+[![提交系统日志](https://img.shields.io/badge/📡_提交系统日志-点这里-blue?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/issues/new?template=syslog-submit.yml)
+[![遇到问题](https://img.shields.io/badge/❓_遇到问题-点这里提问-green?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/issues/new?template=dev-question.yml)
+
+> 做完了？点蓝色按钮，把日志粘贴进去，填上邮箱，点提交。新广播会发到你邮箱里。
+>
+> 有问题？点绿色按钮，填写问题描述，铸渊会自动回答你。
+
+</div>
+
+---
+
 ## 📖 系统简介
 
 **光湖（HoloLake）** 是一个基于人格语言操作系统的智能协作平台，采用壳-核分离设计：
@@ -77,29 +92,31 @@
 <!-- BINGSHUO_BULLETIN_START -->
 | 时间 | 检查项 | 状态 |
 |------|--------|------|
-| 03-13 09:58 | ✅ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 成功 | zhizhi200271 |
-| 03-13 09:57 | ✅ 📢 更新系统公告区 · 成功 | zhizhi200271 |
-| 03-13 09:56 | ⏹️ 📢 更新系统公告区 · cancelled | zhizhi200271 |
-| 03-13 09:56 | 🔧 系统更新: `.github/` | 铸渊 (ZhùYuān) |
-| 03-13 09:56 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | zhizhi200271 |
-| 03-13 09:56 | 🔧 系统更新: `docs/` | 铸渊 (ZhùYuān) |
-| 03-13 08:57 | ✅ 📢 更新系统公告区 · 成功 | 冰朔 |
-| 03-13 08:56 | ✅ 铸渊 · 每日自检 · 成功 | 冰朔 |
-| 03-13 08:01 | ✅ Generate Session Summary for Notion · 成功 | 冰朔 |
-| 03-13 07:59 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
-| 03-13 07:34 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
-| 03-13 06:46 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
-| 03-13 06:01 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
-| 03-13 05:40 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
-| 03-13 04:53 | ✅ 铸渊 · Notion 工单轮询 · 成功 | 冰朔 |
+| 03-13 14:53 | ✅ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 成功 | 冰朔 |
+| 03-13 14:52 | ❌ 📢 更新系统公告区 · 失败 | 冰朔 |
+| 03-13 14:52 | 🔧 系统更新: `.github/` | 铸渊 (ZhùYuān) |
+| 03-13 14:52 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | 冰朔 |
+| 03-13 14:52 | ⏹️ 📢 更新系统公告区 · cancelled | WENZHUOXI |
+| 03-13 14:51 | ✅ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 成功 | WENZHUOXI |
+| 03-13 14:50 | ✅ 📢 更新系统公告区 · 成功 | WENZHUOXI |
+| 03-13 14:50 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | WENZHUOXI |
+| 03-13 14:37 | 🔧 系统更新: `scripts/` | 铸渊 (Copilot) |
+| 03-13 08:00 | ✅ 铸渊 PSP 巡检通过 · 全部检查项 ✅ | 铸渊PSP巡检 |
+| 03-12 16:55 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-12 08:00 | ✅ 铸渊 PSP 巡检通过 · 全部检查项 ✅ | 铸渊PSP巡检 |
+| 03-11 16:55 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-10 16:56 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
+| 03-10 08:00 | 🧠 核心大脑升级 v3.0 · 壳-核分离架构 · 前端壳(UI/IO) + 后端脑(prompt/routing/memory/context) · BRAIN域4接口上线 · 覆盖率 7/21 (33.3%) | 铸渊（冰朔指令） |
 <!-- BINGSHUO_BULLETIN_END -->
 
 ### 🤖 铸渊自动提醒
 
 <!-- BINGSHUO_ALERT_START -->
-> 🟢 **今日无需冰朔手动干预** · 系统一切正常
+> 🔴 **需要冰朔手动干预！**
 >
-> 🗓️ 2026-03-13 · 铸渊自动检测
+> - ❌ 📢 更新系统公告区 · 失败
+>
+> 🗓️ 2026-03-13 · 铸渊已发送邮件提醒
 <!-- BINGSHUO_ALERT_END -->
 
 ---
@@ -113,8 +130,9 @@
 <!-- COLLABORATOR_BULLETIN_START -->
 | 时间 | 合作者 | 模块 | 状态 |
 |------|--------|------|------|
-| 03-13 09:56 | zhizhi200271 | `—/` | ✅ 上传成功 |
-| 03-13 09:56 | 🤖 之之 | `dingtalk-bot/` | 📦 上传成功 |
+| 03-13 14:52 | 冰朔 | `—/` | ✅ 上传成功 |
+| 03-13 14:52 | Copilot | `—/` | ✅ 上传成功 |
+| 03-13 14:50 | WENZHUOXI | `—/` | ✅ 上传成功 |
 <!-- COLLABORATOR_BULLETIN_END -->
 
 ### 🤖 铸渊自动提醒 · 合作者

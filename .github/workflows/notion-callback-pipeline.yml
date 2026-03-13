@@ -1,0 +1,317 @@
+name: Notion Callback Pipeline
+# 📥 Notion → GitHub 回传闭环管道
+#
+# 当 Notion 侧核心大脑人格体处理完 SYSLOG 工单后，
+# 通过 repository_dispatch 回传处理结果到 GitHub。
+# 铸渊 Agent 接收回传，重新唤醒核心大脑认知进行二次核验，
+# 确认新广播生成无误后，自动发送邮件通知开发者。
+#
+# 触发方式：
+#   Notion 侧 Agent 调用 GitHub API 发送 repository_dispatch 事件
+#   event_type: notion-syslog-callback
+#   client_payload: {
+#     broadcast_id: "BC-XXX-XXX-XX",
+#     dev_email: "developer@email.com",
+#     notion_result: "Notion 侧处理结果文本",
+#     ticket_id: "Notion 工单 ID",
+#     status: "approved" | "needs_revision"
+#   }
+#
+# 闭环流程：
+#   ① Notion 侧处理完成 → repository_dispatch 回传
+#   ② 铸渊 Agent 接收并解析回传数据
+#   ③ 重新唤醒铸渊核心大脑认知（二次核验）
+#   ④ 核心大脑核对广播生成无误
+#   ⑤ 铸渊 Agent 发送邮件通知开发者
+#   ⑥ 闭环结束
+#
+# 依赖 Secrets：
+#   LLM_API_KEY          第三方 LLM 平台密钥
+#   LLM_BASE_URL         第三方 LLM 平台 API 地址
+#   NOTION_API_TOKEN     Notion API token
+#   CORE_BRAIN_PAGE_ID   曜冥核心大脑 v4.0 页面 ID
+#   PORTRAIT_DB_ID       开发者动态画像库数据库 ID
+#   FINGERPRINT_DB_ID    模块指纹注册表数据库 ID
+#   SMTP_USER            QQ 邮箱地址
+#   SMTP_PASS            QQ 邮箱 SMTP 授权码
+
+on:
+  repository_dispatch:
+    types: [notion-syslog-callback]
+
+jobs:
+  verify-and-notify:
+    name: 📥 Notion 回传 · 二次核验 · 邮件通知
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: 📥 Parse Notion callback
+        id: callback
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const payload = context.payload.client_payload || {};
+
+            const broadcastId = payload.broadcast_id || '';
+            const devEmail = payload.dev_email || '';
+            const notionResult = payload.notion_result || '';
+            const ticketId = payload.ticket_id || '';
+            const status = payload.status || 'unknown';
+
+            if (!broadcastId) {
+              core.setFailed('❌ 缺少 broadcast_id');
+              return;
+            }
+
+            core.setOutput('broadcast_id', broadcastId);
+            core.setOutput('dev_email', devEmail);
+            core.setOutput('notion_result', notionResult);
+            core.setOutput('ticket_id', ticketId);
+            core.setOutput('status', status);
+
+            console.log(`📥 Notion 回传: 广播=${broadcastId}, 状态=${status}, 工单=${ticketId}`);
+
+      - name: 🔍 铸渊 Agent · 模块二次验证
+        id: verify
+        env:
+          SYSLOG_CONTENT: ${{ steps.callback.outputs.notion_result }}
+          BROADCAST_ID: ${{ steps.callback.outputs.broadcast_id }}
+          AUTHOR: notion-callback
+        run: node scripts/verify-modules.js
+
+      - name: 🧠 二次核验 · 唤醒铸渊核心大脑
+        id: persona
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          BROADCAST_ID: ${{ steps.callback.outputs.broadcast_id }}
+          SUBMIT_TYPE: syslog
+          SUBMIT_CONTENT: ${{ steps.callback.outputs.notion_result }}
+          AUTHOR: notion-callback
+          MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
+          NOTION_CALLBACK_RESULT: ${{ steps.callback.outputs.notion_result }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
+          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+        run: node scripts/wake-persona.js
+
+      - name: 📡 推送广播到 GitHub（Phase B4）
+        if: steps.persona.outcome == 'success' && steps.callback.outputs.status == 'approved'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BROADCAST_ID: ${{ steps.callback.outputs.broadcast_id }}
+          DEVELOPER_NAME: notion-callback
+          BROADCAST_CONTENT: ${{ steps.persona.outputs.result }}
+        run: node scripts/push-broadcast-to-github.js
+
+      - name: 📝 回写 Notion 工单状态
+        if: steps.callback.outputs.ticket_id
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          TICKET_ID: ${{ steps.callback.outputs.ticket_id }}
+          CALLBACK_STATUS: ${{ steps.callback.outputs.status }}
+        run: |
+          node -e "
+          var https = require('https');
+          var token = process.env.NOTION_TOKEN || '';
+          var ticketId = process.env.TICKET_ID || '';
+          var status = process.env.CALLBACK_STATUS || 'unknown';
+
+          if (!token || !ticketId) {
+            console.log('⚠️ 跳过工单状态更新');
+            process.exit(0);
+          }
+
+          var notionStatus = status === 'approved' ? '✅ 已完成' : '⚠️ 异常·等人工介入';
+          var body = JSON.stringify({
+            properties: {
+              '状态': { select: { name: notionStatus } }
+            }
+          });
+
+          var opts = {
+            hostname: 'api.notion.com',
+            port: 443,
+            path: '/v1/pages/' + ticketId,
+            method: 'PATCH',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json',
+              'Notion-Version': '2022-06-28',
+              'Content-Length': Buffer.byteLength(body)
+            }
+          };
+
+          var req = https.request(opts, function(res) {
+            var data = '';
+            res.on('data', function(c) { data += c; });
+            res.on('end', function() {
+              if (res.statusCode >= 200 && res.statusCode < 300) {
+                console.log('✅ 工单状态已更新为 ' + notionStatus);
+              } else {
+                console.log('⚠️ 工单更新失败: ' + res.statusCode);
+              }
+            });
+          });
+          req.on('error', function(e) { console.log('⚠️ ' + e.message); });
+          req.write(body);
+          req.end();
+          "
+
+      - name: 📧 发送最终确认邮件
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ steps.callback.outputs.dev_email }}
+          BROADCAST_ID: ${{ steps.callback.outputs.broadcast_id }}
+          NOTION_STATUS: ${{ steps.callback.outputs.status }}
+          PERSONA_RESULT: ${{ steps.persona.outputs.result }}
+        run: |
+          node -e "
+          const nodemailer = require('nodemailer');
+
+          const user = process.env.SMTP_USER || '';
+          const pass = process.env.SMTP_PASS || '';
+          const to = process.env.EMAIL_TO || '';
+          const broadcastId = process.env.BROADCAST_ID || '';
+          const notionStatus = process.env.NOTION_STATUS || 'unknown';
+          const result = process.env.PERSONA_RESULT || '(处理中)';
+
+          if (!user || !pass) {
+            console.log('⚠️ SMTP not configured, skipping email');
+            process.exit(0);
+          }
+          if (!to) {
+            console.log('⚠️ No recipient email, skipping');
+            process.exit(0);
+          }
+
+          const isApproved = notionStatus === 'approved';
+          const subjectText = isApproved
+            ? '[光湖系统] ' + broadcastId + ' · ✅ 新广播已生成（已核验）'
+            : '[光湖系统] ' + broadcastId + ' · ⚠️ 广播需修订';
+
+          const statusBadge = isApproved
+            ? '<span style=\"background:#22c55e;color:#fff;padding:4px 12px;border-radius:4px;font-weight:bold\">✅ 已核验通过</span>'
+            : '<span style=\"background:#f59e0b;color:#fff;padding:4px 12px;border-radius:4px;font-weight:bold\">⚠️ 需修订</span>';
+
+          const resultHtml = result
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>');
+
+          const html = [
+            '<div style=\"font-family:sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#0f172a;color:#e2e8f0;border-radius:12px\">',
+            '<div style=\"text-align:center;padding:16px 0;border-bottom:1px solid #334155\">',
+            '<h2 style=\"color:#60a5fa;margin:0\">🌊 光湖系统 · Notion 回传核验通知</h2>',
+            '<p style=\"color:#94a3b8;font-size:14px;margin:8px 0 0\">HoloLake · 铸渊核心大脑二次核验完成</p>',
+            '</div>',
+            '<div style=\"padding:20px 0\">',
+            '<p style=\"color:#22d3ee;font-weight:bold\">📡 ' + broadcastId + '</p>',
+            '<p style=\"margin:12px 0\">' + statusBadge + '</p>',
+            '<div style=\"background:#1e293b;padding:16px;border-radius:8px;margin:12px 0;line-height:1.8\">' + resultHtml + '</div>',
+            '</div>',
+            '<div style=\"border-top:1px solid #334155;padding:16px 0;text-align:center\">',
+            '<a href=\"https://github.com/qinfendebingshuo/guanghulab\" style=\"display:inline-block;padding:8px 20px;background:linear-gradient(135deg,#3b82f6,#22d3ee);color:#fff;text-decoration:none;border-radius:6px;font-weight:600\">↩ 回到仓库继续开发</a>',
+            '<p style=\"color:#64748b;font-size:12px;margin:12px 0 0\">🌀 铸渊 · 代码守护人格体 · Notion↔GitHub 闭环确认</p>',
+            '</div>',
+            '</div>'
+          ].join('\n');
+
+          const transporter = nodemailer.createTransport({
+            host: 'smtp.qq.com',
+            port: 465,
+            secure: true,
+            auth: { user, pass }
+          });
+
+          transporter.sendMail({
+            from: '\"光湖系统\" <' + user + '>',
+            to: to,
+            subject: subjectText,
+            html: html
+          }).then((info) => {
+            console.log('✅ 最终确认邮件已发送: ' + info.messageId);
+          }).catch((err) => {
+            console.log('⚠️ 邮件发送失败: ' + err.message);
+          });
+          "
+
+      - name: 📝 更新大脑记忆
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+
+          const memoryPath = path.join('.github', 'brain', 'memory.json');
+          let memory = {};
+          try {
+            memory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+          } catch (_) {
+            memory = { events: [] };
+          }
+          if (!memory.events) memory.events = [];
+
+          const broadcastId = process.env.BROADCAST_ID || 'UNKNOWN';
+          const status = process.env.NOTION_STATUS || 'unknown';
+          const now = new Date().toISOString();
+
+          // 检查是否已存在相同事件（按 broadcast_id 精确匹配 + 同类型 + 同日期）
+          const eventKey = 'Notion 回传核验 · ' + broadcastId;
+          const todayStr = now.slice(0, 10);
+          const existingIdx = memory.events.findIndex(function(e) {
+            return e.type === 'notion_callback' &&
+                   e.broadcast_id === broadcastId &&
+                   e.date === todayStr;
+          });
+
+          const newEvent = {
+            date: todayStr,
+            type: 'notion_callback',
+            broadcast_id: broadcastId,
+            description: eventKey + ' · 状态: ' + status,
+            by: '铸渊Agent·Notion回传管道'
+          };
+
+          if (existingIdx >= 0) {
+            // 同一 broadcast_id 只保留最新的一条
+            memory.events[existingIdx] = newEvent;
+            console.log('ℹ️ 已更新同日同广播事件');
+          } else {
+            memory.events.unshift(newEvent);
+          }
+
+          // 保留最近 20 条事件
+          if (memory.events.length > 20) {
+            memory.events = memory.events.slice(0, 20);
+          }
+
+          fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2) + '\n');
+          console.log('✅ 大脑记忆已更新');
+          "
+        env:
+          BROADCAST_ID: ${{ steps.callback.outputs.broadcast_id }}
+          NOTION_STATUS: ${{ steps.callback.outputs.status }}
+
+      - name: 📤 Commit memory update
+        run: |
+          git config user.name "zhuyuan-agent[bot]"
+          git config user.email "zhuyuan-agent[bot]@users.noreply.github.com"
+          git add .github/brain/memory.json
+          git diff --cached --quiet || git commit -m "🧠 Notion回传核验 · ${{ steps.callback.outputs.broadcast_id }}"
+          git push || echo "⚠️ Push skipped (no changes or conflict)"

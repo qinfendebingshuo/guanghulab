@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光湖实验室 · HoloLake 首页</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Hero 区 -->
+        <header class="hero">
+            <h1 class="hero-title">光湖实验室<span class="hero-subtitle">HoloLake Lab</span></h1>
+            <p class="hero-description">探索未来之域 · 零点原核频道</p>
+            <a href="#" class="hero-btn">进入系统</a>
+        </header>
+        <!-- 公告轮播区（新增） -->
+        <div class="carousel-container">
+            <div class="carousel" id="announcementCarousel">
+                <!-- 轮播内容由 JS 动态生成 -->
+            </div>
+            <button class="carousel-arrow left" id="carouselPrev">←</button>
+            <button class="carousel-arrow right" id="carouselNext">→</button>
+        </div>
+        <!-- 模块导航网格 -->
+        <section class="modules">
+            <h2 class="section-title">核心模块</h2>
+            <div class="grid" id="moduleGrid">
+                <!-- 卡片会由 JavaScript 动态生成 -->
+            </div>
+        </section>
+
+        <!-- 系统状态栏 -->
+        <div class="status-bar">
+            <span>系统状态：</span>
+            <span class="status-dot online"></span> 在线
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2026 光湖实验室 · 零点原核频道</p>
+            <p>版本 HoloLake Era · M23 首页中心</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+name: "📡 提交系统日志 / 提问"
+description: "做完了？提交你的 SYSLOG。有问题？在这里提问。"
+title: "BC-XXX-XXX｜SYSLOG"
+labels: ["syslog", "pending"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📡 SYSLOG 自助提交 / 广播提问
+
+        > 做完了？把日志粘贴进去，填上邮箱，点提交。新广播会发到你邮箱里。
+        >
+        > 有问题？把问题粘贴进去，填上邮箱，点提交。解答会发到你邮箱里。
+
+        **标题格式**：`BC-XXX-XXX｜SYSLOG` 或 `BC-XXX-XXX｜提问`
+
+  - type: input
+    id: broadcast_id
+    attributes:
+      label: "广播编号"
+      description: "写上你当前广播的编号，例如 BC-M22-009-AW"
+      placeholder: "BC-M22-009-AW"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: submit_type
+    attributes:
+      label: "类型"
+      description: "选择提交类型"
+      options:
+        - SYSLOG
+        - 提问
+    validations:
+      required: true
+
+  - type: input
+    id: email
+    attributes:
+      label: "你的邮箱"
+      description: "用于接收新广播或问题解答"
+      placeholder: "your@email.com"
+    validations:
+      required: true
+
+  - type: textarea
+    id: content
+    attributes:
+      label: "内容"
+      description: "粘贴你的 SYSLOG 全文 或 问题描述"
+      placeholder: "在这里粘贴你的 SYSLOG 或问题..."
+    validations:
+      required: true

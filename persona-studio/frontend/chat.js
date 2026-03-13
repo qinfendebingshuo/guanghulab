@@ -640,28 +640,42 @@ async function confirmBuild() {
   if (contact) sessionStorage.setItem('ps_build_contact', contact);
 
   closeEmailModal();
-  appendMessage('system', '🚀 开发任务已提交，完成后会发送到 ' + email);
+  appendMessage('system', '🌀 铸渊代理已启动，完成后会发送到 ' + email);
 
   // 进入分屏模式
   enterDevMode();
 
+  // 先连接 WebSocket（确保在 build 开始前建立连接，避免丢失进度消息）
+  connectPreviewWebSocket();
+
   try {
-    await fetch(API_BASE + '/api/ps/build/start', {
+    var buildRes = await fetch(API_BASE + '/api/ps/build/start', {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         dev_id: DEV_ID,
         email: email,
         contact: contact,
-        conversation: conversationHistory
+        conversation: conversationHistory,
+        api_base: USER_API_BASE,
+        api_key: USER_API_KEY,
+        model: SELECTED_MODEL
       })
     });
-  } catch (_err) {
-    appendMessage('system', '任务提交失败，请稍后再试');
-  }
 
-  // 连接 WebSocket 获取进度更新
-  connectPreviewWebSocket();
+    if (!buildRes.ok) {
+      var errMsg = 'HTTP ' + buildRes.status + ' ' + buildRes.statusText;
+      try {
+        var errData = await buildRes.json();
+        if (errData.message) errMsg = errData.message;
+      } catch (_e) { /* use status text fallback */ }
+      appendMessage('system', '⚠️ 铸渊代理启动失败: ' + errMsg);
+      updatePreviewStatus('error', '启动失败');
+    }
+  } catch (_err) {
+    appendMessage('system', '⚠️ 任务提交失败，请检查网络连接后再试');
+    updatePreviewStatus('error', '网络错误');
+  }
 }
 
 /* ---- Dev Mode: Split Screen ---- */
