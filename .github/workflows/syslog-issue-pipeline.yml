@@ -291,7 +291,7 @@ jobs:
               : (modulesUploaded ? '✅ 全部已上传' : '⚠️ 部分模块未上传');
 
             // Update progress comment to show all completed
-            if (progressCommentId) {
+            if (progressCommentId && !isNaN(Number(progressCommentId))) {
               try {
                 const progressBody = [
                   '## ⚙️ SYSLOG 管道运行完成 ✅',
@@ -315,7 +315,7 @@ jobs:
                   body: progressBody
                 });
               } catch (e) {
-                console.log('⚠️ 更新进度评论失败: ' + e.message);
+                console.log('⚠️ 更新成功进度评论失败: ' + e.message);
               }
             }
 
@@ -368,7 +368,7 @@ jobs:
             const actionsUrl = 'https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions';
 
             // Update progress comment to reflect failure
-            if (progressCommentId) {
+            if (progressCommentId && !isNaN(Number(progressCommentId))) {
               try {
                 const progressBody = [
                   '## ⚙️ SYSLOG 管道运行异常 ❌',
@@ -388,7 +388,7 @@ jobs:
                   body: progressBody
                 });
               } catch (e) {
-                console.log('⚠️ 更新进度评论失败: ' + e.message);
+                console.log('⚠️ 更新失败进度评论失败: ' + e.message);
               }
             }
 
