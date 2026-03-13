@@ -1,6 +1,6 @@
 # HoloLake Era 操作系统部署模块
 
-> 📋 **自动生成文档** · 铸渊（ZhùYuān）维护 · 最后更新：2026-03-12 13:22 UTC
+> 📋 **自动生成文档** · 铸渊（ZhùYuān）维护 · 最后更新：2026-03-13 01:56 UTC
 > 
 > 本文档由 GitHub Actions 自动触发生成，每当合作者上传/更新模块时自动刷新。
 > 按合作者编号（DEV-XXX）整理所有已上传模块。
@@ -183,6 +183,7 @@ m15-cloud-drive/
 
 ```
 dingtalk-bot/
+  .gitignore
   README.md
   broadcast-generator.js
   config.json
@@ -191,8 +192,11 @@ dingtalk-bot/
   dingtalk/
   git-helper.js
   index.js
+  index.js.backup
   knowledge-base/
   loop/
+  notion-test-nossl.js
+  notion-test.js
   package-lock.json
   package.json
   pca/
@@ -355,7 +359,7 @@ m11-module/
 | 已上传模块数 | 12 |
 | 待上传模块数 | 0 |
 | 上传完成率 | 100% |
-| 文档更新时间 | 2026-03-12 13:22 UTC |
+| 文档更新时间 | 2026-03-13 01:56 UTC |
 
 ---
 
