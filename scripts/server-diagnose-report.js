@@ -24,6 +24,9 @@ const HEALTH_REPORT = process.env.HEALTH_REPORT || '';
 const NOTION_VERSION = '2022-06-28';
 const NOTION_API_HOSTNAME = 'api.notion.com';
 const NOTION_RICH_TEXT_MAX = 2000;
+const MAX_PM2_REPORT_LENGTH = 3000;
+const MAX_CLEANUP_REPORT_LENGTH = 2000;
+const MAX_HEALTH_REPORT_LENGTH = 3000;
 
 // ══════════════════════════════════════════════════════════
 // Notion API 工具
@@ -100,21 +103,21 @@ function buildReportContent() {
   if (PM2_REPORT) {
     sections.push('## 阶段一 · PM2 诊断结果');
     sections.push('');
-    sections.push(PM2_REPORT.slice(0, 3000));
+    sections.push(PM2_REPORT.slice(0, MAX_PM2_REPORT_LENGTH));
     sections.push('');
   }
 
   if (CLEANUP_REPORT) {
     sections.push('## 清理操作结果');
     sections.push('');
-    sections.push(CLEANUP_REPORT.slice(0, 2000));
+    sections.push(CLEANUP_REPORT.slice(0, MAX_CLEANUP_REPORT_LENGTH));
     sections.push('');
   }
 
   if (HEALTH_REPORT) {
     sections.push('## 阶段二 · 全系统健康检查');
     sections.push('');
-    sections.push(HEALTH_REPORT.slice(0, 3000));
+    sections.push(HEALTH_REPORT.slice(0, MAX_HEALTH_REPORT_LENGTH));
     sections.push('');
   }
 
