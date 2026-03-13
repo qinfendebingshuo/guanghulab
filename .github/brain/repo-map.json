@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-13T06:50:49.508Z",
+  "generated_at": "2026-03-13T06:52:39.931Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 37,
-    "total_scripts": 33,
+    "total_workflows": 40,
+    "total_scripts": 39,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -267,9 +267,24 @@
           ]
         },
         {
+          "file": "notion-callback-pipeline.yml",
+          "name": "Notion Callback Pipeline",
+          "triggers": [
+            "unknown"
+          ]
+        },
+        {
           "file": "notion-connectivity-test.yml",
           "name": "铸渊 · Notion 连通性测试",
           "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "notion-heartbeat.yml",
+          "name": "Notion Heartbeat Monitor",
+          "triggers": [
+            "schedule(*/5 * * * *)",
             "manual"
           ]
         },
@@ -278,6 +293,13 @@
           "name": "铸渊 · Notion 工单轮询",
           "triggers": [
             "schedule(*/15 * * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "persona-invoke.yml",
+          "name": "Persona Invoke Endpoint",
+          "triggers": [
             "manual"
           ]
         },
@@ -449,7 +471,7 @@
           ]
         }
       ],
-      "item_count": 37
+      "item_count": 40
     },
     {
       "zone_id": "SCRIPTS",
@@ -479,6 +501,9 @@
           "file": "contract-check.js"
         },
         {
+          "file": "create-standardized-ticket.js"
+        },
+        {
           "file": "cross-repo-sync.js"
         },
         {
@@ -500,6 +525,9 @@
           "file": "generate-session-summary.js"
         },
         {
+          "file": "invoke-persona.js"
+        },
+        {
           "file": "notify-module-received.js"
         },
         {
@@ -507,6 +535,9 @@
         },
         {
           "file": "notion-connectivity-test.js"
+        },
+        {
+          "file": "notion-heartbeat.js"
         },
         {
           "file": "notion-signal-bridge.js"
@@ -519,6 +550,9 @@
         },
         {
           "file": "psp-inspection.js"
+        },
+        {
+          "file": "push-broadcast-to-github.js"
         },
         {
           "file": "push-broadcast.js"
@@ -551,6 +585,12 @@
           "file": "update-readme-bulletin.js"
         },
         {
+          "file": "utils"
+        },
+        {
+          "file": "verify-modules.js"
+        },
+        {
           "file": "wake-persona.js"
         },
         {
@@ -566,7 +606,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 33
+      "item_count": 39
     },
     {
       "zone_id": "SRC",
@@ -1330,12 +1370,22 @@
     "hli-contract-check": [
       "WORKFLOWS::hli-contract-check.yml"
     ],
+    "notion-callback-pipeline": [
+      "WORKFLOWS::notion-callback-pipeline.yml"
+    ],
     "notion-connectivity-test": [
       "WORKFLOWS::notion-connectivity-test.yml",
       "SCRIPTS::notion-connectivity-test.js"
     ],
+    "notion-heartbeat": [
+      "WORKFLOWS::notion-heartbeat.yml",
+      "SCRIPTS::notion-heartbeat.js"
+    ],
     "notion-poll": [
       "WORKFLOWS::notion-poll.yml"
+    ],
+    "persona-invoke": [
+      "WORKFLOWS::persona-invoke.yml"
     ],
     "process-notion-orders": [
       "WORKFLOWS::process-notion-orders.yml"
@@ -1438,6 +1488,9 @@
     "contract-check": [
       "SCRIPTS::contract-check.js"
     ],
+    "create-standardized-ticket": [
+      "SCRIPTS::create-standardized-ticket.js"
+    ],
     "cross-repo-sync": [
       "SCRIPTS::cross-repo-sync.js"
     ],
@@ -1452,6 +1505,9 @@
     ],
     "generate-session-summary": [
       "SCRIPTS::generate-session-summary.js"
+    ],
+    "invoke-persona": [
+      "SCRIPTS::invoke-persona.js"
     ],
     "notify-module-received": [
       "SCRIPTS::notify-module-received.js"
@@ -1471,6 +1527,9 @@
     "psp-inspection": [
       "SCRIPTS::psp-inspection.js"
     ],
+    "push-broadcast-to-github": [
+      "SCRIPTS::push-broadcast-to-github.js"
+    ],
     "route-align-check": [
       "SCRIPTS::route-align-check.js"
     ],
@@ -1488,6 +1547,12 @@
     ],
     "update-memory": [
       "SCRIPTS::update-memory.js"
+    ],
+    "utils": [
+      "SCRIPTS::utils"
+    ],
+    "verify-modules": [
+      "SCRIPTS::verify-modules.js"
     ],
     "wake-persona": [
       "SCRIPTS::wake-persona.js"
