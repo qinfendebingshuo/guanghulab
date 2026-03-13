@@ -225,13 +225,14 @@ async function writeResultsToNotion(workOrderId, result, taskId) {
   console.log('📝 回写 Notion 工单结果...');
 
   try {
-    // 更新工单状态
+    // 更新工单状态 + receipt_status
     await notionRequest('PATCH', '/v1/pages/' + workOrderId, {
       properties: {
         '状态': { select: { name: '✅ 已完成' } },
+        'receipt_status': { select: { name: 'completed' } },
       },
     });
-    console.log('  → 工单状态更新为 ✅ 已完成');
+    console.log('  → 工单状态更新为 ✅ 已完成, receipt_status = completed');
 
     // 在工单页面追加处理结果
     var resultBlocks = [
@@ -282,6 +283,7 @@ async function writeResultsToNotion(workOrderId, result, taskId) {
       await notionRequest('PATCH', '/v1/pages/' + workOrderId, {
         properties: {
           '状态': { select: { name: '⚠️ 异常·等人工介入' } },
+          'receipt_status': { select: { name: 'error' } },
         },
       });
     } catch (_) { /* ignore */ }

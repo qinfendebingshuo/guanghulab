@@ -1,0 +1,115 @@
+name: 铸渊 · 回执接收监听器
+# 📥 Notion Agent → GitHub 回执接收闭环
+#
+# 当 Notion Agent 处理完工单后，将回执文件推送到 receipts/ 目录。
+# 本工作流监听回执文件到达 → 读取回执 → 唤醒铸渊核心大脑 → 决定下一步。
+#
+# 触发条件：
+#   1. push 到 main 分支 + receipts/** 路径变更（Notion Agent 推送回执）
+#   2. repository_dispatch: notion-receipt（Notion Agent API 调用）
+#   3. 手动触发
+#
+# 闭环流程：
+#   ① Notion Agent 推送回执文件 / 发送 repository_dispatch
+#   ② 本工作流读取回执
+#   ③ 唤醒铸渊核心大脑人格体 → 读取回执 → 决定下一步
+#   ④ 如 next_action=continue → 推给 Agent 自动继续
+#   ⑤ 如 next_action=escalate → 创建 Issue 通知冰朔
+#
+# 依赖 Secrets：
+#   LLM_API_KEY          第三方 LLM 平台密钥
+#   LLM_BASE_URL         第三方 LLM 平台 API 地址
+#   NOTION_API_TOKEN     Notion API token
+#   CORE_BRAIN_PAGE_ID   曜冥核心大脑 v4.0 页面 ID
+#   PORTRAIT_DB_ID       开发者动态画像库 ID
+#   FINGERPRINT_DB_ID    模块指纹注册表 ID
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'receipts/**'
+
+  repository_dispatch:
+    types: [notion-receipt]
+
+  workflow_dispatch:
+
+jobs:
+  receive:
+    name: 📥 接收 Notion 回执
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📥 处理回执文件
+        id: receipt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/receipt-handler.js
+
+      - name: 🧠 唤醒铸渊核心大脑（处理 continue 任务）
+        if: steps.receipt.outputs.has_continue_tasks == 'true'
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          SUBMIT_TYPE: syslog
+          SUBMIT_CONTENT: ${{ steps.receipt.outputs.continue_tasks }}
+          AUTHOR: notion-receipt
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
+          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+        run: node scripts/wake-persona.js
+
+      - name: ⚠️ 升级处理（创建 Issue 通知冰朔）
+        if: steps.receipt.outputs.has_escalate_tasks == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tasks = JSON.parse('${{ steps.receipt.outputs.escalate_tasks }}' || '[]');
+
+            for (const task of tasks) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '⚠️ [铸渊排查] ' + task.task_id + ' 需要人工介入',
+                body: [
+                  '## ⚠️ 铸渊排查 Agent · 升级通知',
+                  '',
+                  '| 字段 | 值 |',
+                  '|------|-----|',
+                  '| 回执编号 | ' + task.receipt_id + ' |',
+                  '| 任务编号 | ' + task.task_id + ' |',
+                  '| 状态 | ' + task.status + ' |',
+                  '| 下一步 | 需要人工介入 |',
+                  '',
+                  '### 摘要',
+                  task.result_summary || '(无摘要)',
+                  '',
+                  '---',
+                  '*—— 铸渊（ICE-GL-ZY001）· 排查Agent · 自动创建*',
+                ].join('\n'),
+                labels: ['⏳waiting-shuangyan'],
+              });
+            }
+
+      - name: 📤 Commit processed receipts
+        if: always()
+        run: |
+          git config user.name "zhuyuan-agent[bot]"
+          git config user.email "zhuyuan-agent[bot]@users.noreply.github.com"
+          git add receipts/
+          git diff --cached --quiet || git commit -m "📥 回执处理完成 [skip ci]"
+          git pull --rebase origin main || true
+          git push || echo "⚠️ Push skipped"

@@ -148,6 +148,11 @@ async function createStandardizedTicket() {
       '提交者': { rich_text: [{ type: 'text', text: { content: '铸渊Agent·自动管道' } }] },
       '状态': { select: { name: ticketStatus } },
       '优先级': { select: { name: 'P1' } },
+      'receipt_status': { select: { name: 'pending' } },
+      'retry_count': { number: 0 },
+      'taskId': { rich_text: [{ type: 'text', text: { content: BROADCAST_ID.slice(0, 200) } }] },
+      'developer': { rich_text: [{ type: 'text', text: { content: DEVELOPER.slice(0, 200) } }] },
+      'syslog_raw': { rich_text: richTextChunks(SYSLOG_RAW.slice(0, 2000)) },
     },
     children: [
       {

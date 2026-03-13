@@ -110,14 +110,23 @@ async function queryPendingTickets() {
   }
 
   // 查询 receipt_status = pending 的工单
-  // 由于 Notion 数据库可能没有 receipt_status 字段，
-  // 改为查询状态 = "待处理" 的工单
+  // 同时兼容使用 '状态' = '待处理' 的旧工单
   var queryBody = {
     filter: {
-      property: '状态',
-      select: {
-        equals: '待处理',
-      },
+      or: [
+        {
+          property: 'receipt_status',
+          select: {
+            equals: 'pending',
+          },
+        },
+        {
+          property: '状态',
+          select: {
+            equals: '待处理',
+          },
+        },
+      ],
     },
     page_size: 20,
     sorts: [{ timestamp: 'created_time', direction: 'ascending' }],

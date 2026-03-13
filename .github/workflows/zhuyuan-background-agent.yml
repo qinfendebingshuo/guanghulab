@@ -1,0 +1,79 @@
+name: 铸渊 · 后台排查 Agent
+# 🔍 后台自动排查工作流
+#
+# 铸渊代理每次开发时，后台自动运行排查 Agent：
+#   1. 监控代码变更、构建状态、测试结果
+#   2. 发现异常或阶段完成时 → 自动写 Notion 工单
+#   3. 不需要人类触发，跟着开发流程自动跑
+#
+# 触发条件：
+#   - push 到 main 分支（关键路径变更）
+#   - PR 合并到 main
+#   - 手动触发
+#
+# 闭环流程：
+#   ① 代码变更 → 本工作流自动触发
+#   ② 排查 Agent 检查构建/测试/Schema/大脑完整性
+#   ③ 发现问题 → 自动写 Notion 工单（receipt_status=pending）
+#   ④ Notion Agent 检测到待处理工单 → 唤醒人格体
+#   ⑤ 人格体处理完 → 回执返回 GitHub
+#   ⑥ receipt-listener.yml 接收回执 → 唤醒铸渊继续
+#
+# 依赖 Secrets：
+#   NOTION_API_TOKEN     Notion API token
+#   NOTION_TICKET_DB_ID  工单队列数据库 ID
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'persona-studio/**'
+      - 'backend/**'
+      - '.github/workflows/**'
+      - '.github/brain/**'
+
+  workflow_dispatch:
+
+jobs:
+  investigate:
+    name: 🔍 后台排查
+    runs-on: ubuntu-latest
+    # 跳过自动提交（避免无限循环）
+    if: >
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      !contains(github.event.head_commit.message, 'zhuyuan-agent[bot]')
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 排查 Agent · 代码变更分析
+        id: investigate
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_AUTHOR: ${{ github.event.head_commit.author.name || github.actor }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BUILD_STATUS: 'success'
+          TEST_RESULT: 'unknown'
+        run: node scripts/zhuyuan-background-agent.js
+
+      - name: 📊 排查摘要
+        if: always()
+        run: |
+          echo "🔍 后台排查 Agent 执行完毕"
+          echo "  发现数: ${{ steps.investigate.outputs.findings_count || 0 }}"
+          echo "  工单数: ${{ steps.investigate.outputs.tickets_created || 0 }}"

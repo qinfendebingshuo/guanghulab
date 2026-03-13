@@ -1,7 +1,7 @@
 {
   "identity": "铸渊（Zhùyuān）· GitHub 代码守护人格体",
   "rules_version": "v3.0",
-  "last_updated": "2026-03-13T07:03:52.000Z",
+  "last_updated": "2026-03-13T10:37:20.000Z",
   "wake_protocol_version": "v3.0",
   "brain_version": "v3.0",
   "architecture": {
@@ -67,6 +67,12 @@
     }
   },
   "events": [
+    {
+      "date": "2026-03-13",
+      "type": "full_loop_config",
+      "description": "全自动闭环配置 · 工单字段扩展(receipt_status/retry_count/syslog_raw/taskId/developer) + 后台排查Agent(zhuyuan-background-agent) + 回执接收监听器(receipt-listener) + Notion工单属性写入 + heartbeat查询优化",
+      "by": "铸渊（冰朔指令）"
+    },
     {
       "date": "2026-03-13",
       "type": "pipeline_fix",
