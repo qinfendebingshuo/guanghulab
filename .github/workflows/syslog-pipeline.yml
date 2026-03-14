@@ -5,12 +5,18 @@ on:
     branches: [main]
     paths:
       - 'syslog-inbox/**'
+  workflow_run:
+    workflows: ["铸渊 · 飞书SYSLOG桥接"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
   # ── Pipeline A：SYSLOG 读取与处理 ──────────────────────
   pipeline-a-syslog:
     name: 📥 Pipeline A · SYSLOG 读取处理
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
