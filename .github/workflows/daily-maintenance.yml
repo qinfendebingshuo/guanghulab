@@ -22,6 +22,24 @@ jobs:
         with:
           node-version: '20'
 
+      # ── Step 0: 清空公告栏缓存（每日重置） ──
+      - name: 清空公告栏缓存
+        run: |
+          CACHE_FILE=".github/brain/bulletin-board-today.json"
+          TODAY=$(TZ="Asia/Shanghai" date +%Y-%m-%d)
+          if [ -f "$CACHE_FILE" ]; then
+            CACHE_DATE=$(jq -r '.date // ""' "$CACHE_FILE" 2>/dev/null || echo "")
+            if [ "$CACHE_DATE" != "$TODAY" ]; then
+              echo '{"date":"","records":[]}' > "$CACHE_FILE"
+              echo "✅ 公告栏缓存已清空（旧日期: $CACHE_DATE）"
+            else
+              echo "📌 公告栏缓存日期匹配今天 ($TODAY)，无需清空"
+            fi
+          else
+            echo '{"date":"","records":[]}' > "$CACHE_FILE"
+            echo "✅ 创建新的公告栏缓存文件"
+          fi
+
       # ── Step 1: 检查 brain/ 目录完整性 ──
       - name: 检查 brain/ 目录完整性
         id: brain_check
@@ -96,7 +114,7 @@ jobs:
         run: |
           git config user.name "铸渊 Maintenance Agent"
           git config user.email "actions@guanghulab.com"
-          git add brain/system-health.json
+          git add brain/system-health.json .github/brain/bulletin-board-today.json
           if git diff --cached --quiet; then
             echo "📌 无变更需要提交"
           else

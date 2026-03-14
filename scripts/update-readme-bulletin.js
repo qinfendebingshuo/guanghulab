@@ -30,6 +30,7 @@ const MEMORY_PATH = path.join(__dirname, '..', '.github', 'brain', 'memory.json'
 const PERSONA_MEMORY_PATH = path.join(__dirname, '..', '.github', 'persona-brain', 'memory.json');
 const DEV_STATUS_PATH = path.join(__dirname, '..', '.github', 'persona-brain', 'dev-status.json');
 const COLLABORATORS_PATH = path.join(__dirname, '..', '.github', 'brain', 'collaborators.json');
+const BULLETIN_CACHE_PATH = path.join(__dirname, '..', '.github', 'brain', 'bulletin-board-today.json');
 
 const MAX_BINGSHUO_ENTRIES = 15;
 const MAX_COLLAB_ENTRIES = 20;
@@ -101,6 +102,21 @@ function formatTime(ts) {
   return `${get('month')}-${get('day')} ${get('hour')}:${get('minute')}`;
 }
 
+function formatTimeShort(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return '—';
+  const fmt = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(d);
+  const get = (type) => (parts.find(p => p.type === type) || {}).value || '';
+  return `${get('hour')}:${get('minute')}`;
+}
+
 function todayDateStr() {
   const fmt = new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
@@ -147,6 +163,54 @@ function loadMemoryEvents() {
   }
 
   return events;
+}
+
+/* ── 公告栏缓存（当日追加式） ─────────────────────────── */
+
+function loadBulletinCache() {
+  const today = todayDateStr();
+  try {
+    if (fs.existsSync(BULLETIN_CACHE_PATH)) {
+      const cache = JSON.parse(fs.readFileSync(BULLETIN_CACHE_PATH, 'utf8'));
+      if (cache.date === today) {
+        return cache;
+      }
+    }
+  } catch (err) {
+    console.log(`⚠️  公告栏缓存读取失败: ${err.message}`);
+  }
+  return { date: today, records: [] };
+}
+
+function saveBulletinCache(cache) {
+  try {
+    fs.writeFileSync(BULLETIN_CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8');
+  } catch (err) {
+    console.log(`⚠️  公告栏缓存写入失败: ${err.message}`);
+  }
+}
+
+function appendToCache(cache, newEntries) {
+  const existingKeys = new Set(cache.records.map(r => r.key));
+  let added = 0;
+  for (const e of newEntries) {
+    const key = `${e.actor}|${e.module || '—'}|${formatTimeShort(e.ts)}`;
+    if (!existingKeys.has(key)) {
+      existingKeys.add(key);
+      cache.records.push({
+        key,
+        ts: e.ts,
+        actor: e.actor,
+        module: e.module || '—',
+        result: e.result,
+        icon: e.icon,
+        sortKey: e.sortKey,
+      });
+      added++;
+    }
+  }
+  cache.records.sort((a, b) => a.sortKey - b.sortKey);
+  return added;
 }
 
 /* ── 分类事件为冰朔/合作者 ─────────────────────────── */
@@ -474,26 +538,19 @@ function buildBingshuoAlert(issues) {
   return alert;
 }
 
-/* ── 生成合作者公告表格 ─────────────────────────── */
+/* ── 生成合作者公告表格（追加式，从缓存构建） ─────────────────────────── */
 
-function buildCollabBulletin(entries) {
-  const sorted = [...entries].sort((a, b) => b.sortKey - a.sortKey);
-  const seen = new Set();
-  const unique = [];
-  for (const e of sorted) {
-    const key = `${e.actor}|${e.module}|${formatTime(e.ts)}`;
-    if (!seen.has(key)) { seen.add(key); unique.push(e); }
-  }
-
-  const display = unique.slice(0, MAX_COLLAB_ENTRIES);
+function buildCollabBulletin(cacheRecords) {
+  const today = todayDateStr();
+  const display = cacheRecords.slice(0, MAX_COLLAB_ENTRIES);
   if (display.length === 0) {
-    return '| 时间 | 合作者 | 模块 | 状态 |\n|------|--------|------|------|\n| 🕐 暂无记录 | — | — | 等待模块推送 |';
+    return `👥 合作者公告栏（${today}）\n\n| 时间 | 合作者 | 模块 | 状态 |\n|------|--------|------|------|\n| 🕐 暂无记录 | — | — | 等待模块推送 |`;
   }
 
   const rows = display.map(e =>
-    `| ${formatTime(e.ts)} | ${e.actor} | \`${e.module || '—'}/\` | ${e.icon} ${e.result === 'success' || e.result === 'passed' ? '上传成功' : e.result === 'failed' || e.result === 'failure' ? '❌ 上传失败' : '已更新'} |`
+    `| ${formatTimeShort(e.ts)} | ${e.actor} | \`${e.module || '—'}/\` | ${e.icon} ${e.result === 'success' || e.result === 'passed' ? '上传成功' : e.result === 'failed' || e.result === 'failure' ? '❌ 上传失败' : '已更新'} |`
   );
-  return `| 时间 | 合作者 | 模块 | 状态 |\n|------|--------|------|------|\n${rows.join('\n')}`;
+  return `👥 合作者公告栏（${today}）\n\n| 时间 | 合作者 | 模块 | 状态 |\n|------|--------|------|------|\n${rows.join('\n')}`;
 }
 
 /* ── 生成合作者提醒 ─────────────────────────── */
@@ -687,18 +744,24 @@ async function main() {
   console.log(`\n📊 冰朔合计: ${allBingshuo.length} 条`);
   console.log(`📊 合作者合计: ${allCollab.length} 条\n`);
 
-  // 5. 检测需要干预的问题
+  // 5. 合作者公告栏：追加式缓存
+  const cache = loadBulletinCache();
+  const addedCount = appendToCache(cache, allCollab);
+  saveBulletinCache(cache);
+  console.log(`📋 公告栏缓存: ${cache.records.length} 条记录（本次新增 ${addedCount} 条）`);
+
+  // 6. 检测需要干预的问题
   const { bingshuoIssues, collabIssuesByDev } = detectIssues(allBingshuo, allCollab);
   console.log(`🔴 冰朔待处理: ${bingshuoIssues.length} 条`);
   console.log(`🔴 合作者待处理: ${Object.keys(collabIssuesByDev).length} 人\n`);
 
-  // 6. 生成各区域内容
+  // 7. 生成各区域内容
   const bingshuoBulletin = buildBingshuoBulletin(allBingshuo);
   const bingshuoAlert = buildBingshuoAlert(bingshuoIssues);
-  const collabBulletin = buildCollabBulletin(allCollab);
+  const collabBulletin = buildCollabBulletin(cache.records);
   const collabAlert = buildCollabAlert(collabIssuesByDev);
 
-  // 7. 更新 README.md
+  // 8. 更新 README.md
   if (!fs.existsSync(README_PATH)) {
     console.error('❌ README.md 不存在');
     process.exit(1);
@@ -718,7 +781,7 @@ async function main() {
     console.log('✅ README.md 公告区已更新');
   }
 
-  // 8. 发送邮件（如有需要）
+  // 9. 发送邮件（如有需要）
   if (bingshuoIssues.length > 0 || Object.keys(collabIssuesByDev).length > 0) {
     await sendAlertEmails(bingshuoIssues, collabIssuesByDev);
   }
