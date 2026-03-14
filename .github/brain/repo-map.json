@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-14T16:51:56.262Z",
+  "generated_at": "2026-03-14T17:02:29.611Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 44,
-    "total_scripts": 45,
+    "total_workflows": 45,
+    "total_scripts": 46,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -381,6 +381,13 @@
           ]
         },
         {
+          "file": "push-broadcast-feishu.yml",
+          "name": "铸渊 · 广播推送飞书（聊天消息）",
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
           "file": "push-broadcast.yml",
           "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
           "triggers": [
@@ -504,7 +511,7 @@
           ]
         }
       ],
-      "item_count": 44
+      "item_count": 45
     },
     {
       "zone_id": "SCRIPTS",
@@ -645,6 +652,9 @@
           "file": "wake-persona.js"
         },
         {
+          "file": "write-notion-syslog.js"
+        },
+        {
           "file": "zhuyuan-daily-agent.js"
         },
         {
@@ -657,7 +667,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 45
+      "item_count": 46
     },
     {
       "zone_id": "SRC",
@@ -1498,6 +1508,9 @@
     "psp-daily-inspection": [
       "WORKFLOWS::psp-daily-inspection.yml"
     ],
+    "push-broadcast-feishu": [
+      "WORKFLOWS::push-broadcast-feishu.yml"
+    ],
     "push-broadcast": [
       "WORKFLOWS::push-broadcast.yml",
       "SCRIPTS::push-broadcast.js"
@@ -1667,6 +1680,9 @@
     ],
     "wake-persona": [
       "SCRIPTS::wake-persona.js"
+    ],
+    "write-notion-syslog": [
+      "SCRIPTS::write-notion-syslog.js"
     ],
     "zhuyuan-module-protocol": [
       "SCRIPTS::zhuyuan-module-protocol.js"
