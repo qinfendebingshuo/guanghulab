@@ -115,10 +115,12 @@ async function main() {
     process.exit(0);
   }
 
-  // 读取 SYSLOG 文件
+  // 读取 SYSLOG 文件（保留原始文本用于 文件内容 字段）
+  let fileContent;
   let entry;
   try {
-    entry = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    fileContent = fs.readFileSync(filePath, 'utf8');
+    entry = JSON.parse(fileContent);
   } catch (e) {
     console.error('❌ 读取/解析文件失败: ' + e.message);
     process.exit(1);
@@ -133,10 +135,28 @@ async function main() {
   const timestamp   = entry.timestamp || new Date().toISOString();
   const dateStr     = timestamp.split('T')[0] || new Date().toISOString().split('T')[0];
 
+  // 解析 SYSLOG 正文内容（兼容 v4.0 和 v3.0-legacy 格式）
+  let syslogData = null;
+  if (syslogText) {
+    try { syslogData = JSON.parse(syslogText); } catch (_) { /* 非 JSON 则忽略 */ }
+  }
+
+  // DEV编号：优先从 SYSLOG 内容解析，fallback 到 DT-USER
+  const devId = (syslogData && (syslogData.dev_id || (syslogData.header && syslogData.header.developer_id)))
+    || entry.dev_id || entry.from || 'DT-USER';
+
+  // 其他可选字段：兼容 v4.0 header 和 v3.0 顶层字段
+  const broadcastId     = (syslogData && (syslogData.broadcast_id || (syslogData.header && syslogData.header.broadcast_id))) || '';
+  const moduleName      = (syslogData && (syslogData.module || (syslogData.header && syslogData.header.module))) || '';
+  const statusField     = (syslogData && (syslogData.status || (syslogData.header && syslogData.header.status))) || '';
+  const protocolVersion = (syslogData && (syslogData.protocol_version || syslogData.syslog_version)) || '';
+  const commitSha       = process.env.GITHUB_SHA || '';
+
   console.log('📋 写入 Notion SYSLOG 收件箱...');
   console.log('  文件: ' + filename);
   console.log('  来源: ' + source);
   console.log('  发送者: ' + (senderName || senderOpenId || '未知'));
+  console.log('  DEV编号: ' + devId);
 
   // 构建 Notion 页面属性
   const properties = {
@@ -147,7 +167,20 @@ async function main() {
 
   // 可选字段（如果 Notion 数据库有这些列）
   if (source)       properties['推送方']   = richTextProp(source);
-  if (senderOpenId) properties['DEV编号']   = selectProp(senderOpenId);
+  if (devId)        properties['DEV编号']   = selectProp(devId);
+
+  // 文件内容
+  properties['文件内容'] = richTextProp(fileContent);
+
+  // 来源路径
+  properties['来源路径'] = richTextProp(filePath);
+
+  // 其他可选字段
+  if (broadcastId)     properties['广播编号']   = richTextProp(broadcastId);
+  if (moduleName)      properties['模块']       = richTextProp(moduleName);
+  if (statusField)     properties['环节状态']   = selectProp(statusField);
+  if (protocolVersion) properties['协议版本']   = richTextProp(protocolVersion);
+  if (commitSha)       properties['commit_sha'] = richTextProp(commitSha);
 
   // 构建页面内容
   const contentBlocks = [];
