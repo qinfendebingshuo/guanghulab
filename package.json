@@ -30,7 +30,14 @@
     "proxy:start": "node backend-integration/api-proxy.js",
     "notion:poll": "node scripts/notion-signal-bridge.js poll",
     "notion:health": "node scripts/notion-signal-bridge.js health",
-    "notion:summary": "node scripts/generate-session-summary.js"
+    "notion:summary": "node scripts/generate-session-summary.js",
+    "core:listen": "node core/broadcast-listener",
+    "core:queue": "node core/task-queue status",
+    "core:check": "node core/system-check",
+    "core:sync": "node core/execution-sync report",
+    "core:context": "node core/context-loader",
+    "connector:notion": "node connectors/notion-sync status",
+    "connector:model": "node connectors/model-router"
   },
   "dependencies": {
     "axios": "^1.13.6",
