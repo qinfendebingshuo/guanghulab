@@ -92,8 +92,8 @@ function dateProp(dateStr) {
   return { date: { start: dateStr } };
 }
 
-function checkboxProp(val) {
-  return { checkbox: !!val };
+function statusProp(name) {
+  return { status: { name: String(name) } };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -141,14 +141,13 @@ async function main() {
   // 构建 Notion 页面属性
   const properties = {
     '标题':       titleProp('飞书SYSLOG · ' + (senderName || source) + ' · ' + dateStr),
-    '提交日期':   dateProp(dateStr),
-    '霜砚已读':   checkboxProp(false),
+    '接收时间':   dateProp(dateStr),
+    '处理状态':   statusProp('待处理'),
   };
 
   // 可选字段（如果 Notion 数据库有这些列）
-  if (source)       properties['来源']     = richTextProp(source);
-  if (senderName)   properties['发送者']   = richTextProp(senderName);
-  if (senderOpenId) properties['发送者ID'] = richTextProp(senderOpenId);
+  if (source)       properties['推送方']   = richTextProp(source);
+  if (senderOpenId) properties['DEV编号']   = selectProp(senderOpenId);
 
   // 构建页面内容
   const contentBlocks = [];
