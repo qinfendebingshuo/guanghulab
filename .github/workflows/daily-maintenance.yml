@@ -165,9 +165,21 @@ jobs:
             exit 0
           fi
 
-          HEALTH=$(cat brain/system-health.json 2>/dev/null || echo '{"version":"unknown","system_health":"unknown"}')
-          AUTO=$(cat brain/automation-map.json 2>/dev/null || echo '{"workflows":[]}')
-          REPO=$(cat brain/repo-map.json 2>/dev/null || echo '{"directories":{}}')
+          HEALTH=$(cat brain/system-health.json 2>/dev/null)
+          if [ -z "$HEALTH" ]; then
+            echo "⚠️  brain/system-health.json 未找到，使用默认值"
+            HEALTH='{"version":"unknown","system_health":"unknown"}'
+          fi
+          AUTO=$(cat brain/automation-map.json 2>/dev/null)
+          if [ -z "$AUTO" ]; then
+            echo "⚠️  brain/automation-map.json 未找到，使用默认值"
+            AUTO='{"workflows":[]}'
+          fi
+          REPO=$(cat brain/repo-map.json 2>/dev/null)
+          if [ -z "$REPO" ]; then
+            echo "⚠️  brain/repo-map.json 未找到，使用默认值"
+            REPO='{"directories":{}}'
+          fi
 
           VERSION=$(echo "$HEALTH" | jq -r '.version // "unknown"')
           STATUS=$(echo "$HEALTH" | jq -r '.system_health // "unknown"')
