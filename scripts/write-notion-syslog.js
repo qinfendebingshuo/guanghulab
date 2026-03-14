@@ -128,7 +128,7 @@ async function main() {
   const syslogText  = entry.syslog_raw || entry.syslog || entry.content || '';
   const source      = entry.source || 'unknown';
   const senderName  = entry.sender_name || '';
-  const senderOpenId = entry.sender_open_id || '';
+  const senderOpenId = entry.sender_open_id || entry.sender_id || '';
   const chatId      = entry.chat_id || '';
   const timestamp   = entry.timestamp || new Date().toISOString();
   const dateStr     = timestamp.split('T')[0] || new Date().toISOString().split('T')[0];

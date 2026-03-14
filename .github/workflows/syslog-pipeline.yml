@@ -57,7 +57,7 @@ jobs:
           echo "has_syslog=true" >> "$GITHUB_OUTPUT"
           echo "syslog_file=$LATEST" >> "$GITHUB_OUTPUT"
 
-          SENDER_OPEN_ID=$(jq -r '.sender_open_id // empty' "$LATEST" 2>/dev/null || true)
+          SENDER_OPEN_ID=$(jq -r '.sender_open_id // .sender_id // empty' "$LATEST" 2>/dev/null || true)
           CHAT_ID=$(jq -r '.chat_id // empty' "$LATEST" 2>/dev/null || true)
           SENDER_NAME=$(jq -r '.sender_name // empty' "$LATEST" 2>/dev/null || true)
 
@@ -154,6 +154,13 @@ jobs:
             else
               echo "⚠️  SYSLOG 文件未找到: $SYSLOG_FILE（inbox 和 processed 均不存在）"
             fi
+          fi
+
+          if [ -z "$SUBMIT_CONTENT" ]; then
+            echo "⚠️  SUBMIT_CONTENT 为空，跳过人格体唤醒"
+            echo "broadcast_title=" >> "$GITHUB_OUTPUT"
+            echo "broadcast_url=" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           if node scripts/wake-persona.js; then
