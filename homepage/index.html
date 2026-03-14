@@ -14,14 +14,16 @@
             <p class="hero-description">探索未来之域 · 零点原核频道</p>
             <a href="#" class="hero-btn">进入系统</a>
         </header>
-        <!-- 公告轮播区（新增） -->
+        
+        <!-- 公告轮播区 -->
         <div class="carousel-container">
             <div class="carousel" id="announcementCarousel">
                 <!-- 轮播内容由 JS 动态生成 -->
             </div>
-            <button class="carousel-arrow left" id="carouselPrev">←</button>
-            <button class="carousel-arrow right" id="carouselNext">→</button>
+            <button class="carousel-arrow left" id="carouselPrev" onclick="window.HomepageApp.prevAnnouncement()">←</button>
+            <button class="carousel-arrow right" id="carouselNext" onclick="window.HomepageApp.nextAnnouncement()">→</button>
         </div>
+        
         <!-- 模块导航网格 -->
         <section class="modules">
             <h2 class="section-title">核心模块</h2>
@@ -42,7 +44,7 @@
             <p>版本 HoloLake Era · M23 首页中心</p>
         </footer>
     </div>
-
+    <script src="modules-api.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
