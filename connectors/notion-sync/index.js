@@ -166,6 +166,61 @@ function writeLocalLog(logEntry) {
 }
 
 /**
+ * 同步执行层状态到 Notion
+ */
+async function syncExecutionStatus(statusData) {
+  const dbId = process.env.EXECUTION_LOG_DB_ID;
+  if (!dbId) {
+    console.log('⚠️  EXECUTION_LOG_DB_ID 未设置，执行状态仅写入本地');
+    writeLocalLog({
+      task_id: `execution-status-${new Date().toISOString().slice(0, 10)}`,
+      status: statusData.execution_layer_status || 'stable',
+      type: 'execution_status',
+      data: statusData
+    });
+    return;
+  }
+
+  console.log('📡 同步执行层状态到 Notion...');
+
+  const summary = [
+    `version: v${statusData.version || 'unknown'}`,
+    `modules: ${(statusData.core_modules || []).filter(m => m.status === 'enabled').length}/${(statusData.core_modules || []).length}`,
+    `connectors: ${(statusData.connectors || []).filter(c => c.status === 'enabled').length}/${(statusData.connectors || []).length}`,
+    `workflows: ${statusData.workflows?.count || 0}`,
+    `queue: ${statusData.task_queue?.total || 0} total / ${statusData.task_queue?.pending || 0} pending`
+  ].join(' | ');
+
+  try {
+    await notionRequest('POST', 'pages', {
+      parent: { database_id: dbId },
+      properties: {
+        Name: { title: [{ text: { content: `Execution Status · ${new Date().toISOString().slice(0, 10)}` } }] },
+        Status: { select: { name: statusData.execution_layer_status || 'stable' } },
+        Executor: { rich_text: [{ text: { content: 'zhuyuan' } }] },
+        Timestamp: { rich_text: [{ text: { content: statusData.timestamp || new Date().toISOString() } }] }
+      },
+      children: [{
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ text: { content: summary } }]
+        }
+      }]
+    });
+    console.log('✅ 执行层状态已同步到 Notion');
+  } catch (err) {
+    console.error(`⚠️  Notion 同步失败，回退本地: ${err.message}`);
+    writeLocalLog({
+      task_id: `execution-status-${new Date().toISOString().slice(0, 10)}`,
+      status: statusData.execution_layer_status || 'stable',
+      type: 'execution_status',
+      data: statusData
+    });
+  }
+}
+
+/**
  * 检查 Notion 连接状态
  */
 async function checkStatus() {
@@ -206,4 +261,4 @@ if (require.main === module) {
   })();
 }
 
-module.exports = { pullBroadcasts, pushExecutionLog, writeLocalLog, checkStatus, notionRequest };
+module.exports = { pullBroadcasts, pushExecutionLog, syncExecutionStatus, writeLocalLog, checkStatus, notionRequest };

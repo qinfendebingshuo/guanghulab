@@ -28,6 +28,7 @@ const REQUIRED_DIRS = [
   'core/broadcast-listener',
   'core/task-queue',
   'core/system-check',
+  'core/execution-sync',
   'connectors/notion-sync',
   'connectors/model-router',
   '.github/workflows',
@@ -112,6 +113,7 @@ function checkCoreModules() {
     { name: 'broadcast-listener', path: 'core/broadcast-listener/index.js' },
     { name: 'task-queue', path: 'core/task-queue/index.js' },
     { name: 'system-check', path: 'core/system-check/index.js' },
+    { name: 'execution-sync', path: 'core/execution-sync/index.js' },
     { name: 'notion-sync', path: 'connectors/notion-sync/index.js' },
     { name: 'model-router', path: 'connectors/model-router/index.js' }
   ];
