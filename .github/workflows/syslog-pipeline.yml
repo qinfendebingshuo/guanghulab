@@ -142,8 +142,18 @@ jobs:
           fi
 
           # 读取 SYSLOG 文件内容传递给 wake-persona.js
+          # 注意：Pipeline A 可能已将文件从 syslog-inbox/ 归档到 syslog-processed/
           if [ -f "$SYSLOG_FILE" ]; then
             export SUBMIT_CONTENT=$(cat "$SYSLOG_FILE")
+          else
+            BASENAME=$(basename "$SYSLOG_FILE")
+            PROCESSED_FILE=$(find syslog-processed/ -name "$BASENAME" -type f 2>/dev/null | head -1)
+            if [ -n "$PROCESSED_FILE" ]; then
+              echo "📂 文件已归档，从 $PROCESSED_FILE 读取"
+              export SUBMIT_CONTENT=$(cat "$PROCESSED_FILE")
+            else
+              echo "⚠️  SYSLOG 文件未找到: $SYSLOG_FILE（inbox 和 processed 均不存在）"
+            fi
           fi
 
           if node scripts/wake-persona.js; then
