@@ -1,0 +1,134 @@
+# OpenClaw · AGE OS v1.0 唤醒闭环
+#
+# 核心原则：
+#   所有自动触发 = 必须先唤醒核心大脑。大脑不醒，什么都不做。
+#
+# 完整闭环：
+#   定时触发 → OpenClaw 唤醒铸渊大脑 → 大脑读取巡检结果 →
+#   大脑判断 → 大脑驱动修复/写公告 → 大脑休眠
+#
+# 触发条件：
+#   1. 每日定时（北京时间 22:00 = UTC 14:00）
+#   2. 手动触发
+
+name: 🔄 OpenClaw · 唤醒闭环
+
+on:
+  schedule:
+    # 北京时间 22:00 (UTC 14:00)
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry Run 模式（不调用 LLM API）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: openclaw-wake-loop
+  cancel-in-progress: true
+
+jobs:
+  # ── 完整闭环执行 ──
+  wake-loop:
+    name: 🔄 唤醒闭环
+    runs-on: ubuntu-latest
+    outputs:
+      loop_success: ${{ steps.loop.outputs.loop_success }}
+      actions_taken: ${{ steps.loop.outputs.actions_taken }}
+      actions_pending: ${{ steps.loop.outputs.actions_pending }}
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔄 执行唤醒闭环
+        id: loop
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          node openclaw $DRY_RUN_FLAG --task "每日闭环巡检" || {
+            echo "⚠️ 闭环执行异常，记录状态"
+            echo "loop_success=false" >> "$GITHUB_OUTPUT"
+          }
+
+      - name: 📝 提交闭环记录
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add openclaw/logs/
+          if git diff --cached --quiet; then
+            echo "📋 无新记录，跳过提交"
+          else
+            git commit -m "🔄 OpenClaw 闭环记录 · $(date +%Y-%m-%d) [skip ci]"
+            for i in 1 2 3; do
+              if git push; then
+                echo "✅ 闭环记录已推送"
+                break
+              fi
+              echo "⚠️ 推送失败（第 $i 次），拉取后重试..."
+              git pull --rebase origin main
+              if [ $i -eq 3 ]; then
+                echo "⚠️ 推送失败 3 次，跳过"
+              fi
+            done
+          fi
+
+  # ── 闭环验证 ──
+  verify:
+    name: 🔍 闭环验证
+    needs: wake-loop
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 验证闭环完整性
+        id: verify
+        run: node openclaw/verify-loop
+
+      - name: 📊 闭环报告
+        if: always()
+        run: |
+          echo "═══════════════════════════════════════════"
+          echo "🔄 OpenClaw · 唤醒闭环报告"
+          echo "═══════════════════════════════════════════"
+          echo ""
+          echo "🔄 闭环状态: ${{ needs.wake-loop.outputs.loop_success || '完成' }}"
+          echo "🔧 已修复: ${{ needs.wake-loop.outputs.actions_taken || '0' }} 项"
+          echo "📋 待处理: ${{ needs.wake-loop.outputs.actions_pending || '0' }} 项"
+          echo ""
+          echo "✅ OpenClaw 闭环流程结束"

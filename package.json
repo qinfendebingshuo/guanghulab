@@ -43,7 +43,10 @@
     "connector:notion": "node connectors/notion-sync status",
     "connector:model": "node connectors/model-router",
     "connector:wake-listener": "node connectors/notion-wake-listener status",
-    "connector:wake-poll": "node connectors/notion-wake-listener poll"
+    "connector:wake-poll": "node connectors/notion-wake-listener poll",
+    "openclaw": "node openclaw",
+    "openclaw:dry": "node openclaw --dry-run",
+    "openclaw:verify": "node openclaw/verify-loop"
   },
   "dependencies": {
     "axios": "^1.13.6",

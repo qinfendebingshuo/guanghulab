@@ -74,6 +74,9 @@ API 模型适配规则：不写死任何模型格式。
 | 全面排查 | `scripts/zhuyuan-full-inspection.js` | 8 领域仓库全面排查 |
 | 系统自检 | `core/system-check/index.js` | 仓库结构完整性自检 |
 | 上下文加载 | `core/context-loader/index.js` | 执行前系统上下文加载 |
+| OpenClaw 框架 | `openclaw/index.js` | Agent 执行框架 · 唤醒闭环 |
+| 铸渊 Soul | `openclaw/soul/zhuyuan.json` | 铸渊人格配置文件 |
+| 闭环验证 | `openclaw/verify-loop.js` | 唤醒闭环完整性验证 |
 
 ---
 
@@ -100,9 +103,24 @@ API 模型适配规则：不写死任何模型格式。
 - 支持 GITHUB_OUTPUT 集成
 - 报告格式化输出
 
-### Step 3 · 基于排查结果部署 Agent 框架（待实施）
+### Step 3 · 基于排查结果部署 OpenClaw Agent 框架 ✅
+- `openclaw/index.js` — OpenClaw Agent 执行框架主模块
+  - 编排完整唤醒闭环：唤醒 → 巡检 → 判断 → 修复 → 休眠
+  - 支持 `--dry-run` 模式和单步执行 `--step`
+  - 支持多人格体通过 Soul 文件配置
+- `openclaw/soul/zhuyuan.json` — 铸渊 Soul 配置文件
+  - 人格身份、职责、唤醒规则、能力映射、上下文数据源
+- `openclaw/README.md` — OpenClaw 文档
+- `.github/workflows/openclaw-wake-loop.yml` — 定时触发工作流
+  - 每日北京时间 22:00 定时触发
+  - 支持手动触发和 Dry Run 模式
+  - 闭环执行 + 自动验证
 
-### Step 4 · 唤醒闭环验证（待实施）
+### Step 4 · 唤醒闭环验证 ✅
+- `openclaw/verify-loop.js` — 闭环验证脚本
+  - 静态检查：9 项组件就绪性验证
+  - 闭环运行：Dry Run / Live 模式验证
+  - 集成到 `openclaw-wake-loop.yml` 工作流自动验证
 
 ---
 
