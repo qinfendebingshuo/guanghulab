@@ -1,6 +1,6 @@
 # HoloLake Era 操作系统部署模块
 
-> 📋 **自动生成文档** · 铸渊（ZhùYuān）维护 · 最后更新：2026-03-14 18:33 UTC
+> 📋 **自动生成文档** · 铸渊（ZhùYuān）维护 · 最后更新：2026-03-15 04:10 UTC
 > 
 > 本文档由 GitHub Actions 自动触发生成，每当合作者上传/更新模块时自动刷新。
 > 按合作者编号（DEV-XXX）整理所有已上传模块。
@@ -187,14 +187,24 @@ dingtalk-bot/
   README.md
   broadcast-generator.js
   config.json
+  conversation-manager.js
+  conversations/
   data/
   dingtalk-api.js
+  dingtalk-event-handler.js
+  dingtalk-webhook-v3.js
   dingtalk/
+  ecosystem.config.js
   git-helper.js
+  github-bridge.js
+  index-stream.js
   index.js
-  index.js.backup
+  index.js.bak.phase7
   knowledge-base/
+  llm-engine.js
   loop/
+  message-router.js
+  message-router.js.bak.phase7
   notion-test-nossl.js
   notion-test.js
   package-lock.json
@@ -209,6 +219,7 @@ dingtalk-bot/
   sync/
   syslog-parser.js
   syslog-receiver.js
+  test-stream.js
   webhook/
 ```
 
@@ -359,7 +370,7 @@ m11-module/
 | 已上传模块数 | 12 |
 | 待上传模块数 | 0 |
 | 上传完成率 | 100% |
-| 文档更新时间 | 2026-03-14 18:33 UTC |
+| 文档更新时间 | 2026-03-15 04:10 UTC |
 
 ---
 
