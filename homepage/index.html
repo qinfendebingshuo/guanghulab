@@ -23,7 +23,61 @@
             <button class="carousel-arrow left" id="carouselPrev" onclick="window.HomepageApp.prevAnnouncement()">←</button>
             <button class="carousel-arrow right" id="carouselNext" onclick="window.HomepageApp.nextAnnouncement()">→</button>
         </div>
-        
+                <!-- === 模块状态总览面板 · 环节3新增 === -->
+        <section class="status-overview" id="statusOverview">
+            <h2 class="section-title">系统状态总览</h2>
+            <div class="status-grid" id="statusGrid">
+                <!-- 骨架屏占位（数据加载前显示） -->
+                <div class="status-card skeleton">
+                    <div class="skeleton-line w60"></div>
+                    <div class="skeleton-line w40"></div>
+                </div>
+                <div class="status-card skeleton">
+                    <div class="skeleton-line w60"></div>
+                    <div class="skeleton-line w40"></div>
+                </div>
+                <div class="status-card skeleton">
+                    <div class="skeleton-line w60"></div>
+                    <div class="skeleton-line w40"></div>
+                </div>
+                <div class="status-card skeleton">
+                    <div class="skeleton-line w60"></div>
+                    <div class="skeleton-line w40"></div>
+                </div>
+            </div>
+            <div class="status-summary" id="statusSummary"></div>
+        </section>
+
+        <!-- === 快捷操作面板 · 环节3新增 === -->
+        <section class="quick-actions" id="quickActions">
+            <h2 class="section-title">⚡ 快捷操作</h2>
+            <div class="actions-grid">
+                <a href="../bulletin-board/index.html" class="action-btn">
+                    <span class="action-icon">📢</span>
+                    <span class="action-label">查看公告</span>
+                </a>
+                <a href="../devboard/index.html" class="action-btn">
+                    <span class="action-icon">📊</span>
+                    <span class="action-label">开发者看板</span>
+                </a>
+                <a href="../ticket-system/index.html" class="action-btn">
+                    <span class="action-icon">🎫</span>
+                    <span class="action-label">工单系统</span>
+                </a>
+                <a href="../data-stats/index.html" class="action-btn">
+                    <span class="action-icon">📈</span>
+                    <span class="action-label">数据统计</span>
+                </a>
+                <a href="../dynamic-comic/index.html" class="action-btn">
+                    <span class="action-icon">🎨</span>
+                    <span class="action-label">动态漫</span>
+                </a>
+                <a href="../channel/index.html" class="action-btn">
+                    <span class="action-icon">📺</span>
+                    <span class="action-label">我的频道</span>
+                </a>
+            </div>
+        </section>
         <!-- 模块导航网格 -->
         <section class="modules">
             <h2 class="section-title">核心模块</h2>
@@ -45,6 +99,7 @@
         </footer>
     </div>
     <script src="modules-api.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
+    <script src="app.js"></script>    
+    <script src="status-panel.js"></script>
+    </body>
+    </html>
