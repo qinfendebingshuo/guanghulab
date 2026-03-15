@@ -5,7 +5,7 @@ name: "🔍 Server Patrol · 服务器每日巡检"
 
 on:
   schedule:
-    - cron: '0 0,12 * * *'     # UTC 00:00+12:00 = 北京 08:00+20:00
+    - cron: '0 0,12 * * *'     # UTC 00:00 and 12:00 = 北京 08:00 and 20:00
   workflow_dispatch:
   workflow_run:
     workflows: ["🏠 Sandbox Deploy"]
@@ -92,19 +92,17 @@ jobs:
           alerts = '\n'.join(f'  ❌ {a}' for a in report['alerts'])
           fixed = '\n'.join(f'  ✅ {f}' for f in report['auto_fixed'])
 
-          body = f"""🔍 铸渊服务器巡检报告
-          时间: {report['timestamp']}
-
-          ⚠️ 发现 {report['alert_count']} 个异常:
-          {alerts}
-
-          🔧 自动修复 {report['fixed_count']} 个:
-          {fixed if fixed else '  （无）'}
-
-          磁盘使用率: {report['disk_usage_percent']}%
-          Nginx状态: {report['nginx_status']}
-
-          —— 铸渊 · 光湖代码守护人格体"""
+          body = (
+              f"🔍 铸渊服务器巡检报告\n"
+              f"时间: {report['timestamp']}\n\n"
+              f"⚠️ 发现 {report['alert_count']} 个异常:\n"
+              f"{alerts}\n\n"
+              f"🔧 自动修复 {report['fixed_count']} 个:\n"
+              f"{fixed if fixed else '  （无）'}\n\n"
+              f"磁盘使用率: {report['disk_usage_percent']}%\n"
+              f"Nginx状态: {report['nginx_status']}\n\n"
+              f"—— 铸渊 · 光湖代码守护人格体"
+          )
 
           smtp_user = os.environ['SMTP_USER']
           smtp_pass = os.environ['SMTP_PASS']

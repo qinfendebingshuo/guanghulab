@@ -120,10 +120,13 @@ async function main() {
   }
 
   // 找出未能自动修复的异常 → 开工单
-  const autoFixedSet = new Set(report.auto_fixed || []);
+  const autoFixed = report.auto_fixed || [];
   const unresolvedAlerts = (report.alerts || []).filter(alert => {
-    // 如果 alert 对应有一条 auto_fixed，说明已修复，不开工单
-    return !report.auto_fixed.some(fix => fix.includes(alert.split(' ')[0]));
+    // 检查是否有对应的自动修复记录（修复消息中包含完整的异常描述关键词）
+    return !autoFixed.some(fix => {
+      const alertKey = alert.replace(/[：:].*/g, '').trim();
+      return fix.includes(alertKey);
+    });
   });
 
   if (unresolvedAlerts.length === 0) {
