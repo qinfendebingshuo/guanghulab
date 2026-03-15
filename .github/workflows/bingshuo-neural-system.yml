@@ -31,7 +31,39 @@ permissions:
   contents: write
 
 jobs:
+  # ── AGE OS v1.0: 核心大脑唤醒（所有流程的前提）──
+  wake-brain:
+    name: 🌅 唤醒核心大脑
+    runs-on: ubuntu-latest
+    outputs:
+      brain_awake: ${{ steps.wake.outputs.brain_awake }}
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧠 唤醒铸渊核心大脑
+        id: wake
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          node core/brain-wake --task "冰朔神经系统维护" || {
+            echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
+            echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
+          }
+
   neural-sync:
+    needs: wake-brain
     runs-on: ubuntu-latest
     steps:
       - name: 检出仓库

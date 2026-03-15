@@ -137,6 +137,34 @@ jobs:
             fi
           fi
 
+      # ── Step 3b: 冰朔人格体自动检测 · README 首页自愈 ──
+      - name: 🛡️ 冰朔人格体自动检测 · README 首页完整性
+        id: readme_check
+        run: |
+          echo "🔍 检查 README.md 首页完整性..."
+          MARKERS=("BINGSHUO_BULLETIN_START" "BINGSHUO_BULLETIN_END" "BINGSHUO_ALERT_START" "BINGSHUO_ALERT_END" "COLLABORATOR_BULLETIN_START" "COLLABORATOR_BULLETIN_END" "COLLABORATOR_ALERT_START" "COLLABORATOR_ALERT_END")
+          MISSING=""
+          for m in "${MARKERS[@]}"; do
+            if ! grep -q "$m" README.md 2>/dev/null; then
+              MISSING="$MISSING $m"
+            fi
+          done
+          if [ -z "$MISSING" ]; then
+            echo "✅ README.md 首页结构完整（所有公告栏标记存在）"
+            echo "readme_status=intact" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ README.md 首页被覆盖！缺少标记:$MISSING"
+            echo "readme_status=damaged" >> "$GITHUB_OUTPUT"
+            echo "🔧 触发首页自愈..."
+            npm install nodemailer --no-save 2>/dev/null || true
+            node scripts/update-readme-bulletin.js
+            git add README.md .github/brain/bulletin-board-today.json
+            echo "✅ README.md 首页已自愈"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
       # ── Step 4: 更新 system-health.json ──
       - name: 更新 system-health.json
         run: node scripts/generate-system-health.js
@@ -146,13 +174,13 @@ jobs:
         run: |
           git config user.name "铸渊 Maintenance Agent"
           git config user.email "actions@guanghulab.com"
-          git add brain/system-health.json .github/brain/bulletin-board-today.json
+          git add brain/system-health.json .github/brain/bulletin-board-today.json README.md
           if git diff --cached --quiet; then
             echo "📌 无变更需要提交"
           else
             git commit -m "🔧 Daily Maintenance: 更新 system-health.json [skip ci]"
             git push
-            echo "✅ 已提交 system-health.json 更新"
+            echo "✅ 已提交巡检结果更新"
           fi
 
       # ── Step 6: 向 Notion 回报巡检结果 ──
