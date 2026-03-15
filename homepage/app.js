@@ -69,12 +69,16 @@ window.HomepageApp = {
     currentAnnouncementIndex: 0,
     carouselInterval: null,
 
-    async init() {
+       async init() {
         this.renderCards();
         await loadAnnouncementsFromM22();
         await updateModuleStatusFromAPI();
         this.startCarousel();
         this.bindEvents();
+        // 3. 启动状态总览面板（环节3新增）
+        if (window.StatusPanel) {
+            await window.StatusPanel.init();
+        }
         console.log('✅ 首页初始化完成 · 数据源：' + dataSource);
     },
 
