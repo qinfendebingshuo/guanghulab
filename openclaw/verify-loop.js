@@ -191,7 +191,7 @@ async function verifyLoop(live) {
 
     return result;
   } catch (err) {
-    console.log(`❌ 闭环验证异常: ${err.message}`);
+    console.log(`[VERIFY] ❌ 闭环验证异常: ${err.message}`);
     return { success: false, error: err.message };
   }
 }

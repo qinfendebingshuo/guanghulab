@@ -272,7 +272,7 @@ function phaseSleep(soul, loopResult) {
   records.push(sleepRecord);
   fs.writeFileSync(recordPath, JSON.stringify(records, null, 2));
 
-  console.log(`[OPENCLAW] 💤 ${soul.name}核心大脑进入休眠`);
+  console.log(`[OPENCLAW] 💤 ${soul.name} 核心大脑进入休眠`);
   console.log(`[OPENCLAW] 📋 闭环记录已写入: ${recordPath}`);
 
   // 输出到 GITHUB_OUTPUT
