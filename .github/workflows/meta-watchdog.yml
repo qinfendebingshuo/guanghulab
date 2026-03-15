@@ -1,0 +1,70 @@
+name: "🐕 元看门狗 · 巡检健康监控"
+
+# ━━━ 元看门狗：极简独立 workflow，监控巡检本身是否在跑 ━━━
+# 设计原则：
+#   · 极简：不依赖任何外部脚本，只用 curl + 内联 node，PR 无法意外破坏它
+#   · 独立：与被监控的 workflow 完全分离
+#   · 写 Notion：告警直接写入霜砚可读的 Notion 数据库
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # 每6小时一次（北京时间 2/8/14/20点）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-patrol-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查 daily-maintenance 最近运行状态
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 用 GitHub API 查 daily-maintenance 最近一次运行时间
+          LAST_RUN=$(curl -s \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/daily-maintenance.yml/runs?per_page=1&status=completed" \
+            | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); \
+              const r=JSON.parse(d).workflow_runs && JSON.parse(d).workflow_runs[0]; \
+              console.log(r ? r.updated_at : 'NEVER')")
+
+          echo "daily-maintenance 最后运行：$LAST_RUN"
+
+          # 计算距上次运行的时间差，超过 26 小时则告警（24h 调度周期 + 2h 缓冲）
+          node -e "
+            const last = new Date('$LAST_RUN');
+            const now = new Date();
+            const hours = (now - last) / 3600000;
+            if (isNaN(hours) || hours > 26) {
+              console.log('ALERT: daily-maintenance 已超 ' + Math.round(hours) + 'h 未运行');
+              process.exit(1);
+            } else {
+              console.log('OK: 距上次运行 ' + Math.round(hours) + 'h，正常');
+            }
+          "
+
+      - name: 写入 Notion 告警（仅在失败时触发）
+        if: failure()
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+        run: |
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "⚠️ NOTION_API_TOKEN 未配置，跳过 Notion 告警"
+            exit 0
+          fi
+
+          curl -s -X POST https://api.notion.com/v1/pages \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Notion-Version: 2022-06-28" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"parent\": {\"database_id\": \"f983bdc24b654888913ca254160bff33\"},
+              \"properties\": {
+                \"标题\": {\"title\": [{\"text\": {\"content\": \"⚠️ 元看门狗告警：daily-maintenance 巡检中断\"}}]},
+                \"处理状态\": {\"status\": {\"name\": \"待处理\"}}
+              }
+            }"
+

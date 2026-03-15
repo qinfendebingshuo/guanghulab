@@ -185,11 +185,14 @@ jobs:
 
       # ── Step 6: 向 Notion 回报巡检结果 ──
       - name: 向 Notion 回报巡检结果
-        if: ${{ secrets.NOTION_TOKEN != '' && secrets.SYSLOG_DB_ID != '' }}
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           SYSLOG_DB_ID: ${{ secrets.SYSLOG_DB_ID }}
         run: |
+          if [ -z "$NOTION_TOKEN" ] || [ -z "$SYSLOG_DB_ID" ]; then
+            echo "⚠️ NOTION_TOKEN 或 SYSLOG_DB_ID 未配置，跳过 Notion 回报"
+            exit 0
+          fi
           echo "📡 向 Notion 跨平台信号日志回报..."
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
           BRAIN_STATUS="${{ steps.brain_check.outputs.brain_status }}"
