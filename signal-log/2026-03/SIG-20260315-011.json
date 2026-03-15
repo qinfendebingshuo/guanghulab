@@ -1,0 +1,32 @@
+{
+  "signal_id": "SIG-20260315-011",
+  "trace_id": "TRC-20260315-PSP",
+  "timestamp": "2026-03-15T03:52:14.694Z",
+  "signal_type": "GL-DATA",
+  "direction": "GitHub→Notion",
+  "sender": "铸渊",
+  "receiver": "霜砚",
+  "related_dev": null,
+  "related_module": null,
+  "summary": "铸渊 PSP 巡检完成 · 发现 6 个问题 · 自动修复 0 项",
+  "payload": {
+    "check_results": {
+      "G01": "✅",
+      "G02": "✅",
+      "G03": "✅",
+      "G04": "✅",
+      "G05": "❌"
+    },
+    "issues": [
+      "CHK-G05: CI 失败 · .github/workflows/syslog-issue-pipeline.yml · https://github.com/qinfendebingshuo/guanghulab/actions/runs/23101069648",
+      "CHK-G05: CI 失败 · .github/workflows/syslog-auto-pipeline.yml · https://github.com/qinfendebingshuo/guanghulab/actions/runs/23101069609",
+      "CHK-G05: CI 失败 · .github/workflows/daily-maintenance.yml · https://github.com/qinfendebingshuo/guanghulab/actions/runs/23101069556",
+      "CHK-G05: CI 失败 · .github/workflows/pm2-server-diagnose.yml · https://github.com/qinfendebingshuo/guanghulab/actions/runs/23101069510",
+      "CHK-G05: CI 失败 · .github/workflows/pm2-server-diagnose.yml · https://github.com/qinfendebingshuo/guanghulab/actions/runs/23101052049",
+      "CHK-G05: CI 失败 · .github/workflows/syslog-issue-pipeline.yml · https://github.com/qinfendebingshuo/guanghulab/actions/runs/23101051953"
+    ],
+    "auto_fixed": []
+  },
+  "result": "有问题",
+  "ack_signal_id": null
+}
