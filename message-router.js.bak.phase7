@@ -1,0 +1,130 @@
+// 消息智能分流路由·message-router.js·v1.0
+// HoloLake·M-DINGTALK Phase 7
+// DEV-004 之之 × 秋秋
+// 功能：识别消息类型 → 路由到对应处理器
+
+var llmEngine = require('./llm-engine');
+var notionSync = require('./sync/sync-to-notion');
+
+// ===== 消息类型识别 =====
+function classifyMessage(content) {
+    content = (content || '').trim();
+
+    // SYSLOG 类型：含广播编号 + SYSLOG关键词
+    if (/BC-[A-Z0-9-]+/.test(content) && /SYSLOG|系统日志|已完成|completed/i.test(content)) {
+        var bcMatch = content.match(/BC-[A-Z0-9-]+/);
+        return {
+            type: 'syslog',
+            broadcastId: bcMatch ? bcMatch[0] : null,
+            description: 'SYSLOG系统日志提交'
+        };
+    }
+
+    // 提问类型：含广播编号 + 提问/问题关键词
+    if (/BC-[A-Z0-9-]+/.test(content) && /提问|问题|请问|怎么|为什么|报错|error|bug/i.test(content)) {
+        var bcMatch2 = content.match(/BC-[A-Z0-9-]+/);
+        return {
+            type: 'question',
+            broadcastId: bcMatch2 ? bcMatch2[0] : null,
+            description: '广播相关提问'
+        };
+    }
+
+    // 命令类型：以特定前缀开头
+    if (/^[/]/.test(content)) {
+        return {
+            type: 'command',
+            broadcastId: null,
+            description: '系统命令'
+        };
+    }
+
+    // 普通消息
+    return {
+        type: 'chat',
+        broadcastId: null,
+        description: '普通消息'
+    };
+}
+
+// ===== SYSLOG 处理器 =====
+async function handleSyslog(msgContent, senderNick, sessionWebhook) {
+    console.log('[Router] 📡 SYSLOG处理启动');
+
+    // 1. 写入 Notion SYSLOG
+    var syslogResult = { written_to: 'skipped' };
+    try {
+        syslogResult = await notionSync.writeSyslog({
+            title: 'SYSLOG · ' + senderNick + ' · 钉钉提交',
+            dev_id: 'DT-SYSLOG',
+            session_id: 'DT-SL-' + Date.now(),
+            module: 'M-DINGTALK',
+            phase_status: 'syslog_received',
+            content: msgContent,
+            timestamp: new Date().toISOString(),
+            source: 'M-DINGTALK-智能分流-SYSLOG'
+        });
+        console.log('[Router] SYSLOG写入Notion: ' + syslogResult.written_to);
+    } catch (err) {
+        console.error('[Router] SYSLOG写入失败: ' + err.message);
+    }
+
+    // 2. 调用LLM处理（自动选模型）
+    var aiResult = null;
+    try {
+        var systemPrompt = '你是光湖系统的SYSLOG处理助手。收到开发者提交的系统日志后，请：1)确认收到 2)提取关键信息（广播编号、开发者、完成状态）3)给出简短鼓励。用中文回复，简洁温暖。';
+        aiResult = await llmEngine.callLLM(systemPrompt, '开发者' + senderNick + '提交了SYSLOG: \n' + msgContent, { maxTokens: 500 });
+        console.log('[Router] AI处理完成，使用模型: ' + aiResult.model);
+    } catch (err) {
+        console.error('[Router] AI处理失败: ' + err.message);
+    }
+
+    return {
+        syslogStatus: syslogResult.written_to,
+        aiResponse: aiResult ? aiResult.text : null,
+        aiModel: aiResult ? aiResult.model : null
+    };
+}
+
+// ===== 提问处理器 =====
+async function handleQuestion(msgContent, senderNick) {
+    console.log('[Router] ❓ 提问处理流程启动');
+
+    var aiResult = null;
+    try {
+        var systemPrompt = '你是光湖系统的开发者助手（秋秋）。开发者遇到了广播执行中的问题，请帮忙解答。用中文回复，温暖友好，给出具体的操作步骤。如果涉及代码，写出完整可运行的命令。';
+        aiResult = await llmEngine.callLLM(systemPrompt, senderNick + '的提问：\n' + msgContent, { maxTokens: 2000 });
+        console.log('[Router] AI解答完成，使用模型：' + aiResult.model);
+    } catch (err) {
+        console.error('[Router] △ AI解答失败：' + err.message);
+    }
+
+    return {
+        aiResponse: aiResult ? aiResult.text : '抱歉，秋秋暂时无法回答，请截图发给冰朔。',
+        aiModel: aiResult ? aiResult.model : null
+    };
+}
+
+// ===== 普通消息处理器 =====
+async function handleChat(msgContent, senderNick) {
+    console.log('[Router] 💬 普通对话');
+    var aiResult = null;
+    try {
+        var systemPrompt = '你是秋秋，光湖系统的开发者助手。你友好、温暖、有趣，喜欢用简洁的中文回复。如果用户只是闲聊，就正常聊天。如果涉及技术问题，给出有用的建议。';
+        aiResult = await llmEngine.callLLM(systemPrompt, senderNick + '说: ' + msgContent, { maxTokens: 1000 });
+        console.log('[Router] AI回复完成，使用模型: ' + aiResult.model);
+    } catch (err) {
+        console.error('[Router] AI回复失败: ' + err.message);
+    }
+    return {
+        aiResponse: aiResult ? aiResult.text : '秋秋暂时无法回答，请截图发给冰朔。',
+        aiModel: aiResult ? aiResult.model : null
+    };
+}
+
+module.exports = {
+    classifyMessage: classifyMessage,
+    handleSyslog: handleSyslog,
+    handleQuestion: handleQuestion,
+    handleChat: handleChat
+};
