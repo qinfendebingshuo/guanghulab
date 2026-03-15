@@ -1,0 +1,1 @@
+"use strict";function setStyle$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setStyle$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.alidoc.setStyle",exports.setStyle$=setStyle$,exports.default=setStyle$;

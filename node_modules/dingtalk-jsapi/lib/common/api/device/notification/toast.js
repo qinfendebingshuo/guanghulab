@@ -1,0 +1,1 @@
+"use strict";function toast$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.toast$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.notification.toast",exports.toast$=toast$,exports.default=toast$;

@@ -1,0 +1,1 @@
+"use strict";function mark$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.mark$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.tag.mark",exports.mark$=mark$,exports.default=mark$;

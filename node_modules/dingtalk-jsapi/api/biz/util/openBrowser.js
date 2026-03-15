@@ -1,0 +1,1 @@
+"use strict";function openBrowser$(e){return ddSdk_1.ddSdk.invokeAPI(apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openBrowser$=void 0;var ddSdk_1=require("../../../lib/ddSdk"),apiName="biz.util.openBrowser";ddSdk_1.ddSdk.setAPI(apiName,{}),exports.openBrowser$=openBrowser$,exports.default=openBrowser$;

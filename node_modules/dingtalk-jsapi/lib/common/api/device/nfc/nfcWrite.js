@@ -1,0 +1,1 @@
+"use strict";function nfcWrite$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.nfcWrite$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.nfc.nfcWrite",exports.nfcWrite$=nfcWrite$,exports.default=nfcWrite$;

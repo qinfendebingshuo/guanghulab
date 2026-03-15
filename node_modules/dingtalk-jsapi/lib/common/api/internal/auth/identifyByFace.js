@@ -1,0 +1,1 @@
+"use strict";function identifyByFace$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.identifyByFace$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.auth.identifyByFace",exports.identifyByFace$=identifyByFace$,exports.default=identifyByFace$;

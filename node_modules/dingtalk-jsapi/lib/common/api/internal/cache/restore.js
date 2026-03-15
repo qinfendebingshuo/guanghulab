@@ -1,0 +1,1 @@
+"use strict";function restore$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.restore$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.cache.restore",exports.restore$=restore$,exports.default=restore$;

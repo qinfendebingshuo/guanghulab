@@ -1,0 +1,1 @@
+"use strict";function unbindTaobao$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.unbindTaobao$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.user.unbindTaobao",exports.unbindTaobao$=unbindTaobao$,exports.default=unbindTaobao$;

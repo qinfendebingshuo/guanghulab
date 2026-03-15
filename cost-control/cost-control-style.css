@@ -1,0 +1,411 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #12121a;
+    --bg-card: #1a1a2e;
+    --border-color: #2a2a3e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #8888aa;
+    --accent-cyan: #00d4ff;
+    --accent-green: #00ff88;
+    --accent-red: #ff4466;
+    --accent-yellow: #ffaa00;
+    --accent-purple: #aa66ff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    gap: 16px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+.top-bar h1 {
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.status-badge {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--accent-green);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.dashboard {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 成本概览卡片区 */
+.cost-overview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.card-icon {
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: 10px;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.card-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+.card-trend {
+    font-size: 12px;
+}
+
+.card-trend.up {
+    color: var(--accent-red);
+}
+
+.card-trend.down {
+    color: var(--accent-green);
+}
+
+.card-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+    border-radius: 2px;
+    transition: width 1s ease;
+}
+
+/* 模型用量明细区域 */
+.model-usage {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.model-usage h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.tab {
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.tab.active {
+    background: rgba(0, 212, 255, 0.15);
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+.tab:hover {
+    border-color: var(--accent-cyan);
+}
+
+.usage-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.usage-table th,
+.usage-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.usage-table th {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.usage-table tbody tr:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-dot.green {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+/* 成本趋势图 */
+.chart-area {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.chart-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding: 0 20px 30px;
+}
+
+.bar {
+    width: 60px;
+    background: linear-gradient(180deg, var(--accent-cyan), rgba(0, 212, 255, 0.2));
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    transition: all 0.5s ease;
+    position: relative;
+}
+
+.bar span {
+    position: absolute;
+    bottom: -24px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.bar:hover {
+    background: linear-gradient(180deg, var(--accent-green), rgba(0, 255, 136, 0.2));
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.bar.active {
+    background: linear-gradient(180deg, var(--accent-purple), rgba(170, 102, 255, 0.2));
+}
+
+/* 预算设置区域 */
+.budget-settings {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.budget-settings h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-item label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.input-group .prefix {
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    background: rgba(0, 212, 255, 0.05);
+    border-right: 1px solid var(--border-color);
+}
+
+.input-group input {
+    flex: 1;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+}
+
+.select {
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* 告警日志区域 */
+.alert-log {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.alert-log h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.alert-item.warning {
+    border-left: 3px solid var(--accent-yellow);
+    background: rgba(255, 170, 0, 0.05);
+}
+
+.alert-item.info {
+    border-left: 3px solid var(--accent-cyan);
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.alert-item.success {
+    border-left: 3px solid var(--accent-green);
+    background: rgba(0, 255, 136, 0.05);
+}
+
+.alert-icon {
+    font-size: 20px;
+}
+
+.alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.alert-title {
+    font-size: 14px;
+}
+
+.alert-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .cost-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}

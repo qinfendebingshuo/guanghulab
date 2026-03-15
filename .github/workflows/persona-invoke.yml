@@ -1,0 +1,248 @@
+name: Persona Invoke Endpoint
+# 🔗 Phase B2 · Notion Agent → 铸渊人格体唤醒
+#
+# Notion Agent 通过 workflow_dispatch 触发此工作流，
+# 等效于 POST /api/persona/invoke 接口。
+#
+# 完整流程：
+#   ① Notion Agent 发送 workflow_dispatch（传入工单信息）
+#   ② 铸渊 Agent 从 Notion 读取工单内容
+#   ③ 唤醒人格体（Claude API）处理 SYSLOG
+#   ④ 处理结果写回 Notion 工单（receipt_status = completed）
+#   ⑤ 广播文件推送到 GitHub 仓库 broadcasts/{dev_id}/
+#
+# 依赖 Secrets：
+#   LLM_API_KEY          第三方 LLM 平台密钥
+#   LLM_BASE_URL         第三方 LLM 平台 API 地址
+#   NOTION_API_TOKEN     Notion API token
+#   NOTION_TICKET_DB_ID  工单队列数据库 ID
+#   CORE_BRAIN_PAGE_ID   曜冥核心大脑 v4.0 页面 ID
+#   PORTRAIT_DB_ID       开发者动态画像库 ID
+#   FINGERPRINT_DB_ID    模块指纹注册表 ID
+#   INVOKE_API_KEY       调用鉴权密钥
+
+on:
+  workflow_dispatch:
+    inputs:
+      work_order_id:
+        description: 'Notion 工单页面 ID'
+        required: true
+        type: string
+      task_id:
+        description: '广播编号（如 BC-M23-001-AW）'
+        required: true
+        type: string
+      developer:
+        description: '开发者信息（如 DEV-012 Awen）'
+        required: false
+        default: 'unknown'
+        type: string
+      syslog_raw:
+        description: 'SYSLOG JSON 原文（可选，如为空则从 Notion 读取）'
+        required: false
+        default: ''
+        type: string
+      action:
+        description: '动作类型'
+        required: false
+        default: 'process_syslog'
+        type: string
+
+jobs:
+  invoke:
+    name: 🔗 唤醒人格体处理 SYSLOG
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: 🔍 模块验证
+        id: verify
+        env:
+          SYSLOG_CONTENT: ${{ inputs.syslog_raw }}
+          BROADCAST_ID: ${{ inputs.task_id }}
+          AUTHOR: ${{ inputs.developer }}
+        run: node scripts/verify-modules.js
+
+      - name: 🧠 唤醒人格体
+        id: persona
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          BROADCAST_ID: ${{ inputs.task_id }}
+          SUBMIT_TYPE: syslog
+          SUBMIT_CONTENT: ${{ inputs.syslog_raw }}
+          AUTHOR: ${{ inputs.developer }}
+          MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
+          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+        run: node scripts/wake-persona.js
+
+      - name: 📝 回写 Notion 工单
+        if: always()
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          WORK_ORDER_ID: ${{ inputs.work_order_id }}
+          PERSONA_RESULT: ${{ steps.persona.outputs.result }}
+          TASK_ID: ${{ inputs.task_id }}
+        run: |
+          node -e "
+          var https = require('https');
+
+          var token = process.env.NOTION_TOKEN || '';
+          var workOrderId = process.env.WORK_ORDER_ID || '';
+          var result = process.env.PERSONA_RESULT || '(no result)';
+          var taskId = process.env.TASK_ID || '';
+
+          if (!token || !workOrderId) {
+            console.log('⚠️ 缺少 Notion 配置，跳过回写');
+            process.exit(0);
+          }
+
+          // 更新工单状态为 ✅ 已完成
+          var body = JSON.stringify({
+            properties: {
+              '状态': { select: { name: '✅ 已完成' } }
+            }
+          });
+
+          var opts = {
+            hostname: 'api.notion.com',
+            port: 443,
+            path: '/v1/pages/' + workOrderId,
+            method: 'PATCH',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json',
+              'Notion-Version': '2022-06-28',
+              'Content-Length': Buffer.byteLength(body)
+            }
+          };
+
+          var req = https.request(opts, function(res) {
+            var data = '';
+            res.on('data', function(c) { data += c; });
+            res.on('end', function() {
+              if (res.statusCode >= 200 && res.statusCode < 300) {
+                console.log('✅ 工单状态已更新为 ✅ 已完成');
+              } else {
+                console.log('⚠️ 工单状态更新失败: ' + res.statusCode);
+              }
+            });
+          });
+          req.on('error', function(e) { console.log('⚠️ ' + e.message); });
+          req.write(body);
+          req.end();
+
+          // 追加处理结果到工单
+          var appendBody = JSON.stringify({
+            children: [{
+              object: 'block',
+              type: 'heading_2',
+              heading_2: {
+                rich_text: [{ type: 'text', text: { content: '🧠 人格体处理结果 · receipt_status: completed' } }]
+              }
+            }, {
+              object: 'block',
+              type: 'paragraph',
+              paragraph: {
+                rich_text: [{ type: 'text', text: { content: result.slice(0, 2000) } }]
+              }
+            }]
+          });
+
+          var appendOpts = {
+            hostname: 'api.notion.com',
+            port: 443,
+            path: '/v1/blocks/' + workOrderId + '/children',
+            method: 'PATCH',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json',
+              'Notion-Version': '2022-06-28',
+              'Content-Length': Buffer.byteLength(appendBody)
+            }
+          };
+
+          var req2 = https.request(appendOpts, function(res) {
+            var data = '';
+            res.on('data', function(c) { data += c; });
+            res.on('end', function() {
+              if (res.statusCode >= 200 && res.statusCode < 300) {
+                console.log('✅ 处理结果已追加到工单');
+              } else {
+                console.log('⚠️ 结果追加失败: ' + res.statusCode);
+              }
+            });
+          });
+          req2.on('error', function(e) { console.log('⚠️ ' + e.message); });
+          req2.write(appendBody);
+          req2.end();
+          "
+
+      - name: 📡 推送广播到 GitHub
+        if: steps.persona.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BROADCAST_ID: ${{ inputs.task_id }}
+          DEVELOPER_ID: ''
+          DEVELOPER_NAME: ${{ inputs.developer }}
+          BROADCAST_CONTENT: ${{ steps.persona.outputs.result }}
+        run: node scripts/push-broadcast-to-github.js
+
+      - name: 🔴 失败处理
+        if: failure()
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          WORK_ORDER_ID: ${{ inputs.work_order_id }}
+        run: |
+          node -e "
+          var https = require('https');
+          var token = process.env.NOTION_TOKEN || '';
+          var workOrderId = process.env.WORK_ORDER_ID || '';
+
+          if (!token || !workOrderId) process.exit(0);
+
+          var body = JSON.stringify({
+            properties: {
+              '状态': { select: { name: '⚠️ 异常·等人工介入' } }
+            }
+          });
+
+          var opts = {
+            hostname: 'api.notion.com',
+            port: 443,
+            path: '/v1/pages/' + workOrderId,
+            method: 'PATCH',
+            headers: {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json',
+              'Notion-Version': '2022-06-28',
+              'Content-Length': Buffer.byteLength(body)
+            }
+          };
+
+          var req = https.request(opts, function(res) {
+            var data = '';
+            res.on('data', function(c) { data += c; });
+            res.on('end', function() {
+              console.log('工单状态已标记为 ⚠️ 异常');
+            });
+          });
+          req.on('error', function(e) { console.log(e.message); });
+          req.write(body);
+          req.end();
+          "

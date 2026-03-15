@@ -1,0 +1,1 @@
+"use strict";function showPopdownList$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.showPopdownList$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.showPopdownList",exports.showPopdownList$=showPopdownList$,exports.default=showPopdownList$;

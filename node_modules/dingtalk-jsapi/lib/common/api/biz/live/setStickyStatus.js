@@ -1,0 +1,1 @@
+"use strict";function setStickyStatus$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setStickyStatus$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.setStickyStatus",exports.setStickyStatus$=setStickyStatus$,exports.default=setStickyStatus$;

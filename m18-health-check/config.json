@@ -1,0 +1,21 @@
+{
+  "server": {
+    "httpPort": 3000,
+    "wsPort": 3018
+  },
+  "patrol": {
+    "interval": 60000,
+    "maxHistory": 50
+  },
+  "alert": {
+    "warningThreshold": 80,
+    "criticalThreshold": 90
+  },
+  "log": {
+    "file": "health-log.json",
+    "maxDays": 7
+  },
+  "heartbeat": {
+    "timeout": 300000
+  }
+}

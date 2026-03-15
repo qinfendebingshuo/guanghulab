@@ -1,0 +1,650 @@
+{
+  "version": "4.0",
+  "generated_at": "2026-03-13T19:36:48.677Z",
+  "generated_by": "scripts/generate-automation-map.js",
+  "description": "数字地球系统自动化地图 · 所有工作流与自动化脚本",
+  "workflows": [
+    {
+      "file": "bingshuo-deploy-agent.yml",
+      "name": "🧊 冰朔人格体 · 自动部署诊断",
+      "triggers": [
+        "issues",
+        "issue_comment",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/bingshuo-deploy-agent.js"
+      ]
+    },
+    {
+      "file": "bingshuo-neural-system.yml",
+      "name": "冰朔主控神经系统 · 自动维护",
+      "triggers": [
+        "push",
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 0 * * *",
+      "scripts": [
+        "scripts/bingshuo-neural-sync.js"
+      ]
+    },
+    {
+      "file": "brain-sync.yml",
+      "name": "铸渊 Brain Sync",
+      "triggers": [
+        "push",
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 8 * * *",
+      "scripts": [
+        "scripts/process-broadcasts.js",
+        "scripts/daily-check.js",
+        "scripts/update-memory.js"
+      ]
+    },
+    {
+      "file": "bridge-changes-to-notion.yml",
+      "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+      "triggers": [
+        "push",
+        "pull_request"
+      ],
+      "scripts": [
+        "scripts/notion-bridge.js",
+        "scripts/notion-bridge.js"
+      ]
+    },
+    {
+      "file": "bridge-session-summary.yml",
+      "name": "Generate Session Summary for Notion",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "50 23 * * *",
+      "scripts": [
+        "scripts/generate-session-summary.js"
+      ]
+    },
+    {
+      "file": "bridge-syslog-to-notion.yml",
+      "name": "铸渊 · Bridge A · SYSLOG → Notion",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/notion-bridge.js"
+      ]
+    },
+    {
+      "file": "check-structure.yml",
+      "name": "模块结构检查",
+      "triggers": [
+        "unknown"
+      ]
+    },
+    {
+      "file": "daily-maintenance.yml",
+      "name": "🔧 铸渊 · Daily Maintenance Agent",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 2 * * *",
+      "scripts": [
+        "scripts/generate-system-health.js"
+      ]
+    },
+    {
+      "file": "deploy-pages.yml",
+      "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "deploy-to-server.yml",
+      "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/contract-check.js",
+        "scripts/zhuyuan-module-protocol.js",
+        "scripts/notion-bridge.js"
+      ]
+    },
+    {
+      "file": "distribute-broadcasts.yml",
+      "name": "铸渊 · 广播分发",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/distribute-broadcasts.js"
+      ]
+    },
+    {
+      "file": "esp-signal-processor.yml",
+      "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "*/30 * * * *",
+      "scripts": [
+        "scripts/esp-email-processor.js"
+      ]
+    },
+    {
+      "file": "generate-module-doc.yml",
+      "name": "铸渊 · 光湖纪元 模块文档自动生成",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/generate-module-doc.js",
+        "scripts/notify-module-received.js"
+      ]
+    },
+    {
+      "file": "hli-contract-check.yml",
+      "name": "HLI Contract Check",
+      "triggers": [
+        "push",
+        "pull_request"
+      ]
+    },
+    {
+      "file": "notion-callback-pipeline.yml",
+      "name": "Notion Callback Pipeline",
+      "triggers": [
+        "unknown"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/push-broadcast-to-github.js"
+      ]
+    },
+    {
+      "file": "notion-connectivity-test.yml",
+      "name": "铸渊 · Notion 连通性测试",
+      "triggers": [
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/notion-connectivity-test.js"
+      ]
+    },
+    {
+      "file": "notion-heartbeat.yml",
+      "name": "Notion Heartbeat Monitor",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "*/5 * * * *",
+      "scripts": [
+        "scripts/notion-heartbeat.js"
+      ]
+    },
+    {
+      "file": "notion-poll.yml",
+      "name": "铸渊 · Notion 工单轮询",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "*/15 * * * *",
+      "scripts": [
+        "scripts/notion-signal-bridge.js"
+      ]
+    },
+    {
+      "file": "persona-invoke.yml",
+      "name": "Persona Invoke Endpoint",
+      "triggers": [
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/push-broadcast-to-github.js"
+      ]
+    },
+    {
+      "file": "pm2-server-diagnose.yml",
+      "name": "🔧 铸渊 · PM2 服务诊断与健康检查",
+      "triggers": [
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/server-diagnose-report.js"
+      ]
+    },
+    {
+      "file": "process-notion-orders.yml",
+      "name": "Process Notion Work Orders",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "ps-on-build.yml",
+      "name": "🌊 Persona Studio · 代码生成",
+      "triggers": [
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "ps-on-chat.yml",
+      "name": "🌊 Persona Studio · 对话处理",
+      "triggers": [
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "ps-on-complete.yml",
+      "name": "🌊 Persona Studio · 完成通知",
+      "triggers": [
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "ps-on-login.yml",
+      "name": "🌊 Persona Studio · 登录校验",
+      "triggers": [
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "psp-daily-inspection.yml",
+      "name": "铸渊 · PSP 分身巡检",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 1 * * *",
+      "scripts": [
+        "scripts/psp-inspection.js"
+      ]
+    },
+    {
+      "file": "push-broadcast.yml",
+      "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+      "triggers": [
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/push-broadcast.js",
+        "scripts/send-feishu-alert.js",
+        "scripts/send-feishu-alert.js"
+      ]
+    },
+    {
+      "file": "receive-syslog.yml",
+      "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+      "triggers": [
+        "unknown"
+      ],
+      "scripts": [
+        "scripts/receive-syslog.js",
+        "scripts/send-feishu-alert.js"
+      ]
+    },
+    {
+      "file": "staging-preview.yml",
+      "name": "🔍 铸渊预演部署 (Staging Preview)",
+      "triggers": [
+        "pull_request",
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "sync-login-entry.yml",
+      "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+      "triggers": [
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/sync-login-entry.js",
+        "scripts/send-feishu-alert.js"
+      ]
+    },
+    {
+      "file": "sync-persona-studio.yml",
+      "name": "🔄 铸渊跨仓库同步 · persona-studio",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/cross-repo-sync.js"
+      ]
+    },
+    {
+      "file": "syslog-auto-pipeline.yml",
+      "name": "SYSLOG Auto Pipeline",
+      "triggers": [
+        "unknown"
+      ],
+      "scripts": [
+        "scripts/verify-modules.js",
+        "scripts/wake-persona.js",
+        "scripts/create-standardized-ticket.js",
+        "scripts/push-broadcast-to-github.js"
+      ]
+    },
+    {
+      "file": "syslog-issue-pipeline.yml",
+      "name": "📡 SYSLOG Issue Pipeline",
+      "triggers": [
+        "issues"
+      ],
+      "scripts": [
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/verify-modules.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/wake-persona.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/create-standardized-ticket.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/push-broadcast-to-github.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js",
+        "scripts/pipeline-reporter.js"
+      ]
+    },
+    {
+      "file": "syslog-pipeline.yml",
+      "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "scripts": [
+        "scripts/process-syslog.js"
+      ]
+    },
+    {
+      "file": "test-notion-bridge.yml",
+      "name": "🧪 Notion Bridge Connectivity Test",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "file": "update-readme-bulletin.yml",
+      "name": "📢 更新系统公告区",
+      "triggers": [
+        "push",
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 1 * * *",
+      "scripts": [
+        "scripts/update-readme-bulletin.js"
+      ]
+    },
+    {
+      "file": "update-repo-map.yml",
+      "name": "铸渊 · 图书馆目录自动更新",
+      "triggers": [
+        "push",
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 0 * * *",
+      "scripts": [
+        "scripts/generate-repo-map.js"
+      ]
+    },
+    {
+      "file": "zhuyuan-brain-sync.yml",
+      "name": "铸渊 · Brain Sync",
+      "triggers": [
+        "push"
+      ],
+      "scripts": [
+        "scripts/update-brain.js",
+        "scripts/process-broadcasts.js"
+      ]
+    },
+    {
+      "file": "zhuyuan-daily-agent.yml",
+      "name": "🤖 铸渊巡检 Agent · 每日自动巡检与修复",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 14 * * *",
+      "scripts": [
+        "scripts/zhuyuan-daily-agent.js"
+      ]
+    },
+    {
+      "file": "zhuyuan-daily-selfcheck.yml",
+      "name": "铸渊 · 每日自检",
+      "triggers": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "cron": "0 0 * * *",
+      "scripts": [
+        "scripts/selfcheck.js"
+      ]
+    },
+    {
+      "file": "zhuyuan-issue-reply.yml",
+      "name": "铸渊 · Issue 自动回复",
+      "triggers": [
+        "issues",
+        "issue_comment"
+      ],
+      "scripts": [
+        "scripts/zhuyuan-issue-reply.js"
+      ]
+    },
+    {
+      "file": "zhuyuan-pr-review.yml",
+      "name": "铸渊 · PR Review",
+      "triggers": [
+        "pull_request"
+      ],
+      "scripts": [
+        "scripts/contract-check.js",
+        "scripts/route-align-check.js"
+      ]
+    }
+  ],
+  "cron_jobs": [
+    {
+      "cron": "*/15 * * * *",
+      "workflow": "notion-poll.yml",
+      "name": "铸渊 · Notion 工单轮询"
+    },
+    {
+      "cron": "*/30 * * * *",
+      "workflow": "esp-signal-processor.yml",
+      "name": "铸渊 · ESP 邮件信号处理器（已暂停）"
+    },
+    {
+      "cron": "*/5 * * * *",
+      "workflow": "notion-heartbeat.yml",
+      "name": "Notion Heartbeat Monitor"
+    },
+    {
+      "cron": "0 0 * * *",
+      "workflow": "bingshuo-neural-system.yml",
+      "name": "冰朔主控神经系统 · 自动维护"
+    },
+    {
+      "cron": "0 0 * * *",
+      "workflow": "update-repo-map.yml",
+      "name": "铸渊 · 图书馆目录自动更新"
+    },
+    {
+      "cron": "0 0 * * *",
+      "workflow": "zhuyuan-daily-selfcheck.yml",
+      "name": "铸渊 · 每日自检"
+    },
+    {
+      "cron": "0 1 * * *",
+      "workflow": "psp-daily-inspection.yml",
+      "name": "铸渊 · PSP 分身巡检"
+    },
+    {
+      "cron": "0 1 * * *",
+      "workflow": "update-readme-bulletin.yml",
+      "name": "📢 更新系统公告区"
+    },
+    {
+      "cron": "0 14 * * *",
+      "workflow": "zhuyuan-daily-agent.yml",
+      "name": "🤖 铸渊巡检 Agent · 每日自动巡检与修复"
+    },
+    {
+      "cron": "0 2 * * *",
+      "workflow": "daily-maintenance.yml",
+      "name": "🔧 铸渊 · Daily Maintenance Agent"
+    },
+    {
+      "cron": "0 8 * * *",
+      "workflow": "brain-sync.yml",
+      "name": "铸渊 Brain Sync"
+    },
+    {
+      "cron": "50 23 * * *",
+      "workflow": "bridge-session-summary.yml",
+      "name": "Generate Session Summary for Notion"
+    }
+  ],
+  "deploy_scripts": [
+    {
+      "workflow": "bingshuo-deploy-agent.yml",
+      "name": "🧊 冰朔人格体 · 自动部署诊断",
+      "triggers": [
+        "issues",
+        "issue_comment",
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "workflow": "deploy-pages.yml",
+      "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ]
+    },
+    {
+      "workflow": "deploy-to-server.yml",
+      "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+      "triggers": [
+        "push",
+        "workflow_dispatch"
+      ]
+    }
+  ],
+  "data_sync_scripts": [
+    {
+      "script": "scripts/bingshuo-deploy-agent.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/bingshuo-neural-sync.js",
+      "type": "sync"
+    },
+    {
+      "script": "scripts/brain-bridge-sync.js",
+      "type": "sync"
+    },
+    {
+      "script": "scripts/create-standardized-ticket.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/cross-repo-sync.js",
+      "type": "sync"
+    },
+    {
+      "script": "scripts/generate-automation-map.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/generate-communication-map.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/invoke-persona.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/notify-module-received.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/notion-bridge.js",
+      "type": "bridge"
+    },
+    {
+      "script": "scripts/notion-connectivity-test.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/notion-heartbeat.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/notion-signal-bridge.js",
+      "type": "bridge"
+    },
+    {
+      "script": "scripts/process-broadcasts.js",
+      "type": "broadcast"
+    },
+    {
+      "script": "scripts/push-broadcast-to-github.js",
+      "type": "broadcast"
+    },
+    {
+      "script": "scripts/push-broadcast.js",
+      "type": "broadcast"
+    },
+    {
+      "script": "scripts/receive-syslog.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/server-diagnose-report.js",
+      "type": "other"
+    },
+    {
+      "script": "scripts/sync-login-entry.js",
+      "type": "sync"
+    },
+    {
+      "script": "scripts/wake-persona.js",
+      "type": "other"
+    }
+  ],
+  "status": "stable"
+}

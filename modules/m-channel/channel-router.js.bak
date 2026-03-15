@@ -1,0 +1,244 @@
+// 频道路由（支持真实模块适配器 + 卡片列表首页 + 数据采集钩子）
+window.ChannelRouter = {
+    currentChannel: 'home',
+    contentEl: null,
+    
+    init: function(contentElement) {
+        this.contentEl = contentElement;
+        console.log('[router] 初始化');
+        
+        const savedState = ChannelState.restoreState();
+        if (savedState && savedState.currentChannel) {
+            this.currentChannel = savedState.currentChannel;
+        }
+        
+        this.loadChannel(this.currentChannel);
+        
+        if (savedState && savedState.visited) {
+            savedState.visited.forEach(channel => {
+                document.querySelectorAll('.channel-btn').forEach(btn => {
+                    if (btn.dataset.channel === channel) {
+                        btn.classList.add('visited');
+                    }
+                });
+            });
+        }
+
+        // 页面关闭时结束计时
+        window.addEventListener('beforeunload', function() {
+            if (typeof ChannelAnalytics !== 'undefined') {
+                ChannelAnalytics.endSession();
+            }
+        });
+    },
+    
+    navigateTo: function(channel) {
+        if (channel === this.currentChannel) return;
+        
+        console.log(`[router] 导航到: ${channel}`);
+        
+        this.contentEl.classList.add('fade-out');
+        
+        setTimeout(() => {
+            this.loadChannel(channel);
+            this.contentEl.classList.remove('fade-out');
+            this.contentEl.classList.add('fade-in');
+            setTimeout(() => {
+                this.contentEl.classList.remove('fade-in');
+            }, 300);
+        }, 300);
+        
+        this.currentChannel = channel;
+        
+        document.querySelectorAll('.channel-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.channel === channel) {
+                btn.classList.add('active');
+            }
+        });
+        
+        ChannelState.saveState({
+            currentChannel: channel,
+            visited: this.getVisitedChannels()
+        });
+    },
+    
+    loadChannel: function(channel) {
+        if (!this.contentEl) return;
+        
+        // 数据采集钩子：开始加载
+        if (typeof ChannelAnalytics !== 'undefined') {
+            ChannelAnalytics.markLoadStart();
+            if (channel !== 'home' && channel !== 'debug' && channel !== 'dashboard') {
+                ChannelAnalytics.recordVisit(channel);
+            }
+        }
+        
+        // 如果是真实模块（m06/m08/m11）
+        if (channel === 'm06' || channel === 'm08' || channel === 'm11') {
+            if (window.ModuleAdapter) {
+                ModuleAdapter.loadModule(channel, 'channel-content');
+                // 模块加载完成后记录加载时间
+                setTimeout(() => {
+                    if (typeof ChannelAnalytics !== 'undefined') {
+                        ChannelAnalytics.markLoadEnd(channel);
+                    }
+                }, 100);
+            } else {
+                this.contentEl.innerHTML = '<div class="error-boundary">适配器未加载</div>';
+            }
+            ModuleLifecycle.onLoad(channel);
+            return;
+    .catch(err => {
+        document.getElementById('module-content').innerHTML = '<h2>设置面板加载失败</h2>';
+        console.error(err);
+    });
+    return;
+}
+        }
+        
+        // 数据面板路由（环节8新增）
+        if (channel === 'dashboard') {
+            fetch('views/channel-dashboard.html')
+                .then(response => response.text())
+                .then(html => {
+                    this.contentEl.innerHTML = html;
+                    // 渲染图表
+                    if (typeof ChannelDashboard !== 'undefined') {
+                        ChannelDashboard.render();
+                    }
+                    ModuleLifecycle.onLoad('dashboard');
+                    // 记录加载完成
+                    if (typeof ChannelAnalytics !== 'undefined') {
+                        ChannelAnalytics.markLoadEnd('dashboard');
+                    }
+                })
+                .catch(err => {
+                    this.contentEl.innerHTML = '<h2>数据面板加载失败</h2>';
+                    console.error(err);
+                });
+            return;
+// 设置中心路由（环节9新增）
+if (channel === 'settings') {
+    fetch('views/channel-settings.html')
+    .then(r => r.text())
+    .then(html => {
+        document.getElementById('module-content').innerHTML = html;
+        if (typeof SettingsUI !== 'undefined') {
+            SettingsUI.init();
+        }
+    })
+    .catch(err => {
+        document.getElementById('module-content').innerHTML = '<h2>设置面板加载失败</h2>';
+        console.error(err);
+    });
+    return;
+}
+        }
+        
+        // 内置频道
+        if (channel === 'home') {
+            this.renderModuleCards();
+        } else if (channel === 'debug') {
+            this.loadDebugPanel();
+        } else {
+            this.contentEl.innerHTML = '<h2>未知频道</h2>';
+        }
+
+        // 对于内置频道也记录加载完成
+        if (typeof ChannelAnalytics !== 'undefined' && channel !== 'dashboard') {
+            ChannelAnalytics.markLoadEnd(channel);
+        }
+    },
+    
+    // 渲染所有模块卡片（用于首页）
+    renderModuleCards: function() {
+        const modules = [
+            { id: 'm06', name: '工单管理', icon: '📋', desc: '管理任务和工单' },
+            { id: 'm08', name: '数据统计', icon: '📊', desc: '查看数据统计和报表' },
+            { id: 'm11', name: '组件库', icon: '🧩', desc: '系统组件展示' },
+            { id: 'debug', name: '调试面板', icon: '🐞', desc: '查看事件和模块状态' },
+            { id: 'dashboard', name: '数据面板', icon: '📈', desc: '查看使用统计和性能' }
+        ];
+        
+        let html = '<div class="module-grid">';
+        modules.forEach(mod => {
+            const isFavorite = window.ChannelPreferences ? 
+                ChannelPreferences.getFavorites().includes(mod.id) : false;
+            html += `
+                <div class="module-card" data-module="${mod.id}">
+                    <div class="module-card-header">
+                        <span class="drag-handle">⋮⋮</span>
+                        <span class="module-card-title">${mod.icon} ${mod.name}</span>
+                        <span class="favorite-star ${isFavorite ? 'active' : ''}">${isFavorite ? '★' : '☆'}</span>
+                    </div>
+                    <div class="module-card-content">
+                        <p>${mod.desc}</p>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        this.contentEl.innerHTML = html;
+        ModuleLifecycle.onLoad('home');
+        
+        // 触发收藏/拖拽重新初始化
+        if (window.ChannelFavorites) {
+            setTimeout(() => {
+                ChannelFavorites.init();
+                ChannelFavorites.initDragAndDrop();
+            }, 100);
+        }
+    },
+    
+    loadDebugPanel: function() {
+        fetch('views/channel-debug.html')
+            .then(response => response.text())
+            .then(html => {
+                this.contentEl.innerHTML = html;
+                ModuleLifecycle.onLoad('debug');
+                this.initDebugPanel();
+            })
+            .catch(err => {
+                this.contentEl.innerHTML = '<h2>调试面板加载失败</h2>';
+            });
+    },
+    
+    initDebugPanel: function() {
+        const msgList = document.getElementById('debug-messages');
+        if (msgList && window.debugMessages) {
+            window.debugMessages.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = `[${msg.time}] ${msg.event}: ${JSON.stringify(msg.data)}`;
+                msgList.appendChild(li);
+            });
+        }
+        const sendBtn = document.getElementById('debug-send');
+        const input = document.getElementById('debug-input');
+        if (sendBtn && input) {
+            sendBtn.addEventListener('click', () => {
+                const text = input.value.trim();
+                if (text) {
+                    EventBus.emit('debug:message', { text, from: '调试面板' });
+                    input.value = '';
+                }
+            });
+        }
+        const clearBtn = document.getElementById('debug-clear');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                ChannelState.clearState();
+                alert('状态已清除，刷新页面生效');
+            });
+        }
+    },
+    
+    getVisitedChannels: function() {
+        const visited = [];
+        document.querySelectorAll('.channel-btn.visited').forEach(btn => {
+            visited.push(btn.dataset.channel);
+        });
+        return visited;
+    }
+};

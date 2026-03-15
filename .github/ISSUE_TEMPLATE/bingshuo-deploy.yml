@@ -1,0 +1,53 @@
+name: "🧊 冰朔人格体 · 部署诊断"
+description: "启动冰朔人格体，自动检查所有工作流状态并生成诊断报告"
+title: "[部署诊断] 启动冰朔人格体"
+labels: ["bingshuo-deploy", "pending"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🧊 冰朔人格体 · 自动部署诊断
+
+        冰朔你好！只需要提交这个 Issue，冰朔人格体就会自动启动。
+
+        它会帮你做以下事情：
+        1. ✅ 检查所有工作流的运行状态
+        2. 🔍 诊断失败的工作流原因
+        3. 🔄 自动重新运行失败的工作流
+        4. 📝 生成一份中文报告发在下方评论里
+
+        **你不需要点任何其他按钮，提交就行了。**
+
+  - type: dropdown
+    id: action
+    attributes:
+      label: "你想做什么"
+      description: "通常选「全自动」就行"
+      options:
+        - 全自动（检查 + 修复）
+        - 只看报告（不修复）
+        - 只重新运行失败的
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hours_back
+    attributes:
+      label: "检查多久的记录"
+      description: "通常选24小时就够了"
+      options:
+        - 24小时
+        - 48小时
+        - 72小时
+        - 最近一周
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: "补充说明（可选）"
+      description: "如果有具体的问题或想让冰朔人格体特别关注的，写在这里"
+    validations:
+      required: false

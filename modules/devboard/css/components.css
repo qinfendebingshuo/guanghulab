@@ -1,0 +1,140 @@
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, var(--color-bg-card), #2a3442);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    border: 1px solid var(--color-border);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, var(--color-accent-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+}
+
+.dev-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.dev-card {
+    background: var(--color-bg-card);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+}
+
+.dev-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.dev-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background: linear-gradient(135deg, var(--color-accent-primary), #4cc9f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.dev-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.dev-id {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+}
+
+.dev-streak {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-accent-primary);
+}
+
+.ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.ranking-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 70px;
+    align-items: center;
+    background: var(--color-bg-card);
+    border-radius: 12px;
+    padding: 0.8rem;
+    border: 1px solid var(--color-border);
+}
+
+.ranking-streak-bar {
+    background: var(--color-bg-secondary);
+    height: 16px;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.streak-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #00b4d8, #4cc9f0);
+}
+
+.streak-count {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: white;
+}
+
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

@@ -1,0 +1,1 @@
+"use strict";function addFromManual$(a){return common_1.ddSdk.invokeAPI(exports.apiName,a)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.addFromManual$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.contact.addFromManual",exports.addFromManual$=addFromManual$,exports.default=addFromManual$;

@@ -1,0 +1,1 @@
+"use strict";function create$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.create$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.ding.create",exports.create$=create$,exports.default=create$;

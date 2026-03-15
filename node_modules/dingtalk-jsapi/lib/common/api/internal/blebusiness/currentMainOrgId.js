@@ -1,0 +1,1 @@
+"use strict";function currentMainOrgId$(r){return common_1.ddSdk.invokeAPI(exports.apiName,r)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.currentMainOrgId$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.blebusiness.currentMainOrgId",exports.currentMainOrgId$=currentMainOrgId$,exports.default=currentMainOrgId$;

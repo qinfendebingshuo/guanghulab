@@ -1,0 +1,1 @@
+"use strict";function friendsByName$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.friendsByName$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.bizcard.friendsByName",exports.friendsByName$=friendsByName$,exports.default=friendsByName$;

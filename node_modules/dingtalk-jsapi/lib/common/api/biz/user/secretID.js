@@ -1,0 +1,1 @@
+"use strict";function secretID$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.secretID$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.user.secretID",exports.secretID$=secretID$,exports.default=secretID$;

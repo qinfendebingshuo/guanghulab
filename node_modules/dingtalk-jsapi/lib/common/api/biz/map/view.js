@@ -1,0 +1,1 @@
+"use strict";function view$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.view$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.map.view",exports.view$=view$,exports.default=view$;

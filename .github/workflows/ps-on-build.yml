@@ -1,0 +1,45 @@
+name: "🌊 Persona Studio · 代码生成"
+
+# 工作流存根 · "我要开发" → 代码生成+测试+打包
+# 实际代码生成由 persona-studio/backend/brain/code-generator.js 处理
+# 此工作流用于重量级构建任务的异步执行
+
+on:
+  workflow_dispatch:
+    inputs:
+      dev_id:
+        description: '体验者编号（EXP-XXX）'
+        required: true
+      email:
+        description: '完成后通知邮箱'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: "🚀 代码生成"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 安装依赖
+        run: |
+          cd persona-studio/backend
+          npm install --production
+
+      - name: 🔨 执行代码生成
+        env:
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+        run: |
+          echo "🔨 开始代码生成"
+          echo "  体验者: ${{ github.event.inputs.dev_id }}"
+          echo "  通知邮箱: ${{ github.event.inputs.email }}"
+          echo "✅ 代码生成任务已排队（由后端服务处理）"

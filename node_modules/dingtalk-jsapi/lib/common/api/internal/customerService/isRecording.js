@@ -1,0 +1,1 @@
+"use strict";function isRecording$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.isRecording$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.customerService.isRecording",exports.isRecording$=isRecording$,exports.default=isRecording$;

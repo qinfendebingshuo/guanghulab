@@ -1,0 +1,57 @@
+name: "📡 铸渊 · 执行层状态同步"
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # 每日 UTC 03:00 (北京时间 11:00)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  execution-sync:
+    name: 执行层状态采集与同步
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── Step 1: 加载执行上下文 ──
+      - name: 加载执行上下文
+        run: node core/context-loader
+
+      # ── Step 2: 运行系统自检 ──
+      - name: 运行系统自检
+        run: node core/system-check --auto-tasks
+
+      # ── Step 3: 生成执行状态报告 ──
+      - name: 生成执行状态报告
+        run: node core/execution-sync report
+
+      # ── Step 4: 同步到 Notion ──
+      - name: 同步执行状态到 Notion
+        if: ${{ env.NOTION_TOKEN != '' }}
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          EXECUTION_LOG_DB_ID: ${{ secrets.EXECUTION_LOG_DB_ID }}
+        run: node core/execution-sync sync
+
+      # ── Step 5: 提交状态报告 ──
+      - name: 提交状态报告
+        run: |
+          git config user.name "铸渊 Execution Sync"
+          git config user.email "actions@guanghulab.com"
+          git add docs/execution-status.md
+          if git diff --cached --quiet; then
+            echo "📌 无变更需要提交"
+          else
+            git commit -m "📡 Execution Sync: 更新执行状态报告 [skip ci]"
+            git push
+            echo "✅ 已提交执行状态报告"
+          fi

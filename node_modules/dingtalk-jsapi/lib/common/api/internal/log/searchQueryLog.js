@@ -1,0 +1,1 @@
+"use strict";function searchQueryLog$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.searchQueryLog$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.log.searchQueryLog",exports.searchQueryLog$=searchQueryLog$,exports.default=searchQueryLog$;

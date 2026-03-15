@@ -1,0 +1,1 @@
+"use strict";function stop$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.stop$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="ui.pullToRefresh.stop",exports.stop$=stop$,exports.default=stop$;

@@ -1,0 +1,145 @@
+/* 频道布局样式 - 三种布局模式 */
+
+/* 基础卡片样式（所有布局共用） */
+.module-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.module-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+/* 卡片头部 */
+.module-card-header {
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.module-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 收藏星星 */
+.favorite-star {
+    font-size: 20px;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.favorite-star.active {
+    color: #fbbf24;
+}
+
+.favorite-star:hover {
+    transform: scale(1.1);
+}
+
+/* 卡片内容区 */
+.module-card-content {
+    padding: 16px;
+    min-height: 100px;
+}
+
+/* 拖拽把手 */
+.drag-handle {
+    font-size: 20px;
+    color: #999;
+    cursor: grab;
+    user-select: none;
+    margin-right: 8px;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* ===== 布局1：网格模式（默认） ===== */
+.layout-grid .channel-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    padding: 24px;
+}
+
+.layout-grid .module-card {
+    height: fit-content;
+}
+
+/* ===== 布局2：列表模式（一行一个） ===== */
+.layout-list .channel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+}
+
+.layout-list .module-card {
+    width: 100%;
+}
+
+.layout-list .module-card-header {
+    padding: 12px 16px;
+}
+
+.layout-list .module-card-content {
+    padding: 12px 16px;
+}
+
+/* ===== 布局3：紧凑模式（小卡片密排） ===== */
+.layout-compact .channel-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.layout-compact .module-card {
+    font-size: 14px;
+}
+
+.layout-compact .module-card-header {
+    padding: 10px 12px;
+}
+
+.layout-compact .module-card-title {
+    font-size: 16px;
+}
+
+.layout-compact .module-card-content {
+    padding: 10px 12px;
+    min-height: 80px;
+}
+
+/* 布局切换动画 */
+.channel-content {
+    transition: all 0.3s ease-in-out;
+}
+
+/* 拖拽中的样式 */
+.module-card.dragging {
+    opacity: 0.6;
+    transform: scale(0.98);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* 拖拽放置区高亮 */
+.module-card.drop-target {
+    border: 2px dashed #3b82f6;
+    background: #f0f9ff;
+}

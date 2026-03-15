@@ -1,0 +1,49 @@
+name: 铸渊 · Sync Login Entry · Notion → 飞书文档A
+
+# 链路1：登录入口同步
+# Notion 霜砚登录入口页面 → 全量替换飞书文档A
+#
+# 依赖 Secrets：
+#   NOTION_TOKEN          Notion API token
+#   NOTION_LOGIN_PAGE_ID  Notion 登录入口页面 ID
+#   FEISHU_APP_ID         飞书应用 App ID
+#   FEISHU_APP_SECRET     飞书应用 App Secret
+#   FEISHU_DOC_A_ID       飞书文档A的 document_id
+
+on:
+  repository_dispatch:
+    types: [sync-login-entry]
+  workflow_dispatch:
+
+jobs:
+  sync-login-entry:
+    name: 📋 同步登录入口到飞书
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔗 同步 Notion 登录入口 → 飞书文档A
+        env:
+          NOTION_TOKEN:          ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_LOGIN_PAGE_ID:  ${{ secrets.NOTION_LOGIN_PAGE_ID }}
+          FEISHU_APP_ID:         ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET:     ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_DOC_A_ID:       ${{ secrets.FEISHU_DOC_A_ID }}
+        run: node scripts/sync-login-entry.js
+
+      - name: 🔴 失败告警 → 飞书通知
+        if: failure()
+        env:
+          FEISHU_APP_ID:     ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          ALERT_CHAT_ID:     ${{ secrets.FEISHU_ALERT_CHAT_ID }}
+        run: node scripts/send-feishu-alert.js "sync-login-entry"

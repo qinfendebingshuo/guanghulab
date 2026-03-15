@@ -1,0 +1,1 @@
+"use strict";function getCloudSetting$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getCloudSetting$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.getCloudSetting",exports.getCloudSetting$=getCloudSetting$,exports.default=getCloudSetting$;

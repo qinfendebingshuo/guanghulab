@@ -1,0 +1,1 @@
+"use strict";function hidePreloader$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.hidePreloader$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.notification.hidePreloader",exports.hidePreloader$=hidePreloader$,exports.default=hidePreloader$;

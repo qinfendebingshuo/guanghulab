@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光湖频道 · 动态渲染引擎</title>
+    <link rel="stylesheet" href="channel-style.css">
+    <link rel="stylesheet" href="channel-transition.css">
+</head>
+<body>
+    <div class="channel-container">
+        <nav class="channel-nav">
+            <button class="channel-btn active" data-channel="home">🏠 首页</button>
+            <button class="channel-btn" data-channel="module-a">📦 模块A</button>
+            <button class="channel-btn" data-channel="module-b">📦 模块B</button>
+            <button class="channel-btn" data-channel="module-c">📦 模块C</button>
+            <button class="channel-btn" data-channel="debug">🐞 调试面板</button>
+        </nav>
+        <main id="channel-content" class="channel-content">
+            <!-- 动态内容会加载到这里 -->
+        </main>
+    </div>
+
+    <!-- 核心脚本（顺序很重要！） -->
+    <script src="module-registry.js"></script>
+    <script src="event-bus.js"></script>
+    <script src="module-lifecycle.js"></script>
+    <script src="channel-state.js"></script>
+    <script src="channel-router.js"></script>
+    <script src="module-loader.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

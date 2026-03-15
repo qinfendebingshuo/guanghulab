@@ -1,0 +1,34 @@
+name: 铸渊 · 每日自检
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # UTC 00:00 = 北京时间 08:00
+  workflow_dispatch:      # 也支持手动触发
+
+jobs:
+  selfcheck:
+    name: 🔍 铸渊自检
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run self-check
+        id: check
+        run: node scripts/selfcheck.js
+
+      - name: Commit self-check result
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/memory.json
+          git diff --cached --quiet || git commit -m "🔍 铸渊每日自检 · $(date +%Y-%m-%d)"
+          git push

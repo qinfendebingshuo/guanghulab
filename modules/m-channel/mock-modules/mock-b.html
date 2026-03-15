@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>模拟模块B</h2>
+    <div id="messages"></div>
+    
+    <script>
+        EventBus.on('mock-a:click', function(data) {
+            const div = document.getElementById('messages');
+            div.innerHTML += '<p>收到模块A消息: ' + JSON.stringify(data) + '</p>';
+            
+            // 回复消息
+            EventBus.emit('mock-b:reply', { message: '已收到，谢谢！' });
+        });
+    </script>
+</body>
+</html>

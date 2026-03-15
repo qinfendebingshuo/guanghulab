@@ -1,0 +1,1 @@
+"use strict";function quit$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.quit$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.quit",exports.quit$=quit$,exports.default=quit$;

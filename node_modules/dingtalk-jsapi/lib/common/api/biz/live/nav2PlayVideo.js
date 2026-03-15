@@ -1,0 +1,1 @@
+"use strict";function nav2PlayVideo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.nav2PlayVideo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.nav2PlayVideo",exports.nav2PlayVideo$=nav2PlayVideo$,exports.default=nav2PlayVideo$;

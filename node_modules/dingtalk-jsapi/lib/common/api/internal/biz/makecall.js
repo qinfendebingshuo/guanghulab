@@ -1,0 +1,1 @@
+"use strict";function makecall$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.makecall$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.biz.makecall",exports.makecall$=makecall$,exports.default=makecall$;

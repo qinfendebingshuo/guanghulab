@@ -1,0 +1,1 @@
+"use strict";function prompt$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.prompt$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.notification.prompt",exports.prompt$=prompt$,exports.default=prompt$;

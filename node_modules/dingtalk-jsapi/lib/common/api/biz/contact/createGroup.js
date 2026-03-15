@@ -1,0 +1,1 @@
+"use strict";function createGroup$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.createGroup$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.contact.createGroup",exports.createGroup$=createGroup$,exports.default=createGroup$;

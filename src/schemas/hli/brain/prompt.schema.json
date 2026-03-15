@@ -1,0 +1,33 @@
+{
+  "hli_id": "HLI-BRAIN-001",
+  "version": "v0.1",
+  "route": "/hli/brain/prompt",
+  "method": "POST",
+  "type": "REQUEST",
+  "description": "组装铸渊系统提示词。前端传入用户身份和上下文，后端返回完整 system prompt。",
+  "input": {
+    "type": "object",
+    "required": ["userName"],
+    "properties": {
+      "userName": { "type": "string", "description": "当前用户名" },
+      "ghUser": { "type": "string", "description": "GitHub 用户名" },
+      "role": { "type": "string", "enum": ["founder", "supreme", "main", "dev", "guest"] },
+      "mode": { "type": "string", "enum": ["chat", "build", "review", "brain"] },
+      "text": { "type": "string", "description": "当前用户输入文本（用于自动检测模式）" },
+      "devStatus": { "type": "object", "description": "开发者状态" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "prompt", "brain_version"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "prompt": { "type": "string" },
+      "brain_version": { "type": "string" },
+      "mode": { "type": "string" }
+    }
+  },
+  "changelog": [
+    { "date": "2026-03-10", "note": "核心大脑升级 v3.0 — 从前端迁出提示词组装逻辑" }
+  ]
+}

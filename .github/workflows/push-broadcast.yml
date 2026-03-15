@@ -1,0 +1,63 @@
+name: 铸渊 · Push Broadcast · Notion → 飞书文档B
+
+# 链路2：新广播推送
+# Notion 新广播页面 → 追加到飞书文档B顶部
+#
+# 依赖 Secrets：
+#   NOTION_TOKEN       Notion API token
+#   FEISHU_APP_ID      飞书应用 App ID
+#   FEISHU_APP_SECRET  飞书应用 App Secret
+#   FEISHU_DOC_B_ID    飞书文档B的 document_id
+#
+# dispatch payload：
+#   broadcast_page_id  Notion 广播页面 ID
+
+on:
+  repository_dispatch:
+    types: [push-broadcast]
+  workflow_dispatch:
+    inputs:
+      broadcast_page_id:
+        description: 'Notion 广播页面 ID'
+        required: true
+
+jobs:
+  push-broadcast:
+    name: 📡 推送广播到飞书
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📡 推送广播 → 飞书文档B
+        env:
+          NOTION_TOKEN:      ${{ secrets.NOTION_API_TOKEN }}
+          BROADCAST_PAGE_ID: ${{ github.event.client_payload.broadcast_page_id || github.event.inputs.broadcast_page_id }}
+          FEISHU_APP_ID:     ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_DOC_B_ID:   ${{ secrets.FEISHU_DOC_B_ID }}
+        run: node scripts/push-broadcast.js
+
+      - name: 📢 通知飞书群有新广播
+        if: success()
+        env:
+          FEISHU_APP_ID:     ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          ALERT_CHAT_ID:     ${{ secrets.FEISHU_ALERT_CHAT_ID }}
+        run: node scripts/send-feishu-alert.js "push-broadcast" "📡 新广播已推送到飞书文档B，请查看飞书广播收件箱。" || true
+
+      - name: 🔴 失败告警 → 飞书通知
+        if: failure()
+        env:
+          FEISHU_APP_ID:     ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          ALERT_CHAT_ID:     ${{ secrets.FEISHU_ALERT_CHAT_ID }}
+        run: node scripts/send-feishu-alert.js "push-broadcast"

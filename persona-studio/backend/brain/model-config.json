@@ -1,0 +1,52 @@
+{
+  "api_source": "third_party_combined",
+  "api_key_env": "MODEL_API_KEY",
+  "base_url": "https://api.yunwu.ai/v1",
+  "context_window_target": 200000,
+  "auto_detect": {
+    "enabled": true,
+    "schedule": "daily_0300",
+    "test_prompts": {
+      "chat": "你好，请用中文介绍一下自己",
+      "code": "写一个JavaScript函数，输入数组返回去重后的结果",
+      "reasoning": "分析以下需求并给出技术方案：用户想做一个带搜索功能的个人博客"
+    }
+  },
+  "routing_rules": {
+    "chat": {
+      "priority": ["chinese_ability", "conversation_quality", "context_window", "speed"],
+      "max_latency_ms": 5000
+    },
+    "code_generation": {
+      "priority": ["code_quality", "context_window", "reasoning"],
+      "max_latency_ms": 30000
+    },
+    "code_review": {
+      "priority": ["reasoning", "code_quality", "context_window"],
+      "max_latency_ms": 15000
+    },
+    "quick_reply": {
+      "priority": ["speed", "cost"],
+      "max_latency_ms": 2000
+    }
+  },
+  "memory_injection": {
+    "enabled": true,
+    "compression_model": "quick_reply",
+    "compression_trigger": {
+      "every_n_rounds": 10,
+      "token_threshold": 50000,
+      "force_on_session_start": true
+    },
+    "injection_strategy": {
+      "system_prompt_max_tokens": 8000,
+      "sliding_window_rounds": 10,
+      "priority": ["confirmed_decisions", "requirements", "open_questions", "user_preferences", "emotional_signals"]
+    }
+  },
+  "fallback": {
+    "max_retries": 3,
+    "timeout_ms": 30000,
+    "on_all_fail": "notify_master"
+  }
+}

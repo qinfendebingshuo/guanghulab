@@ -1,0 +1,1 @@
+"use strict";function initEventChannel$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.initEventChannel$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.imshortcut.initEventChannel",exports.initEventChannel$=initEventChannel$,exports.default=initEventChannel$;

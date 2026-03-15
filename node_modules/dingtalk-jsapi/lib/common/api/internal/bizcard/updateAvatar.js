@@ -1,0 +1,1 @@
+"use strict";function updateAvatar$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.updateAvatar$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.bizcard.updateAvatar",exports.updateAvatar$=updateAvatar$,exports.default=updateAvatar$;

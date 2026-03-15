@@ -1,0 +1,1 @@
+"use strict";function choose$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.choose$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.customContact.choose",exports.choose$=choose$,exports.default=choose$;

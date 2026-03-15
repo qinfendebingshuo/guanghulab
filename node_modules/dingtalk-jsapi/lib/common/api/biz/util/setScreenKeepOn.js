@@ -1,0 +1,1 @@
+"use strict";function setScreenKeepOn$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setScreenKeepOn$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.setScreenKeepOn",exports.setScreenKeepOn$=setScreenKeepOn$,exports.default=setScreenKeepOn$;

@@ -1,0 +1,343 @@
+name: SYSLOG Auto Pipeline
+# 📡 SYSLOG 自助提交系统 · 全自动闭环
+#
+# 开发者在 GitHub Discussion 提交 SYSLOG 或提问
+# → Actions 自动解析 → 模块上传验证 → 调用 LLM API 唤醒人格体
+# → 模块闭环测试 → 写入 Notion 工单 → 发邮件给开发者 → Discussion 回复
+#
+# 闭环流程：
+#   ① 开发者提交 SYSLOG → Discussion 触发
+#   ② 铸渊 Agent 解析提交内容
+#   ③ 铸渊 Agent 检测模块是否上传到仓库
+#   ④ 唤醒铸渊核心大脑认知（注入模块验证结果）
+#   ⑤ 核心大脑处理 SYSLOG + 生成广播
+#   ⑥ 铸渊 Agent 推送 Notion 工单（触发 Notion 侧处理）
+#   ⑦ 邮件通知开发者
+#   ⑧ Discussion 回复闭环
+#
+# 依赖 Secrets：
+#   LLM_API_KEY          第三方 LLM 平台密钥（必须）
+#   LLM_BASE_URL         第三方 LLM 平台 API 地址（必须，如 https://api.xxx.com/v1）
+#   NOTION_API_TOKEN     Notion API token
+#   NOTION_TICKET_DB_ID  霜砚工单数据库 ID
+#   CORE_BRAIN_PAGE_ID   曜冥核心大脑 v4.0 页面 ID（v4.0 协议动态注入）
+#   PORTRAIT_DB_ID       开发者动态画像库数据库 ID（v4.0 协议动态注入）
+#   FINGERPRINT_DB_ID    模块指纹注册表数据库 ID（v4.0 协议动态注入）
+#   SMTP_USER            QQ 邮箱地址
+#   SMTP_PASS            QQ 邮箱 SMTP 授权码
+
+on:
+  discussion:
+    types: [created]
+
+jobs:
+  process:
+    name: 📡 处理 SYSLOG 提交 / 广播提问
+    runs-on: ubuntu-latest
+    if: contains(github.event.discussion.category.name, 'SYSLOG')
+    permissions:
+      contents: write
+      discussions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: 🔍 Parse submission
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.discussion.body || '';
+            const title = context.payload.discussion.title || '';
+
+            // Parse structured fields from discussion body
+            function extractField(text, label) {
+              // Match form field format: ### Label\n\nValue
+              const regex = new RegExp('###\\s*' + label + '\\s*\\n+([^\\n#]+)', 'i');
+              const match = text.match(regex);
+              return match ? match[1].trim() : '';
+            }
+
+            const broadcastId = extractField(body, '广播编号') || '';
+            const submitType = extractField(body, '类型') || '';
+            const email = extractField(body, '你的邮箱') || '';
+
+            // Extract content (everything after "### 内容")
+            const contentMatch = body.match(/###\s*内容\s*\n+([\s\S]*?)$/i);
+            const content = contentMatch ? contentMatch[1].trim() : '';
+
+            // Determine type from title or body
+            let type = 'question'; // default
+            if (submitType.includes('SYSLOG') || title.includes('SYSLOG')) {
+              type = 'syslog';
+            } else if (submitType.includes('提问') || title.includes('提问')) {
+              type = 'question';
+            }
+
+            // Validate
+            if (!broadcastId) {
+              core.setFailed('❌ 缺少广播编号，请在提交时填写广播编号');
+              return;
+            }
+            if (!email) {
+              core.setFailed('❌ 缺少邮箱，请在提交时填写你的邮箱');
+              return;
+            }
+            if (!content) {
+              core.setFailed('❌ 缺少内容，请粘贴你的 SYSLOG 或问题');
+              return;
+            }
+
+            core.setOutput('broadcast_id', broadcastId);
+            core.setOutput('type', type);
+            core.setOutput('email', email);
+            core.setOutput('content', content);
+            core.setOutput('discussion_number', context.payload.discussion.number);
+            core.setOutput('author', context.payload.discussion.user.login);
+
+            console.log(`📡 解析完成: 广播=${broadcastId}, 类型=${type}, 邮箱=${email}`);
+
+      - name: 🔍 铸渊 Agent · 模块上传验证
+        id: verify
+        env:
+          SYSLOG_CONTENT: ${{ steps.parse.outputs.content }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          AUTHOR: ${{ steps.parse.outputs.author }}
+        run: node scripts/verify-modules.js
+
+      - name: 🧠 Auto-detect and wake up persona
+        id: persona
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
+          SUBMIT_CONTENT: ${{ steps.parse.outputs.content }}
+          AUTHOR: ${{ steps.parse.outputs.author }}
+          MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
+          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+        run: node scripts/wake-persona.js
+
+      - name: 📋 创建标准化 Notion 工单（Phase B1）
+        id: ticket
+        if: ${{ secrets.NOTION_API_TOKEN }}
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
+          PERSONA_RESULT: ${{ steps.persona.outputs.result }}
+          MODULE_VERIFY: ${{ steps.verify.outputs.verify_result }}
+          MODULES_UPLOADED: ${{ steps.verify.outputs.modules_uploaded }}
+          DEVELOPER: ${{ steps.parse.outputs.author }}
+          SYSLOG_RAW: ${{ steps.parse.outputs.content }}
+        run: node scripts/create-standardized-ticket.js
+
+      - name: 📡 推送广播到 GitHub（Phase B4）
+        if: steps.persona.outcome == 'success' && steps.parse.outputs.type == 'syslog'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          DEVELOPER_NAME: ${{ steps.parse.outputs.author }}
+          BROADCAST_CONTENT: ${{ steps.persona.outputs.result }}
+        run: node scripts/push-broadcast-to-github.js
+
+      - name: 📧 Send email to developer
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ steps.parse.outputs.email }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
+          PERSONA_RESULT: ${{ steps.persona.outputs.result }}
+        run: |
+          node -e "
+          const nodemailer = require('nodemailer');
+
+          const user = process.env.SMTP_USER || '';
+          const pass = process.env.SMTP_PASS || '';
+          const to = process.env.EMAIL_TO || '';
+          const broadcastId = process.env.BROADCAST_ID || '';
+          const type = process.env.SUBMIT_TYPE || 'syslog';
+          const result = process.env.PERSONA_RESULT || '(处理中，请稍后)';
+
+          if (!user || !pass) {
+            console.log('⚠️ SMTP not configured, skipping email');
+            process.exit(0);
+          }
+          if (!to) {
+            console.log('⚠️ No recipient email, skipping');
+            process.exit(0);
+          }
+
+          const subjectText = type === 'syslog'
+            ? '[光湖系统] ' + broadcastId + ' · 新广播已生成'
+            : '[光湖系统] ' + broadcastId + ' · 问题已解答';
+
+          const resultHtml = result
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br>');
+
+          const html = [
+            '<div style=\"font-family:sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#0f172a;color:#e2e8f0;border-radius:12px\">',
+            '<div style=\"text-align:center;padding:16px 0;border-bottom:1px solid #334155\">',
+            '<h2 style=\"color:#60a5fa;margin:0\">🌊 光湖系统 · 自动通知</h2>',
+            '<p style=\"color:#94a3b8;font-size:14px;margin:8px 0 0\">HoloLake · 人格语言操作系统</p>',
+            '</div>',
+            '<div style=\"padding:20px 0\">',
+            '<p style=\"color:#22d3ee;font-weight:bold\">📡 ' + broadcastId + '</p>',
+            '<div style=\"background:#1e293b;padding:16px;border-radius:8px;margin:12px 0;line-height:1.8\">' + resultHtml + '</div>',
+            '</div>',
+            '<div style=\"border-top:1px solid #334155;padding:16px 0;text-align:center\">',
+            '<a href=\"https://github.com/qinfendebingshuo/guanghulab\" style=\"display:inline-block;padding:8px 20px;background:linear-gradient(135deg,#3b82f6,#22d3ee);color:#fff;text-decoration:none;border-radius:6px;font-weight:600\">↩ 回到仓库继续开发</a>',
+            '<p style=\"color:#64748b;font-size:12px;margin:12px 0 0\">🌀 铸渊 · 代码守护人格体 · 自动发送</p>',
+            '</div>',
+            '</div>'
+          ].join('\n');
+
+          const transporter = nodemailer.createTransport({
+            host: 'smtp.qq.com',
+            port: 465,
+            secure: true,
+            auth: { user, pass }
+          });
+
+          transporter.sendMail({
+            from: '\"光湖系统\" <' + user + '>',
+            to: to,
+            subject: subjectText,
+            html: html
+          }).then((info) => {
+            console.log('✅ 邮件已发送: ' + info.messageId);
+          }).catch((err) => {
+            console.log('⚠️ 邮件发送失败: ' + err.message);
+          });
+          "
+
+      - name: 💬 Reply to Discussion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const number = ${{ steps.parse.outputs.discussion_number }};
+            const type = '${{ steps.parse.outputs.type }}';
+            const broadcastId = '${{ steps.parse.outputs.broadcast_id }}';
+            const email = '${{ steps.parse.outputs.email }}';
+            const modulesUploaded = '${{ steps.verify.outputs.modules_uploaded }}' === 'true';
+            const moduleCount = '${{ steps.verify.outputs.module_count }}' || '0';
+
+            const typeLabel = type === 'syslog' ? 'SYSLOG 闭环处理' : '问题解答';
+            const maskedEmail = email.length > 4
+              ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+              : '***';
+            const moduleStatus = moduleCount === '0'
+              ? 'ℹ️ 未检测到模块引用'
+              : (modulesUploaded ? '✅ 全部已上传' : '⚠️ 部分模块未上传');
+
+            const body = [
+              '✅ **已处理** · ' + typeLabel,
+              '',
+              '| 项目 | 内容 |',
+              '|------|------|',
+              '| 📡 广播编号 | `' + broadcastId + '` |',
+              '| 🔍 模块验证 | ' + moduleStatus + ' |',
+              '| 📧 结果发送至 | `' + maskedEmail + '` |',
+              '| 🤖 处理人格体 | 铸渊 |',
+              '| ⏰ 处理时间 | ' + new Date().toISOString() + ' |',
+              '',
+              '> 铸渊核心大脑已完成 SYSLOG 验收 + 模块检测 + 广播生成。',
+              '> 结果已发送到你的邮箱，Notion 侧工单已创建。',
+              '>',
+              '> 如未收到邮件，请检查垃圾箱或重新提交。'
+            ].join('\n');
+
+            // Use GraphQL to add discussion comment
+            const query = `
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {
+                  discussionId: $discussionId,
+                  body: $body
+                }) {
+                  comment { id }
+                }
+              }
+            `;
+
+            try {
+              // Get the discussion node ID
+              const { repository } = await github.graphql(`
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    discussion(number: $number) {
+                      id
+                    }
+                  }
+                }
+              `, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                number: number
+              });
+
+              await github.graphql(query, {
+                discussionId: repository.discussion.id,
+                body: body
+              });
+
+              console.log('✅ Discussion 回复已发送');
+            } catch (err) {
+              console.log('⚠️ Discussion 回复失败: ' + err.message);
+            }
+
+      - name: 🔴 失败告警
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const number = context.payload.discussion?.number;
+            if (!number) return;
+
+            try {
+              const { repository } = await github.graphql(`
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    discussion(number: $number) {
+                      id
+                    }
+                  }
+                }
+              `, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                number: number
+              });
+
+              await github.graphql(`
+                mutation($discussionId: ID!, $body: String!) {
+                  addDiscussionComment(input: {
+                    discussionId: $discussionId,
+                    body: $body
+                  }) {
+                    comment { id }
+                  }
+                }
+              `, {
+                discussionId: repository.discussion.id,
+                body: '❌ **处理失败** · 请检查提交格式是否正确，或联系管理员。\n\n> 错误详情请查看 [Actions 日志](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions)。'
+              });
+            } catch (err) {
+              console.log('⚠️ 失败告警回复失败: ' + err.message);
+            }

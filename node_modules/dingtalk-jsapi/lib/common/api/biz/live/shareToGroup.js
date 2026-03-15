@@ -1,0 +1,1 @@
+"use strict";function shareToGroup$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.shareToGroup$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.shareToGroup",exports.shareToGroup$=shareToGroup$,exports.default=shareToGroup$;

@@ -1,0 +1,83 @@
+/**
+ * channel-transition.css
+ * 路由过渡动画 - 让切换像呼吸一样自然
+ * 提供两种模式：淡入淡出(fade) / 滑入滑出(slide)
+ */
+
+/* 基础容器样式 */
+.route-container {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+}
+
+/* 所有路由页面默认绝对定位，便于重叠动画 */
+.route-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 淡入淡出模式 */
+.fade-mode .route-page {
+  opacity: 0;
+  transform: scale(0.98);
+  pointer-events: none;
+}
+
+.fade-mode .route-page.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  position: relative; /* 激活页变为相对定位，占据文档流高度 */
+}
+
+/* 滑入滑出模式 */
+.slide-mode .route-page {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: none;
+}
+
+.slide-mode .route-page.active {
+  position: relative;
+  pointer-events: auto;
+}
+
+/* 进入动画：从右侧滑入 */
+.slide-mode .route-page.slide-enter {
+  transform: translateX(100%);
+}
+
+.slide-mode .route-page.active.slide-enter {
+  transform: translateX(0);
+}
+
+/* 离开动画：向左侧滑出（用于后退时的反向） */
+.slide-mode .route-page.slide-exit {
+  transform: translateX(-100%);
+}
+
+/* 前进/后退方向控制 */
+.slide-mode.forward .route-page.slide-enter {
+  transform: translateX(100%);
+}
+
+.slide-mode.forward .route-page.active.slide-enter {
+  transform: translateX(0);
+}
+
+.slide-mode.backward .route-page.slide-enter {
+  transform: translateX(-100%);
+}
+
+.slide-mode.backward .route-page.active.slide-enter {
+  transform: translateX(0);
+}
+
+/* 防止快速点击时动画重叠 */
+.route-page {
+  will-change: transform, opacity;
+}

@@ -1,0 +1,16 @@
+{
+  "title": "示例广播：新增 NOTIFICATION 业务域",
+  "from": "霜砚",
+  "date": "2026-03-05",
+  "rules_version": "v1.1",
+  "update_target": "routing-map",
+  "data": {
+    "NOTIFICATION": {
+      "module": "M09",
+      "route_prefix": "/hli/notification",
+      "interfaces": [
+        { "id": "HLI-NOTIF-001", "path": "/hli/notification/push", "status": "pending" }
+      ]
+    }
+  }
+}

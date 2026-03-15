@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索与筛选系统 · 糖星云陪妈妈 · 环节5+6</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 搜索与筛选系统</h1>
+        <p class="subtitle">糖星云陪妈妈一起做 · 环节5+6：排序+分页+模糊+拼音+自动补全</p>
+
+        <!-- 搜索区域 + 自动补全 -->
+        <div class="search-section">
+            <div class="search-input-wrapper">
+                <input type="text" id="searchInput" placeholder="输入关键词搜索... 支持拼音/模糊" autocomplete="off">
+                <button id="searchBtn">搜索</button>
+            </div>
+            
+            <!-- 自动补全下拉列表 -->
+            <div id="autocompletePanel" class="autocomplete-panel hidden">
+                <ul id="autocompleteList" class="autocomplete-list"></ul>
+            </div>
+            
+            <!-- 搜索历史面板 -->
+            <div id="historyPanel" class="history-panel hidden">
+                <div class="history-header">
+                    <span>📜 搜索历史</span>
+                    <button id="clearHistoryBtn" class="small-btn">清空全部</button>
+                </div>
+                <ul id="historyList" class="history-list"></ul>
+            </div>
+        </div>
+
+        <!-- 排序控件区 -->
+        <div class="sort-section">
+            <div class="sort-buttons">
+                <span class="sort-label">排序：</span>
+                <button class="sort-btn active" data-sort="relevance">🔥 相关度</button>
+                <button class="sort-btn" data-sort="time">⏱️ 时间</button>
+                <button class="sort-btn" data-sort="name">📝 名称</button>
+            </div>
+            <div class="sort-order">
+                <label>
+                    <input type="checkbox" id="sortAscending"> 升序
+                </label>
+            </div>
+        </div>
+
+        <!-- 筛选区域 -->
+        <div class="filter-section">
+            <div class="filter-header">
+                <h3>🎛️ 筛选条件</h3>
+                <button id="savePresetBtn" class="secondary-btn">➕ 保存为预设</button>
+            </div>
+            
+            <div class="filter-options">
+                <label><input type="checkbox" id="filterInStock" value="inStock"> 仅显示有货</label>
+                <label><input type="checkbox" id="filterDiscount" value="discount"> 仅显示折扣</label>
+                <label><input type="checkbox" id="filterFreeShipping" value="freeShipping"> 包邮</label>
+            </div>
+
+            <div class="price-range">
+                <label>价格区间：</label>
+                <input type="number" id="minPrice" placeholder="最低价" min="0"> ～ 
+                <input type="number" id="maxPrice" placeholder="最高价" min="0">
+            </div>
+
+            <!-- 预设列表 -->
+            <div id="presetsPanel" class="presets-panel">
+                <h4>📋 我的筛选预设</h4>
+                <ul id="presetsList" class="presets-list"></ul>
+            </div>
+        </div>
+
+        <!-- 搜索结果统计 -->
+        <div class="stats-section" id="statsSection">
+            <span id="statsText">共 0 条结果</span>
+            <span id="timeText"></span>
+        </div>
+
+        <!-- 搜索结果区域 -->
+        <div class="results-section">
+            <h3>📦 搜索结果</h3>
+            <div id="resultsList" class="results-list"></div>
+            
+            <!-- 无结果提示 -->
+            <div id="noResultsPanel" class="no-results-panel hidden">
+                <p>😢 没有找到相关商品</p>
+                <div id="suggestionsPanel" class="suggestions-panel">
+                    <p>试试这些关键词：</p>
+                    <div id="suggestionTags" class="suggestion-tags"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页导航 -->
+        <div class="pagination-section" id="paginationSection">
+            <div class="pagination-controls">
+                <button id="firstPageBtn" disabled>⟪</button>
+                <button id="prevPageBtn" disabled>⟨</button>
+                <span id="pageInfo">第 1 页 / 共 1 页</span>
+                <button id="nextPageBtn" disabled>⟩</button>
+                <button id="lastPageBtn" disabled>⟫</button>
+            </div>
+            <div class="pagination-size">
+                <label>
+                    每页显示：
+                    <select id="pageSizeSelect">
+                        <option value="10">10 条</option>
+                        <option value="20">20 条</option>
+                        <option value="50">50 条</option>
+                    </select>
+                </label>
+            </div>
+            <div class="pagination-jump">
+                <label>
+                    跳转到：
+                    <input type="number" id="jumpToPage" min="1" value="1">
+                    <button id="jumpBtn">Go</button>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存预设的弹窗 -->
+    <div id="presetModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>💾 保存筛选预设</h3>
+            <input type="text" id="presetNameInput" placeholder="给这个预设起个名字">
+            <div class="modal-actions">
+                <button id="cancelPresetBtn">取消</button>
+                <button id="confirmPresetBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fuzzy.js"></script>
+    <script src="js/pinyin.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

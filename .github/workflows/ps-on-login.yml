@@ -1,0 +1,48 @@
+name: "🌊 Persona Studio · 登录校验"
+
+# 工作流存根 · 合作者登录时触发校验
+# 实际登录校验由 persona-studio/backend/routes/auth.js 处理
+# 此工作流用于审计日志和扩展
+
+on:
+  workflow_dispatch:
+    inputs:
+      dev_id:
+        description: '体验者编号（EXP-XXX）'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: "🔐 校验开发编号"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🔍 校验编号
+        run: |
+          DEV_ID="${{ github.event.inputs.dev_id }}"
+          echo "校验编号: $DEV_ID"
+
+          if ! echo "$DEV_ID" | grep -qE '^EXP-[0-9]{3,}$'; then
+            echo "❌ 编号格式不正确"
+            exit 1
+          fi
+
+          if node -e "
+            const r = require('./persona-studio/brain/registry.json');
+            const d = r.developers['$DEV_ID'];
+            if (!d) { console.log('❌ 编号未注册'); process.exit(1); }
+            if (d.status !== 'active' && d.status !== 'pending_activation') {
+              console.log('❌ 编号未激活:', d.status); process.exit(1);
+            }
+            console.log('✅ 校验通过:', d.name || DEV_ID);
+          "; then
+            echo "✅ 登录校验通过"
+          else
+            echo "❌ 登录校验失败"
+            exit 1
+          fi

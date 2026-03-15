@@ -1,0 +1,57 @@
+<div class="dashboard-container" id="analyticsDashboard">
+    <div class="dashboard-header">
+        <h2>📊 频道数据面板</h2>
+        <p>模块使用统计 · 性能监控 · 访问趋势</p>
+    </div>
+
+    <div class="charts-grid">
+        <!-- 柱状图：模块访问次数 -->
+        <div class="chart-card">
+            <h3>📊 模块访问次数</h3>
+            <div class="bar-chart" id="visitBarChart">
+                <p style="color:#666;text-align:center;width:100%;">暂无数据，多点几个模块再来看</p>
+            </div>
+        </div>
+
+        <!-- 饼图：使用时间占比 -->
+        <div class="chart-card">
+            <h3>🥧 使用时间占比</h3>
+            <div class="pie-container" id="timePieChart">
+                <div class="pie-canvas-wrap">
+                    <canvas id="pieCanvas" width="160" height="160"></canvas>
+                </div>
+                <ul class="pie-legend" id="pieLegend"></ul>
+            </div>
+        </div>
+
+        <!-- 折线图：7天趋势 -->
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <h3>📈 最近7天访问趋势</h3>
+            <div class="line-chart-wrap">
+                <canvas id="lineCanvas" width="800" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 性能表格 -->
+    <div class="chart-card">
+        <h3>⚡ 模块加载性能</h3>
+        <table class="perf-table">
+            <thead>
+                <tr>
+                    <th>模块</th>
+                    <th>访问次数</th>
+                    <th>总停留(分钟)</th>
+                    <th>平均加载(ms)</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody id="perfTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 清除按钮 -->
+    <div class="dashboard-actions">
+        <button class="btn-clear" onclick="ChannelDashboard.clearData()">🗑️ 清除所有数据</button>
+    </div>
+</div>

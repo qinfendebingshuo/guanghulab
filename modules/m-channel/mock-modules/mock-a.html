@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>模拟模块A</h2>
+    <button onclick="EventBus.emit('mock-a:click', { message: '模块A被点击了' })">
+        发送事件
+    </button>
+    <div id="output"></div>
+    
+    <script>
+        EventBus.on('mock-b:reply', function(data) {
+            document.getElementById('output').innerHTML = '收到回复: ' + data.message;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════════════
+# process-notion-orders.yml
+# 处理 Notion Agent 推送到仓库的微调工单和广播
+# 监听 persona-telemetry/tuning-queue/ 和 broadcasts-outbox/ 变更
+# ═══════════════════════════════════════════════════════
+name: Process Notion Work Orders
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'persona-telemetry/tuning-queue/**.json'
+      - 'broadcasts-outbox/**.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Process tuning orders
+        run: |
+          echo "🔧 检查微调工单队列..."
+          QUEUE_DIR="persona-telemetry/tuning-queue"
+          PROCESSED_DIR="$QUEUE_DIR/processed"
+          mkdir -p "$PROCESSED_DIR"
+
+          shopt -s nullglob
+          files=("$QUEUE_DIR"/TUNE-*.json)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "✅ 无待处理微调工单"
+          else
+            for f in "${files[@]}"; do
+              echo "📋 处理工单: $(basename "$f")"
+              # 读取工单内容并标记已处理
+              mv "$f" "$PROCESSED_DIR/"
+              echo "  → 已移动到 processed/"
+            done
+          fi
+
+      - name: Commit processed orders
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan-bot@guanghulab.com"
+          git add persona-telemetry/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git pull --rebase origin main || true
+            git commit -m "🔧 铸渊处理 Notion 工单完成 [skip ci]"
+            git push origin main
+          fi

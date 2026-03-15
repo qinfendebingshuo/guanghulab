@@ -1,0 +1,1 @@
+"use strict";function openWifiSetting$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openWifiSetting$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.schema.openWifiSetting",exports.openWifiSetting$=openWifiSetting$,exports.default=openWifiSetting$;

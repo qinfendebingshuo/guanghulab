@@ -1,0 +1,61 @@
+name: 铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion
+
+# 链路3：SYSLOG 回传
+# 飞书机器人发来的 SYSLOG → 存入仓库 + 创建 Notion 条目 + 创建霜砚工单
+#
+# 依赖 Secrets：
+#   NOTION_TOKEN          Notion API token
+#   NOTION_SYSLOG_DB_ID   SYSLOG 收件箱数据库 ID
+#   NOTION_TICKET_DB_ID   霜砚工单数据库 ID
+#
+# dispatch payload：
+#   syslog  SYSLOG JSON 全文
+
+on:
+  repository_dispatch:
+    types: [receive-syslog]
+
+jobs:
+  receive-syslog:
+    name: 📥 接收 SYSLOG 回传
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📥 处理 SYSLOG
+        env:
+          SYSLOG_JSON:          ${{ toJSON(github.event.client_payload.syslog) }}
+          NOTION_TOKEN:         ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_SYSLOG_DB_ID:  ${{ secrets.NOTION_SYSLOG_DB_ID }}
+          NOTION_TICKET_DB_ID:  ${{ secrets.NOTION_TICKET_DB_ID }}
+        run: node scripts/receive-syslog.js
+
+      - name: 💾 提交 SYSLOG 文件到仓库
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan-bot@guanghulab.com"
+          git add syslog/
+          if git diff --cached --quiet; then
+            echo "No new syslog files to commit"
+          else
+            git pull --rebase origin main || true
+            git commit -m "📥 铸渊接收 SYSLOG 回传 [skip ci]"
+            git push origin main
+          fi
+
+      - name: 🔴 失败告警 → 飞书通知
+        if: failure()
+        env:
+          FEISHU_APP_ID:     ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          ALERT_CHAT_ID:     ${{ secrets.FEISHU_ALERT_CHAT_ID }}
+        run: node scripts/send-feishu-alert.js "receive-syslog"

@@ -1,0 +1,1 @@
+"use strict";function add$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.add$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.notify.add",exports.add$=add$,exports.default=add$;

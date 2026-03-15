@@ -1,0 +1,1 @@
+"use strict";function perfBizReady$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.perfBizReady$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.perfBizReady",exports.perfBizReady$=perfBizReady$,exports.default=perfBizReady$;

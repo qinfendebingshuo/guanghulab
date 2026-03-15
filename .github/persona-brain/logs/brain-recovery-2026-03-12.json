@@ -1,0 +1,122 @@
+{
+  "type": "brain-recovery",
+  "timestamp": "2026-03-12T21:30:00+08:00",
+  "trigger": "post-PR74-merge",
+  "files_checked": [
+    "memory.json",
+    "routing-map.json",
+    "knowledge-base.json",
+    "dev-status.json",
+    "system-prompt.md",
+    "identity.md",
+    "style-config.json"
+  ],
+  "files_status": {
+    "memory.json": "healthy",
+    "routing-map.json": "healthy",
+    "knowledge-base.json": "healthy",
+    "dev-status.json": "healthy",
+    "system-prompt.md": "healthy",
+    "identity.md": "healthy",
+    "style-config.json": "healthy",
+    "copilot-instructions.md": "not-found",
+    "kb/knowledge-base.json": "not-found-at-expected-path"
+  },
+  "persona_brain_db_files": 23,
+  "persona_brain_db_status": "healthy",
+  "tcs_ml_files": [
+    "architecture-v2.md",
+    "dictionary-sync.json",
+    "landing-protocol.md",
+    "signal-bus-latest.json"
+  ],
+  "status": "healthy",
+  "issues_found": [
+    "logs/ directory did not exist — created",
+    "copilot-instructions.md not found (system-prompt.md serves as equivalent)",
+    "knowledge-base.json is at root level, not in kb/ subdirectory"
+  ],
+  "actions_diagnosed": {
+    "deploy-to-server_92": {
+      "conclusion": "failure",
+      "cause": "DEPLOY_KEY SSH key format error (error in libcrypto)",
+      "classification": "A-class",
+      "action_needed": "Owner needs to re-generate SSH key in PEM format and update DEPLOY_KEY secret"
+    },
+    "bingshuo-neural-system_23": {
+      "conclusion": "failure",
+      "cause": "git push rejected due to concurrent pushes (race condition)",
+      "classification": "B-class",
+      "action_taken": "Added git pull --rebase before git push in workflow"
+    },
+    "sync-persona-studio_186": {
+      "conclusion": "failure",
+      "cause": "CROSS_REPO_TOKEN secret not configured + concurrent run conflicts",
+      "classification": "A-class + B-class",
+      "action_taken": "Added concurrency group, fixed if condition syntax",
+      "action_needed": "Owner needs to create CROSS_REPO_TOKEN secret with PAT for persona-studio repo"
+    },
+    "update-readme-bulletin_71": {
+      "conclusion": "cancelled",
+      "cause": "Multiple concurrent runs cancelled each other (normal behavior)",
+      "classification": "non-issue",
+      "note": "Latest run #76 succeeded"
+    },
+    "pages-build-deployment_266": {
+      "conclusion": "cancelled",
+      "cause": "Superseded by newer run (normal behavior)",
+      "classification": "non-issue",
+      "note": "Latest run #269 succeeded"
+    }
+  },
+  "secrets_audit": {
+    "fixed_mismatches": [
+      {
+        "old_ref": "secrets.NOTION_TOKEN",
+        "new_ref": "secrets.NOTION_API_TOKEN",
+        "affected_files": [
+          "sync-login-entry.yml",
+          "push-broadcast.yml",
+          "receive-syslog.yml",
+          "deploy-to-server.yml",
+          "bridge-changes-to-notion.yml",
+          "test-notion-bridge.yml",
+          "bridge-syslog-to-notion.yml",
+          "notion-connectivity-test.yml"
+        ]
+      },
+      {
+        "old_ref": "secrets.CHANGES_DB_ID",
+        "new_ref": "secrets.NOTION_CHANGE_LOG_DB_ID",
+        "affected_files": [
+          "deploy-to-server.yml",
+          "bridge-changes-to-notion.yml",
+          "notion-connectivity-test.yml"
+        ]
+      },
+      {
+        "old_ref": "secrets.SYSLOG_DB_ID",
+        "new_ref": "secrets.NOTION_SYSLOG_DB_ID",
+        "affected_files": [
+          "bridge-syslog-to-notion.yml",
+          "notion-connectivity-test.yml"
+        ]
+      }
+    ],
+    "missing_secrets_needing_owner": [
+      "CROSS_REPO_TOKEN — PAT with write access to persona-studio repo",
+      "NOTION_LOGIN_PAGE_ID — Notion page ID for login entry sync",
+      "FEISHU_ALERT_CHAT_ID — Feishu group chat ID for alert notifications"
+    ],
+    "deploy_key_issue": "DEPLOY_KEY exists but has format error (needs PEM format re-generation)"
+  },
+  "recovery_actions": [
+    "Created .github/persona-brain/logs/ directory",
+    "Fixed secrets.NOTION_TOKEN → secrets.NOTION_API_TOKEN in 8 workflow files",
+    "Fixed secrets.CHANGES_DB_ID → secrets.NOTION_CHANGE_LOG_DB_ID in 3 workflow files",
+    "Fixed secrets.SYSLOG_DB_ID → secrets.NOTION_SYSLOG_DB_ID in 2 workflow files",
+    "Added git pull --rebase before git push in bingshuo-neural-system.yml",
+    "Added concurrency group to sync-persona-studio.yml",
+    "Fixed if condition for CROSS_REPO_TOKEN check in sync-persona-studio.yml"
+  ]
+}

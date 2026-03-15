@@ -1,0 +1,53 @@
+/* 过渡动画 */
+.channel-content {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.channel-content.fade-out {
+    opacity: 0;
+}
+
+.channel-content.fade-in {
+    opacity: 1;
+}
+
+/* 滑动动画 */
+.slide-left-enter {
+    transform: translateX(100%);
+}
+
+.slide-left-enter-active {
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+}
+
+.slide-right-enter {
+    transform: translateX(-100%);
+}
+
+.slide-right-enter-active {
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+}
+
+.slide-exit {
+    position: absolute;
+    width: 100%;
+}
+
+.slide-exit-active {
+    transition: transform 0.3s ease-in-out;
+}
+
+.slide-exit-left {
+    transform: translateX(-100%);
+}
+
+.slide-exit-right {
+    transform: translateX(100%);
+}
+
+/* 临时测试动画 */
+.fade-out, .fade-in {
+    transition: opacity 1s ease !important;
+}

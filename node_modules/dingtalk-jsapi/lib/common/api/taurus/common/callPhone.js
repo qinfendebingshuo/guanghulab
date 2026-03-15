@@ -1,0 +1,1 @@
+"use strict";function callPhone$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.callPhone$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="taurus.common.callPhone",exports.callPhone$=callPhone$,exports.default=callPhone$;

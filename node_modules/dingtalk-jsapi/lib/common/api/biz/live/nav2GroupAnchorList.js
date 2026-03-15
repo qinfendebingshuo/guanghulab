@@ -1,0 +1,1 @@
+"use strict";function nav2GroupAnchorList$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.nav2GroupAnchorList$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.nav2GroupAnchorList",exports.nav2GroupAnchorList$=nav2GroupAnchorList$,exports.default=nav2GroupAnchorList$;

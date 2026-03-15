@@ -1,0 +1,1 @@
+"use strict";function getAvatar$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getAvatar$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.data.getAvatar",exports.getAvatar$=getAvatar$,exports.default=getAvatar$;

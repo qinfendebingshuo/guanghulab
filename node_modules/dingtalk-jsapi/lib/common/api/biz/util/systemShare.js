@@ -1,0 +1,1 @@
+"use strict";function systemShare$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.systemShare$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.systemShare",exports.systemShare$=systemShare$,exports.default=systemShare$;

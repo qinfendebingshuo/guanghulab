@@ -1,0 +1,1 @@
+"use strict";function videoCall$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.videoCall$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.conference.videoCall",exports.videoCall$=videoCall$,exports.default=videoCall$;

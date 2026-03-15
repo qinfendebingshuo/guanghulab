@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .debug-panel { padding: 20px; }
+        .message-list { 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            height: 200px; 
+            overflow-y: auto;
+            background: #f9f9f9;
+            margin: 10px 0;
+        }
+        .message-list li {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .debug-controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .debug-controls input {
+            flex: 1;
+            padding: 8px;
+        }
+        .debug-controls button {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .debug-controls button:hover {
+            background: #2563eb;
+        }
+        .module-list {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-panel">
+        <h2>🐞 调试面板</h2>
+        
+        <div class="module-list">
+            <strong>当前活跃模块:</strong> 
+            <span id="active-modules">加载中...</span>
+        </div>
+        
+        <h3>事件总线聊天记录</h3>
+        <ul class="message-list" id="debug-messages">
+            <!-- 动态插入消息 -->
+        </ul>
+        
+        <div class="debug-controls">
+            <input type="text" id="debug-input" placeholder="输入要发送的消息...">
+            <button id="debug-send">发送测试消息</button>
+        </div>
+        
+        <div class="debug-controls">
+            <button id="debug-clear" style="background: #ef4444;">清除状态</button>
+            <button id="debug-refresh" onclick="location.reload()">刷新页面</button>
+        </div>
+        
+        <p><small>消息会广播给所有订阅的模块</small></p>
+    </div>
+    
+    <script>
+        // 更新活跃模块列表
+        function updateActiveModules() {
+            const span = document.getElementById('active-modules');
+            if (span && window.ModuleLifecycle) {
+                const modules = ModuleLifecycle.getActiveModules();
+                span.textContent = modules.length ? modules.join('、') : '无';
+            }
+        }
+        
+        // 监听模块加载/卸载事件
+        if (window.EventBus) {
+            EventBus.on('module:loaded', updateActiveModules);
+            EventBus.on('module:unloaded', updateActiveModules);
+        }
+        
+        // 初始更新
+        setTimeout(updateActiveModules, 100);
+    </script>
+</body>
+</html>

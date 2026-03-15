@@ -1,0 +1,1 @@
+"use strict";function request$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.request$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="net.tunnel.request",exports.request$=request$,exports.default=request$;

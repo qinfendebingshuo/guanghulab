@@ -1,0 +1,1 @@
+"use strict";function publish$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.publish$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.channel.publish",exports.publish$=publish$,exports.default=publish$;

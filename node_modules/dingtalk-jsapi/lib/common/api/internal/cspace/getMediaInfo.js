@@ -1,0 +1,1 @@
+"use strict";function getMediaInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getMediaInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.cspace.getMediaInfo",exports.getMediaInfo$=getMediaInfo$,exports.default=getMediaInfo$;

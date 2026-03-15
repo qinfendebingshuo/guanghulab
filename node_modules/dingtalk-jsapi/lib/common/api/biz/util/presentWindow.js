@@ -1,0 +1,1 @@
+"use strict";function presentWindow$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.presentWindow$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.presentWindow",exports.presentWindow$=presentWindow$,exports.default=presentWindow$;

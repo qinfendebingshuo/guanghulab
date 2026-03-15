@@ -1,0 +1,31 @@
+name: "📊 进度查询"
+description: "想知道自己或团队的开发进度"
+title: "[进度] "
+labels: ["progress-query", "pending"]
+assignees: []
+body:
+  - type: input
+    id: dev_id
+    attributes:
+      label: "你的开发者编号"
+      placeholder: "DEV-00X"
+    validations:
+      required: true
+  - type: dropdown
+    id: query_type
+    attributes:
+      label: "查什么"
+      options:
+        - 我自己的进度
+        - 我下一步要做什么
+        - 团队整体进度
+        - 谁在做跟我相关的模块
+        - 我的模块依赖谁
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: "补充说明（可选）"
+    validations:
+      required: false

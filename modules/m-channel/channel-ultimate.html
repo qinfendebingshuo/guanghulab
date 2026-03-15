@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光湖频道 · 终极版</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--theme-background, #f9fafb);
+            color: var(--theme-text, #1f2937);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .channel-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .channel-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--theme-border, #e5e7eb);
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .channel-btn {
+            padding: 10px 20px;
+            border: none;
+            background: var(--theme-surface, #f3f4f6);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            color: var(--theme-text, #1f2937);
+        }
+        .channel-btn:hover { background: var(--theme-border, #e5e7eb); }
+        .channel-btn.active {
+            background: var(--theme-primary, #3b82f6);
+            color: white;
+        }
+        .channel-btn.visited::after {
+            content: "✓";
+            margin-left: 5px;
+        }
+        .channel-content {
+            min-height: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .channel-content.fade-out { opacity: 0; }
+        .channel-content.fade-in { opacity: 1; }
+
+        /* 模块卡片网格 */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .module-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--theme-border, #e5e7eb);
+        }
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .module-card.dragging {
+            opacity: 0.6;
+            transform: scale(0.98);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .module-card.drop-target {
+            border: 2px dashed var(--theme-primary, #3b82f6);
+            background: rgba(59,130,246,0.05);
+        }
+        .module-card-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--theme-border, #eee);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .drag-handle {
+            font-size: 20px;
+            color: #999;
+            cursor: grab;
+            user-select: none;
+        }
+        .drag-handle:active { cursor: grabbing; }
+        .module-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+        }
+        .favorite-star {
+            font-size: 20px;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .favorite-star.active { color: #fbbf24; }
+        .module-card-content { padding: 15px; color: #4b5563; }
+
+        /* 布局模式 */
+        .layout-grid .module-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+        .layout-list .module-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .layout-list .module-card { width: 100%; }
+        .layout-compact .module-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .layout-compact .module-card-header { padding: 10px; }
+        .layout-compact .module-card-content { padding: 10px; font-size: 14px; }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        .settings-panel.open { right: 0; }
+        .settings-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--theme-border, #eee);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .settings-header h3 { margin: 0; }
+        .settings-header button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .settings-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        .settings-section h4 {
+            margin: 0 0 15px 0;
+            color: #666;
+        }
+        .layout-options label {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .theme-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .theme-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--theme-border, #ddd);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            color: var(--theme-text, #1f2937);
+        }
+        .theme-btn:hover { background: #f0f0f0; }
+
+        /* 统计模态框 */
+        .stats-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .stats-modal-content {
+            background: white;
+            width: 600px;
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 12px;
+            overflow: auto;
+        }
+        .stats-modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--theme-border, #eee);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-modal-body { padding: 20px; }
+        .stats-panel table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .stats-panel th, .stats-panel td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .stats-panel th { background: #f3f4f6; }
+
+        /* 错误边界 */
+        .error-boundary {
+            padding: 30px;
+            text-align: center;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            margin: 20px;
+        }
+        .error-retry {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+    <!-- 主题变量（默认） -->
+    <style id="theme-variables">
+        :root {
+            --theme-primary: #3b82f6;
+            --theme-primaryDark: #2563eb;
+            --theme-secondary: #10b981;
+            --theme-background: #ffffff;
+            --theme-surface: #f9fafb;
+            --theme-text: #1f2937;
+            --theme-textLight: #6b7280;
+            --theme-border: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="channel-container">
+        <nav class="channel-nav">
+            <button class="channel-btn active" data-channel="home">🏠 首页</button>
+            <button class="channel-btn" data-channel="m06">📋 工单管理</button>
+            <button class="channel-btn" data-channel="m08">📊 数据统计</button>
+            <button class="channel-btn" data-channel="m11">🧩 组件库</button>
+            <button class="channel-btn" data-channel="debug">🐞 调试面板</button>
+            <button class="channel-btn settings-btn" id="settings-toggle">⚙️ 设置</button>
+        </nav>
+        <main id="channel-content" class="channel-content">
+            <!-- 动态内容 -->
+        </main>
+    </div>
+
+    <!-- 设置面板 -->
+    <div id="settings-panel" class="settings-panel">
+        <div class="settings-header">
+            <h3>频道设置</h3>
+            <button id="settings-close">✕</button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-section">
+                <h4>布局模式</h4>
+                <div class="layout-options">
+                    <label><input type="radio" name="layout" value="grid" checked> 网格</label>
+                    <label><input type="radio" name="layout" value="list"> 列表</label>
+                    <label><input type="radio" name="layout" value="compact"> 紧凑</label>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>主题色</h4>
+                <div class="theme-options">
+                    <button class="theme-btn" data-theme="default">默认蓝</button>
+                    <button class="theme-btn" data-theme="ocean">海洋</button>
+                    <button class="theme-btn" data-theme="forest">森林</button>
+                    <button class="theme-btn" data-theme="sunset">日落</button>
+                    <button class="theme-btn" data-theme="lavender">薰衣草</button>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>统计数据</h4>
+                <button id="show-stats-btn">查看使用统计</button>
+            </div>
+            <div class="settings-section">
+                <h4>其他</h4>
+                <button id="reset-preferences-btn">恢复默认设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计模态框 -->
+    <div id="stats-modal" class="stats-modal">
+        <div class="stats-modal-content">
+            <div class="stats-modal-header">
+                <h3>使用统计</h3>
+                <button id="stats-close">✕</button>
+            </div>
+            <div class="stats-modal-body" id="stats-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- ========== 内联所有JS ========== -->
+    <script>
+        // ---------- 模块注册表 ----------
+        window.ModuleRegistry = {
+            modules: {},
+            register(name, module) { this.modules[name] = module; console.log(`[registry] 模块 ${name} 已注册`); },
+            get(name) { return this.modules[name]; },
+            list() { return Object.keys(this.modules); }
+        };
+
+        // ---------- 事件总线 ----------
+        window.EventBus = {
+            listeners: {},
+            on(event, callback) {
+                if (!this.listeners[event]) this.listeners[event] = [];
+                this.listeners[event].push(callback);
+                console.log(`[事件总线] 订阅事件: ${event}`);
+            },
+            off(event, callback) {
+                if (!this.listeners[event]) return;
+                if (!callback) delete this.listeners[event];
+                else this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                console.log(`[事件总线] 取消订阅: ${event}`);
+            },
+            emit(event, data) {
+                console.log(`[事件总线] 发送事件: ${event}`, data);
+                if (!this.listeners[event]) return;
+                this.listeners[event].forEach(cb => { try { cb(data); } catch (e) { console.error(e); } });
+            }
+        };
+
+        // ---------- 模块生命周期 ----------
+        window.ModuleLifecycle = {
+            activeModules: new Set(),
+            onLoad(moduleName) {
+                this.activeModules.add(moduleName);
+                console.log(`[生命周期] 模块加载: ${moduleName}`);
+                EventBus.emit('module:loaded', { module: moduleName, time: Date.now() });
+            },
+            onUnload(moduleName) {
+                this.activeModules.delete(moduleName);
+                console.log(`[生命周期] 模块卸载: ${moduleName}`);
+                EventBus.emit('module:unloaded', { module: moduleName, time: Date.now() });
+            },
+            getActiveModules() { return Array.from(this.activeModules); }
+        };
+
+        // ---------- 频道状态 ----------
+        window.ChannelState = {
+            STORAGE_KEY: 'hololake_channel_state',
+            saveState(state) {
+                const data = { ...state, timestamp: Date.now(), visited: state.visited || [] };
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+                console.log('[state] 保存状态:', data);
+            },
+            restoreState() {
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (!saved) return null;
+                try {
+                    const state = JSON.parse(saved);
+                    console.log('[state] 恢复状态:', state);
+                    return state;
+                } catch (e) { console.error('[state] 解析失败:', e); return null; }
+            },
+            markVisited(channel) {
+                const state = this.restoreState() || { visited: [] };
+                if (!state.visited.includes(channel)) { state.visited.push(channel); this.saveState(state); }
+            },
+            clearState() { localStorage.removeItem(this.STORAGE_KEY); console.log('[state] 已清除'); }
+        };
+
+        // ---------- 模块加载器 ----------
+        window.ModuleLoader = {
+            loadModule(moduleName, containerId) {
+                console.log(`[loader] 加载模块: ${moduleName}`);
+                const module = ModuleRegistry.get(moduleName);
+                if (!module) { console.error(`[loader] 模块 ${moduleName} 未注册`); return; }
+                const container = document.getElementById(containerId);
+                if (!container) { console.error(`[loader] 容器 ${containerId} 不存在`); return; }
+                if (module.init && typeof module.init === 'function') module.init(container);
+                else container.innerHTML = `<div>模块 ${moduleName} 内容</div>`;
+                ModuleLifecycle.onLoad(moduleName);
+            },
+            unloadModule(moduleName) {
+                console.log(`[loader] 卸载模块: ${moduleName}`);
+                const module = ModuleRegistry.get(moduleName);
+                if (module && module.destroy) module.destroy();
+                ModuleLifecycle.onUnload(moduleName);
+            }
+        };
+
+        // ---------- 错误边界 ----------
+        window.ErrorBoundary = {
+            showFallback(container, moduleId, error) {
+                container.innerHTML = `
+                    <div class="error-boundary">
+                        <div>⚠️ 模块 ${moduleId} 加载失败</div>
+                        <p>${error || ''}</p>
+                        <button class="error-retry" onclick="ErrorBoundary.reloadModule('${moduleId}')">重试</button>
+                    </div>
+                `;
+                EventBus.emit('module:error', { module: moduleId, error: error, time: Date.now() });
+            },
+            reloadModule(moduleId) {
+                console.log(`[error-boundary] 重载模块: ${moduleId}`);
+                EventBus.emit('module:reload', { module: moduleId });
+                const container = document.getElementById('channel-content');
+                if (container && window.ModuleAdapter) ModuleAdapter.loadModule(moduleId, 'channel-content');
+            }
+        };
+
+        // ---------- 模块适配器 ----------
+        window.ModuleAdapter = {
+            loadedModules: {},
+            config: {
+                m06: { name: '工单管理', path: '/ticket-system/index.html', width: '100%', height: '500px', events: [] },
+                m08: { name: '数据统计', path: '/status-board/index.html', width: '100%', height: '500px', events: [] },
+                m11: { name: '组件库', path: '/m11-module/index.html', width: '100%', height: '600px', events: [] }
+            },
+            loadModule(moduleId, containerId) {
+                console.log(`[adapter] 加载真实模块: ${moduleId}`);
+                const container = document.getElementById(containerId);
+                if (!container) return null;
+                container.innerHTML = '';
+                const config = this.config[moduleId];
+                if (!config) { container.innerHTML = '<div class="error-boundary">模块配置不存在</div>'; return null; }
+                const iframe = document.createElement('iframe');
+                iframe.src = config.path;
+                iframe.style.width = config.width;
+                iframe.style.height = config.height;
+                iframe.style.border = 'none';
+                iframe.style.borderRadius = '8px';
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+                const loadingDiv = document.createElement('div');
+                loadingDiv.textContent = `加载 ${config.name}...`;
+                container.appendChild(loadingDiv);
+                iframe.onload = () => {
+                    loadingDiv.remove();
+                    console.log(`[adapter] ${moduleId} 加载完成`);
+                    this.setupMessageBridge(iframe, moduleId);
+                };
+                iframe.onerror = () => {
+                    loadingDiv.remove();
+                    ErrorBoundary.showFallback(container, moduleId, '404 模块文件不存在');
+                };
+                container.appendChild(iframe);
+                this.loadedModules[moduleId] = { iframe, containerId };
+                return iframe;
+            },
+            setupMessageBridge(iframe, moduleId) {
+                window.addEventListener('message', (event) => {
+                    if (event.source !== iframe.contentWindow) return;
+                    const data = event.data;
+                    if (!data || !data.type) return;
+                    EventBus.emit(`module:${moduleId}:message`, { from: moduleId, type: data.type, payload: data.payload });
+                });
+            },
+            sendMessage(moduleId, message) {
+                const mod = this.loadedModules[moduleId];
+                if (!mod || !mod.iframe) { console.error(`[adapter] 模块 ${moduleId} 未加载`); return false; }
+                mod.iframe.contentWindow.postMessage(message, '*');
+                return true;
+            },
+            unloadModule(moduleId) {
+                const mod = this.loadedModules[moduleId];
+                if (mod) {
+                    const container = document.getElementById(mod.containerId);
+                    if (container) container.innerHTML = '';
+                    delete this.loadedModules[moduleId];
+                    console.log(`[adapter] 卸载模块: ${moduleId}`);
+                }
+            }
+        };
+
+        // ---------- 适配器注册 ----------
+        (function registerAdapters() {
+            window.M06Adapter = { moduleId: 'm06', moduleName: '工单管理', init(containerId) { return ModuleAdapter.loadModule('m06', containerId); }, destroy() { ModuleAdapter.unloadModule('m06'); } };
+            window.M08Adapter = { moduleId: 'm08', moduleName: '数据统计', init(containerId) { return ModuleAdapter.loadModule('m08', containerId); }, destroy() { ModuleAdapter.unloadModule('m08'); } };
+            window.M11Adapter = { moduleId: 'm11', moduleName: '组件库', init(containerId) { return ModuleAdapter.loadModule('m11', containerId); }, destroy() { ModuleAdapter.unloadModule('m11'); } };
+            ModuleRegistry.register('m06', window.M06Adapter);
+            ModuleRegistry.register('m08', window.M08Adapter);
+            ModuleRegistry.register('m11', window.M11Adapter);
+        })();
+
+        // ---------- 频道偏好 ----------
+        window.ChannelPreferences = {
+            STORAGE_KEY: 'hololake_channel_preferences',
+            defaults: { layout: 'grid', theme: 'default', favorites: [], moduleOrder: [], stats: {} },
+            config: null,
+            init() { console.log('[preferences] 初始化'); this.load(); return this.config; },
+            load() {
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) { try { this.config = JSON.parse(saved); } catch (e) { this.config = { ...this.defaults }; } }
+                else { this.config = { ...this.defaults }; }
+                console.log('[preferences] 加载配置:', this.config);
+                return this.config;
+            },
+            save() { if (!this.config) return; localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.config)); console.log('[preferences] 保存配置:', this.config); },
+            get(key) { if (!this.config) this.load(); return this.config[key]; },
+            set(key, value) { if (!this.config) this.load(); this.config[key] = value; this.save(); EventBus.emit('preferences:changed', { key, value }); },
+            reset() { this.config = { ...this.defaults }; this.save(); EventBus.emit('preferences:reset', this.config); },
+            getFavorites() { return this.get('favorites') || []; },
+            toggleFavorite(moduleId) {
+                let favs = this.get('favorites') || [];
+                if (favs.includes(moduleId)) favs = favs.filter(id => id !== moduleId);
+                else favs.push(moduleId);
+                this.set('favorites', favs);
+                return favs.includes(moduleId);
+            },
+            getLayout() { return this.get('layout') || 'grid'; },
+            setLayout(layout) { this.set('layout', layout); },
+            getTheme() { return this.get('theme') || 'default'; },
+            setTheme(theme) { this.set('theme', theme); },
+            getModuleOrder() { return this.get('moduleOrder') || []; },
+            setModuleOrder(order) { this.set('moduleOrder', order); },
+            reorderModules(from, to) {
+                let order = this.getModuleOrder();
+                if (order.length === 0) {
+                    const cards = document.querySelectorAll('.module-card');
+                    order = Array.from(cards).map(c => c.dataset.module);
+                }
+                if (from < 0 || from >= order.length || to < 0 || to >= order.length) return;
+                const [moved] = order.splice(from, 1);
+                order.splice(to, 0, moved);
+                this.setModuleOrder(order);
+            },
+            recordUsage(moduleId) {
+                if (!this.config) this.load();
+                if (!this.config.stats) this.config.stats = {};
+                if (!this.config.stats[moduleId]) this.config.stats[moduleId] = { count: 0, lastUsed: null, totalTime: 0 };
+                this.config.stats[moduleId].count++;
+                this.config.stats[moduleId].lastUsed = Date.now();
+                this.save();
+                this.startTiming(moduleId);
+            },
+            timing: {},
+            startTiming(moduleId) { this.timing[moduleId] = Date.now(); },
+            stopTiming(moduleId) {
+                if (this.timing[moduleId]) {
+                    const duration = (Date.now() - this.timing[moduleId]) / 1000;
+                    if (this.config.stats[moduleId]) this.config.stats[moduleId].totalTime += duration;
+                    delete this.timing[moduleId];
+                    this.save();
+                }
+            },
+            getStats() { return this.get('stats') || {}; }
+        };
+
+        // ---------- 频道主题 ----------
+        window.ChannelTheme = {
+            themes: {
+                default: { name: '默认蓝', colors: { primary: '#3b82f6', primaryDark: '#2563eb', secondary: '#10b981', background: '#ffffff', surface: '#f9fafb', text: '#1f2937', textLight: '#6b7280', border: '#e5e7eb' } },
+                ocean: { name: '海洋', colors: { primary: '#0891b2', primaryDark: '#0e7490', secondary: '#2dd4bf', background: '#ecfeff', surface: '#ffffff', text: '#164e63', textLight: '#155e75', border: '#a5f3fc' } },
+                forest: { name: '森林', colors: { primary: '#059669', primaryDark: '#047857', secondary: '#fbbf24', background: '#f0fdf4', surface: '#ffffff', text: '#064e3b', textLight: '#065f46', border: '#a7f3d0' } },
+                sunset: { name: '日落', colors: { primary: '#d97706', primaryDark: '#b45309', secondary: '#f43f5e', background: '#fff7ed', surface: '#ffffff', text: '#7c2d12', textLight: '#9a3412', border: '#fed7aa' } },
+                lavender: { name: '薰衣草', colors: { primary: '#8b5cf6', primaryDark: '#7c3aed', secondary: '#ec4899', background: '#f5f3ff', surface: '#ffffff', text: '#4c1d95', textLight: '#5b21b6', border: '#ddd6fe' } }
+            },
+            currentTheme: 'default',
+            init() {
+                console.log('[theme] 初始化');
+                const saved = ChannelPreferences ? ChannelPreferences.getTheme() : 'default';
+                if (this.themes[saved]) this.currentTheme = saved;
+                this.applyTheme(this.currentTheme);
+                EventBus.on('preferences:changed', (data) => { if (data.key === 'theme') this.applyTheme(data.value); });
+            },
+            applyTheme(themeId) {
+                if (!this.themes[themeId]) return;
+                this.currentTheme = themeId;
+                const colors = this.themes[themeId].colors;
+                const root = document.documentElement;
+                for (const [key, val] of Object.entries(colors)) root.style.setProperty(`--theme-${key}`, val);
+                console.log(`[theme] 应用主题: ${themeId}`);
+                EventBus.emit('theme:changed', { theme: themeId, colors });
+            },
+            setTheme(themeId) { if (this.themes[themeId]) { this.applyTheme(themeId); if (ChannelPreferences) ChannelPreferences.setTheme(themeId); } }
+        };
+
+        // ---------- 频道收藏与拖拽 ----------
+        window.ChannelFavorites = {
+            draggingElement: null,
+            init() {
+                console.log('[favorites] 初始化');
+                this.bindEvents();
+                this.renderFavorites();
+            },
+            bindEvents() {
+                document.addEventListener('click', (e) => {
+                    const star = e.target.closest('.favorite-star');
+                    if (star) {
+                        e.preventDefault();
+                        const card = star.closest('.module-card');
+                        if (card) this.toggleFavorite(card.dataset.module, star);
+                    }
+                });
+                EventBus.on('preferences:changed', () => this.updateAllStars());
+            },
+            toggleFavorite(moduleId, starEl) {
+                const isNow = ChannelPreferences.toggleFavorite(moduleId);
+                if (starEl) {
+                    starEl.classList.toggle('active', isNow);
+                    starEl.textContent = isNow ? '★' : '☆';
+                }
+                this.updateFavoritesOrder();
+                EventBus.emit('favorite:toggled', { module: moduleId, favorite: isNow });
+            },
+            updateAllStars() {
+                const favs = ChannelPreferences.getFavorites();
+                document.querySelectorAll('.favorite-star').forEach(star => {
+                    const card = star.closest('.module-card');
+                    if (card) {
+                        const id = card.dataset.module;
+                        if (favs.includes(id)) { star.classList.add('active'); star.textContent = '★'; }
+                        else { star.classList.remove('active'); star.textContent = '☆'; }
+                    }
+                });
+            },
+            updateFavoritesOrder() {
+                const container = document.querySelector('.module-grid');
+                if (!container) return;
+                const cards = Array.from(container.querySelectorAll('.module-card'));
+                const favs = ChannelPreferences.getFavorites();
+                cards.sort((a, b) => {
+                    const aFav = favs.includes(a.dataset.module);
+                    const bFav = favs.includes(b.dataset.module);
+                    if (aFav && !bFav) return -1;
+                    if (!aFav && bFav) return 1;
+                    return 0;
+                });
+                cards.forEach(c => container.appendChild(c));
+                // 保存顺序
+                const order = cards.map(c => c.dataset.module);
+                ChannelPreferences.setModuleOrder(order);
+            },
+            initDragAndDrop() {
+                console.log('[favorites] 初始化拖拽排序');
+                const container = document.querySelector('.module-grid');
+                if (!container) return;
+                container.querySelectorAll('.module-card').forEach(card => {
+                    card.setAttribute('draggable', 'true');
+                    card.removeEventListener('dragstart', this.handleDragStart);
+                    card.removeEventListener('dragend', this.handleDragEnd);
+                    card.removeEventListener('dragover', this.handleDragOver);
+                    card.removeEventListener('dragenter', this.handleDragEnter);
+                    card.removeEventListener('dragleave', this.handleDragLeave);
+                    card.removeEventListener('drop', this.handleDrop);
+                    card.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    card.addEventListener('dragend', this.handleDragEnd.bind(this));
+                    card.addEventListener('dragover', this.handleDragOver);
+                    card.addEventListener('dragenter', this.handleDragEnter);
+                    card.addEventListener('dragleave', this.handleDragLeave);
+                    card.addEventListener('drop', this.handleDrop.bind(this));
+                });
+            },
+            handleDragStart(e) {
+                this.draggingElement = e.target.closest('.module-card');
+                if (!this.draggingElement) return;
+                e.dataTransfer.setData('text/plain', this.draggingElement.dataset.module);
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => this.draggingElement.classList.add('dragging'), 0);
+            },
+            handleDragEnd(e) {
+                e.target.closest('.module-card')?.classList.remove('dragging');
+                document.querySelectorAll('.module-card.drop-target').forEach(el => el.classList.remove('drop-target'));
+                this.draggingElement = null;
+            },
+            handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; },
+            handleDragEnter(e) {
+                const card = e.target.closest('.module-card');
+                if (card && card !== this.draggingElement) card.classList.add('drop-target');
+            },
+            handleDragLeave(e) { e.target.closest('.module-card')?.classList.remove('drop-target'); },
+            handleDrop(e) {
+                e.preventDefault();
+                const target = e.target.closest('.module-card');
+                if (!target || !this.draggingElement || target === this.draggingElement) return;
+                target.classList.remove('drop-target');
+                const container = document.querySelector('.module-grid');
+                const cards = Array.from(container.querySelectorAll('.module-card'));
+                const fromIdx = cards.indexOf(this.draggingElement);
+                const toIdx = cards.indexOf(target);
+                if (fromIdx === -1 || toIdx === -1) return;
+                ChannelPreferences.reorderModules(fromIdx, toIdx);
+                if (fromIdx < toIdx) target.insertAdjacentElement('afterend', this.draggingElement);
+                else target.insertAdjacentElement('beforebegin', this.draggingElement);
+                // 保存顺序
+                const newOrder = Array.from(container.querySelectorAll('.module-card')).map(c => c.dataset.module);
+                ChannelPreferences.setModuleOrder(newOrder);
+                EventBus.emit('favorites:reordered', { from: fromIdx, to: toIdx });
+            },
+            refreshDragAndDrop() { this.initDragAndDrop(); },
+            renderFavorites() { this.updateAllStars(); }
+        };
+
+        // ---------- 频道统计 ----------
+        window.ChannelStats = {
+            init() {
+                console.log('[stats] 初始化');
+                EventBus.on('module:loaded', (data) => { if (data?.module) this.recordView(data.module); });
+                EventBus.on('module:unloaded', (data) => { if (data?.module && ChannelPreferences) ChannelPreferences.stopTiming(data.module); });
+                window.addEventListener('beforeunload', () => {
+                    if (ChannelPreferences && ChannelPreferences.timing) {
+                        Object.keys(ChannelPreferences.timing).forEach(id => ChannelPreferences.stopTiming(id));
+                    }
+                });
+            },
+            recordView(moduleId) { if (ChannelPreferences) ChannelPreferences.recordUsage(moduleId); },
+            getStatsReport() {
+                if (!ChannelPreferences) return {};
+                const stats = ChannelPreferences.getStats();
+                const modules = ModuleRegistry.list().filter(m => ['m06','m08','m11','home','debug'].includes(m));
+                const report = { totalViews: 0, mostUsed: null, lastUsed: null, moduleDetails: {} };
+                let maxCount = 0, lastTime = 0;
+                modules.forEach(id => {
+                    const s = stats[id] || { count: 0, lastUsed: null, totalTime: 0 };
+                    report.moduleDetails[id] = {
+                        count: s.count,
+                        lastUsed: s.lastUsed ? new Date(s.lastUsed).toLocaleString() : '从未使用',
+                        totalTime: s.totalTime ? Math.round(s.totalTime) + '秒' : '0秒'
+                    };
+                    report.totalViews += s.count;
+                    if (s.count > maxCount) { maxCount = s.count; report.mostUsed = id; }
+                    if (s.lastUsed && s.lastUsed > lastTime) { lastTime = s.lastUsed; report.lastUsed = id; }
+                });
+                return report;
+            },
+            renderStatsPanel(container) {
+                if (!container) return;
+                const report = this.getStatsReport();
+                let html = '<div class="stats-panel"><h3>使用统计</h3>';
+                html += '<table><thead><tr><th>模块</th><th>访问次数</th><th>累计时长</th><th>最后使用</th></tr></thead><tbody>';
+                for (const [id, detail] of Object.entries(report.moduleDetails)) {
+                    html += `<tr><td>${id}</td><td>${detail.count}</td><td>${detail.totalTime}</td><td>${detail.lastUsed}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                html += '<button id="stats-reset-btn" style="margin-top:15px; padding:8px 16px;">重置统计</button>';
+                html += '</div>';
+                container.innerHTML = html;
+                document.getElementById('stats-reset-btn')?.addEventListener('click', () => {
+                    if (confirm('重置所有统计数据？')) {
+                        if (ChannelPreferences) {
+                            ChannelPreferences.config.stats = {};
+                            ChannelPreferences.save();
+                            this.renderStatsPanel(container);
+                        }
+                    }
+                });
+            }
+        };
+
+        // ---------- 路由 ----------
+        window.ChannelRouter = {
+            currentChannel: 'home',
+            contentEl: null,
+            init(contentElement) {
+                this.contentEl = contentElement;
+                console.log('[router] 初始化');
+                const saved = ChannelState.restoreState();
+                if (saved && saved.currentChannel) this.currentChannel = saved.currentChannel;
+                this.loadChannel(this.currentChannel);
+                if (saved && saved.visited) {
+                    saved.visited.forEach(ch => {
+                        document.querySelectorAll('.channel-btn').forEach(btn => {
+                            if (btn.dataset.channel === ch) btn.classList.add('visited');
+                        });
+                    });
+                }
+            },
+            navigateTo(channel) {
+                if (channel === this.currentChannel) return;
+                console.log(`[router] 导航到: ${channel}`);
+                this.contentEl.classList.add('fade-out');
+                setTimeout(() => {
+                    this.loadChannel(channel);
+                    this.contentEl.classList.remove('fade-out');
+                    this.contentEl.classList.add('fade-in');
+                    setTimeout(() => this.contentEl.classList.remove('fade-in'), 300);
+                }, 300);
+                this.currentChannel = channel;
+                document.querySelectorAll('.channel-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.channel === channel) btn.classList.add('active');
+                });
+                ChannelState.saveState({ currentChannel: channel, visited: this.getVisitedChannels() });
+            },
+            loadChannel(channel) {
+                if (!this.contentEl) return;
+                if (['m06','m08','m11'].includes(channel)) {
+                    if (ModuleAdapter) ModuleAdapter.loadModule(channel, 'channel-content');
+                    else this.contentEl.innerHTML = '<div class="error-boundary">适配器未加载</div>';
+                    ModuleLifecycle.onLoad(channel);
+                    return;
+                }
+                if (channel === 'home') this.renderModuleCards();
+                else if (channel === 'debug') this.loadDebugPanel();
+                else this.contentEl.innerHTML = '<h2>未知频道</h2>';
+            },
+            renderModuleCards() {
+                const modules = [
+                    { id: 'm06', name: '工单管理', icon: '📋', desc: '管理任务和工单' },
+                    { id: 'm08', name: '数据统计', icon: '📊', desc: '查看数据统计和报表' },
+                    { id: 'm11', name: '组件库', icon: '🧩', desc: '系统组件展示' },
+                    { id: 'debug', name: '调试面板', icon: '🐞', desc: '查看事件和模块状态' }
+                ];
+                const favs = ChannelPreferences ? ChannelPreferences.getFavorites() : [];
+                let html = '<div class="module-grid">';
+                modules.forEach(m => {
+                    const isFav = favs.includes(m.id);
+                    html += `
+                        <div class="module-card" data-module="${m.id}">
+                            <div class="module-card-header">
+                                <span class="drag-handle">⋮⋮</span>
+                                <span class="module-card-title">${m.icon} ${m.name}</span>
+                                <span class="favorite-star ${isFav ? 'active' : ''}">${isFav ? '★' : '☆'}</span>
+                            </div>
+                            <div class="module-card-content">${m.desc}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                this.contentEl.innerHTML = html;
+                ModuleLifecycle.onLoad('home');
+                // 应用自定义排序
+                if (ChannelPreferences) {
+                    const order = ChannelPreferences.getModuleOrder();
+                    if (order && order.length) {
+                        const container = this.contentEl.querySelector('.module-grid');
+                        const cards = Array.from(container.children);
+                        const sorted = cards.sort((a,b) => {
+                            const idxA = order.indexOf(a.dataset.module);
+                            const idxB = order.indexOf(b.dataset.module);
+                            if (idxA === -1 && idxB === -1) return 0;
+                            if (idxA === -1) return 1;
+                            if (idxB === -1) return -1;
+                            return idxA - idxB;
+                        });
+                        sorted.forEach(c => container.appendChild(c));
+                    }
+                }
+                setTimeout(() => {
+                    if (ChannelFavorites) {
+                        ChannelFavorites.init();
+                        ChannelFavorites.initDragAndDrop();
+                    }
+                }, 100);
+            },
+            loadDebugPanel() {
+                this.contentEl.innerHTML = `
+                    <div class="debug-panel">
+                        <h2>🐞 调试面板</h2>
+                        <p><strong>当前活跃模块:</strong> <span id="active-modules">${ModuleLifecycle.getActiveModules().join(', ') || '无'}</span></p>
+                        <h3>事件总线聊天记录</h3>
+                        <ul id="debug-messages" style="height:200px; overflow:auto; border:1px solid #ccc; padding:10px; background:#f9f9f9;"></ul>
+                        <div style="margin:10px 0;">
+                            <input id="debug-input" type="text" placeholder="输入要发送的消息..." style="width:70%; padding:8px;">
+                            <button id="debug-send">发送测试消息</button>
+                        </div>
+                        <div>
+                            <button id="debug-clear">清除状态</button>
+                            <button id="debug-refresh" onclick="location.reload()">刷新页面</button>
+                        </div>
+                        <p><small>消息会广播给所有订阅的模块</small></p>
+                    </div>
+                `;
+                ModuleLifecycle.onLoad('debug');
+                // 填充消息
+                const msgList = document.getElementById('debug-messages');
+                if (msgList && window.debugMessages) {
+                    window.debugMessages.forEach(msg => {
+                        const li = document.createElement('li');
+                        li.textContent = `[${msg.time}] ${msg.event}: ${JSON.stringify(msg.data)}`;
+                        msgList.appendChild(li);
+                    });
+                }
+                document.getElementById('debug-send')?.addEventListener('click', () => {
+                    const input = document.getElementById('debug-input');
+                    if (input.value.trim()) {
+                        EventBus.emit('debug:message', { text: input.value.trim(), from: '调试面板' });
+                        input.value = '';
+                    }
+                });
+                document.getElementById('debug-clear')?.addEventListener('click', () => {
+                    ChannelState.clearState();
+                    alert('状态已清除，刷新页面生效');
+                });
+            },
+            getVisitedChannels() {
+                const v = [];
+                document.querySelectorAll('.channel-btn.visited').forEach(btn => v.push(btn.dataset.channel));
+                return v;
+            }
+        };
+
+        // ---------- 应用启动 ----------
+        console.log('[app] 启动中...');
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[app] DOM 已加载');
+            // 初始化偏好（必须先加载）
+            if (ChannelPreferences) ChannelPreferences.init();
+            // 初始化主题（依赖偏好）
+            if (ChannelTheme) ChannelTheme.init();
+            // 初始化统计
+            if (ChannelStats) ChannelStats.init();
+            // 初始化路由
+            const contentEl = document.getElementById('channel-content');
+            if (contentEl && ChannelRouter) ChannelRouter.init(contentEl);
+            // 导航按钮绑定
+            document.querySelectorAll('.channel-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const ch = this.dataset.channel;
+                    if (ch && ChannelRouter) {
+                        ChannelRouter.navigateTo(ch);
+                        this.classList.add('visited');
+                        ChannelState.markVisited(ch);
+                    }
+                });
+            });
+            // 设置面板开关
+            const settingsToggle = document.getElementById('settings-toggle');
+            const settingsPanel = document.getElementById('settings-panel');
+            const settingsClose = document.getElementById('settings-close');
+            if (settingsToggle && settingsPanel) {
+                settingsToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    settingsPanel.classList.add('open');
+                });
+                settingsClose.addEventListener('click', () => settingsPanel.classList.remove('open'));
+            }
+            // 布局切换
+            document.querySelectorAll('input[name="layout"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        const layout = e.target.value;
+                        document.body.className = document.body.className.replace(/layout-\w+/g, '') + ' layout-' + layout;
+                        if (ChannelPreferences) ChannelPreferences.setLayout(layout);
+                        setTimeout(() => ChannelFavorites?.refreshDragAndDrop(), 100);
+                    }
+                });
+            });
+            // 主题切换
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const theme = btn.dataset.theme;
+                    if (ChannelTheme) ChannelTheme.setTheme(theme);
+                });
+            });
+            // 统计模态框
+            const statsModal = document.getElementById('stats-modal');
+            const statsClose = document.getElementById('stats-close');
+            document.getElementById('show-stats-btn')?.addEventListener('click', () => {
+                if (ChannelStats) {
+                    const body = document.getElementById('stats-modal-body');
+                    ChannelStats.renderStatsPanel(body);
+                    statsModal.style.display = 'flex';
+                }
+            });
+            statsClose?.addEventListener('click', () => statsModal.style.display = 'none');
+            window.addEventListener('click', (e) => { if (e.target === statsModal) statsModal.style.display = 'none'; });
+            // 恢复默认
+            document.getElementById('reset-preferences-btn')?.addEventListener('click', () => {
+                if (confirm('确定恢复所有默认设置吗？')) {
+                    ChannelPreferences.reset();
+                    document.body.className = document.body.className.replace(/layout-\w+/g, '') + ' layout-grid';
+                    document.querySelectorAll('input[name="layout"]').forEach(r => r.checked = (r.value === 'grid'));
+                    if (ChannelTheme) ChannelTheme.setTheme('default');
+                    alert('已恢复默认设置');
+                }
+            });
+        });
+
+        // 拦截事件总线消息用于调试
+        (function() {
+            const original = EventBus.emit;
+            EventBus.emit = function(event, data) {
+                if (!window.debugMessages) window.debugMessages = [];
+                window.debugMessages.push({ event, data, time: new Date().toLocaleTimeString() });
+                original.call(this, event, data);
+            };
+        })();
+    </script>
+</body>
+</html>
+<script>
+// ========== 紧急修复补丁 ==========
+(function() {
+    console.log('[修复补丁] 执行中...');
+
+    // 1. 修复设置面板内按钮点击无效的问题（使用事件委托）
+    document.addEventListener('click', function(e) {
+        // 主题按钮
+        if (e.target.classList.contains('theme-btn')) {
+            const theme = e.target.dataset.theme;
+            if (theme && window.ChannelTheme) {
+                e.preventDefault();
+                ChannelTheme.setTheme(theme);
+                console.log('[修复补丁] 主题按钮点击:', theme);
+            }
+        }
+        // 查看统计按钮
+        if (e.target.id === 'show-stats-btn') {
+            e.preventDefault();
+            if (window.ChannelStats) {
+                const body = document.getElementById('stats-modal-body');
+                const modal = document.getElementById('stats-modal');
+                if (body && modal) {
+                    ChannelStats.renderStatsPanel(body);
+                    modal.style.display = 'flex';
+                }
+            }
+        }
+        // 恢复默认按钮
+        if (e.target.id === 'reset-preferences-btn') {
+            e.preventDefault();
+            if (window.ChannelPreferences && confirm('确定恢复所有默认设置吗？')) {
+                ChannelPreferences.reset();
+                document.body.className = document.body.className.replace(/layout-\w+/g, '') + ' layout-grid';
+                document.querySelectorAll('input[name="layout"]').forEach(r => r.checked = (r.value === 'grid'));
+                if (window.ChannelTheme) ChannelTheme.setTheme('default');
+                alert('已恢复默认设置');
+            }
+        }
+        // 布局切换（radio 需要特殊处理，因为点击 label 可能触发）
+        if (e.target.name === 'layout') {
+            // 由 change 事件处理，这里不用重复
+        }
+    });
+
+    // 2. 布局切换的 change 事件重新绑定（以防原来的失效）
+    document.querySelectorAll('input[name="layout"]').forEach(radio => {
+        radio.removeEventListener('change', window._layoutChangeHandler);
+        window._layoutChangeHandler = function(e) {
+            if (e.target.checked) {
+                const layout = e.target.value;
+                document.body.className = document.body.className.replace(/layout-\w+/g, '') + ' layout-' + layout;
+                if (window.ChannelPreferences) ChannelPreferences.setLayout(layout);
+                setTimeout(() => window.ChannelFavorites?.refreshDragAndDrop(), 100);
+            }
+        };
+        radio.addEventListener('change', window._layoutChangeHandler);
+    });
+
+    // 3. 修复拖拽后顺序保存
+    if (window.ChannelFavorites && window.ChannelFavorites.handleDrop) {
+        const originalHandleDrop = ChannelFavorites.handleDrop;
+        ChannelFavorites.handleDrop = function(e) {
+            originalHandleDrop.call(this, e);
+            // 拖拽完成后，显式保存顺序
+            setTimeout(() => {
+                const container = document.querySelector('.module-grid');
+                if (container && window.ChannelPreferences) {
+                    const cards = Array.from(container.querySelectorAll('.module-card'));
+                    const order = cards.map(c => c.dataset.module);
+                    ChannelPreferences.setModuleOrder(order);
+                    console.log('[修复补丁] 拖拽顺序已保存:', order);
+                }
+            }, 50);
+        };
+    }
+
+    // 4. 如果拖拽后刷新不保留，我们还需要在页面加载时应用保存的顺序
+    // 但 ChannelRouter.renderModuleCards 中已经有应用顺序的逻辑，应该没问题。
+    // 如果还是不行，我们强制在页面加载后重新应用一次
+    window.addEventListener('load', function() {
+        if (window.ChannelPreferences && window.ChannelRouter && window.ChannelRouter.currentChannel === 'home') {
+            const order = ChannelPreferences.getModuleOrder();
+            if (order && order.length) {
+                const container = document.querySelector('.module-grid');
+                if (container) {
+                    const cards = Array.from(container.children);
+                    const sorted = cards.sort((a,b) => {
+                        const idxA = order.indexOf(a.dataset.module);
+                        const idxB = order.indexOf(b.dataset.module);
+                        if (idxA === -1 && idxB === -1) return 0;
+                        if (idxA === -1) return 1;
+                        if (idxB === -1) return -1;
+                        return idxA - idxB;
+                    });
+                    sorted.forEach(c => container.appendChild(c));
+                }
+            }
+        }
+    });
+
+    console.log('[修复补丁] 执行完成');
+})();
+</script>
+<script>
+// 调试面板美化补丁
+(function() {
+    if (window.ChannelRouter) {
+        const originalLoadDebugPanel = ChannelRouter.loadDebugPanel;
+        ChannelRouter.loadDebugPanel = function() {
+            originalLoadDebugPanel.call(this);
+            setTimeout(() => {
+                const msgList = document.getElementById("debug-messages");
+                if (!msgList || !window.debugMessages) return;
+                msgList.innerHTML = "";
+                window.debugMessages.forEach(msg => {
+                    const li = document.createElement("li");
+                    let dataDisplay = "";
+                    if (msg.event === "module:loaded" && msg.data?.module) {
+                        dataDisplay = `模块 ${msg.data.module} 加载`;
+                    } else if (msg.event === "module:unloaded" && msg.data?.module) {
+                        dataDisplay = `模块 ${msg.data.module} 卸载`;
+                    } else if (msg.event === "theme:changed" && msg.data?.theme) {
+                        const themeNames = { default: "默认蓝", ocean: "海洋", forest: "森林", sunset: "日落", lavender: "薰衣草" };
+                        dataDisplay = `主题切换为 ${themeNames[msg.data.theme] || msg.data.theme}`;
+                    } else if (msg.event === "preferences:changed" && msg.data?.key) {
+                        dataDisplay = `设置变更: ${msg.data.key} = ${msg.data.value}`;
+                    } else if (msg.event === "favorite:toggled" && msg.data?.module) {
+                        dataDisplay = `收藏 ${msg.data.module} ${msg.data.favorite ? "★" : "☆"}`;
+                    } else if (msg.event === "favorites:reordered") {
+                        dataDisplay = "卡片顺序已调整";
+                    } else if (msg.event === "module:error" && msg.data?.module) {
+                        dataDisplay = `模块 ${msg.data.module} 错误`;
+                    } else {
+                        try {
+                            dataDisplay = typeof msg.data === "object" 
+                                ? JSON.stringify(msg.data).substring(0, 100) 
+                                : String(msg.data).substring(0, 100);
+                        } catch (e) {
+                            dataDisplay = String(msg.data);
+                        }
+                    }
+                    li.textContent = `[${msg.time}] ${msg.event}: ${dataDisplay}`;
+                    msgList.appendChild(li);
+                });
+            }, 50);
+        };
+        console.log("[美化] 调试面板已优化");
+    }
+})();
+</script>
+<script>
+// ========== 调试面板终极美化 ==========
+(function() {
+    // 完全重写调试面板渲染函数
+    function renderBeautifulDebugPanel() {
+        const contentEl = document.getElementById('channel-content');
+        if (!contentEl) return;
+
+        // 构建美观的调试面板 HTML
+        const activeModules = window.ModuleLifecycle ? ModuleLifecycle.getActiveModules() : [];
+        const messages = window.debugMessages || [];
+
+        const html = `
+            <div class="beautiful-debug">
+                <h2>🐞 调试面板</h2>
+                <div class="debug-section">
+                    <div class="section-title">📌 当前活跃模块</div>
+                    <div class="active-modules">
+                        ${activeModules.length ? activeModules.map(m => `<span class="module-badge">${m}</span>`).join('') : '<span class="no-data">无活跃模块</span>'}
+                    </div>
+                </div>
+                <div class="debug-section">
+                    <div class="section-title">📋 事件总线记录</div>
+                    <div class="event-list">
+                        ${messages.slice().reverse().map(msg => {
+                            let displayMsg = '';
+                            if (msg.event === 'module:loaded' && msg.data?.module) {
+                                displayMsg = `模块 <strong>${msg.data.module}</strong> 已加载`;
+                            } else if (msg.event === 'module:unloaded' && msg.data?.module) {
+                                displayMsg = `模块 <strong>${msg.data.module}</strong> 已卸载`;
+                            } else if (msg.event === 'theme:changed' && msg.data?.theme) {
+                                const themeNames = { default: '默认蓝', ocean: '海洋', forest: '森林', sunset: '日落', lavender: '薰衣草' };
+                                displayMsg = `主题切换为 <span style="color:var(--theme-primary)">${themeNames[msg.data.theme] || msg.data.theme}</span>`;
+                            } else if (msg.event === 'preferences:changed' && msg.data?.key) {
+                                displayMsg = `设置变更: <strong>${msg.data.key}</strong> = ${msg.data.value}`;
+                            } else if (msg.event === 'favorite:toggled' && msg.data?.module) {
+                                displayMsg = `收藏 ${msg.data.module} ${msg.data.favorite ? '★' : '☆'}`;
+                            } else if (msg.event === 'favorites:reordered') {
+                                displayMsg = `卡片顺序已调整`;
+                            } else {
+                                displayMsg = `${msg.event}: ${JSON.stringify(msg.data)}`;
+                            }
+                            return `<div class="event-item"><span class="event-time">[${msg.time}]</span> ${displayMsg}</div>`;
+                        }).join('')}
+                        ${messages.length === 0 ? '<div class="no-data">暂无事件记录</div>' : ''}
+                    </div>
+                </div>
+                <div class="debug-section">
+                    <div class="section-title">📤 发送测试消息</div>
+                    <div class="message-sender">
+                        <input type="text" id="beautiful-debug-input" placeholder="输入要发送的消息...">
+                        <button id="beautiful-debug-send">发送</button>
+                    </div>
+                </div>
+                <div class="debug-actions">
+                    <button id="beautiful-debug-clear">清除所有状态</button>
+                    <button id="beautiful-debug-refresh">刷新页面</button>
+                </div>
+                <p class="debug-note">消息会广播给所有订阅的模块</p>
+            </div>
+        `;
+
+        contentEl.innerHTML = html;
+
+        // 绑定事件
+        document.getElementById('beautiful-debug-send')?.addEventListener('click', () => {
+            const input = document.getElementById('beautiful-debug-input');
+            if (input.value.trim()) {
+                EventBus.emit('debug:message', { text: input.value.trim(), from: '调试面板' });
+                input.value = '';
+                // 重新渲染以显示新消息
+                renderBeautifulDebugPanel();
+            }
+        });
+
+        document.getElementById('beautiful-debug-clear')?.addEventListener('click', () => {
+            if (window.ChannelState) ChannelState.clearState();
+            if (window.ChannelPreferences) ChannelPreferences.reset();
+            window.debugMessages = [];
+            renderBeautifulDebugPanel();
+            alert('状态已清除');
+        });
+
+        document.getElementById('beautiful-debug-refresh')?.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+
+    // 注入样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .beautiful-debug {
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .beautiful-debug h2 {
+            margin-top: 0;
+            color: #0f172a;
+            font-size: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .debug-section {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .active-modules {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .module-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .event-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .event-item {
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        .event-time {
+            color: #64748b;
+            margin-right: 10px;
+            font-family: monospace;
+        }
+        .no-data {
+            color: #94a3b8;
+            font-style: italic;
+            padding: 10px;
+            text-align: center;
+        }
+        .message-sender {
+            display: flex;
+            gap: 10px;
+        }
+        .message-sender input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .message-sender button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .message-sender button:hover {
+            background: #2563eb;
+        }
+        .debug-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .debug-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .debug-actions button:first-child {
+            background: #ef4444;
+            color: white;
+        }
+        .debug-actions button:first-child:hover {
+            background: #dc2626;
+        }
+        .debug-actions button:last-child {
+            background: #64748b;
+            color: white;
+        }
+        .debug-actions button:last-child:hover {
+            background: #475569;
+        }
+        .debug-note {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 10px;
+            text-align: center;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 替换原有的 loadDebugPanel 函数
+    if (window.ChannelRouter) {
+        window.ChannelRouter.loadDebugPanel = function() {
+            renderBeautifulDebugPanel();
+            ModuleLifecycle.onLoad('debug');
+        };
+        console.log('[美化] 调试面板已替换为终极美化版');
+    }
+
+    // 监听模块事件自动更新调试面板（如果当前在调试页面）
+    if (window.EventBus) {
+        EventBus.on('module:loaded', () => {
+            if (window.ChannelRouter && window.ChannelRouter.currentChannel === 'debug') {
+                setTimeout(renderBeautifulDebugPanel, 50);
+            }
+        });
+        EventBus.on('module:unloaded', () => {
+            if (window.ChannelRouter && window.ChannelRouter.currentChannel === 'debug') {
+                setTimeout(renderBeautifulDebugPanel, 50);
+            }
+        });
+        EventBus.on('theme:changed', () => {
+            if (window.ChannelRouter && window.ChannelRouter.currentChannel === 'debug') {
+                setTimeout(renderBeautifulDebugPanel, 50);
+            }
+        });
+        EventBus.on('preferences:changed', () => {
+            if (window.ChannelRouter && window.ChannelRouter.currentChannel === 'debug') {
+                setTimeout(renderBeautifulDebugPanel, 50);
+            }
+        });
+    }
+})();
+</script>

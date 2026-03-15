@@ -1,0 +1,1 @@
+"use strict";function enableBluetoothV2$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.enableBluetoothV2$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.enableBluetoothV2",exports.enableBluetoothV2$=enableBluetoothV2$,exports.default=enableBluetoothV2$;

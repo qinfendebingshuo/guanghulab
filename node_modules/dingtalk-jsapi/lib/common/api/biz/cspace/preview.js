@@ -1,0 +1,1 @@
+"use strict";function preview$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.preview$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.cspace.preview",exports.preview$=preview$,exports.default=preview$;

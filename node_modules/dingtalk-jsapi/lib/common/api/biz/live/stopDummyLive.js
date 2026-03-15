@@ -1,0 +1,1 @@
+"use strict";function stopDummyLive$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.stopDummyLive$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.stopDummyLive",exports.stopDummyLive$=stopDummyLive$,exports.default=stopDummyLive$;

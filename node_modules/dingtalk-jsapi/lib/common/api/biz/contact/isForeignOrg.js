@@ -1,0 +1,1 @@
+"use strict";function isForeignOrg$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.isForeignOrg$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.contact.isForeignOrg",exports.isForeignOrg$=isForeignOrg$,exports.default=isForeignOrg$;

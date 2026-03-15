@@ -1,0 +1,1 @@
+"use strict";function listFilterMsg$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.listFilterMsg$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.imshortcut.listFilterMsg",exports.listFilterMsg$=listFilterMsg$,exports.default=listFilterMsg$;

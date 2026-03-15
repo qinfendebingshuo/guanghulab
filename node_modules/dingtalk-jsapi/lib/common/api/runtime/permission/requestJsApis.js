@@ -1,0 +1,1 @@
+"use strict";function requestJsApis$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.requestJsApis$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="runtime.permission.requestJsApis",exports.requestJsApis$=requestJsApis$,exports.default=requestJsApis$;

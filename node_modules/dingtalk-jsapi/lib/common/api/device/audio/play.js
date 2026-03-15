@@ -1,0 +1,1 @@
+"use strict";function play$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.play$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.audio.play",exports.play$=play$,exports.default=play$;

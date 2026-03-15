@@ -1,0 +1,88 @@
+name: 铸渊 · 广播推送飞书（聊天消息）
+
+# 独立 workflow：接收广播内容，推送飞书消息卡片到原聊天窗口
+# 用于自动链路推送失败时的手动兜底，或独立触发推送
+#
+# 依赖 Secrets：
+#   PUSH_BROADCAST_TOKEN   广播推送接口鉴权 token
+#
+# dispatch payload：
+#   chat_id            飞书聊天窗口 ID（优先）
+#   sender_open_id     发送者飞书 Open ID（备选）
+#   broadcast_title    广播标题
+#   broadcast_content  广播摘要内容
+#   broadcast_url      Notion 广播页面链接
+
+on:
+  repository_dispatch:
+    types: [push-broadcast-feishu]
+  workflow_dispatch:
+    inputs:
+      chat_id:
+        description: '飞书聊天窗口 ID'
+        required: false
+      sender_open_id:
+        description: '发送者飞书 Open ID'
+        required: false
+      broadcast_title:
+        description: '广播标题'
+        required: true
+      broadcast_content:
+        description: '广播摘要'
+        required: true
+      broadcast_url:
+        description: 'Notion 广播页面链接'
+        required: true
+
+jobs:
+  push-to-feishu:
+    name: 📢 推送广播到飞书聊天
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: 📢 推送广播消息卡片
+        env:
+          PUSH_URL: https://guanghulab.com/webhook/push-broadcast
+          PUSH_TOKEN: ${{ secrets.PUSH_BROADCAST_TOKEN }}
+          CHAT_ID: ${{ github.event.client_payload.chat_id || github.event.inputs.chat_id || '' }}
+          SENDER_OPEN_ID: ${{ github.event.client_payload.sender_open_id || github.event.inputs.sender_open_id || '' }}
+          BROADCAST_TITLE: ${{ github.event.client_payload.broadcast_title || github.event.inputs.broadcast_title || '' }}
+          BROADCAST_CONTENT: ${{ github.event.client_payload.broadcast_content || github.event.inputs.broadcast_content || '' }}
+          BROADCAST_URL: ${{ github.event.client_payload.broadcast_url || github.event.inputs.broadcast_url || '' }}
+        run: |
+          if [ -z "$PUSH_TOKEN" ]; then
+            echo "⚠️  PUSH_BROADCAST_TOKEN 未配置，跳过推送"
+            exit 0
+          fi
+          if [ -z "$CHAT_ID" ] && [ -z "$SENDER_OPEN_ID" ]; then
+            echo "⚠️  缺少 chat_id 和 sender_open_id，无法推送"
+            exit 1
+          fi
+
+          echo "📢 推送广播到飞书..."
+          echo "  标题: $BROADCAST_TITLE"
+          echo "  目标: ${CHAT_ID:-$SENDER_OPEN_ID}"
+
+          HTTP_CODE=$(curl -s -o /tmp/push-response.txt -w "%{http_code}" \
+            -X POST "$PUSH_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-push-token: $PUSH_TOKEN" \
+            -d "$(jq -n \
+              --arg chat_id "$CHAT_ID" \
+              --arg sender_open_id "$SENDER_OPEN_ID" \
+              --arg broadcast_title "$BROADCAST_TITLE" \
+              --arg broadcast_content "$BROADCAST_CONTENT" \
+              --arg broadcast_url "$BROADCAST_URL" \
+              '{chat_id: $chat_id, sender_open_id: $sender_open_id, broadcast_title: $broadcast_title, broadcast_content: $broadcast_content, broadcast_url: $broadcast_url}')")
+
+          echo "  HTTP 响应: $HTTP_CODE"
+          cat /tmp/push-response.txt 2>/dev/null || true
+          echo ""
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ 广播已推送到飞书"
+          else
+            echo "❌ 推送失败 (HTTP $HTTP_CODE)"
+            exit 1
+          fi

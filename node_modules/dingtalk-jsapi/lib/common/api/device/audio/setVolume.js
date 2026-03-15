@@ -1,0 +1,1 @@
+"use strict";function setVolume$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setVolume$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.audio.setVolume",exports.setVolume$=setVolume$,exports.default=setVolume$;

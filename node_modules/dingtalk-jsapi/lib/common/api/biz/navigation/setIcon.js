@@ -1,0 +1,1 @@
+"use strict";function setIcon$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setIcon$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.setIcon",exports.setIcon$=setIcon$,exports.default=setIcon$;

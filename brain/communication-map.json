@@ -1,0 +1,631 @@
+{
+  "version": "4.0",
+  "generated_at": "2026-03-13T19:38:09.552Z",
+  "generated_by": "scripts/generate-communication-map.js",
+  "description": "数字地球系统通信地图 · 所有通信入口与数据流",
+  "api_endpoints": {
+    "hli_middleware": {
+      "port": 3001,
+      "process": "guanghulab",
+      "script": "src/index.js",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "description": "健康检查"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/auth/login",
+          "description": "用户登录"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/auth/register",
+          "description": "用户注册"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/auth/verify",
+          "description": "Token 验证"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/prompt",
+          "description": "AI Prompt 构建"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/route",
+          "description": "脑路由"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/context",
+          "description": "上下文管理"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/memory",
+          "description": "记忆管理"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/status",
+          "description": "脑状态"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/bridge",
+          "description": "脑桥接状态"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/bridge/sync",
+          "description": "脑桥接同步"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/bridge/export",
+          "description": "脑桥接导出"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/bridge/consistency",
+          "description": "一致性检查"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/bridge/master-mode",
+          "description": "主模式切换"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/bridge/explanation",
+          "description": "桥接说明"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/bridge/inspection",
+          "description": "桥接巡检"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/bridge/developers",
+          "description": "开发者列表"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/brain/bridge/developers/:expId",
+          "description": "单个开发者信息"
+        },
+        {
+          "method": "POST",
+          "path": "/hli/brain/bridge/developers",
+          "description": "开发者管理"
+        },
+        {
+          "method": "GET",
+          "path": "/hli/registry/lookup",
+          "description": "开发者编号查询"
+        }
+      ]
+    },
+    "express_backend": {
+      "port": 3000,
+      "process": "guanghulab-backend",
+      "script": "backend/server.js",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/",
+          "description": "服务状态"
+        },
+        {
+          "method": "*",
+          "path": "/notion/*",
+          "description": "Notion 路由"
+        },
+        {
+          "method": "*",
+          "path": "/feishu/*",
+          "description": "飞书路由"
+        },
+        {
+          "method": "*",
+          "path": "/feishu-bot/*",
+          "description": "飞书机器人路由"
+        },
+        {
+          "method": "*",
+          "path": "/router/*",
+          "description": "路由管理"
+        },
+        {
+          "method": "*",
+          "path": "/api/coldstart/*",
+          "description": "冷启动接口"
+        },
+        {
+          "method": "*",
+          "path": "/api/v1/developers/*",
+          "description": "开发者管理接口"
+        },
+        {
+          "method": "POST",
+          "path": "/webhook/feishu",
+          "description": "飞书 Webhook 入口"
+        }
+      ]
+    },
+    "ai_proxy": {
+      "port": 3721,
+      "process": "guanghulab-proxy",
+      "script": "backend-integration/api-proxy.js",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/chat",
+          "description": "AI Chat 代理"
+        }
+      ]
+    },
+    "persona_studio": {
+      "port": 3002,
+      "process": "persona-studio",
+      "script": "persona-studio/backend/server.js",
+      "routes": [
+        {
+          "method": "*",
+          "path": "/api/ps/*",
+          "description": "Persona Studio API"
+        }
+      ]
+    },
+    "websocket": {
+      "port": 8080,
+      "process": "guanghulab-ws",
+      "script": "status-board/mock-ws-server.js",
+      "routes": [
+        {
+          "method": "WS",
+          "path": "/ws",
+          "description": "看板 WebSocket 推送"
+        }
+      ]
+    }
+  },
+  "webhook_endpoints": [
+    {
+      "path": "/webhook/feishu",
+      "port": 3000,
+      "description": "飞书 Webhook 入口（机器人事件回调）",
+      "direction": "inbound"
+    },
+    {
+      "path": "/feishu-bot/event",
+      "port": 3000,
+      "description": "飞书机器人新版事件入口",
+      "direction": "inbound"
+    }
+  ],
+  "trigger_paths": {
+    "github_to_notion": [
+      {
+        "workflow": "bridge-changes-to-notion.yml",
+        "name": "铸渊 · Bridge E · GitHub Changes → Notion"
+      },
+      {
+        "workflow": "bridge-session-summary.yml",
+        "name": "Generate Session Summary for Notion"
+      },
+      {
+        "workflow": "bridge-syslog-to-notion.yml",
+        "name": "铸渊 · Bridge A · SYSLOG → Notion"
+      },
+      {
+        "workflow": "deploy-to-server.yml",
+        "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com"
+      },
+      {
+        "workflow": "notion-callback-pipeline.yml",
+        "name": "Notion Callback Pipeline"
+      },
+      {
+        "workflow": "persona-invoke.yml",
+        "name": "Persona Invoke Endpoint"
+      },
+      {
+        "workflow": "push-broadcast.yml",
+        "name": "铸渊 · Push Broadcast · Notion → 飞书文档B"
+      },
+      {
+        "workflow": "receive-syslog.yml",
+        "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion"
+      },
+      {
+        "workflow": "sync-login-entry.yml",
+        "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A"
+      },
+      {
+        "workflow": "syslog-auto-pipeline.yml",
+        "name": "SYSLOG Auto Pipeline"
+      },
+      {
+        "workflow": "syslog-issue-pipeline.yml",
+        "name": "📡 SYSLOG Issue Pipeline"
+      },
+      {
+        "workflow": "test-notion-bridge.yml",
+        "name": "🧪 Notion Bridge Connectivity Test"
+      }
+    ],
+    "notion_to_github": [
+      {
+        "workflow": "notion-heartbeat.yml",
+        "name": "Notion Heartbeat Monitor"
+      },
+      {
+        "workflow": "notion-poll.yml",
+        "name": "铸渊 · Notion 工单轮询"
+      },
+      {
+        "workflow": "persona-invoke.yml",
+        "name": "Persona Invoke Endpoint"
+      },
+      {
+        "workflow": "process-notion-orders.yml",
+        "name": "Process Notion Work Orders"
+      }
+    ]
+  },
+  "data_sync_scripts": [
+    {
+      "script": "scripts/bingshuo-deploy-agent.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/bingshuo-neural-sync.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/brain-bridge-sync.js",
+      "direction": "bidirectional",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/create-standardized-ticket.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/cross-repo-sync.js",
+      "direction": "unknown",
+      "uses_notion_api": false,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/esp-email-processor.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/generate-automation-map.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/generate-communication-map.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/generate-repo-map.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/generate-session-summary.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/invoke-persona.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/notion-bridge.js",
+      "direction": "bidirectional",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/notion-connectivity-test.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/notion-heartbeat.js",
+      "direction": "external_to_github",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/notion-signal-bridge.js",
+      "direction": "bidirectional",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/psp-inspection.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/push-broadcast-to-github.js",
+      "direction": "github_to_external",
+      "uses_notion_api": false,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/push-broadcast.js",
+      "direction": "github_to_external",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/receive-syslog.js",
+      "direction": "external_to_github",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/server-diagnose-report.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/sync-login-entry.js",
+      "direction": "github_to_external",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/update-readme-bulletin.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/wake-persona.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    },
+    {
+      "script": "scripts/zhuyuan-daily-selfcheck.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": false
+    },
+    {
+      "script": "scripts/zhuyuan-issue-reply.js",
+      "direction": "github_to_notion",
+      "uses_notion_api": true,
+      "uses_http": true
+    }
+  ],
+  "automation_flows": [
+    {
+      "name": "SYSLOG 处理管线",
+      "flow": "飞书机器人 → /webhook/feishu → receive-syslog.js → Notion 工单 → persona-invoke → 执行 → 回报",
+      "workflows": [
+        "receive-syslog.yml",
+        "syslog-issue-pipeline.yml",
+        "syslog-auto-pipeline.yml",
+        "syslog-pipeline.yml"
+      ]
+    },
+    {
+      "name": "每日巡检",
+      "flow": "cron → zhuyuan-daily-agent.yml → zhuyuan-daily-agent.js → 巡检报告 → Notion",
+      "workflows": [
+        "zhuyuan-daily-agent.yml",
+        "zhuyuan-daily-selfcheck.yml",
+        "psp-daily-inspection.yml"
+      ]
+    },
+    {
+      "name": "自动部署",
+      "flow": "push to main → deploy-to-server.yml → SSH → PM2 restart",
+      "workflows": [
+        "deploy-to-server.yml",
+        "deploy-pages.yml"
+      ]
+    },
+    {
+      "name": "Notion 双向同步",
+      "flow": "push → notion-bridge.js → Notion | cron → notion-poll.yml → GitHub",
+      "workflows": [
+        "bridge-changes-to-notion.yml",
+        "notion-poll.yml",
+        "notion-heartbeat.yml",
+        "brain-sync.yml"
+      ]
+    },
+    {
+      "name": "广播分发",
+      "flow": "Notion 工单 → invoke-persona.js → broadcasts-outbox/ → distribute-broadcasts.yml → dev-nodes/",
+      "workflows": [
+        "persona-invoke.yml",
+        "distribute-broadcasts.yml",
+        "push-broadcast.yml"
+      ]
+    }
+  ],
+  "scan_results": {
+    "hli_routes_found": 19,
+    "backend_routes_found": 9,
+    "sync_scripts_found": 25,
+    "hli_routes": [
+      {
+        "method": "POST",
+        "path": "/hli/auth/",
+        "file": "src/routes/hli/auth/login.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/auth/",
+        "file": "src/routes/hli/auth/register.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/auth/",
+        "file": "src/routes/hli/auth/verify.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/prompt",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/route",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/context",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/memory",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/status",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/bridge",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/bridge/sync",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/bridge/export",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/bridge/consistency",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/bridge/master-mode",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/bridge/explanation",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/bridge/inspection",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/bridge/developers",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/brain/bridge/developers/:expId",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "POST",
+        "path": "/hli/brain/bridge/developers",
+        "file": "src/routes/hli/brain/index.js"
+      },
+      {
+        "method": "GET",
+        "path": "/hli/registry/lookup",
+        "file": "src/routes/hli/registry/index.js"
+      }
+    ],
+    "backend_routes": [
+      {
+        "method": "*",
+        "path": "/notion",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "*",
+        "path": "/feishu",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "*",
+        "path": "/feishu-bot",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "*",
+        "path": "/router",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "*",
+        "path": "/api/coldstart",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "*",
+        "path": "/api/v1/developers",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "*",
+        "path": "/hli",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "file": "backend/server.js"
+      },
+      {
+        "method": "POST",
+        "path": "/webhook/feishu",
+        "file": "backend/server.js"
+      }
+    ]
+  }
+}

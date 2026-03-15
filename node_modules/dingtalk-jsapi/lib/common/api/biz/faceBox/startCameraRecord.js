@@ -1,0 +1,1 @@
+"use strict";function startCameraRecord$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.startCameraRecord$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.faceBox.startCameraRecord",exports.startCameraRecord$=startCameraRecord$,exports.default=startCameraRecord$;

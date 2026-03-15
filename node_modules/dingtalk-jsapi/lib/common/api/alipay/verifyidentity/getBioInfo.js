@@ -1,0 +1,1 @@
+"use strict";function getBioInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getBioInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="alipay.verifyidentity.getBioInfo",exports.getBioInfo$=getBioInfo$,exports.default=getBioInfo$;

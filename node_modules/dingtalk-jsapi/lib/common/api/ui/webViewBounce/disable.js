@@ -1,0 +1,1 @@
+"use strict";function disable$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.disable$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="ui.webViewBounce.disable",exports.disable$=disable$,exports.default=disable$;

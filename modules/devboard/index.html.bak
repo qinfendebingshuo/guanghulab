@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>开发者实时看板 · 环节0~4 · 之之</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="detail.css">
+</head>
+<body>
+    <!-- 总览页容器 -->
+    <div id="overview-container" class="overview-grid fade-in">
+        <header class="dashboard-header">
+            <h1>⚡ 开发者实时看板 ⚡</h1>
+            <p>DEV-004 · 之之 · 十三连胜追平桔子 · EL-6</p>
+        </header>
+        
+        <!-- 搜索和筛选区 -->
+        <div class="controls-section">
+            <input type="text" id="search-input" placeholder="🔍 搜索开发者姓名/ID/模块..." class="search-box">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="active">进行中</button>
+                <button class="filter-btn" data-filter="completed">已完成</button>
+            </div>
+        </div>
+        
+        <!-- 开发者卡片网格 -->
+        <div id="developers-grid" class="developers-grid"></div>
+        
+        <!-- 雷达图+排行榜区 -->
+        <div class="stats-section">
+            <div class="radar-container">
+                <h2>团队PCA雷达</h2>
+                <canvas id="team-radar" width="400" height="300"></canvas>
+            </div>
+            <div class="ranking-container">
+                <h2>连胜排行榜</h2>
+                <div id="ranking-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情页容器 -->
+    <div id="detail-container" style="display: none;"></div>
+
+    <script src="radar.js"></script>
+    <script src="components.js"></script>
+    <script src="detail.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

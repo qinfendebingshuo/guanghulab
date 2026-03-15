@@ -1,0 +1,1 @@
+"use strict";function authAlipayInvoice$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.authAlipayInvoice$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.authAlipayInvoice",exports.authAlipayInvoice$=authAlipayInvoice$,exports.default=authAlipayInvoice$;

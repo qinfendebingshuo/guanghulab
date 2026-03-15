@@ -1,0 +1,144 @@
+<div class="settings-container" id="settingsPanel">
+  <div class="settings-header">
+    <h2>频道设置中心</h2>
+    <p>管理你的频道偏好 · 主题 · 通知 · 显示</p>
+  </div>
+
+  <!-- 外观设置 -->
+  <div class="settings-group">
+    <h3>🎨 外观设置</h3>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">主题模式</span>
+        <span class="desc">选择你喜欢的界面风格</span>
+      </div>
+    </div>
+    <div class="theme-cards" id="themeCards"></div>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">字体大小</span>
+        <span class="desc">调整界面文字大小</span>
+      </div>
+      <select class="setting-select" id="settingFontSize" onchange="SettingsUI.onChange('fontSize', this.value)">
+        <option value="small">小</option>
+        <option value="medium">中</option>
+        <option value="large">大</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">过渡动画</span>
+        <span class="desc">开启页面切换动画效果</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingAnimation" onchange="SettingsUI.onToggle('animationEnabled', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">侧边栏默认收起</span>
+        <span class="desc">页面加载时侧边栏是否收起</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingSidebar" onchange="SettingsUI.onToggle('sidebarCollapsed', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- 🔔 通知设置 -->
+  <div class="settings-group">
+    <h3>🔔 通知设置</h3>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">模块更新通知</span>
+        <span class="desc">有模块内容更新时提醒</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingNotifyModule" onchange="SettingsUI.onToggle('notifyModuleUpdate', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">系统通知</span>
+        <span class="desc">系统公告和维护提醒</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingNotifySystem" onchange="SettingsUI.onToggle('notifySystem', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">通知声音</span>
+        <span class="desc">收到通知时播放提示音</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingNotifySound" onchange="SettingsUI.onToggle('notifySound', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- 数据设置 -->
+  <div class="settings-group">
+    <h3>📊 数据设置</h3>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">数据采集</span>
+        <span class="desc">允许采集模块访问和性能数据（用于数据面板）</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingAnalytics" onchange="SettingsUI.onToggle('analyticsEnabled', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">自动刷新</span>
+        <span class="desc">定时自动刷新频道数据</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingAutoRefresh" onchange="SettingsUI.onToggle('autoRefresh', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">
+        <span class="title">刷新间隔</span>
+        <span class="desc">自动刷新的时间间隔</span>
+      </div>
+      <select class="setting-select" id="settingRefreshInterval" onchange="SettingsUI.onChange('refreshInterval', parseInt(this.value))">
+        <option value="15">15秒</option>
+        <option value="30">30秒</option>
+        <option value="60">1分钟</option>
+        <option value="300">5分钟</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="settings-actions">
+    <button class="btn-settings btn-export" onclick="SettingsUI.exportSettings()">📤 导出设置</button>
+    <button class="btn-settings btn-import" onclick="SettingsUI.showImport()">📥 导入设置</button>
+    <button class="btn-settings btn-reset" onclick="SettingsUI.resetAll()">🔄 恢复默认</button>
+  </div>
+</div>
+
+<!-- 导入弹窗 -->
+<div class="import-modal" id="importModal">
+  <div class="import-dialog">
+    <h3 style="color:var(--accent-color); margin-bottom:8px;">📥 导入设置</h3>
+    <p style="font-size:13px; margin-bottom:12px;">粘贴之前导出的JSON内容：</p>
+    <textarea class="import-textarea" id="importTextarea" placeholder='{"theme":"dark",...}'></textarea>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn-settings" style="background:#555; color:#fff;" onclick="SettingsUI.hideImport()">取消</button>
+      <button class="btn-settings btn-import" onclick="SettingsUI.doImport()">确认导入</button>
+    </div>
+  </div>
+</div>

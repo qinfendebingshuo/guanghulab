@@ -1,0 +1,1 @@
+"use strict";function getDeviceProperties$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getDeviceProperties$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.iot.getDeviceProperties",exports.getDeviceProperties$=getDeviceProperties$,exports.default=getDeviceProperties$;

@@ -1,0 +1,1 @@
+"use strict";function switchOA$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.switchOA$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.util.switchOA",exports.switchOA$=switchOA$,exports.default=switchOA$;

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者实时看板 · HoloLake</title>
+    <style>
+        /* 这里保留你原有的样式，如果样式比较多，建议去复制原有的内容 */
+        /* 为了保持简洁，秋秋只放必须的样式框架，妈妈根据实际补充 */
+        body {
+            background: #0a0e17;
+            color: #e1e5ee;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        /* 其他样式保持不变 */
+    </style>
+</head>
+<body>
+    <h1>🚀 HoloLake 开发者实时看板</h1>
+    <div id="stats-container"></div>
+    <div id="developers-container"></div>
+    <div id="leaderboard-container"></div>
+
+    <!-- ⚠️ 重点：脚本引入顺序必须正确！ -->
+    <!-- 1. API客户端最先加载 -->
+    <script src="api.js"></script>
+    <!-- 2. 然后是原有的业务逻辑脚本 -->
+    <script src="main.js"></script>
+    <script src="components.js"></script>
+    <!-- 3. 初始化引擎最后加载 -->
+    <script src="api-init.js"></script>
+</body>
+</html>

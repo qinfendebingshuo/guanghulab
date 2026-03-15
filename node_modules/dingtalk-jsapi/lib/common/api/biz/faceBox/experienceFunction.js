@@ -1,0 +1,1 @@
+"use strict";function experienceFunction$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.experienceFunction$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.faceBox.experienceFunction",exports.experienceFunction$=experienceFunction$,exports.default=experienceFunction$;

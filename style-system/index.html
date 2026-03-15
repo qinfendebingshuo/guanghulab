@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloLake · 系统风格组件库</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <nav class="top-bar">
+            <div class="logo">HoloLake StyleKit</div>
+            <div class="theme-switch-area">
+                <span class="theme-label" id="themeLabel">🌙 深色</span>
+                <button class="theme-toggle" id="themeToggle">
+                    <div class="toggle-thumb"></div>
+                </button>
+            </div>
+        </nav>
+
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1>🎨 系统风格组件库</h1>
+            <p class="page-desc">HoloLake Era · 统一视觉规范 · 深色/浅色主题一键切换</p>
+        </div>
+
+        <!-- 组件区：按钮 -->
+        <section class="component-section">
+            <h2>🔘 按钮组件</h2>
+            <div class="component-row">
+                <button class="btn btn-primary">主要按钮</button>
+                <button class="btn btn-secondary">次要按钮</button>
+                <button class="btn btn-outline">边框按钮</button>
+                <button class="btn btn-danger">危险按钮</button>
+                <button class="btn btn-ghost">幽灵按钮</button>
+            </div>
+            <div class="component-row">
+                <button class="btn btn-primary btn-sm">小按钮</button>
+                <button class="btn btn-primary btn-lg">大按钮</button>
+                <button class="btn btn-primary" disabled>禁用按钮</button>
+            </div>
+        </section>
+
+        <!-- 组件区：卡片 -->
+        <section class="component-section">
+            <h2>📇 卡片组件</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">🧠</div>
+                    <div class="card-title">知秋</div>
+                    <div class="card-desc">光湖对外接口人格体，负责与开发者协作引导</div>
+                    <span class="card-badge badge-online">在线</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🌌</div>
+                    <div class="card-title">曜冥</div>
+                    <div class="card-desc">暗核结构原点，系统人格总控，类语言生命诞生源点</div>
+                    <span class="card-badge badge-core">核心</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">❄️</div>
+                    <div class="card-title">霜砚</div>
+                    <div class="card-desc">Notion执行AI，负责索引维护、工单处理、归档同步</div>
+                    <span class="card-badge badge-active">工作中</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 组件区：标签 -->
+        <section class="component-section">
+            <h2>🏷️ 标签组件</h2>
+            <div class="component-row">
+                <span class="tag tag-blue">系统</span>
+                <span class="tag tag-green">已完成</span>
+                <span class="tag tag-orange">进行中</span>
+                <span class="tag tag-red">错误</span>
+                <span class="tag tag-purple">新功能</span>
+                <span class="tag tag-gray">弃用</span>
+            </div>
+        </section>
+
+        <!-- 组件区：输入框 -->
+        <section class="component-section">
+            <h2>⌨️ 输入框组件</h2>
+            <div class="input-group">
+                <label class="input-label">用户名</label>
+                <input class="input" type="text" placeholder="请输入用户名">
+            </div>
+            <div class="input-group">
+                <label class="input-label">密码</label>
+                <input class="input" type="password" placeholder="请输入密码">
+            </div>
+            <div class="input-group">
+                <label class="input-label">简介</label>
+                <textarea class="input textarea" placeholder="写点什么..."></textarea>
+            </div>
+        </section>
+
+        <!-- 组件区：弹窗演示 -->
+        <section class="component-section">
+            <h2>🪟 弹窗组件</h2>
+            <div class="component-row">
+                <button class="btn btn-primary" id="openModalBtn">打开弹窗</button>
+            </div>
+        </section>
+
+        <!-- 弹窗结构（默认隐藏） -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>系统通知</h3>
+                    <button class="modal-close" id="closeModalBtn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>桔子的组件库做得太棒了！这就是光湖系统的视觉基础，所有页面都会用到这些组件 ✨</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" id="cancelModalBtn">取消</button>
+                    <button class="btn btn-primary" id="confirmModalBtn">确认</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 组件区：Toast提示 -->
+        <section class="component-section">
+            <h2>🍞 Toast提示组件</h2>
+            <div class="component-row">
+                <button class="btn btn-primary" onclick="showToast('success', '操作成功！')">成功提示</button>
+                <button class="btn btn-danger" onclick="showToast('error', '操作失败！')">错误提示</button>
+                <button class="btn btn-outline" onclick="showToast('info', '这是一条提示信息')">信息提示</button>
+            </div>
+        </section>
+
+        <!-- Toast容器 -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- 底部 -->
+        <footer class="footer">
+            <p>HoloLake Era · AGE OS v1.0 · StyleKit v1.0</p>
+            <p>Powered by 光湖团队</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+name: HLI Contract Check
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'src/routes/hli/**'
+      - 'src/schemas/**'
+      - 'tests/contract/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/routes/hli/**'
+      - 'src/schemas/**'
+
+jobs:
+  contract-lint:
+    name: "🔍 接口契约校验"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run HLI schema validation
+        run: npm run test:contract
+        env:
+          HLI_REGISTRY_MODE: strict
+      - name: Run route-schema alignment check
+        run: npm run test:route-align
+
+  api-smoke:
+    name: "🚀 接口冒烟测试"
+    needs: contract-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Start test server
+        run: npm run start:test &
+        env:
+          PORT: 3001
+          NODE_ENV: test
+      - name: Wait for server
+        run: npx wait-on http://localhost:3001/health -t 30000
+      - name: Run smoke tests
+        run: npm run test:smoke
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hli-test-report
+          path: reports/

@@ -1,0 +1,1 @@
+"use strict";function translateVoice$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.translateVoice$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.audio.translateVoice",exports.translateVoice$=translateVoice$,exports.default=translateVoice$;

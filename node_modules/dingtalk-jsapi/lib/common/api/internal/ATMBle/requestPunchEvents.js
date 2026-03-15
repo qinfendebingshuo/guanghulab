@@ -1,0 +1,1 @@
+"use strict";function requestPunchEvents$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.requestPunchEvents$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.ATMBle.requestPunchEvents",exports.requestPunchEvents$=requestPunchEvents$,exports.default=requestPunchEvents$;

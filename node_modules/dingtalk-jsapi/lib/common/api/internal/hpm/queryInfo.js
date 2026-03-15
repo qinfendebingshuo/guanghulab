@@ -1,0 +1,1 @@
+"use strict";function queryInfo$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.queryInfo$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.hpm.queryInfo",exports.queryInfo$=queryInfo$,exports.default=queryInfo$;

@@ -1,0 +1,1 @@
+"use strict";function detectStop$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.detectStop$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.beacon.detectStop",exports.detectStop$=detectStop$,exports.default=detectStop$;

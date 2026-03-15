@@ -1,0 +1,1 @@
+"use strict";function sendDataToDevice$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.sendDataToDevice$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="device.base.sendDataToDevice",exports.sendDataToDevice$=sendDataToDevice$,exports.default=sendDataToDevice$;

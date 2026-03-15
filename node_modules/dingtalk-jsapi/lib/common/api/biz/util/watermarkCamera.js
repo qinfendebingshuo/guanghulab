@@ -1,0 +1,1 @@
+"use strict";function watermarkCamera$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.watermarkCamera$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.watermarkCamera",exports.watermarkCamera$=watermarkCamera$,exports.default=watermarkCamera$;

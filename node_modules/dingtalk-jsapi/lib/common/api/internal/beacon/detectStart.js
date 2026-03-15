@@ -1,0 +1,1 @@
+"use strict";function detectStart$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.detectStart$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.beacon.detectStart",exports.detectStart$=detectStart$,exports.default=detectStart$;

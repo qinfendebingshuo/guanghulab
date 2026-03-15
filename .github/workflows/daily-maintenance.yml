@@ -1,0 +1,280 @@
+name: "🔧 铸渊 · Daily Maintenance Agent"
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 每日 UTC 02:00 (北京时间 10:00)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ── AGE OS v1.0: 核心大脑唤醒（所有流程的前提）──
+  wake-brain:
+    name: 🌅 唤醒核心大脑
+    runs-on: ubuntu-latest
+    outputs:
+      brain_awake: ${{ steps.wake.outputs.brain_awake }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧠 唤醒铸渊核心大脑
+        id: wake
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          node core/brain-wake --task "每日维护" || {
+            echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
+            echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
+          }
+
+  maintenance:
+    name: 每日巡检与系统健康更新
+    needs: wake-brain
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── Step 0: 清空公告栏缓存（每日重置） ──
+      - name: 清空公告栏缓存
+        run: |
+          CACHE_FILE=".github/brain/bulletin-board-today.json"
+          TODAY=$(TZ="Asia/Shanghai" date +%Y-%m-%d)
+          if [ -f "$CACHE_FILE" ]; then
+            CACHE_DATE=$(jq -r '.date // ""' "$CACHE_FILE" 2>/dev/null || echo "")
+            if [ "$CACHE_DATE" != "$TODAY" ]; then
+              echo "{\"date\":\"$TODAY\",\"records\":[]}" > "$CACHE_FILE"
+              echo "✅ 公告栏缓存已清空（旧日期: $CACHE_DATE）"
+            else
+              echo "📌 公告栏缓存日期匹配今天 ($TODAY)，无需清空"
+            fi
+          else
+            echo "{\"date\":\"$TODAY\",\"records\":[]}" > "$CACHE_FILE"
+            echo "✅ 创建新的公告栏缓存文件"
+          fi
+
+      # ── Step 1: 检查 brain/ 目录完整性 ──
+      - name: 检查 brain/ 目录完整性
+        id: brain_check
+        run: |
+          echo "🔍 检查 brain/ 目录..."
+          REQUIRED_FILES="master-brain.md read-order.md repo-map.json automation-map.json communication-map.json id-map.json system-health.json"
+          MISSING=""
+          for f in $REQUIRED_FILES; do
+            if [ ! -f "brain/$f" ]; then
+              MISSING="$MISSING $f"
+              echo "⚠️  缺失: brain/$f"
+            else
+              echo "✅ 存在: brain/$f"
+            fi
+          done
+          if [ -z "$MISSING" ]; then
+            echo "brain_status=complete" >> "$GITHUB_OUTPUT"
+            echo "✅ brain/ 目录完整"
+          else
+            echo "brain_status=incomplete" >> "$GITHUB_OUTPUT"
+            echo "⚠️  缺失文件:$MISSING"
+          fi
+
+      # ── Step 2: 检查最近 workflow 运行状态 ──
+      - name: 检查最近 workflow 运行状态
+        id: workflow_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔍 检查最近 workflow 运行..."
+          FAILED=$(gh api repos/${{ github.repository }}/actions/runs \
+            --jq '[.workflow_runs[] | select(.conclusion == "failure")] | length' \
+            2>/dev/null || echo "0")
+          echo "failed_count=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ "$FAILED" -gt "0" ]; then
+            echo "⚠️  最近有 $FAILED 个失败的 workflow"
+          else
+            echo "✅ 最近没有失败的 workflow"
+          fi
+
+      # ── Step 3: 检查 Notion API 连通性 ──
+      - name: 检查 Notion API 连通性
+        id: notion_check
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          echo "🔍 检查 Notion API 连通性..."
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "notion_status=no_token" >> "$GITHUB_OUTPUT"
+            echo "⚠️  NOTION_TOKEN 未配置"
+          else
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $NOTION_TOKEN" \
+              -H "Notion-Version: 2022-06-28" \
+              https://api.notion.com/v1/users/me 2>/dev/null || echo "000")
+            echo "notion_http_code=$HTTP_CODE" >> "$GITHUB_OUTPUT"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "notion_status=connected" >> "$GITHUB_OUTPUT"
+              echo "✅ Notion API 连通"
+            else
+              echo "notion_status=error" >> "$GITHUB_OUTPUT"
+              echo "⚠️  Notion API 返回 HTTP $HTTP_CODE"
+            fi
+          fi
+
+      # ── Step 4: 更新 system-health.json ──
+      - name: 更新 system-health.json
+        run: node scripts/generate-system-health.js
+
+      # ── Step 5: 提交更新 ──
+      - name: 提交巡检结果
+        run: |
+          git config user.name "铸渊 Maintenance Agent"
+          git config user.email "actions@guanghulab.com"
+          git add brain/system-health.json .github/brain/bulletin-board-today.json
+          if git diff --cached --quiet; then
+            echo "📌 无变更需要提交"
+          else
+            git commit -m "🔧 Daily Maintenance: 更新 system-health.json [skip ci]"
+            git push
+            echo "✅ 已提交 system-health.json 更新"
+          fi
+
+      # ── Step 6: 向 Notion 回报巡检结果 ──
+      - name: 向 Notion 回报巡检结果
+        if: ${{ secrets.NOTION_TOKEN != '' && secrets.SYSLOG_DB_ID != '' }}
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          SYSLOG_DB_ID: ${{ secrets.SYSLOG_DB_ID }}
+        run: |
+          echo "📡 向 Notion 跨平台信号日志回报..."
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+          BRAIN_STATUS="${{ steps.brain_check.outputs.brain_status }}"
+          FAILED_COUNT="${{ steps.workflow_check.outputs.failed_count }}"
+          NOTION_STATUS="${{ steps.notion_check.outputs.notion_status }}"
+
+          REPORT="Daily Maintenance Report | brain: ${BRAIN_STATUS} | failed_workflows: ${FAILED_COUNT} | notion: ${NOTION_STATUS}"
+
+          curl -s -X POST "https://api.notion.com/v1/pages" \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d "{
+              \"parent\": { \"database_id\": \"$SYSLOG_DB_ID\" },
+              \"properties\": {
+                \"标题\": {
+                  \"title\": [{ \"text\": { \"content\": \"Daily Maintenance · $(date +%Y-%m-%d)\" } }]
+                },
+                \"状态\": { \"select\": { \"name\": \"已处理\" } },
+                \"类型\": { \"select\": { \"name\": \"巡检\" } }
+              },
+              \"children\": [{
+                \"object\": \"block\",
+                \"type\": \"paragraph\",
+                \"paragraph\": {
+                  \"rich_text\": [{ \"text\": { \"content\": \"$REPORT\" } }]
+                }
+              }]
+            }" 2>&1 | tail -1
+          echo "✅ Notion 回报请求已发送"
+
+  # ── 同步执行层状态到 Notion Execution Status 数据库 ──
+  sync-execution-status-to-notion:
+    name: 同步执行层状态到 Notion
+    needs: maintenance
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Read brain data and sync to Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "⚠️  NOTION_TOKEN 未配置，跳过 Execution Status 同步"
+            exit 0
+          fi
+
+          HEALTH=$(cat brain/system-health.json 2>/dev/null)
+          if [ -z "$HEALTH" ]; then
+            echo "⚠️  brain/system-health.json 未找到，使用默认值"
+            HEALTH='{"version":"unknown","system_health":"unknown"}'
+          fi
+          AUTO=$(cat brain/automation-map.json 2>/dev/null)
+          if [ -z "$AUTO" ]; then
+            echo "⚠️  brain/automation-map.json 未找到，使用默认值"
+            AUTO='{"workflows":[]}'
+          fi
+          REPO=$(cat brain/repo-map.json 2>/dev/null)
+          if [ -z "$REPO" ]; then
+            echo "⚠️  brain/repo-map.json 未找到，使用默认值"
+            REPO='{"directories":{}}'
+          fi
+
+          VERSION=$(echo "$HEALTH" | jq -r '.version // "unknown"')
+          STATUS=$(echo "$HEALTH" | jq -r '.system_health // "unknown"')
+          WF_COUNT=$(echo "$AUTO" | jq '[.workflows // [] | length] | .[0]' 2>/dev/null || echo '0')
+          CRON_COUNT=$(echo "$AUTO" | jq '[.workflows // [] | .[] | select(.cron)] | length' 2>/dev/null || echo '0')
+          DIR_COUNT=$(echo "$REPO" | jq '.directories // {} | keys | length' 2>/dev/null || echo '0')
+
+          case "$STATUS" in
+            normal)  AUTO_S="🟢 Normal"; QUEUE_S="🟢 Active" ;;
+            partial) AUTO_S="🟡 Partial"; QUEUE_S="🟡 Backlog" ;;
+            *)       AUTO_S="🔴 Down"; QUEUE_S="🔴 Blocked" ;;
+          esac
+
+          SYNC_DATE=$(date -u +%Y%m%d)
+          SYNC_TS=$(date -u +%Y-%m-%dT%H:%M:%S+00:00)
+
+          echo "📡 同步 Execution Status → Notion..."
+          echo "  版本: v${VERSION} · ${DIR_COUNT}+ dirs"
+          echo "  模块: ${WF_COUNT} workflow · ${CRON_COUNT} cron"
+          echo "  状态: ${AUTO_S}"
+
+          HTTP_CODE=$(curl -s -o /tmp/notion_resp.json -w "%{http_code}" \
+            -X POST 'https://api.notion.com/v1/pages' \
+            -H "Authorization: Bearer $NOTION_TOKEN" \
+            -H "Notion-Version: 2022-06-28" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"parent\": { \"database_id\": \"41971982-4a17-47c0-afe3-21458c44f154\" },
+              \"properties\": {
+                \"同步记录\": { \"title\": [{ \"text\": { \"content\": \"SYNC-${SYNC_DATE}-001\" } }] },
+                \"同步时间\": { \"date\": { \"start\": \"${SYNC_TS}\" } },
+                \"仓库版本\": { \"rich_text\": [{ \"text\": { \"content\": \"v${VERSION} · ${DIR_COUNT}+ dirs\" } }] },
+                \"执行模块\": { \"rich_text\": [{ \"text\": { \"content\": \"${WF_COUNT} workflow · ${CRON_COUNT} cron\" } }] },
+                \"自动化状态\": { \"select\": { \"name\": \"${AUTO_S}\" } },
+                \"Notion连接状态\": { \"select\": { \"name\": \"🟢 Connected\" } },
+                \"任务队列状态\": { \"select\": { \"name\": \"${QUEUE_S}\" } },
+                \"同步来源\": { \"select\": { \"name\": \"铸渊自动同步\" } },
+                \"备注\": { \"rich_text\": [{ \"text\": { \"content\": \"Daily Maintenance auto sync\" } }] }
+              }
+            }")
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Execution Status synced to Notion (HTTP ${HTTP_CODE})"
+          else
+            echo "❌ Sync failed (HTTP ${HTTP_CODE})"
+            cat /tmp/notion_resp.json 2>/dev/null || true
+            exit 1
+          fi

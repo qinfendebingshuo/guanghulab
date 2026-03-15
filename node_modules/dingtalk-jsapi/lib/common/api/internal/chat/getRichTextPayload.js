@@ -1,0 +1,1 @@
+"use strict";function getRichTextPayload$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getRichTextPayload$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.getRichTextPayload",exports.getRichTextPayload$=getRichTextPayload$,exports.default=getRichTextPayload$;

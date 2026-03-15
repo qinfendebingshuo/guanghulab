@@ -1,0 +1,1 @@
+"use strict";function openLocalFile$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openLocalFile$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.openLocalFile",exports.openLocalFile$=openLocalFile$,exports.default=openLocalFile$;

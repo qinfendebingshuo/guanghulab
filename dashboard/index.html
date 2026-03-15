@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoloLake · 数据统计</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="top-bar">
+      <div class="logo">HoloLake</div>
+      <div class="nav-links">
+        <a href="#">工单</a>
+        <a href="#" class="active">统计</a>
+        <a href="#">设置</a>
+      </div>
+    </nav>
+
+    <div class="page-header">
+      <h1>系统概览</h1>
+      <div class="time-selector">
+        <button class="time-btn active" data-range="today">今日</button>
+        <button class="time-btn" data-range="week">本周</button>
+        <button class="time-btn" data-range="month">本月</button>
+      </div>
+    </div>
+
+    <div class="export-bar">
+      <button class="export-btn" id="exportBtn">导出CSV</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">128</div>
+        <div class="stat-label">总用户</div>
+        <div class="stat-change up">↑ 12%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💬</div>
+        <div class="stat-value">1,024</div>
+        <div class="stat-label">今日对话</div>
+        <div class="stat-change up">↑ 8%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🤖</div>
+        <div class="stat-value">6</div>
+        <div class="stat-label">活跃人格体</div>
+        <div class="stat-change same">— 持平</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value">3,892</div>
+        <div class="stat-label">API调用</div>
+        <div class="stat-change down">↓ 3%</div>
+      </div>
+    </div>
+
+    <div class="section donut-section">
+      <h2>🔀 模型调用占比</h2>
+      <div class="donut-container">
+        <div class="donut-chart">
+          <svg viewBox="0 0 160 160">
+            <circle class="donut-bg" cx="80" cy="80" r="60"></circle>
+            <circle class="donut-segment" id="seg-deepseek" cx="80" cy="80" r="60" stroke="#4fc3f7" stroke-dasharray="0 377" stroke-dashoffset="0"></circle>
+            <circle class="donut-segment" id="seg-qwen" cx="80" cy="80" r="60" stroke="#7c4dff" stroke-dasharray="0 377" stroke-dashoffset="0"></circle>
+            <circle class="donut-segment" id="seg-kimi" cx="80" cy="80" r="60" stroke="#ff7043" stroke-dasharray="0 377" stroke-dashoffset="0"></circle>
+            <circle class="donut-segment" id="seg-doubao" cx="80" cy="80" r="60" stroke="#66bb6a" stroke-dasharray="0 377" stroke-dashoffset="0"></circle>
+            <circle class="donut-segment" id="seg-premium" cx="80" cy="80" r="60" stroke="#ffd54f" stroke-dasharray="0 377" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="donut-center">
+            <div class="donut-center-value">3,892</div>
+            <div class="donut-center-label">总调用</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item"><span class="legend-dot c-deepseek"></span> DeepSeek <span class="legend-percent">72%</span></div>
+          <div class="legend-item"><span class="legend-dot c-qwen"></span> 通义千问 <span class="legend-percent">15%</span></div>
+          <div class="legend-item"><span class="legend-dot c-kimi"></span> Kimi <span class="legend-percent">8%</span></div>
+          <div class="legend-item"><span class="legend-dot c-doubao"></span> 豆包 <span class="legend-percent">3%</span></div>
+          <div class="legend-item"><span class="legend-dot c-premium"></span> GPT/Claude <span class="legend-percent">2%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📊 模型调用分布</h2>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <span class="bar-label">DeepSeek</span>
+          <div class="bar-track"><div class="bar-fill deepseek" style="width: 0%" data-percent="72"></div></div>
+          <span class="bar-value">72%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">通义千问</span>
+          <div class="bar-track"><div class="bar-fill qwen" style="width: 0%" data-percent="15"></div></div>
+          <span class="bar-value">15%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Kimi</span>
+          <div class="bar-track"><div class="bar-fill kimi" style="width: 0%" data-percent="8"></div></div>
+          <span class="bar-value">8%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">豆包</span>
+          <div class="bar-track"><div class="bar-fill doubao" style="width: 0%" data-percent="3"></div></div>
+          <span class="bar-value">3%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">GPT/Claude</span>
+          <div class="bar-track"><div class="bar-fill premium" style="width: 0%" data-percent="2"></div></div>
+          <span class="bar-value">2%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>每日对话趋势（近7天）</h2>
+      <div class="trend-chart">
+        <div class="trend-bar" data-height="45"><div class="trend-fill" style="height: 0%;"></div><span>周一</span></div>
+        <div class="trend-bar" data-height="62"><div class="trend-fill" style="height: 0%;"></div><span>周二</span></div>
+        <div class="trend-bar" data-height="38"><div class="trend-fill" style="height: 0%;"></div><span>周三</span></div>
+        <div class="trend-bar" data-height="78"><div class="trend-fill" style="height: 0%;"></div><span>周四</span></div>
+        <div class="trend-bar" data-height="55"><div class="trend-fill" style="height: 0%;"></div><span>周五</span></div>
+        <div class="trend-bar" data-height="90"><div class="trend-fill" style="height: 0%;"></div><span>周六</span></div>
+        <div class="trend-bar" data-height="85"><div class="trend-fill" style="height: 0%;"></div><span>周日</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>最近活动</h2>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-dot blue"></div>
+          <div class="activity-content">
+            <div class="activity-text">用户「星河」与 <strong>知秋</strong> 完成了32轮对话</div>
+            <div class="activity-time">5分钟前</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot green"></div>
+          <div class="activity-content">
+            <div class="activity-text">新用户「雨落」注册并激活了人格体</div>
+            <div class="activity-time">12分钟前</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot orange"></div>
+          <div class="activity-content">
+            <div class="activity-text">DeepSeek API 调用量达到今日峰值（420次/小时）</div>
+            <div class="activity-time">28分钟前</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot purple"></div>
+          <div class="activity-content">
+            <div class="activity-text">人格体「小坍缩核」记忆库自动归档完成</div>
+            <div class="activity-time">1小时前</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot blue"></div>
+          <div class="activity-content">
+            <div class="activity-text">用户「晚风」上传了3个文件到云盘</div>
+            <div class="activity-time">2小时前</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>HoloLake Era · AGE OS v1.0</p>
+      <p>Powered by 光湖团队</p>
+    </footer>
+  </div>
+
+  <div class="export-toast" id="exportToast">CSV已下载！</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

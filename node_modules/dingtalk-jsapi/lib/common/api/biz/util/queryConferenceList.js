@@ -1,0 +1,1 @@
+"use strict";function queryConferenceList$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.queryConferenceList$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.queryConferenceList",exports.queryConferenceList$=queryConferenceList$,exports.default=queryConferenceList$;

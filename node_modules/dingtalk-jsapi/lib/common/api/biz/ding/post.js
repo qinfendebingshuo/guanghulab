@@ -1,0 +1,1 @@
+"use strict";function post$(o){return common_1.ddSdk.invokeAPI(exports.apiName,o)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.post$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.ding.post",exports.post$=post$,exports.default=post$;

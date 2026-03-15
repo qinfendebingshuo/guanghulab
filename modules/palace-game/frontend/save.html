@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宫廷纪 · 存档管理</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="save-page container">
+
+    <h1>🏯 存档管理</h1>
+
+    <div class="divider"></div>
+
+    <!-- Manual Load -->
+    <div class="start-card" style="margin: 0 auto 2rem; max-width:500px;">
+      <div class="form-group">
+        <label for="load-id">输入存档编号读档</label>
+        <div class="load-row">
+          <input type="text" id="load-id" placeholder="PAL-20260311-A3K9">
+          <button class="btn btn-small" id="btn-load">读档</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Save List -->
+    <h2 style="text-align:center; margin-bottom:1rem; font-size:1.1rem;">已有存档</h2>
+    <div class="save-list" id="save-list">
+      <div class="loading">
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-top:2rem;"></div>
+
+    <div style="text-align:center;">
+      <button class="btn btn-small" onclick="window.location.href='index.html'">← 返回首页</button>
+    </div>
+
+  </div>
+
+  <script src="save.js"></script>
+</body>
+</html>

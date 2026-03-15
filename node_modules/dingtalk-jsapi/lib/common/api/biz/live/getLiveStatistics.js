@@ -1,0 +1,1 @@
+"use strict";function getLiveStatistics$(t){return common_1.ddSdk.invokeAPI(exports.apiName,t)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getLiveStatistics$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.live.getLiveStatistics",exports.getLiveStatistics$=getLiveStatistics$,exports.default=getLiveStatistics$;

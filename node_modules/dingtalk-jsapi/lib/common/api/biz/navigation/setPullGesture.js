@@ -1,0 +1,1 @@
+"use strict";function setPullGesture$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.setPullGesture$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.navigation.setPullGesture",exports.setPullGesture$=setPullGesture$,exports.default=setPullGesture$;

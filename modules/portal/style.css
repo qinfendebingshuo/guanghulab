@@ -1,0 +1,440 @@
+﻿/* HoloLake公告栏系统深色科技风 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: #0a1628;
+    color: #e0e6ed;
+    min-height: 100vh;
+}
+
+.app-container {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* ========== 顶部标题栏 ========== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e0e6ed;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pinned-badge {
+    background: rgba(255, 183, 77, 0.15);
+    color: #ffb74d;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.subscribe-btn {
+    background: rgba(79, 195, 247, 0.1);
+    color: #4fc3f7;
+    border: 1px solid rgba(79, 195, 247, 0.2);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.subscribe-btn:hover {
+    background: rgba(79, 195, 247, 0.2);
+}
+
+/* ========== 频道栏 ========== */
+.channel-bar {
+    display: flex;
+    gap: 8px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    overflow-x: auto;
+}
+
+.channel {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: #8899aa;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.channel:hover {
+    border-color: rgba(255, 183, 77, 0.3);
+    color: #b0bec5;
+}
+
+.channel.active {
+    background: rgba(255,183,77,0.15);
+    border-color: #ffb74d;
+    color: #ffb74d;
+    font-weight: 600;
+}
+
+/* ========== 公告列表 ========== */
+.bulletin-list {
+    padding: 16px 0;
+}
+
+.bulletin-card {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(20, 30, 45, 0.6);
+    border: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.bulletin-card.pinned {
+    border: 1px solid rgba(255, 183, 77, 0.3);
+    background: rgba(255, 183, 77, 0.02);
+}
+
+.pin-indicator {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 11px;
+    color: #ffb74d;
+    font-weight: 600;
+}
+
+/* 公告图标 */
+.bulletin-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.bulletin-icon.system { background: rgba(156,39,176,0.12); }
+.bulletin-icon.dev { background: rgba(76,175,80,0.12); }
+.bulletin-icon.team { background: rgba(79,195,247,0.12); }
+
+/* 公告内容 */
+.bulletin-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bulletin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.bulletin-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e0e6ed;
+}
+
+.bulletin-time {
+    font-size: 12px;
+    color: #556677;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.bulletin-summary {
+    font-size: 13px;
+    color: #8899aa;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+/* 公告底部 */
+.bulletin-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bulletin-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.tag-system { background: rgba(156,39,176,0.12); color: #ce93d8; }
+.tag-dev { background: rgba(76,175,80,0.12); color: #81c784; }
+.tag-team { background: rgba(79,195,247,0.12); color: #4fc3f7; }
+
+.bulletin-author {
+    font-size: 11px;
+    color: #556677;
+}
+
+/* ========== 底部状态栏 ========== */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 12px;
+    color: #556677;
+}
+
+.footer-brand {
+    color: rgba(255, 183, 77, 0.5);
+}
+
+/* ========== 环节2：响应式布局（爸爸的深色科技风） ========== */
+
+/* 平板（宽度 768px 以下） */
+@media (max-width: 768px) {
+    .app-container {
+        max-width: 100%;
+        padding: 0 12px;
+    }
+    .header h1 {
+        font-size: 18px;
+    }
+    .channel-bar {
+        gap: 6px;
+        padding: 12px 0;
+    }
+    .channel {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+    .bulletin-card {
+        padding: 12px 10px;
+    }
+    .channel-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .channel-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .bulletin-card {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .bulletin-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    .bulletin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    .bulletin-time {
+        margin-left: 0;
+    }
+    .pin-indicator {
+        top: 6px;
+        right: 8px;
+        font-size: 10px;
+    }
+    .footer {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+}
+
+/* 手机（宽度 480px 以下）- 复用平板样式，只调更小字体 */
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 16px;
+    }
+    .subscribe-btn {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+    .channel {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+    .bulletin-title {
+        font-size: 14px;
+    }
+    .bulletin-summary {
+        font-size: 12px;
+    }
+}
+
+/* 已读公告样式 */
+.bulletin-card.read {
+    opacity: 0.6;
+}
+.bulletin-card.read .bulletin-title {
+    color: #8899aa;
+}
+
+/* 订阅按钮激活状态 */
+.subscribe-btn.active {
+    background: rgba(79, 195, 247, 0.25);
+    border-color: #4fc3f7;
+    color: #4fc3f7;
+}
+
+/* ========== 环节3：过渡动画 ========== */
+
+/* 公告卡片：悬停上移 + 阴影加深 */
+.bulletin-card {
+    transition: all 0.3s ease;
+}
+.bulletin-card:hover {
+    transform: translateY(-4px);  /* 从 -2px 改为 -4px，更明显 */
+    box-shadow: 0 12px 24px rgba(0, 160, 255, 0.2);  /* 蓝色光晕 */
+}
+/* 订阅按钮：缩放反馈 + 颜色过渡 */
+.subscribe-btn {
+    transition: all 0.2s ease;
+}
+
+.subscribe-btn:hover {
+    transform: scale(1.05);
+}
+
+.subscribe-btn:active {
+    transform: scale(0.95);
+}
+
+/* 频道标签：背景色/文字色平滑切换 */
+.channel {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 已读公告：淡入淡出效果 */
+.bulletin-card.read {
+    transition: opacity 0.5s ease;
+}
+/* ========== 环节3：关键帧动画 ========== */
+
+/* 淡入浮起动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 为每个公告卡片添加动画 */
+.bulletin-card {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0; /* 动画开始前隐藏 */
+}
+
+/* 按索引依次延迟出现 */
+.bulletin-card:nth-child(1) { animation-delay: 0.1s; }
+.bulletin-card:nth-child(2) { animation-delay: 0.2s; }
+.bulletin-card:nth-child(3) { animation-delay: 0.3s; }
+.bulletin-card:nth-child(4) { animation-delay: 0.4s; }
+.bulletin-card:nth-child(5) { animation-delay: 0.5s; }
+.bulletin-card:nth-child(6) { animation-delay: 0.6s; }
+/* 如果卡片超过6张，继续往后加 */
+/* ========== 环节3：光湖水面效果 ========== */
+
+/* Header 光湖呼吸渐变 */
+.header {
+    background: linear-gradient(135deg, #0a2a4a 0%, #1b4a6b 50%, #0a2a4a 100%);
+    background-size: 200% 200%;
+    animation: breathe 8s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 呼吸动画 */
+@keyframes breathe {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+
+/* 微光扫过效果 */
+.header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transform: translateX(-100%);
+    animation: shimmer 6s infinite;
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    20% { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* 频道栏底部边缘（水面倒影） */
+.channel-bar {
+    border-bottom: 1px solid rgba(79, 195, 247, 0.2);
+    position: relative;
+}
+
+.channel-bar::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4fc3f7, transparent);
+    opacity: 0.3;
+}
+/* 订阅按钮脉冲效果 */
+.subscribe-btn.pulse {
+    animation: pulse 0.3s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 10px 5px rgba(79, 195, 247, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 195, 247, 0); }
+}

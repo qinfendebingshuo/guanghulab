@@ -1,0 +1,35 @@
+name: "🌊 Persona Studio · 对话处理"
+
+# 工作流存根 · 对话消息处理
+# 实际对话由 persona-studio/backend/routes/chat.js + persona-engine.js 处理
+# 此工作流用于异步任务和审计
+
+on:
+  workflow_dispatch:
+    inputs:
+      dev_id:
+        description: '体验者编号（EXP-XXX）'
+        required: true
+      task_type:
+        description: '任务类型'
+        required: false
+        default: 'chat'
+
+permissions:
+  contents: read
+
+jobs:
+  process:
+    name: "💬 对话处理"
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📝 记录对话事件
+        run: |
+          echo "📝 对话事件"
+          echo "  体验者: ${{ github.event.inputs.dev_id }}"
+          echo "  任务类型: ${{ github.event.inputs.task_type }}"
+          echo "  时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "✅ 事件已记录"

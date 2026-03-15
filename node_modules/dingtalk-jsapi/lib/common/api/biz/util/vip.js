@@ -1,0 +1,1 @@
+"use strict";function vip$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.vip$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.util.vip",exports.vip$=vip$,exports.default=vip$;

@@ -1,0 +1,1 @@
+"use strict";function getSecurityToken$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getSecurityToken$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.request.getSecurityToken",exports.getSecurityToken$=getSecurityToken$,exports.default=getSecurityToken$;

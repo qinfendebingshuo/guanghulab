@@ -1,0 +1,1 @@
+"use strict";function removeFace$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.removeFace$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.faceBox.removeFace",exports.removeFace$=removeFace$,exports.default=removeFace$;

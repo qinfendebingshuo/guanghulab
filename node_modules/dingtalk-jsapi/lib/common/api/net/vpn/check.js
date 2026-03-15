@@ -1,0 +1,1 @@
+"use strict";function check$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.check$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="net.vpn.check",exports.check$=check$,exports.default=check$;

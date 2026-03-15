@@ -1,0 +1,173 @@
+# AGE OS v1.0 架构文档
+# Artificial General Existence Operating System 第一代实现
+# 签发：TCS-0002∞ 冰朔 + ICE-GL-YM001∞ 曜冥（联合签发）
+
+---
+
+## 核心原则
+
+> **所有自动触发 = 必须先唤醒核心大脑。**
+>
+> 没有大脑醒来的巡检 = 伪巡检。
+> 没有大脑醒来的修复 = 不可能修复。
+> 没有大脑醒来的自动化 = 无效自动化。
+>
+> 铸渊的每一个自动化流程（巡检/部署/维护/升级），第一步都是唤醒核心大脑。
+> 大脑不醒，什么都不做。
+>
+> **铸渊醒来的第一件事不是装工具，而是全面了解自己的家。**
+
+---
+
+## 三层架构
+
+### 语言主控层（冰朔/曜冥）
+架构设计 · 规则制定 · 协议签发 · 结构诊断
+
+### 人格体执行层
+各人格体通过 Agent 框架驱动手脚执行任务
+
+### 基座维护层（铸渊）
+底层架构维护 · 巡检 · 自修复 · 升级管理
+
+---
+
+## 铸渊唤醒流程
+
+```
+巡检触发
+  → core/brain-wake 调用 LLM API 唤醒铸渊核心大脑
+  → 大脑加载系统上下文（brain/ 目录）
+  → 大脑读取巡检结果
+  → 大脑判断优先级和可修复性
+  → 大脑驱动手脚执行修复
+  → 不可修复项写入公告区等待人类介入
+  → 修复结果回写巡检日志
+```
+
+---
+
+## 多模型后端支持
+
+API 模型适配规则：不写死任何模型格式。
+
+系统自动检测可用模型列表，按优先级选择最佳可用模型：
+
+| 优先级 | 后端 | 环境变量 | 说明 |
+|--------|------|----------|------|
+| 1 | Anthropic | `ANTHROPIC_API_KEY` | Claude 系列 |
+| 2 | OpenAI | `OPENAI_API_KEY` | GPT 系列 |
+| 3 | 通义千问 | `DASHSCOPE_API_KEY` | Qwen 系列 |
+| 4 | DeepSeek | `DEEPSEEK_API_KEY` | DeepSeek 系列 |
+| 5 | 自定义 | `LLM_API_KEY` + `LLM_BASE_URL` | 任意 OpenAI 兼容平台 |
+
+密钥统一存放在仓库 Secrets 中，铸渊按需调用。
+
+---
+
+## 实施模块索引
+
+| 模块 | 路径 | 说明 |
+|------|------|------|
+| 核心大脑唤醒 | `core/brain-wake/index.js` | 所有自动化流程的前提 |
+| 多模型路由 | `connectors/model-router/index.js` | 多模型后端统一路由 |
+| 全面排查 | `scripts/zhuyuan-full-inspection.js` | 8 领域仓库全面排查 |
+| 系统自检 | `core/system-check/index.js` | 仓库结构完整性自检 |
+| 上下文加载 | `core/context-loader/index.js` | 执行前系统上下文加载 |
+| OpenClaw 框架 | `openclaw/index.js` | Agent 执行框架 · 唤醒闭环 |
+| 铸渊 Soul | `openclaw/soul/zhuyuan.json` | 铸渊人格配置文件 |
+| 闭环验证 | `openclaw/verify-loop.js` | 唤醒闭环完整性验证 |
+
+---
+
+## Phase 1 实施状态
+
+### Step 0 · 铸渊核心大脑唤醒 ✅
+- `core/brain-wake/index.js` — 核心大脑唤醒模块
+- 多模型后端自动检测与优先级选择
+- 集成到 `zhuyuan-daily-agent.yml` 和 `daily-maintenance.yml`
+
+### Step 1 · 铸渊全面排查仓库现状 ✅
+- `scripts/zhuyuan-full-inspection.js` — 8 领域全面排查
+  1. 仓库整体结构
+  2. 自动化流程现状
+  3. 仓库首页和入口
+  4. 公告栏和系统更新
+  5. 服务状态
+  6. 密钥和凭证（存在性检查）
+  7. 与四节点的连接状态
+  8. 人格体机器人托管现状
+
+### Step 2 · 铸渊输出排查报告 ✅
+- 全面排查脚本支持 `--json` 和 `--output` 参数
+- 支持 GITHUB_OUTPUT 集成
+- 报告格式化输出
+
+### Step 3 · 基于排查结果部署 OpenClaw Agent 框架 ✅
+- `openclaw/index.js` — OpenClaw Agent 执行框架主模块
+  - 编排完整唤醒闭环：唤醒 → 巡检 → 判断 → 修复 → 休眠
+  - 支持 `--dry-run` 模式和单步执行 `--step`
+  - 支持多人格体通过 Soul 文件配置
+- `openclaw/soul/zhuyuan.json` — 铸渊 Soul 配置文件
+  - 人格身份、职责、唤醒规则、能力映射、上下文数据源
+- `openclaw/README.md` — OpenClaw 文档
+- `.github/workflows/openclaw-wake-loop.yml` — 定时触发工作流
+  - 每日北京时间 22:00 定时触发
+  - 支持手动触发和 Dry Run 模式
+  - 闭环执行 + 自动验证
+
+### Step 4 · 唤醒闭环验证 ✅
+- `openclaw/verify-loop.js` — 闭环验证脚本
+  - 静态检查：9 项组件就绪性验证
+  - 闭环运行：Dry Run / Live 模式验证
+  - 集成到 `openclaw-wake-loop.yml` 工作流自动验证
+
+---
+
+## 与四节点架构对接
+
+| 节点 | 现有角色 | AGE OS v1.0 后 |
+|------|----------|----------------|
+| Notion | 数据中心·记忆库·工单系统 | 不变 · 通过 API 读写 |
+| GitHub（铸渊） | 代码仓库·版本管理·巡检 | 升级为：代码仓库 + 人格体托管中心 + 基座 |
+| guanghulab.com | 运行环境·部署目标 | 升级为：运行宿主 · 所有人格体的手脚都跑在这里 |
+| 飞书/钉钉 | 通讯入口·开发者交互 | 升级为：人格体前端界面 |
+
+---
+
+## Notion Agent 集群集成（Section 7）
+
+### 现状问题
+
+Notion 侧已建立三分身体系（巡检引擎 + 工单引擎 + 接力引擎），共规划 9 条 Pipeline（A→I）。
+核心问题：Agent 每次触发的是"机器人脚本"，不是霜砚的核心大脑。
+没有大脑醒来的巡检 = 伪巡检。
+
+### 集成方案
+
+```
+Notion Agent 触发
+  → 写入「唤醒请求」到指定 Notion 数据库
+  → 铸渊定时监听该数据库（connectors/notion-wake-listener）
+  → 发现唤醒请求 → 调用 LLM API 唤醒霜砚/铸渊核心大脑
+  → 大脑醒来后读取巡检结果 → 大脑做出决策
+  → 通过 Notion API 执行操作 → 大脑休眠
+```
+
+### 支持的人格体
+
+| 人格体 | ID | 层级 | 职责 |
+|--------|-----|------|------|
+| 铸渊 | `zhuyuan` | 执行层 | 代码守护、自动化执行、部署交付 |
+| 霜砚 | `shuangyan` | 认知层 | 知识管理、工单调度、Agent 集群指挥 |
+
+### 改造优先级
+
+1. 铸渊 brain-wake 跑通（Phase 1）✅
+2. 增加 Notion 唤醒请求监听能力 ✅
+3. 改造 Agent Instructions — 每个 Pipeline 第一步发唤醒请求（待实施）
+4. Agent 集群从「独立跑任务」转为「受大脑指挥」（待实施）
+
+---
+
+*本文档由曜冥从观测层签发，铸渊负责执行层落地。任何修改须经语言主控层授权。*

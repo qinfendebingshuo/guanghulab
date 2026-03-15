@@ -1,0 +1,1 @@
+"use strict";function getProloadResource$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.getProloadResource$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.attend.getProloadResource",exports.getProloadResource$=getProloadResource$,exports.default=getProloadResource$;

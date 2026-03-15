@@ -1,0 +1,1 @@
+"use strict";function searchRoute$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.searchRoute$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.map.searchRoute",exports.searchRoute$=searchRoute$,exports.default=searchRoute$;

@@ -1,0 +1,358 @@
+/* detail.css - 详情页专用样式 */
+
+/* 详情页容器 */
+#detail-container {
+    display: none;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 详情页头部 */
+.detail-header {
+    margin-bottom: 30px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.back-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #4a9eff;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.back-button:hover {
+    background: #4a9eff;
+    transform: translateX(-5px);
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.5);
+}
+
+.back-button:focus-visible {
+    outline: 3px solid #ffd700;
+    outline-offset: 2px;
+}
+
+/* 详情页内容区 */
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.detail-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.detail-section h2 {
+    color: #4a9eff;
+    font-size: 20px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(74, 158, 255, 0.3);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 开发者大头卡片（大尺寸） */
+.developer-card-large .dev-card {
+    transform: scale(1);
+    background: linear-gradient(145deg, #1e2436, #161b28);
+    border: 2px solid #4a9eff;
+    margin-bottom: 0;
+}
+
+.developer-card-large .dev-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 30px -10px rgba(74, 158, 255, 0.5);
+}
+
+/* PCA雷达图容器 */
+.radar-large-container {
+    height: 300px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.radar-large-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* PCA分数标签 */
+.pca-scores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.score-tag {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid;
+    transition: transform 0.2s;
+}
+
+.score-tag:hover {
+    transform: scale(1.05);
+}
+
+.score-tag.EXE { border-color: #4CAF50; color: #4CAF50; }
+.score-tag.TEC { border-color: #2196F3; color: #2196F3; }
+.score-tag.SYS { border-color: #9C27B0; color: #9C27B0; }
+.score-tag.COL { border-color: #FF9800; color: #FF9800; }
+.score-tag.INI { border-color: #f44336; color: #f44336; }
+
+/* 五维进度条 */
+.progress-bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    transition: transform 0.2s ease, background 0.2s;
+}
+
+.progress-item:hover {
+    transform: translateX(10px);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.progress-label {
+    width: 100px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+}
+
+.dim-name {
+    color: #fff;
+}
+
+.dim-score {
+    color: #ffd700;
+    font-family: monospace;
+}
+
+.progress-bar-bg {
+    flex: 1;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.progress-dim-code {
+    width: 50px;
+    text-align: right;
+    font-family: monospace;
+    color: #888;
+    font-size: 14px;
+}
+
+/* 模块历史列表 */
+.module-history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.module-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.2s ease;
+}
+
+.module-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(1.01);
+}
+
+.module-code {
+    font-family: monospace;
+    color: #4a9eff;
+    font-weight: bold;
+    width: 150px;
+}
+
+.module-name {
+    flex: 1;
+    color: #fff;
+}
+
+.module-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    width: 80px;
+    text-align: center;
+}
+
+.status-已完成 { background: rgba(76, 175, 80, 0.2); color: #4CAF50; border: 1px solid #4CAF50; }
+.status-进行中 { background: rgba(255, 152, 0, 0.2); color: #FF9800; border: 1px solid #FF9800; }
+.status-待开始 { background: rgba(158, 158, 158, 0.2); color: #9E9E9E; border: 1px solid #9E9E9E; }
+
+.module-date {
+    color: #888;
+    font-size: 14px;
+    width: 100px;
+    font-family: monospace;
+}
+
+/* 趋势图容器 */
+.trend-chart-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+}
+
+/* 无数据提示 */
+.no-data {
+    text-align: center;
+    color: #888;
+    padding: 40px;
+    font-style: italic;
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(20px); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .detail-content {
+        gap: 15px;
+    }
+    
+    .detail-section {
+        padding: 15px;
+    }
+    
+    .progress-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .progress-label {
+        width: 100%;
+    }
+    
+    .progress-bar-bg {
+        width: 100%;
+    }
+    
+    .progress-dim-code {
+        width: 100%;
+        text-align: left;
+    }
+    
+    .module-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .module-code {
+        width: auto;
+    }
+    
+    .module-name {
+        width: 100%;
+    }
+    
+    .module-status {
+        width: auto;
+    }
+    
+    .module-date {
+        width: auto;
+    }
+    
+    .pca-scores {
+        gap: 8px;
+    }
+    
+    .score-tag {
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+    
+    .radar-large-container {
+        height: 250px;
+    }
+}

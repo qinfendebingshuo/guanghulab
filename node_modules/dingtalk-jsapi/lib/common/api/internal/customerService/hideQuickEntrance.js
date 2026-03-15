@@ -1,0 +1,1 @@
+"use strict";function hideQuickEntrance$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.hideQuickEntrance$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.customerService.hideQuickEntrance",exports.hideQuickEntrance$=hideQuickEntrance$,exports.default=hideQuickEntrance$;

@@ -1,0 +1,1 @@
+"use strict";function openConversation$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.openConversation$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.openConversation",exports.openConversation$=openConversation$,exports.default=openConversation$;

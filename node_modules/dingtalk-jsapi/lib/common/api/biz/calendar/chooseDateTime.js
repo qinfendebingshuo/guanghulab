@@ -1,0 +1,1 @@
+"use strict";function chooseDateTime$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.chooseDateTime$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="biz.calendar.chooseDateTime",exports.chooseDateTime$=chooseDateTime$,exports.default=chooseDateTime$;

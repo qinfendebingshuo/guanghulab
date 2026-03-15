@@ -1,0 +1,1 @@
+"use strict";function recallMessage$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.recallMessage$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.chat.recallMessage",exports.recallMessage$=recallMessage$,exports.default=recallMessage$;

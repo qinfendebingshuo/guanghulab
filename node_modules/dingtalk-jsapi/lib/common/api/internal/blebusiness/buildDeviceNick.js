@@ -1,0 +1,1 @@
+"use strict";function buildDeviceNick$(e){return common_1.ddSdk.invokeAPI(exports.apiName,e)}Object.defineProperty(exports,"__esModule",{value:!0}),exports.buildDeviceNick$=exports.apiName=void 0;var common_1=require("../../../common");exports.apiName="internal.blebusiness.buildDeviceNick",exports.buildDeviceNick$=buildDeviceNick$,exports.default=buildDeviceNick$;

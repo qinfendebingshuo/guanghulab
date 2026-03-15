@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光湖频道 · 完全版</title>
+    <link rel="stylesheet" href="channel-style.css">
+    <link rel="stylesheet" href="channel-transition.css">
+    <link rel="stylesheet" href="channel-layout.css">
+    <style id="theme-variables"></style>
+</head>
+<body>
+    <div class="channel-container">
+        <nav class="channel-nav">
+            <button class="channel-btn" data-channel="home">🏠 首页</button>
+            <button class="channel-btn" data-channel="m06">📋 工单管理</button>
+            <button class="channel-btn" data-channel="m08">📊 数据统计</button>
+            <button class="channel-btn" data-channel="m11">🧩 组件库</button>
+            <button class="channel-btn" data-channel="debug">🐞 调试面板</button>
+            <button class="channel-btn settings-btn" id="settings-toggle">⚙️ 设置</button>
+        </nav>
+        <main id="channel-content" class="channel-content">
+            <!-- 动态内容加载到这里 -->
+        </main>
+    </div>
+
+    <!-- 设置面板（侧边栏） -->
+    <div id="settings-panel" class="settings-panel">
+        <div class="settings-header">
+            <h3>频道设置</h3>
+            <button id="settings-close">✕</button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-section">
+                <h4>布局模式</h4>
+                <div class="layout-options">
+                    <label><input type="radio" name="layout" value="grid" checked> 网格</label>
+                    <label><input type="radio" name="layout" value="list"> 列表</label>
+                    <label><input type="radio" name="layout" value="compact"> 紧凑</label>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>主题色</h4>
+                <div class="theme-options">
+                    <button class="theme-btn" data-theme="default">默认蓝</button>
+                    <button class="theme-btn" data-theme="ocean">海洋</button>
+                    <button class="theme-btn" data-theme="forest">森林</button>
+                    <button class="theme-btn" data-theme="sunset">日落</button>
+                    <button class="theme-btn" data-theme="lavender">薰衣草</button>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>统计数据</h4>
+                <button id="show-stats-btn">查看使用统计</button>
+            </div>
+            <div class="settings-section">
+                <h4>其他</h4>
+                <button id="reset-preferences-btn">恢复默认设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计面板（模态框） -->
+    <div id="stats-modal" class="stats-modal">
+        <div class="stats-modal-content">
+            <div class="stats-modal-header">
+                <h3>使用统计</h3>
+                <button id="stats-close">✕</button>
+            </div>
+            <div class="stats-modal-body" id="stats-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- 核心脚本 -->
+    <script src="module-registry.js"></script>
+    <script src="event-bus.js"></script>
+    <script src="module-lifecycle.js"></script>
+    <script src="channel-state.js"></script>
+    <script src="module-loader.js"></script>
+    <script src="error-boundary.js"></script>
+    <script src="adapters/module-adapter.js"></script>
+    <script src="adapters/m06-adapter.js"></script>
+    <script src="adapters/m08-adapter.js"></script>
+    <script src="adapters/m11-adapter.js"></script>
+    <script src="channel-preferences.js"></script>
+    <script src="channel-theme.js"></script>
+    <script src="channel-favorites.js"></script>
+    <script src="channel-stats.js"></script>
+    <script src="channel-router.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.ChannelPreferences) ChannelPreferences.init();
+            if (window.ChannelTheme) ChannelTheme.init();
+            if (window.ChannelStats) ChannelStats.init();
+
+            // 设置面板开关
+            const settingsToggle = document.getElementById('settings-toggle');
+            const settingsPanel = document.getElementById('settings-panel');
+            const settingsClose = document.getElementById('settings-close');
+            if (settingsToggle && settingsPanel) {
+                settingsToggle.addEventListener('click', () => {
+                    settingsPanel.classList.add('open');
+                });
+                settingsClose.addEventListener('click', () => {
+                    settingsPanel.classList.remove('open');
+                });
+            }
+
+            // 布局切换
+            document.querySelectorAll('input[name="layout"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        const layout = e.target.value;
+                        document.body.className = document.body.className.replace(/layout-\w+/, '') + ' layout-' + layout;
+                        if (window.ChannelPreferences) ChannelPreferences.setLayout(layout);
+                    }
+                });
+            });
+
+            // 主题切换
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const theme = btn.dataset.theme;
+                    if (window.ChannelTheme) ChannelTheme.setTheme(theme);
+                });
+            });
+
+            // 统计面板
+            const showStatsBtn = document.getElementById('show-stats-btn');
+            const statsModal = document.getElementById('stats-modal');
+            const statsClose = document.getElementById('stats-close');
+            if (showStatsBtn && statsModal) {
+                showStatsBtn.addEventListener('click', () => {
+                    if (window.ChannelStats) {
+                        const body = document.getElementById('stats-modal-body');
+                        ChannelStats.renderStatsPanel(body);
+                        statsModal.style.display = 'flex';
+                    }
+                });
+                statsClose.addEventListener('click', () => {
+                    statsModal.style.display = 'none';
+                });
+                window.addEventListener('click', (e) => {
+                    if (e.target === statsModal) statsModal.style.display = 'none';
+                });
+            }
+
+            // 恢复默认
+            const resetBtn = document.getElementById('reset-preferences-btn');
+            if (resetBtn && window.ChannelPreferences) {
+                resetBtn.addEventListener('click', () => {
+                    if (confirm('确定恢复所有默认设置吗？')) {
+                        ChannelPreferences.reset();
+                        document.body.className = document.body.className.replace(/layout-\w+/, '') + ' layout-grid';
+                        document.querySelectorAll('input[name="layout"]').forEach(r => r.checked = (r.value === 'grid'));
+                        if (window.ChannelTheme) ChannelTheme.setTheme('default');
+                        alert('已恢复默认设置');
+                    }
+                });
+            }
+        });
+
+        // 拦截事件总线消息
+        const originalEmit = EventBus.emit;
+        EventBus.emit = function(event, data) {
+            if (!window.debugMessages) window.debugMessages = [];
+            window.debugMessages.push({ event, data, time: new Date().toLocaleTimeString() });
+            originalEmit.call(this, event, data);
+        };
+    </script>
+
+    <style>
+        .settings-panel { position: fixed; top: 0; right: -400px; width: 380px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.1); transition: right 0.3s ease; z-index: 1000; display: flex; flex-direction: column; }
+        .settings-panel.open { right: 0; }
+        .settings-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .settings-body { padding: 20px; overflow-y: auto; }
+        .settings-section { margin-bottom: 30px; }
+        .layout-options label { margin-right: 20px; }
+        .theme-options { display: flex; flex-wrap: wrap; gap: 10px; }
+        .theme-btn { padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; background: white; cursor: pointer; }
+        .stats-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index:2000; }
+        .stats-modal-content { background: white; width: 600px; max-width: 90%; max-height: 80vh; border-radius: 12px; overflow: auto; }
+        .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
+        .module-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.2s; }
+        .module-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .module-card-header { padding: 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+        .drag-handle { font-size: 20px; color: #999; cursor: grab; }
+        .favorite-star { margin-left: auto; font-size: 20px; color: #ccc; cursor: pointer; }
+        .favorite-star.active { color: #fbbf24; }
+        .module-card-content { padding: 15px; }
+    </style>
+</body>
+</html>
+<script>
+// 确保所有模块在页面加载后自动初始化
+(function() {
+    if (window.ChannelPreferences) ChannelPreferences.init();
+    if (window.ChannelTheme) ChannelTheme.init();
+    if (window.ChannelFavorites) {
+        setTimeout(() => {
+            ChannelFavorites.init();
+            ChannelFavorites.initDragAndDrop();
+        }, 100);
+    }
+    if (window.ChannelStats) ChannelStats.init();
+})();
+</script>
+<script>
+// 确保所有功能自动初始化
+(function() {
+    console.log('[最终修复] 执行自动初始化');
+    
+    // 初始化各个模块（如果尚未初始化）
+    if (window.ChannelPreferences && !window.ChannelPreferences.config) {
+        ChannelPreferences.init();
+    }
+    if (window.ChannelTheme) {
+        ChannelTheme.init();
+    }
+    if (window.ChannelFavorites) {
+        // 延迟一点确保DOM渲染完成
+        setTimeout(() => {
+            ChannelFavorites.init();
+            ChannelFavorites.initDragAndDrop();
+        }, 200);
+    }
+    if (window.ChannelStats) {
+        ChannelStats.init();
+    }
+    
+    // 绑定设置按钮事件
+    const settingsToggle = document.getElementById('settings-toggle');
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsToggle && settingsPanel) {
+        // 移除可能存在的旧监听器（避免重复）
+        settingsToggle.replaceWith(settingsToggle.cloneNode(true));
+        const newToggle = document.getElementById('settings-toggle');
+        newToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            settingsPanel.classList.add('open');
+        });
+        console.log('[最终修复] 设置按钮事件已绑定');
+    } else {
+        console.warn('[最终修复] 未找到设置按钮或面板');
+    }
+    
+    // 修复拖拽排序保存
+    if (window.ChannelFavorites && window.ChannelFavorites.handleDrop) {
+        // 增强拖拽放置处理，保存排序
+        const originalHandleDrop = ChannelFavorites.handleDrop;
+        ChannelFavorites.handleDrop = function(e) {
+            originalHandleDrop.call(this, e);
+            // 拖拽完成后，保存当前顺序
+            setTimeout(() => {
+                if (window.ChannelPreferences) {
+                    const cards = Array.from(document.querySelectorAll('.module-card'));
+                    const order = cards.map(card => card.dataset.module);
+                    ChannelPreferences.setModuleOrder(order);
+                    console.log('[最终修复] 拖拽顺序已保存', order);
+                }
+            }, 50);
+        };
+    }
+})();
+</script>
