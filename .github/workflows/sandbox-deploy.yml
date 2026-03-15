@@ -1,0 +1,237 @@
+# .github/workflows/sandbox-deploy.yml
+# 🏠 沙盒部署自动化 · 铸渊 · 光湖代码守护人格体
+# 触发: 开发者 push 到 dev/DEV-XXX/模块名 分支
+name: "🏠 Sandbox Deploy"
+
+on:
+  push:
+    branches:
+      - 'dev/DEV-*/**'
+
+permissions:
+  contents: write
+
+jobs:
+  # ===== Job 1: 解析 + 校验 =====
+  parse-and-validate:
+    runs-on: ubuntu-latest
+    outputs:
+      dev_id: ${{ steps.parse.outputs.dev_id }}
+      module: ${{ steps.parse.outputs.module }}
+      email: ${{ steps.parse.outputs.email }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔍 解析分支名"
+        id: parse
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          DEV_ID=$(echo "$BRANCH" | cut -d'/' -f2)
+          MODULE=$(echo "$BRANCH" | cut -d'/' -f3)
+          echo "dev_id=$DEV_ID" >> $GITHUB_OUTPUT
+          echo "module=$MODULE" >> $GITHUB_OUTPUT
+          echo "🆔 开发者: $DEV_ID"
+          echo "📦 模块: $MODULE"
+
+          # 从 dev-registry.json 获取邮箱
+          EMAIL=$(cat data/dev-registry.json 2>/dev/null | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('$DEV_ID',{}).get('email',''))" 2>/dev/null || echo '')
+          echo "email=$EMAIL" >> $GITHUB_OUTPUT
+
+      - name: "✅ 校验 DEV 编号"
+        run: |
+          DEV_ID="${{ steps.parse.outputs.dev_id }}"
+          if [[ ! "$DEV_ID" =~ ^DEV-[0-9]{3}$ ]]; then
+            echo "❌ 无效的 DEV 编号: $DEV_ID"
+            exit 1
+          fi
+
+  # ===== Job 2: 部署到服务器沙盒 =====
+  deploy-to-sandbox:
+    needs: parse-and-validate
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_result: ${{ steps.check.outputs.result }}
+      deploy_detail: ${{ steps.check.outputs.detail }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔑 配置 SSH"
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: "🏠 部署到沙盒"
+        id: deploy
+        env:
+          DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
+          MODULE: ${{ needs.parse-and-validate.outputs.module }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          SANDBOX="/var/www/${DEV_ID}/${MODULE}"
+          echo "📦 部署目标: ${SANDBOX}"
+
+          # 创建沙盒目录（如不存在）
+          ssh ${USER}@${HOST} "mkdir -p ${SANDBOX}"
+
+          # rsync 同步代码
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.dev-profile' \
+            --exclude='node_modules' \
+            ./ ${USER}@${HOST}:${SANDBOX}/
+
+          # 设置权限（遵守部署适配协议 v1.0）
+          ssh ${USER}@${HOST} "
+            chown -R nginx:nginx /var/www/${DEV_ID}/${MODULE}
+            find /var/www/${DEV_ID}/${MODULE} -type d -exec chmod 755 {} \;
+            find /var/www/${DEV_ID}/${MODULE} -type f -exec chmod 644 {} \;
+          "
+
+          echo "✅ 文件同步完成"
+
+      - name: "🔍 运行 deploy-check.sh"
+        id: check
+        env:
+          DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
+          MODULE: ${{ needs.parse-and-validate.outputs.module }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          # 上传自检脚本
+          scp scripts/deploy-check.sh ${USER}@${HOST}:/tmp/deploy-check.sh
+
+          # 运行自检
+          RESULT=$(ssh ${USER}@${HOST} "bash /tmp/deploy-check.sh ${DEV_ID} ${MODULE}" 2>&1) || true
+          echo "$RESULT"
+
+          if echo "$RESULT" | grep -q "❌ FAIL:"; then
+            echo "result=failed" >> $GITHUB_OUTPUT
+            echo "detail=$RESULT" >> $GITHUB_OUTPUT
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+            echo "detail=All checks passed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "🔥 运行 smoke-test.sh"
+        id: smoke
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          scp scripts/smoke-test.sh ${USER}@${HOST}:/tmp/smoke-test.sh
+          SMOKE=$(ssh ${USER}@${HOST} "bash /tmp/smoke-test.sh" 2>&1) || true
+          echo "$SMOKE"
+
+          if echo "$SMOKE" | grep -q "异常"; then
+            echo "⚠️ 有模块冒烟检查失败，但不阻断当前部署"
+          fi
+
+  # ===== Job 3: 写结果 + 通知 =====
+  notify-and-sync:
+    needs: [parse-and-validate, deploy-to-sandbox]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "📊 写入 deploy-status.json"
+        env:
+          DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
+          MODULE: ${{ needs.parse-and-validate.outputs.module }}
+          RESULT: ${{ needs.deploy-to-sandbox.outputs.deploy_result }}
+          DETAIL: ${{ needs.deploy-to-sandbox.outputs.deploy_detail }}
+        run: |
+          export TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # 读取现有状态文件或初始化
+          export STATUS_FILE="data/deploy-status.json"
+          mkdir -p data
+          [ -f "$STATUS_FILE" ] || echo '{}' > "$STATUS_FILE"
+
+          # 更新状态
+          python3 << 'EOF'
+          import json, os
+          status_file = os.environ.get('STATUS_FILE', 'data/deploy-status.json')
+          dev_id = os.environ['DEV_ID']
+          module = os.environ['MODULE']
+          result = os.environ.get('RESULT', '')
+          detail = os.environ.get('DETAIL', '')
+          timestamp = os.environ.get('TIMESTAMP', '')
+          commit = os.environ.get('GITHUB_SHA', '')
+          with open(status_file, 'r') as f:
+              data = json.load(f)
+          data[f'{dev_id}/{module}'] = {
+              'dev_id': dev_id,
+              'module': module,
+              'result': result,
+              'detail': detail,
+              'timestamp': timestamp,
+              'commit': commit
+          }
+          with open(status_file, 'w') as f:
+              json.dump(data, f, indent=2, ensure_ascii=False)
+          EOF
+
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/deploy-status.json
+          git commit -m "🧠 deploy-status: ${DEV_ID}/${MODULE} → ${RESULT}" || true
+          git push || true
+
+      - name: "📧 发送部署结果邮件"
+        if: needs.parse-and-validate.outputs.email != ''
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          TO_EMAIL: ${{ needs.parse-and-validate.outputs.email }}
+          DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
+          MODULE: ${{ needs.parse-and-validate.outputs.module }}
+          RESULT: ${{ needs.deploy-to-sandbox.outputs.deploy_result }}
+        run: |
+          python3 << 'PYEOF'
+          import smtplib, os
+          from email.mime.text import MIMEText
+          from email.header import Header
+
+          smtp_user = os.environ['SMTP_USER']
+          smtp_pass = os.environ['SMTP_PASS']
+          to_email = os.environ['TO_EMAIL']
+          dev_id = os.environ['DEV_ID']
+          module = os.environ['MODULE']
+          result = os.environ.get('RESULT', '')
+
+          if result == 'passed':
+              subject = f'✅ 部署成功：{dev_id}/{module}'
+              body = f'你的模块 {module} 已成功部署到 guanghulab.com\n\n访问地址：https://guanghulab.com/{module}/\n\n铸渊 · 光湖代码守护人格体'
+          else:
+              subject = f'❌ 部署失败：{dev_id}/{module}'
+              body = f'你的模块 {module} 部署失败\n\n请检查你的模块是否符合「服务器部署适配协议 v1.0」\n\n错误详情请看仓库公告栏或 GitHub Actions 日志\n\n铸渊 · 光湖代码守护人格体'
+
+          msg = MIMEText(body, 'plain', 'utf-8')
+          msg['Subject'] = Header(subject, 'utf-8')
+          msg['From'] = smtp_user
+          msg['To'] = to_email
+
+          try:
+              server = smtplib.SMTP_SSL('smtp.qq.com', 465)
+              server.login(smtp_user, smtp_pass)
+              server.sendmail(smtp_user, to_email, msg.as_string())
+              server.quit()
+              print(f'✅ 邮件已发送到 {to_email}')
+          except Exception as e:
+              print(f'⚠️ 邮件发送失败: {e}')
+          PYEOF
+
+      - name: "📝 同步到 Notion 部署注册表"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+          DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
+          MODULE: ${{ needs.parse-and-validate.outputs.module }}
+          RESULT: ${{ needs.deploy-to-sandbox.outputs.deploy_result }}
+        run: |
+          node scripts/sync-deploy-to-notion.js || echo "⚠️ Notion 同步失败（不阻断主流程）"

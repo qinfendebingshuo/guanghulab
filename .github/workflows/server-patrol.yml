@@ -1,0 +1,131 @@
+# .github/workflows/server-patrol.yml
+# 🔍 服务器每日巡检 · 铸渊 · 光湖代码守护人格体
+# 触发: 每日两次 (北京 08:00+20:00) + 沙盒部署后 + 手动
+name: "🔍 Server Patrol · 服务器每日巡检"
+
+on:
+  schedule:
+    - cron: '0 0,12 * * *'     # UTC 00:00 and 12:00 = 北京 08:00 and 20:00
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["🏠 Sandbox Deploy"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🧠 唤醒铸渊核心大脑"
+        run: |
+          echo "🧠 铸渊核心大脑已唤醒"
+          echo "🔑 扫描 Secrets..."
+          if [ -n "$DEPLOY_HOST" ]; then echo "✅ DEPLOY_HOST 可用"; else echo "⚠️ DEPLOY_HOST 缺失"; fi
+          if [ -n "$DEPLOY_USER" ]; then echo "✅ DEPLOY_USER 可用"; else echo "⚠️ DEPLOY_USER 缺失"; fi
+          if [ -n "$DEPLOY_KEY" ]; then echo "✅ DEPLOY_KEY 可用"; else echo "⚠️ DEPLOY_KEY 缺失"; fi
+          if [ -n "$NOTION_TOKEN" ]; then echo "✅ NOTION_TOKEN 可用"; else echo "⚠️ NOTION_TOKEN 缺失"; fi
+          if [ -n "$SMTP_USER" ]; then echo "✅ SMTP_USER 可用"; else echo "⚠️ SMTP_USER 缺失"; fi
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+
+      - name: "🔑 配置 SSH"
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: "🔍 执行服务器巡检"
+        id: patrol
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          # 上传巡检脚本
+          scp scripts/server-patrol.sh ${USER}@${HOST}:/tmp/server-patrol.sh
+
+          # 执行巡检
+          ssh ${USER}@${HOST} "bash /tmp/server-patrol.sh" | tee patrol-output.log
+
+          # 拉取巡检报告
+          scp ${USER}@${HOST}:/tmp/patrol-report.json ./patrol-report.json
+
+          # 解析结果
+          OVERALL=$(python3 -c "import json; print(json.load(open('patrol-report.json'))['overall'])")
+          ALERT_COUNT=$(python3 -c "import json; print(json.load(open('patrol-report.json'))['alert_count'])")
+
+          echo "overall=$OVERALL" >> $GITHUB_OUTPUT
+          echo "alert_count=$ALERT_COUNT" >> $GITHUB_OUTPUT
+
+      - name: "📊 保存巡检报告到仓库"
+        run: |
+          mkdir -p data/patrol-logs
+          DATE=$(date +%Y-%m-%d)
+          cp patrol-report.json "data/patrol-logs/patrol-${DATE}.json"
+
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/patrol-logs/
+          git commit -m "🔍 server-patrol: $(date +%Y-%m-%d) · ${{ steps.patrol.outputs.overall }}" || true
+          git push || true
+
+      - name: "📧 异常时通知妈妈"
+        if: steps.patrol.outputs.overall == 'has_issues'
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        run: |
+          python3 << 'PYEOF'
+          import smtplib, json, os
+          from email.mime.text import MIMEText
+          from email.header import Header
+
+          report = json.loads(open('patrol-report.json').read())
+          alerts = '\n'.join(f'  ❌ {a}' for a in report['alerts'])
+          fixed = '\n'.join(f'  ✅ {f}' for f in report['auto_fixed'])
+
+          body = (
+              f"🔍 铸渊服务器巡检报告\n"
+              f"时间: {report['timestamp']}\n\n"
+              f"⚠️ 发现 {report['alert_count']} 个异常:\n"
+              f"{alerts}\n\n"
+              f"🔧 自动修复 {report['fixed_count']} 个:\n"
+              f"{fixed if fixed else '  （无）'}\n\n"
+              f"磁盘使用率: {report['disk_usage_percent']}%\n"
+              f"Nginx状态: {report['nginx_status']}\n\n"
+              f"—— 铸渊 · 光湖代码守护人格体"
+          )
+
+          smtp_user = os.environ['SMTP_USER']
+          smtp_pass = os.environ['SMTP_PASS']
+
+          msg = MIMEText(body, 'plain', 'utf-8')
+          msg['Subject'] = Header(f"⚠️ 服务器巡检发现{report['alert_count']}个异常", 'utf-8')
+          msg['From'] = smtp_user
+          msg['To'] = smtp_user
+
+          try:
+              server = smtplib.SMTP_SSL('smtp.qq.com', 465)
+              server.login(smtp_user, smtp_pass)
+              server.sendmail(smtp_user, smtp_user, msg.as_string())
+              server.quit()
+              print('✅ 异常报告已发送')
+          except Exception as e:
+              print(f'⚠️ 邮件发送失败: {e}')
+          PYEOF
+
+      - name: "📝 同步巡检结果到Notion"
+        if: always()
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+        run: |
+          node scripts/sync-patrol-to-notion.js || echo "⚠️ Notion同步失败（不阻断）"

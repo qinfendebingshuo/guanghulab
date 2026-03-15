@@ -1,0 +1,50 @@
+# .github/workflows/sync-deploy-to-notion.yml
+# 📝 定时同步部署状态到 Notion · 铸渊 · 光湖代码守护人格体
+# 每天两次: 04:00 + 14:00 UTC（北京 12:00 + 22:00）
+name: "📝 Sync Deploy Status to Notion"
+
+on:
+  schedule:
+    - cron: '0 4,14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🧠 唤醒铸渊核心大脑"
+        run: |
+          echo "🧠 铸渊核心大脑唤醒中..."
+          echo "🔑 扫描 Secrets 权限..."
+          if [ -z "$NOTION_TOKEN" ]; then echo "⚠️ 缺失: NOTION_TOKEN"; else echo "✅ 可用: NOTION_TOKEN"; fi
+          if [ -z "$FINGERPRINT_DB_ID" ]; then echo "⚠️ 缺失: FINGERPRINT_DB_ID"; else echo "✅ 可用: FINGERPRINT_DB_ID"; fi
+          if [ -z "$SMTP_USER" ]; then echo "⚠️ 缺失: SMTP_USER"; else echo "✅ 可用: SMTP_USER"; fi
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+
+      - name: "📝 同步部署状态到 Notion"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+        run: |
+          node scripts/sync-deploy-to-notion.js
+
+      - name: "🔥 远程冒烟检查"
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts 2>/dev/null
+          scp scripts/smoke-test.sh ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/smoke-test.sh
+          ssh ${DEPLOY_USER}@${DEPLOY_HOST} "bash /tmp/smoke-test.sh"
