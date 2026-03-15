@@ -71,7 +71,9 @@ function inspectRepoStructure() {
     if (exists) {
       try {
         fileCount = fs.readdirSync(fullPath).length;
-      } catch { /* skip */ }
+      } catch {
+        // Directory exists but is unreadable — use 0 as fallback
+      }
     }
     result.directories[dir.path] = {
       exists,
@@ -178,6 +180,7 @@ function inspectAutomation() {
     'core/context-loader/index.js',
     'core/brain-wake/index.js',
     'connectors/notion-sync/index.js',
+    'connectors/notion-wake-listener/index.js',
     'connectors/model-router/index.js',
   ];
   console.log('\n  🔧 核心模块:');
@@ -301,8 +304,8 @@ function inspectBulletins() {
       result.bulletinBoard.cacheDate = cache.date || 'unknown';
       result.bulletinBoard.cacheRecords = (cache.records || []).length;
       console.log(`  ✅ 公告栏缓存日期: ${cache.date} (${(cache.records || []).length} 条记录)`);
-    } catch {
-      console.log('  ⚠️  公告栏缓存 JSON 解析失败');
+    } catch (err) {
+      console.log('  ⚠️  公告栏缓存 JSON 解析失败:', err.message);
     }
   } else {
     console.log('  ⏭️  公告栏缓存文件不存在');

@@ -104,6 +104,7 @@
 | 执行同步 | `core/execution-sync/index.js` | 执行层状态同步 |
 | Notion 同步 | `connectors/notion-sync/index.js` | 双向数据同步 |
 | 模型路由 | `connectors/model-router/index.js` | 多模型后端路由（AGE OS v1.0） |
+| Notion 唤醒监听 | `connectors/notion-wake-listener/index.js` | Notion Agent 集群唤醒请求监听 |
 | 全面排查 | `scripts/zhuyuan-full-inspection.js` | 仓库全面排查（8个领域） |
 | 结构地图 | `docs/repo-structure-map.md` | 仓库结构文档 |
 | 桥接地图 | `docs/notion-bridge-map.md` | Notion 桥接文档 |

@@ -1,0 +1,104 @@
+# 铸渊 · Notion Agent 唤醒请求监听
+#
+# AGE OS v1.0 · Section 7: Notion Agent 集群集成方案
+#
+# 核心逻辑：
+#   Notion Agent 集群每次触发前，先写入「唤醒请求」到 Notion 数据库
+#   → 铸渊定时监听该数据库
+#   → 发现唤醒请求 → 调用 LLM API 唤醒对应人格体核心大脑
+#   → 大脑醒来后执行任务 → 回写结果
+#
+# 触发条件：
+#   1. 定时轮询（北京时间每 15 分钟一次）
+#   2. 手动触发
+#
+# 支持唤醒的人格体：
+#   - 霜砚（认知层守护者 · Notion 工作区管理）
+#   - 铸渊（执行层守护者 · 代码仓库管理）
+
+name: 📡 铸渊 · Notion Agent 唤醒监听
+
+on:
+  schedule:
+    # 每 15 分钟轮询一次 Notion 唤醒请求数据库
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: notion-wake-listener
+  cancel-in-progress: true
+
+jobs:
+  # ── AGE OS v1.0: 核心大脑唤醒（所有流程的前提）──
+  wake-brain:
+    name: 🌅 唤醒铸渊核心大脑
+    runs-on: ubuntu-latest
+    outputs:
+      brain_awake: ${{ steps.wake.outputs.brain_awake }}
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧠 唤醒铸渊核心大脑
+        id: wake
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          node core/brain-wake --task "Notion唤醒请求监听" || {
+            echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
+            echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
+          }
+
+  # ── 监听 Notion 唤醒请求 ──
+  listen:
+    name: 📡 监听唤醒请求
+    needs: wake-brain
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📡 轮询 Notion 唤醒请求数据库
+        id: poll
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          WAKE_REQUEST_DB_ID: ${{ secrets.WAKE_REQUEST_DB_ID }}
+          SIGNAL_LOG_DB_ID: ${{ secrets.SIGNAL_LOG_DB_ID }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: node connectors/notion-wake-listener poll
+
+      - name: 📊 输出监听结果
+        if: always()
+        run: |
+          echo "═══════════════════════════════════════════"
+          echo "📡 Notion Agent 唤醒请求监听结果"
+          echo "═══════════════════════════════════════════"
+          echo "处理数: ${{ steps.poll.outputs.wake_requests_processed || '0' }}"
+          echo "成功数: ${{ steps.poll.outputs.wake_requests_succeeded || '0' }}"
+          echo "失败数: ${{ steps.poll.outputs.wake_requests_failed || '0' }}"
+          echo "✅ 监听流程结束"

@@ -41,7 +41,9 @@
     "core:inspect": "node scripts/zhuyuan-full-inspection.js",
     "core:inspect:json": "node scripts/zhuyuan-full-inspection.js --json",
     "connector:notion": "node connectors/notion-sync status",
-    "connector:model": "node connectors/model-router"
+    "connector:model": "node connectors/model-router",
+    "connector:wake-listener": "node connectors/notion-wake-listener status",
+    "connector:wake-poll": "node connectors/notion-wake-listener poll"
   },
   "dependencies": {
     "axios": "^1.13.6",

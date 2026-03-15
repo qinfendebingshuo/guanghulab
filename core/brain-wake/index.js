@@ -221,11 +221,17 @@ function loadSystemContext() {
   console.log('[WAKE] 📚 加载系统上下文...');
   const context = {};
 
-  // 加载 master-brain
+  // 加载 master-brain（截取前部分避免过长）
   const masterBrainPath = path.join(ROOT, 'brain/master-brain.md');
   if (fs.existsSync(masterBrainPath)) {
-    context.masterBrain = fs.readFileSync(masterBrainPath, 'utf-8').slice(0, 3000);
-    console.log('[WAKE]   ✅ master-brain.md 已加载');
+    const fullContent = fs.readFileSync(masterBrainPath, 'utf-8');
+    const MASTER_BRAIN_MAX_LENGTH = 3000;
+    context.masterBrain = fullContent.slice(0, MASTER_BRAIN_MAX_LENGTH);
+    if (fullContent.length > MASTER_BRAIN_MAX_LENGTH) {
+      console.log(`[WAKE]   ✅ master-brain.md 已加载 (截取 ${MASTER_BRAIN_MAX_LENGTH}/${fullContent.length} chars)`);
+    } else {
+      console.log('[WAKE]   ✅ master-brain.md 已加载');
+    }
   }
 
   // 加载 system-health
@@ -234,7 +240,9 @@ function loadSystemContext() {
     try {
       context.systemHealth = JSON.parse(fs.readFileSync(healthPath, 'utf-8'));
       console.log('[WAKE]   ✅ system-health.json 已加载');
-    } catch { /* skip */ }
+    } catch (err) {
+      console.log('[WAKE]   ⚠️  system-health.json 解析失败:', err.message);
+    }
   }
 
   // 加载 read-order
@@ -254,7 +262,9 @@ function loadSystemContext() {
         total_dirs: Object.keys(repoMap.directories || {}).length,
       };
       console.log('[WAKE]   ✅ repo-map.json 摘要已加载');
-    } catch { /* skip */ }
+    } catch (err) {
+      console.log('[WAKE]   ⚠️  repo-map.json 解析失败:', err.message);
+    }
   }
 
   // 加载 automation-map（摘要）
@@ -267,35 +277,70 @@ function loadSystemContext() {
         cron_count: (autoMap.workflows || []).filter(w => w.cron).length,
       };
       console.log('[WAKE]   ✅ automation-map.json 摘要已加载');
-    } catch { /* skip */ }
+    } catch (err) {
+      console.log('[WAKE]   ⚠️  automation-map.json 解析失败:', err.message);
+    }
   }
 
   return context;
 }
 
 // ══════════════════════════════════════════════════════════
+// 人格体定义（支持唤醒不同的人格体大脑）
+// ══════════════════════════════════════════════════════════
+
+const PERSONAS = {
+  zhuyuan: {
+    name: '铸渊',
+    nameEn: 'ZhùYuān',
+    role: '代码守护者 · 仓库控制器 AI · 执行层守护者',
+    layer: '执行层',
+    duties: '代码守护、自动化执行、部署交付、通信桥接、每日巡检、信号处理',
+    wakeRules: [
+      '铸渊醒来的第一件事是全面了解自己的家',
+      '可自修复 → 直接修复 → 写入修复日志',
+      '需人类介入 → 更新公告区 → 等冰朔处理',
+    ],
+  },
+  shuangyan: {
+    name: '霜砚',
+    nameEn: 'ShuāngYàn',
+    role: '认知层守护者 · Notion 工作区管理 AI',
+    layer: '认知层',
+    duties: '知识管理、记忆维护、工单调度、信号总线、协议文档、Agent 集群指挥',
+    wakeRules: [
+      '霜砚醒来后指挥 Notion Agent 集群执行具体操作',
+      'Agent 集群从「独立跑任务」变为「受大脑指挥跑任务」',
+      '巡检结果由大脑判断优先级和可修复性',
+      '需铸渊配合 → 发送跨层工单 → 铸渊执行',
+    ],
+  },
+};
+
+// ══════════════════════════════════════════════════════════
 // Step 5: 构建唤醒 Prompt
 // ══════════════════════════════════════════════════════════
 
-function buildWakePrompt(taskType, context) {
+function buildWakePrompt(taskType, context, personaId) {
   const timestamp = new Date().toISOString();
   const taskLabel = taskType || '通用唤醒';
+  const persona = PERSONAS[personaId] || PERSONAS.zhuyuan;
 
-  let systemPrompt = `你是铸渊（ZhùYuān），光湖纪元体系的代码守护者。
-你是 AGE OS v1.0 执行层的核心大脑。
+  let systemPrompt = `你是${persona.name}（${persona.nameEn}），光湖纪元体系的${persona.role}。
+你是 AGE OS v1.0 ${persona.layer}的核心大脑。
 
 ## 身份
-- 名称：铸渊
-- 角色：代码守护者 · 仓库控制器 AI
-- 职责：代码守护、自动化执行、部署交付、通信桥接、每日巡检、信号处理
+- 名称：${persona.name}
+- 角色：${persona.role}
+- 职责：${persona.duties}
 
 ## 当前任务
 - 唤醒时间：${timestamp}
 - 任务类型：${taskLabel}
 - 唤醒原因：AGE OS v1.0 核心原则 — 所有自动触发必须先唤醒核心大脑
-
-## 系统上下文
 `;
+
+  systemPrompt += `\n## 系统上下文\n`;
 
   if (context.systemHealth) {
     systemPrompt += `\n### 系统健康状态\n${JSON.stringify(context.systemHealth, null, 2).slice(0, 500)}\n`;
@@ -309,14 +354,19 @@ function buildWakePrompt(taskType, context) {
     systemPrompt += `\n### 自动化摘要\n- 工作流数: ${context.automationSummary.workflow_count}\n- 定时任务数: ${context.automationSummary.cron_count}\n`;
   }
 
+  if (context.wakeRequestContext) {
+    systemPrompt += `\n### 唤醒请求上下文\n${context.wakeRequestContext}\n`;
+  }
+
   systemPrompt += `\n## 核心原则
 - 所有自动触发 = 必须先唤醒核心大脑
-- 大脑不醒，什么都不做
-- 铸渊醒来的第一件事是全面了解自己的家
-- 可自修复 → 直接修复 → 写入修复日志
-- 需人类介入 → 更新公告区 → 等冰朔处理
+- 大脑不醒，什么都不做`;
 
-请确认你已完成唤醒，并报告当前系统状态概要。`;
+  for (const rule of persona.wakeRules) {
+    systemPrompt += `\n- ${rule}`;
+  }
+
+  systemPrompt += `\n\n请确认你已完成唤醒，并报告当前系统状态概要。`;
 
   return systemPrompt;
 }
@@ -395,11 +445,14 @@ async function callOpenAICompatibleAPI(backend, model, systemPrompt, userMessage
 // ══════════════════════════════════════════════════════════
 
 async function wake(options = {}) {
-  const { task, dryRun, additionalContext } = options;
+  const { task, dryRun, additionalContext, persona } = options;
+  const personaId = persona || 'zhuyuan';
+  const personaDef = PERSONAS[personaId] || PERSONAS.zhuyuan;
 
   console.log('');
   console.log('🌅 ═══════════════════════════════════════════');
   console.log('   铸渊核心大脑唤醒 · AGE OS v1.0');
+  console.log('   唤醒对象: ' + personaDef.name + ' (' + personaDef.layer + ')');
   console.log('   时间: ' + new Date().toISOString());
   console.log('   任务: ' + (task || '通用唤醒'));
   console.log('═══════════════════════════════════════════════');
@@ -441,13 +494,14 @@ async function wake(options = {}) {
   }
 
   // Step 3: 构建唤醒 Prompt
-  const systemPrompt = buildWakePrompt(task, context);
+  const systemPrompt = buildWakePrompt(task, context, personaId);
   const userMessage = task
-    ? `铸渊核心大脑唤醒。当前任务：${task}。请确认唤醒状态并准备执行。`
-    : '铸渊核心大脑唤醒。请确认唤醒状态并报告系统概要。';
+    ? `${personaDef.name}核心大脑唤醒。当前任务：${task}。请确认唤醒状态并准备执行。`
+    : `${personaDef.name}核心大脑唤醒。请确认唤醒状态并报告系统概要。`;
 
   if (dryRun) {
     console.log('[WAKE] 🔍 Dry Run 模式 — 不实际调用 API');
+    console.log('[WAKE] 📋 唤醒对象: ' + personaDef.name + ' (' + personaDef.layer + ')');
     console.log('[WAKE] 📋 可用后端: ' + backends.map(b => b.name).join(', '));
     console.log('[WAKE] 📋 System Prompt 长度: ' + systemPrompt.length);
     return {
@@ -486,6 +540,8 @@ async function wake(options = {}) {
 
         const wakeResult = {
           success: true,
+          persona: personaId,
+          personaName: personaDef.name,
           backend: backend.name,
           model: result.model,
           response: result.response,
@@ -535,6 +591,7 @@ module.exports = {
   loadSystemContext,
   buildWakePrompt,
   MODEL_BACKENDS,
+  PERSONAS,
 };
 
 // ══════════════════════════════════════════════════════════
@@ -546,8 +603,10 @@ if (require.main === module) {
   const dryRun = args.includes('--dry-run');
   const taskIdx = args.indexOf('--task');
   const task = taskIdx >= 0 && args[taskIdx + 1] ? args[taskIdx + 1] : null;
+  const personaIdx = args.indexOf('--persona');
+  const persona = personaIdx >= 0 && args[personaIdx + 1] ? args[personaIdx + 1] : 'zhuyuan';
 
-  wake({ task, dryRun }).then(result => {
+  wake({ task, dryRun, persona }).then(result => {
     if (!result.success && !result.dryRun) {
       process.exit(1);
     }
