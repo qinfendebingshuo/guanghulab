@@ -186,8 +186,8 @@ async function discoverModels(backend) {
       const json = JSON.parse(res.body);
       return json.data || [];
     }
-  } catch {
-    // 模型探测失败，使用预定义列表
+  } catch (err) {
+    console.log(`[WAKE] ⚠️  ${backend.name} 模型探测失败: ${err.message}`);
   }
 
   return backend.models.map(id => ({ id }));
