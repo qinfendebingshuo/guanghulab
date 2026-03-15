@@ -8,6 +8,9 @@ on:
     branches:
       - 'dev/DEV-*/**'
 
+permissions:
+  contents: write
+
 jobs:
   # ===== Job 1: 解析 + 校验 =====
   parse-and-validate:
