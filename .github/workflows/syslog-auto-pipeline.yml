@@ -132,7 +132,6 @@ jobs:
 
       - name: 📋 创建标准化 Notion 工单（Phase B1）
         id: ticket
-        if: ${{ secrets.NOTION_API_TOKEN }}
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
@@ -143,7 +142,12 @@ jobs:
           MODULES_UPLOADED: ${{ steps.verify.outputs.modules_uploaded }}
           DEVELOPER: ${{ steps.parse.outputs.author }}
           SYSLOG_RAW: ${{ steps.parse.outputs.content }}
-        run: node scripts/create-standardized-ticket.js
+        run: |
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "⚠️ NOTION_API_TOKEN 未配置，跳过 Notion 工单创建"
+            exit 0
+          fi
+          node scripts/create-standardized-ticket.js
 
       - name: 📡 推送广播到 GitHub（Phase B4）
         if: steps.persona.outcome == 'success' && steps.parse.outputs.type == 'syslog'

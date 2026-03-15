@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-15T14:19:06.192Z",
+  "generated_at": "2026-03-15T15:35:25.881Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 50,
-    "total_scripts": 53,
+    "total_workflows": 54,
+    "total_scripts": 56,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -163,6 +163,13 @@
       ],
       "shelves": [
         {
+          "file": "auto-reply-discussions.yml",
+          "name": "\"🤖 铸渊 · Discussion 自动回复\"",
+          "triggers": [
+            "unknown"
+          ]
+        },
+        {
           "file": "bingshuo-deploy-agent.yml",
           "name": "\"🧊 冰朔人格体 · 自动部署诊断\"",
           "triggers": [
@@ -230,6 +237,14 @@
           ]
         },
         {
+          "file": "daily-report.yml",
+          "name": "\"📰 铸渊 · 光湖开发日报\"",
+          "triggers": [
+            "schedule(0 2 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "deploy-pages.yml",
           "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
           "triggers": [
@@ -290,6 +305,14 @@
           "triggers": [
             "push",
             "pull_request"
+          ]
+        },
+        {
+          "file": "meta-watchdog.yml",
+          "name": "\"🐕 元看门狗 · 巡检健康监控\"",
+          "triggers": [
+            "schedule(0 */6 * * *)",
+            "manual"
           ]
         },
         {
@@ -449,6 +472,14 @@
           ]
         },
         {
+          "file": "sync-dev-status.yml",
+          "name": "\"📡 铸渊 · dev-status 自动同步\"",
+          "triggers": [
+            "schedule(0 1 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "sync-login-entry.yml",
           "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
           "triggers": [
@@ -550,7 +581,7 @@
           ]
         }
       ],
-      "item_count": 50
+      "item_count": 54
     },
     {
       "zone_id": "SCRIPTS",
@@ -567,6 +598,9 @@
         "runner"
       ],
       "shelves": [
+        {
+          "file": "auto-reply-discussions.js"
+        },
         {
           "file": "bingshuo-deploy-agent.js"
         },
@@ -602,6 +636,9 @@
         },
         {
           "file": "generate-communication-map.js"
+        },
+        {
+          "file": "generate-daily-report.js"
         },
         {
           "file": "generate-module-doc.js"
@@ -685,6 +722,9 @@
           "file": "sync-deploy-to-notion.js"
         },
         {
+          "file": "sync-dev-status.js"
+        },
+        {
           "file": "sync-login-entry.js"
         },
         {
@@ -727,7 +767,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 53
+      "item_count": 56
     },
     {
       "zone_id": "SRC",
@@ -1467,6 +1507,10 @@
     "cron": [
       "WORKFLOWS"
     ],
+    "auto-reply-discussions": [
+      "WORKFLOWS::auto-reply-discussions.yml",
+      "SCRIPTS::auto-reply-discussions.js"
+    ],
     "bingshuo-deploy-agent": [
       "WORKFLOWS::bingshuo-deploy-agent.yml",
       "SCRIPTS::bingshuo-deploy-agent.js"
@@ -1491,6 +1535,9 @@
     ],
     "daily-maintenance": [
       "WORKFLOWS::daily-maintenance.yml"
+    ],
+    "daily-report": [
+      "WORKFLOWS::daily-report.yml"
     ],
     "deploy-pages": [
       "WORKFLOWS::deploy-pages.yml"
@@ -1517,6 +1564,9 @@
     ],
     "hli-contract-check": [
       "WORKFLOWS::hli-contract-check.yml"
+    ],
+    "meta-watchdog": [
+      "WORKFLOWS::meta-watchdog.yml"
     ],
     "notion-callback-pipeline": [
       "WORKFLOWS::notion-callback-pipeline.yml"
@@ -1586,6 +1636,10 @@
     "sync-deploy-to-notion": [
       "WORKFLOWS::sync-deploy-to-notion.yml",
       "SCRIPTS::sync-deploy-to-notion.js"
+    ],
+    "sync-dev-status": [
+      "WORKFLOWS::sync-dev-status.yml",
+      "SCRIPTS::sync-dev-status.js"
     ],
     "sync-login-entry": [
       "WORKFLOWS::sync-login-entry.yml",
@@ -1679,6 +1733,9 @@
     ],
     "generate-communication-map": [
       "SCRIPTS::generate-communication-map.js"
+    ],
+    "generate-daily-report": [
+      "SCRIPTS::generate-daily-report.js"
     ],
     "generate-repo-map": [
       "SCRIPTS::generate-repo-map.js"

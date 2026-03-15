@@ -1,0 +1,45 @@
+name: "📡 铸渊 · dev-status 自动同步"
+
+on:
+  schedule:
+    - cron: '0 1 * * *'    # UTC 01:00 = 北京时间 09:00
+    - cron: '0 14 * * *'   # UTC 14:00 = 北京时间 22:00
+  workflow_dispatch:        # 支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  sync-dev-status:
+    name: 同步 dev-status.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── 执行同步脚本 ──
+      - name: 同步 dev-status.json
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          DEV_STATUS_DB_ID: ${{ secrets.DEV_STATUS_DB_ID }}
+        run: node scripts/sync-dev-status.js
+
+      # ── 提交更新 ──
+      - name: 提交 dev-status 更新
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/dev-status.json dev-status.json
+          if git diff --cached --quiet; then
+            echo "📌 dev-status.json 无变更"
+          else
+            git commit -m "📡 dev-status 同步 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [skip ci]"
+            git push
+            echo "✅ dev-status.json 已同步并推送"
+          fi

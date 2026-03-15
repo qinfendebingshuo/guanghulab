@@ -1,0 +1,58 @@
+name: "🤖 铸渊 · Discussion 自动回复"
+
+on:
+  discussion:
+    types: [created]
+  discussion_comment:
+    types: [created]
+
+permissions:
+  discussions: write
+
+jobs:
+  auto-reply:
+    name: 铸渊自动回复
+    runs-on: ubuntu-latest
+    # 仅在非 bot 触发时运行
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'qinfendebingshuo'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── 处理新 Discussion ──
+      - name: 回复新 Discussion
+        if: github.event_name == 'discussion' && github.event.action == 'created'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DISCUSSION_ID: ${{ github.event.discussion.number }}
+          DISCUSSION_BODY: ${{ github.event.discussion.body }}
+          DISCUSSION_AUTHOR: ${{ github.event.discussion.user.login }}
+          DISCUSSION_CATEGORY: ${{ github.event.discussion.category.name }}
+          DISCUSSION_NODE_ID: ${{ github.event.discussion.node_id }}
+          IS_COMMENT: 'false'
+          BOT_LOGIN: 'github-actions[bot]'
+        run: node scripts/auto-reply-discussions.js
+
+      # ── 处理新评论 ──
+      - name: 回复新评论
+        if: github.event_name == 'discussion_comment' && github.event.action == 'created'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DISCUSSION_ID: ${{ github.event.discussion.number }}
+          DISCUSSION_BODY: ${{ github.event.comment.body }}
+          DISCUSSION_AUTHOR: ${{ github.event.comment.user.login }}
+          DISCUSSION_CATEGORY: ${{ github.event.discussion.category.name }}
+          DISCUSSION_NODE_ID: ${{ github.event.discussion.node_id }}
+          IS_COMMENT: 'true'
+          BOT_LOGIN: 'github-actions[bot]'
+        run: node scripts/auto-reply-discussions.js
