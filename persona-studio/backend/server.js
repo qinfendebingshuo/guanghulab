@@ -12,7 +12,17 @@ const apikeyRoutes = require('./routes/apikey');
 const previewRoutes = require('./routes/preview');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3002',
+    'http://127.0.0.1:3002',
+    'http://8.155.62.235',
+    'https://guanghulab.com',
+    'http://guanghulab.com',
+    'https://qinfendebingshuo.github.io'
+  ],
+  credentials: true
+}));
 app.use(express.json({ limit: '2mb' }));
 
 // ── 静态文件：persona-studio 前端 ──

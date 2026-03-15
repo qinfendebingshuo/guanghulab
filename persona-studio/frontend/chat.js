@@ -15,7 +15,8 @@ const API_BASE = (function () {
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     return 'http://localhost:3002';
   }
-  return 'https://guanghulab.com';
+  // 非本地环境统一使用当前域名 + 协议，走 Nginx 转发
+  return location.protocol + '//' + location.host;
 })();
 
 /* ---- State ---- */
