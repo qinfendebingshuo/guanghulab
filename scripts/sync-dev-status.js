@@ -133,7 +133,9 @@ function mapNotionStatus(status) {
 function generateSummary(team) {
   const activeCount = team.filter(d => d.status === 'active').length;
   const waitingSyslog = team.filter(d => d.status === 'waiting_syslog').length;
-  const topStreak = team.reduce((max, d) => d.streak > max.streak ? d : max, { streak: 0 });
+  const topStreakDev = team.length > 0
+    ? team.reduce((max, d) => d.streak > max.streak ? d : max, team[0])
+    : null;
   const alerts = team
     .filter(d => d.waiting && d.waiting.includes('⚠️'))
     .map(d => `${d.dev_id} ${d.name}: ${d.waiting}`);
@@ -142,7 +144,7 @@ function generateSummary(team) {
     total_devs: team.length,
     active_waiting_syslog: waitingSyslog,
     active_normal: activeCount,
-    top_streak: topStreak.dev_id ? `${topStreak.dev_id} ${topStreak.name} ${topStreak.streak}连胜` : '无',
+    top_streak: topStreakDev ? `${topStreakDev.dev_id} ${topStreakDev.name} ${topStreakDev.streak}连胜` : '无',
     alerts,
   };
 }

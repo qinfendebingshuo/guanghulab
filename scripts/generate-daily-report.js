@@ -179,7 +179,6 @@ function generateReport(devStatus, activity) {
   // 项目概览
   const activeDevs = team.filter(d => d.status !== 'paused').length;
   const summary = devStatus.summary || {};
-  const graduatedCount = summary.graduated_modules?.length || 0;
 
   const report = `# 🌊 光湖开发日报 · ${dateStr}
 
