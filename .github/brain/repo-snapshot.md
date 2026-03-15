@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-15 17:47 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-15 22:19 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 47 个 GitHub Actions |
-| 脚本 | 47 个执行脚本 |
+| 工作流 | 50 个 GitHub Actions |
+| 脚本 | 53 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-15 17:47 CST |
+| 快照生成时间 | 2026-03-15 22:19 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 47 项
+**路径**: `.github/workflows` · **数量**: 50 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 47 项
+**路径**: `scripts` · **数量**: 53 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -123,7 +123,10 @@
 | `push-broadcast-feishu.yml` | 铸渊 · 广播推送飞书（聊天消息） | manual |
 | `push-broadcast.yml` | 铸渊 · Push Broadcast · Notion → 飞书文档B | manual |
 | `receive-syslog.yml` | 铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion | unknown |
+| `sandbox-deploy.yml` | "🏠 Sandbox Deploy" | push |
+| `server-patrol.yml` | "🔍 Server Patrol · 服务器每日巡检" | schedule(0 0,12 * * *), manual |
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
+| `sync-deploy-to-notion.yml` | "📝 Sync Deploy Status to Notion" | schedule(0 4,14 * * *), manual |
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
 | `sync-persona-studio.yml` | 🔄 铸渊跨仓库同步 · persona-studio | push, manual |
 | `syslog-auto-pipeline.yml` | SYSLOG Auto Pipeline | unknown |
@@ -149,6 +152,7 @@
 - `scripts/create-standardized-ticket.js`
 - `scripts/cross-repo-sync.js`
 - `scripts/daily-check.js`
+- `scripts/deploy-check.sh`
 - `scripts/distribute-broadcasts.js`
 - `scripts/esp-email-processor.js`
 - `scripts/generate-automation-map.js`
@@ -176,7 +180,12 @@
 - `scripts/selfcheck.js`
 - `scripts/send-feishu-alert.js`
 - `scripts/server-diagnose-report.js`
+- `scripts/server-patrol.sh`
+- `scripts/setup-sandbox.sh`
+- `scripts/smoke-test.sh`
+- `scripts/sync-deploy-to-notion.js`
 - `scripts/sync-login-entry.js`
+- `scripts/sync-patrol-to-notion.js`
 - `scripts/update-brain.js`
 - `scripts/update-memory.js`
 - `scripts/update-readme-bulletin.js`
