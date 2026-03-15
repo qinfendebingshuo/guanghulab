@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-15 23:33 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-15 23:35 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 51 个 GitHub Actions |
-| 脚本 | 53 个执行脚本 |
+| 工作流 | 54 个 GitHub Actions |
+| 脚本 | 56 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-15 23:33 CST |
+| 快照生成时间 | 2026-03-15 23:35 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 51 项
+**路径**: `.github/workflows` · **数量**: 54 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 53 项
+**路径**: `scripts` · **数量**: 56 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -90,6 +90,7 @@
 
 | 文件 | 名称 | 触发方式 |
 |------|------|----------|
+| `auto-reply-discussions.yml` | "🤖 铸渊 · Discussion 自动回复" | unknown |
 | `bingshuo-deploy-agent.yml` | "🧊 冰朔人格体 · 自动部署诊断" | issues, issue_comment, manual |
 | `bingshuo-neural-system.yml` | 冰朔主控神经系统 · 自动维护 | push, schedule(0 0 * * *), manual |
 | `brain-sync.yml` | 铸渊 Brain Sync | push, schedule(0 8 * * *), manual |
@@ -98,6 +99,7 @@
 | `bridge-syslog-to-notion.yml` | 铸渊 · Bridge A · SYSLOG → Notion | push, manual |
 | `check-structure.yml` | 模块结构检查 | push, pull_request |
 | `daily-maintenance.yml` | "🔧 铸渊 · Daily Maintenance Agent" | schedule(0 2 * * *), manual |
+| `daily-report.yml` | "📰 铸渊 · 光湖开发日报" | schedule(0 2 * * *), manual |
 | `deploy-pages.yml` | 🌀 部署铸渊聊天室 (GitHub Pages) | push, manual |
 | `deploy-to-server.yml` | "🚀 铸渊 CD · 自动部署到 guanghulab.com" | push, manual |
 | `distribute-broadcasts.yml` | 铸渊 · 广播分发 | push, manual |
@@ -128,6 +130,7 @@
 | `server-patrol.yml` | "🔍 Server Patrol · 服务器每日巡检" | schedule(0 0,12 * * *), manual |
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `sync-deploy-to-notion.yml` | "📝 Sync Deploy Status to Notion" | schedule(0 4,14 * * *), manual |
+| `sync-dev-status.yml` | "📡 铸渊 · dev-status 自动同步" | schedule(0 1 * * *), manual |
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
 | `sync-persona-studio.yml` | 🔄 铸渊跨仓库同步 · persona-studio | push, manual |
 | `syslog-auto-pipeline.yml` | SYSLOG Auto Pipeline | unknown |
@@ -146,6 +149,7 @@
 
 ## 🔧 执行脚本库（铸渊的工作人员）
 
+- `scripts/auto-reply-discussions.js`
 - `scripts/bingshuo-deploy-agent.js`
 - `scripts/bingshuo-neural-sync.js`
 - `scripts/brain-bridge-sync.js`
@@ -158,6 +162,7 @@
 - `scripts/esp-email-processor.js`
 - `scripts/generate-automation-map.js`
 - `scripts/generate-communication-map.js`
+- `scripts/generate-daily-report.js`
 - `scripts/generate-module-doc.js`
 - `scripts/generate-repo-map.js`
 - `scripts/generate-session-summary.js`
@@ -185,6 +190,7 @@
 - `scripts/setup-sandbox.sh`
 - `scripts/smoke-test.sh`
 - `scripts/sync-deploy-to-notion.js`
+- `scripts/sync-dev-status.js`
 - `scripts/sync-login-entry.js`
 - `scripts/sync-patrol-to-notion.js`
 - `scripts/update-brain.js`
