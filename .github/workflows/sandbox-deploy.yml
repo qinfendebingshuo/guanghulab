@@ -228,7 +228,7 @@ jobs:
 
       - name: "📝 同步到 Notion 部署注册表"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
           DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
           MODULE: ${{ needs.parse-and-validate.outputs.module }}

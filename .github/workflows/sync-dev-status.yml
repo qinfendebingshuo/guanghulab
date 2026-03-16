@@ -27,7 +27,7 @@ jobs:
       # ── 执行同步脚本 ──
       - name: 同步 dev-status.json
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           DEV_STATUS_DB_ID: ${{ secrets.DEV_STATUS_DB_ID }}
         run: node scripts/sync-dev-status.js
 

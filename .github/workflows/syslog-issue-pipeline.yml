@@ -57,8 +57,8 @@ jobs:
 
       - name: 📋 步骤 1/8 · 接收提交
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '1'
           STEP_NAME: '接收提交'
           STEP_STATUS: 'ok'
@@ -118,19 +118,19 @@ jobs:
       - name: 📋 步骤 2/8 · 解析内容（成功）
         if: success()
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '2'
           STEP_NAME: '解析内容'
           STEP_STATUS: 'ok'
-          STEP_DETAIL: '广播编号: $ steps.parse.outputs.broadcast_id  · 类型: $ steps.parse.outputs.type  · 邮箱: $ steps.parse.outputs.email '
+          STEP_DETAIL: '广播编号: ${{ steps.parse.outputs.broadcast_id }} · 类型: ${{ steps.parse.outputs.type }} · 邮箱: ${{ steps.parse.outputs.email }}'
         run: node scripts/pipeline-reporter.js
 
       - name: 📋 步骤 2/8 · 解析内容（失败）
         if: failure()
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '2'
           STEP_NAME: '解析内容'
           STEP_STATUS: 'error'
@@ -140,16 +140,16 @@ jobs:
       - name: 🔍 铸渊 Agent · 模块上传验证
         id: verify
         env:
-          SYSLOG_CONTENT: $ steps.parse.outputs.content 
-          BROADCAST_ID: $ steps.parse.outputs.broadcast_id 
-          AUTHOR: $ steps.parse.outputs.author 
+          SYSLOG_CONTENT: ${{ steps.parse.outputs.content }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          AUTHOR: ${{ steps.parse.outputs.author }}
         run: node scripts/verify-modules.js
 
       - name: 📋 步骤 3/8 · 模块验证（成功）
         if: always() && steps.verify.outcome == 'success'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '3'
           STEP_NAME: '模块验证'
           STEP_STATUS: 'ok'
@@ -159,8 +159,8 @@ jobs:
       - name: 📋 步骤 3/8 · 模块验证（失败）
         if: always() && steps.verify.outcome == 'failure'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '3'
           STEP_NAME: '模块验证'
           STEP_STATUS: 'error'
@@ -170,24 +170,24 @@ jobs:
       - name: 🧠 Auto-detect and wake up persona
         id: persona
         env:
-          LLM_API_KEY: $ secrets.LLM_API_KEY 
-          LLM_BASE_URL: $ secrets.LLM_BASE_URL 
-          BROADCAST_ID: $ steps.parse.outputs.broadcast_id 
-          SUBMIT_TYPE: $ steps.parse.outputs.type 
-          SUBMIT_CONTENT: $ steps.parse.outputs.content 
-          AUTHOR: $ steps.parse.outputs.author 
-          MODULE_VERIFY_RESULT: $ steps.verify.outputs.verify_report 
-          NOTION_TOKEN: $ secrets.NOTION_API_TOKEN 
-          CORE_BRAIN_PAGE_ID: $ secrets.CORE_BRAIN_PAGE_ID 
-          PORTRAIT_DB_ID: $ secrets.PORTRAIT_DB_ID 
-          FINGERPRINT_DB_ID: $ secrets.FINGERPRINT_DB_ID 
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
+          SUBMIT_CONTENT: ${{ steps.parse.outputs.content }}
+          AUTHOR: ${{ steps.parse.outputs.author }}
+          MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
+          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
+          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
         run: node scripts/wake-persona.js
 
       - name: 📋 步骤 4/8 · 唤醒核心大脑（成功）
         if: success()
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '4'
           STEP_NAME: '唤醒核心大脑'
           STEP_STATUS: 'ok'
@@ -197,8 +197,8 @@ jobs:
       - name: 📋 步骤 4/8 · 唤醒核心大脑（失败）
         if: failure() && steps.parse.outcome == 'success'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '4'
           STEP_NAME: '唤醒核心大脑'
           STEP_STATUS: 'error'
@@ -209,24 +209,24 @@ jobs:
       # secrets 不能在 if: 里直接用，必须改成 != '' 的形式
       - name: 📋 创建标准化 Notion 工单（Phase B1）
         id: ticket
-        if: $ secrets.NOTION_API_TOKEN != '' 
+        if: ${{ secrets.NOTION_API_TOKEN != '' }}
         env:
-          NOTION_TOKEN: $ secrets.NOTION_API_TOKEN 
-          NOTION_TICKET_DB_ID: $ secrets.NOTION_TICKET_DB_ID 
-          BROADCAST_ID: $ steps.parse.outputs.broadcast_id 
-          SUBMIT_TYPE: $ steps.parse.outputs.type 
-          PERSONA_RESULT: $ steps.persona.outputs.result 
-          MODULE_VERIFY: $ steps.verify.outputs.verify_result 
-          MODULES_UPLOADED: $ steps.verify.outputs.modules_uploaded 
-          DEVELOPER: $ steps.parse.outputs.author 
-          SYSLOG_RAW: $ steps.parse.outputs.content 
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
+          PERSONA_RESULT: ${{ steps.persona.outputs.result }}
+          MODULE_VERIFY: ${{ steps.verify.outputs.verify_result }}
+          MODULES_UPLOADED: ${{ steps.verify.outputs.modules_uploaded }}
+          DEVELOPER: ${{ steps.parse.outputs.author }}
+          SYSLOG_RAW: ${{ steps.parse.outputs.content }}
         run: node scripts/create-standardized-ticket.js
 
       - name: 📋 步骤 5/8 · 创建 Notion 工单（成功）
         if: always() && steps.ticket.outcome == 'success'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '5'
           STEP_NAME: '创建 Notion 工单'
           STEP_STATUS: 'ok'
@@ -236,8 +236,8 @@ jobs:
       - name: 📋 步骤 5/8 · 创建 Notion 工单（跳过）
         if: always() && steps.ticket.outcome == 'skipped'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '5'
           STEP_NAME: '创建 Notion 工单'
           STEP_STATUS: 'skip'
@@ -247,8 +247,8 @@ jobs:
       - name: 📋 步骤 5/8 · 创建 Notion 工单（失败）
         if: always() && steps.ticket.outcome == 'failure'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '5'
           STEP_NAME: '创建 Notion 工单'
           STEP_STATUS: 'error'
@@ -259,17 +259,17 @@ jobs:
         id: broadcast
         if: steps.persona.outcome == 'success' && steps.parse.outputs.type == 'syslog'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          BROADCAST_ID: $ steps.parse.outputs.broadcast_id 
-          DEVELOPER_NAME: $ steps.parse.outputs.author 
-          BROADCAST_CONTENT: $ steps.persona.outputs.result 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          DEVELOPER_NAME: ${{ steps.parse.outputs.author }}
+          BROADCAST_CONTENT: ${{ steps.persona.outputs.result }}
         run: node scripts/push-broadcast-to-github.js
 
       - name: 📋 步骤 6/8 · 生成广播（成功）
         if: always() && steps.broadcast.outcome == 'success'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '6'
           STEP_NAME: '生成广播'
           STEP_STATUS: 'ok'
@@ -279,8 +279,8 @@ jobs:
       - name: 📋 步骤 6/8 · 生成广播（跳过）
         if: always() && steps.broadcast.outcome == 'skipped'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '6'
           STEP_NAME: '生成广播'
           STEP_STATUS: 'skip'
@@ -290,8 +290,8 @@ jobs:
       - name: 📋 步骤 6/8 · 生成广播（失败）
         if: always() && steps.broadcast.outcome == 'failure'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '6'
           STEP_NAME: '生成广播'
           STEP_STATUS: 'error'
@@ -301,12 +301,12 @@ jobs:
       - name: 📧 Send email to developer
         id: email
         env:
-          SMTP_USER: $ secrets.SMTP_USER 
-          SMTP_PASS: $ secrets.SMTP_PASS 
-          EMAIL_TO: $ steps.parse.outputs.email 
-          BROADCAST_ID: $ steps.parse.outputs.broadcast_id 
-          SUBMIT_TYPE: $ steps.parse.outputs.type 
-          PERSONA_RESULT: $ steps.persona.outputs.result 
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ steps.parse.outputs.email }}
+          BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
+          SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
+          PERSONA_RESULT: ${{ steps.persona.outputs.result }}
         run: |
           node -e "
           const nodemailer = require('nodemailer');
@@ -376,8 +376,8 @@ jobs:
       - name: 📋 步骤 7/8 · 邮件通知（成功）
         if: always() && steps.email.outcome == 'success'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '7'
           STEP_NAME: '邮件通知'
           STEP_STATUS: 'ok'
@@ -387,8 +387,8 @@ jobs:
       - name: 📋 步骤 7/8 · 邮件通知（失败）
         if: always() && steps.email.outcome == 'failure'
         env:
-          GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
-          ISSUE_NUMBER: $ github.event.issue.number 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
           STEP_NUM: '7'
           STEP_NAME: '邮件通知'
           STEP_STATUS: 'error'
@@ -400,11 +400,11 @@ jobs:
         with:
           script: |
             const number = context.payload.issue.number;
-            const type = '$ steps.parse.outputs.type ';
-            const broadcastId = '$ steps.parse.outputs.broadcast_id ';
-            const email = '$ steps.parse.outputs.email ';
-            const modulesUploaded = '$ steps.verify.outputs.modules_uploaded ' === 'true';
-            const moduleCount = '$ steps.verify.outputs.module_count ' || '0';
+            const type = '${{ steps.parse.outputs.type }}';
+            const broadcastId = '${{ steps.parse.outputs.broadcast_id }}';
+            const email = '${{ steps.parse.outputs.email }}';
+            const modulesUploaded = '${{ steps.verify.outputs.modules_uploaded }}' === 'true';
+            const moduleCount = '${{ steps.verify.outputs.module_count }}' || '0';
 
             const typeLabel = type === 'syslog' ? 'SYSLOG 闭环处理' : '问题解答';
             const maskedEmail = email.length > 4
