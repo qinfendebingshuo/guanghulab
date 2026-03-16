@@ -185,8 +185,10 @@ function main() {
 
   if (disallowedFiles.length > 0 && allowedFiles.length > 0) {
     // 部分文件越权，部分合法 → 回退整个 commit（不做部分修复，避免复杂性）
-    const msg = `⚠️ 部分路径越权 · 推送者: ${actor} · ${developer.name}(${developer.devId})\n\n` +
-      `允许路径: ${developer.allowed_paths.join(', ')}\n\n` +
+    const devName = developer ? `${developer.name}(${developer.devId})` : `未注册开发者`;
+    const devPaths = developer && developer.allowed_paths ? developer.allowed_paths.join(', ') : '无';
+    const msg = `⚠️ 部分路径越权 · 推送者: ${actor} · ${devName}\n\n` +
+      `允许路径: ${devPaths}\n\n` +
       `✅ 合法文件:\n` + allowedFiles.map(f => `- \`${f}\``).join('\n') + '\n\n' +
       `❌ 越权文件:\n` + disallowedFiles.map(f => `- \`${f}\``).join('\n') +
       `\n\n该 commit 已被自动回退。请将越权文件移除后重新提交。`;

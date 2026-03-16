@@ -53,7 +53,7 @@ jobs:
           mkdir -p /tmp/skyeye
           node scripts/skyeye/scan-workflows.js > /tmp/skyeye/workflow-health.json
           gh run list --limit 50 --json name,status,conclusion,createdAt,updatedAt \
-            > /tmp/skyeye/recent-runs.json || echo "[]" > /tmp/skyeye/recent-runs.json
+            > /tmp/skyeye/recent-runs.json || { echo "⚠️ gh run list 失败，使用空列表" && echo "[]" > /tmp/skyeye/recent-runs.json; }
           FAILED_COUNT=$(cat /tmp/skyeye/recent-runs.json | \
             python3 -c "import sys,json; runs=json.load(sys.stdin); print(sum(1 for r in runs if r.get('conclusion')=='failure'))" 2>/dev/null || echo "0")
           echo "failed_count=$FAILED_COUNT" >> $GITHUB_OUTPUT

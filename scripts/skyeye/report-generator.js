@@ -104,16 +104,19 @@ function generateReport() {
       auto_fixed: repairResult ? repairResult.total_repaired : 0,
       needs_human: diagnosis ? diagnosis.needs_human : 0,
       watching: diagnosis ? diagnosis.watch_list : 0,
-      issues: diagnosis ? (diagnosis.issues || []).map(i => ({
-        id: i.id,
-        symptom: i.symptom,
-        root_cause: i.root_cause,
-        impact: i.impact,
-        fix_applied: i.fixable ? i.fix_plan : null,
-        verified: repairResult
-          ? (repairResult.repairs || []).find(r => r.issue_id === i.id)?.verified || false
-          : false
-      })) : []
+      issues: diagnosis ? (diagnosis.issues || []).map(i => {
+        const repairEntry = repairResult
+          ? (repairResult.repairs || []).find(r => r.issue_id === i.id)
+          : null;
+        return {
+          id: i.id,
+          symptom: i.symptom,
+          root_cause: i.root_cause,
+          impact: i.impact,
+          fix_applied: i.fixable ? i.fix_plan : null,
+          verified: repairEntry ? repairEntry.verified : false
+        };
+      }) : []
     },
 
     repairs_applied: repairResult

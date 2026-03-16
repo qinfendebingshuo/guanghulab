@@ -27,7 +27,7 @@ function checkYamlSyntax(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     // Basic checks: not empty, has 'name:', has 'on:', has 'jobs:'
     const hasName = /^name\s*:/m.test(content);
-    const hasOn   = /^on\s*:/m.test(content) || /^on:/m.test(content) || /^"on"\s*:/m.test(content) || /^'on'\s*:/m.test(content);
+    const hasOn   = /^on\s*:/m.test(content) || /^"on"\s*:/m.test(content) || /^'on'\s*:/m.test(content);
     const hasJobs = /^jobs\s*:/m.test(content);
 
     const issues = [];

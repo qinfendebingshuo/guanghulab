@@ -55,7 +55,7 @@ function notionRequest(apiPath, body) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve({ statusCode: res.statusCode, body: data });
         } else {
-          reject(new Error(`Notion API ${res.statusCode}: ${data.substring(0, 200)}`));
+          reject(new Error(`Notion API ${res.statusCode}: ${data.length > 200 ? data.substring(0, 200) + '...' : data}`));
         }
       });
     });
