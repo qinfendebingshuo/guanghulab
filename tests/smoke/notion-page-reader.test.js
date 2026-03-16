@@ -125,7 +125,7 @@ describe('blocksToMarkdown', () => {
     ];
     const md = blocksToMarkdown(blocks);
     expect(md).toContain('- Bullet');
-    expect(md).toContain('• Number');
+    expect(md).toContain('1. Number');
   });
 
   test('converts code blocks', () => {

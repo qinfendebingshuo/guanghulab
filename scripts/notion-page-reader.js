@@ -184,7 +184,7 @@ function blocksToMarkdown(blocks) {
     if (type === 'heading_2') return '\n## ' + text;
     if (type === 'heading_3') return '\n### ' + text;
     if (type === 'bulleted_list_item') return '- ' + text;
-    if (type === 'numbered_list_item') return '• ' + text;
+    if (type === 'numbered_list_item') return '1. ' + text;
     if (type === 'to_do') {
       var checked = block.to_do && block.to_do.checked ? '☑' : '☐';
       return checked + ' ' + text;
