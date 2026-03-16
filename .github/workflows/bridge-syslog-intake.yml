@@ -1,0 +1,84 @@
+name: 铸渊 · 🌉 桥接·SYSLOG 上行处理
+
+# syslog-inbox/ 有新文件 push → 批量写入 Notion + 创建调度队列任务 + 归档
+#
+# 依赖 Secrets：
+#   NOTION_API_TOKEN      Notion 集成 token
+#   BRIDGE_QUEUE_DB_ID    桥接调度队列数据库 ID
+#   NOTION_SYSLOG_DB_ID   SYSLOG 收件箱数据库 ID（可选，有默认值）
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'syslog-inbox/**'
+  workflow_dispatch:
+
+jobs:
+  # ── AGE OS v1.0: 核心大脑唤醒 ──
+  wake-brain:
+    name: 🌅 唤醒核心大脑
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      brain_awake: ${{ steps.wake.outputs.brain_awake }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧠 唤醒铸渊核心大脑
+        id: wake
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          node core/brain-wake --task "桥接SYSLOG上行" || {
+            echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
+            echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
+          }
+
+  process-syslog:
+    name: 🌉 SYSLOG 批量上行处理
+    needs: wake-brain
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📥 批量处理 SYSLOG
+        id: process
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
+          SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: node scripts/bridge/process-syslog-batch.js
+
+      - name: 📦 提交归档结果
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add syslog-inbox/ syslog-processed/ data/bridge-logs/
+          git diff --staged --quiet || git commit -m "🌉 桥接SYSLOG上行处理 · 已归档 [auto-bridge]"
+          git push
+
+      - name: ✅ 上行处理完成
+        run: |
+          echo "✅ SYSLOG 上行处理完成"
+          echo "📋 已处理: ${{ steps.process.outputs.processed_count || '0' }} 条"
+          echo "📡 等待 Notion Agent 自动触发 SYSLOG 闭环处理"

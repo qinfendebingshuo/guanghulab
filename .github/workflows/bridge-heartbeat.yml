@@ -1,0 +1,80 @@
+name: 铸渊 · 🌉 桥接·心跳检测
+
+# 每6小时检测桥接通道畅通性
+# 测试 Notion API 连通 + 在调度队列写入 HEARTBEAT 记录
+#
+# 依赖 Secrets：
+#   NOTION_API_TOKEN       Notion 集成 token
+#   BRIDGE_QUEUE_DB_ID     桥接调度队列数据库 ID
+
+on:
+  schedule:
+    - cron: '0 0,6,12,18 * * *'  # UTC 每6小时 = 北京 08:00/14:00/20:00/02:00
+  workflow_dispatch:
+
+jobs:
+  # ── AGE OS v1.0: 核心大脑唤醒 ──
+  wake-brain:
+    name: 🌅 唤醒核心大脑
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      brain_awake: ${{ steps.wake.outputs.brain_awake }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧠 唤醒铸渊核心大脑
+        id: wake
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          node core/brain-wake --task "桥接心跳检测" || {
+            echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
+            echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
+          }
+
+  heartbeat:
+    name: 💓 桥接心跳检测
+    needs: wake-brain
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 💓 执行心跳检测
+        id: heartbeat
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
+        run: node scripts/bridge/heartbeat.js
+
+      - name: 📦 提交心跳日志
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add data/bridge-logs/
+          git diff --staged --quiet || git commit -m "💓 桥接心跳 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [auto-bridge]"
+          git push
+
+      - name: 📋 心跳结果
+        run: |
+          echo "💓 桥接心跳检测完成"
+          echo "📡 Notion: ${{ steps.heartbeat.outputs.notion_healthy || 'unknown' }}"
+          echo "🌉 状态: ${{ steps.heartbeat.outputs.heartbeat_status || 'unknown' }}"

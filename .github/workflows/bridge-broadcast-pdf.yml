@@ -1,0 +1,133 @@
+name: 铸渊 · 🌉 桥接·广播PDF生成+分发
+
+# 定时拉取 Notion 中 BROADCAST_READY 的广播 → 生成 PDF → 上传 → 分发到 IM
+#
+# 依赖 Secrets：
+#   NOTION_API_TOKEN       Notion 集成 token
+#   BRIDGE_QUEUE_DB_ID     桥接调度队列数据库 ID
+#   FEISHU_APP_ID          飞书 App ID
+#   FEISHU_APP_SECRET      飞书 App Secret
+#   DINGTALK_TOKEN         钉钉机器人 Token
+#   OSS_ACCESS_KEY         阿里云 OSS AccessKey（可选）
+#   OSS_SECRET_KEY         阿里云 OSS SecretKey（可选）
+
+on:
+  schedule:
+    - cron: '0 6,14 * * *'   # UTC 06:00+14:00 = 北京 14:00+22:00
+  workflow_dispatch:
+
+jobs:
+  # ── AGE OS v1.0: 核心大脑唤醒 ──
+  wake-brain:
+    name: 🌅 唤醒核心大脑
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      brain_awake: ${{ steps.wake.outputs.brain_awake }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧠 唤醒铸渊核心大脑
+        id: wake
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          node core/brain-wake --task "桥接广播PDF生成分发" || {
+            echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
+            echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
+          }
+
+  generate-and-distribute:
+    name: 🌉 广播PDF生成+分发
+    needs: wake-brain
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📡 检查调度队列
+        id: check
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
+        run: node scripts/bridge/check-queue.js BROADCAST_READY
+
+      - name: 📥 拉取广播内容
+        if: steps.check.outputs.task_count != '0'
+        id: fetch
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          QUEUE_FILE: ${{ steps.check.outputs.queue_file }}
+        run: node scripts/bridge/fetch-broadcast.js
+
+      - name: 📄 生成PDF
+        if: steps.check.outputs.task_count != '0'
+        id: pdf
+        env:
+          MANIFEST_FILE: ${{ steps.fetch.outputs.manifest_file }}
+        run: |
+          npm install --no-save md-to-pdf 2>/dev/null || echo "⚠️ md-to-pdf 安装失败，使用回退模式"
+          node scripts/bridge/generate-pdf.js
+
+      - name: ☁️ 上传PDF
+        if: steps.check.outputs.task_count != '0'
+        id: upload
+        env:
+          PDF_MANIFEST: ${{ steps.pdf.outputs.pdf_manifest }}
+          UPLOAD_MODE: ${{ vars.BRIDGE_UPLOAD_MODE || 'server' }}
+          OSS_ACCESS_KEY: ${{ secrets.OSS_ACCESS_KEY }}
+          OSS_SECRET_KEY: ${{ secrets.OSS_SECRET_KEY }}
+        run: node scripts/bridge/upload-pdf.js
+
+      - name: 📢 分发到IM
+        if: steps.check.outputs.task_count != '0'
+        env:
+          DIST_MANIFEST: ${{ steps.upload.outputs.dist_manifest }}
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          DINGTALK_TOKEN: ${{ secrets.DINGTALK_TOKEN }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_EMAIL: ${{ vars.ALERT_EMAIL || '565183519@qq.com' }}
+          FEISHU_BROADCAST_CHAT_ID: ${{ vars.FEISHU_BROADCAST_CHAT_ID }}
+        run: node scripts/bridge/distribute.js
+
+      - name: ✅ 更新调度队列状态
+        if: steps.check.outputs.task_count != '0'
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          QUEUE_FILE: ${{ steps.check.outputs.queue_file }}
+        run: node scripts/bridge/update-queue-status.js
+
+      - name: 📦 提交生成结果
+        if: steps.check.outputs.task_count != '0'
+        run: |
+          git config user.name "铸渊[bot]"
+          git config user.email "zhu-yuan-bot@guanghulab.com"
+          git add data/broadcasts/ data/bridge-logs/
+          git diff --staged --quiet || git commit -m "🌉 桥接广播PDF生成+分发 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [auto-bridge]"
+          git push
+
+      - name: 📋 运行总结
+        run: |
+          echo "🌉 桥接·广播PDF生成+分发 完成"
+          echo "📋 待处理任务: ${{ steps.check.outputs.task_count || '0' }}"
+          echo "📄 生成PDF: ${{ steps.pdf.outputs.pdf_count || '0' }}"
+          echo "☁️  已上传: ${{ steps.upload.outputs.uploaded_count || '0' }}"
