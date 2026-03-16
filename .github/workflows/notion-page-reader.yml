@@ -1,12 +1,14 @@
 name: 铸渊 · Notion 页面阅读器
 
 # 从 Notion 页面链接读取内容，输出 Markdown 格式文本
+# 支持保存到文件并提交到仓库
 #
 # 依赖 Secrets：
 #   NOTION_API_TOKEN   Notion API token
 #
 # dispatch payload / inputs：
 #   notion_page_url    Notion 页面链接或页面 ID
+#   save_to_repo       是否保存到仓库（true/false，默认 false）
 
 on:
   repository_dispatch:
@@ -16,13 +18,17 @@ on:
       notion_page_url:
         description: 'Notion 页面链接或页面 ID'
         required: true
+      save_to_repo:
+        description: '保存到仓库 data/notion-pages/ 目录（true/false）'
+        required: false
+        default: 'false'
 
 jobs:
   read-page:
     name: 📖 读取 Notion 页面
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout
@@ -35,6 +41,20 @@ jobs:
 
       - name: 📖 读取 Notion 页面内容
         env:
-          NOTION_TOKEN:    ${{ secrets.NOTION_API_TOKEN }}
-          NOTION_PAGE_URL: ${{ github.event.client_payload.notion_page_url || github.event.inputs.notion_page_url }}
+          NOTION_TOKEN:      ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_PAGE_URL:   ${{ github.event.client_payload.notion_page_url || github.event.inputs.notion_page_url }}
+          NOTION_OUTPUT_DIR: ${{ (github.event.client_payload.save_to_repo == 'true' || github.event.inputs.save_to_repo == 'true') && 'data/notion-pages' || '' }}
         run: node scripts/notion-page-reader.js
+
+      - name: 💾 提交保存的页面内容
+        if: github.event.client_payload.save_to_repo == 'true' || github.event.inputs.save_to_repo == 'true'
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan-bot@guanghulab.com"
+          git add data/notion-pages/
+          if git diff --cached --quiet; then
+            echo "没有新文件需要提交"
+          else
+            git commit -m "📖 铸渊 · 保存 Notion 页面内容 [skip ci]"
+            git push
+          fi

@@ -19,6 +19,8 @@
 'use strict';
 
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 // ══════════════════════════════════════════════════════════
 // 常量
@@ -236,6 +238,7 @@ function blocksToMarkdown(blocks) {
 async function main() {
   var input = process.env.NOTION_PAGE_URL || process.argv[2];
   var token = process.env.NOTION_TOKEN;
+  var outputDir = process.env.NOTION_OUTPUT_DIR || '';
 
   if (!token) {
     console.error('❌ 缺少 NOTION_TOKEN 环境变量');
@@ -281,6 +284,26 @@ async function main() {
   console.log('');
   console.log('════════════════════════════════════════');
   console.log('✅ 读取完成 · 共 ' + blocks.length + ' 个内容块');
+
+  // 5. 可选：保存到文件
+  if (outputDir) {
+    var safeTitle = title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, '_').slice(0, 80);
+    var filename = safeTitle + '-' + pageId.slice(0, 8) + '.md';
+    var outputPath = path.join(outputDir, filename);
+
+    var fileContent = '# ' + title + '\n\n';
+    fileContent += '> 📖 Notion 页面 ID: `' + pageId + '`\n';
+    fileContent += '> 🕐 读取时间: ' + new Date().toISOString() + '\n\n';
+    fileContent += '---\n\n';
+    fileContent += markdown + '\n';
+
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    fs.writeFileSync(outputPath, fileContent, 'utf-8');
+    console.log('');
+    console.log('💾 已保存到: ' + outputPath);
+  }
 }
 
 // ══════════════════════════════════════════════════════════
