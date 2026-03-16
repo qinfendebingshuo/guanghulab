@@ -72,9 +72,21 @@ function main() {
   console.log('\n🔬 Phase 3 · 诊断');
   results.diagnosis = runModule('diagnose.js', 'diagnosis.json');
 
+  // Phase 3.5: ASOP 审批（新增）
+  console.log('\n🔄 Phase 3.5 · ASOP 自优化审批');
+  results.asop_review = runModule('asop-reviewer.js', 'asop-review.json');
+
   // Phase 4: 修复
   console.log('\n🔧 Phase 4 · 修复 Agent');
   results.repair = runModule('repair-agent.js', 'repair-result.json');
+
+  // Phase 4.5: ASOP 执行已批准的优化
+  console.log('\n🔧 Phase 4.5 · ASOP 执行已批准优化');
+  results.asop_execute = runModule('asop-executor.js', 'asop-execute.json');
+
+  // Phase 4.7: ASOP 验证之前执行的优化效果
+  console.log('\n🔍 Phase 4.7 · ASOP 验证优化效果');
+  results.asop_verify = runModule('asop-verifier.js', 'asop-verify.json');
 
   // Phase 6: 报告
   console.log('\n📋 Phase 6 · 全局健康报告');

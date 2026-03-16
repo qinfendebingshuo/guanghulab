@@ -113,18 +113,22 @@ function parsePersonaPage(page) {
     if (prop.title) return prop.title.map(t => t.plain_text).join('');
     if (prop.rich_text) return prop.rich_text.map(t => t.plain_text).join('');
     if (prop.select) return prop.select ? prop.select.name : '';
+    if (prop.status) return prop.status ? prop.status.name : '';
     return '';
   }
 
   return {
     page_id: page.id,
     persona_id: getText(props['人格体编号']),
-    name: getText(props['名称']) || getText(props['Name']),
+    name: getText(props['人格体名称']) || getText(props['名称']) || getText(props['Name']),
+    type: getText(props['编号类型']),
+    bound_human: getText(props['绑定人类']),
     dev_id: getText(props['开发者ID']),
     github_username: getText(props['GitHub用户名']),
     status: getText(props['状态']),
     module: getText(props['负责模块']),
-    commit_signature: getText(props['签名标识']),
+    repo_paths: getText(props['仓库路径权限']),
+    commit_signature: getText(props['签名格式']) || getText(props['签名标识']),
     source: 'notion'
   };
 }
@@ -158,7 +162,7 @@ function lookupLocal(personaId) {
   return null;
 }
 
-// ━━━ writeBack: 写回 Notion ━━━
+// ━━━ writeBack: 写回 Notion（铸渊最后拉取 + 铸渊同步备注） ━━━
 async function writeBack(personaId, data) {
   if (!PERSONA_DB_ID || !NOTION_TOKEN) {
     console.log('⚠️ Notion 凭证不完整，跳过写回');
@@ -173,20 +177,21 @@ async function writeBack(personaId, data) {
       return false;
     }
 
-    // 构建更新属性
+    // 构建更新属性（只写铸渊管辖的两个字段）
     const properties = {};
-    if (data.status) {
-      properties['状态'] = {
-        select: { name: data.status }
+
+    // 铸渊最后拉取
+    properties['铸渊最后拉取'] = {
+      date: { start: new Date().toISOString() }
+    };
+
+    // 铸渊同步备注：[时间戳] [模块] [动作] · [变更摘要] · [分流路径]
+    if (data.sync_note) {
+      properties['铸渊同步备注'] = {
+        rich_text: [{ type: 'text', text: { content: data.sync_note.substring(0, MAX_NOTION_RICH_TEXT) } }]
       };
-    }
-    if (data.last_activity) {
-      properties['最后活动'] = {
-        date: { start: data.last_activity }
-      };
-    }
-    if (data.gate_result) {
-      properties['门禁记录'] = {
+    } else if (data.gate_result) {
+      properties['铸渊同步备注'] = {
         rich_text: [{ type: 'text', text: { content: data.gate_result.substring(0, MAX_NOTION_RICH_TEXT) } }]
       };
     }

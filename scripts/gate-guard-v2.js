@@ -28,8 +28,8 @@ const GITHUB_OUTPUT = process.env.GITHUB_OUTPUT || '/dev/null';
 // ━━━ 仓库主人 ━━━
 const REPO_OWNER = 'qinfendebingshuo';
 
-// ━━━ 人格体签名正则 ━━━
-const PERSONA_SIGNATURE_REGEX = /\[PER-(\d{3})\]/;
+// ━━━ 人格体签名正则（v2 升级：支持 PER-XXX / TCS-XXX / PER-PENDING-XXX） ━━━
+const PERSONA_SIGNATURE_REGEX = /^\[([A-Z]+-[A-Z0-9\-∞]+)\]/;
 
 // ━━━ 显示长度限制 ━━━
 const MAX_COMMIT_DISPLAY = 80;
@@ -100,7 +100,7 @@ function extractPersonaSignature(commitMessage) {
   if (!commitMessage) return null;
   const match = commitMessage.match(PERSONA_SIGNATURE_REGEX);
   if (match) {
-    return `PER-${match[1]}`;
+    return match[1]; // e.g. "PER-SS001", "TCS-0002∞", "PER-PENDING-005"
   }
   return null;
 }

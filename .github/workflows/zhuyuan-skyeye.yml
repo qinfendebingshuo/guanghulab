@@ -72,6 +72,11 @@ jobs:
           echo "auto_fixable=$AUTO_FIXABLE" >> $GITHUB_OUTPUT
           echo "needs_human=$NEEDS_HUMAN" >> $GITHUB_OUTPUT
 
+      - name: "🔄 Phase 3.5 · ASOP 自优化审批"
+        run: |
+          echo "🔄 ASOP 审批引擎启动..."
+          node scripts/skyeye/asop-reviewer.js > /tmp/skyeye/asop-review.json || echo "{}" > /tmp/skyeye/asop-review.json
+
       - name: "🔧 Phase 4 · 修复Agent"
         if: steps.diagnose.outputs.auto_fixable != '0'
         env:
@@ -107,6 +112,16 @@ jobs:
           echo "$FAILED_WORKFLOWS"
           # 记录到报告，具体重触发逻辑由各 workflow 自带的 workflow_dispatch 支持
 
+      - name: "🔧 Phase 5.5 · ASOP 执行已批准优化"
+        run: |
+          echo "🔧 ASOP 执行器启动..."
+          node scripts/skyeye/asop-executor.js > /tmp/skyeye/asop-execute.json || echo "{}" > /tmp/skyeye/asop-execute.json
+
+      - name: "🔍 Phase 5.7 · ASOP 验证优化效果"
+        run: |
+          echo "🔍 ASOP 验证器启动..."
+          node scripts/skyeye/asop-verifier.js > /tmp/skyeye/asop-verify.json || echo "{}" > /tmp/skyeye/asop-verify.json
+
       - name: "📋 Phase 6 · 全局健康报告"
         run: |
           node scripts/skyeye/report-generator.js
@@ -115,7 +130,7 @@ jobs:
           cp /tmp/skyeye/full-report.json "data/skyeye-reports/skyeye-${DATE}.json"
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add data/skyeye-reports/ .github/persona-brain/memory.json
+          git add data/skyeye-reports/ .github/persona-brain/memory.json data/asop-requests/
           if ! git diff --cached --quiet; then
             git commit -m "🦅 天眼报告 · $(date +%Y-%m-%d) · 问题:${{ steps.diagnose.outputs.issues_count }} 自动修复:${{ steps.diagnose.outputs.auto_fixable }}"
             git push
