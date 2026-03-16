@@ -33,7 +33,7 @@ function loadChangedFiles() {
   try {
     const content = fs.readFileSync(CHANGED_FILES_PATH, 'utf8').trim();
     if (!content) return [];
-    return content.split('\n').filter(f => f.trim());
+    return content.split('\n').map(f => f.trim()).filter(f => f !== '');
   } catch (e) {
     console.error('⚠️ 无法读取变更文件列表:', e.message);
     return [];
