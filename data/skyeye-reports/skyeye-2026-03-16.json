@@ -1,0 +1,460 @@
+{
+  "report_id": "SKYEYE-20260316",
+  "timestamp": "2026-03-17 06:21:40+08:00",
+  "duration_seconds": 0,
+  "overall_health": "🟡",
+  "brain_status": {
+    "integrity": "ok",
+    "memory_fresh": true,
+    "routing_map_aligned": true,
+    "dev_status_last_sync": "2026-03-16T12:01:00+08:00",
+    "knowledge_base_entries": 3
+  },
+  "workflow_health": {
+    "total": 60,
+    "healthy": 60,
+    "failed": 0,
+    "never_triggered": 0,
+    "conflicts": 5,
+    "details": [
+      {
+        "name": "🤖 铸渊 · Discussion 自动回复",
+        "file": "auto-reply-discussions.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🧊 冰朔人格体 · 自动部署诊断",
+        "file": "bingshuo-deploy-agent.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "冰朔主控神经系统 · 自动维护",
+        "file": "bingshuo-neural-system.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 Brain Sync",
+        "file": "brain-sync.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 🌉 桥接·广播PDF生成+分发",
+        "file": "bridge-broadcast-pdf.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+        "file": "bridge-changes-to-notion.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 🌉 桥接·心跳检测",
+        "file": "bridge-heartbeat.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "Generate Session Summary for Notion",
+        "file": "bridge-session-summary.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 🌉 桥接·SYSLOG 上行处理",
+        "file": "bridge-syslog-intake.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Bridge A · SYSLOG → Notion",
+        "file": "bridge-syslog-to-notion.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "模块结构检查",
+        "file": "check-structure.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🔧 铸渊 · Daily Maintenance Agent",
+        "file": "daily-maintenance.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📰 铸渊 · 光湖开发日报",
+        "file": "daily-report.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+        "file": "deploy-pages.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+        "file": "deploy-to-server.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 广播分发",
+        "file": "distribute-broadcasts.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
+        "file": "esp-signal-processor.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📡 铸渊 · 执行层状态同步",
+        "file": "execution-sync.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 飞书SYSLOG桥接",
+        "file": "feishu-syslog-bridge.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 光湖纪元 模块文档自动生成",
+        "file": "generate-module-doc.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "HLI Contract Check",
+        "file": "hli-contract-check.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🐕 元看门狗 · 巡检健康监控",
+        "file": "meta-watchdog.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "Notion Callback Pipeline",
+        "file": "notion-callback-pipeline.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Notion 连通性测试",
+        "file": "notion-connectivity-test.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "Notion Heartbeat Monitor",
+        "file": "notion-heartbeat.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Notion 页面阅读器",
+        "file": "notion-page-reader.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Notion 工单轮询",
+        "file": "notion-poll.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📡 铸渊 · Notion Agent 唤醒监听",
+        "file": "notion-wake-listener.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🔄 OpenClaw · 唤醒闭环",
+        "file": "openclaw-wake-loop.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "Persona Invoke Endpoint",
+        "file": "persona-invoke.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🔧 铸渊 · PM2 服务诊断与健康检查",
+        "file": "pm2-server-diagnose.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "Process Notion Work Orders",
+        "file": "process-notion-orders.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🌊 Persona Studio · 代码生成",
+        "file": "ps-on-build.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🌊 Persona Studio · 对话处理",
+        "file": "ps-on-chat.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🌊 Persona Studio · 完成通知",
+        "file": "ps-on-complete.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🌊 Persona Studio · 登录校验",
+        "file": "ps-on-login.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · PSP 分身巡检",
+        "file": "psp-daily-inspection.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 广播推送飞书（聊天消息）",
+        "file": "push-broadcast-feishu.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+        "file": "push-broadcast.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+        "file": "receive-syslog.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🏠 Sandbox Deploy",
+        "file": "sandbox-deploy.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🔍 Server Patrol · 服务器每日巡检",
+        "file": "server-patrol.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🔍 铸渊预演部署 (Staging Preview)",
+        "file": "staging-preview.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📝 Sync Deploy Status to Notion",
+        "file": "sync-deploy-to-notion.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📡 铸渊 · dev-status 自动同步",
+        "file": "sync-dev-status.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+        "file": "sync-login-entry.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🔄 铸渊跨仓库同步 · persona-studio",
+        "file": "sync-persona-studio.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "SYSLOG Auto Pipeline",
+        "file": "syslog-auto-pipeline.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📡 SYSLOG Issue Pipeline",
+        "file": "syslog-issue-pipeline.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
+        "file": "syslog-pipeline.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🧪 Notion Bridge Connectivity Test",
+        "file": "test-notion-bridge.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "📢 更新系统公告区",
+        "file": "update-readme-bulletin.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 图书馆目录自动更新",
+        "file": "update-repo-map.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Brain Sync",
+        "file": "zhuyuan-brain-sync.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🤖 铸渊巡检 Agent · 每日自动巡检与修复",
+        "file": "zhuyuan-daily-agent.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · 每日自检",
+        "file": "zhuyuan-daily-selfcheck.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🚨 铸渊·智能门禁 · Push Gate Guard",
+        "file": "zhuyuan-gate-guard.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · Issue 自动回复",
+        "file": "zhuyuan-issue-reply.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "铸渊 · PR Review",
+        "file": "zhuyuan-pr-review.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      },
+      {
+        "name": "🦅 铸渊·天眼 · 全局俯瞰 + 自动诊断 + 修复驱动",
+        "file": "zhuyuan-skyeye.yml",
+        "status": "✅",
+        "last_run": "unknown"
+      }
+    ]
+  },
+  "structure_health": {
+    "core_dirs_ok": true,
+    "orphan_files": 80,
+    "missing_dirs": [],
+    "readme_ok": true
+  },
+  "bridge_health": {
+    "notion_api": "🟢",
+    "server_ssh": "🟡",
+    "github_api": "🟢",
+    "secrets_complete": true
+  },
+  "diagnosis": {
+    "total_issues": 6,
+    "auto_fixed": 6,
+    "needs_human": 0,
+    "watching": 0,
+    "issues": [
+      {
+        "id": "SKYEYE-001",
+        "symptom": "Cron 冲突: 3 个 workflow 使用相同 cron: 0 0 * * *",
+        "root_cause": "Cron 冲突: 3 个 workflow 使用相同 cron: 0 0 * * *",
+        "impact": "定时任务时序冲突",
+        "fix_applied": "log_conflict",
+        "verified": true
+      },
+      {
+        "id": "SKYEYE-002",
+        "symptom": "Cron 冲突: 2 个 workflow 使用相同 cron: 0 2 * * *",
+        "root_cause": "Cron 冲突: 2 个 workflow 使用相同 cron: 0 2 * * *",
+        "impact": "定时任务时序冲突",
+        "fix_applied": "log_conflict",
+        "verified": true
+      },
+      {
+        "id": "SKYEYE-003",
+        "symptom": "Cron 冲突: 2 个 workflow 使用相同 cron: */15 * * * *",
+        "root_cause": "Cron 冲突: 2 个 workflow 使用相同 cron: */15 * * * *",
+        "impact": "定时任务时序冲突",
+        "fix_applied": "log_conflict",
+        "verified": true
+      },
+      {
+        "id": "SKYEYE-004",
+        "symptom": "Cron 冲突: 3 个 workflow 使用相同 cron: 0 14 * * *",
+        "root_cause": "Cron 冲突: 3 个 workflow 使用相同 cron: 0 14 * * *",
+        "impact": "定时任务时序冲突",
+        "fix_applied": "log_conflict",
+        "verified": true
+      },
+      {
+        "id": "SKYEYE-005",
+        "symptom": "Cron 冲突: 3 个 workflow 使用相同 cron: 0 1 * * *",
+        "root_cause": "Cron 冲突: 3 个 workflow 使用相同 cron: 0 1 * * *",
+        "impact": "定时任务时序冲突",
+        "fix_applied": "log_conflict",
+        "verified": true
+      },
+      {
+        "id": "SKYEYE-006",
+        "symptom": "发现 80 个孤儿文件",
+        "root_cause": "发现 80 个孤儿文件",
+        "impact": "仓库整洁度",
+        "fix_applied": "log_orphans",
+        "verified": true
+      }
+    ]
+  },
+  "repairs_applied": [
+    "Cron 冲突: 3 个 workflow 使用相同 cron: 0 0 * * *",
+    "Cron 冲突: 2 个 workflow 使用相同 cron: 0 2 * * *",
+    "Cron 冲突: 2 个 workflow 使用相同 cron: */15 * * * *",
+    "Cron 冲突: 3 个 workflow 使用相同 cron: 0 14 * * *",
+    "Cron 冲突: 3 个 workflow 使用相同 cron: 0 1 * * *",
+    "发现 80 个孤儿文件"
+  ],
+  "tickets_created": [],
+  "next_actions": []
+}
