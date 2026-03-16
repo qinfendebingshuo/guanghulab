@@ -22,6 +22,7 @@ const fs   = require('fs');
 const path = require('path');
 
 const OUTPUT_DIR = path.join('data', 'broadcasts', 'pdf');
+const SITE_BASE_URL = 'https://guanghulab.com';
 
 // ══════════════════════════════════════════════════════════
 // 上传模式
@@ -49,10 +50,10 @@ async function uploadToServer(pdfFiles) {
 
     const filename = path.basename(pdfPath);
     const destPath = path.join(serverDir, filename);
+    const downloadUrl = `${SITE_BASE_URL}/broadcasts/${filename}`;
 
     if (isCI) {
       // CI 环境：仅记录，由部署脚本负责实际复制
-      const downloadUrl = `https://guanghulab.com/broadcasts/${filename}`;
       results.push({ ...item, download_url: downloadUrl });
       console.log(`  📋 ${filename} → ${downloadUrl} (CI模式·待部署)`);
     } else {
@@ -61,7 +62,6 @@ async function uploadToServer(pdfFiles) {
           fs.mkdirSync(serverDir, { recursive: true });
         }
         fs.copyFileSync(pdfPath, destPath);
-        const downloadUrl = `https://guanghulab.com/broadcasts/${filename}`;
         results.push({ ...item, download_url: downloadUrl });
         console.log(`  ✅ ${filename} → ${destPath}`);
       } catch (e) {

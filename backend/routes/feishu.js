@@ -117,9 +117,9 @@ router.post('/syslog-receive', async (req, res) => {
       });
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const safeDevId = String(devId).replace(/[^a-zA-Z0-9_-]/g, '');
-    const filename  = `SYSLOG-${safeDevId}-${timestamp}.json`;
+    const timestampStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const safeDevId   = String(devId).replace(/[^a-zA-Z0-9_-]/g, '');
+    const filename  = `SYSLOG-${safeDevId}-${timestampStr}.json`;
     const filePath  = `syslog-inbox/${filename}`;
     const content   = Buffer.from(JSON.stringify(syslog, null, 2)).toString('base64');
 

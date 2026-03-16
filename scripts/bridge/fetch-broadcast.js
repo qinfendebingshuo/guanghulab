@@ -137,7 +137,7 @@ async function getPageTitle(pageId, token) {
       return props[key].title.map(t => t.plain_text).join('');
     }
   }
-  return 'Untitled';
+  return '未命名广播';
 }
 
 // ══════════════════════════════════════════════════════════
