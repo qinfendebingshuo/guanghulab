@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   # ── AGE OS v1.0: 核心大脑唤醒（所有流程的前提）──
@@ -100,12 +101,23 @@ jobs:
           mkdir -p data/patrol-logs
           DATE=$(date +%Y-%m-%d)
           cp patrol-report.json "data/patrol-logs/patrol-${DATE}.json"
+          echo "PATROL_DATE=$DATE" >> $GITHUB_ENV
 
-          git config user.name "zhuyuan-bot"
-          git config user.email "zhuyuan@guanghulab.com"
-          git add data/patrol-logs/
-          git commit -m "🔍 server-patrol: $(date +%Y-%m-%d) · ${{ steps.patrol.outputs.overall }}" || true
-          git push || true
+      - name: "📊 提交巡检报告"
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🔍 server-patrol: ${{ env.PATROL_DATE }} · ${{ steps.patrol.outputs.overall }}"
+          title: "🔍 服务器巡检报告 · ${{ env.PATROL_DATE }}"
+          body: |
+            🤖 铸渊服务器巡检报告自动提交
+            - 结果: ${{ steps.patrol.outputs.overall }}
+            - 告警数: ${{ steps.patrol.outputs.alert_count }}
+          branch: auto/server-patrol
+          delete-branch: true
+          add-paths: |
+            data/patrol-logs/
+          labels: auto-sync
 
       - name: "📧 异常时通知妈妈"
         if: steps.patrol.outputs.overall == 'has_issues'

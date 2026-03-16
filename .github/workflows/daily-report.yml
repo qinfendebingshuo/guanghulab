@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   discussions: write
 
 jobs:
@@ -33,16 +34,22 @@ jobs:
           DISCUSSION_CATEGORY: "Announcements"
         run: node scripts/generate-daily-report.js
 
-      # ── 提交日报存档 ──
+      # ── 通过 PR 提交日报存档（兼容 branch protection）──
+      - name: 设置日报日期
+        run: echo "REPORT_DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: 提交日报存档
-        run: |
-          git config user.name "铸渊 (ZhùYuān)"
-          git config user.email "zhuyuan@guanghulab.com"
-          git add docs/daily-reports/
-          if git diff --cached --quiet; then
-            echo "📌 无日报文件需要提交"
-          else
-            git commit -m "📰 光湖开发日报 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d') [skip ci]"
-            git push
-            echo "✅ 日报存档已提交"
-          fi
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "📰 光湖开发日报 · ${{ env.REPORT_DATE }} [skip ci]"
+          title: "📰 光湖开发日报 · ${{ env.REPORT_DATE }}"
+          body: |
+            🤖 铸渊自动生成并存档开发日报
+            - 日期: ${{ env.REPORT_DATE }}
+            - 触发方式: ${{ github.event_name }}
+          branch: auto/daily-report
+          delete-branch: true
+          add-paths: |
+            docs/daily-reports/
+          labels: auto-sync

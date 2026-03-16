@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   sync-dev-status:
@@ -30,16 +31,23 @@ jobs:
           DEV_STATUS_DB_ID: ${{ secrets.DEV_STATUS_DB_ID }}
         run: node scripts/sync-dev-status.js
 
-      # ── 提交更新 ──
+      # ── 通过 PR 提交更新（兼容 branch protection）──
+      - name: 设置同步时间
+        run: echo "SYNC_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+
       - name: 提交 dev-status 更新
-        run: |
-          git config user.name "铸渊 (ZhùYuān)"
-          git config user.email "zhuyuan@guanghulab.com"
-          git add .github/persona-brain/dev-status.json dev-status.json
-          if git diff --cached --quiet; then
-            echo "📌 dev-status.json 无变更"
-          else
-            git commit -m "📡 dev-status 同步 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [skip ci]"
-            git push
-            echo "✅ dev-status.json 已同步并推送"
-          fi
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "📡 dev-status 同步 · ${{ env.SYNC_TIME }} [skip ci]"
+          title: "📡 dev-status 自动同步 · ${{ env.SYNC_TIME }}"
+          body: |
+            🤖 铸渊自动同步 dev-status.json
+            - 同步时间: ${{ env.SYNC_TIME }}
+            - 触发方式: ${{ github.event_name }}
+          branch: auto/sync-dev-status
+          delete-branch: true
+          add-paths: |
+            .github/persona-brain/dev-status.json
+            dev-status.json
+          labels: auto-sync
