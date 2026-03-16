@@ -126,8 +126,18 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
+          SKYEYE_PERSONA_DB_ID: ${{ secrets.SKYEYE_PERSONA_DB_ID }}
         run: |
           node scripts/skyeye/sync-to-notion.js || echo "⚠️ Notion同步失败（不阻断）"
+          # 人格体注册表全量同步（双端同步：Notion → 本地配置）
+          node scripts/skyeye/persona-lookup.js --sync || echo "⚠️ 人格体注册表同步失败（不阻断）"
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/gate-guard-config.json
+          if ! git diff --cached --quiet; then
+            git commit -m "🦅 天眼·人格体注册表同步 · $(date +%Y-%m-%d)"
+            git push || true
+          fi
 
       - name: "📧 通知妈妈（仅有严重问题时）"
         if: steps.diagnose.outputs.needs_human != '0'
