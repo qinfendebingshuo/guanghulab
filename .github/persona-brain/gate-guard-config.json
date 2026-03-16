@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "updated_at": "2026-03-16",
   "description": "铸渊·智能门禁 · 开发者权限矩阵配置",
-  "note": "developer_permissions 中的 github_usernames 需要由管理员填入实际的 GitHub 用户名，未填入的开发者将被视为未注册开发者",
+  "note": "developer_permissions 中的 github_usernames 需要由管理员填入实际的 GitHub 登录用户名（非显示名）。参考 .github/gate-guard-config.json 中冰朔确认的开发者映射表。含中文字符的显示名非 GitHub 用户名，需管理员确认实际用户名后补充。",
   "whitelist_actors": [
     "github-actions[bot]",
     "qinfendebingshuo",
@@ -26,17 +26,17 @@
   "developer_permissions": {
     "DEV-001": {
       "name": "页页",
-      "github_usernames": ["夜夜光湖"],
+      "github_usernames": [],
       "allowed_paths": ["dev/DEV-001/", "backend/", "src/"]
     },
     "DEV-002": {
       "name": "肥猫",
-      "github_usernames": ["建培"],
+      "github_usernames": [],
       "allowed_paths": ["dev/DEV-002/", "frontend/", "persona-selector/", "chat-bubble/"]
     },
     "DEV-003": {
       "name": "燕樊",
-      "github_usernames": ["六寻寻7-max"],
+      "github_usernames": [],
       "allowed_paths": ["dev/DEV-003/", "settings/", "cloud-drive/"]
     },
     "DEV-004": {
@@ -51,7 +51,7 @@
     },
     "DEV-009": {
       "name": "花尔",
-      "github_usernames": ["华尔华"],
+      "github_usernames": [],
       "allowed_paths": ["dev/DEV-009/", "user-center/"]
     },
     "DEV-010": {
@@ -66,7 +66,7 @@
     },
     "DEV-012": {
       "name": "Awen",
-      "github_usernames": ["文卓熙"],
+      "github_usernames": [],
       "allowed_paths": ["dev/DEV-012/", "notification-center/", "notification/"]
     },
     "DEV-013": {
