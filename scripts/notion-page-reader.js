@@ -288,7 +288,7 @@ async function main() {
   // 5. 可选：保存到文件
   if (outputDir) {
     var safeTitle = title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5_-]/g, '_').slice(0, 80);
-    var filename = safeTitle + '-' + pageId.slice(0, 8) + '.md';
+    var filename = safeTitle + '-' + pageId.replace(/-/g, '') + '.md';
     var outputPath = path.join(outputDir, filename);
 
     var fileContent = '# ' + title + '\n\n';
