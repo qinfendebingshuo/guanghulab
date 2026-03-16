@@ -68,14 +68,17 @@ jobs:
           
           echo "actor=$ACTOR" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" > /tmp/changed_files.txt
+          # v2: 传递 commit message 用于签名验证
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
-      - name: "🚦 门禁判定"
+      - name: "🚦 门禁判定 v2"
         id: verdict
         if: steps.analyze.outputs.is_bot != 'true' && steps.analyze.outputs.is_system != 'true'
         run: |
-          node scripts/gate-guard.js
+          node scripts/gate-guard-v2.js
         env:
           PUSH_ACTOR: ${{ steps.analyze.outputs.actor }}
+          COMMIT_MESSAGE: ${{ steps.analyze.outputs.commit_msg }}
 
       - name: "✅ 系统 Push 放行"
         if: steps.analyze.outputs.is_bot == 'true' || steps.analyze.outputs.is_system == 'true'
