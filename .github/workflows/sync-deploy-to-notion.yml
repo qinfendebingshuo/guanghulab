@@ -25,13 +25,13 @@ jobs:
           if [ -z "$FINGERPRINT_DB_ID" ]; then echo "⚠️ 缺失: FINGERPRINT_DB_ID"; else echo "✅ 可用: FINGERPRINT_DB_ID"; fi
           if [ -z "$SMTP_USER" ]; then echo "⚠️ 缺失: SMTP_USER"; else echo "✅ 可用: SMTP_USER"; fi
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
 
       - name: "📝 同步部署状态到 Notion"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
         run: |
           node scripts/sync-deploy-to-notion.js

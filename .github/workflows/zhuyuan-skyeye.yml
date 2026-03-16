@@ -42,7 +42,7 @@ jobs:
       - name: "🦅 Phase 2 · 全局扫描"
         id: scan
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
@@ -75,7 +75,7 @@ jobs:
       - name: "🔧 Phase 4 · 修复Agent"
         if: steps.diagnose.outputs.auto_fixable != '0'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node scripts/skyeye/repair-agent.js
@@ -124,7 +124,7 @@ jobs:
       - name: "📡 Phase 7 · 同步到 Notion"
         if: always()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
           SKYEYE_PERSONA_DB_ID: ${{ secrets.SKYEYE_PERSONA_DB_ID }}
         run: |
