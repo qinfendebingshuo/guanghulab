@@ -1,0 +1,113 @@
+{
+  "report_id": "ZY-PATROL-20260316-001",
+  "timestamp": "2026-03-16T12:01:00+08:00",
+  "trigger": "冰朔授权·霜砚签发·P0紧急排查",
+  "brain_status": {
+    "integrity": "ok",
+    "files_checked": [
+      "memory.json",
+      "routing-map.json",
+      "dev-status.json",
+      "kb/knowledge-base.json",
+      "copilot-instructions.md",
+      "identity.md",
+      "responsibility.md",
+      "system-prompt.md",
+      "growth-journal.md",
+      "decision-log.md"
+    ],
+    "missing_files": []
+  },
+  "workflow_status": {
+    "server-patrol.yml": {
+      "exists": true,
+      "syntax_ok": true,
+      "last_run": "2026-03-16T01:06Z (schedule)",
+      "last_result": "success",
+      "issue": "git push || true 静默失败，巡检日志未保存到main",
+      "fix": "改用 peter-evans/create-pull-request@v7"
+    },
+    "daily-report.yml": {
+      "exists": true,
+      "syntax_ok": true,
+      "last_run": "从未运行（新建workflow，cron尚未到达触发时间）",
+      "last_result": "N/A",
+      "issue": "git push 会被 branch protection 拒绝",
+      "fix": "改用 peter-evans/create-pull-request@v7"
+    },
+    "zhuyuan-daily-selfcheck.yml": {
+      "exists": true,
+      "syntax_ok": true,
+      "last_run": "2026-03-16T01:06Z (schedule)",
+      "last_result": "failure",
+      "issue": "git push 被 branch protection 拒绝 (GH006)",
+      "fix": "改用 peter-evans/create-pull-request@v7"
+    },
+    "sync-dev-status.yml": {
+      "exists": true,
+      "syntax_ok": true,
+      "last_run": "2026-03-16T03:54Z (schedule)",
+      "last_result": "failure",
+      "issue": "git push 被 branch protection 拒绝 (GH006) + Notion API 404",
+      "fix": "改用 peter-evans/create-pull-request@v7"
+    },
+    "meta-watchdog.yml": {
+      "exists": true,
+      "syntax_ok": true,
+      "last_run": "2026-03-16 (schedule)",
+      "last_result": "success"
+    },
+    "syslog-auto-pipeline.yml": {
+      "exists": true,
+      "syntax_ok": true,
+      "last_run": "2026-03-15",
+      "last_result": "failure (push event, unrelated)"
+    }
+  },
+  "root_cause_analysis": {
+    "primary": "main分支启用了 branch protection，要求通过 Pull Request 提交变更。所有使用 git push 直接推送到 main 的 workflow 均被 GH006 错误拒绝。",
+    "secondary": "Notion API 返回 404：数据库 dc675e91-5529-4e47-9fe4-13de3ec6a334 未共享给 HoloLake-v3 integration。",
+    "affected_workflows": [
+      "sync-dev-status.yml",
+      "zhuyuan-daily-selfcheck.yml",
+      "daily-report.yml",
+      "server-patrol.yml"
+    ],
+    "unaffected_workflows_with_same_issue": [
+      "brain-sync.yml",
+      "distribute-broadcasts.yml",
+      "daily-maintenance.yml",
+      "feishu-syslog-bridge.yml",
+      "execution-sync.yml",
+      "process-notion-orders.yml",
+      "notion-poll.yml",
+      "psp-daily-inspection.yml"
+    ]
+  },
+  "dev_status_sync": {
+    "last_sync_before_fix": "2026-03-11T10:45:00+08:00",
+    "last_sync_after_fix": "2026-03-16T12:01:00+08:00",
+    "sync_mechanism": "scripts/sync-dev-status.js + .github/workflows/sync-dev-status.yml (cron 09:00+22:00 北京时间)",
+    "root_cause": "branch protection 阻止 git push 到 main + Notion API 数据库未共享",
+    "fix_applied": "workflow 改用 peter-evans/create-pull-request@v7 + 手动更新时间戳"
+  },
+  "fixes_applied": [
+    "sync-dev-status.yml: git push → peter-evans/create-pull-request@v7 + pull-requests:write权限",
+    "zhuyuan-daily-selfcheck.yml: git push → peter-evans/create-pull-request@v7 + pull-requests:write权限",
+    "daily-report.yml: git push → peter-evans/create-pull-request@v7 + pull-requests:write权限",
+    "server-patrol.yml: git push || true → peter-evans/create-pull-request@v7 + pull-requests:write权限",
+    "dev-status.json: last_sync 更新到 2026-03-16T12:01:00+08:00",
+    "memory.json: 添加修复事件记录 + 更新 last_updated + daily_selfcheck.last_run"
+  ],
+  "remaining_issues": [
+    "Notion API 404: 数据库 dc675e91-5529-4e47-9fe4-13de3ec6a334 需要共享给 HoloLake-v3 integration → 需要妈妈在 Notion 中操作",
+    "其他 20+ 个 workflow 也使用 git push 直接推送，同样会受 branch protection 影响 → 建议逐步迁移或配置 branch protection bypass rule",
+    "Secrets 状态无法在 workflow 外验证 → 需要手动触发 server-patrol.yml 验证",
+    "服务器脚本部署状态无法从 GitHub Actions 外验证 → 需要 SSH 检查"
+  ],
+  "recommendations": [
+    "方案A: 在 GitHub Settings → Branches → Branch protection rules 中，为 GitHub Actions bot 添加 bypass 权限",
+    "方案B: 创建一个 PAT (Personal Access Token) 用于 workflow 推送，配置为仓库 Secret",
+    "方案C: 逐步将所有 git push workflow 迁移为 create-pull-request 模式（本次已完成4个关键workflow）"
+  ]
+}

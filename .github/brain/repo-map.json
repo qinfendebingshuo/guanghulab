@@ -1,20 +1,20 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-15T15:35:25.881Z",
+  "generated_at": "2026-03-16T10:37:23.702Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 54,
-    "total_scripts": 56,
+    "total_workflows": 56,
+    "total_scripts": 60,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
     "hli_coverage_pct": "33%",
     "last_ci_run": "2026-03-05T16:07:24.070Z",
-    "memory_last_updated": "2026-03-15T08:50:17.308Z"
+    "memory_last_updated": "2026-03-16T09:08:54.932Z"
   },
   "zones": [
     {
@@ -114,6 +114,9 @@
           "file": "dev-status.json"
         },
         {
+          "file": "gate-guard-config.json"
+        },
+        {
           "file": "growth-journal.md"
         },
         {
@@ -144,7 +147,7 @@
           "file": "tcs-ml"
         }
       ],
-      "item_count": 12
+      "item_count": 13
     },
     {
       "zone_id": "WORKFLOWS",
@@ -566,6 +569,14 @@
           ]
         },
         {
+          "file": "zhuyuan-gate-guard.yml",
+          "name": "\"🚨 铸渊·智能门禁 · Push Gate Guard\"",
+          "triggers": [
+            "push",
+            "issues"
+          ]
+        },
+        {
           "file": "zhuyuan-issue-reply.yml",
           "name": "铸渊 · Issue 自动回复",
           "triggers": [
@@ -579,9 +590,18 @@
           "triggers": [
             "pull_request"
           ]
+        },
+        {
+          "file": "zhuyuan-skyeye.yml",
+          "name": "\"🦅 铸渊·天眼 · 全局俯瞰 + 自动诊断 + 修复驱动\"",
+          "triggers": [
+            "issues",
+            "schedule(0 22 * * *)",
+            "manual"
+          ]
         }
       ],
-      "item_count": 54
+      "item_count": 56
     },
     {
       "zone_id": "SCRIPTS",
@@ -630,6 +650,15 @@
         },
         {
           "file": "esp-email-processor.js"
+        },
+        {
+          "file": "gate-guard-log.js"
+        },
+        {
+          "file": "gate-guard-v2.js"
+        },
+        {
+          "file": "gate-guard.js"
         },
         {
           "file": "generate-automation-map.js"
@@ -716,6 +745,9 @@
           "file": "setup-sandbox.sh"
         },
         {
+          "file": "skyeye"
+        },
+        {
           "file": "smoke-test.sh"
         },
         {
@@ -767,7 +799,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 56
+      "item_count": 60
     },
     {
       "zone_id": "SRC",
@@ -1465,6 +1497,9 @@
     "decision-log": [
       "PERSONA_BRAIN::decision-log.md"
     ],
+    "gate-guard-config": [
+      "PERSONA_BRAIN::gate-guard-config.json"
+    ],
     "growth-journal": [
       "PERSONA_BRAIN::growth-journal.md"
     ],
@@ -1678,12 +1713,18 @@
       "WORKFLOWS::zhuyuan-daily-selfcheck.yml",
       "SCRIPTS::zhuyuan-daily-selfcheck.js"
     ],
+    "zhuyuan-gate-guard": [
+      "WORKFLOWS::zhuyuan-gate-guard.yml"
+    ],
     "zhuyuan-issue-reply": [
       "WORKFLOWS::zhuyuan-issue-reply.yml",
       "SCRIPTS::zhuyuan-issue-reply.js"
     ],
     "zhuyuan-pr-review": [
       "WORKFLOWS::zhuyuan-pr-review.yml"
+    ],
+    "zhuyuan-skyeye": [
+      "WORKFLOWS::zhuyuan-skyeye.yml"
     ],
     "script": [
       "SCRIPTS"
@@ -1727,6 +1768,15 @@
     ],
     "esp-email-processor": [
       "SCRIPTS::esp-email-processor.js"
+    ],
+    "gate-guard-log": [
+      "SCRIPTS::gate-guard-log.js"
+    ],
+    "gate-guard-v2": [
+      "SCRIPTS::gate-guard-v2.js"
+    ],
+    "gate-guard": [
+      "SCRIPTS::gate-guard.js"
     ],
     "generate-automation-map": [
       "SCRIPTS::generate-automation-map.js"
@@ -1793,6 +1843,9 @@
     ],
     "setup-sandbox": [
       "SCRIPTS::setup-sandbox.sh"
+    ],
+    "skyeye": [
+      "SCRIPTS::skyeye"
     ],
     "smoke-test": [
       "SCRIPTS::smoke-test.sh"

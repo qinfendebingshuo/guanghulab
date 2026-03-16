@@ -1,0 +1,121 @@
+name: "🚨 铸渊·智能门禁 · Push Gate Guard"
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  gate-guard:
+    runs-on: ubuntu-latest
+    # 跳过铸渊自己、GitHub Actions bot 和妈妈的 push
+    if: >
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'qinfendebingshuo'
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: "🧠 唤醒铸渊核心大脑"
+        run: |
+          echo "🧠 铸渊门禁·核心大脑唤醒"
+          if [ -f ".github/persona-brain/memory.json" ]; then
+            python3 -c "import json; json.load(open('.github/persona-brain/memory.json')); print('大脑状态: OK · 记忆完整')"
+          else
+            echo "⚠️ 大脑文件缺失"
+          fi
+
+      - name: "🔍 分析 Push 内容"
+        id: analyze
+        run: |
+          ACTOR="${{ github.actor }}"
+          echo "推送者: $ACTOR"
+          
+          # 获取本次 push 修改的文件列表
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          echo "修改的文件:"
+          echo "$CHANGED_FILES"
+          
+          # 检查 commit message 中的系统前缀（系统自动 push 放行）
+          COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
+          echo "Commit message: $COMMIT_MSG"
+          
+          # 检查 commit author（系统 bot push 放行）
+          COMMIT_AUTHOR=$(git log -1 --pretty=%an 2>/dev/null || echo "")
+          echo "Commit author: $COMMIT_AUTHOR"
+          
+          # 系统 bot 或铸渊自己的 commit → 直接放行
+          if echo "$COMMIT_AUTHOR" | grep -qiE "^(zhuyuan-bot|github-actions|铸渊)"; then
+            echo "ℹ️ 系统 bot commit，直接放行"
+            echo "is_bot=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_bot=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # 系统前缀 commit → 直接放行
+          SYSTEM_PREFIXES="🔍|📊|📡|🧠|📢|🚨|📰|🔧|🦅"
+          if echo "$COMMIT_MSG" | head -1 | grep -qE "^($SYSTEM_PREFIXES)"; then
+            echo "ℹ️ 系统前缀 commit，直接放行"
+            echo "is_system=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_system=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "actor=$ACTOR" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" > /tmp/changed_files.txt
+          # v2: 传递 commit message 用于签名验证
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: "🚦 门禁判定 v2"
+        id: verdict
+        if: steps.analyze.outputs.is_bot != 'true' && steps.analyze.outputs.is_system != 'true'
+        run: |
+          node scripts/gate-guard-v2.js
+        env:
+          PUSH_ACTOR: ${{ steps.analyze.outputs.actor }}
+          COMMIT_MESSAGE: ${{ steps.analyze.outputs.commit_msg }}
+
+      - name: "✅ 系统 Push 放行"
+        if: steps.analyze.outputs.is_bot == 'true' || steps.analyze.outputs.is_system == 'true'
+        run: |
+          echo "✅ 系统自动 push，门禁放行"
+
+      - name: "❌ 违规·回退 commit"
+        if: steps.verdict.outputs.action == 'revert'
+        run: |
+          set -e
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git revert HEAD --no-edit
+          git push
+          echo "⛔ 已回退 commit: ${{ github.sha }}"
+
+      - name: "📢 通知开发者"
+        if: steps.verdict.outputs.action == 'revert'
+        run: |
+          gh issue create \
+            --title "🚨 门禁通知｜${{ steps.analyze.outputs.actor }} 的 push 被回退" \
+            --body "${{ steps.verdict.outputs.notification }}" \
+            --label "gate-guard" || echo "⚠️ Issue 创建失败（label 可能不存在）"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "📝 记录到核心大脑"
+        if: always() && steps.analyze.outputs.is_bot != 'true' && steps.analyze.outputs.is_system != 'true'
+        run: |
+          node scripts/gate-guard-log.js
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/memory.json
+          git diff --cached --quiet || git commit -m "🧠 门禁日志: ${{ steps.analyze.outputs.actor }} · ${{ steps.verdict.outputs.action || 'pass' }}"
+          git push || true
+        env:
+          PUSH_ACTOR: ${{ steps.analyze.outputs.actor }}
+          GATE_ACTION: ${{ steps.verdict.outputs.action || 'pass' }}
+          GATE_VIOLATION: ${{ steps.verdict.outputs.violation_type }}
+          GATE_FILES: ${{ steps.verdict.outputs.violation_files }}

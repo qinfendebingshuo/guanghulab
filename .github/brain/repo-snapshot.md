@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-15 23:35 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-16 18:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 54 个 GitHub Actions |
-| 脚本 | 56 个执行脚本 |
+| 工作流 | 56 个 GitHub Actions |
+| 脚本 | 60 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-15 23:35 CST |
+| 快照生成时间 | 2026-03-16 18:37 CST |
 
 ---
 
@@ -25,17 +25,17 @@
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
 ### 🎭 人格大脑（PERSONA_BRAIN）
-**路径**: `.github/persona-brain` · **数量**: 12 项
+**路径**: `.github/persona-brain` · **数量**: 13 项
 **描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 54 项
+**路径**: `.github/workflows` · **数量**: 56 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 56 项
+**路径**: `scripts` · **数量**: 60 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -142,8 +142,10 @@
 | `zhuyuan-brain-sync.yml` | 铸渊 · Brain Sync | push |
 | `zhuyuan-daily-agent.yml` | 🤖 铸渊巡检 Agent · 每日自动巡检与修复 | schedule(0 14 * * *), manual |
 | `zhuyuan-daily-selfcheck.yml` | 铸渊 · 每日自检 | schedule(0 0 * * *), manual |
+| `zhuyuan-gate-guard.yml` | "🚨 铸渊·智能门禁 · Push Gate Guard" | push, issues |
 | `zhuyuan-issue-reply.yml` | 铸渊 · Issue 自动回复 | issues, issue_comment |
 | `zhuyuan-pr-review.yml` | 铸渊 · PR Review | pull_request |
+| `zhuyuan-skyeye.yml` | "🦅 铸渊·天眼 · 全局俯瞰 + 自动诊断 + 修复驱动" | issues, schedule(0 22 * * *), manual |
 
 ---
 
@@ -160,6 +162,9 @@
 - `scripts/deploy-check.sh`
 - `scripts/distribute-broadcasts.js`
 - `scripts/esp-email-processor.js`
+- `scripts/gate-guard-log.js`
+- `scripts/gate-guard-v2.js`
+- `scripts/gate-guard.js`
 - `scripts/generate-automation-map.js`
 - `scripts/generate-communication-map.js`
 - `scripts/generate-daily-report.js`
@@ -188,6 +193,7 @@
 - `scripts/server-diagnose-report.js`
 - `scripts/server-patrol.sh`
 - `scripts/setup-sandbox.sh`
+- `scripts/skyeye`
 - `scripts/smoke-test.sh`
 - `scripts/sync-deploy-to-notion.js`
 - `scripts/sync-dev-status.js`
@@ -298,9 +304,9 @@
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-16T09:08:54.931Z` · daily_check — passed
 - `2026-03-15T08:50:17.308Z` · daily_check — passed
 - `2026-03-14T21:00:19.971Z` · syslog_unknown — (无标题)
-- `2026-03-14T18:57:45.006Z` · syslog_unknown — (无标题)
 
 ---
 

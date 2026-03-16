@@ -74,7 +74,7 @@ jobs:
       - name: 📝 写入 Notion SYSLOG 收件箱
         if: steps.parse.outputs.has_syslog == 'true'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_DB_SYSLOG: ${{ secrets.NOTION_DB_SYSLOG }}
         run: node scripts/write-notion-syslog.js "${{ steps.parse.outputs.syslog_file }}"
 
@@ -126,7 +126,7 @@ jobs:
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
           PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}

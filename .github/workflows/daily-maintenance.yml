@@ -116,7 +116,7 @@ jobs:
       - name: 检查 Notion API 连通性
         id: notion_check
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
         run: |
           echo "🔍 检查 Notion API 连通性..."
           if [ -z "$NOTION_TOKEN" ]; then
@@ -186,7 +186,7 @@ jobs:
       # ── Step 6: 向 Notion 回报巡检结果 ──
       - name: 向 Notion 回报巡检结果
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           SYSLOG_DB_ID: ${{ secrets.SYSLOG_DB_ID }}
         run: |
           if [ -z "$NOTION_TOKEN" ] || [ -z "$SYSLOG_DB_ID" ]; then
@@ -239,7 +239,7 @@ jobs:
 
       - name: Read brain data and sync to Notion
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
         run: |
           if [ -z "$NOTION_TOKEN" ]; then
             echo "⚠️  NOTION_TOKEN 未配置，跳过 Execution Status 同步"
