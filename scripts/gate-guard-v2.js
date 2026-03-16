@@ -31,6 +31,9 @@ const REPO_OWNER = 'qinfendebingshuo';
 // ━━━ 人格体签名正则 ━━━
 const PERSONA_SIGNATURE_REGEX = /\[PER-(\d{3})\]/;
 
+// ━━━ 显示长度限制 ━━━
+const MAX_COMMIT_DISPLAY = 80;
+
 // ━━━ 安全读取 JSON ━━━
 function readJSON(filePath) {
   try {
@@ -186,7 +189,7 @@ function main() {
   const commitMessage = process.env.COMMIT_MESSAGE || '';
   console.log(`🚦 铸渊·智能门禁 v2 · 判定引擎启动`);
   console.log(`   推送者: ${actor}`);
-  console.log(`   Commit: ${commitMessage.substring(0, 80)}`);
+  console.log(`   Commit: ${commitMessage.substring(0, MAX_COMMIT_DISPLAY)}`);
 
   // 0. 仓库主人 → 永远放行
   if (actor === REPO_OWNER) {

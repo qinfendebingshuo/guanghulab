@@ -24,6 +24,9 @@ const BRAIN_DIR = path.join(ROOT, '.github/persona-brain');
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const PERSONA_DB_ID = process.env.SKYEYE_PERSONA_DB_ID;
 
+const MAX_NOTION_RICH_TEXT = 2000;
+const MAX_COMMIT_DISPLAY = 80;
+
 // ━━━ Notion API 请求 ━━━
 function notionRequest(method, apiPath, body) {
   return new Promise((resolve, reject) => {
@@ -184,7 +187,7 @@ async function writeBack(personaId, data) {
     }
     if (data.gate_result) {
       properties['门禁记录'] = {
-        rich_text: [{ type: 'text', text: { content: data.gate_result.substring(0, 2000) } }]
+        rich_text: [{ type: 'text', text: { content: data.gate_result.substring(0, MAX_NOTION_RICH_TEXT) } }]
       };
     }
 
@@ -254,7 +257,7 @@ async function fullSync() {
       updated++;
     }
 
-    config.updated_at = new Date().toISOString().slice(0, 10);
+    config.updated_at = new Date().toISOString().split('T')[0];
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
     console.log(`✅ 已更新 ${updated} 个人格体配置`);
 
