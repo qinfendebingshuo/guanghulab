@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoloLake · 光湖纪元</title>
+  <link rel="stylesheet" href="app-shell.css">
+</head>
+<body>
+  <!-- 全局导航栏 -->
+  <nav class="global-nav" id="globalNav">
+    <div class="nav-brand">
+      <span class="brand-icon">🌊</span>
+      <span class="brand-text">HoloLake</span>
+    </div>
+    <div class="nav-modules" id="navModules">
+      <!-- 由JS动态生成 -->
+    </div>
+    <div class="nav-actions">
+      <button class="nav-btn" id="btnHome" title="首页">🏠</button>
+      <button class="nav-btn" id="btnToggleNav" title="折叠导航">☰</button>
+    </div>
+  </nav>
+
+  <!-- 模块加载区域 -->
+  <main class="module-viewport" id="moduleViewport">
+    <div class="welcome-screen" id="welcomeScreen">
+      <h1>欢迎来到光湖纪元</h1>
+      <p>点击上方导航栏选择一个模块开始</p>
+      <div class="module-grid" id="moduleGrid"></div>
+    </div>
+    <iframe class="module-frame" id="moduleFrame" style="display: none;"></iframe>
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>模块加载中...</p>
+    </div>
+  </main>
+
+  <!-- 状态栏 -->
+  <footer class="status-bar" id="statusBar">
+    <span class="status-text">系统就绪</span>
+    <span class="status-builder">Built by DEV-010 桔子</span>
+  </footer>
+
+  <script src="app-shell.js"></script>
+</body>
+</html>
