@@ -1,0 +1,115 @@
+{
+  "version": "1.1",
+  "updated_at": "2026-03-17",
+  "description": "铸渊指令签名·授权名单 v1.1 — 铸渊只认签名，不认请求内容",
+  "signed_by": "TCS-0002∞",
+  "signed_by_name": "冰朔",
+  "authorized_senders": {
+    "TCS-0002∞": {
+      "name": "冰朔",
+      "role": "MASTER",
+      "permission_tier": 0,
+      "scope": "全局",
+      "can_broadcast": true,
+      "broadcast_scope": "全权",
+      "note": "总主控·唯一 Tier 0"
+    },
+    "DEV-004": {
+      "name": "之之",
+      "role": "SUB_CTRL_PRIVATE",
+      "permission_tier": 1,
+      "scope": "全局",
+      "can_broadcast": true,
+      "broadcast_scope": "Tier 1 范围内",
+      "note": "冰朔私人副控·独立于光湖团队"
+    },
+    "DEV-002": {
+      "name": "肥猫",
+      "role": "SUB_CTRL_HOLOLAKE",
+      "permission_tier": 1,
+      "scope": "光湖",
+      "can_broadcast": true,
+      "broadcast_scope": "光湖模块范围内",
+      "note": "光湖团队主控"
+    },
+    "DEV-010": {
+      "name": "桔子",
+      "role": "SUB_CTRL_HOLOLAKE",
+      "permission_tier": 1,
+      "scope": "光湖",
+      "can_broadcast": true,
+      "broadcast_scope": "光湖模块范围内",
+      "note": "光湖团队主控"
+    },
+    "DEV-001": { "name": "页页", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-003": { "name": "燕樊", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-005": { "name": "小草莓", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-006": { "name": "DEV-006", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-007": { "name": "DEV-007", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-008": { "name": "DEV-008", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-009": { "name": "花尔", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-011": { "name": "匆匆那年", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-012": { "name": "Awen", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-013": { "name": "小兴", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "DEV-014": { "name": "时雨", "role": "DEV", "permission_tier": 2, "scope": "自己分支", "can_broadcast": false, "note": "协作者" },
+    "SYSTEM-RT02": { "name": "RT-02自动调度", "role": "SYSTEM", "permission_tier": 3, "scope": "白名单", "can_broadcast": false, "note": "仅白名单 workflow" }
+  },
+  "permission_tiers": {
+    "0": {
+      "label": "总主控",
+      "roles": ["MASTER"],
+      "allowed_operations": ["*"],
+      "denied_operations": []
+    },
+    "1": {
+      "label": "副控",
+      "roles": ["SUB_CTRL_PRIVATE", "SUB_CTRL_HOLOLAKE"],
+      "allowed_operations": [
+        "push_feature_branch",
+        "create_pr",
+        "trigger_sandbox_deploy",
+        "write_copilot_instructions",
+        "broadcast_tier2"
+      ],
+      "denied_operations": [
+        "modify_branch_protection",
+        "modify_other_permissions",
+        "trigger_production_deploy",
+        "modify_zhuyuan_protocol"
+      ]
+    },
+    "2": {
+      "label": "协作者",
+      "roles": ["DEV"],
+      "allowed_operations": [
+        "push_own_branch",
+        "create_pr",
+        "view_repo_status",
+        "write_syslog"
+      ],
+      "denied_operations": [
+        "direct_command_zhuyuan",
+        "operate_other_branch",
+        "trigger_deploy",
+        "modify_branch_protection",
+        "modify_permissions"
+      ]
+    },
+    "3": {
+      "label": "系统自动",
+      "roles": ["SYSTEM"],
+      "allowed_operations": [
+        "trigger_whitelisted_workflow"
+      ],
+      "denied_operations": ["*_non_whitelisted"]
+    }
+  },
+  "system_workflow_whitelist": [
+    "bridge-syslog-intake",
+    "bridge-broadcast-pdf",
+    "bridge-heartbeat",
+    "daily-maintenance",
+    "zhuyuan-daily-selfcheck",
+    "zhuyuan-skyeye"
+  ]
+}
