@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>秋秋 · HoloLake AI 悬浮球 · Phase 2</title>
+  <!-- 提前加载 CSS，确保样式生效 -->
+  <link rel="stylesheet" href="floating-ball.css">
+  <!-- 先加载 API 客户端，再加载悬浮球逻辑 -->
+  <script src="api-client.js"></script>
+  <script src="floating-ball.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+      color: #1e293b;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #3b82f6;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 10px;
+    }
+    .note {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      border-left: 4px solid #60a5fa;
+      margin: 20px 0;
+    }
+    kbd {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍂 秋秋 · HoloLake AI 悬浮球</h1>
+  
+  <div class="note">
+    <strong>M-FLOATING-AI · Phase 2 · DEV-004 之之 × 秋秋</strong><br>
+    接入真实 AI 对话（M-ROUTER API）+ loading 动画 + 降级保障
+  </div>
+  
+  <p>
+    👉 点击右下角的悬浮球，或使用快捷键 <kbd>Cmd/Ctrl+K</kbd> 唤出对话框。
+  </p>
+  
+  <p>
+    <strong>测试方法：</strong><br>
+    1. 点击小球打开对话框<br>
+    2. 输入任意文字，点发送<br>
+    3. 先看到「...」loading动画<br>
+    4. 出现真实 AI 回复（或降级回复）
+  </p>
+  
+  <p>
+    ✅ 控制台输出：<br>
+    <code>[M-FLOATING-AI] API接入层已加载·Phase2·DEV-004</code><br>
+    <code>[M-FLOATING-AI] Phase 2 悬浮球已加载（fixed）</code>
+  </p>
+
+  <!-- 悬浮球会由 floating-ball.js 自动插入 -->
+</body>
+</html>

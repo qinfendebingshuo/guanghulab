@@ -1,0 +1,146 @@
+// floating-ball.js · Phase 2 · 接入M-ROUTER API
+// DEV-004 之之妈妈 · 秋秋奶瓶线
+
+(function() {
+  // 创建悬浮球DOM
+  if (document.getElementById('floatingBallContainer')) return;
+  
+  var container = document.createElement('div');
+  container.id = 'floatingBallContainer';
+  container.innerHTML = `
+    <div id="floatingBall" title="秋秋 · HoloLake AI (Cmd/Ctrl+K)">
+      <span>🍂</span>
+    </div>
+    <div id="floatingChatBox">
+      <div id="floatingChatHeader">
+        <span>秋秋 · HoloLake AI</span>
+        <button id="floatingCloseBtn">✕</button>
+      </div>
+      <div id="floatingChatMessages">
+        <div id="floatingMsgList">
+          <div class="msg-bubble bot-bubble">你好！我是秋秋～有什么我能帮到妈妈的吗？</div>
+        </div>
+      </div>
+      <div id="floatingChatInputArea">
+        <input type="text" id="floatingChatInput" placeholder="和秋秋说点什么...">
+        <button id="floatingSendBtn">发送</button>
+      </div>
+      <div id="floatingShortcutHint">⌘ / Ctrl + K 唤出</div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  // 样式自动注入
+  var style = document.createElement('link');
+  style.rel = 'stylesheet';
+  style.href = 'floating-ball.css';
+  document.head.appendChild(style);
+
+  // ---------- 状态 ----------
+  var isOpen = false;
+  var ball = document.getElementById('floatingBall');
+  var chatBox = document.getElementById('floatingChatBox');
+  var closeBtn = document.getElementById('floatingCloseBtn');
+  var sendBtn = document.getElementById('floatingSendBtn');
+  var input = document.getElementById('floatingChatInput');
+  var msgList = document.getElementById('floatingMsgList');
+
+  // ---------- 工具函数 ----------
+  function addMessage(text, isUser) {
+    var msgDiv = document.createElement('div');
+    msgDiv.className = 'msg-bubble ' + (isUser ? 'user-bubble' : 'bot-bubble');
+    msgDiv.textContent = text;
+    msgList.appendChild(msgDiv);
+    msgList.scrollTop = msgList.scrollHeight;
+  }
+
+  // ---------- AI回复（Phase2：接入M-ROUTER API）----------
+  function sendBotReply(userText) {
+    if (!msgList) return;
+
+    // 显示loading气泡
+    var loadingId = 'loading-' + Date.now();
+    var loadingDiv = document.createElement('div');
+    loadingDiv.className = 'msg-bubble bot-bubble loading-bubble';
+    loadingDiv.id = loadingId;
+    loadingDiv.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+    msgList.appendChild(loadingDiv);
+    msgList.scrollTop = msgList.scrollHeight;
+
+    // 调用M-ROUTER API
+    if (typeof FloatingAIClient !== 'undefined') {
+      FloatingAIClient.sendMessage(
+        userText,
+        function(reply) {
+          var loadingEl = document.getElementById(loadingId);
+          if (loadingEl) {
+            loadingEl.className = 'msg-bubble bot-bubble';
+            loadingEl.innerHTML = reply;
+          }
+          msgList.scrollTop = msgList.scrollHeight;
+          console.log('[M-FLOATING-AI] AI回复成功');
+        },
+        function(fallbackMsg, err) {
+          var loadingEl = document.getElementById(loadingId);
+          if (loadingEl) {
+            loadingEl.className = 'msg-bubble bot-bubble';
+            loadingEl.innerHTML = fallbackMsg;
+          }
+          msgList.scrollTop = msgList.scrollHeight;
+          console.warn('[M-FLOATING-AI] API降级, 使用本地回复:', err.message);
+        }
+      );
+    } else {
+      var loadingEl = document.getElementById(loadingId);
+      if (loadingEl) {
+        loadingEl.className = 'msg-bubble bot-bubble';
+        loadingEl.innerHTML = '秋秋在这里, API加载中, 请刷新一下~';
+      }
+    }
+  }
+
+  // ---------- 事件绑定 ----------
+  ball.addEventListener('click', function(e) {
+    e.stopPropagation();
+    isOpen = !isOpen;
+    chatBox.classList.toggle('open', isOpen);
+    if (isOpen) input.focus();
+  });
+
+  closeBtn.addEventListener('click', function() {
+    isOpen = false;
+    chatBox.classList.remove('open');
+  });
+
+  sendBtn.addEventListener('click', function() {
+    var text = input.value.trim();
+    if (!text) return;
+    addMessage(text, true);
+    input.value = '';
+    sendBotReply(text);
+  });
+
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') sendBtn.click();
+  });
+
+  // 快捷键 Cmd/Ctrl+K
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      isOpen = !isOpen;
+      chatBox.classList.toggle('open', isOpen);
+      if (isOpen) input.focus();
+    }
+  });
+
+  // 点击外部关闭
+  document.addEventListener('click', function(e) {
+    if (isOpen && !chatBox.contains(e.target) && e.target !== ball) {
+      isOpen = false;
+      chatBox.classList.remove('open');
+    }
+  });
+
+  console.log('[M-FLOATING-AI] Phase 2 悬浮球已加载');
+})();

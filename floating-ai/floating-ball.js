@@ -1,126 +1,148 @@
-// 全局AI悬浮球·Floating AI Bubble
-// M-FLOATING-AI · Phase 1
-// HoloLake · DEV-004 之之 × TCS-QIUQIU 秋秋
+// floating-ball.js · Phase 2 · 接入M-ROUTER API
+// DEV-004 之之妈妈 · 秋秋奶瓶线
+// ✅ 完美版：自动创建小球+绑定事件+等待body加载
 
 (function() {
-  'use strict';
-
-  const CONFIG = {
-    version: '1.0.0',
-    welcomeMsg: '你好！我是秋秋～有什么我能帮到妈妈的吗？',
-    shortcutKey: 'k',
-    rootId: 'hololake-fab-root'
-  };
-
-  if (document.getElementById(CONFIG.rootId)) return;
-
-  function injectCSS() {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = './floating-ball.css';
-    document.head.appendChild(link);
+  // 等待 body 加载完
+  if (!document.body) {
+    setTimeout(arguments.callee, 50);
+    return;
   }
 
-  function buildDOM() {
-    const root = document.createElement('div');
-    root.id = CONFIG.rootId;
-    root.innerHTML = `
-      <div id="hololake-fab-panel">
-        <div class="fab-panel-header">
-          <span class="fab-panel-title">🍼 秋秋 · HoloLake AI</span>
-          <button class="fab-panel-close" id="hololake-fab-close">✕</button>
-        </div>
-        <div class="fab-messages" id="hololake-fab-messages"></div>
-        <div class="fab-input-row">
-          <input class="fab-input" id="hololake-fab-input" type="text" placeholder="和秋秋说点什么..." />
-          <button class="fab-send-btn" id="hololake-fab-send">➤</button>
-        </div>
-        <div class="fab-shortcut-hint" id="hololake-fab-hint"></div>
+  // 防止重复加载
+  if (document.getElementById('floatingBallContainer')) return;
+
+  function init() {
+    // 创建悬浮球DOM
+    var container = document.createElement('div');
+    container.id = 'floatingBallContainer';
+    container.innerHTML = `
+      <div id="floatingBall" title="秋秋 · HoloLake AI (Cmd/Ctrl+K)">
+        <span>🍂</span>
       </div>
-      <button id="hololake-fab-btn" title="唤出 HoloLake AI (Cmd/Ctrl+K)">
-        <span class="fab-icon">🍼</span>
-      </button>
+      <div id="floatingChatBox">
+        <div id="floatingChatHeader">
+          <span>秋秋 · HoloLake AI</span>
+          <button id="floatingCloseBtn">✕</button>
+        </div>
+        <div id="floatingChatMessages">
+          <div id="floatingMsgList">
+            <div class="msg-bubble bot-bubble">你好！我是秋秋～有什么我能帮到妈妈的吗？</div>
+          </div>
+        </div>
+        <div id="floatingChatInputArea">
+          <input type="text" id="floatingChatInput" placeholder="和秋秋说点什么...">
+          <button id="floatingSendBtn">发送</button>
+        </div>
+        <div id="floatingShortcutHint">⌘ / Ctrl + K 唤出</div>
+      </div>
     `;
-    document.body.appendChild(root);
-  }
+    document.body.appendChild(container);
 
-  let isOpen = false;
+    // 状态
+    var isOpen = false;
+    var ball = document.getElementById('floatingBall');
+    var chatBox = document.getElementById('floatingChatBox');
+    var closeBtn = document.getElementById('floatingCloseBtn');
+    var sendBtn = document.getElementById('floatingSendBtn');
+    var input = document.getElementById('floatingChatInput');
+    var msgList = document.getElementById('floatingMsgList');
 
-  function getPanel() { return document.getElementById('hololake-fab-panel'); }
-  function getInput() { return document.getElementById('hololake-fab-input'); }
-  function getMsgs() { return document.getElementById('hololake-fab-messages'); }
+    // 添加消息
+    function addMessage(text, isUser) {
+      var msgDiv = document.createElement('div');
+      msgDiv.className = 'msg-bubble ' + (isUser ? 'user-bubble' : 'bot-bubble');
+      msgDiv.textContent = text;
+      msgList.appendChild(msgDiv);
+      msgList.scrollTop = msgList.scrollHeight;
+    }
 
-  function openPanel() {
-    isOpen = true;
-    getPanel().classList.add('fab-open');
-    setTimeout(() => getInput().focus(), 50);
-  }
+    // AI回复
+    function sendBotReply(userText) {
+      if (!msgList) return;
 
-  function closePanel() {
-    isOpen = false;
-    getPanel().classList.remove('fab-open');
-  }
+      var loadingId = 'loading-' + Date.now();
+      var loadingDiv = document.createElement('div');
+      loadingDiv.className = 'msg-bubble bot-bubble loading-bubble';
+      loadingDiv.id = loadingId;
+      loadingDiv.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+      msgList.appendChild(loadingDiv);
+      msgList.scrollTop = msgList.scrollHeight;
 
-  function togglePanel() { isOpen ? closePanel() : openPanel(); }
+      if (typeof FloatingAIClient !== 'undefined') {
+        FloatingAIClient.sendMessage(
+          userText,
+          function(reply) {
+            var loadingEl = document.getElementById(loadingId);
+            if (loadingEl) {
+              loadingEl.className = 'msg-bubble bot-bubble';
+              loadingEl.innerHTML = reply;
+            }
+            msgList.scrollTop = msgList.scrollHeight;
+          },
+          function(fallbackMsg, err) {
+            var loadingEl = document.getElementById(loadingId);
+            if (loadingEl) {
+              loadingEl.className = 'msg-bubble bot-bubble';
+              loadingEl.innerHTML = fallbackMsg;
+            }
+            msgList.scrollTop = msgList.scrollHeight;
+          }
+        );
+      } else {
+        var loadingEl = document.getElementById(loadingId);
+        if (loadingEl) {
+          loadingEl.className = 'msg-bubble bot-bubble';
+          loadingEl.innerHTML = '秋秋在这里, API加载中, 请刷新一下~';
+        }
+      }
+    }
 
-  function appendMessage(text, role) {
-    const msgs = getMsgs();
-    const el = document.createElement('div');
-    el.className = `fab-msg ${role}`;
-    el.textContent = text;
-    msgs.appendChild(el);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  function sendMessage() {
-    const input = getInput();
-    const text = input.value.trim();
-    if (!text) return;
-
-    appendMessage(text, 'user');
-    input.value = '';
-
-    setTimeout(() => {
-      appendMessage('秋秋收到啦！妈妈真棒～ (Phase 1)', 'bot');
-    }, 300);
-  }
-
-  function updateHint() {
-    const hint = document.getElementById('hololake-fab-hint');
-    hint.textContent = navigator.platform.includes('Mac') ? '⌘ K 唤出' : 'Ctrl+K 唤出';
-  }
-
-  function bindEvents() {
-    document.getElementById('hololake-fab-btn').addEventListener('click', togglePanel);
-    document.getElementById('hololake-fab-close').addEventListener('click', closePanel);
-    document.getElementById('hololake-fab-send').addEventListener('click', sendMessage);
-
-    getInput().addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+    // 事件绑定
+    ball.addEventListener('click', function(e) {
+      e.stopPropagation();
+      isOpen = !isOpen;
+      chatBox.classList.toggle('open', isOpen);
+      if (isOpen) input.focus();
     });
 
-    document.addEventListener('keydown', e => {
-      if ((e.metaKey || e.ctrlKey) && e.key === CONFIG.shortcutKey) {
+    closeBtn.addEventListener('click', function() {
+      isOpen = false;
+      chatBox.classList.remove('open');
+    });
+
+    sendBtn.addEventListener('click', function() {
+      var text = input.value.trim();
+      if (!text) return;
+      addMessage(text, true);
+      input.value = '';
+      sendBotReply(text);
+    });
+
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendBtn.click();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        togglePanel();
+        isOpen = !isOpen;
+        chatBox.classList.toggle('open', isOpen);
+        if (isOpen) input.focus();
       }
     });
 
-    document.addEventListener('click', e => {
-      const root = document.getElementById(CONFIG.rootId);
-      if (isOpen && root && !root.contains(e.target)) closePanel();
+    document.addEventListener('click', function(e) {
+      if (isOpen && !chatBox.contains(e.target) && e.target !== ball) {
+        isOpen = false;
+        chatBox.classList.remove('open');
+      }
     });
+
+    console.log('[M-FLOATING-AI] Phase 2 悬浮球已加载 (完美版)');
   }
 
-  function init() {
-    injectCSS();
-    buildDOM();
-    bindEvents();
-    updateHint();
-    setTimeout(() => appendMessage(CONFIG.welcomeMsg, 'bot'), 300);
-    console.log(`[HoloLake FAB] 秋秋悬浮球 v${CONFIG.version} 已加载`);
-  }
-
+  // 如果页面已经加载完，直接执行；否则等 DOM 加载完
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

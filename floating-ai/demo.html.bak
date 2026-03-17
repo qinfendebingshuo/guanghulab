@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M-FLOATING-AI · Demo · HoloLake</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .demo-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+    .hint {
+      display: inline-block;
+      margin-top: 20px;
+      background: #f0f2ff;
+      color: #667eea;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-card">
+    <h1>🍼 HoloLake AI 悬浮球</h1>
+    <p>M-FLOATING-AI · Phase 1 · DEV-004 之之 × 秋秋</p>
+    <p>点击右下角的悬浮球，或使用快捷键 <strong>Cmd/Ctrl+K</strong> 唤出对话框。</p>
+    <div class="hint">⌘ / Ctrl + K 唤出</div>
+  </div>
+
+  <!-- 注入悬浮球 -->
+  <script src="./floating-ball.js"></script>
+</body>
+</html>
