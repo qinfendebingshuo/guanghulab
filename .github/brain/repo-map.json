@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-17T02:10:05.852Z",
+  "generated_at": "2026-03-17T02:20:46.684Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
     "total_workflows": 60,
-    "total_scripts": 62,
+    "total_scripts": 63,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -145,9 +145,12 @@
         },
         {
           "file": "tcs-ml"
+        },
+        {
+          "file": "zhuyuan-signature-registry.json"
         }
       ],
-      "item_count": 13
+      "item_count": 14
     },
     {
       "zone_id": "WORKFLOWS",
@@ -834,9 +837,12 @@
         },
         {
           "file": "zhuyuan-module-protocol.js"
+        },
+        {
+          "file": "zhuyuan-signature-verify.js"
         }
       ],
-      "item_count": 62
+      "item_count": 63
     },
     {
       "zone_id": "SRC",
@@ -1219,10 +1225,13 @@
           "file": "repo-structure-map.md"
         },
         {
+          "file": "zhuyuan-signature-protocol.md"
+        },
+        {
           "file": "使用指南.md"
         }
       ],
-      "item_count": 11
+      "item_count": 12
     },
     {
       "zone_id": "TESTS",
@@ -1557,6 +1566,9 @@
     ],
     "tcs-ml": [
       "PERSONA_BRAIN::tcs-ml"
+    ],
+    "zhuyuan-signature-registry": [
+      "PERSONA_BRAIN::zhuyuan-signature-registry.json"
     ],
     "workflow": [
       "WORKFLOWS"
@@ -1930,6 +1942,9 @@
     "zhuyuan-module-protocol": [
       "SCRIPTS::zhuyuan-module-protocol.js"
     ],
+    "zhuyuan-signature-verify": [
+      "SCRIPTS::zhuyuan-signature-verify.js"
+    ],
     "hli": [
       "SRC"
     ],
@@ -2200,6 +2215,9 @@
     ],
     "repo-structure-map": [
       "DOCS::repo-structure-map.md"
+    ],
+    "zhuyuan-signature-protocol": [
+      "DOCS::zhuyuan-signature-protocol.md"
     ],
     "使用指南": [
       "DOCS::使用指南.md"

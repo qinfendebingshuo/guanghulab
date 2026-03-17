@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-17 10:10 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-17 10:20 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -10,10 +10,10 @@
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
 | 工作流 | 60 个 GitHub Actions |
-| 脚本 | 62 个执行脚本 |
+| 脚本 | 63 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-17 10:10 CST |
+| 快照生成时间 | 2026-03-17 10:20 CST |
 
 ---
 
@@ -25,7 +25,7 @@
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
 ### 🎭 人格大脑（PERSONA_BRAIN）
-**路径**: `.github/persona-brain` · **数量**: 13 项
+**路径**: `.github/persona-brain` · **数量**: 14 项
 **描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
@@ -35,7 +35,7 @@
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 62 项
+**路径**: `scripts` · **数量**: 63 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -75,7 +75,7 @@
 **关键词**: syslog · inbox · log · 系统日志
 
 ### 📄 文档与前端（DOCS）
-**路径**: `docs` · **数量**: 11 项
+**路径**: `docs` · **数量**: 12 项
 **描述**: 铸渊助手聊天界面 · GitHub Pages 部署
 **关键词**: docs · html · chat · pages · 文档 · 聊天室
 
@@ -217,6 +217,7 @@
 - `scripts/zhuyuan-full-inspection.js`
 - `scripts/zhuyuan-issue-reply.js`
 - `scripts/zhuyuan-module-protocol.js`
+- `scripts/zhuyuan-signature-verify.js`
 
 ---
 
