@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-17T06:53:37.485Z",
+  "generated_at": "2026-03-17T07:09:54.581Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 60,
-    "total_scripts": 63,
+    "total_workflows": 62,
+    "total_scripts": 67,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -108,6 +108,12 @@
       ],
       "shelves": [
         {
+          "file": "agent-registry.json"
+        },
+        {
+          "file": "checkin-board.json"
+        },
+        {
           "file": "decision-log.md"
         },
         {
@@ -150,7 +156,7 @@
           "file": "zhuyuan-signature-registry.json"
         }
       ],
-      "item_count": 14
+      "item_count": 16
     },
     {
       "zone_id": "WORKFLOWS",
@@ -168,6 +174,14 @@
         "cron"
       ],
       "shelves": [
+        {
+          "file": "agent-checkin.yml",
+          "name": "人格体每日签到",
+          "triggers": [
+            "schedule(0 2 * * *)",
+            "manual"
+          ]
+        },
         {
           "file": "auto-reply-discussions.yml",
           "name": "\"🤖 铸渊 · Discussion 自动回复\"",
@@ -595,6 +609,15 @@
           ]
         },
         {
+          "file": "zhuyuan-daily-inspection.yml",
+          "name": "铸渊每日巡检",
+          "triggers": [
+            "issues",
+            "schedule(0 4 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "zhuyuan-daily-selfcheck.yml",
           "name": "铸渊 · 每日自检",
           "triggers": [
@@ -635,7 +658,7 @@
           ]
         }
       ],
-      "item_count": 60
+      "item_count": 62
     },
     {
       "zone_id": "SCRIPTS",
@@ -652,6 +675,9 @@
         "runner"
       ],
       "shelves": [
+        {
+          "file": "agent-checkin.js"
+        },
         {
           "file": "auto-reply-discussions.js"
         },
@@ -761,6 +787,9 @@
           "file": "push-broadcast.js"
         },
         {
+          "file": "push-inspection-report.js"
+        },
+        {
           "file": "receive-syslog.js"
         },
         {
@@ -833,6 +862,9 @@
           "file": "zhuyuan-full-inspection.js"
         },
         {
+          "file": "zhuyuan-inspection.js"
+        },
+        {
           "file": "zhuyuan-issue-reply.js"
         },
         {
@@ -840,9 +872,12 @@
         },
         {
           "file": "zhuyuan-signature-verify.js"
+        },
+        {
+          "file": "zhuyuan-wakeup.js"
         }
       ],
-      "item_count": 63
+      "item_count": 67
     },
     {
       "zone_id": "SRC",
@@ -1540,6 +1575,12 @@
     "开发者状态": [
       "PERSONA_BRAIN"
     ],
+    "agent-registry": [
+      "PERSONA_BRAIN::agent-registry.json"
+    ],
+    "checkin-board": [
+      "PERSONA_BRAIN::checkin-board.json"
+    ],
     "decision-log": [
       "PERSONA_BRAIN::decision-log.md"
     ],
@@ -1590,6 +1631,10 @@
     ],
     "cron": [
       "WORKFLOWS"
+    ],
+    "agent-checkin": [
+      "WORKFLOWS::agent-checkin.yml",
+      "SCRIPTS::agent-checkin.js"
     ],
     "auto-reply-discussions": [
       "WORKFLOWS::auto-reply-discussions.yml",
@@ -1771,6 +1816,9 @@
       "WORKFLOWS::zhuyuan-daily-agent.yml",
       "SCRIPTS::zhuyuan-daily-agent.js"
     ],
+    "zhuyuan-daily-inspection": [
+      "WORKFLOWS::zhuyuan-daily-inspection.yml"
+    ],
     "zhuyuan-daily-selfcheck": [
       "WORKFLOWS::zhuyuan-daily-selfcheck.yml",
       "SCRIPTS::zhuyuan-daily-selfcheck.js"
@@ -1891,6 +1939,9 @@
     "push-broadcast-to-github": [
       "SCRIPTS::push-broadcast-to-github.js"
     ],
+    "push-inspection-report": [
+      "SCRIPTS::push-inspection-report.js"
+    ],
     "route-align-check": [
       "SCRIPTS::route-align-check.js"
     ],
@@ -1939,11 +1990,17 @@
     "zhuyuan-full-inspection": [
       "SCRIPTS::zhuyuan-full-inspection.js"
     ],
+    "zhuyuan-inspection": [
+      "SCRIPTS::zhuyuan-inspection.js"
+    ],
     "zhuyuan-module-protocol": [
       "SCRIPTS::zhuyuan-module-protocol.js"
     ],
     "zhuyuan-signature-verify": [
       "SCRIPTS::zhuyuan-signature-verify.js"
+    ],
+    "zhuyuan-wakeup": [
+      "SCRIPTS::zhuyuan-wakeup.js"
     ],
     "hli": [
       "SRC"

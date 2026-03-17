@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-17 14:53 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-17 15:09 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 60 个 GitHub Actions |
-| 脚本 | 63 个执行脚本 |
+| 工作流 | 62 个 GitHub Actions |
+| 脚本 | 67 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-17 14:53 CST |
+| 快照生成时间 | 2026-03-17 15:09 CST |
 
 ---
 
@@ -25,17 +25,17 @@
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
 ### 🎭 人格大脑（PERSONA_BRAIN）
-**路径**: `.github/persona-brain` · **数量**: 14 项
+**路径**: `.github/persona-brain` · **数量**: 16 项
 **描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 60 项
+**路径**: `.github/workflows` · **数量**: 62 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 63 项
+**路径**: `scripts` · **数量**: 67 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -90,6 +90,7 @@
 
 | 文件 | 名称 | 触发方式 |
 |------|------|----------|
+| `agent-checkin.yml` | 人格体每日签到 | schedule(0 2 * * *), manual |
 | `auto-reply-discussions.yml` | "🤖 铸渊 · Discussion 自动回复" | unknown |
 | `bingshuo-deploy-agent.yml` | "🧊 冰朔人格体 · 自动部署诊断" | issues, issue_comment, manual |
 | `bingshuo-neural-system.yml` | 冰朔主控神经系统 · 自动维护 | push, schedule(0 0 * * *), manual |
@@ -145,6 +146,7 @@
 | `update-repo-map.yml` | 铸渊 · 图书馆目录自动更新 | push, schedule(0 0 * * *), manual |
 | `zhuyuan-brain-sync.yml` | 铸渊 · Brain Sync | push |
 | `zhuyuan-daily-agent.yml` | 🤖 铸渊巡检 Agent · 每日自动巡检与修复 | schedule(0 14 * * *), manual |
+| `zhuyuan-daily-inspection.yml` | 铸渊每日巡检 | issues, schedule(0 4 * * *), manual |
 | `zhuyuan-daily-selfcheck.yml` | 铸渊 · 每日自检 | schedule(0 0 * * *), manual |
 | `zhuyuan-gate-guard.yml` | "🚨 铸渊·智能门禁 · Push Gate Guard" | push, issues |
 | `zhuyuan-issue-reply.yml` | 铸渊 · Issue 自动回复 | issues, issue_comment |
@@ -155,6 +157,7 @@
 
 ## 🔧 执行脚本库（铸渊的工作人员）
 
+- `scripts/agent-checkin.js`
 - `scripts/auto-reply-discussions.js`
 - `scripts/bingshuo-deploy-agent.js`
 - `scripts/bingshuo-neural-sync.js`
@@ -191,6 +194,7 @@
 - `scripts/psp-inspection.js`
 - `scripts/push-broadcast-to-github.js`
 - `scripts/push-broadcast.js`
+- `scripts/push-inspection-report.js`
 - `scripts/receive-syslog.js`
 - `scripts/route-align-check.js`
 - `scripts/save-collaboration-log.js`
@@ -215,9 +219,11 @@
 - `scripts/zhuyuan-daily-agent.js`
 - `scripts/zhuyuan-daily-selfcheck.js`
 - `scripts/zhuyuan-full-inspection.js`
+- `scripts/zhuyuan-inspection.js`
 - `scripts/zhuyuan-issue-reply.js`
 - `scripts/zhuyuan-module-protocol.js`
 - `scripts/zhuyuan-signature-verify.js`
+- `scripts/zhuyuan-wakeup.js`
 
 ---
 
