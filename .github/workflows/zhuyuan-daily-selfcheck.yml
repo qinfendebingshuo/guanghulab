@@ -62,6 +62,16 @@ jobs:
       - name: 设置自检日期
         run: echo "CHECK_DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')" >> $GITHUB_ENV
 
+      - name: DC-01 Notion Usage Snapshot
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+        run: node scripts/dc-notion-usage.js
+
+      - name: DC-02 Workflow Performance Snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/dc-workflow-perf.js
+
       - name: Commit self-check result
         uses: peter-evans/create-pull-request@v7
         with:
@@ -76,4 +86,5 @@ jobs:
           delete-branch: true
           add-paths: |
             .github/persona-brain/memory.json
+            data/dc-reports/
           labels: auto-sync
