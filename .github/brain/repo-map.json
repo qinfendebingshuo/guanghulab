@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-16T15:12:11.784Z",
+  "generated_at": "2026-03-17T02:10:05.852Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 57,
-    "total_scripts": 61,
+    "total_workflows": 60,
+    "total_scripts": 62,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -200,6 +200,14 @@
           ]
         },
         {
+          "file": "bridge-broadcast-pdf.yml",
+          "name": "铸渊 · 🌉 桥接·广播PDF生成+分发",
+          "triggers": [
+            "schedule(0 6,14 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "bridge-changes-to-notion.yml",
           "name": "铸渊 · Bridge E · GitHub Changes → Notion",
           "triggers": [
@@ -208,10 +216,26 @@
           ]
         },
         {
+          "file": "bridge-heartbeat.yml",
+          "name": "铸渊 · 🌉 桥接·心跳检测",
+          "triggers": [
+            "schedule(0 0,6,12,18 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "bridge-session-summary.yml",
           "name": "Generate Session Summary for Notion",
           "triggers": [
             "schedule(50 23 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "bridge-syslog-intake.yml",
+          "name": "铸渊 · 🌉 桥接·SYSLOG 上行处理",
+          "triggers": [
+            "push",
             "manual"
           ]
         },
@@ -608,7 +632,7 @@
           ]
         }
       ],
-      "item_count": 57
+      "item_count": 60
     },
     {
       "zone_id": "SCRIPTS",
@@ -636,6 +660,9 @@
         },
         {
           "file": "brain-bridge-sync.js"
+        },
+        {
+          "file": "bridge"
         },
         {
           "file": "contract-check.js"
@@ -809,7 +836,7 @@
           "file": "zhuyuan-module-protocol.js"
         }
       ],
-      "item_count": 61
+      "item_count": 62
     },
     {
       "zone_id": "SRC",
@@ -1566,11 +1593,20 @@
     "brain-sync": [
       "WORKFLOWS::brain-sync.yml"
     ],
+    "bridge-broadcast-pdf": [
+      "WORKFLOWS::bridge-broadcast-pdf.yml"
+    ],
     "bridge-changes-to-notion": [
       "WORKFLOWS::bridge-changes-to-notion.yml"
     ],
+    "bridge-heartbeat": [
+      "WORKFLOWS::bridge-heartbeat.yml"
+    ],
     "bridge-session-summary": [
       "WORKFLOWS::bridge-session-summary.yml"
+    ],
+    "bridge-syslog-intake": [
+      "WORKFLOWS::bridge-syslog-intake.yml"
     ],
     "bridge-syslog-to-notion": [
       "WORKFLOWS::bridge-syslog-to-notion.yml"
@@ -1764,6 +1800,9 @@
     ],
     "brain-bridge-sync": [
       "SCRIPTS::brain-bridge-sync.js"
+    ],
+    "bridge": [
+      "SCRIPTS::bridge"
     ],
     "contract-check": [
       "SCRIPTS::contract-check.js"

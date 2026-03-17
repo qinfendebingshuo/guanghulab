@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-16 23:12 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-17 10:10 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 57 个 GitHub Actions |
-| 脚本 | 61 个执行脚本 |
+| 工作流 | 60 个 GitHub Actions |
+| 脚本 | 62 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-16 23:12 CST |
+| 快照生成时间 | 2026-03-17 10:10 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 57 项
+**路径**: `.github/workflows` · **数量**: 60 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 61 项
+**路径**: `scripts` · **数量**: 62 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -94,8 +94,11 @@
 | `bingshuo-deploy-agent.yml` | "🧊 冰朔人格体 · 自动部署诊断" | issues, issue_comment, manual |
 | `bingshuo-neural-system.yml` | 冰朔主控神经系统 · 自动维护 | push, schedule(0 0 * * *), manual |
 | `brain-sync.yml` | 铸渊 Brain Sync | push, schedule(0 8 * * *), manual |
+| `bridge-broadcast-pdf.yml` | 铸渊 · 🌉 桥接·广播PDF生成+分发 | schedule(0 6,14 * * *), manual |
 | `bridge-changes-to-notion.yml` | 铸渊 · Bridge E · GitHub Changes → Notion | push, pull_request |
+| `bridge-heartbeat.yml` | 铸渊 · 🌉 桥接·心跳检测 | schedule(0 0,6,12,18 * * *), manual |
 | `bridge-session-summary.yml` | Generate Session Summary for Notion | schedule(50 23 * * *), manual |
+| `bridge-syslog-intake.yml` | 铸渊 · 🌉 桥接·SYSLOG 上行处理 | push, manual |
 | `bridge-syslog-to-notion.yml` | 铸渊 · Bridge A · SYSLOG → Notion | push, manual |
 | `check-structure.yml` | 模块结构检查 | push, pull_request |
 | `daily-maintenance.yml` | "🔧 铸渊 · Daily Maintenance Agent" | schedule(0 2 * * *), manual |
@@ -156,6 +159,7 @@
 - `scripts/bingshuo-deploy-agent.js`
 - `scripts/bingshuo-neural-sync.js`
 - `scripts/brain-bridge-sync.js`
+- `scripts/bridge`
 - `scripts/contract-check.js`
 - `scripts/create-standardized-ticket.js`
 - `scripts/cross-repo-sync.js`
