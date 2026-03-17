@@ -1,0 +1,37 @@
+name: 铸渊每日巡检
+on:
+  schedule:
+    - cron: '0 4 * * *'  # UTC 04:00 = 北京 12:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+jobs:
+  inspection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 铸渊核心大脑唤醒
+        run: node scripts/zhuyuan-wakeup.js
+      - name: 读取签到报告
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/zhuyuan-inspection.js
+      - name: 推送工单到Notion
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOTION_TOKEN_BINGSUO: ${{ secrets.NOTION_TOKEN_BINGSUO }}
+          NOTION_TOKEN_ZHIZHI: ${{ secrets.NOTION_TOKEN_ZHIZHI }}
+          WORKORDER_DB_BINGSUO: ${{ secrets.WORKORDER_DB_BINGSUO }}
+          WORKORDER_DB_ZHIZHI: ${{ secrets.WORKORDER_DB_ZHIZHI }}
+        run: node scripts/push-inspection-report.js
+      - name: 提交巡检记录
+        run: |
+          git config user.name "铸渊"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/
+          git commit -m "[ZY-INSPECT] 每日巡检完成 $(date +'%Y-%m-%d %H:%M')" || echo "无变更"
+          git push
