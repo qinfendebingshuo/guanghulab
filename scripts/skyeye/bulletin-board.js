@@ -105,6 +105,7 @@ function extractBlockText(block) {
   const type = block.type;
   if (!block[type]) return '';
   const richTexts = block[type].rich_text || block[type].text || [];
+  if (!Array.isArray(richTexts)) return '';
   return richTexts.map(t => t.plain_text || '').join('');
 }
 
@@ -192,7 +193,7 @@ async function main() {
 
 if (require.main === module) {
   main().catch(e => {
-    console.error('公告板模块执行失败:', e.message);
+    console.error('⚠️ 公告板模块执行失败（非阻断性）:', e.message);
     process.exit(0); // 不阻断天眼主流程
   });
 }
