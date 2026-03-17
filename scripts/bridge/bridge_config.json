@@ -1,0 +1,15 @@
+{
+  "_comment": "M-BRIDGE-AUTO · 桥接配置 · DEV-010桔子 · PER-CX001晨星",
+  "version": "1.0.0",
+  "paths": {
+    "syslog_inbox": "scripts/bridge/inbox/",
+    "dispatch_queue": "scripts/bridge/queue/",
+    "archive": "scripts/bridge/archive/",
+    "logs": "scripts/bridge/logs/"
+  },
+  "validation": {
+    "required_fields": ["protocol_version", "header", "persona", "collaboration"],
+    "protocol_version": "SYSLOG-v4.0",
+    "max_file_size_kb": 512
+  }
+}
