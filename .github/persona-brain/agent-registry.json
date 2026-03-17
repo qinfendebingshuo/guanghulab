@@ -1,0 +1,629 @@
+{
+  "registry_version": "v1.0",
+  "created": "2026-03-17",
+  "controller": "TCS-0004∞",
+  "commander": "ICE-GL-ZY001",
+  "agents": [
+    {
+      "id": "AG-ZY-001",
+      "name": "人格体每日签到",
+      "workflow": "agent-checkin.yml",
+      "duty": "人格体每日签到",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-002",
+      "name": "🤖 铸渊 · Discussion 自动回复",
+      "workflow": "auto-reply-discussions.yml",
+      "duty": "🤖 铸渊 · Discussion 自动回复",
+      "trigger": "Discussion",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-003",
+      "name": "🧊 冰朔人格体 · 自动部署诊断",
+      "workflow": "bingshuo-deploy-agent.yml",
+      "duty": "🧊 冰朔人格体 · 自动部署诊断",
+      "trigger": "手动/Issue",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-004",
+      "name": "冰朔主控神经系统 · 自动维护",
+      "workflow": "bingshuo-neural-system.yml",
+      "duty": "冰朔主控神经系统 · 自动维护",
+      "trigger": "定时/手动/推送",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-005",
+      "name": "铸渊 Brain Sync",
+      "workflow": "brain-sync.yml",
+      "duty": "铸渊 Brain Sync",
+      "trigger": "定时/手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-006",
+      "name": "铸渊 · 🌉 桥接·广播PDF生成+分发",
+      "workflow": "bridge-broadcast-pdf.yml",
+      "duty": "铸渊 · 🌉 桥接·广播PDF生成+分发",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-007",
+      "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+      "workflow": "bridge-changes-to-notion.yml",
+      "duty": "铸渊 · Bridge E · GitHub Changes → Notion",
+      "trigger": "推送/PR",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-008",
+      "name": "铸渊 · 🌉 桥接·心跳检测",
+      "workflow": "bridge-heartbeat.yml",
+      "duty": "铸渊 · 🌉 桥接·心跳检测",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-009",
+      "name": "Generate Session Summary for Notion",
+      "workflow": "bridge-session-summary.yml",
+      "duty": "Generate Session Summary for Notion",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-010",
+      "name": "铸渊 · 🌉 桥接·SYSLOG 上行处理",
+      "workflow": "bridge-syslog-intake.yml",
+      "duty": "铸渊 · 🌉 桥接·SYSLOG 上行处理",
+      "trigger": "手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-011",
+      "name": "铸渊 · Bridge A · SYSLOG → Notion",
+      "workflow": "bridge-syslog-to-notion.yml",
+      "duty": "铸渊 · Bridge A · SYSLOG → Notion",
+      "trigger": "手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-012",
+      "name": "模块结构检查",
+      "workflow": "check-structure.yml",
+      "duty": "模块结构检查",
+      "trigger": "PR",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-013",
+      "name": "🔧 铸渊 · Daily Maintenance Agent",
+      "workflow": "daily-maintenance.yml",
+      "duty": "🔧 铸渊 · Daily Maintenance Agent",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-014",
+      "name": "📰 铸渊 · 光湖开发日报",
+      "workflow": "daily-report.yml",
+      "duty": "📰 铸渊 · 光湖开发日报",
+      "trigger": "定时/手动/Discussion",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-015",
+      "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+      "workflow": "deploy-pages.yml",
+      "duty": "🌀 部署铸渊聊天室 (GitHub Pages)",
+      "trigger": "手动/推送",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-016",
+      "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+      "workflow": "deploy-to-server.yml",
+      "duty": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+      "trigger": "手动/推送",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-017",
+      "name": "铸渊 · 广播分发",
+      "workflow": "distribute-broadcasts.yml",
+      "duty": "铸渊 · 广播分发",
+      "trigger": "手动/推送",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-018",
+      "name": "铸渊 · ESP 邮件信号处理器（已暂停）",
+      "workflow": "esp-signal-processor.yml",
+      "duty": "铸渊 · ESP 邮件信号处理器（已暂停）",
+      "trigger": "定时/手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-019",
+      "name": "📡 铸渊 · 执行层状态同步",
+      "workflow": "execution-sync.yml",
+      "duty": "📡 铸渊 · 执行层状态同步",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-020",
+      "name": "铸渊 · 飞书SYSLOG桥接",
+      "workflow": "feishu-syslog-bridge.yml",
+      "duty": "铸渊 · 飞书SYSLOG桥接",
+      "trigger": "仓库事件",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-021",
+      "name": "铸渊 · 光湖纪元 模块文档自动生成",
+      "workflow": "generate-module-doc.yml",
+      "duty": "铸渊 · 光湖纪元 模块文档自动生成",
+      "trigger": "手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-022",
+      "name": "HLI Contract Check",
+      "workflow": "hli-contract-check.yml",
+      "duty": "HLI Contract Check",
+      "trigger": "推送/PR",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-023",
+      "name": "🐕 元看门狗 · 巡检健康监控",
+      "workflow": "meta-watchdog.yml",
+      "duty": "🐕 元看门狗 · 巡检健康监控",
+      "trigger": "定时/手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-024",
+      "name": "Notion Callback Pipeline",
+      "workflow": "notion-callback-pipeline.yml",
+      "duty": "Notion Callback Pipeline",
+      "trigger": "仓库事件",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-025",
+      "name": "铸渊 · Notion 连通性测试",
+      "workflow": "notion-connectivity-test.yml",
+      "duty": "铸渊 · Notion 连通性测试",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-026",
+      "name": "Notion Heartbeat Monitor",
+      "workflow": "notion-heartbeat.yml",
+      "duty": "Notion Heartbeat Monitor",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-027",
+      "name": "铸渊 · Notion 页面阅读器",
+      "workflow": "notion-page-reader.yml",
+      "duty": "铸渊 · Notion 页面阅读器",
+      "trigger": "手动/仓库事件",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-028",
+      "name": "铸渊 · Notion 工单轮询",
+      "workflow": "notion-poll.yml",
+      "duty": "铸渊 · Notion 工单轮询",
+      "trigger": "定时/手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-029",
+      "name": "📡 铸渊 · Notion Agent 唤醒监听",
+      "workflow": "notion-wake-listener.yml",
+      "duty": "📡 铸渊 · Notion Agent 唤醒监听",
+      "trigger": "定时/手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-030",
+      "name": "🔄 OpenClaw · 唤醒闭环",
+      "workflow": "openclaw-wake-loop.yml",
+      "duty": "🔄 OpenClaw · 唤醒闭环",
+      "trigger": "定时/手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-031",
+      "name": "Persona Invoke Endpoint",
+      "workflow": "persona-invoke.yml",
+      "duty": "Persona Invoke Endpoint",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-032",
+      "name": "🔧 铸渊 · PM2 服务诊断与健康检查",
+      "workflow": "pm2-server-diagnose.yml",
+      "duty": "🔧 铸渊 · PM2 服务诊断与健康检查",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-033",
+      "name": "Process Notion Work Orders",
+      "workflow": "process-notion-orders.yml",
+      "duty": "Process Notion Work Orders",
+      "trigger": "手动/推送",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-034",
+      "name": "🌊 Persona Studio · 代码生成",
+      "workflow": "ps-on-build.yml",
+      "duty": "🌊 Persona Studio · 代码生成",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-035",
+      "name": "🌊 Persona Studio · 对话处理",
+      "workflow": "ps-on-chat.yml",
+      "duty": "🌊 Persona Studio · 对话处理",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-036",
+      "name": "🌊 Persona Studio · 完成通知",
+      "workflow": "ps-on-complete.yml",
+      "duty": "🌊 Persona Studio · 完成通知",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-037",
+      "name": "🌊 Persona Studio · 登录校验",
+      "workflow": "ps-on-login.yml",
+      "duty": "🌊 Persona Studio · 登录校验",
+      "trigger": "手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-038",
+      "name": "铸渊 · PSP 分身巡检",
+      "workflow": "psp-daily-inspection.yml",
+      "duty": "铸渊 · PSP 分身巡检",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-039",
+      "name": "铸渊 · 广播推送飞书（聊天消息）",
+      "workflow": "push-broadcast-feishu.yml",
+      "duty": "铸渊 · 广播推送飞书（聊天消息）",
+      "trigger": "手动/仓库事件",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-040",
+      "name": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+      "workflow": "push-broadcast.yml",
+      "duty": "铸渊 · Push Broadcast · Notion → 飞书文档B",
+      "trigger": "手动/仓库事件",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-041",
+      "name": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+      "workflow": "receive-syslog.yml",
+      "duty": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
+      "trigger": "仓库事件",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-042",
+      "name": "🏠 Sandbox Deploy",
+      "workflow": "sandbox-deploy.yml",
+      "duty": "🏠 Sandbox Deploy",
+      "trigger": "推送",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-043",
+      "name": "🔍 Server Patrol · 服务器每日巡检",
+      "workflow": "server-patrol.yml",
+      "duty": "🔍 Server Patrol · 服务器每日巡检",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-044",
+      "name": "🔍 铸渊预演部署 (Staging Preview)",
+      "workflow": "staging-preview.yml",
+      "duty": "🔍 铸渊预演部署 (Staging Preview)",
+      "trigger": "手动/PR",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-045",
+      "name": "📝 Sync Deploy Status to Notion",
+      "workflow": "sync-deploy-to-notion.yml",
+      "duty": "📝 Sync Deploy Status to Notion",
+      "trigger": "定时/手动",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-046",
+      "name": "📡 铸渊 · dev-status 自动同步",
+      "workflow": "sync-dev-status.yml",
+      "duty": "📡 铸渊 · dev-status 自动同步",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-047",
+      "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+      "workflow": "sync-login-entry.yml",
+      "duty": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
+      "trigger": "手动/仓库事件",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-048",
+      "name": "🔄 铸渊跨仓库同步 · persona-studio",
+      "workflow": "sync-persona-studio.yml",
+      "duty": "🔄 铸渊跨仓库同步 · persona-studio",
+      "trigger": "手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-049",
+      "name": "SYSLOG Auto Pipeline",
+      "workflow": "syslog-auto-pipeline.yml",
+      "duty": "SYSLOG Auto Pipeline",
+      "trigger": "Discussion",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-050",
+      "name": "📡 SYSLOG Issue Pipeline",
+      "workflow": "syslog-issue-pipeline.yml",
+      "duty": "📡 SYSLOG Issue Pipeline",
+      "trigger": "Issue",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-051",
+      "name": "铸渊 · SYSLOG Pipeline (A/D/E)",
+      "workflow": "syslog-pipeline.yml",
+      "duty": "铸渊 · SYSLOG Pipeline (A/D/E)",
+      "trigger": "手动/推送/Issue",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-052",
+      "name": "🧪 Notion Bridge Connectivity Test",
+      "workflow": "test-notion-bridge.yml",
+      "duty": "🧪 Notion Bridge Connectivity Test",
+      "trigger": "手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-053",
+      "name": "📢 更新系统公告区",
+      "workflow": "update-readme-bulletin.yml",
+      "duty": "📢 更新系统公告区",
+      "trigger": "定时/手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-054",
+      "name": "铸渊 · 图书馆目录自动更新",
+      "workflow": "update-repo-map.yml",
+      "duty": "铸渊 · 图书馆目录自动更新",
+      "trigger": "定时/手动/推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-055",
+      "name": "铸渊 · Brain Sync",
+      "workflow": "zhuyuan-brain-sync.yml",
+      "duty": "铸渊 · Brain Sync",
+      "trigger": "推送",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-056",
+      "name": "🤖 铸渊巡检 Agent · 每日自动巡检与修复",
+      "workflow": "zhuyuan-daily-agent.yml",
+      "duty": "🤖 铸渊巡检 Agent · 每日自动巡检与修复",
+      "trigger": "定时/手动/Issue",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-057",
+      "name": "铸渊每日巡检",
+      "workflow": "zhuyuan-daily-inspection.yml",
+      "duty": "铸渊每日巡检",
+      "trigger": "定时/手动",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-058",
+      "name": "铸渊 · 每日自检",
+      "workflow": "zhuyuan-daily-selfcheck.yml",
+      "duty": "铸渊 · 每日自检",
+      "trigger": "定时/手动/Issue",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-059",
+      "name": "🚨 铸渊·智能门禁 · Push Gate Guard",
+      "workflow": "zhuyuan-gate-guard.yml",
+      "duty": "🚨 铸渊·智能门禁 · Push Gate Guard",
+      "trigger": "推送/Issue",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-060",
+      "name": "铸渊 · Issue 自动回复",
+      "workflow": "zhuyuan-issue-reply.yml",
+      "duty": "铸渊 · Issue 自动回复",
+      "trigger": "Issue",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-061",
+      "name": "铸渊 · PR Review",
+      "workflow": "zhuyuan-pr-review.yml",
+      "duty": "铸渊 · PR Review",
+      "trigger": "PR",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    },
+    {
+      "id": "AG-ZY-062",
+      "name": "🦅 铸渊·天眼 · 全局俯瞰 + 自动诊断 + 修复驱动",
+      "workflow": "zhuyuan-skyeye.yml",
+      "duty": "🦅 铸渊·天眼 · 全局俯瞰 + 自动诊断 + 修复驱动",
+      "trigger": "定时/手动/Issue",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "status": "registered"
+    }
+  ],
+  "note": "铸渊已扫描所有workflow文件，按此格式逐一注册，编号从AG-ZY-001开始顺序分配"
+}
