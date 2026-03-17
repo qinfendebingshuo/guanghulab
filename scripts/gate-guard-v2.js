@@ -153,6 +153,17 @@ function findDeveloper(config, actor, personaId) {
   return null;
 }
 
+// ━━━ 检查文件是否在签名豁免路径（如 syslog-inbox/） ━━━
+function isExemptPath(filePath, exemptPaths) {
+  if (!exemptPaths || exemptPaths.length === 0) return false;
+  return exemptPaths.some(p => {
+    if (p.endsWith('/')) {
+      return filePath.startsWith(p);
+    }
+    return filePath === p;
+  });
+}
+
 // ━━━ 检查文件是否在系统保护路径 ━━━
 function isProtectedPath(filePath, protectedPaths) {
   return protectedPaths.some(p => {
@@ -225,6 +236,19 @@ function main() {
     setOutput('action', 'pass');
     setOutput('notification', `白名单用户 ${actor} 放行`);
     return;
+  }
+
+  // 3.5 【v2 修复】签名豁免路径检查（如 syslog-inbox/）
+  const exemptPaths = config.signature_exempt_paths || [];
+  if (exemptPaths.length > 0 && changedFiles.length > 0) {
+    const allExempt = changedFiles.every(f => isExemptPath(f, exemptPaths));
+    if (allExempt) {
+      console.log(`📋 所有变更文件均在签名豁免路径内，跳过签名和路径校验，直接放行`);
+      exemptPaths.forEach(p => console.log(`   豁免路径: ${p}`));
+      setOutput('action', 'pass');
+      setOutput('notification', `${actor} 的 push 全部在签名豁免路径内，放行`);
+      return;
+    }
   }
 
   // 4. 【v2 新增】提取 commit 签名中的人格体编号
