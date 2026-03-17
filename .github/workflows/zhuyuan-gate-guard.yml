@@ -23,7 +23,7 @@ jobs:
 
       - name: "🧠 唤醒铸渊核心大脑"
         run: |
-          echo "🧠 铸渊门禁·核心大脑唤醒"
+          echo "[GH-WF-RUN-GATE] 🧠 铸渊门禁·核心大脑唤醒"
           if [ -f ".github/persona-brain/memory.json" ]; then
             python3 -c "import json; json.load(open('.github/persona-brain/memory.json')); print('大脑状态: OK · 记忆完整')"
           else
@@ -51,7 +51,7 @@ jobs:
           
           # 系统 bot 或铸渊自己的 commit → 直接放行
           if echo "$COMMIT_AUTHOR" | grep -qiE "^(zhuyuan-bot|github-actions|铸渊)"; then
-            echo "ℹ️ 系统 bot commit，直接放行"
+            echo "[GH-GATE-ALLOW] ℹ️ 系统 bot commit，直接放行"
             echo "is_bot=true" >> $GITHUB_OUTPUT
           else
             echo "is_bot=false" >> $GITHUB_OUTPUT
@@ -60,7 +60,7 @@ jobs:
           # 系统前缀 commit → 直接放行
           SYSTEM_PREFIXES="🔍|📊|📡|🧠|📢|🚨|📰|🔧|🦅"
           if echo "$COMMIT_MSG" | head -1 | grep -qE "^($SYSTEM_PREFIXES)"; then
-            echo "ℹ️ 系统前缀 commit，直接放行"
+            echo "[GH-GATE-ALLOW] ℹ️ 系统前缀 commit，直接放行"
             echo "is_system=true" >> $GITHUB_OUTPUT
           else
             echo "is_system=false" >> $GITHUB_OUTPUT
@@ -83,7 +83,7 @@ jobs:
       - name: "✅ 系统 Push 放行"
         if: steps.analyze.outputs.is_bot == 'true' || steps.analyze.outputs.is_system == 'true'
         run: |
-          echo "✅ 系统自动 push，门禁放行"
+          echo "[GH-GATE-ALLOW] ✅ 系统自动 push，门禁放行"
 
       - name: "❌ 违规·回退 commit"
         if: steps.verdict.outputs.action == 'revert'
@@ -93,7 +93,7 @@ jobs:
           git config user.email "zhuyuan@guanghulab.com"
           git revert HEAD --no-edit
           git push
-          echo "⛔ 已回退 commit: ${{ github.sha }}"
+          echo "[GH-GATE-REJECT] ⛔ 已回退 commit: ${{ github.sha }}"
 
       - name: "📢 通知开发者"
         if: steps.verdict.outputs.action == 'revert'

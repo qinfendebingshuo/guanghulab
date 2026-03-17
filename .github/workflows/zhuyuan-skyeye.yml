@@ -27,7 +27,7 @@ jobs:
       - name: "🧠 Phase 1 · 唤醒核心大脑"
         id: brain
         run: |
-          echo "🦅 天眼启动 · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "[GH-WF-RUN-SKYEYE] 🦅 天眼启动 · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           BRAIN_OK=true
           for f in memory.json routing-map.json dev-status.json; do
             if [ -f ".github/persona-brain/$f" ]; then
@@ -38,6 +38,14 @@ jobs:
             fi
           done
           echo "brain_ok=$BRAIN_OK" >> $GITHUB_OUTPUT
+
+      - name: "📡 Phase 1.6 · 拉取 Agent 集群公告板"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
+        run: |
+          echo "[BRIDGE-BULLETIN-READ] 🔄 拉取 Agent 集群公告板"
+          node scripts/skyeye/bulletin-board.js > /tmp/skyeye/bulletin-board.json || echo "{}" > /tmp/skyeye/bulletin-board.json
 
       - name: "🦅 Phase 2 · 全局扫描"
         id: scan
@@ -74,7 +82,7 @@ jobs:
 
       - name: "🔄 Phase 3.5 · ASOP 自优化审批"
         run: |
-          echo "🔄 ASOP 审批引擎启动..."
+          echo "[GH-ASOP-APPROVE] 🔄 ASOP 审批引擎启动..."
           node scripts/skyeye/asop-reviewer.js > /tmp/skyeye/asop-review.json || echo "{}" > /tmp/skyeye/asop-review.json
 
       - name: "🔧 Phase 4 · 修复Agent"
@@ -114,12 +122,12 @@ jobs:
 
       - name: "🔧 Phase 5.5 · ASOP 执行已批准优化"
         run: |
-          echo "🔧 ASOP 执行器启动..."
+          echo "[GH-ASOP-EXECUTE] 🔧 ASOP 执行器启动..."
           node scripts/skyeye/asop-executor.js > /tmp/skyeye/asop-execute.json || echo "{}" > /tmp/skyeye/asop-execute.json
 
       - name: "🔍 Phase 5.7 · ASOP 验证优化效果"
         run: |
-          echo "🔍 ASOP 验证器启动..."
+          echo "[GH-ASOP-EXECUTE] 🔍 ASOP 验证器启动..."
           node scripts/skyeye/asop-verifier.js > /tmp/skyeye/asop-verify.json || echo "{}" > /tmp/skyeye/asop-verify.json
 
       - name: "📋 Phase 6 · 全局健康报告"

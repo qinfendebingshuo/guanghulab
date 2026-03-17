@@ -79,6 +79,6 @@ jobs:
 
       - name: ✅ 上行处理完成
         run: |
-          echo "✅ SYSLOG 上行处理完成"
-          echo "📋 已处理: ${{ steps.process.outputs.processed_count || '0' }} 条"
-          echo "📡 等待 Notion Agent 自动触发 SYSLOG 闭环处理"
+          echo "[GH-WF-RUN-SYSLOG] ✅ SYSLOG 上行处理完成"
+          echo "[GH-WF-RUN-SYSLOG] 📋 已处理: ${{ steps.process.outputs.processed_count || '0' }} 条"
+          echo "[BRIDGE-GH2NT-SYSLOG] 📡 等待 Notion Agent 自动触发 SYSLOG 闭环处理"

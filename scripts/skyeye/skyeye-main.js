@@ -61,6 +61,10 @@ function main() {
 
   const results = {};
 
+  // Phase 1.6: 拉取 Agent 集群公告板
+  console.log('\n📡 Phase 1.6 · 拉取 Agent 集群公告板');
+  results.bulletin = runModule('bulletin-board.js', 'bulletin-board.json');
+
   // Phase 2: 全局扫描
   console.log('\n🦅 Phase 2 · 全局扫描');
   results.workflows = runModule('scan-workflows.js', 'workflow-health.json');

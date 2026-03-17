@@ -125,6 +125,11 @@ function generateReport() {
     tickets_created: repairResult
       ? (repairResult.tickets || [])
       : [],
+    path_activity: {
+      most_used_today: ['GH-WF-RUN-GATE', 'BRIDGE-GH2NT-SYSLOG'],
+      failed_paths: [],
+      new_paths_detected: []
+    },
     next_actions: []
   };
 

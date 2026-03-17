@@ -1,4 +1,34 @@
 {
+  "path_codes": {
+    "version": "1.0",
+    "updated_at": "2026-03-17",
+    "gh_domain": {
+      "GH-WF-RUN-SKYEYE": "天眼 workflow 执行",
+      "GH-WF-RUN-GATE": "门禁 workflow 执行",
+      "GH-WF-RUN-SYSLOG": "SYSLOG处理 workflow",
+      "GH-WF-RUN-DEPLOY": "CD部署 workflow",
+      "GH-BRAIN-WRITE-MEM": "写入 memory.json",
+      "GH-BRAIN-WRITE-MAP": "写入 routing-map.json",
+      "GH-BRAIN-SYNC-DEV": "同步 dev-status（persona-status）",
+      "GH-GATE-CHECK-SIG": "门禁签名校验",
+      "GH-GATE-CHECK-PATH": "门禁路径权限校验",
+      "GH-GATE-ALLOW": "门禁放行",
+      "GH-GATE-REJECT": "门禁拒绝",
+      "GH-ASOP-SUBMIT": "提交ASOP优化申请",
+      "GH-ASOP-APPROVE": "天眼批准优化",
+      "GH-ASOP-EXECUTE": "执行已批准优化"
+    },
+    "bridge_domain": {
+      "BRIDGE-GH2NT-SYSLOG": "铸渊→霜砚 SYSLOG推送",
+      "BRIDGE-GH2NT-CHANGE": "铸渊→霜砚 变更日志推送",
+      "BRIDGE-NT2GH-CMD": "霜砚→铸渊 工单指令",
+      "BRIDGE-NT2GH-BC": "霜砚→铸渊 广播分发",
+      "BRIDGE-SKYEYE-PULL": "天眼拉取Notion注册表",
+      "BRIDGE-SKYEYE-PUSH": "天眼推送报告到Notion",
+      "BRIDGE-BULLETIN-READ": "铸渊读取Agent公告板",
+      "BRIDGE-BULLETIN-WRITE": "铸渊写回公告板回执"
+    }
+  },
   "system_name": "光湖纪元·AGE-5 MVP",
   "updated_at": "2026-03-11",
   "architecture": {
