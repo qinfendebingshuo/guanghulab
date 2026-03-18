@@ -40,6 +40,8 @@ function generateReport() {
   const brainHealth    = readJSON(path.join(SKYEYE_DIR, 'brain-health.json'));
   const bridgeHealth   = readJSON(path.join(SKYEYE_DIR, 'bridge-health.json'));
   const securityHealth = readJSON(path.join(SKYEYE_DIR, 'security-health.json'));
+  const sfpHealth      = readJSON(path.join(SKYEYE_DIR, 'sfp-health.json'));
+  const soldierHealth  = readJSON(path.join(SKYEYE_DIR, 'soldier-health.json'));
   const diagnosis      = readJSON(path.join(SKYEYE_DIR, 'diagnosis.json'));
   const repairResult   = readJSON(path.join(SKYEYE_DIR, 'repair-result.json'));
 
@@ -111,6 +113,28 @@ function generateReport() {
           last_verified: bjTime
         },
 
+    bulletin_sfp_health: sfpHealth ? {
+      dimension: 'D14',
+      status: sfpHealth.status || '❓',
+      total_messages: sfpHealth.total_messages || 0,
+      valid_fingerprints: sfpHealth.valid_fingerprints || 0,
+      invalid_fingerprints: sfpHealth.invalid_fingerprints || 0,
+      without_fingerprint: sfpHealth.without_fingerprint || 0,
+      sfp_config_exists: sfpHealth.sfp_config_exists || false,
+      agent_activity: sfpHealth.agent_activity || {}
+    } : { dimension: 'D14', status: '❓' },
+
+    soldier_health: soldierHealth ? {
+      dimension: 'D15',
+      status: soldierHealth.status || '❓',
+      total_soldiers: soldierHealth.total_soldiers || 0,
+      healthy: soldierHealth.healthy || 0,
+      failed: soldierHealth.failed || 0,
+      failure_rate: soldierHealth.failure_rate || 0,
+      recurring_errors: soldierHealth.recurring_errors || [],
+      recommendations: soldierHealth.recommendations || []
+    } : { dimension: 'D15', status: '❓' },
+
     diagnosis: {
       total_issues: diagnosis ? diagnosis.total_issues : 0,
       auto_fixed: repairResult ? repairResult.total_repaired : 0,
@@ -163,6 +187,16 @@ function generateReport() {
     report.next_actions.push('P0: 安全协议L0等级或永久标记被修改');
   } else if (!report.security_health.copyright_anchor) {
     report.next_actions.push('P1: 安全协议版权锚点缺失，需补充');
+  }
+  if (report.bulletin_sfp_health && report.bulletin_sfp_health.invalid_fingerprints > 0) {
+    report.next_actions.push('P0: 公告板发现无效指纹内容，需立即清理');
+  }
+  if (report.soldier_health && report.soldier_health.failure_rate > 20) {
+    report.next_actions.push('P0: 小兵故障率超过20%，需全局修复');
+  }
+  if (report.soldier_health && report.soldier_health.recurring_errors &&
+      report.soldier_health.recurring_errors.length > 0) {
+    report.next_actions.push('P1: 存在持续性故障小兵，建议铸渊介入');
   }
 
   // 保存完整报告

@@ -65,7 +65,7 @@ jobs:
           fi
           
           # 系统前缀 commit → 直接放行
-          SYSTEM_PREFIXES="🔍|📊|📡|🧠|📢|🚨|📰|🔧|🦅"
+          SYSTEM_PREFIXES="🔍|📊|📡|🧠|📢|🚨|📰|🔧|🦅|🎖️|🔐|🌊"
           if echo "$COMMIT_MSG" | head -1 | grep -qE "^($SYSTEM_PREFIXES)"; then
             echo "[GH-GATE-ALLOW] ℹ️ 系统前缀 commit，直接放行"
             echo "is_system=true" >> $GITHUB_OUTPUT

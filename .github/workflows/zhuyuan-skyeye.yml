@@ -76,6 +76,9 @@ jobs:
           node scripts/skyeye/scan-brain-health.js > /tmp/skyeye/brain-health.json
           node scripts/skyeye/scan-external-bridges.js > /tmp/skyeye/bridge-health.json
           node scripts/skyeye/scan-security-protocol.js > /tmp/skyeye/security-health.json
+          node scripts/commander-dashboard.js > /dev/null 2>&1 || true
+          node scripts/skyeye/scan-bulletin-sfp.js > /tmp/skyeye/sfp-health.json
+          node scripts/skyeye/scan-soldier-health.js > /tmp/skyeye/soldier-health.json
 
       - name: "🔬 Phase 3 · 诊断"
         id: diagnose
