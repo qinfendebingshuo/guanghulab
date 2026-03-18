@@ -159,6 +159,10 @@ function generateReport() {
     report.next_actions.push('P0: 安全协议文件缺失，需立即恢复');
   } else if (!report.security_health.root_rules_intact) {
     report.next_actions.push('P0: 安全协议根规则被篡改，需立即修复');
+  } else if (report.security_health.level !== 'L0' || !report.security_health.permanent) {
+    report.next_actions.push('P0: 安全协议L0等级或永久标记被修改');
+  } else if (!report.security_health.copyright_anchor) {
+    report.next_actions.push('P1: 安全协议版权锚点缺失，需补充');
   }
 
   // 保存完整报告

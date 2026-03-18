@@ -66,7 +66,7 @@ function checkSecurityProtocol() {
   }
 
   // 检查6：签名者信息
-  if (!protocol.signed_by || !protocol.signed_by.includes('TCS-0002')) {
+  if (!protocol.signed_by || protocol.signed_by !== '冰朔（TCS-0002∞）') {
     result.status = '⚠️';
     result.issue = '签名者信息缺失或不正确';
     result.action = 'P1工单 · 补充签名信息';
