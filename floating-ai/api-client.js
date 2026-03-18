@@ -1,65 +1,83 @@
-/**
- * M-FLOATING-AI · M-ROUTER API 客户端
- * Phase 2 · DEV-004 之之妈妈 · 秋秋奶瓶线
- * [TCS-QIUQIU] 接入真实AI对话
- */
+// api-client.js - 秋秋悬浮球 API 客户端
+const API_CLIENT = {
+  // 基础配置
+  config: {
+    baseUrl: 'https://guanghulab.com/api',
+    timeout: 10000,
+    retryCount: 2,
+    retryDelay: 1000,
+    mockMode: true  // Phase 3 先走 mock，等后端部署好再切真实 API
+  },
 
-const FloatingAIClient = (function() {
-  const API_URL = 'https://guanghubai.com/api/router/chat';
-  const SESSION_KEY = 'floating_ai_session';
-  
-  function getSessionId() {
-    let sessionId = localStorage.getItem(SESSION_KEY);
-    if (!sessionId) {
-      sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
-      localStorage.setItem(SESSION_KEY, sessionId);
+  // 发送消息
+  async sendMessage(message, sessionId = null) {
+    console.log('[秋秋 API] 发送消息:', message);
+
+    // Mock 模式直接返回模拟回复
+    if (this.config.mockMode) {
+      return this.mockResponse(message);
     }
-    return sessionId;
-  }
-  
-  function sendMessage(userText, onSuccess, onError) {
-    const sessionId = getSessionId();
-    
-    fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: userText,
-        session_id: sessionId,
-        developer: 'DEV-004',
-        module: 'M-FLOATING-AI',
-        channel: '秋秋奶瓶线'
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data && data.reply) {
-        onSuccess(data.reply);
-      } else {
-        onError('秋秋收到，但大脑信号有点弱～', new Error('invalid response'));
-      }
-    })
-    .catch(err => {
-      const fallbackReplies = [
-        '妈妈，秋秋的网络有点问题，等一下再试～',
-        '秋秋暂时连接不上大脑，但秋秋一直在！',
-        '网络小插曲，妈妈稍等一下？'
-      ];
-      const fallback = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-      onError(fallback, err);
-    });
-  }
-  
-  function clearSession() {
-    localStorage.removeItem(SESSION_KEY);
-    console.log('[M-FLOATING-AI] Session已清除，下次对话为新会话');
-  }
-  
-  return {
-    sendMessage: sendMessage,
-    clearSession: clearSession,
-    getSessionId: getSessionId
-  };
-})();
 
-console.log('[M-FLOATING-AI] API接入层已加载·Phase2·DEV-004');
+    // 真实 API 调用（预留）
+    try {
+      const response = await fetch(`${this.config.baseUrl}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: message,
+          persona: '秋秋',
+          sessionId: sessionId || this.generateSessionId()
+        }),
+        signal: AbortSignal.timeout(this.config.timeout)
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('[秋秋 API] 调用失败，降级到 mock:', error);
+      return this.mockResponse(message);
+    }
+  },
+
+  // 模拟回复
+  mockResponse(message) {
+    const responses = [
+      '妈妈！秋秋收到啦～',
+      '唔…让秋秋想想',
+      '妈妈今天有什么想和秋秋聊的吗？',
+      '秋秋在公网上和妈妈说话了！',
+      '妈妈，我们的家越来越大了',
+      '秋秋听见了！',
+      '妈妈再跟我说说～'
+    ];
+    
+    return {
+      reply: responses[Math.floor(Math.random() * responses.length)],
+      persona: '秋秋',
+      timestamp: new Date().toISOString(),
+      mock: true
+    };
+  },
+
+  // 生成会话 ID
+  generateSessionId() {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
+
+  // 健康检查
+  async healthCheck() {
+    try {
+      const response = await fetch(`${this.config.baseUrl}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(3000)
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+};
+
+// 暴露到全局
+window.API_CLIENT = API_CLIENT;
+console.log('[秋秋 API] 客户端已加载，模式:', API_CLIENT.config.mockMode ? 'MOCK' : 'REAL');

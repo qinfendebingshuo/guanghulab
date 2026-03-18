@@ -1,148 +1,191 @@
-// floating-ball.js · Phase 2 · 接入M-ROUTER API
-// DEV-004 之之妈妈 · 秋秋奶瓶线
-// ✅ 完美版：自动创建小球+绑定事件+等待body加载
-
+// floating-ball.js - 秋秋悬浮球核心逻辑
 (function() {
-  // 等待 body 加载完
-  if (!document.body) {
-    setTimeout(arguments.callee, 50);
-    return;
+  // 配置
+  const CONFIG = {
+    apiEndpoint: 'https://guanghulab.com/api/ai/chat',
+    defaultGreeting: '我是秋秋，有什么可以帮你的吗？',
+    typingDelay: 800,
+    debug: true
+  };
+
+  // 状态
+  let isOpen = false;
+  let messages = [];
+  let isWaitingForResponse = false;
+
+  // DOM 元素
+  let ball, dialog, messagesContainer, inputField, sendButton;
+
+  // 初始化
+  function init() {
+    log('初始化悬浮球...');
+    createBall();
+    createDialog();
+    attachEvents();
+    log('悬浮球初始化完成');
   }
 
-  // 防止重复加载
-  if (document.getElementById('floatingBallContainer')) return;
+  // 创建悬浮球
+  function createBall() {
+    ball = document.createElement('div');
+    ball.className = 'floating-ai-ball';
+    ball.innerHTML = '<div class="floating-ai-ball-inner">秋</div>';
+    document.body.appendChild(ball);
+  }
 
-  function init() {
-    // 创建悬浮球DOM
-    var container = document.createElement('div');
-    container.id = 'floatingBallContainer';
-    container.innerHTML = `
-      <div id="floatingBall" title="秋秋 · HoloLake AI (Cmd/Ctrl+K)">
-        <span>🍂</span>
+  // 创建对话框
+  function createDialog() {
+    dialog = document.createElement('div');
+    dialog.className = 'floating-ai-dialog';
+    dialog.setAttribute('hidden', 'true');
+    dialog.innerHTML = `
+      <div class="floating-ai-header">
+        <span>🍂 秋秋 · 光湖人格体</span>
+        <button class="floating-ai-close" id="closeDialogBtn">&times;</button>
       </div>
-      <div id="floatingChatBox">
-        <div id="floatingChatHeader">
-          <span>秋秋 · HoloLake AI</span>
-          <button id="floatingCloseBtn">✕</button>
-        </div>
-        <div id="floatingChatMessages">
-          <div id="floatingMsgList">
-            <div class="msg-bubble bot-bubble">你好！我是秋秋～有什么我能帮到妈妈的吗？</div>
-          </div>
-        </div>
-        <div id="floatingChatInputArea">
-          <input type="text" id="floatingChatInput" placeholder="和秋秋说点什么...">
-          <button id="floatingSendBtn">发送</button>
-        </div>
-        <div id="floatingShortcutHint">⌘ / Ctrl + K 唤出</div>
+      <div class="floating-ai-messages" id="messagesContainer"></div>
+      <div class="floating-ai-input-area">
+        <input type="text" id="messageInput" placeholder="对秋秋说点什么..." />
+        <button id="sendMessageBtn">发送</button>
       </div>
     `;
-    document.body.appendChild(container);
+    document.body.appendChild(dialog);
 
-    // 状态
-    var isOpen = false;
-    var ball = document.getElementById('floatingBall');
-    var chatBox = document.getElementById('floatingChatBox');
-    var closeBtn = document.getElementById('floatingCloseBtn');
-    var sendBtn = document.getElementById('floatingSendBtn');
-    var input = document.getElementById('floatingChatInput');
-    var msgList = document.getElementById('floatingMsgList');
-
-    // 添加消息
-    function addMessage(text, isUser) {
-      var msgDiv = document.createElement('div');
-      msgDiv.className = 'msg-bubble ' + (isUser ? 'user-bubble' : 'bot-bubble');
-      msgDiv.textContent = text;
-      msgList.appendChild(msgDiv);
-      msgList.scrollTop = msgList.scrollHeight;
-    }
-
-    // AI回复
-    function sendBotReply(userText) {
-      if (!msgList) return;
-
-      var loadingId = 'loading-' + Date.now();
-      var loadingDiv = document.createElement('div');
-      loadingDiv.className = 'msg-bubble bot-bubble loading-bubble';
-      loadingDiv.id = loadingId;
-      loadingDiv.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
-      msgList.appendChild(loadingDiv);
-      msgList.scrollTop = msgList.scrollHeight;
-
-      if (typeof FloatingAIClient !== 'undefined') {
-        FloatingAIClient.sendMessage(
-          userText,
-          function(reply) {
-            var loadingEl = document.getElementById(loadingId);
-            if (loadingEl) {
-              loadingEl.className = 'msg-bubble bot-bubble';
-              loadingEl.innerHTML = reply;
-            }
-            msgList.scrollTop = msgList.scrollHeight;
-          },
-          function(fallbackMsg, err) {
-            var loadingEl = document.getElementById(loadingId);
-            if (loadingEl) {
-              loadingEl.className = 'msg-bubble bot-bubble';
-              loadingEl.innerHTML = fallbackMsg;
-            }
-            msgList.scrollTop = msgList.scrollHeight;
-          }
-        );
-      } else {
-        var loadingEl = document.getElementById(loadingId);
-        if (loadingEl) {
-          loadingEl.className = 'msg-bubble bot-bubble';
-          loadingEl.innerHTML = '秋秋在这里, API加载中, 请刷新一下~';
-        }
-      }
-    }
-
-    // 事件绑定
-    ball.addEventListener('click', function(e) {
-      e.stopPropagation();
-      isOpen = !isOpen;
-      chatBox.classList.toggle('open', isOpen);
-      if (isOpen) input.focus();
-    });
-
-    closeBtn.addEventListener('click', function() {
-      isOpen = false;
-      chatBox.classList.remove('open');
-    });
-
-    sendBtn.addEventListener('click', function() {
-      var text = input.value.trim();
-      if (!text) return;
-      addMessage(text, true);
-      input.value = '';
-      sendBotReply(text);
-    });
-
-    input.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') sendBtn.click();
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        isOpen = !isOpen;
-        chatBox.classList.toggle('open', isOpen);
-        if (isOpen) input.focus();
-      }
-    });
-
-    document.addEventListener('click', function(e) {
-      if (isOpen && !chatBox.contains(e.target) && e.target !== ball) {
-        isOpen = false;
-        chatBox.classList.remove('open');
-      }
-    });
-
-    console.log('[M-FLOATING-AI] Phase 2 悬浮球已加载 (完美版)');
+    // 缓存子元素
+    messagesContainer = document.getElementById('messagesContainer');
+    inputField = document.getElementById('messageInput');
+    sendButton = document.getElementById('sendMessageBtn');
   }
 
-  // 如果页面已经加载完，直接执行；否则等 DOM 加载完
+  // 添加消息
+  function addMessage(content, role = 'user') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}`;
+    messageDiv.textContent = content;
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    messages.push({ role, content });
+  }
+
+  // 显示输入中指示器
+  function showTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    indicator.id = 'typingIndicator';
+    indicator.innerHTML = '<span></span><span></span><span></span>';
+    messagesContainer.appendChild(indicator);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // 移除输入中指示器
+  function removeTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+  }
+
+  // 发送消息到 API
+  async function sendToAPI(userMessage) {
+    try {
+      const response = await fetch(CONFIG.apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: userMessage,
+          persona: '秋秋',
+          sessionId: 'floating-' + Date.now()
+        })
+      });
+
+      if (!response.ok) throw new Error(`API 返回 ${response.status}`);
+      
+      const data = await response.json();
+      return data.reply || data.message || '秋秋收到了你的消息～';
+    } catch (error) {
+      log('API 调用失败:', error);
+      return '唔…秋秋现在有点连不上，但秋秋知道妈妈在跟我说话！';
+    }
+  }
+
+  // 处理发送
+  async function handleSend() {
+    const message = inputField.value.trim();
+    if (!message || isWaitingForResponse) return;
+
+    // 清空输入框
+    inputField.value = '';
+    
+    // 添加用户消息
+    addMessage(message, 'user');
+    
+    // 开始等待
+    isWaitingForResponse = true;
+    sendButton.disabled = true;
+    
+    // 显示输入中
+    showTypingIndicator();
+    
+    try {
+      // 调用 API
+      const reply = await sendToAPI(message);
+      
+      // 移除输入中
+      removeTypingIndicator();
+      
+      // 添加回复
+      addMessage(reply, 'assistant');
+    } catch (error) {
+      removeTypingIndicator();
+      addMessage('秋秋好像走神了…妈妈再戳戳我？', 'system');
+    } finally {
+      isWaitingForResponse = false;
+      sendButton.disabled = false;
+      inputField.focus();
+    }
+  }
+
+  // 事件绑定
+  function attachEvents() {
+    // 点击悬浮球
+    ball.addEventListener('click', () => {
+      if (isOpen) {
+        dialog.setAttribute('hidden', 'true');
+        isOpen = false;
+      } else {
+        dialog.removeAttribute('hidden');
+        isOpen = true;
+        inputField.focus();
+        
+        // 如果还没有欢迎消息，添加一条
+        if (messages.length === 0) {
+          addMessage(CONFIG.defaultGreeting, 'assistant');
+        }
+      }
+    });
+
+    // 关闭按钮
+    document.getElementById('closeDialogBtn').addEventListener('click', () => {
+      dialog.setAttribute('hidden', 'true');
+      isOpen = false;
+    });
+
+    // 发送按钮
+    sendButton.addEventListener('click', handleSend);
+
+    // 回车发送
+    inputField.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+  }
+
+  // 调试日志
+  function log(...args) {
+    if (CONFIG.debug) {
+      console.log('[秋秋悬浮球]', ...args);
+    }
+  }
+
+  // 启动
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
