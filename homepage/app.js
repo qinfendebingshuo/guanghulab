@@ -78,6 +78,8 @@ window.HomepageApp = {
         // 3. 启动状态总览面板（环节3新增）
         if (window.StatusPanel) {
             await window.StatusPanel.init();
+// 4. 启动搜索筛选 + 欢迎栏（环节4新增）
+if (window.SearchActivity) { window.SearchActivity.init(); }
         }
         console.log('✅ 首页初始化完成 · 数据源：' + dataSource);
     },

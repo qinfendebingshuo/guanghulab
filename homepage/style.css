@@ -616,3 +616,80 @@ body {
         gap: 8px;
     }
 }
+/* === 时间欢迎栏·环节4 === */
+.welcome-bar {
+    background: linear-gradient(135deg, rgba(100,181,246,0.1), rgba(129,199,132,0.1));
+    border: 1px solid rgba(100,181,246,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.5s ease;
+}
+
+.welcome-greeting {
+    font-size: 1.2rem;
+    color: #e0e0e0;
+    font-weight: 600;
+}
+
+.welcome-time {
+    font-size: 0.85rem;
+    color: #90caf9;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+/* === 搜索筛选·环节4 === */
+.search-bar {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-bar input:focus {
+    border-color: rgba(100, 181, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.1);
+}
+
+.search-bar input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.search-result {
+    font-size: 0.75rem;
+    color: #90caf9;
+    min-width: 90px;
+    white-space: nowrap;
+}
+
+/* === 响应式·环节4 === */
+@media (max-width: 600px) {
+    .welcome-bar {
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+        padding: 12px 16px;
+    }
+    .welcome-greeting {
+        font-size: 1rem;
+    }
+    .welcome-time {
+        font-size: 0.75rem;
+    }
+}

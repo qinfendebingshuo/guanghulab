@@ -15,6 +15,12 @@
             <a href="#" class="hero-btn">进入系统</a>
         </header>
         
+        <!-- == 时间欢迎栏·环节4新增 == -->
+        <div class="welcome-bar" id="welcomeBar">
+            <div class="welcome-greeting">欢迎回到光湖</div>
+            <div class="welcome-time">加载中...</div>
+        </div>
+
         <!-- 公告轮播区 -->
         <div class="carousel-container">
             <div class="carousel" id="announcementCarousel">
@@ -23,9 +29,17 @@
             <button class="carousel-arrow left" id="carouselPrev" onclick="window.HomepageApp.prevAnnouncement()">←</button>
             <button class="carousel-arrow right" id="carouselNext" onclick="window.HomepageApp.nextAnnouncement()">→</button>
         </div>
-                <!-- === 模块状态总览面板 · 环节3新增 === -->
+
+        <!-- === 模块状态总览面板 · 环节3新增 === -->
         <section class="status-overview" id="statusOverview">
             <h2 class="section-title">系统状态总览</h2>
+            
+            <!-- == 搜索筛选·环节4新增 == -->
+            <div class="search-bar">
+                <input type="text" id="moduleSearch" placeholder="搜索模块名称或状态...">
+                <span class="search-result" id="searchResult"></span>
+            </div>
+
             <div class="status-grid" id="statusGrid">
                 <!-- 骨架屏占位（数据加载前显示） -->
                 <div class="status-card skeleton">
@@ -78,6 +92,7 @@
                 </a>
             </div>
         </section>
+
         <!-- 模块导航网格 -->
         <section class="modules">
             <h2 class="section-title">核心模块</h2>
@@ -101,5 +116,6 @@
     <script src="modules-api.js"></script>
     <script src="app.js"></script>    
     <script src="status-panel.js"></script>
+    <script src="search-activity.js"></script>
     </body>
-    </html>
+</html>
