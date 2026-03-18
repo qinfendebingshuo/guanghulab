@@ -46,12 +46,16 @@ jobs:
           fi
           echo "brain_ok=$BRAIN_OK" >> $GITHUB_OUTPUT
 
+      - name: "📦 安装依赖"
+        run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
+
       - name: "📡 Phase 1.6 · 拉取 Agent 集群公告板"
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
         run: |
           echo "[BRIDGE-BULLETIN-READ] 🔄 拉取 Agent 集群公告板"
+          mkdir -p /tmp/skyeye
           node scripts/skyeye/bulletin-board.js > /tmp/skyeye/bulletin-board.json || echo "{}" > /tmp/skyeye/bulletin-board.json
 
       - name: "🦅 Phase 2 · 全局扫描"
