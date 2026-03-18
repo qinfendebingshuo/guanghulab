@@ -35,12 +35,13 @@ function generateReport() {
     .replace('T', ' ').slice(0, 19) + '+08:00';
 
   // 读取所有扫描结果
-  const wfHealth     = readJSON(path.join(SKYEYE_DIR, 'workflow-health.json'));
-  const structHealth = readJSON(path.join(SKYEYE_DIR, 'structure-health.json'));
-  const brainHealth  = readJSON(path.join(SKYEYE_DIR, 'brain-health.json'));
-  const bridgeHealth = readJSON(path.join(SKYEYE_DIR, 'bridge-health.json'));
-  const diagnosis    = readJSON(path.join(SKYEYE_DIR, 'diagnosis.json'));
-  const repairResult = readJSON(path.join(SKYEYE_DIR, 'repair-result.json'));
+  const wfHealth       = readJSON(path.join(SKYEYE_DIR, 'workflow-health.json'));
+  const structHealth   = readJSON(path.join(SKYEYE_DIR, 'structure-health.json'));
+  const brainHealth    = readJSON(path.join(SKYEYE_DIR, 'brain-health.json'));
+  const bridgeHealth   = readJSON(path.join(SKYEYE_DIR, 'bridge-health.json'));
+  const securityHealth = readJSON(path.join(SKYEYE_DIR, 'security-health.json'));
+  const diagnosis      = readJSON(path.join(SKYEYE_DIR, 'diagnosis.json'));
+  const repairResult   = readJSON(path.join(SKYEYE_DIR, 'repair-result.json'));
 
   // 计算时长
   const durationSeconds = Math.round((Date.now() - startTime) / 1000);
@@ -99,6 +100,17 @@ function generateReport() {
         ? bridgeHealth.secrets.complete : false
     },
 
+    security_health: securityHealth && securityHealth.security_health
+      ? securityHealth.security_health
+      : {
+          protocol_exists: false,
+          root_rules_intact: false,
+          level: null,
+          permanent: false,
+          copyright_anchor: false,
+          last_verified: bjTime
+        },
+
     diagnosis: {
       total_issues: diagnosis ? diagnosis.total_issues : 0,
       auto_fixed: repairResult ? repairResult.total_repaired : 0,
@@ -142,6 +154,11 @@ function generateReport() {
   }
   if (!report.brain_status.memory_fresh) {
     report.next_actions.push('memory.json 数据需要刷新');
+  }
+  if (!report.security_health.protocol_exists) {
+    report.next_actions.push('P0: 安全协议文件缺失，需立即恢复');
+  } else if (!report.security_health.root_rules_intact) {
+    report.next_actions.push('P0: 安全协议根规则被篡改，需立即修复');
   }
 
   // 保存完整报告

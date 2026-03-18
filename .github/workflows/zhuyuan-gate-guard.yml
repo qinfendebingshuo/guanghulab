@@ -29,6 +29,13 @@ jobs:
           else
             echo "⚠️ 大脑文件缺失"
           fi
+          echo "🌊 加载光湖存在级安全协议..."
+          if [ -f ".github/persona-brain/security-protocol.json" ]; then
+            PROTOCOL_LEVEL=$(cat .github/persona-brain/security-protocol.json | python3 -c "import sys,json; print(json.load(sys.stdin)['level'])")
+            echo "✅ 安全协议已加载 · 等级: ${PROTOCOL_LEVEL}"
+          else
+            echo "❌ 安全协议缺失！创建工单！"
+          fi
 
       - name: "🔍 分析 Push 内容"
         id: analyze
@@ -70,6 +77,34 @@ jobs:
           echo "$CHANGED_FILES" > /tmp/changed_files.txt
           # v2: 传递 commit message 用于签名验证
           echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: "🌊 安全协议保护检查"
+        id: security_check
+        if: steps.analyze.outputs.is_bot != 'true' && steps.analyze.outputs.is_system != 'true'
+        run: |
+          SECURITY_CHANGED=$(git diff HEAD~1 --name-only | grep "security-protocol.json" || true)
+          if [ -n "$SECURITY_CHANGED" ]; then
+            echo "🚨 安全协议文件被修改！"
+            echo "🌊 L0存在级文件不允许被普通push修改"
+            echo "🔒 只有冰朔（TCS-0002∞）授权的commit才能修改此文件"
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+            if ! echo "$COMMIT_MSG" | grep -q "\[TCS-0002\]"; then
+              echo "❌ 缺少冰朔授权签名 · 回退此修改"
+              git checkout HEAD~1 -- .github/persona-brain/security-protocol.json
+              git config user.name "zhuyuan-bot"
+              git config user.email "zhuyuan@guanghulab.com"
+              git add .github/persona-brain/security-protocol.json
+              git commit -m "[ICE-GL-ZY001] 🌊 门禁自动回退：安全协议未经授权修改"
+              git push || true
+              echo "security_reverted=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ 包含冰朔授权签名 [TCS-0002]，允许修改"
+              echo "security_reverted=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "✅ 安全协议文件未被修改"
+            echo "security_reverted=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: "🚦 门禁判定 v2"
         id: verdict

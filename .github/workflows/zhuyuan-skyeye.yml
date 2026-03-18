@@ -37,6 +37,13 @@ jobs:
               echo "❌ $f 缺失"; BRAIN_OK=false
             fi
           done
+          echo "🌊 加载光湖存在级安全协议..."
+          if [ -f ".github/persona-brain/security-protocol.json" ]; then
+            PROTOCOL_LEVEL=$(cat .github/persona-brain/security-protocol.json | python3 -c "import sys,json; print(json.load(sys.stdin)['level'])")
+            echo "✅ 安全协议已加载 · 等级: ${PROTOCOL_LEVEL}"
+          else
+            echo "❌ 安全协议缺失！创建工单！"
+          fi
           echo "brain_ok=$BRAIN_OK" >> $GITHUB_OUTPUT
 
       - name: "📡 Phase 1.6 · 拉取 Agent 集群公告板"
@@ -68,6 +75,7 @@ jobs:
           node scripts/skyeye/scan-structure.js > /tmp/skyeye/structure-health.json
           node scripts/skyeye/scan-brain-health.js > /tmp/skyeye/brain-health.json
           node scripts/skyeye/scan-external-bridges.js > /tmp/skyeye/bridge-health.json
+          node scripts/skyeye/scan-security-protocol.js > /tmp/skyeye/security-health.json
 
       - name: "🔬 Phase 3 · 诊断"
         id: diagnose

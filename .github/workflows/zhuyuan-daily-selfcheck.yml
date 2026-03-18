@@ -37,6 +37,13 @@ jobs:
             echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
             echo "brain_awake=dry-run" >> "$GITHUB_OUTPUT"
           }
+          echo "🌊 加载光湖存在级安全协议..."
+          if [ -f ".github/persona-brain/security-protocol.json" ]; then
+            PROTOCOL_LEVEL=$(cat .github/persona-brain/security-protocol.json | python3 -c "import sys,json; print(json.load(sys.stdin)['level'])")
+            echo "✅ 安全协议已加载 · 等级: ${PROTOCOL_LEVEL}"
+          else
+            echo "❌ 安全协议缺失！创建工单！"
+          fi
 
   selfcheck:
     name: 🔍 铸渊自检
