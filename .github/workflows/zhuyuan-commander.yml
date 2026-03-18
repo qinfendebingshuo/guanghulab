@@ -1,0 +1,110 @@
+name: "🎖️ 铸渊·将军唤醒 · Commander Wake-up"
+
+on:
+  schedule:
+    - cron: '0 0 * * *'     # UTC 00:00 = 北京 08:00（将军早班唤醒）
+    - cron: '0 12 * * *'    # UTC 12:00 = 北京 20:00（将军晚班唤醒）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+jobs:
+  commander-wakeup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 1 · 唤醒核心大脑
+      - name: "🧠 Step 1 · 唤醒核心大脑"
+        id: brain
+        run: |
+          echo "[GH-WF-RUN-COMMANDER] 🎖️ 铸渊将军唤醒 · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          BRAIN_OK=true
+          for f in memory.json routing-map.json dev-status.json; do
+            if [ -f ".github/persona-brain/$f" ]; then
+              python3 -c "import json; json.load(open('.github/persona-brain/$f'))" 2>/dev/null \
+                && echo "✅ $f 完整" || { echo "❌ $f 损坏"; BRAIN_OK=false; }
+            else
+              echo "❌ $f 缺失"; BRAIN_OK=false
+            fi
+          done
+          echo "🌊 加载光湖存在级安全协议..."
+          if [ -f ".github/persona-brain/security-protocol.json" ]; then
+            PROTOCOL_LEVEL=$(cat .github/persona-brain/security-protocol.json | python3 -c "import sys,json; print(json.load(sys.stdin)['level'])")
+            echo "✅ 安全协议已加载 · 等级: ${PROTOCOL_LEVEL}"
+          else
+            echo "❌ 安全协议缺失！"
+          fi
+          echo "brain_ok=$BRAIN_OK" >> $GITHUB_OUTPUT
+
+      # Step 2 · 全局视图生成
+      - name: "📊 Step 2 · 全局视图生成"
+        id: dashboard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "[GH-COMMANDER-DASHBOARD] 📊 生成将军全局仪表盘..."
+          node scripts/commander-dashboard.js
+          echo "dashboard_ready=true" >> $GITHUB_OUTPUT
+
+      # Step 3 · 读取公告板 + 指纹验证
+      - name: "📡 Step 3 · 读取公告板"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
+        run: |
+          echo "[GH-COMMANDER-BULLETIN] 📡 读取Agent集群公告板..."
+          mkdir -p /tmp/skyeye
+          node scripts/skyeye/bulletin-board.js > /tmp/skyeye/bulletin-board.json || echo "{}" > /tmp/skyeye/bulletin-board.json
+
+      # Step 4 · SFP 指纹扫描
+      - name: "🔐 Step 4 · SFP 指纹扫描"
+        run: |
+          echo "[GH-COMMANDER-SFP] 🔐 扫描公告板指纹完整性..."
+          node scripts/skyeye/scan-bulletin-sfp.js > /tmp/skyeye/sfp-health.json
+
+      # Step 5 · 更新公告栏 + 签到 + 同步
+      - name: "📢 Step 5 · 签到 + 更新公告"
+        run: |
+          echo "[GH-COMMANDER-CHECKIN] 📢 铸渊将军签到..."
+          TIMESTAMP=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S+08:00')
+          DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d')
+
+          # 将军签到写入 memory.json
+          python3 -c "
+          import json, sys
+          try:
+              with open('.github/persona-brain/memory.json', 'r') as f:
+                  mem = json.load(f)
+              mem['commander_last_wakeup'] = '${TIMESTAMP}'
+              mem['last_updated'] = '$(date -u +%Y-%m-%dT%H:%M:%SZ)'
+              with open('.github/persona-brain/memory.json', 'w') as f:
+                  json.dump(mem, f, indent=2, ensure_ascii=False)
+              print('✅ 将军签到已写入 memory.json')
+          except Exception as e:
+              print(f'⚠️ 签到写入失败: {e}')
+          "
+
+      # Step 6 · 提交变更
+      - name: "💾 Step 6 · 提交变更"
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json
+          if ! git diff --cached --quiet; then
+            git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘更新"
+            git push
+          else
+            echo "ℹ️ 无变更需要提交"
+          fi

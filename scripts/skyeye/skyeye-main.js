@@ -71,6 +71,9 @@ function main() {
   results.structure = runModule('scan-structure.js', 'structure-health.json');
   results.brain     = runModule('scan-brain-health.js', 'brain-health.json');
   results.bridges   = runModule('scan-external-bridges.js', 'bridge-health.json');
+  results.security  = runModule('scan-security-protocol.js', 'security-health.json');
+  results.sfp       = runModule('scan-bulletin-sfp.js', 'sfp-health.json');
+  results.soldiers  = runModule('scan-soldier-health.js', 'soldier-health.json');
 
   // Phase 3: 诊断
   console.log('\n🔬 Phase 3 · 诊断');
