@@ -1,0 +1,40 @@
+name: "Receive SYSLOG from IM"
+
+on:
+  repository_dispatch:
+    types: [syslog_received]
+
+jobs:
+  process-syslog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r scripts/bridge/requirements.txt
+
+      - name: Parse SYSLOG
+        run: |
+          echo '${{ toJson(github.event.client_payload) }}' > /tmp/raw_syslog.json
+          python scripts/bridge/syslog_receiver.py /tmp/raw_syslog.json > /tmp/parsed_fields.json
+          echo "Parsed fields:"
+          cat /tmp/parsed_fields.json
+
+      - name: Write to Notion dispatch queue
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DISPATCH_DB_ID: ${{ secrets.NOTION_DISPATCH_DB_ID }}
+        run: |
+          python scripts/bridge/dispatch_writer.py /tmp/parsed_fields.json
+
+      - name: Log result
+        if: always()
+        run: |
+          echo "SYSLOG processing completed at $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "Source event type: ${{ github.event.action }}"
