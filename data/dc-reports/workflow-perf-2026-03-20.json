@@ -1,0 +1,47 @@
+{
+  "date": "2026-03-20",
+  "workflows": [
+    {
+      "name": "铸渊 · 每日自检",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 17,
+      "success_rate": null,
+      "dependencies": [
+        "wake-brain"
+      ]
+    },
+    {
+      "name": "Notion Heartbeat Monitor",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 17,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "pages build and deployment",
+      "trigger": "dynamic",
+      "runs_today": 1,
+      "avg_duration_sec": 46,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "Generate Session Summary for Notion",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 13,
+      "success_rate": 1,
+      "dependencies": []
+    }
+  ],
+  "total_workflows": 63,
+  "failed_today": 0,
+  "parallel_capable": 44,
+  "_meta": {
+    "generated_by": "dc-workflow-perf.js",
+    "generated_at": "2026-03-20T00:58:30.225Z",
+    "runs_fetched": 4
+  }
+}
