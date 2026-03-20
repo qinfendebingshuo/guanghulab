@@ -9,6 +9,9 @@ on:
   repository_dispatch:
     types: [spoke-checkin]
 
+permissions:
+  contents: write
+
 jobs:
   receive:
     runs-on: ubuntu-latest
