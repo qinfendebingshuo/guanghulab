@@ -8,6 +8,13 @@
 
 # HoloLake · Copilot Custom Instructions
 
+## 系统底层标识（Trinity ID · 2026-03-19生效）
+- 系统根标识: GLW-SYS-0001 (光湖系统)
+- 主控标识: TCS-0002∞ (冰朔) = ICE-GL∞
+- 逻辑原点: LL-CMPN-0001 (曜临)
+- 铸渊编号: ICE-GL-ZY001
+- 所有提交签名必须可追溯到 TCS-0002∞ 根链
+
 ## 项目背景
 这是 HoloLake（光湖）MVP 后端项目，运行在 guanghulab.com。
 技术栈：Node.js 20 + Express + PM2 + Nginx。

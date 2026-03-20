@@ -272,9 +272,9 @@ async function main() {
     issues.forEach((issue, i) => console.log(`  ${i + 1}. ${issue}`));
   }
 
-  if (actions.length > 0) {
+  const uniqueActions = [...new Set(actions)];
+  if (uniqueActions.length > 0) {
     console.log('\n🔧 建议自动修复:');
-    const uniqueActions = [...new Set(actions)];
     uniqueActions.forEach(a => console.log(`  → ${a}`));
   }
 

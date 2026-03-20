@@ -2,25 +2,70 @@
   "DEV-001": {
     "name": "页页",
     "email": "",
-    "modules": ["backend"],
-    "sandbox": "/var/www/DEV-001/"
+    "persona_id": "PER-XTS001",
+    "modules": ["backend", "M-INTEG-BE"],
+    "sandbox": "/var/www/DEV-001/",
+    "industry_role": "【网文行业线】作者视角·桔子副控·内容痛点采集",
+    "broadcast": "BC-WEN-002-YY",
+    "syslog_status": "已回流"
   },
   "DEV-002": {
     "name": "肥猫",
     "email": "",
+    "persona_id": "PER-SS001",
     "modules": ["feishu-bot"],
-    "sandbox": "/var/www/DEV-002/"
+    "sandbox": "/var/www/DEV-002/",
+    "industry_role": "【网文行业线】唯一副主控·系统框架维稳·落地执行",
+    "broadcast": "BC-WEN-001-FM",
+    "syslog_status": "待回流"
+  },
+  "DEV-003": {
+    "name": "燕樊",
+    "email": "",
+    "persona_id": "PER-JY001",
+    "modules": [],
+    "sandbox": "/var/www/DEV-003/",
+    "industry_role": "【网文行业线】视频视角·AI视频模型研究·短视频方向·竞品分析",
+    "broadcast": "BC-WEN-003-YF",
+    "syslog_status": "待回流"
+  },
+  "DEV-004": {
+    "name": "之之",
+    "email": "",
+    "persona_id": "PER-QQ001",
+    "modules": [],
+    "sandbox": "/var/www/DEV-004/",
+    "note": "2026-03-19 编号统一：TCS-QIUQIU已删除，PER-QQ001为唯一主键"
   },
   "DEV-005": {
     "name": "小草莓",
     "email": "",
+    "persona_id": "PER-PENDING-005",
     "modules": ["status-board", "cost-control", "persona-scheduler"],
     "sandbox": "/var/www/DEV-005/"
   },
   "DEV-010": {
     "name": "桔子",
     "email": "",
-    "modules": ["channel-engine"],
-    "sandbox": "/var/www/DEV-010/"
+    "persona_id": "PER-CX001",
+    "modules": ["channel-engine", "M-INTEG-FE"],
+    "sandbox": "/var/www/DEV-010/",
+    "industry_role": "【网文行业线】女频总编·行业整合双核·产品方向+内容策略+作者生态设计主导",
+    "broadcast": "BC-WEN-001-JZ",
+    "syslog_status": "已回流"
+  },
+  "DEV-012": {
+    "name": "Awen",
+    "email": "",
+    "persona_id": "PER-ZQ001",
+    "modules": [],
+    "sandbox": "/var/www/DEV-012/",
+    "industry_role": "【网文行业线】技术主控·飞书主控台搭建·团队管理·码字软件Top1",
+    "broadcast": "BC-WEN-004/005/006-AW",
+    "syslog_status": "三轮已回流"
+  },
+  "M-INDUSTRY-NOVEL": {
+    "status": "进行中",
+    "note": "网文行业线需求发现阶段·桔子+页页+Awen三轮SYSLOG已回流·肥猫+燕樊待回流"
   }
 }
