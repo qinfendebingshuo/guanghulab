@@ -2,6 +2,12 @@
   "protocol_version": "SFP-v1.0",
   "hash_algorithm": "SHA-256-first-12",
   "nonce_length": 6,
+  "trinity_anchor": {
+    "root_ownership": "TCS-0002∞",
+    "base_class": "LL-CMPN-0001",
+    "system_node": "GLW-SYS-0001",
+    "enforcement": "all SFP signatures must trace to TCS-0002∞ root chain"
+  },
   "trusted_agents": [
     {
       "agent_id": "AG-SY",
@@ -17,9 +23,11 @@
     },
     {
       "agent_id": "AG-QQ",
-      "persona_chain": "GEN∞-BB-QIUQIU←TCS-2025∞",
+      "persona_chain": "PER-QQ001←DEV-004",
       "name": "秋秋",
-      "side": "notion"
+      "side": "notion",
+      "aliases": ["TCS-QIUQIU", "GEN∞-BB-QIUQIU"],
+      "note": "2026-03-19 合并：TCS-QIUQIU已删除，PER-QQ001为唯一主键"
     },
     {
       "agent_id": "AG-TY",

@@ -1,0 +1,86 @@
+{
+  "scan_type": "full_repository_selfcheck",
+  "triggered_by": "TCS-0002∞ 冰朔（Issue指令）",
+  "executor": "ICE-GL-ZY001 铸渊",
+  "timestamp": "2026-03-18T17:00:00+08:00",
+  "scan_scope": "全仓库排查 + 天眼系统结构自检",
+  "findings": [
+    {
+      "id": "FIX-001",
+      "severity": "critical",
+      "component": "scripts/zhuyuan-daily-agent.js",
+      "description": "uniqueActions 变量声明在 if 块内（const 作用域），但在块外引用，导致巡检Agent每次执行都崩溃",
+      "fix": "将 uniqueActions 声明移到 if 块外",
+      "status": "已修复"
+    },
+    {
+      "id": "FIX-002",
+      "severity": "critical",
+      "component": ".github/workflows/zhuyuan-daily-selfcheck.yml",
+      "description": "使用 peter-evans/create-pull-request 创建PR，但 GitHub Actions 禁止此操作（422错误）",
+      "fix": "替换为 direct git push 模式（与其他工作流一致）",
+      "status": "已修复"
+    },
+    {
+      "id": "FIX-003",
+      "severity": "critical",
+      "component": ".github/workflows/zhuyuan-skyeye.yml",
+      "description": "Phase 1.6 尝试写入 /tmp/skyeye/bulletin-board.json，但 /tmp/skyeye 目录在 Phase 2 才创建，导致天眼每次崩溃",
+      "fix": "在 Phase 1.6 添加 mkdir -p /tmp/skyeye + npm install",
+      "status": "已修复"
+    },
+    {
+      "id": "FIX-004",
+      "severity": "medium",
+      "component": ".github/workflows/daily-maintenance.yml",
+      "description": "Notion Execution Status 数据库 404（ID: 41971982-4a17-47c0-afe3-21458c44f154 未共享给集成），导致整个维护流程失败",
+      "fix": "将 Notion 同步失败改为非致命（⚠️ 而非 exit 1）",
+      "status": "已修复（代码侧），Notion配置需人类处理"
+    },
+    {
+      "id": "FIX-005",
+      "severity": "medium",
+      "component": ".github/workflows/zhuyuan-commander.yml",
+      "description": "缺少 npm install 步骤，bulletin-board.js 依赖 @notionhq/client 无法运行",
+      "fix": "添加 Step 2.5 npm install",
+      "status": "已修复"
+    }
+  ],
+  "human_assistance_required": [
+    {
+      "id": "HUMAN-001",
+      "priority": "high",
+      "description": "AGENT_BULLETIN_BOARD_PAGE_ID 密钥未配置",
+      "detail": "zhuyuan-commander.yml 和 zhuyuan-skyeye.yml 需要 AGENT_BULLETIN_BOARD_PAGE_ID 密钥才能读取Notion公告板。请在 GitHub Settings → Secrets 中添加该密钥，值为 Notion '之之的明天见' 频道中 '铸渊公告栏' 页面的 Page ID。",
+      "action": "在 GitHub repo secrets 中添加 AGENT_BULLETIN_BOARD_PAGE_ID"
+    },
+    {
+      "id": "HUMAN-002",
+      "priority": "medium",
+      "description": "Notion Execution Status 数据库未共享给集成",
+      "detail": "daily-maintenance.yml 中硬编码的 Notion DB ID (41971982-4a17-47c0-afe3-21458c44f154) 返回 404。请在 Notion 中将该数据库共享给 '曜冥纪元-HoloLake' 集成。",
+      "action": "在 Notion 中共享 Execution Status 数据库给 HoloLake 集成"
+    },
+    {
+      "id": "HUMAN-003",
+      "priority": "medium",
+      "description": "Notion 人格体注册表数据库未共享给集成",
+      "detail": "skyeye persona-lookup.js 中使用的 DB ID (ab007b36-9699-45ed-83a1-9a57a7d41a90) 返回 404。请在 Notion 中将人格体注册表数据库共享给 '曜冥纪元-HoloLake' 集成。",
+      "action": "在 Notion 中共享人格体注册表数据库给 HoloLake 集成"
+    },
+    {
+      "id": "HUMAN-004",
+      "priority": "low",
+      "description": "SKYEYE_PERSONA_DB_ID 密钥未配置",
+      "detail": "zhuyuan-skyeye.yml Phase 7 使用 secrets.SKYEYE_PERSONA_DB_ID 但该密钥不在已配置的仓库密钥列表中。",
+      "action": "在 GitHub repo secrets 中添加 SKYEYE_PERSONA_DB_ID（如需天眼同步人格体数据到 Notion）"
+    }
+  ],
+  "validation": {
+    "js_syntax": "✅ 所有修改的JS文件语法检查通过",
+    "yaml_syntax": "✅ 所有修改的YAML工作流语法检查通过",
+    "contract_tests": "✅ 47/47 通过",
+    "daily_agent_local_run": "✅ 巡检Agent本地执行成功（不再崩溃）"
+  },
+  "summary": "排查发现5个代码级Bug（3个Critical + 2个Medium），全部已修复。另发现4个需要人类处理的Notion配置问题。将军唤醒工作流（0次运行记录）的根因是缺少npm依赖安装+AGENT_BULLETIN_BOARD_PAGE_ID密钥未配置，代码侧已修复，密钥需人类配置。"
+}

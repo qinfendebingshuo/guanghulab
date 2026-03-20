@@ -80,18 +80,23 @@ jobs:
         run: node scripts/dc-workflow-perf.js
 
       - name: Commit self-check result
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "🔍 铸渊每日自检 · ${{ env.CHECK_DATE }}"
-          title: "🔍 铸渊每日自检 · ${{ env.CHECK_DATE }}"
-          body: |
-            🤖 铸渊每日自检结果自动提交
-            - 日期: ${{ env.CHECK_DATE }}
-            - 触发方式: ${{ github.event_name }}
-          branch: auto/daily-selfcheck
-          delete-branch: true
-          add-paths: |
-            .github/persona-brain/memory.json
-            data/dc-reports/
-          labels: auto-sync
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/persona-brain/memory.json data/dc-reports/
+          if ! git diff --cached --quiet; then
+            git commit -m "🔍 铸渊每日自检 · ${{ env.CHECK_DATE }} [skip ci]"
+            for i in 1 2 3; do
+              if git push; then
+                echo "✅ 自检结果已推送"
+                break
+              fi
+              echo "⚠️ 推送失败（第 $i 次），拉取后重试..."
+              git pull --rebase origin main
+              if [ $i -eq 3 ]; then
+                echo "⚠️ 推送失败 3 次，跳过"
+              fi
+            done
+          else
+            echo "📌 无变化，跳过提交"
+          fi

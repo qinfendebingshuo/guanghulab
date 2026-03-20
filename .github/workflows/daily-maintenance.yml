@@ -305,7 +305,6 @@ jobs:
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
             echo "✅ Execution Status synced to Notion (HTTP ${HTTP_CODE})"
           else
-            echo "❌ Sync failed (HTTP ${HTTP_CODE})"
+            echo "⚠️ Sync failed (HTTP ${HTTP_CODE})，不阻断流程"
             cat /tmp/notion_resp.json 2>/dev/null || true
-            exit 1
           fi

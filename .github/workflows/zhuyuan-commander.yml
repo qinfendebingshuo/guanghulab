@@ -58,6 +58,10 @@ jobs:
           node scripts/commander-dashboard.js
           echo "dashboard_ready=true" >> $GITHUB_OUTPUT
 
+      # Step 2.5 · 安装依赖
+      - name: "📦 Step 2.5 · 安装依赖"
+        run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
+
       # Step 3 · 读取公告板 + 指纹验证
       - name: "📡 Step 3 · 读取公告板"
         env:
