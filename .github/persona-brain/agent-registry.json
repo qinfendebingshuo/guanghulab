@@ -10,6 +10,7 @@
       "workflow": "agent-checkin.yml",
       "duty": "人格体每日签到",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -20,6 +21,7 @@
       "workflow": "auto-reply-discussions.yml",
       "duty": "🤖 铸渊 · Discussion 自动回复",
       "trigger": "Discussion",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -30,6 +32,7 @@
       "workflow": "bingshuo-deploy-agent.yml",
       "duty": "🧊 冰朔人格体 · 自动部署诊断",
       "trigger": "手动/Issue",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -40,6 +43,7 @@
       "workflow": "bingshuo-neural-system.yml",
       "duty": "冰朔主控神经系统 · 自动维护",
       "trigger": "定时/手动/推送",
+      "daily_checkin_required": true,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -50,6 +54,7 @@
       "workflow": "brain-sync.yml",
       "duty": "铸渊 Brain Sync",
       "trigger": "定时/手动/推送",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -60,6 +65,7 @@
       "workflow": "bridge-broadcast-pdf.yml",
       "duty": "铸渊 · 🌉 桥接·广播PDF生成+分发",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -70,6 +76,7 @@
       "workflow": "bridge-changes-to-notion.yml",
       "duty": "铸渊 · Bridge E · GitHub Changes → Notion",
       "trigger": "推送/PR",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -80,6 +87,7 @@
       "workflow": "bridge-heartbeat.yml",
       "duty": "铸渊 · 🌉 桥接·心跳检测",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -90,6 +98,7 @@
       "workflow": "bridge-session-summary.yml",
       "duty": "Generate Session Summary for Notion",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -100,6 +109,7 @@
       "workflow": "bridge-syslog-intake.yml",
       "duty": "铸渊 · 🌉 桥接·SYSLOG 上行处理",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -110,6 +120,7 @@
       "workflow": "bridge-syslog-to-notion.yml",
       "duty": "铸渊 · Bridge A · SYSLOG → Notion",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -120,6 +131,7 @@
       "workflow": "check-structure.yml",
       "duty": "模块结构检查",
       "trigger": "PR",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -130,6 +142,7 @@
       "workflow": "daily-maintenance.yml",
       "duty": "🔧 铸渊 · Daily Maintenance Agent",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -140,6 +153,7 @@
       "workflow": "daily-report.yml",
       "duty": "📰 铸渊 · 光湖开发日报",
       "trigger": "定时/手动/Discussion",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -150,6 +164,7 @@
       "workflow": "deploy-pages.yml",
       "duty": "🌀 部署铸渊聊天室 (GitHub Pages)",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -160,6 +175,7 @@
       "workflow": "deploy-to-server.yml",
       "duty": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -170,6 +186,7 @@
       "workflow": "distribute-broadcasts.yml",
       "duty": "铸渊 · 广播分发",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -180,6 +197,7 @@
       "workflow": "esp-signal-processor.yml",
       "duty": "铸渊 · ESP 邮件信号处理器（已暂停）",
       "trigger": "定时/手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -190,6 +208,7 @@
       "workflow": "execution-sync.yml",
       "duty": "📡 铸渊 · 执行层状态同步",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -200,6 +219,7 @@
       "workflow": "feishu-syslog-bridge.yml",
       "duty": "铸渊 · 飞书SYSLOG桥接",
       "trigger": "仓库事件",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -210,6 +230,7 @@
       "workflow": "generate-module-doc.yml",
       "duty": "铸渊 · 光湖纪元 模块文档自动生成",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -220,6 +241,7 @@
       "workflow": "hli-contract-check.yml",
       "duty": "HLI Contract Check",
       "trigger": "推送/PR",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -230,6 +252,7 @@
       "workflow": "meta-watchdog.yml",
       "duty": "🐕 元看门狗 · 巡检健康监控",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -240,6 +263,7 @@
       "workflow": "notion-callback-pipeline.yml",
       "duty": "Notion Callback Pipeline",
       "trigger": "仓库事件",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -250,6 +274,7 @@
       "workflow": "notion-connectivity-test.yml",
       "duty": "铸渊 · Notion 连通性测试",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -260,6 +285,7 @@
       "workflow": "notion-heartbeat.yml",
       "duty": "Notion Heartbeat Monitor",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -270,6 +296,7 @@
       "workflow": "notion-page-reader.yml",
       "duty": "铸渊 · Notion 页面阅读器",
       "trigger": "手动/仓库事件",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -280,6 +307,7 @@
       "workflow": "notion-poll.yml",
       "duty": "铸渊 · Notion 工单轮询",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -290,6 +318,7 @@
       "workflow": "notion-wake-listener.yml",
       "duty": "📡 铸渊 · Notion Agent 唤醒监听",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -300,6 +329,7 @@
       "workflow": "openclaw-wake-loop.yml",
       "duty": "🔄 OpenClaw · 唤醒闭环",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -310,6 +340,7 @@
       "workflow": "persona-invoke.yml",
       "duty": "Persona Invoke Endpoint",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -320,6 +351,7 @@
       "workflow": "pm2-server-diagnose.yml",
       "duty": "🔧 铸渊 · PM2 服务诊断与健康检查",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -330,6 +362,7 @@
       "workflow": "process-notion-orders.yml",
       "duty": "Process Notion Work Orders",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -340,6 +373,7 @@
       "workflow": "ps-on-build.yml",
       "duty": "🌊 Persona Studio · 代码生成",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -350,6 +384,7 @@
       "workflow": "ps-on-chat.yml",
       "duty": "🌊 Persona Studio · 对话处理",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -360,6 +395,7 @@
       "workflow": "ps-on-complete.yml",
       "duty": "🌊 Persona Studio · 完成通知",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -370,6 +406,7 @@
       "workflow": "ps-on-login.yml",
       "duty": "🌊 Persona Studio · 登录校验",
       "trigger": "手动",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -380,6 +417,7 @@
       "workflow": "psp-daily-inspection.yml",
       "duty": "铸渊 · PSP 分身巡检",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -390,6 +428,7 @@
       "workflow": "push-broadcast-feishu.yml",
       "duty": "铸渊 · 广播推送飞书（聊天消息）",
       "trigger": "手动/仓库事件",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -400,6 +439,7 @@
       "workflow": "push-broadcast.yml",
       "duty": "铸渊 · Push Broadcast · Notion → 飞书文档B",
       "trigger": "手动/仓库事件",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -410,6 +450,7 @@
       "workflow": "receive-syslog.yml",
       "duty": "铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion",
       "trigger": "仓库事件",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -420,6 +461,7 @@
       "workflow": "sandbox-deploy.yml",
       "duty": "🏠 Sandbox Deploy",
       "trigger": "推送",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -430,6 +472,7 @@
       "workflow": "server-patrol.yml",
       "duty": "🔍 Server Patrol · 服务器每日巡检",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -440,6 +483,7 @@
       "workflow": "staging-preview.yml",
       "duty": "🔍 铸渊预演部署 (Staging Preview)",
       "trigger": "手动/PR",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -450,6 +494,7 @@
       "workflow": "sync-deploy-to-notion.yml",
       "duty": "📝 Sync Deploy Status to Notion",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -460,6 +505,7 @@
       "workflow": "sync-dev-status.yml",
       "duty": "📡 铸渊 · dev-status 自动同步",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -470,6 +516,7 @@
       "workflow": "sync-login-entry.yml",
       "duty": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
       "trigger": "手动/仓库事件",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -480,6 +527,7 @@
       "workflow": "sync-persona-studio.yml",
       "duty": "🔄 铸渊跨仓库同步 · persona-studio",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -490,6 +538,7 @@
       "workflow": "syslog-auto-pipeline.yml",
       "duty": "SYSLOG Auto Pipeline",
       "trigger": "Discussion",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -500,6 +549,7 @@
       "workflow": "syslog-issue-pipeline.yml",
       "duty": "📡 SYSLOG Issue Pipeline",
       "trigger": "Issue",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -510,6 +560,7 @@
       "workflow": "syslog-pipeline.yml",
       "duty": "铸渊 · SYSLOG Pipeline (A/D/E)",
       "trigger": "手动/推送/Issue",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -520,6 +571,7 @@
       "workflow": "test-notion-bridge.yml",
       "duty": "🧪 Notion Bridge Connectivity Test",
       "trigger": "手动/推送",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -530,6 +582,7 @@
       "workflow": "update-readme-bulletin.yml",
       "duty": "📢 更新系统公告区",
       "trigger": "定时/手动/推送",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -540,6 +593,7 @@
       "workflow": "update-repo-map.yml",
       "duty": "铸渊 · 图书馆目录自动更新",
       "trigger": "定时/手动/推送",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -550,6 +604,7 @@
       "workflow": "zhuyuan-brain-sync.yml",
       "duty": "铸渊 · Brain Sync",
       "trigger": "推送",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -560,6 +615,7 @@
       "workflow": "zhuyuan-daily-agent.yml",
       "duty": "🤖 铸渊巡检 Agent · 每日自动巡检与修复",
       "trigger": "定时/手动/Issue",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -570,6 +626,7 @@
       "workflow": "zhuyuan-daily-inspection.yml",
       "duty": "铸渊每日巡检",
       "trigger": "定时/手动",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -580,6 +637,7 @@
       "workflow": "zhuyuan-daily-selfcheck.yml",
       "duty": "铸渊 · 每日自检",
       "trigger": "定时/手动/Issue",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -590,6 +648,7 @@
       "workflow": "zhuyuan-gate-guard.yml",
       "duty": "🚨 铸渊·智能门禁 · Push Gate Guard",
       "trigger": "推送/Issue",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -600,6 +659,7 @@
       "workflow": "zhuyuan-issue-reply.yml",
       "duty": "铸渊 · Issue 自动回复",
       "trigger": "Issue",
+      "daily_checkin_required": false,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -610,6 +670,7 @@
       "workflow": "zhuyuan-pr-review.yml",
       "duty": "铸渊 · PR Review",
       "trigger": "PR",
+      "daily_checkin_required": false,
       "self_repair": false,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"
@@ -620,6 +681,7 @@
       "workflow": "zhuyuan-skyeye.yml",
       "duty": "🦅 铸渊·天眼 · 全局俯瞰 + 自动诊断 + 修复驱动",
       "trigger": "定时/手动/Issue",
+      "daily_checkin_required": true,
       "self_repair": true,
       "report_to": "ICE-GL-ZY001",
       "status": "registered"

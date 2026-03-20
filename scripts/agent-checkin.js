@@ -96,20 +96,34 @@ async function main() {
   const records = [];
   let checkedIn = 0;
   const missingAgents = [];
+  let skippedEventAgents = 0;
 
   for (const agent of registry.agents) {
-    console.log(`  🔍 检查 ${agent.id} (${agent.workflow})...`);
-    const run = await getLatestRun(agent.workflow);
+    const isDailyRequired = agent.daily_checkin_required === true;
+    console.log(`  🔍 检查 ${agent.id} (${agent.workflow})${isDailyRequired ? '' : ' [事件触发型]'}...`);
 
     const record = {
       agent_id: agent.id,
       agent_name: agent.name,
+      daily_checkin_required: isDailyRequired,
       status: 'pending',
       checkin_time: null,
       last_run: null,
       last_run_result: null,
       note: '',
     };
+
+    // 事件触发型代理不需要每日签到，跳过 API 查询
+    if (!isDailyRequired) {
+      record.status = '⏭️ 非每日签到';
+      record.note = '事件触发型代理，无需每日签到';
+      skippedEventAgents++;
+      console.log(`    ⏭️ 事件触发型，跳过签到检查`);
+      records.push(record);
+      continue;
+    }
+
+    const run = await getLatestRun(agent.workflow);
 
     if (run && run.conclusion === 'success') {
       record.status = '✅ 已签到';
@@ -136,16 +150,19 @@ async function main() {
   }
 
   // 3. 构建签到板
+  const dailyRequiredCount = registry.agents.filter(a => a.daily_checkin_required === true).length;
   const board = {
-    board_version: 'v1.0',
+    board_version: 'v1.1',
     checkin_deadline: '10:00+08:00',
     inspection_time: '12:00+08:00',
     date: today,
     records: records,
     summary: {
       total: records.length,
+      daily_required: dailyRequiredCount,
+      event_triggered: skippedEventAgents,
       checked_in: checkedIn,
-      missing: records.length - checkedIn,
+      missing: dailyRequiredCount - checkedIn,
       missing_agents: missingAgents,
     },
   };
@@ -154,7 +171,7 @@ async function main() {
   fs.writeFileSync(BOARD_PATH, JSON.stringify(board, null, 2));
 
   console.log(`\n📊 签到汇总：`);
-  console.log(`  总数: ${board.summary.total}`);
+  console.log(`  总数: ${board.summary.total} (每日必签: ${board.summary.daily_required}, 事件触发: ${board.summary.event_triggered})`);
   console.log(`  已签到: ${board.summary.checked_in}`);
   console.log(`  缺席: ${board.summary.missing}`);
   if (missingAgents.length > 0) {
