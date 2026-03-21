@@ -1,0 +1,52 @@
+# 光湖系统 · 项目进度同步工作流
+# 从总仓库拉取 dev-status.json 进度数据
+#
+# 触发条件:
+#   - repository_dispatch: dev-status-update
+#   - schedule: UTC 02:00 = 北京 10:00
+
+name: 📊 同步项目进度
+
+on:
+  repository_dispatch:
+    types: [dev-status-update]
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 拉取进度数据
+        env:
+          DEV_ID: ${{ vars.DEV_ID }}
+        run: |
+          mkdir -p dev-status
+          curl -sf -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/qinfendebingshuo/guanghulab/contents/.github/persona-brain/dev-status.json" \
+            -o dev-status/all-status.json 2>/dev/null || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 重新生成 README
+        env:
+          DEV_ID: ${{ vars.DEV_ID }}
+          DEV_NAME: ${{ vars.DEV_NAME }}
+          DEV_ROLE: ${{ vars.DEV_ROLE }}
+          PERSONA_NAME: ${{ vars.PERSONA_NAME }}
+          PERSONA_ID: ${{ vars.PERSONA_ID }}
+        run: node scripts/generate-readme.js
+
+      - name: 提交
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .
+          git diff --cached --quiet || git commit -m "📊 项目进度同步 · $(date +%Y-%m-%d)"
+          git push
