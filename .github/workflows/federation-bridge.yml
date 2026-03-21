@@ -31,6 +31,8 @@ jobs:
   bridge:
     name: "🌉 桥接执行"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
