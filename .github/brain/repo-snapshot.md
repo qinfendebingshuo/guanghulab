@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-21 10:03 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-21 11:44 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -13,7 +13,7 @@
 | 脚本 | 72 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-21 10:03 CST |
+| 快照生成时间 | 2026-03-21 11:44 CST |
 
 ---
 
@@ -275,7 +275,7 @@
 | DEV-001 | 🖥️页页 | backend-integration | 0 |
 | DEV-002 | 🦁肥猫 | m01-login, m03-personality | 0 |
 | DEV-003 | 🌸燕樊 | m07-dialogue-ui, m10-cloud, m15-cloud-drive | 0 |
-| DEV-004 | 🤖之之 | dingtalk-bot | 0 |
+| DEV-004 | 🤖之之 | dingtalk, floating-ai, devboard | 0 |
 | DEV-005 | 🍓小草莓 | m12-kanban, status-board | 0 |
 | DEV-009 | 🌺花尔 | m05-user-center | 0 |
 | DEV-010 | 🍊桔子 | m06-ticket, m11-module | 0 |
