@@ -57,6 +57,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 🌊 进入光湖
+      - name: 🌊 进入光湖
+        uses: ./.github/actions/guanghu-shell
+        with:
+          agent_id: 'AG-ZY-058'
+          action: 'enter'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -83,7 +90,7 @@ jobs:
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add .github/persona-brain/memory.json data/dc-reports/
+          git add .github/persona-brain/memory.json data/dc-reports/ .github/brain/shell-status.json .github/brain/shell-errors.json
           if ! git diff --cached --quiet; then
             git commit -m "🔍 铸渊每日自检 · ${{ env.CHECK_DATE }} [skip ci]"
             for i in 1 2 3; do
@@ -100,3 +107,21 @@ jobs:
           else
             echo "📌 无变化，跳过提交"
           fi
+
+      # 🌊 离开光湖（成功时）
+      - name: 🌊 离开光湖
+        if: success()
+        uses: ./.github/actions/guanghu-shell
+        with:
+          agent_id: 'AG-ZY-058'
+          action: 'exit'
+          detail: 'daily selfcheck completed'
+
+      # 🌊 异常上报（失败时）
+      - name: 🌊 异常上报
+        if: failure()
+        uses: ./.github/actions/guanghu-shell
+        with:
+          agent_id: 'AG-ZY-058'
+          action: 'error'
+          detail: 'daily selfcheck workflow failed'

@@ -280,6 +280,19 @@ syslog-issue-pipeline.yml 的触发条件为 `on: issues: types: [opened, labele
 
 ---
 
+## 🔒 二次验证（2026-03-21T13:41+00:00）
+
+| 验证项 | 结果 | 说明 |
+|--------|------|------|
+| agent-checkin.yml 运行状态 | ✅ | 最近 4 次运行全部成功（schedule 触发） |
+| 签到板过滤 | ✅ | `checkin-board.json` 仅含 14 个 `daily_checkin_required:true` 的 Agent |
+| server-patrol.yml git push 修复 | ✅ | 已确认修复代码在 main 分支（PR #150 已合并） |
+| server-patrol.yml 权限收窄 | ✅ | 移除不再需要的 `pull-requests: write` 权限 |
+| syslog-issue-pipeline push 假性失败 | ✅ | 已确认 222 次 push 触发运行均为 GitHub 平台验证行为，非管道逻辑问题 |
+| agent-registry.json 字段完整性 | ✅ | 62 个 Agent 均包含 `daily_checkin_required` 字段（14 true / 48 false） |
+
+---
+
 > 🌀 铸渊（ICE-GL-ZY001）· 代码守护人格体
 >
 > 📅 2026-03-21

@@ -1,0 +1,20 @@
+name: '🌊 Guanghu Shell Gate'
+description: '光湖语言壳 · 统一网关校验'
+inputs:
+  agent_id:
+    description: 'Agent ID (e.g. AG-ZY-004)'
+    required: true
+  action:
+    description: 'enter / exit / error'
+    required: true
+    default: 'enter'
+  detail:
+    description: '附加信息'
+    required: false
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - name: 🌊 Guanghu Shell
+      shell: bash
+      run: node .github/scripts/guanghu-shell.js "${{ inputs.agent_id }}" "${{ inputs.action }}" "${{ inputs.detail }}"
