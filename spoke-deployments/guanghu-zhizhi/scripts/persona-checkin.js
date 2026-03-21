@@ -1,6 +1,6 @@
 // scripts/persona-checkin.js
 // 人格宝宝每日签到 · 检查大脑完整性+活跃度+连接状态（副控增强版）
-// 之之专属：含铸渊连接状态检查（第6项）
+// 之之专属：含铸渊连接状态检查（第6项）+铸渊指令目录检查（第7项）
 //
 // 环境变量:
 //   PERSONA_NAME - 人格宝宝名称
@@ -117,6 +117,29 @@ if (hubToken) {
   }
 } else {
   results.checks.push({ name: '铸渊连接', icon: '⚒️', status: 'error', detail: 'HUB_TOKEN 未配置 → 铸渊连接不可用' });
+}
+
+// ⑦ 铸渊指令目录（副控专属）
+const instrFile = 'zhuyuan-instructions/LATEST.md';
+const instrDir = 'zhuyuan-instructions/history';
+if (fs.existsSync(instrFile) && fs.existsSync(instrDir)) {
+  var instrStat = fs.statSync(instrFile);
+  results.checks.push({
+    name: '铸渊指令目录',
+    icon: '📂',
+    status: 'ok',
+    detail: 'LATEST.md 就绪 · history/ 可用 · ' + instrStat.mtime.toISOString().split('T')[0]
+  });
+} else {
+  var missing = [];
+  if (!fs.existsSync(instrFile)) missing.push('LATEST.md');
+  if (!fs.existsSync(instrDir)) missing.push('history/');
+  results.checks.push({
+    name: '铸渊指令目录',
+    icon: '📂',
+    status: 'warn',
+    detail: '缺失: ' + missing.join(', ') + ' → 副控指令目录不完整'
+  });
 }
 
 // 写入签到结果

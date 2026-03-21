@@ -30,7 +30,7 @@ jobs:
           DEV_ID: ${{ vars.DEV_ID }}
           PERSONA_NAME: ${{ vars.PERSONA_NAME }}
           PERSONA_ID: ${{ vars.PERSONA_ID }}
-          HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          HUB_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/persona-checkin.js
 
@@ -55,7 +55,7 @@ jobs:
         if: always()
         run: |
           curl -sf -X POST \
-            -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.MAIN_REPO_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/qinfendebingshuo/guanghulab/dispatches" \
             -d '{"event_type":"spoke-checkin","client_payload":{"dev_id":"${{ vars.DEV_ID }}","status":"ok"}}' \

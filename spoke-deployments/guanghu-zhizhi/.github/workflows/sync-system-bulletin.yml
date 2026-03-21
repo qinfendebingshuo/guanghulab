@@ -22,7 +22,7 @@ jobs:
       - name: 拉取总仓库公告
         run: |
           mkdir -p system-bulletin
-          curl -sf -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+          curl -sf -H "Authorization: token ${{ secrets.MAIN_REPO_TOKEN }}" \
             -H "Accept: application/vnd.github.v3.raw" \
             "https://api.github.com/repos/qinfendebingshuo/guanghulab/contents/system-bulletin/LATEST.md" \
             -o system-bulletin/LATEST.md || echo "⚠️ 拉取失败，保留本地版本"

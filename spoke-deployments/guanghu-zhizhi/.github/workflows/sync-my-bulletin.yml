@@ -24,7 +24,7 @@ jobs:
           DEV_ID: ${{ vars.DEV_ID }}
         run: |
           mkdir -p my-bulletin/history
-          curl -sf -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+          curl -sf -H "Authorization: token ${{ secrets.MAIN_REPO_TOKEN }}" \
             -H "Accept: application/vnd.github.v3.raw" \
             "https://api.github.com/repos/qinfendebingshuo/guanghulab/contents/broadcasts-outbox/${DEV_ID}/LATEST.md" \
             -o my-bulletin/LATEST-BROADCAST.md 2>/dev/null || true
