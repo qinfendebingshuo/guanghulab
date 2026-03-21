@@ -1,0 +1,34 @@
+# 光湖系统公告区自动更新工作流
+# 接收子仓库签到结果并记录到 spoke-status/ 目录
+#
+# 触发条件: repository_dispatch (spoke-checkin event)
+
+name: 📥 接收子仓库签到
+
+on:
+  repository_dispatch:
+    types: [spoke-checkin]
+
+permissions:
+  contents: write
+
+jobs:
+  receive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 记录签到
+        run: |
+          DEV_ID="${{ github.event.client_payload.dev_id }}"
+          STATUS="${{ github.event.client_payload.status }}"
+          mkdir -p spoke-status
+          echo "{\"dev_id\":\"${DEV_ID}\",\"status\":\"${STATUS}\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > "spoke-status/${DEV_ID}.json"
+
+      - name: 提交
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add spoke-status/
+          git diff --cached --quiet || git commit -m "📥 收到 ${{ github.event.client_payload.dev_id }} 签到"
+          git push

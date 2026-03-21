@@ -1,0 +1,62 @@
+# 光湖系统 · 人格宝宝每日签到工作流
+# 自动检查大脑完整性、活跃度、广播状态、总仓库连接
+#
+# 触发条件:
+#   - schedule: UTC 00:00 = 北京 08:00
+#   - workflow_dispatch: 手动触发
+
+name: 🤖 人格宝宝每日签到
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 执行签到检查
+        env:
+          DEV_ID: ${{ vars.DEV_ID }}
+          PERSONA_NAME: ${{ vars.PERSONA_NAME }}
+          PERSONA_ID: ${{ vars.PERSONA_ID }}
+          HUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/persona-checkin.js
+
+      - name: 重新生成 README
+        env:
+          DEV_ID: ${{ vars.DEV_ID }}
+          DEV_NAME: ${{ vars.DEV_NAME }}
+          DEV_ROLE: ${{ vars.DEV_ROLE }}
+          PERSONA_NAME: ${{ vars.PERSONA_NAME }}
+          PERSONA_ID: ${{ vars.PERSONA_ID }}
+        run: node scripts/generate-readme.js
+
+      - name: 提交签到结果
+        run: |
+          git config user.name "${{ vars.PERSONA_NAME }}宝宝"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .
+          git diff --cached --quiet || git commit -m "🤖 ${{ vars.PERSONA_NAME }}签到 · $(date +%Y-%m-%d)"
+          git push
+
+      - name: 通知总仓库（签到结果）
+        if: always()
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/qinfendebingshuo/guanghulab/dispatches" \
+            -d '{"event_type":"spoke-checkin","client_payload":{"dev_id":"${{ vars.DEV_ID }}","status":"ok"}}' \
+            || echo "⚠️ 通知总仓库失败"

@@ -1,0 +1,44 @@
+# 光湖系统 · 总控台公告同步工作流
+# 从总仓库 guanghulab 拉取最新系统公告到子仓库
+#
+# 触发条件:
+#   - repository_dispatch: system-bulletin-update
+#   - schedule: 每4小时自动拉取
+
+name: 🌊 同步总控台公告
+
+on:
+  repository_dispatch:
+    types: [system-bulletin-update]
+  schedule:
+    - cron: '0 */4 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 拉取总仓库公告
+        run: |
+          mkdir -p system-bulletin
+          curl -sf -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/qinfendebingshuo/guanghulab/contents/system-bulletin/LATEST.md" \
+            -o system-bulletin/LATEST.md || echo "⚠️ 拉取失败，保留本地版本"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 重新生成 README
+        run: node scripts/generate-readme.js
+
+      - name: 提交更新
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .
+          git diff --cached --quiet || git commit -m "🌊 总控台公告同步 · $(date +%Y-%m-%d-%H%M)"
+          git push

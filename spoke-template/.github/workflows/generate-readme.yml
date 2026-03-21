@@ -1,0 +1,42 @@
+# 光湖系统 · README 自动重新生成工作流
+# 任何推送到 main 分支后自动重新生成 README Dashboard
+#
+# 触发条件: push to main (排除 README.md 自身避免循环)
+
+name: 📄 README 自动生成
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 生成 README Dashboard
+        env:
+          DEV_ID: ${{ vars.DEV_ID }}
+          DEV_NAME: ${{ vars.DEV_NAME }}
+          DEV_ROLE: ${{ vars.DEV_ROLE }}
+          PERSONA_NAME: ${{ vars.PERSONA_NAME }}
+          PERSONA_ID: ${{ vars.PERSONA_ID }}
+        run: node scripts/generate-readme.js
+
+      - name: 提交（仅 README 有变化时）
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "📄 README Dashboard 自动更新 · $(date +%Y-%m-%d-%H%M)"
+          git push

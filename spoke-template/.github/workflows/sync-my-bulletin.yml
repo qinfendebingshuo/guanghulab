@@ -1,0 +1,54 @@
+# 光湖系统 · 个人广播同步工作流
+# 从总仓库 guanghulab 的 broadcasts-outbox/{DEV_ID}/ 拉取个人广播
+#
+# 触发条件:
+#   - repository_dispatch: broadcast-push
+#   - schedule: 每4小时（偏移30分钟避免与公告同步冲突）
+
+name: 📡 同步个人广播
+
+on:
+  repository_dispatch:
+    types: [broadcast-push]
+  schedule:
+    - cron: '30 */4 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 拉取个人广播
+        env:
+          DEV_ID: ${{ vars.DEV_ID }}
+        run: |
+          mkdir -p my-bulletin/history
+          curl -sf -H "Authorization: token ${{ secrets.HUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/qinfendebingshuo/guanghulab/contents/broadcasts-outbox/${DEV_ID}/LATEST.md" \
+            -o my-bulletin/LATEST-BROADCAST.md 2>/dev/null || true
+
+      - name: 归档旧广播（如有变化）
+        run: |
+          if [ -f my-bulletin/LATEST-BROADCAST.md ]; then
+            HASH=$(md5sum my-bulletin/LATEST-BROADCAST.md | cut -d' ' -f1)
+            ARCHIVE="my-bulletin/history/$(date +%Y%m%d)-${HASH:0:8}.md"
+            [ ! -f "$ARCHIVE" ] && cp my-bulletin/LATEST-BROADCAST.md "$ARCHIVE"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 重新生成 README
+        run: node scripts/generate-readme.js
+
+      - name: 提交
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .
+          git diff --cached --quiet || git commit -m "📡 个人广播同步 · $(date +%Y-%m-%d-%H%M)"
+          git push

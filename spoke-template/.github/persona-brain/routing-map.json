@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "persona_id": "{{PERSONA_ID}}",
+  "routes": {
+    "system-bulletin": {
+      "source": "qinfendebingshuo/guanghulab/system-bulletin/LATEST.md",
+      "local": "system-bulletin/LATEST.md",
+      "sync": "every 4 hours"
+    },
+    "my-bulletin": {
+      "source": "qinfendebingshuo/guanghulab/broadcasts-outbox/{{DEV_ID}}/LATEST.md",
+      "local": "my-bulletin/LATEST-BROADCAST.md",
+      "sync": "every 4 hours (offset 30min)"
+    },
+    "dev-status": {
+      "source": "qinfendebingshuo/guanghulab/.github/persona-brain/dev-status.json",
+      "local": "dev-status/all-status.json",
+      "sync": "daily UTC 02:00"
+    },
+    "checkin-report": {
+      "target": "qinfendebingshuo/guanghulab (repository_dispatch: spoke-checkin)",
+      "local": "checkin/latest.json",
+      "sync": "daily UTC 00:00"
+    }
+  }
+}
