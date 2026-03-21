@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-21 22:16 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-22 01:03 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 66 个 GitHub Actions |
+| 工作流 | 67 个 GitHub Actions |
 | 脚本 | 74 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-21 22:16 CST |
+| 快照生成时间 | 2026-03-22 01:03 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 66 项
+**路径**: `.github/workflows` · **数量**: 67 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -129,6 +129,7 @@
 | `ps-on-complete.yml` | "🌊 Persona Studio · 完成通知" | manual |
 | `ps-on-login.yml` | "🌊 Persona Studio · 登录校验" | manual |
 | `psp-daily-inspection.yml` | 铸渊 · PSP 分身巡检 | schedule(0 1 * * *), manual |
+| `pull-sync-awen.yml` | "🌉 Pull Sync from Awen" | schedule(0 1 * * *), manual |
 | `push-broadcast-feishu.yml` | 铸渊 · 广播推送飞书（聊天消息） | manual |
 | `push-broadcast.yml` | 铸渊 · Push Broadcast · Notion → 飞书文档B | manual |
 | `receive-spoke-checkin.yml` | 📥 接收子仓库签到 | unknown |
@@ -330,9 +331,9 @@
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-21T14:20:47.286Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 - `2026-03-21T08:44:50.327Z` · daily_check — passed
 - `2026-03-20T14:39:13.086Z` · daily_agent_inspection — 铸渊巡检Agent · ✅3 ⚠️3 ❌0 · 2个问题
-- `2026-03-20T08:53:49.483Z` · daily_check — passed
 
 ---
 

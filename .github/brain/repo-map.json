@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-21T14:16:04.020Z",
+  "generated_at": "2026-03-21T17:03:35.946Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 66,
+    "total_workflows": 67,
     "total_scripts": 74,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -495,6 +495,14 @@
           ]
         },
         {
+          "file": "pull-sync-awen.yml",
+          "name": "\"🌉 Pull Sync from Awen\"",
+          "triggers": [
+            "schedule(0 1 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "push-broadcast-feishu.yml",
           "name": "铸渊 · 广播推送飞书（聊天消息）",
           "triggers": [
@@ -706,7 +714,7 @@
           ]
         }
       ],
-      "item_count": 66
+      "item_count": 67
     },
     {
       "zone_id": "SCRIPTS",
@@ -1848,6 +1856,9 @@
     ],
     "psp-daily-inspection": [
       "WORKFLOWS::psp-daily-inspection.yml"
+    ],
+    "pull-sync-awen": [
+      "WORKFLOWS::pull-sync-awen.yml"
     ],
     "push-broadcast-feishu": [
       "WORKFLOWS::push-broadcast-feishu.yml"
