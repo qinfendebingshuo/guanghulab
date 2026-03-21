@@ -1,0 +1,76 @@
+# .github/workflows/federation-bridge.yml
+# 铸渊仓库联邦桥接 · 定时自动运行
+
+name: 🌉 铸渊 · 仓库联邦桥接
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 每日 10:00 北京时间 · 推送公告
+    - cron: '0 14 * * *'  # 每日 22:00 北京时间 · 汇总进度
+  push:
+    branches: [main]
+    paths:
+      - 'bulletins/**'
+      - 'broadcasts-outbox/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '执行动作'
+        required: true
+        type: choice
+        options:
+          - bulletin
+          - init-all
+          - status
+          - distribute
+      dev_id:
+        description: '单独初始化某个DEV（仅init时填写）'
+        required: false
+
+jobs:
+  bridge:
+    name: "🌉 桥接执行"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 定时任务 · 公告或汇总
+        if: github.event_name == 'schedule'
+        env:
+          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          GITHUB_ORG: qinfendebingshuo
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "$HOUR" = "02" ]; then
+            node scripts/bridge-app.js bulletin
+          else
+            node scripts/bridge-app.js status
+          fi
+
+      - name: 手动触发
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          GITHUB_ORG: qinfendebingshuo
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          DEV_ID="${{ github.event.inputs.dev_id }}"
+          if [ "$ACTION" = "init-all" ] && [ -n "$DEV_ID" ]; then
+            node scripts/bridge-app.js init "$DEV_ID"
+          else
+            node scripts/bridge-app.js "$ACTION"
+          fi
+
+      - name: Push触发 · 公告+广播
+        if: github.event_name == 'push'
+        env:
+          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          GITHUB_ORG: qinfendebingshuo
+        run: |
+          node scripts/bridge-app.js bulletin
+          node scripts/bridge-app.js distribute
