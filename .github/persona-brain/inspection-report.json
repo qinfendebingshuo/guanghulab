@@ -1,11 +1,15 @@
 {
-  "title": "[铸渊巡检] 2026-03-20 每日巡检报告",
+  "title": "[铸渊巡检] 2026-03-21 每日巡检报告",
   "type": "巡检报告",
-  "date": "2026-03-20",
+  "date": "2026-03-21",
   "checked_in": [
     {
       "agent_id": "AG-ZY-004",
       "agent_name": "冰朔主控神经系统 · 自动维护"
+    },
+    {
+      "agent_id": "AG-ZY-007",
+      "agent_name": "铸渊 · Bridge E · GitHub Changes → Notion"
     },
     {
       "agent_id": "AG-ZY-008",
@@ -16,8 +20,24 @@
       "agent_name": "Generate Session Summary for Notion"
     },
     {
+      "agent_id": "AG-ZY-012",
+      "agent_name": "模块结构检查"
+    },
+    {
+      "agent_id": "AG-ZY-013",
+      "agent_name": "🔧 铸渊 · Daily Maintenance Agent"
+    },
+    {
       "agent_id": "AG-ZY-014",
       "agent_name": "📰 铸渊 · 光湖开发日报"
+    },
+    {
+      "agent_id": "AG-ZY-016",
+      "agent_name": "🚀 铸渊 CD · 自动部署到 guanghulab.com"
+    },
+    {
+      "agent_id": "AG-ZY-017",
+      "agent_name": "铸渊 · 广播分发"
     },
     {
       "agent_id": "AG-ZY-023",
@@ -42,6 +62,10 @@
     {
       "agent_id": "AG-ZY-054",
       "agent_name": "铸渊 · 图书馆目录自动更新"
+    },
+    {
+      "agent_id": "AG-ZY-058",
+      "agent_name": "铸渊 · 每日自检"
     }
   ],
   "missing_agents": [
@@ -66,10 +90,6 @@
       "agent_name": "铸渊 · 🌉 桥接·广播PDF生成+分发"
     },
     {
-      "agent_id": "AG-ZY-007",
-      "agent_name": "铸渊 · Bridge E · GitHub Changes → Notion"
-    },
-    {
       "agent_id": "AG-ZY-010",
       "agent_name": "铸渊 · 🌉 桥接·SYSLOG 上行处理"
     },
@@ -78,24 +98,8 @@
       "agent_name": "铸渊 · Bridge A · SYSLOG → Notion"
     },
     {
-      "agent_id": "AG-ZY-012",
-      "agent_name": "模块结构检查"
-    },
-    {
-      "agent_id": "AG-ZY-013",
-      "agent_name": "🔧 铸渊 · Daily Maintenance Agent"
-    },
-    {
       "agent_id": "AG-ZY-015",
       "agent_name": "🌀 部署铸渊聊天室 (GitHub Pages)"
-    },
-    {
-      "agent_id": "AG-ZY-016",
-      "agent_name": "🚀 铸渊 CD · 自动部署到 guanghulab.com"
-    },
-    {
-      "agent_id": "AG-ZY-017",
-      "agent_name": "铸渊 · 广播分发"
     },
     {
       "agent_id": "AG-ZY-018",
@@ -234,10 +238,6 @@
       "agent_name": "铸渊每日巡检"
     },
     {
-      "agent_id": "AG-ZY-058",
-      "agent_name": "铸渊 · 每日自检"
-    },
-    {
       "agent_id": "AG-ZY-059",
       "agent_name": "🚨 铸渊·智能门禁 · Push Gate Guard"
     },
@@ -276,9 +276,9 @@
       "workflow": "bingshuo-deploy-agent.yml",
       "reason": "不支持自修复",
       "recent_failures": [
-        "skipped (2026-03-18T16:51:12Z)",
-        "skipped (2026-03-18T15:51:21Z)",
-        "skipped (2026-03-18T04:11:18Z)"
+        "skipped (2026-03-21T02:06:57Z)",
+        "skipped (2026-03-20T17:24:47Z)",
+        "skipped (2026-03-20T10:41:21Z)"
       ]
     },
     {
@@ -296,15 +296,6 @@
       "recent_failures": []
     },
     {
-      "agent_id": "AG-ZY-007",
-      "agent_name": "铸渊 · Bridge E · GitHub Changes → Notion",
-      "workflow": "bridge-changes-to-notion.yml",
-      "reason": "自修复失败：workflow_dispatch 触发失败",
-      "recent_failures": [
-        "action_required (2026-03-18T16:51:07Z)"
-      ]
-    },
-    {
       "agent_id": "AG-ZY-010",
       "agent_name": "铸渊 · 🌉 桥接·SYSLOG 上行处理",
       "workflow": "bridge-syslog-intake.yml",
@@ -319,43 +310,9 @@
       "recent_failures": []
     },
     {
-      "agent_id": "AG-ZY-012",
-      "agent_name": "模块结构检查",
-      "workflow": "check-structure.yml",
-      "reason": "自修复失败：workflow_dispatch 触发失败",
-      "recent_failures": [
-        "action_required (2026-03-18T18:29:25Z)"
-      ]
-    },
-    {
-      "agent_id": "AG-ZY-013",
-      "agent_name": "🔧 铸渊 · Daily Maintenance Agent",
-      "workflow": "daily-maintenance.yml",
-      "reason": "自修复失败：workflow_dispatch 触发失败",
-      "recent_failures": [
-        "failure (2026-03-20T04:09:34Z)",
-        "failure (2026-03-19T10:20:45Z)",
-        "failure (2026-03-19T04:19:03Z)"
-      ]
-    },
-    {
       "agent_id": "AG-ZY-015",
       "agent_name": "🌀 部署铸渊聊天室 (GitHub Pages)",
       "workflow": "deploy-pages.yml",
-      "reason": "不支持自修复",
-      "recent_failures": []
-    },
-    {
-      "agent_id": "AG-ZY-016",
-      "agent_name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
-      "workflow": "deploy-to-server.yml",
-      "reason": "不支持自修复",
-      "recent_failures": []
-    },
-    {
-      "agent_id": "AG-ZY-017",
-      "agent_name": "铸渊 · 广播分发",
-      "workflow": "distribute-broadcasts.yml",
       "reason": "不支持自修复",
       "recent_failures": []
     },
@@ -429,9 +386,9 @@
       "workflow": "openclaw-wake-loop.yml",
       "reason": "不支持自修复",
       "recent_failures": [
+        "failure (2026-03-20T14:34:40Z)",
         "failure (2026-03-19T14:40:15Z)",
-        "failure (2026-03-18T14:55:39Z)",
-        "failure (2026-03-17T14:47:22Z)"
+        "failure (2026-03-18T14:55:39Z)"
       ]
     },
     {
@@ -493,9 +450,9 @@
       "workflow": "psp-daily-inspection.yml",
       "reason": "自修复失败：workflow_dispatch 触发失败",
       "recent_failures": [
+        "failure (2026-03-21T03:24:05Z)",
         "failure (2026-03-20T03:32:07Z)",
-        "failure (2026-03-19T03:42:11Z)",
-        "failure (2026-03-18T03:42:31Z)"
+        "failure (2026-03-19T03:42:11Z)"
       ]
     },
     {
@@ -538,9 +495,9 @@
       "workflow": "server-patrol.yml",
       "reason": "自修复失败：workflow_dispatch 触发失败",
       "recent_failures": [
-        "failure (2026-03-20T00:58:58Z)",
-        "failure (2026-03-19T12:32:24Z)",
-        "failure (2026-03-19T01:02:36Z)"
+        "failure (2026-03-21T00:55:22Z)",
+        "failure (2026-03-20T12:28:59Z)",
+        "failure (2026-03-20T00:58:58Z)"
       ]
     },
     {
@@ -548,11 +505,7 @@
       "agent_name": "🔍 铸渊预演部署 (Staging Preview)",
       "workflow": "staging-preview.yml",
       "reason": "不支持自修复",
-      "recent_failures": [
-        "action_required (2026-03-18T18:29:25Z)",
-        "action_required (2026-03-18T18:14:20Z)",
-        "action_required (2026-03-18T17:04:58Z)"
-      ]
+      "recent_failures": []
     },
     {
       "agent_id": "AG-ZY-045",
@@ -567,9 +520,9 @@
       "workflow": "sync-dev-status.yml",
       "reason": "自修复失败：workflow_dispatch 触发失败",
       "recent_failures": [
-        "failure (2026-03-20T03:29:51Z)",
-        "failure (2026-03-19T14:52:14Z)",
-        "failure (2026-03-19T03:40:00Z)"
+        "failure (2026-03-21T03:21:41Z)",
+        "failure (2026-03-20T14:45:37Z)",
+        "failure (2026-03-20T03:29:51Z)"
       ]
     },
     {
@@ -603,9 +556,9 @@
       "workflow": "syslog-issue-pipeline.yml",
       "reason": "不支持自修复",
       "recent_failures": [
-        "failure (2026-03-19T10:20:46Z)",
-        "failure (2026-03-18T18:29:21Z)",
-        "failure (2026-03-18T18:14:17Z)"
+        "failure (2026-03-21T03:44:30Z)",
+        "failure (2026-03-21T02:39:25Z)",
+        "failure (2026-03-21T02:37:17Z)"
       ]
     },
     {
@@ -640,8 +593,7 @@
       "reason": "自修复失败：workflow_dispatch 触发失败",
       "recent_failures": [
         "failure (2026-03-19T14:42:03Z)",
-        "failure (2026-03-18T14:57:35Z)",
-        "failure (2026-03-17T14:51:01Z)"
+        "failure (2026-03-18T14:57:35Z)"
       ]
     },
     {
@@ -652,25 +604,14 @@
       "recent_failures": []
     },
     {
-      "agent_id": "AG-ZY-058",
-      "agent_name": "铸渊 · 每日自检",
-      "workflow": "zhuyuan-daily-selfcheck.yml",
-      "reason": "自修复失败：workflow_dispatch 触发失败",
-      "recent_failures": [
-        "failure (2026-03-20T00:58:09Z)",
-        "failure (2026-03-19T01:01:15Z)",
-        "failure (2026-03-18T01:01:41Z)"
-      ]
-    },
-    {
       "agent_id": "AG-ZY-059",
       "agent_name": "🚨 铸渊·智能门禁 · Push Gate Guard",
       "workflow": "zhuyuan-gate-guard.yml",
       "reason": "不支持自修复",
       "recent_failures": [
-        "skipped (2026-03-18T16:44:35Z)",
-        "failure (2026-03-18T02:55:05Z)",
-        "failure (2026-03-18T01:51:59Z)"
+        "skipped (2026-03-21T03:44:30Z)",
+        "skipped (2026-03-21T00:08:39Z)",
+        "skipped (2026-03-20T10:41:42Z)"
       ]
     },
     {
@@ -679,8 +620,9 @@
       "workflow": "zhuyuan-issue-reply.yml",
       "reason": "自修复失败：workflow_dispatch 触发失败",
       "recent_failures": [
-        "skipped (2026-03-18T16:51:12Z)",
-        "skipped (2026-03-18T15:51:21Z)"
+        "skipped (2026-03-21T02:06:57Z)",
+        "skipped (2026-03-20T17:24:47Z)",
+        "skipped (2026-03-20T10:41:21Z)"
       ]
     },
     {
@@ -689,9 +631,7 @@
       "workflow": "zhuyuan-pr-review.yml",
       "reason": "不支持自修复",
       "recent_failures": [
-        "action_required (2026-03-18T18:29:25Z)",
-        "action_required (2026-03-18T18:14:20Z)",
-        "action_required (2026-03-18T17:04:58Z)"
+        "action_required (2026-03-20T10:41:18Z)"
       ]
     },
     {
@@ -701,17 +641,16 @@
       "reason": "自修复失败：workflow_dispatch 触发失败",
       "recent_failures": [
         "failure (2026-03-19T22:16:06Z)",
-        "failure (2026-03-18T22:21:34Z)",
-        "failure (2026-03-17T22:21:44Z)"
+        "failure (2026-03-18T22:21:34Z)"
       ]
     }
   ],
   "summary": {
     "total": 62,
-    "checked_in": 10,
-    "missing": 52,
+    "checked_in": 16,
+    "missing": 46,
     "auto_repaired": 0,
-    "needs_intervention": 52
+    "needs_intervention": 46
   },
   "push_targets": [
     "零点原核",
