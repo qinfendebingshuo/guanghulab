@@ -6,7 +6,7 @@
 //   PERSONA_NAME - 人格宝宝名称
 //   PERSONA_ID   - 人格宝宝编号
 //   DEV_ID       - 开发者编号
-//   HUB_TOKEN    - 总仓库访问 Token
+//   HUB_TOKEN    - 总仓库访问 Token（由 MAIN_REPO_TOKEN secret 映射）
 //   GITHUB_TOKEN - GitHub Actions Token
 
 const fs = require('fs');
