@@ -63,8 +63,10 @@ function identityGate(agentId) {
 
   if (agent.daily_checkin_required === false) {
     console.log(`🌊 事件触发型Agent ${agentId} (${agent.name}) 已确认身份，允许通行`);
-  } else {
+  } else if (agent.daily_checkin_required === true) {
     console.log(`🌊 定时型Agent ${agentId} (${agent.name}) 已确认身份，允许通行并登记签到`);
+  } else {
+    console.log(`🌊 Agent ${agentId} (${agent.name}) 已确认身份，允许通行（签到状态未标记）`);
   }
 
   return { allowed: true, agent: agent };
