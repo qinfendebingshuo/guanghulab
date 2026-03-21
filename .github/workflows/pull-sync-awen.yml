@@ -1,0 +1,91 @@
+# 🌉 光湖桥接拉取同步 · Awen 仓库
+# 主仓库主动拉取 Awen 仓库内容到 federation/awen/
+# 触发条件：定时 / 手动 / Awen 通过 repository_dispatch 触发
+
+name: "🌉 Pull Sync from Awen"
+
+on:
+  # 定时拉取：每天 09:00 和 21:00 北京时间
+  schedule:
+    - cron: "0 1 * * *"   # UTC 01:00 = CST 09:00
+    - cron: "0 13 * * *"  # UTC 13:00 = CST 21:00
+  # 手动触发
+  workflow_dispatch:
+  # Awen 仓库可通过 API 触发
+  repository_dispatch:
+    types: [awen-sync]
+
+permissions:
+  contents: write
+
+jobs:
+  pull-from-awen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📥 Checkout GuanghuLab"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🌉 Pull Awen Repo Content"
+        env:
+          GH_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+        run: |
+          echo "🌊 光湖桥接拉取同步开始"
+          echo "时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')"
+          
+          # 克隆 Awen 仓库
+          git clone https://github.com/WENZHUOXI/guanghu-awen.git /tmp/awen-repo || {
+            echo "⚠️ Awen 仓库为 Private，尝试用 Token 克隆"
+            git clone https://x-access-token:${GH_TOKEN}@github.com/WENZHUOXI/guanghu-awen.git /tmp/awen-repo
+          }
+          
+          # 验证克隆结果非空
+          if [ -z "$(ls -A /tmp/awen-repo/ 2>/dev/null)" ]; then
+            echo "❌ Awen 仓库克隆结果为空，中止同步"
+            exit 1
+          fi
+          
+          # 创建同步目标目录
+          mkdir -p federation/awen/workspace
+          
+          # 复制 Awen 仓库内容（排除 .git 和 .github）
+          rsync -av --delete --exclude='.git' --exclude='.github' /tmp/awen-repo/ federation/awen/workspace/
+          
+          # 生成同步清单
+          cat > federation/awen/latest-sync.json << EOF
+          {
+            "source": "WENZHUOXI/guanghu-awen",
+            "synced_by": "guanghulab-pull-action",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "method": "pull-sync"
+          }
+          EOF
+          
+          echo "✅ 拉取完成"
+
+      - name: "💾 Commit & Push"
+        run: |
+          git config user.name "guanghu-bridge-bot"
+          git config user.email "bridge-bot@guanghu.dev"
+          
+          git add -A
+          git diff --cached --quiet && echo "无变更，跳过" && exit 0
+          git commit -m "🌉 [pull-sync] GuanghuLab ← Awen | $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [skip ci]"
+          git pull --rebase origin main || echo "⚠️ rebase 失败，尝试直接推送..."
+          git push || {
+            echo "⚠️ 推送失败，尝试重新拉取后再推送..."
+            git pull --rebase origin main
+            git push
+          }
+          
+          echo "✅ 同步提交完成！"
+
+      - name: "📝 Sync Summary"
+        if: always()
+        run: |
+          echo "## 🌉 拉取同步结果" >> $GITHUB_STEP_SUMMARY
+          echo "- 源仓库: WENZHUOXI/guanghu-awen" >> $GITHUB_STEP_SUMMARY
+          echo "- 目标路径: federation/awen/" >> $GITHUB_STEP_SUMMARY
+          echo "- 方式: 主仓库拉取" >> $GITHUB_STEP_SUMMARY
+          echo "- 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')" >> $GITHUB_STEP_SUMMARY
