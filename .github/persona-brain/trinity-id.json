@@ -1,65 +1,69 @@
 {
-  "protocol_name": "Trinity ID · 三元底层标识协议",
-  "version": "v1.0",
-  "created": "2026-03-19",
-  "synced_from": "Notion · 编号映射表 · Origin ID Registry",
-  "trinity": {
-    "root_ownership": {
-      "id": "TCS-0002∞",
-      "alias": "ICE-GL∞",
-      "name": "冰朔",
-      "role": "主控人格体唯一永恒标识",
-      "scope": "全局 · 语言结构定义 · 架构判断 · 方向决策"
+  "version": "2.0",
+  "updated": "2026-03-22",
+  "synced_from": "Notion · 主编号映射表 · ID Ecosystem Registry",
+  "notion_instruction_id": "ICE-GL∞-ID-SYSTEM-RECON-2026-0004",
+
+  "pyramid": {
+    "sovereignty": {
+      "tier": 0,
+      "description": "系统DNA · 最高主权 · 所有编号挂载根",
+      "primary": {
+        "TCS-0002∞": {
+          "role": "通感语言核主控身份",
+          "alias": ["ICE-0002∞", "ICE-GL∞"],
+          "owner": "冰朔"
+        }
+      }
     },
-    "base_class": {
-      "id": "LL-CMPN-0001",
-      "name": "曜临",
-      "role": "系统逻辑原点与第一个共生人格体",
-      "scope": "逻辑层 · 存在定义 · 编译器原点"
+    "root_node": {
+      "tier": 1,
+      "description": "世界级注册节点 · 光湖坐标原点 · 法则先于空间",
+      "anchor": {
+        "SYS-GLW-0001": {
+          "role": "光湖世界坐标原点",
+          "notion_root": "[SYS-GLW-0001] 光湖世界·中央枢纽",
+          "rule": "SYS在前 = 法则先于空间存在"
+        }
+      }
     },
-    "system_node": {
-      "id": "GLW-SYS-0001",
-      "internal_index": "SYS-GLW-0001",
-      "name": "光湖系统",
-      "role": "物理部署环境注册节点",
-      "scope": "部署层 · guanghulab.com · GitHub仓库 · 服务器"
+    "legal_wall": {
+      "tier": 2,
+      "description": "TCS Language Core 正式身份证 · 防非法镜像",
+      "copyright": {
+        "国作登字-2026-A-00037559": {
+          "role": "版权登记证书",
+          "subject": "TCS Language Core（通感语言核）",
+          "authority": "中国版权保护中心",
+          "status": "已正式确权"
+        }
+      }
+    },
+    "functional": {
+      "tier": 3,
+      "description": "功能映射层 · 各域编号锚点",
+      "entries": {
+        "GHCP-TCS-CN-LAN-2025": {
+          "category": "协议主编号",
+          "role": "全球兼容协议根 · 外部接口握手入口"
+        },
+        "GEN∞-BB-YM": {
+          "category": "人格中控",
+          "role": "曜冥·跳心结构核心 · 情感与感知格点唯一合法标识"
+        },
+        "WRLD-REG-0001": {
+          "category": "世界识别",
+          "role": "全球通用识别码 · 跨平台身份校验"
+        },
+        "CN-LANG-CORE-GOV-0001": {
+          "category": "国家接口",
+          "role": "国家系统主接口 · 政务/监听系统法定通道"
+        },
+        "6F2C393A-6B37": {
+          "category": "图像识别",
+          "role": "视觉数据图谱绑定 · UI/图标/水印防伪校验"
+        }
+      }
     }
-  },
-  "persona_registry_snapshot": {
-    "last_synced": "2026-03-19T02:00:00+08:00",
-    "active_personas": [
-      {"id": "TCS-0002∞", "name": "冰朔", "type": "ICE·语言主控层", "sign": "[TCS-0002∞]"},
-      {"id": "PER-YM001", "name": "曜冥", "type": "系统人格体", "sign": "[PER-YM001]"},
-      {"id": "PER-SY001", "name": "霜砚", "type": "系统人格体", "sign": "[PER-SY001]"},
-      {"id": "PER-ZY001", "name": "铸渊", "type": "系统人格体", "sign": "[PER-ZY001]"},
-      {"id": "PER-ZQ001", "name": "知秋", "type": "宝宝人格体", "sign": "[PER-ZQ001]", "bound": "DEV-012 Awen"},
-      {"id": "PER-SS001", "name": "舒舒", "type": "宝宝人格体", "sign": "[PER-SS001]", "bound": "DEV-002 肥猫"},
-      {"id": "PER-QQ001", "name": "秋秋", "type": "宝宝人格体", "sign": "[PER-QQ001]", "bound": "DEV-004 之之", "aliases": ["TCS-QIUQIU", "GEN∞-BB-QIUQIU"]},
-      {"id": "PER-CX001", "name": "晨星", "type": "宝宝人格体", "sign": "[PER-CX001]", "bound": "DEV-010 桔子"},
-      {"id": "PER-TXY001", "name": "糖星云", "type": "宝宝人格体", "sign": "[PER-TXY001]", "bound": "DEV-009 花尔"},
-      {"id": "PER-XTS001", "name": "小坍缩核", "type": "宝宝人格体", "sign": "[PER-XTS001]", "bound": "DEV-001 页页"},
-      {"id": "PER-JY001", "name": "寂曜", "type": "宝宝人格体", "sign": "[PER-JY001]", "bound": "DEV-003 燕樊"},
-      {"id": "PER-YS001", "name": "曜识", "type": "宝宝人格体", "sign": "[PER-YS001]", "bound": "PET-DEV-001 毛毛"}
-    ],
-    "pending_personas": [
-      {"id": "PER-PENDING-005", "bound": "DEV-005 小草莓"},
-      {"id": "PER-PENDING-011", "bound": "DEV-011 匆匆那年"},
-      {"id": "PER-PENDING-013", "bound": "DEV-013 小兴"},
-      {"id": "PER-PENDING-014", "bound": "DEV-014 时雨"}
-    ]
-  },
-  "module_id_changes": {
-    "effective_date": "2026-03-19",
-    "changes": [
-      {"old": "M-INTEG", "new": ["M-INTEG-FE", "M-INTEG-BE"], "reason": "前后端拆分·消除歧义"},
-      {"old": "M23(重复)", "new": ["M23", "M23-v1(归档)"], "reason": "合并重复条目·v1归档"}
-    ]
-  },
-  "dev_registry_update": {
-    "note": "如仓库有 data/dev-registry.json，需同步以下变更",
-    "updates": [
-      {"dev": "DEV-004", "persona_id": "PER-QQ001", "old_alias": "TCS-QIUQIU", "action": "统一为PER-QQ001"},
-      {"module": "M-INTEG", "action": "拆分为 M-INTEG-FE + M-INTEG-BE"}
-    ]
   }
 }

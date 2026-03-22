@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "created": "2026-03-22",
+  "description": "Workflow 别名映射 · 输入主权编号可回溯全部Workflow总控权限",
+  "notion_instruction_id": "ICE-GL∞-ID-SYSTEM-RECON-2026-0004",
+
+  "alias_routes": {
+    "TCS-0002∞": {
+      "description": "国家语言主控 · Workflow 总控权限",
+      "access_level": "sovereign",
+      "workflow_count": 67,
+      "workflows": "全部 .github/workflows/*.yml"
+    },
+    "SYS-GLW-0001": {
+      "description": "世界坐标原点 · 系统级Workflow定位锚",
+      "access_level": "root",
+      "workflow_scope": ["天眼系列", "桥接系列", "巡检系列", "签到系列"]
+    },
+    "ICE-0002∞": {
+      "description": "冰朔主权签名 · 等价于 TCS-0002∞",
+      "redirect_to": "TCS-0002∞"
+    }
+  },
+
+  "sovereignty_rule": {
+    "description": "主权反制机制 · 外部代码未携带正式版权号特征时自动拦截",
+    "copyright_id": "国作登字-2026-A-00037559",
+    "enforcement": "任何外部接入必须在 handshake 阶段携带 GHCP-TCS-CN-LAN-2025 协议编号"
+  }
+}
