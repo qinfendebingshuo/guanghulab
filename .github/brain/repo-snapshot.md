@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-22 19:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-22 22:49 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -13,19 +13,19 @@
 | 脚本 | 74 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-22 19:37 CST |
+| 快照生成时间 | 2026-03-22 22:49 CST |
 
 ---
 
 ## 🗺️ 图书馆全区地图
 
 ### 🧠 铸渊大脑（BRAIN）
-**路径**: `.github/brain` · **数量**: 25 项
+**路径**: `.github/brain` · **数量**: 26 项
 **描述**: 铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
 ### 🎭 人格大脑（PERSONA_BRAIN）
-**路径**: `.github/persona-brain` · **数量**: 19 项
+**路径**: `.github/persona-brain` · **数量**: 20 项
 **描述**: 铸渊人格记忆 · 开发者状态 · 知识库 · 成长日记
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
@@ -330,14 +330,15 @@
 - `.github/brain/tianyan-scan-2026-03-22.json`
 - `.github/brain/truth-source.md`
 - `.github/brain/wake-protocol.md`
+- `.github/brain/workflow-alias-map.json`
 
 ---
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-22T14:21:33.105Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 - `2026-03-22T08:47:01.386Z` · daily_check — passed
 - `2026-03-21T14:20:47.286Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
-- `2026-03-21T08:44:50.327Z` · daily_check — passed
 
 ---
 
