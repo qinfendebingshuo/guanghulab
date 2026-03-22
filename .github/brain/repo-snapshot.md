@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-22 22:49 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-23 01:21 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 67 个 GitHub Actions |
-| 脚本 | 74 个执行脚本 |
+| 工作流 | 72 个 GitHub Actions |
+| 脚本 | 75 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-22 22:49 CST |
+| 快照生成时间 | 2026-03-23 01:21 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 67 项
+**路径**: `.github/workflows` · **数量**: 72 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 74 项
+**路径**: `scripts` · **数量**: 75 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -112,6 +112,9 @@
 | `federation-bridge.yml` | 🌉 铸渊 · 仓库联邦桥接 | push, schedule(0 2 * * *), manual |
 | `feishu-syslog-bridge.yml` | 铸渊 · 飞书SYSLOG桥接 | unknown |
 | `generate-module-doc.yml` | 铸渊 · 光湖纪元 模块文档自动生成 | push, manual |
+| `grid-db-archive.yml` | 📦 Grid-DB 月度归档 | schedule(0 2 1 * *), manual |
+| `grid-db-processor.yml` | ⚙️ Grid-DB 消息处理器 | push |
+| `grid-db-training-extract.yml` | 🧬 训练数据提取 | schedule(0 3 * * 0), manual |
 | `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
 | `meta-watchdog.yml` | "🐕 元看门狗 · 巡检健康监控" | schedule(0 */6 * * *), manual |
 | `notion-callback-pipeline.yml` | Notion Callback Pipeline | unknown |
@@ -139,7 +142,9 @@
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `sync-deploy-to-notion.yml` | "📝 Sync Deploy Status to Notion" | schedule(0 4,14 * * *), manual |
 | `sync-dev-status.yml` | "📡 铸渊 · dev-status 自动同步" | schedule(0 1 * * *), manual |
+| `sync-griddb-to-notion.yml` | 📤 Grid-DB → Notion 增量回传 | push |
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
+| `sync-notion-to-griddb.yml` | 🧠 Notion → Grid-DB 记忆同步 | schedule(0 */4 * * *), manual |
 | `sync-persona-studio.yml` | 🔄 铸渊跨仓库同步 · persona-studio | push, manual |
 | `syslog-auto-pipeline.yml` | SYSLOG Auto Pipeline | unknown |
 | `syslog-issue-pipeline.yml` | 📡 SYSLOG Issue Pipeline | issues |
@@ -191,6 +196,7 @@
 - `scripts/generate-repo-map.js`
 - `scripts/generate-session-summary.js`
 - `scripts/generate-system-health.js`
+- `scripts/grid-db`
 - `scripts/intent-router.js`
 - `scripts/invoke-persona.js`
 - `scripts/notify-module-received.js`

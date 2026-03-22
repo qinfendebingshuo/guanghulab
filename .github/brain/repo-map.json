@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-22T14:49:39.325Z",
+  "generated_at": "2026-03-22T17:21:28.209Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 67,
-    "total_scripts": 74,
+    "total_workflows": 72,
+    "total_scripts": 75,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -386,6 +386,29 @@
           ]
         },
         {
+          "file": "grid-db-archive.yml",
+          "name": "📦 Grid-DB 月度归档",
+          "triggers": [
+            "schedule(0 2 1 * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "grid-db-processor.yml",
+          "name": "⚙️ Grid-DB 消息处理器",
+          "triggers": [
+            "push"
+          ]
+        },
+        {
+          "file": "grid-db-training-extract.yml",
+          "name": "🧬 训练数据提取",
+          "triggers": [
+            "schedule(0 3 * * 0)",
+            "manual"
+          ]
+        },
+        {
           "file": "hli-contract-check.yml",
           "name": "HLI Contract Check",
           "triggers": [
@@ -588,9 +611,24 @@
           ]
         },
         {
+          "file": "sync-griddb-to-notion.yml",
+          "name": "📤 Grid-DB → Notion 增量回传",
+          "triggers": [
+            "push"
+          ]
+        },
+        {
           "file": "sync-login-entry.yml",
           "name": "铸渊 · Sync Login Entry · Notion → 飞书文档A",
           "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "file": "sync-notion-to-griddb.yml",
+          "name": "🧠 Notion → Grid-DB 记忆同步",
+          "triggers": [
+            "schedule(0 */4 * * *)",
             "manual"
           ]
         },
@@ -732,7 +770,7 @@
           ]
         }
       ],
-      "item_count": 67
+      "item_count": 72
     },
     {
       "zone_id": "SCRIPTS",
@@ -835,6 +873,9 @@
         },
         {
           "file": "generate-system-health.js"
+        },
+        {
+          "file": "grid-db"
         },
         {
           "file": "intent-router.js"
@@ -972,7 +1013,7 @@
           "file": "zhuyuan-wakeup.js"
         }
       ],
-      "item_count": 74
+      "item_count": 75
     },
     {
       "zone_id": "SRC",
@@ -1837,6 +1878,15 @@
       "WORKFLOWS::generate-module-doc.yml",
       "SCRIPTS::generate-module-doc.js"
     ],
+    "grid-db-archive": [
+      "WORKFLOWS::grid-db-archive.yml"
+    ],
+    "grid-db-processor": [
+      "WORKFLOWS::grid-db-processor.yml"
+    ],
+    "grid-db-training-extract": [
+      "WORKFLOWS::grid-db-training-extract.yml"
+    ],
     "hli-contract-check": [
       "WORKFLOWS::hli-contract-check.yml"
     ],
@@ -1926,9 +1976,15 @@
       "WORKFLOWS::sync-dev-status.yml",
       "SCRIPTS::sync-dev-status.js"
     ],
+    "sync-griddb-to-notion": [
+      "WORKFLOWS::sync-griddb-to-notion.yml"
+    ],
     "sync-login-entry": [
       "WORKFLOWS::sync-login-entry.yml",
       "SCRIPTS::sync-login-entry.js"
+    ],
+    "sync-notion-to-griddb": [
+      "WORKFLOWS::sync-notion-to-griddb.yml"
     ],
     "sync-persona-studio": [
       "WORKFLOWS::sync-persona-studio.yml"
@@ -2075,6 +2131,9 @@
     ],
     "generate-system-health": [
       "SCRIPTS::generate-system-health.js"
+    ],
+    "grid-db": [
+      "SCRIPTS::grid-db"
     ],
     "intent-router": [
       "SCRIPTS::intent-router.js"
