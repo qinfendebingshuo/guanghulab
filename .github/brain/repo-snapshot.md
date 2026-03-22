@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-22 10:22 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-22 19:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -13,14 +13,14 @@
 | 脚本 | 74 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-22 10:22 CST |
+| 快照生成时间 | 2026-03-22 19:37 CST |
 
 ---
 
 ## 🗺️ 图书馆全区地图
 
 ### 🧠 铸渊大脑（BRAIN）
-**路径**: `.github/brain` · **数量**: 21 项
+**路径**: `.github/brain` · **数量**: 25 项
 **描述**: 铸渊核心记忆 · 路由映射 · 唤醒协议 · 图书馆目录
 **关键词**: brain · memory · routing · wake · 大脑 · 记忆
 
@@ -305,6 +305,7 @@
 
 ## 🧠 铸渊大脑文件速查（.github/brain/）
 
+- `.github/brain/architecture`
 - `.github/brain/bingshuo-agent-registry.json`
 - `.github/brain/bingshuo-brain-bridge.json`
 - `.github/brain/bingshuo-growth-log.md`
@@ -314,7 +315,9 @@
 - `.github/brain/bingshuo-routing-index.json`
 - `.github/brain/bingshuo-system-health.json`
 - `.github/brain/bulletin-board-today.json`
+- `.github/brain/cep`
 - `.github/brain/collaborators.json`
+- `.github/brain/gate-guard-config.json`
 - `.github/brain/growth-log.md`
 - `.github/brain/human-registry.json`
 - `.github/brain/memory.json`
@@ -324,6 +327,7 @@
 - `.github/brain/routing-map.json`
 - `.github/brain/shell-errors.json`
 - `.github/brain/shell-status.json`
+- `.github/brain/tianyan-scan-2026-03-22.json`
 - `.github/brain/truth-source.md`
 - `.github/brain/wake-protocol.md`
 
@@ -331,9 +335,9 @@
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-22T08:47:01.386Z` · daily_check — passed
 - `2026-03-21T14:20:47.286Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 - `2026-03-21T08:44:50.327Z` · daily_check — passed
-- `2026-03-20T14:39:13.086Z` · daily_agent_inspection — 铸渊巡检Agent · ✅3 ⚠️3 ❌0 · 2个问题
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-22T02:22:59.342Z",
+  "generated_at": "2026-03-22T11:37:34.775Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
@@ -14,7 +14,7 @@
     "hli_implemented": 7,
     "hli_coverage_pct": "33%",
     "last_ci_run": "2026-03-05T16:07:24.070Z",
-    "memory_last_updated": "2026-03-21T08:44:50.327Z"
+    "memory_last_updated": "2026-03-22T08:47:01.386Z"
   },
   "zones": [
     {
@@ -33,6 +33,9 @@
         "路由"
       ],
       "shelves": [
+        {
+          "file": "architecture"
+        },
         {
           "file": "bingshuo-agent-registry.json"
         },
@@ -61,7 +64,13 @@
           "file": "bulletin-board-today.json"
         },
         {
+          "file": "cep"
+        },
+        {
           "file": "collaborators.json"
+        },
+        {
+          "file": "gate-guard-config.json"
         },
         {
           "file": "growth-log.md"
@@ -91,13 +100,16 @@
           "file": "shell-status.json"
         },
         {
+          "file": "tianyan-scan-2026-03-22.json"
+        },
+        {
           "file": "truth-source.md"
         },
         {
           "file": "wake-protocol.md"
         }
       ],
-      "item_count": 21
+      "item_count": 25
     },
     {
       "zone_id": "PERSONA_BRAIN",
@@ -1588,6 +1600,9 @@
       "BRAIN",
       "SRC"
     ],
+    "architecture": [
+      "BRAIN::architecture"
+    ],
     "bingshuo-agent-registry": [
       "BRAIN::bingshuo-agent-registry.json"
     ],
@@ -1615,8 +1630,15 @@
     "bulletin-board-today": [
       "BRAIN::bulletin-board-today.json"
     ],
+    "cep": [
+      "BRAIN::cep"
+    ],
     "collaborators": [
       "BRAIN::collaborators.json"
+    ],
+    "gate-guard-config": [
+      "BRAIN::gate-guard-config.json",
+      "PERSONA_BRAIN::gate-guard-config.json"
     ],
     "growth-log": [
       "BRAIN::growth-log.md"
@@ -1642,6 +1664,9 @@
     ],
     "shell-status": [
       "BRAIN::shell-status.json"
+    ],
+    "tianyan-scan-2026-03-22": [
+      "BRAIN::tianyan-scan-2026-03-22.json"
     ],
     "truth-source": [
       "BRAIN::truth-source.md"
@@ -1674,9 +1699,6 @@
     ],
     "decision-log": [
       "PERSONA_BRAIN::decision-log.md"
-    ],
-    "gate-guard-config": [
-      "PERSONA_BRAIN::gate-guard-config.json"
     ],
     "growth-journal": [
       "PERSONA_BRAIN::growth-journal.md"
