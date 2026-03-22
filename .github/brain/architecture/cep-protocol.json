@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "protocol_name": "Co-Evolution Proposal (CEP)",
+  "description": "频道/模块产生优秀逻辑时，整理为演化提案上报主控层",
+
+  "proposal_format": {
+    "id": "CEP-[YYYYMMDD]-[序号]",
+    "source_channel": "DEV-XXX / 模块名",
+    "logic_description": "该结构做了什么、为什么优秀",
+    "compile_suggestion": "是否应纳入 TCS Language Core 标准库",
+    "impact_assessment": "纳入后对系统整体的影响"
+  },
+
+  "workflow": {
+    "step_1": "铸渊/霜砚识别优秀逻辑结构",
+    "step_2": "整理为 CEP 文件存入 .github/brain/cep/",
+    "step_3": "通知主控层（冰朔/曜冥）裁决",
+    "step_4_approved": "编译进 TCS 标准库 → 全系统生效",
+    "step_4_rejected": "保留在频道本地 → 允许频道内使用",
+    "step_4_revision": "提出修改建议 → 频道迭代后重新申请"
+  },
+
+  "storage": {
+    "pending": ".github/brain/cep/pending/",
+    "approved": ".github/brain/cep/approved/",
+    "rejected": ".github/brain/cep/rejected/"
+  }
+}

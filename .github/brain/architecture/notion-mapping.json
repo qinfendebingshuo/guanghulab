@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "synced_at": "2026-03-22",
+  "notion_instruction_id": "ICE-GL∞-DEV-NOTION-RESTRUCT-2026-0001",
+  "description": "GitHub 仓库模块 ↔ Notion 语言格点 双向映射",
+
+  "core_repos": {
+    "qinfendebingshuo/guanghulab": {
+      "notion_anchor": "数字地球主控台",
+      "type": "主仓库",
+      "modules": {
+        "backend/": { "notion_grid": "后端核心引擎", "module_id": "M-BACKEND", "owner": "DEV-001" },
+        "src/": { "notion_grid": "HLI接口实现层", "module_id": "M-HLI", "owner": "DEV-001" },
+        "frontend/": { "notion_grid": "前端主框架", "module_id": "M02", "owner": "DEV-002" },
+        "persona-selector/": { "notion_grid": "人格切换器", "module_id": "M03", "owner": "DEV-002" },
+        "chat-bubble/": { "notion_grid": "聊天气泡", "module_id": "M07", "owner": "DEV-002" },
+        "settings/": { "notion_grid": "系统设置", "module_id": "M-SETTINGS", "owner": "DEV-003" },
+        "cloud-drive/": { "notion_grid": "云盘同步", "module_id": "M15", "owner": "DEV-003" },
+        "dingtalk-bot/": { "notion_grid": "钉钉机器人", "module_id": "M-DINGTALK", "owner": "DEV-004" },
+        "status-board/": { "notion_grid": "系统看板", "module_id": "M-STATUS", "owner": "DEV-005" },
+        "user-center/": { "notion_grid": "用户中心", "module_id": "M05", "owner": "DEV-009" },
+        "cost-control/": { "notion_grid": "成本管控", "module_id": "M05-COST", "owner": "DEV-009" },
+        "ticket-system/": { "notion_grid": "接单工单系统", "module_id": "M06", "owner": "DEV-010" },
+        "notification/": { "notion_grid": "主域公告栏", "module_id": "M09", "owner": "DEV-012" },
+        "portal/": { "notion_grid": "首页导航中心", "module_id": "M23", "owner": "DEV-012" },
+        "writing-workspace/": { "notion_grid": "码字工作台", "module_id": "M16", "owner": "DEV-011" },
+        "app/": { "notion_grid": "Next.js主应用", "module_id": "M-APP", "owner": "system" },
+        "docs/": { "notion_grid": "文档+Pages入口", "module_id": "M-DOCS", "owner": "system" }
+      },
+      "system_dirs": {
+        ".github/brain/": { "notion_grid": "铸渊核心大脑", "grid_id": "SYS-ZY-BRAIN" },
+        ".github/persona-brain/": { "notion_grid": "人格体脑结构", "grid_id": "SYS-BRAIN" },
+        ".github/workflows/": { "notion_grid": "自动化引擎", "grid_id": "SYS-WORKFLOW" },
+        "scripts/": { "notion_grid": "系统脚本", "grid_id": "SYS-SCRIPTS" },
+        "broadcasts-outbox/": { "notion_grid": "广播下发通道", "grid_id": "SYS-BC-OUT" },
+        "syslog-inbox/": { "notion_grid": "SYSLOG回收通道", "grid_id": "SYS-SYSLOG-IN" },
+        "signal-log/": { "notion_grid": "信号日志", "grid_id": "SYS-SIGNAL" }
+      }
+    },
+    "zhizhi2026/guanghu-zhizhi": {
+      "notion_anchor": "🛸 之之开发者空间｜DEV-004",
+      "type": "开发者子仓库",
+      "owner": "DEV-004"
+    },
+    "WENZHUOXI/guanghu-awen": {
+      "notion_anchor": "🛸 Awen开发者空间｜DEV-012",
+      "type": "开发者子仓库",
+      "owner": "DEV-012"
+    }
+  },
+
+  "m_series_legacy": {
+    "description": "m-前缀目录为早期模块原型，部分已迁移至功能目录名",
+    "m01-login": "M01 登录模块",
+    "m03-personality": "M03 人格系统",
+    "m05-user-center": "M05 用户中心",
+    "m06-ticket": "M06 工单系统",
+    "m07-dialogue-ui": "M07 对话UI",
+    "m10-cloud": "M10 云存储",
+    "m11-module": "M11 模块管理",
+    "m12-kanban": "M12 看板",
+    "m15-cloud-drive": "M15 云盘",
+    "m18-health-check": "M18 健康检查"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "description": "智能门禁 · 三层隔离权限",
+
+  "layer_access_control": {
+    "L0_ontology": {
+      "paths": [".github/brain/architecture/"],
+      "allowed_modifiers": ["system-instruction-only"],
+      "on_violation": "reject_and_report"
+    },
+    "L1_relay": {
+      "paths": [".github/workflows/", "scripts/", ".github/brain/agent-registry.json"],
+      "allowed_modifiers": ["zhuyuan", "system-workflow"],
+      "on_violation": "reject_and_report"
+    },
+    "L2_channels": {
+      "access_type": "per_channel",
+      "rule": "开发者只能修改自己频道目录下的文件",
+      "channel_map": ".github/brain/architecture/channel-map.json",
+      "on_violation": "warn_and_log"
+    }
+  },
+
+  "syslog_inbox_exemption": {
+    "paths": ["syslog-inbox/"],
+    "description": "SYSLOG投递入口对所有开发者开放",
+    "signature_required": false
+  }
+}

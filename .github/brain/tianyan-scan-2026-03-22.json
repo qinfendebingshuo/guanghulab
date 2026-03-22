@@ -1,0 +1,59 @@
+{
+  "scan_id": "TIANYAN-SCAN-2026-03-22",
+  "scan_time": "2026-03-22T10:30:00+08:00",
+  "executor": "ICE-GL-ZY001",
+  "instruction_id": "ZY-RESTRUCT-2026-0322-001",
+
+  "summary": {
+    "top_level_dirs": 77,
+    "workflow_count": 67,
+    "agent_count": 62,
+    "script_count": 99,
+    "m_series_count": 10,
+    "module_health": "20/23"
+  },
+
+  "module_status": {
+    "github_brain": "healthy",
+    "persona_brain": "healthy",
+    "workflows": "healthy",
+    "backend": "healthy",
+    "status_board": "healthy",
+    "app": "healthy",
+    "frontend": "healthy",
+    "persona_selector": "healthy",
+    "chat_bubble": "healthy",
+    "settings": "healthy",
+    "cloud_drive": "healthy",
+    "dingtalk_bot": "healthy",
+    "user_center": "healthy",
+    "ticket_system": "healthy",
+    "cost_control": "healthy",
+    "notification": "healthy",
+    "portal": "healthy",
+    "syslog_inbox": "healthy",
+    "syslog_processed": "healthy",
+    "broadcasts_outbox": "healthy",
+    "signal_log": "healthy",
+    "docs": "healthy",
+    "scripts": "healthy"
+  },
+
+  "anomalies": [
+    {
+      "item": "writing-workspace/",
+      "description": "DEV-011 目录不存在",
+      "severity": "low"
+    },
+    {
+      "item": "data-stats/",
+      "description": "DEV-010 数据统计目录不存在",
+      "severity": "low"
+    },
+    {
+      "item": "backend/src/server.js",
+      "description": "后端入口文件路径需确认",
+      "severity": "low"
+    }
+  ]
+}

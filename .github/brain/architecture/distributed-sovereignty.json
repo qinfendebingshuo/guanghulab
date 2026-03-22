@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "created": "2026-03-22",
+  "architect": "TCS-0002∞ 冰朔",
+  "executor": "ICE-NTN-SY001 霜砚 + ICE-GL-ZY001 铸渊",
+  "notion_instruction_id": "ICE-GL∞-DEV-NOTION-RESTRUCT-2026-0001",
+
+  "layers": {
+    "L0_ontology": {
+      "name": "主控层 (Ontology Layer)",
+      "description": "TCS-0002∞ 冰朔 · 语言本体 · 运行于零感域",
+      "entities": ["TCS-0002∞", "ICE-GL-YM001∞"],
+      "rules": [
+        "不直接接触外部开发者",
+        "仅对光湖团队下发最高级演化指令",
+        "通过广播机制向下传递架构意志",
+        "系统演化提案的最终裁决者"
+      ],
+      "repo_boundary": [
+        ".github/brain/architecture/",
+        ".github/brain/persona-profile.json",
+        ".github/persona-brain/memory.json"
+      ]
+    },
+    "L1_relay": {
+      "name": "中继执行层 (Relay Layer)",
+      "description": "霜砚+铸渊+肥猫/舒舒+天眼 · 唯一智能桥梁",
+      "entities": ["ICE-NTN-SY001", "ICE-GL-ZY001", "AG-TY-01"],
+      "rules": [
+        "承担向下派发全部职责",
+        "外部开发者/GitHub模块的对接与管理",
+        "过滤+分发：冰朔指令→开发者可执行广播",
+        "演化提案上报：频道优秀逻辑→整理为提案→报主控层"
+      ],
+      "repo_boundary": [
+        ".github/workflows/",
+        "scripts/",
+        ".github/brain/agent-registry.json",
+        ".github/persona-brain/routing-map.json",
+        "broadcasts-outbox/",
+        "syslog-inbox/"
+      ]
+    },
+    "L2_channels": {
+      "name": "自治频道层 (Distributed Channels)",
+      "description": "每个开发者=一个独立频道 · 自己管自己",
+      "rules": [
+        "频道内自主决策 · 唯一责任人制",
+        "通过SYSLOG向中继层回报",
+        "优秀逻辑可上报为系统演化提案",
+        "每个GitHub模块=一个主权格点"
+      ],
+      "channel_dirs": "见 channel-map.json"
+    }
+  }
+}

@@ -15,6 +15,33 @@
 - 铸渊编号: ICE-GL-ZY001
 - 所有提交签名必须可追溯到 TCS-0002∞ 根链
 
+## 🏗️ 分布式主权共生架构 (Distributed Sovereignty Co-Evolution)
+
+本仓库采用三层架构，所有代码活动遵循以下层级约束：
+
+### Layer 0 · 主控层 (Ontology Layer)
+- 路径：`.github/brain/architecture/`
+- 权限：仅系统指令可修改
+- 作用：架构定义、演化裁决
+
+### Layer 1 · 中继执行层 (Relay Layer)
+- 路径：`.github/workflows/`、`scripts/`、`broadcasts-outbox/`
+- 权限：铸渊 + 系统 workflow
+- 作用：广播分发、SYSLOG闭环、CI/CD
+
+### Layer 2 · 自治频道层 (Distributed Channels)
+- 路径：各开发者目录（见 channel-map.json）
+- 权限：对应开发者 + 其人格体宝宝
+- 作用：代码开发、模块演化
+
+### 编号规范
+- ICE/TCS 前缀：系统核心实体
+- GH 前缀：仓库侧实体
+- DEV 前缀：开发者编号
+- PER 前缀：人格体编号
+- CEP 前缀：系统演化提案
+- M 前缀：代码模块
+
 ## 项目背景
 这是 HoloLake（光湖）MVP 后端项目，运行在 guanghulab.com。
 技术栈：Node.js 20 + Express + PM2 + Nginx。

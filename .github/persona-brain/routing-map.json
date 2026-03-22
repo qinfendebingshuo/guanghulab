@@ -30,5 +30,41 @@
         "status": "pending"
       }
     ]
+  },
+  "sovereignty_routing": {
+    "version": "2.0",
+    "description": "分布式主权共生架构路由",
+
+    "L0_ontology_paths": [
+      ".github/brain/architecture/",
+      ".github/brain/persona-profile.json"
+    ],
+
+    "L1_relay_paths": [
+      ".github/workflows/",
+      "scripts/",
+      ".github/brain/agent-registry.json",
+      "broadcasts-outbox/",
+      "syslog-inbox/"
+    ],
+
+    "L2_channel_paths": {
+      "DEV-001": ["backend/", "src/"],
+      "DEV-002": ["frontend/", "persona-selector/", "chat-bubble/"],
+      "DEV-003": ["settings/", "cloud-drive/"],
+      "DEV-004": ["dingtalk-bot/"],
+      "DEV-005": ["status-board/"],
+      "DEV-009": ["user-center/", "cost-control/"],
+      "DEV-010": ["ticket-system/", "data-stats/", "dynamic-comic/"],
+      "DEV-011": ["writing-workspace/"],
+      "DEV-012": ["notification-center/", "notification/", "portal/", "public/"]
+    },
+
+    "isolation_rules": [
+      "L2层开发者只能修改自己的 channel_paths 目录",
+      "L1层文件仅铸渊和系统workflow可修改",
+      "L0层文件仅由主控层指令触发修改",
+      "越权修改由智能门禁拦截并上报"
+    ]
   }
 }
