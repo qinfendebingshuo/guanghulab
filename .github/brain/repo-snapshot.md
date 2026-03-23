@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-23 20:38 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-23 22:04 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 76 个 GitHub Actions |
+| 工作流 | 78 个 GitHub Actions |
 | 脚本 | 75 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-23 20:38 CST |
+| 快照生成时间 | 2026-03-23 22:04 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 76 项
+**路径**: `.github/workflows` · **数量**: 78 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -102,6 +102,8 @@
 | `bridge-session-summary.yml` | Generate Session Summary for Notion | schedule(50 23 * * *), manual |
 | `bridge-syslog-intake.yml` | 铸渊 · 🌉 桥接·SYSLOG 上行处理 | push, manual |
 | `bridge-syslog-to-notion.yml` | 铸渊 · Bridge A · SYSLOG → Notion | push, manual |
+| `buffer-collect.yml` | "📥 Grid-DB Buffer Collect" | schedule(0 1 * * *), manual |
+| `buffer-flush.yml` | "🧠 Grid-DB Buffer Flush" | schedule(30 13 * * *), manual |
 | `check-structure.yml` | 模块结构检查 | push, pull_request |
 | `daily-maintenance.yml` | "🔧 铸渊 · Daily Maintenance Agent" | schedule(0 2 * * *), manual |
 | `daily-report.yml` | "📰 铸渊 · 光湖开发日报" | schedule(0 2 * * *), manual |
