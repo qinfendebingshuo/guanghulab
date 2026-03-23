@@ -1,7 +1,7 @@
 # 冰朔主控神经系统 · 核心主控大脑 v1.0
 
 > 本文件为冰朔主控神经系统的总控脑文件。
-> 最后编译时间：2026-03-23T10:16:40.226Z
+> 最后编译时间：2026-03-23T12:38:52.527Z
 
 ---
 
@@ -56,7 +56,7 @@
 
 ### 仓库统计
 - 功能模块：10 个
-- Workflow：74 个
+- Workflow：76 个
 
 ---
 
@@ -85,7 +85,7 @@
 
 > 本区块由 master-brain-compiler 自动编译。
 
-- **编译时间**：2026-03-23T10:16:40.226Z
+- **编译时间**：2026-03-23T12:38:52.527Z
 - **脑文件规则版本**：v3.0
 - **脑文件完整性**：✅ 完整
 
@@ -107,7 +107,7 @@
 |--------|------|------|
 | 🟡 brain_consistency | yellow | 主仓库脑文件完整，但与 persona-studio 脑文件的同步状态待验证 |
 | 🟢 deployment_health | green | deploy-to-server.yml 与 deploy-pages.yml 均存在 |
-| 🟢 workflow_health | green | 74 个 workflow 已注册 |
+| 🟢 workflow_health | green | 76 个 workflow 已注册 |
 | 🟡 routing_health | yellow | HLI 接口覆盖率 33.3%（7/21） |
 | 🟢 docs_entry_health | green | docs/index.html 存在 |
 | 🟡 persona_studio_health | yellow | 前后端结构存在，端到端对话链路待验证 |
