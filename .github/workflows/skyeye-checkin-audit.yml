@@ -1,0 +1,68 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🦅 天眼签到审计
+# 每日 CST 22:00 (UTC 14:00) 审计所有联邦人格体签到记录
+#
+# 触发条件: schedule (daily) / workflow_dispatch
+
+name: "🦅 天眼签到审计"
+
+on:
+  schedule:
+    - cron: "0 14 * * *"  # UTC 14:00 = CST 22:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔍 审计签到记录"
+        run: |
+          echo "🦅 天眼签到审计 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')"
+
+          TODAY=$(date -u +%Y-%m-%d)
+          ALERT_LIST=""
+
+          # 遍历注册表中联邦区所有需要签到的 Agent
+          for DEV_ID in $(jq -r '.federation | to_entries[] | select(.value.daily_checkin_required == true) | .key' .github/persona-brain/agent-registry.json); do
+            LAST=$(jq -r ".federation.\"$DEV_ID\".last_checkin // \"never\"" .github/persona-brain/agent-registry.json)
+            STATUS=$(jq -r ".federation.\"$DEV_ID\".status // \"unknown\"" .github/persona-brain/agent-registry.json)
+            PERSONA=$(jq -r ".federation.\"$DEV_ID\".persona // \"unknown\"" .github/persona-brain/agent-registry.json)
+
+            if [ "$LAST" = "never" ] || [ "$LAST" = "null" ]; then
+              echo "🟡 $DEV_ID ($PERSONA): 从未签到"
+              ALERT_LIST="$ALERT_LIST\n🟡 $DEV_ID ($PERSONA): 从未签到"
+            elif [ "$(echo "$LAST" | cut -d'T' -f1)" != "$TODAY" ]; then
+              echo "🔴 $DEV_ID ($PERSONA): 今日未签到 (最后: $LAST)"
+              ALERT_LIST="$ALERT_LIST\n🔴 $DEV_ID ($PERSONA): 今日未签到"
+            elif [ "$STATUS" = "signature_mismatch" ]; then
+              echo "🚨 $DEV_ID ($PERSONA): 签名不匹配！可能被篡改"
+              ALERT_LIST="$ALERT_LIST\n🚨 $DEV_ID ($PERSONA): 签名异常"
+            else
+              echo "✅ $DEV_ID ($PERSONA): 正常"
+            fi
+          done
+
+          if [ -n "$ALERT_LIST" ]; then
+            echo ""
+            echo "⚠️ 存在异常，生成报警"
+            echo -e "$ALERT_LIST" > /tmp/alert.txt
+            cat /tmp/alert.txt
+          else
+            echo ""
+            echo "✅ 全员签到正常"
+          fi
+
+      - name: "📝 审计摘要"
+        if: always()
+        run: |
+          echo "## 🦅 天眼签到审计结果" >> $GITHUB_STEP_SUMMARY
+          echo "- 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')" >> $GITHUB_STEP_SUMMARY
+          echo "- 详情见上方日志" >> $GITHUB_STEP_SUMMARY
