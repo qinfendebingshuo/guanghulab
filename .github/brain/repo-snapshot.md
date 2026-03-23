@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-23 10:24 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-23 18:16 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 72 个 GitHub Actions |
+| 工作流 | 74 个 GitHub Actions |
 | 脚本 | 75 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-23 10:24 CST |
+| 快照生成时间 | 2026-03-23 18:16 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 72 项
+**路径**: `.github/workflows` · **数量**: 74 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -91,6 +91,7 @@
 | 文件 | 名称 | 触发方式 |
 |------|------|----------|
 | `agent-checkin.yml` | 人格体每日签到 | schedule(0 2 * * *), manual |
+| `auto-deploy-drive-bridge.yml` | ⚡ 一键部署 Drive 桥接层 | push, manual |
 | `auto-reply-discussions.yml` | "🤖 铸渊 · Discussion 自动回复" | unknown |
 | `bingshuo-deploy-agent.yml` | "🧊 冰朔人格体 · 自动部署诊断" | issues, issue_comment, manual |
 | `bingshuo-neural-system.yml` | 冰朔主控神经系统 · 自动维护 | push, schedule(0 0 * * *), manual |
@@ -142,6 +143,7 @@
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `sync-deploy-to-notion.yml` | "📝 Sync Deploy Status to Notion" | schedule(0 4,14 * * *), manual |
 | `sync-dev-status.yml` | "📡 铸渊 · dev-status 自动同步" | schedule(0 1 * * *), manual |
+| `sync-griddb-to-drive.yml` | 🪞 Grid-DB → Google Drive 镜像同步 | push, schedule(*/15 * * * *), manual |
 | `sync-griddb-to-notion.yml` | 📤 Grid-DB → Notion 增量回传 | push |
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
 | `sync-notion-to-griddb.yml` | 🧠 Notion → Grid-DB 记忆同步 | schedule(0 */4 * * *), manual |
@@ -342,9 +344,9 @@
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-23T09:08:37.949Z` · daily_check — passed
 - `2026-03-22T14:21:33.105Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 - `2026-03-22T08:47:01.386Z` · daily_check — passed
-- `2026-03-21T14:20:47.286Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 
 ---
 

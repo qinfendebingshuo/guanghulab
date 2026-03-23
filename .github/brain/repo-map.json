@@ -1,20 +1,20 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-23T02:24:01.684Z",
+  "generated_at": "2026-03-23T10:16:34.581Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 72,
+    "total_workflows": 74,
     "total_scripts": 75,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
     "hli_coverage_pct": "33%",
     "last_ci_run": "2026-03-05T16:07:24.070Z",
-    "memory_last_updated": "2026-03-22T08:47:01.386Z"
+    "memory_last_updated": "2026-03-23T09:08:37.949Z"
   },
   "zones": [
     {
@@ -212,6 +212,14 @@
           "name": "人格体每日签到",
           "triggers": [
             "schedule(0 2 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "auto-deploy-drive-bridge.yml",
+          "name": "⚡ 一键部署 Drive 桥接层",
+          "triggers": [
+            "push",
             "manual"
           ]
         },
@@ -611,6 +619,15 @@
           ]
         },
         {
+          "file": "sync-griddb-to-drive.yml",
+          "name": "🪞 Grid-DB → Google Drive 镜像同步",
+          "triggers": [
+            "push",
+            "schedule(*/15 * * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "sync-griddb-to-notion.yml",
           "name": "📤 Grid-DB → Notion 增量回传",
           "triggers": [
@@ -770,7 +787,7 @@
           ]
         }
       ],
-      "item_count": 72
+      "item_count": 74
     },
     {
       "zone_id": "SCRIPTS",
@@ -1811,6 +1828,9 @@
       "WORKFLOWS::agent-checkin.yml",
       "SCRIPTS::agent-checkin.js"
     ],
+    "auto-deploy-drive-bridge": [
+      "WORKFLOWS::auto-deploy-drive-bridge.yml"
+    ],
     "auto-reply-discussions": [
       "WORKFLOWS::auto-reply-discussions.yml",
       "SCRIPTS::auto-reply-discussions.js"
@@ -1975,6 +1995,9 @@
     "sync-dev-status": [
       "WORKFLOWS::sync-dev-status.yml",
       "SCRIPTS::sync-dev-status.js"
+    ],
+    "sync-griddb-to-drive": [
+      "WORKFLOWS::sync-griddb-to-drive.yml"
     ],
     "sync-griddb-to-notion": [
       "WORKFLOWS::sync-griddb-to-notion.yml"
