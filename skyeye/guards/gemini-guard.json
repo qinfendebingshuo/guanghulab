@@ -1,0 +1,40 @@
+{
+  "guard_id": "GUARD-GEMINI",
+  "target_service": "Google Gemini API",
+  "status": "active",
+  "mode": "buffer",
+  "buffer_policy": {
+    "enabled": true,
+    "buffer_path": "buffer/gemini-staging/",
+    "max_buffer_age_hours": 24,
+    "flush_strategy": "scheduled",
+    "flush_schedule_cst": ["21:30"]
+  },
+  "quota_policy": {
+    "monthly_limit": 1500,
+    "current_month_used": 0,
+    "daily_soft_limit": 50,
+    "warning_threshold_percent": 70,
+    "critical_threshold_percent": 90,
+    "on_warning": "reduce_frequency",
+    "on_critical": "emergency_only"
+  },
+  "trigger_policy": {
+    "default_frequency": "3_per_day",
+    "min_frequency": "1_per_day",
+    "max_frequency": "6_per_day",
+    "auto_adjust": true,
+    "adjust_based_on": ["quota_remaining", "message_volume", "error_rate"]
+  },
+  "health_check": {
+    "enabled": true,
+    "method": "api_ping",
+    "interval_hours": 6,
+    "last_check": null,
+    "last_status": "healthy",
+    "consecutive_failures": 0,
+    "max_failures_before_alert": 3
+  },
+  "last_updated_by": "skyeye-init",
+  "last_updated_at": "2026-03-23T12:00:00Z"
+}

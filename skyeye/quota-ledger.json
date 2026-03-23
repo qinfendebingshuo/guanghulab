@@ -1,0 +1,43 @@
+{
+  "ledger_version": "1.0.0",
+  "billing_cycle": {
+    "start": "2026-03-01",
+    "end": "2026-03-31"
+  },
+  "services": {
+    "github_actions": {
+      "limit": 2000,
+      "used": 0,
+      "remaining": 2000,
+      "allocated": {
+        "buffer_system": 360,
+        "skyeye_daily": 180,
+        "skyeye_weekly": 30,
+        "sub_repo_checkins": 200,
+        "emergency": 1230
+      },
+      "daily_entries": []
+    },
+    "google_drive": {
+      "storage_limit_gb": 15,
+      "storage_used_gb": 0,
+      "apps_script_triggers_today": 0,
+      "apps_script_triggers_limit": 20
+    },
+    "notion_api": {
+      "rate_limit_per_second": 3,
+      "requests_today": 0,
+      "errors_today": 0
+    },
+    "gemini": {
+      "daily_limit": 1500,
+      "daily_used": 0,
+      "per_minute_limit": 15
+    }
+  },
+  "health_summary": {
+    "overall": "healthy",
+    "alerts": [],
+    "last_updated": "2026-03-23T12:00:00Z"
+  }
+}

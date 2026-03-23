@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "last_scan": "2026-03-23T12:00:00Z",
+  "last_scan_by": "skyeye-weekly-scan",
+  "infrastructure": {
+    "github": {
+      "service": "GitHub",
+      "plan": "Free",
+      "repos": [
+        {
+          "name": "qinfendebingshuo/guanghulab",
+          "role": "main",
+          "guard": "buffer/"
+        },
+        {
+          "name": "WENZHUOXI/guanghu-awen",
+          "role": "sub-repo",
+          "persona": "PER-ZQ001",
+          "guard": ".github/persona-brain/"
+        }
+      ],
+      "quotas": {
+        "actions_minutes_per_month": 2000,
+        "actions_current_used": 0,
+        "actions_budget_allocated": {
+          "buffer_collect": 270,
+          "buffer_flush": 90,
+          "skyeye_checkin": 180,
+          "skyeye_weekly_scan": 30,
+          "other_workflows": 200,
+          "emergency_reserve": 1230
+        },
+        "storage_limit_gb": 0.5,
+        "lfs_bandwidth_gb": 1
+      }
+    },
+    "google_drive": {
+      "service": "Google Drive",
+      "plan": "Google One / Free 15GB",
+      "guard": "buffer/drive-staging/",
+      "quotas": {
+        "storage_gb": 15,
+        "current_used_gb": 0,
+        "apps_script_daily_triggers": 20,
+        "apps_script_runtime_min_per_day": 90,
+        "drive_api_queries_per_100s": 20000
+      }
+    },
+    "notion": {
+      "service": "Notion",
+      "plan": "Plus",
+      "guard": "霜砚（PER-SY001）",
+      "quotas": {
+        "api_requests_per_second": 3,
+        "blocks_per_page": 10000,
+        "file_upload_mb": 5,
+        "guest_limit": 100
+      }
+    },
+    "gemini": {
+      "service": "Google Gemini",
+      "plan": "Free / Pro",
+      "guard": "buffer/gemini-staging/",
+      "quotas": {
+        "requests_per_minute": 15,
+        "requests_per_day": 1500,
+        "context_window_tokens": 1000000,
+        "personal_context_files": 100
+      }
+    },
+    "github_actions": {
+      "service": "GitHub Actions",
+      "plan": "Free",
+      "guard": "skyeye/guards/actions-guard.json",
+      "quotas": {
+        "concurrent_jobs": 20,
+        "minutes_per_month": 2000,
+        "job_timeout_hours": 6
+      }
+    }
+  }
+}
