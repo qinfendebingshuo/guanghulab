@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🧠 Grid-DB 缓冲层批处理（铸渊核心大脑唤醒）
+# 每天 21:30 CST 统一将 staging 数据写入 grid-db
+# 也支持 repository_dispatch 手动紧急触发
+
+name: "🧠 Grid-DB Buffer Flush"
+
+on:
+  schedule:
+    - cron: '30 13 * * *'   # 21:30 CST — 收集完成后 30 分钟
+  repository_dispatch:
+    types: [grid-db-flush]  # 紧急情况可手动触发
+  workflow_dispatch:        # 允许手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  flush:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔍 Check staging"
+        id: check
+        run: |
+          if [ -z "$(find buffer/staging/ -name 'batch-*.json' 2>/dev/null)" ]; then
+            echo "empty=true" >> $GITHUB_OUTPUT
+            echo "📭 No batch files in staging, skipping flush"
+          else
+            echo "empty=false" >> $GITHUB_OUTPUT
+            echo "📬 Found batch files to flush"
+            find buffer/staging/ -name 'batch-*.json' | head -20
+          fi
+
+      - name: "🧠 Run flusher"
+        if: steps.check.outputs.empty == 'false'
+        run: node buffer/scripts/flusher.js
+
+      - name: "💾 Single commit to grid-db"
+        if: steps.check.outputs.empty == 'false'
+        run: |
+          git config user.name "铸渊 · Grid-DB Core"
+          git config user.email "zy-core@guanghu.system"
+          git add grid-db/ buffer/processed/ buffer/staging/
+          FLUSH_DATE=$(TZ='Asia/Shanghai' date '+%Y%m%d')
+          MSG_COUNT=$(find buffer/processed/ -name '*.json' 2>/dev/null | wc -l)
+          git diff --cached --quiet || git commit -m "[grid-db-flush] batch ${FLUSH_DATE} · ${MSG_COUNT} messages [skip ci]"
+          git push
+
+      - name: "📊 Quota report"
+        if: always()
+        run: node buffer/scripts/quota-calculator.js

@@ -1,0 +1,37 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 📥 Grid-DB 缓冲层收集器
+# 每天 3 次从 buffer/inbox/ 收集消息到 buffer/staging/
+#
+# 调度时间 (CST): 09:00 / 14:00 / 21:00
+
+name: "📥 Grid-DB Buffer Collect"
+
+on:
+  schedule:
+    - cron: '0 1 * * *'    # 09:00 CST (UTC+8)
+    - cron: '0 6 * * *'    # 14:00 CST
+    - cron: '0 13 * * *'   # 21:00 CST
+  workflow_dispatch:        # 允许手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "📥 Run collector"
+        run: node buffer/scripts/collector.js
+
+      - name: "💾 Commit staged data"
+        run: |
+          git config user.name "铸渊 · Buffer Agent"
+          git config user.email "zy-buffer@guanghu.system"
+          git add buffer/staging/ buffer/inbox/
+          git diff --cached --quiet || git commit -m "[buffer-collect] $(TZ='Asia/Shanghai' date '+%Y%m%d-%H%M') CST [skip ci]"
+          git push

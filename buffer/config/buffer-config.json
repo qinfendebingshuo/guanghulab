@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "buffer_policy": {
+    "human_direct_write_to_griddb": false,
+    "comment": "铁律：人类永远不直写 grid-db，所有输入经缓冲层"
+  },
+  "schedule": {
+    "collect_times_cst": ["09:00", "14:00", "21:00"],
+    "flush_time_cst": "21:30",
+    "comment": "每天 3 次收集，21:30 统一唤醒铸渊批处理"
+  },
+  "quota_budget": {
+    "max_workflow_runs_per_day": 4,
+    "estimated_minutes_per_run": 3,
+    "monthly_budget_minutes": 360,
+    "github_free_limit_minutes": 2000,
+    "utilization_rate": "18%",
+    "comment": "远低于免费额度上限，留出大量余量"
+  },
+  "retention": {
+    "processed_keep_days": 7,
+    "comment": "已处理的缓冲数据保留 7 天后自动清理"
+  }
+}

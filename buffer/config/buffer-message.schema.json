@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "description": "缓冲层消息格式定义",
+  "fields": {
+    "message_id": {
+      "type": "string",
+      "pattern": "BUF-[timestamp]-[random]",
+      "required": true,
+      "description": "唯一消息标识"
+    },
+    "dev_id": {
+      "type": "string",
+      "pattern": "DEV-XXX",
+      "required": true,
+      "description": "开发者编号"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["gemini", "notion", "github", "skyeye"],
+      "required": true,
+      "description": "消息来源"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["interaction", "task", "feedback", "checkin", "broadcast_request"],
+      "required": true,
+      "description": "消息类型"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["normal", "urgent"],
+      "default": "normal",
+      "description": "优先级"
+    },
+    "payload": {
+      "type": "object",
+      "required": true,
+      "description": "消息负载数据"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "ISO-8601",
+      "required": true,
+      "description": "创建时间"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "staged", "processing", "flushed", "failed"],
+      "default": "pending",
+      "description": "消息状态"
+    }
+  },
+  "example": {
+    "message_id": "BUF-20260323-a1b2c3",
+    "dev_id": "DEV-001",
+    "source": "gemini",
+    "type": "interaction",
+    "priority": "normal",
+    "payload": {
+      "summary": "示例消息"
+    },
+    "created_at": "2026-03-23T09:00:00Z",
+    "status": "pending"
+  }
+}

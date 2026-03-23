@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "description": "缓冲层定时任务时刻表",
+  "timezone": "Asia/Shanghai (CST, UTC+8)",
+  "tasks": [
+    {
+      "name": "buffer-collect-1",
+      "cron_utc": "0 1 * * *",
+      "time_cst": "09:00",
+      "action": "collect",
+      "description": "第 1 次收集：inbox → staging"
+    },
+    {
+      "name": "buffer-collect-2",
+      "cron_utc": "0 6 * * *",
+      "time_cst": "14:00",
+      "action": "collect",
+      "description": "第 2 次收集：inbox → staging"
+    },
+    {
+      "name": "buffer-collect-3",
+      "cron_utc": "0 13 * * *",
+      "time_cst": "21:00",
+      "action": "collect",
+      "description": "第 3 次收集：inbox → staging"
+    },
+    {
+      "name": "buffer-flush",
+      "cron_utc": "30 13 * * *",
+      "time_cst": "21:30",
+      "action": "flush",
+      "description": "唤醒铸渊批处理：staging → grid-db"
+    }
+  ]
+}

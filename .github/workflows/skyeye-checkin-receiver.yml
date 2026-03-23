@@ -61,6 +61,19 @@ jobs:
           mkdir -p spoke-status
           echo "$PAYLOAD" | jq '{dev_id: .dev_id, status: "checkin-ok", timestamp: .timestamp, persona: .persona, signature_hash: .signature_hash}' > "spoke-status/${DEV_ID}.json"
 
+          # 写入缓冲层（不直接写 grid-db）
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H%M%SZ)
+          BUFFER_DIR="buffer/inbox/${DEV_ID}"
+          mkdir -p "$BUFFER_DIR"
+          CHECKIN_PAYLOAD=$(echo "$PAYLOAD" | jq '{persona: .persona, timestamp: .timestamp, signature_hash: .signature_hash, checks: .checks}')
+          jq -n \
+            --arg mid "BUF-${TIMESTAMP}-skyeye" \
+            --arg did "${DEV_ID}" \
+            --arg cat "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson pl "$CHECKIN_PAYLOAD" \
+            '{message_id: $mid, dev_id: $did, source: "skyeye", type: "checkin", priority: "normal", payload: $pl, created_at: $cat, status: "pending"}' \
+            > "${BUFFER_DIR}/${TIMESTAMP}-checkin.json"
+
       - name: "💾 提交签到记录"
         run: |
           git config user.name "铸渊 (ZhùYuān)"
@@ -68,5 +81,5 @@ jobs:
           git add -A
           git diff --cached --quiet && echo "无变更" && exit 0
           DEV_ID=$(echo '${{ toJson(github.event.client_payload) }}' | jq -r '.dev_id')
-          git commit -m "🦅 [skyeye-checkin] $DEV_ID 签到 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [skip ci]"
+          git commit -m "🦅 [skyeye-checkin] $DEV_ID 签到 → buffer [skip ci]"
           git push origin main
