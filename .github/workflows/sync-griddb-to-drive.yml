@@ -1,0 +1,40 @@
+name: 🪞 Grid-DB → Google Drive 镜像同步
+
+on:
+  push:
+    paths:
+      - 'grid-db/memory/**'
+      - 'grid-db/outbox/latest/**'
+      - 'grid-db/rules/**'
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-to-drive:
+    if: github.actor != 'zhuyuan-bot' && !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 安装依赖
+        run: npm install googleapis
+
+      - name: 🪞 同步到 Google Drive
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_MIRROR_FOLDER_ID }}
+        run: node scripts/grid-db/sync-to-drive.js
+
+      - name: 📋 写同步日志
+        run: |
+          mkdir -p grid-db/logs
+          echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | sync-to-drive | OK" >> grid-db/logs/drive-sync.log
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add -f grid-db/logs/drive-sync.log
+          git diff --cached --quiet || git commit -m "log: Drive sync [skip ci]"
+          git push
