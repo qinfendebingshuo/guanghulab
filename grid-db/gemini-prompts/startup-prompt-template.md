@@ -45,7 +45,7 @@
 
 ■ 写入规则：
 在 Google Drive「光湖格点库/inbox/」创建 Google Doc。
-文件名：INBOX-{DEV_ID}-{YYYYMMDD}-{HHmmss}-{类型}
+文件名格式由桥接器自动生成：{timestamp}-{safeName}.json
 内容必须是 JSON 格式。
 类型：status-update / task-complete / memory-save /
       broadcast-reply / raw-message

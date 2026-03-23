@@ -203,7 +203,7 @@ async function main() {
     const { main: generateIndex } = require('./generate-drive-index');
     generateIndex();
   } catch (err) {
-    console.log('[sync-to-drive] Index generation skipped:', err.message);
+    console.log('[sync-to-drive] Index generation skipped (non-fatal):', err.message);
   }
 
   console.log('[sync-to-drive] Starting Grid-DB → Drive mirror sync');

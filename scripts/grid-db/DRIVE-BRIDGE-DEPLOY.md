@@ -60,6 +60,7 @@ Workflow `.github/workflows/sync-griddb-to-drive.yml` 会在以下情况自动�
 | `grid-db/memory/DEV-XXX/` | `mirror/memory/DEV-XXX/` | ✅ |
 | `grid-db/outbox/latest/` | `mirror/outbox/` | ✅ |
 | `grid-db/rules/` | `mirror/rules/` | ✅ |
+| `grid-db/drive-index/` | `mirror/` | ✅ (per-DEV index.json) |
 | `grid-db/interactions/` | — | ❌ 不同步 |
 | `grid-db/training-lake/` | — | ❌ 不同步 |
 | `grid-db/inbox/` | — | ❌ 不同步 |

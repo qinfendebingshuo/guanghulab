@@ -312,17 +312,35 @@ async function deploy(commandFilePath) {
   const drive = google.drive({ version: 'v3', auth });
 
   try {
-    // ① 在用户 Drive 创建根目录
+    // ① 在用户 Drive 创建或复用根目录
     const rootFolderName = config.drive_root_folder || '光湖格点库';
-    const rootFolder = await drive.files.create({
-      requestBody: {
-        name: rootFolderName,
-        mimeType: 'application/vnd.google-apps.folder'
-      },
-      fields: 'id'
-    });
-    const rootFolderId = rootFolder.data.id;
-    console.log(`[deploy] Created root folder: ${rootFolderName} (${rootFolderId})`);
+    let rootFolderId;
+
+    if (action === 'recover_drive_bridge') {
+      // 恢复模式：尝试查找已有文件夹
+      const safeName = escapeQuery(rootFolderName);
+      const searchRes = await drive.files.list({
+        q: `name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id, name)',
+        pageSize: 1
+      });
+      if (searchRes.data.files && searchRes.data.files.length > 0) {
+        rootFolderId = searchRes.data.files[0].id;
+        console.log(`[deploy] Reusing existing folder: ${rootFolderName} (${rootFolderId})`);
+      }
+    }
+
+    if (!rootFolderId) {
+      const rootFolder = await drive.files.create({
+        requestBody: {
+          name: rootFolderName,
+          mimeType: 'application/vnd.google-apps.folder'
+        },
+        fields: 'id'
+      });
+      rootFolderId = rootFolder.data.id;
+      console.log(`[deploy] Created root folder: ${rootFolderName} (${rootFolderId})`);
+    }
 
     // 共享给用户
     await shareFolderWithUser(drive, rootFolderId, google_email);

@@ -75,6 +75,7 @@ function processInbox() {
       var safeName = file.getName().replace(/[^a-zA-Z0-9.\-_]/g, '');
       // Strip any existing extension, then add .json
       safeName = safeName.replace(/\.[^.]+$/, '');
+      if (!safeName) safeName = 'untitled';
       var filename = timestamp + '-' + safeName + '.json';
 
       // 写入 GitHub 仓库
@@ -163,7 +164,7 @@ function writeToGitHub(token, filePath, content) {
     + CONFIG.GITHUB_REPO + '/contents/' + filePath;
 
   var payload = {
-    message: 'auto: Gemini inbox via Drive bridge (' + filePath.split('/').pop() + ') [skip ci]',
+    message: 'auto: Gemini inbox via Drive bridge (' + filePath.split('/').pop().replace(/[^\w.\-]/g, '') + ') [skip ci]',
     content: Utilities.base64Encode(content, Utilities.Charset.UTF_8),
     branch: CONFIG.GITHUB_BRANCH
   };
