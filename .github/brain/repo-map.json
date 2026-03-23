@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-23T10:16:34.581Z",
+  "generated_at": "2026-03-23T12:38:40.812Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 74,
+    "total_workflows": 76,
     "total_scripts": 75,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -595,6 +595,21 @@
           ]
         },
         {
+          "file": "skyeye-checkin-audit.yml",
+          "name": "\"🦅 天眼签到审计\"",
+          "triggers": [
+            "schedule(0 14 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "skyeye-checkin-receiver.yml",
+          "name": "\"🦅 天眼签到接收\"",
+          "triggers": [
+            "unknown"
+          ]
+        },
+        {
           "file": "staging-preview.yml",
           "name": "\"🔍 铸渊预演部署 (Staging Preview)\"",
           "triggers": [
@@ -787,7 +802,7 @@
           ]
         }
       ],
-      "item_count": 74
+      "item_count": 76
     },
     {
       "zone_id": "SCRIPTS",
@@ -1984,6 +1999,12 @@
     "server-patrol": [
       "WORKFLOWS::server-patrol.yml",
       "SCRIPTS::server-patrol.sh"
+    ],
+    "skyeye-checkin-audit": [
+      "WORKFLOWS::skyeye-checkin-audit.yml"
+    ],
+    "skyeye-checkin-receiver": [
+      "WORKFLOWS::skyeye-checkin-receiver.yml"
     ],
     "staging-preview": [
       "WORKFLOWS::staging-preview.yml"

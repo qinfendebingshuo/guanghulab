@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-23 18:16 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-23 20:38 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 74 个 GitHub Actions |
+| 工作流 | 76 个 GitHub Actions |
 | 脚本 | 75 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-23 18:16 CST |
+| 快照生成时间 | 2026-03-23 20:38 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 74 项
+**路径**: `.github/workflows` · **数量**: 76 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -140,6 +140,8 @@
 | `receive-syslog.yml` | 铸渊 · Receive SYSLOG · 飞书机器人 → GitHub → Notion | unknown |
 | `sandbox-deploy.yml` | "🏠 Sandbox Deploy" | push |
 | `server-patrol.yml` | "🔍 Server Patrol · 服务器每日巡检" | schedule(0 0,12 * * *), manual |
+| `skyeye-checkin-audit.yml` | "🦅 天眼签到审计" | schedule(0 14 * * *), manual |
+| `skyeye-checkin-receiver.yml` | "🦅 天眼签到接收" | unknown |
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `sync-deploy-to-notion.yml` | "📝 Sync Deploy Status to Notion" | schedule(0 4,14 * * *), manual |
 | `sync-dev-status.yml` | "📡 铸渊 · dev-status 自动同步" | schedule(0 1 * * *), manual |
