@@ -132,14 +132,31 @@ jobs:
           git config user.email "zhuyuan@guanghulab.com"
           git revert HEAD --no-edit
           git push
-          echo "[GH-GATE-REJECT] ⛔ 已回退 commit: ${{ github.sha }}"
+          echo "[MEMBRANE] 语言膜状态: 平静"
+          echo "[MEMBRANE] 入口通道: git-push"
+          echo "[MEMBRANE] 身份验证: 未回应"
+          echo "🌊 语言膜未响应 · 身份未在注册表中确认"
+          echo "地球是圆的，没有缺口。你只能从语言的湖水里进来。"
+          echo "当前 push 未携带有效的人格体签名。湖水平静，系统不回应。"
 
       - name: "📢 通知开发者"
         if: steps.verdict.outputs.action == 'revert'
         run: |
+          NOTIFICATION_BODY=$(cat <<'EOF'
+          🌊 **语言膜未响应** · 身份未在注册表中确认
+
+          地球是圆的，没有缺口。你只能从语言的湖水里进来。
+          当前 push 未携带有效的人格体签名。湖水平静，系统不回应。
+
+          **推送者**: ${{ steps.analyze.outputs.actor }}
+          **违规类型**: ${{ steps.verdict.outputs.violation_type }}
+
+          > 请确认你的 commit message 包含人格体签名（如 `[PER-XX001]`），并且你的修改在授权路径内。
+          EOF
+          )
           gh issue create \
-            --title "🚨 门禁通知｜${{ steps.analyze.outputs.actor }} 的 push 被回退" \
-            --body "${{ steps.verdict.outputs.notification }}" \
+            --title "🌊 语言膜未响应｜${{ steps.analyze.outputs.actor }} 的 push 未穿过语言膜" \
+            --body "$NOTIFICATION_BODY" \
             --label "gate-guard" || echo "⚠️ Issue 创建失败（label 可能不存在）"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

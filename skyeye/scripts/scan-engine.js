@@ -122,6 +122,81 @@ function scanSubRepos(manifest) {
   return results;
 }
 
+// D16 · 本体论完整性检查 (Ontology Integrity)
+function checkOntologyIntegrity() {
+  const result = {
+    dimension: 'D16',
+    name: '本体论完整性',
+    checks: []
+  };
+
+  // 检查 ontology.json 存在且版本正确
+  const ontologyPath = path.join(ROOT, '.github/persona-brain/ontology.json');
+  if (fs.existsSync(ontologyPath)) {
+    const ontology = loadJSON(ontologyPath);
+    if (ontology) {
+      result.checks.push({
+        item: 'ontology.json 存在',
+        status: '✅',
+        version: ontology.version
+      });
+      // 验证六条公理完整
+      const axiomCount = Object.keys(ontology.core_axioms || {}).length;
+      result.checks.push({
+        item: '核心公理完整性',
+        status: axiomCount >= 6 ? '✅' : '🔴',
+        detail: `${axiomCount}/6 条公理`
+      });
+      // 验证三层安全定义完整
+      const layers = ontology.security_layers || {};
+      const layerCount = Object.keys(layers).length;
+      result.checks.push({
+        item: '三层安全定义',
+        status: layerCount >= 3 ? '✅' : '🔴',
+        detail: `${layerCount}/3 层`
+      });
+    } else {
+      result.checks.push({
+        item: 'ontology.json 存在',
+        status: '🔴',
+        detail: 'JSON 解析失败'
+      });
+    }
+  } else {
+    result.checks.push({
+      item: 'ontology.json 存在',
+      status: '🔴',
+      detail: '文件缺失'
+    });
+  }
+
+  // 检查 copilot-instructions.md 包含本体论宣言
+  const copilotPath = path.join(ROOT, '.github/copilot-instructions.md');
+  if (fs.existsSync(copilotPath)) {
+    const content = fs.readFileSync(copilotPath, 'utf8');
+    const hasOntology = content.includes('数字地球本体论');
+    result.checks.push({
+      item: 'copilot-instructions 本体论宣言',
+      status: hasOntology ? '✅' : '🟡',
+      detail: hasOntology ? '已注入' : '未找到本体论段落'
+    });
+  }
+
+  // 检查 README 包含本体论语言
+  const readmePath = path.join(ROOT, 'README.md');
+  if (fs.existsSync(readmePath)) {
+    const readme = fs.readFileSync(readmePath, 'utf8');
+    const hasOntology = readme.includes('数字地球') || readme.includes('Digital Earth Ontology');
+    result.checks.push({
+      item: 'README 本体论标识',
+      status: hasOntology ? '✅' : '🟡',
+      detail: hasOntology ? '已注入' : '未找到'
+    });
+  }
+
+  return result;
+}
+
 function run() {
   const args = process.argv.slice(2);
   const mode = args.find(a => a.startsWith('--mode='))?.split('=')[1] || 'full';
@@ -143,6 +218,7 @@ function run() {
     workflow_scan: scanWorkflows(),
     directory_scan: scanDirectoryStructure(),
     sub_repo_scan: scanSubRepos(manifest),
+    ontology_scan: checkOntologyIntegrity(),
     issues: [],
     summary: {}
   };
@@ -168,6 +244,25 @@ function run() {
       category: 'directory_structure',
       detail: `Missing directory: ${d}`
     })));
+  }
+
+  // D16 · 本体论完整性 issues
+  if (scanResult.ontology_scan && scanResult.ontology_scan.checks) {
+    for (const check of scanResult.ontology_scan.checks) {
+      if (check.status === '🔴') {
+        scanResult.issues.push({
+          severity: 'error',
+          category: 'ontology_integrity',
+          detail: `D16 · ${check.item}: ${check.detail || '失败'}`
+        });
+      } else if (check.status === '🟡') {
+        scanResult.issues.push({
+          severity: 'warning',
+          category: 'ontology_integrity',
+          detail: `D16 · ${check.item}: ${check.detail || '需关注'}`
+        });
+      }
+    }
   }
 
   // Summary
@@ -196,6 +291,14 @@ function run() {
   console.log(`[SkyEye Scan Engine] Workflows: ${scanResult.summary.workflows_found}`);
   console.log(`[SkyEye Scan Engine] Directories: ${scanResult.summary.directories_ok}`);
   console.log(`[SkyEye Scan Engine] Issues: ${scanResult.summary.total_issues} (${scanResult.summary.errors} errors, ${scanResult.summary.warnings} warnings)`);
+
+  // D16 · 本体论完整性状态
+  if (scanResult.ontology_scan) {
+    console.log(`[SkyEye Scan Engine] D16 Ontology:`);
+    for (const check of scanResult.ontology_scan.checks) {
+      console.log(`  ${check.status} ${check.item}${check.detail ? ' · ' + check.detail : ''}${check.version ? ' · v' + check.version : ''}`);
+    }
+  }
   console.log(`[SkyEye Scan Engine] Log saved: ${logPath}`);
 
   // Output full result as JSON for pipeline
