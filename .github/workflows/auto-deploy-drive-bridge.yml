@@ -1,0 +1,37 @@
+name: ⚡ 一键部署 Drive 桥接层
+
+on:
+  push:
+    paths:
+      - 'grid-db/deploy-queue/*.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    if: github.actor != 'zhuyuan-bot' && !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 安装依赖
+        run: npm install googleapis
+
+      - name: ⚡ 执行部署
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
+          DEPLOY_GITHUB_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          for f in grid-db/deploy-queue/*.json; do
+            [ -f "$f" ] && node scripts/grid-db/deploy-drive-bridge.js "$f"
+          done
+
+      - name: 📋 提交部署结果
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add grid-db/deploy-log/ grid-db/deploy-queue/
+          git diff --cached --quiet || git commit -m "deploy: Drive bridge deployed [skip ci]"
+          git push

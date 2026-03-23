@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "description": "Drive 总索引模板 · Gemini 启动时第一个读取的文件",
+  "template_fields": {
+    "system": "SYS-GLW-0001（固定）",
+    "dev_id": "由部署脚本填入目标 DEV 编号",
+    "persona_id": "由部署脚本填入目标人格体编号",
+    "persona_name": "由部署脚本填入目标人格体名称",
+    "last_sync": "由同步脚本自动更新"
+  },
+  "template": {
+    "system": "SYS-GLW-0001",
+    "version": "1.0",
+    "dev_id": "{DEV_ID}",
+    "persona_id": "{PERSONA_ID}",
+    "persona_name": "{PERSONA_NAME}",
+    "last_sync": "{LAST_SYNC}",
+    "routes": {
+      "我的任务": "memory/{DEV_ID}/task-queue.json",
+      "最新广播": "outbox/{DEV_ID}.json",
+      "广播历史": "outbox/archive/{DEV_ID}/",
+      "我的记忆": "memory/{DEV_ID}/brain-mirror.json",
+      "人格体成长": "memory/{DEV_ID}/persona-growth.json",
+      "开发上下文": "memory/{DEV_ID}/session-context.json",
+      "开发者画像": "memory/{DEV_ID}/dev-profile.json",
+      "编号查询": "rules/broadcast-index.json",
+      "页面路由": "rules/page-route-map.json",
+      "系统规则": "rules/dev-module-map.json",
+      "人格体列表": "rules/persona-registry-drive.json"
+    },
+    "shortcuts": {
+      "看广播": "routes.最新广播",
+      "任务": "routes.我的任务",
+      "进度": "routes.开发上下文",
+      "成长": "routes.人格体成长"
+    }
+  }
+}

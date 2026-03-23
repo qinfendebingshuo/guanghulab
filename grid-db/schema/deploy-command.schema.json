@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "type": "deploy-command",
+  "description": "Drive 桥接层部署/恢复指令格式",
+  "required_fields": [
+    "schema_version",
+    "deploy_id",
+    "timestamp",
+    "action",
+    "source",
+    "target_dev",
+    "config",
+    "signed_by",
+    "authorized_by"
+  ],
+  "field_definitions": {
+    "deploy_id": {
+      "format": "DEPLOY-{DEV_ID}-{YYYYMMDD}-{HHmmss}",
+      "example": "DEPLOY-DEV-001-20260323-120000"
+    },
+    "action": {
+      "enum": ["deploy_drive_bridge", "recover_drive_bridge"],
+      "description": "deploy = 首次部署, recover = 换号恢复"
+    },
+    "source": {
+      "enum": ["notion-shuangyan", "manual"],
+      "description": "指令签发来源"
+    },
+    "target_dev": {
+      "type": "object",
+      "required": ["dev_id", "dev_name", "google_email", "persona_id", "persona_name"],
+      "properties": {
+        "dev_id": { "type": "string", "pattern": "^DEV-\\d{3}$" },
+        "dev_name": { "type": "string" },
+        "google_email": { "type": "string", "format": "email" },
+        "persona_id": { "type": "string", "pattern": "^PER-[A-Z]+\\d{3}$" },
+        "persona_name": { "type": "string" }
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "drive_root_folder": { "type": "string", "default": "光湖格点库" },
+        "sync_memory": { "type": "boolean", "default": true },
+        "sync_outbox": { "type": "boolean", "default": true },
+        "sync_rules": { "type": "boolean", "default": true },
+        "apps_script_trigger_interval_minutes": { "type": "number", "default": 1 },
+        "gemini_startup_prompt": { "type": "boolean", "default": true }
+      }
+    },
+    "signed_by": { "type": "string", "description": "签发人格体编号" },
+    "authorized_by": { "type": "string", "description": "授权主体" }
+  }
+}

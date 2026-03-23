@@ -1,0 +1,28 @@
+{
+  "system": "SYS-GLW-0001",
+  "version": "1.0",
+  "dev_id": "DEV-010",
+  "persona_id": "PER-CX001",
+  "persona_name": "晨星",
+  "dev_name": "桔子",
+  "last_sync": "2026-03-23T04:17:50.665Z",
+  "routes": {
+    "我的任务": "memory/DEV-010/task-queue.json",
+    "最新广播": "outbox/DEV-010.json",
+    "广播历史": "outbox/archive/DEV-010/",
+    "我的记忆": "memory/DEV-010/brain-mirror.json",
+    "人格体成长": "memory/DEV-010/persona-growth.json",
+    "开发上下文": "memory/DEV-010/session-context.json",
+    "开发者画像": "memory/DEV-010/dev-profile.json",
+    "编号查询": "rules/broadcast-index.json",
+    "页面路由": "rules/page-route-map.json",
+    "系统规则": "rules/dev-module-map.json",
+    "人格体列表": "rules/persona-registry-drive.json"
+  },
+  "shortcuts": {
+    "看广播": "routes.最新广播",
+    "任务": "routes.我的任务",
+    "进度": "routes.开发上下文",
+    "成长": "routes.人格体成长"
+  }
+}
