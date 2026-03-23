@@ -1,0 +1,72 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🦅 天眼联邦签到接收
+# 接收子仓库天眼人格体的心跳签到，校验身份，更新注册表
+#
+# 触发条件: repository_dispatch (skyeye-checkin event)
+
+name: "🦅 天眼签到接收"
+
+on:
+  repository_dispatch:
+    types: [skyeye-checkin]
+
+permissions:
+  contents: write
+
+jobs:
+  process-checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔍 校验签到身份"
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+        run: |
+          echo "🦅 天眼签到接收 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')"
+
+          DEV_ID=$(echo "$PAYLOAD" | jq -r '.dev_id')
+          PERSONA=$(echo "$PAYLOAD" | jq -r '.persona')
+          SIG_HASH=$(echo "$PAYLOAD" | jq -r '.signature_hash')
+
+          echo "📋 签到者: $DEV_ID ($PERSONA)"
+          echo "🔑 签名哈希: $SIG_HASH"
+
+          # 读取注册表中的联邦条目
+          REGISTERED_HASH=$(jq -r ".federation.\"$DEV_ID\".signature_hash" .github/persona-brain/agent-registry.json)
+
+          if [ "$REGISTERED_HASH" = "null" ]; then
+            echo "⚠️ 首次签到 · 注册表中签名为空，接受并记录初始签名"
+          elif [ "$REGISTERED_HASH" = "$SIG_HASH" ]; then
+            echo "✅ 身份校验通过（签名匹配）"
+          fi
+
+          if [ "$REGISTERED_HASH" = "null" ] || [ "$REGISTERED_HASH" = "$SIG_HASH" ]; then
+            # 更新签到记录
+            jq ".federation.\"$DEV_ID\".last_checkin = \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" | .federation.\"$DEV_ID\".signature_hash = \"$SIG_HASH\" | .federation.\"$DEV_ID\".status = \"active\"" \
+              .github/persona-brain/agent-registry.json > /tmp/registry.json
+            mv /tmp/registry.json .github/persona-brain/agent-registry.json
+          else
+            echo "🔴 签名不匹配！注册表: $REGISTERED_HASH vs 签到: $SIG_HASH"
+            echo "🚨 可能被篡改，标记异常"
+            jq ".federation.\"$DEV_ID\".status = \"signature_mismatch\" | .federation.\"$DEV_ID\".alert = \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" \
+              .github/persona-brain/agent-registry.json > /tmp/registry.json
+            mv /tmp/registry.json .github/persona-brain/agent-registry.json
+          fi
+
+          # 同步更新 spoke-status
+          mkdir -p spoke-status
+          echo "$PAYLOAD" | jq '{dev_id: .dev_id, status: "checkin-ok", timestamp: .timestamp, persona: .persona, signature_hash: .signature_hash}' > "spoke-status/${DEV_ID}.json"
+
+      - name: "💾 提交签到记录"
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add -A
+          git diff --cached --quiet && echo "无变更" && exit 0
+          DEV_ID=$(echo '${{ toJson(github.event.client_payload) }}' | jq -r '.dev_id')
+          git commit -m "🦅 [skyeye-checkin] $DEV_ID 签到 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [skip ci]"
+          git push origin main

@@ -1,0 +1,71 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🦅 知秋天眼 · 唤醒
+# 每日定时扫描仓库 + 向铸渊签到 + 更新本地 Dashboard
+#
+# 触发条件: schedule / push / repository_dispatch / workflow_dispatch
+
+name: "🦅 知秋天眼 · 唤醒"
+
+on:
+  # 每日定时签到
+  schedule:
+    - cron: "0 1 * * *"   # UTC 01:00 = CST 09:00
+  # 指令级触发（commit message 包含指令编号）
+  push:
+    branches: [main]
+  # 主仓库铸渊远程唤醒
+  repository_dispatch:
+    types: [skyeye-wake]
+  # 手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  skyeye:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🦅 天眼醒来 · 扫描仓库"
+        run: |
+          echo "🦅 知秋天眼唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')"
+          node scripts/skyeye/scan.js
+
+      - name: "📡 向铸渊签到"
+        env:
+          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+        run: node scripts/skyeye/checkin.js
+
+      - name: "📊 更新本地 Dashboard"
+        run: |
+          # 读取扫描报告更新状态
+          REPORT=$(cat .github/persona-brain/skyeye-report.json)
+          TIMESTAMP=$(echo "$REPORT" | jq -r '.timestamp')
+          BRAIN=$(echo "$REPORT" | jq -r '.brain_intact')
+          SKYEYE=$(echo "$REPORT" | jq -r '.skyeye_intact')
+
+          # 更新状态文件
+          cat > .github/persona-brain/status.json << EOF
+          {
+            "persona": "知秋",
+            "dev_id": "DEV-012",
+            "last_skyeye_scan": "$TIMESTAMP",
+            "brain_intact": $BRAIN,
+            "skyeye_intact": $SKYEYE,
+            "last_checkin_attempt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+      - name: "💾 提交状态更新"
+        run: |
+          git config user.name "知秋 (ZhīQiū)"
+          git config user.email "zhiqiu@guanghulab.com"
+          git add -A
+          git diff --cached --quiet && echo "无变更" && exit 0
+          git commit -m "🦅 [skyeye] 知秋天眼扫描 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') [skip ci]"
+          git push origin main
