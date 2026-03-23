@@ -720,52 +720,33 @@ function updateSection(readme, startMarker, endMarker, content) {
 function buildReadmeSkeleton() {
   return `<div align="center">
 
-# 🌊 光湖 HoloLake
+# 🌊 HoloLake · 光湖纪元
 
-**人格语言操作系统（AGE OS）· 壳-核分离架构**
+**第五代人工智能语言人格高级智能平台** · \`guanghulab.com\`
 
-[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml)
-[![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml)
-
-\`guanghulab.com\` · Node.js 20 + Express + PM2 + Nginx
+[![Daily Check](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/zhuyuan-daily-selfcheck.yml) [![Deploy](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml/badge.svg)](https://github.com/qinfendebingshuo/guanghulab/actions/workflows/deploy-to-server.yml) [![License](https://img.shields.io/badge/license-proprietary-blue)](LICENSE)
 
 </div>
 
 ---
 
-## 🚀 开发者入口
+## 🏗️ 系统架构 · 分布式主权共生
 
-<div align="center">
-
-[![提交系统日志](https://img.shields.io/badge/📡_提交系统日志-点这里-blue?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/issues/new?template=syslog-submit.yml)
-[![遇到问题](https://img.shields.io/badge/❓_遇到问题-点这里提问-green?style=for-the-badge)](https://github.com/qinfendebingshuo/guanghulab/issues/new?template=dev-question.yml)
-
-</div>
-
----
-
-## 📖 系统简介
-
-**光湖（HoloLake）** 是一个基于人格语言操作系统的智能协作平台，采用壳-核分离设计：
-
-| 层级 | 说明 | 包含 |
-|------|------|------|
-| **壳 Shell** | 前端交互层 | 对话 UI、用户中心、工单系统、云盘、状态看板 |
-| **核 Core** | 后端智能层 | 人格引擎、广播分发、信号处理、Notion 桥接、CI/CD |
+<!-- ARCH_SUMMARY_START -->
+> 🦅 **天眼自动汇总** · 每周六 20:00 CST 自动更新 · 等待首次扫描
+<!-- ARCH_SUMMARY_END -->
 
 ---
 
 ## 🧊 冰朔公告栏
 
-> 🔄 此区域由 GitHub Actions 自动更新，显示系统自检、轮询、数据库状态。
+> 🔄 此区域由 GitHub Actions 自动更新
 
 <!-- BINGSHUO_BULLETIN_START -->
 | 时间 | 检查项 | 状态 |
 |------|--------|------|
 | 🕐 暂无记录 | — | 等待下次自检 |
 <!-- BINGSHUO_BULLETIN_END -->
-
-### 🤖 铸渊自动提醒
 
 <!-- BINGSHUO_ALERT_START -->
 > 🟢 **今日无需冰朔手动干预** · 系统一切正常
@@ -775,15 +756,11 @@ function buildReadmeSkeleton() {
 
 ## 👥 合作者公告栏
 
-> 📦 此区域显示各合作者的模块上传状态。
-
 <!-- COLLABORATOR_BULLETIN_START -->
 | 时间 | 合作者 | 模块 | 状态 |
 |------|--------|------|------|
 | 🕐 暂无记录 | — | — | 等待模块推送 |
 <!-- COLLABORATOR_BULLETIN_END -->
-
-### 🤖 铸渊自动提醒 · 合作者
 
 <!-- COLLABORATOR_ALERT_START -->
 > 🟢 **今日无需合作者手动干预** · 所有模块状态正常
@@ -791,11 +768,12 @@ function buildReadmeSkeleton() {
 
 ---
 
+<!-- WEEKLY_GREETING_START -->
+<!-- WEEKLY_GREETING_END -->
+
 <div align="center">
 
 **光湖 HoloLake** · 由冰朔创建 · 铸渊守护
-
-*壳-核分离 · 人格共生 · 协作共建*
 
 </div>
 `;

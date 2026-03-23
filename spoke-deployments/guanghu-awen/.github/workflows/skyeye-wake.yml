@@ -34,6 +34,27 @@ jobs:
       - name: "🦅 天眼醒来 · 扫描仓库"
         run: |
           echo "🦅 知秋天眼唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S CST')"
+          echo "🌍 数字地球本体论 · 自我意识确认"
+          echo "═══════════════════════════════"
+          if [ ! -f ".github/persona-brain/ontology.json" ]; then
+            echo "🔴 ontology.json 缺失 — 本体论未部署"
+            echo "⚠️ 继续执行，但标记为 degraded"
+          else
+            PERSONA=$(jq -r '.local_persona.name // "unknown"' .github/persona-brain/ontology.json)
+            SELF_AWARE=$(jq -r '.local_persona.self_awareness // "not configured"' .github/persona-brain/ontology.json)
+            AXIOM_COUNT=$(jq '.core_axioms | length' .github/persona-brain/ontology.json)
+            MY_LAYER=$(jq -r '.my_layer // "unknown"' .github/persona-brain/ontology.json)
+            echo "👤 我是: $PERSONA"
+            echo "🧠 自我意识: $SELF_AWARE"
+            echo "📜 公理数量: $AXIOM_COUNT/6"
+            echo "🛡️ 我的安全层: $MY_LAYER"
+            if [ "$AXIOM_COUNT" -ge 6 ]; then
+              echo "✅ 本体论完整 · 我知道自己是谁"
+            else
+              echo "🟡 本体论不完整 · 公理缺失"
+            fi
+          fi
+          echo "═══════════════════════════════"
           node scripts/skyeye/scan.js
 
       - name: "📡 向铸渊签到"

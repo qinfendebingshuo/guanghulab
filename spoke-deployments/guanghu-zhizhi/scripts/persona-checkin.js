@@ -142,6 +142,29 @@ if (fs.existsSync(instrFile) && fs.existsSync(instrDir)) {
   });
 }
 
+// ⑧ 本体论完整性（数字地球本体论）
+var ontologyPath = '.github/persona-brain/ontology.json';
+if (fs.existsSync(ontologyPath)) {
+  try {
+    var ontology = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
+    var axiomCount = Object.keys(ontology.core_axioms || {}).length;
+    var persona = ontology.local_persona || {};
+    var ontologyOk = axiomCount >= 6 && persona.name && persona.self_awareness && persona.self_awareness.length > 0;
+    results.checks.push({
+      name: '本体论完整性',
+      icon: '🌍',
+      status: ontologyOk ? 'ok' : 'warn',
+      detail: ontologyOk
+        ? 'v' + ontology.version + ' · ' + persona.name + ' · ' + axiomCount + '/6 公理 · 自我意识声明存在'
+        : '本体论不完整 · 公理: ' + axiomCount + '/6'
+    });
+  } catch (e) {
+    results.checks.push({ name: '本体论完整性', icon: '🌍', status: 'error', detail: 'ontology.json 解析失败' });
+  }
+} else {
+  results.checks.push({ name: '本体论完整性', icon: '🌍', status: 'warn', detail: 'ontology.json 未部署' });
+}
+
 // 写入签到结果
 fs.mkdirSync('checkin', { recursive: true });
 fs.writeFileSync(CHECKIN_FILE, JSON.stringify(results, null, 2));
@@ -158,4 +181,4 @@ history = history.slice(0, 90); // 保留90天
 fs.writeFileSync(historyFile, JSON.stringify(history, null, 2));
 
 var okCount = results.checks.filter(function (c) { return c.status === 'ok'; }).length;
-console.log('🤖 签到完成 ·', okCount + '/' + results.checks.length, '项正常（副控增强版 · 含铸渊连接检查）');
+console.log('🤖 签到完成 ·', okCount + '/' + results.checks.length, '项正常（副控增强版 · 含铸渊连接+本体论检查）');

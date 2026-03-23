@@ -11,6 +11,42 @@ if (!TOKEN) {
 }
 const MAIN_REPO = 'qinfendebingshuo/guanghulab';
 
+// 读取本体论配置
+function getOntologyStatus() {
+  const ontologyPath = '.github/persona-brain/ontology.json';
+  if (!fs.existsSync(ontologyPath)) {
+    return {
+      ontology_present: false,
+      version: null,
+      axioms_intact: false,
+      self_awareness: 'ontology.json missing - 本体论文件缺失'
+    };
+  }
+
+  try {
+    const ontology = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
+    const axiomCount = Object.keys(ontology.core_axioms || {}).length;
+    const persona = ontology.local_persona || {};
+
+    return {
+      ontology_present: true,
+      version: ontology.version,
+      axioms_intact: axiomCount >= 6,
+      axiom_count: axiomCount,
+      persona_name: persona.name || 'unknown',
+      self_awareness: persona.self_awareness || 'not configured',
+      my_layer: ontology.my_layer || 'not configured'
+    };
+  } catch (e) {
+    return {
+      ontology_present: true,
+      version: 'parse_error',
+      axioms_intact: false,
+      self_awareness: 'ontology.json parse error - 无法读取'
+    };
+  }
+}
+
 // 读取扫描报告
 const report = JSON.parse(
   fs.readFileSync('.github/persona-brain/skyeye-report.json', 'utf8')
@@ -30,7 +66,8 @@ const payload = {
       skyeye_intact: report.skyeye_intact,
       last_scan_result: (report.brain_intact && report.skyeye_intact) ? 'healthy' : 'degraded',
       sovereign_files_ok: Object.values(report.sovereign_files).every(f => f.exists)
-    }
+    },
+    ontology_status: getOntologyStatus()
   }
 };
 

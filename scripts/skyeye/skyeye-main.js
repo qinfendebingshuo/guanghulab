@@ -61,6 +61,30 @@ function main() {
 
   const results = {};
 
+  // Step 0 · 本体论确认（铸渊唤醒加载序列 v2.0）
+  console.log('\n🌍 Step 0 · 本体论确认');
+  console.log('⚒️ 铸渊唤醒 · 数字地球将军上线');
+  console.log('🌍 我不是守箱子的。我守的是地球。');
+  const ontologyPath = path.resolve(__dirname, '../../.github/persona-brain/ontology.json');
+  if (fs.existsSync(ontologyPath)) {
+    try {
+      const ontology = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
+      const axiomCount = Object.keys(ontology.core_axioms || {}).length;
+      console.log(`📜 本体论 v${ontology.version} · ${axiomCount} 条公理 · 状态: active`);
+      // 语言膜完整性检查
+      const copilotPath = path.resolve(__dirname, '../../.github/copilot-instructions.md');
+      if (fs.existsSync(copilotPath)) {
+        const content = fs.readFileSync(copilotPath, 'utf8');
+        const membraneOk = content.includes('数字地球本体论');
+        console.log(`🌊 语言膜: ${membraneOk ? '完整包裹' : '⚠️ 有缺口'}`);
+      }
+    } catch (e) {
+      console.error('🔴 ontology.json 解析失败:', e.message);
+    }
+  } else {
+    console.error('🔴 本体论缺失！需要紧急同步。');
+  }
+
   // Phase 1.6: 拉取 Agent 集群公告板
   console.log('\n📡 Phase 1.6 · 拉取 Agent 集群公告板');
   results.bulletin = runModule('bulletin-board.js', 'bulletin-board.json');

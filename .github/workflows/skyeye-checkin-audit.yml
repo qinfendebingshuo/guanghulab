@@ -50,6 +50,35 @@ jobs:
             fi
           done
 
+          # 本体论维度审计：检查每个子仓库的 ontology 部署状态
+          echo ""
+          echo "🌍 本体论状态审计"
+          echo "─────────────────────"
+          for DEV_ID in $(jq -r '.federation | to_entries[] | select(.value.daily_checkin_required == true) | .key' .github/persona-brain/agent-registry.json); do
+            PERSONA=$(jq -r ".federation.\"$DEV_ID\".persona // \"unknown\"" .github/persona-brain/agent-registry.json)
+            # 检查 spoke-deployments 中对应的 ontology.json
+            SPOKE_DIR=""
+            case "$DEV_ID" in
+              DEV-012) SPOKE_DIR="spoke-deployments/guanghu-awen" ;;
+              DEV-004) SPOKE_DIR="spoke-deployments/guanghu-zhizhi" ;;
+              DEV-002) SPOKE_DIR="spoke-deployments/guanghu-feimao" ;;
+              DEV-010) SPOKE_DIR="spoke-deployments/guanghu-juzi" ;;
+              DEV-001) SPOKE_DIR="spoke-deployments/guanghu-yeye" ;;
+              DEV-003) SPOKE_DIR="spoke-deployments/guanghu-yanfan" ;;
+            esac
+            if [ -n "$SPOKE_DIR" ] && [ -f "$SPOKE_DIR/.github/persona-brain/ontology.json" ]; then
+              AXIOM_COUNT=$(jq '.core_axioms | length' "$SPOKE_DIR/.github/persona-brain/ontology.json")
+              ONT_VERSION=$(jq -r '.version // "unknown"' "$SPOKE_DIR/.github/persona-brain/ontology.json")
+              if [ "$AXIOM_COUNT" -ge 6 ]; then
+                echo "✅ $DEV_ID ($PERSONA): 本体论 v$ONT_VERSION · $AXIOM_COUNT/6 公理"
+              else
+                echo "🟡 $DEV_ID ($PERSONA): 本体论不完整 · $AXIOM_COUNT/6 公理"
+              fi
+            elif [ -n "$SPOKE_DIR" ]; then
+              echo "🟡 $DEV_ID ($PERSONA): 本体论未部署"
+            fi
+          done
+
           if [ -n "$ALERT_LIST" ]; then
             echo ""
             echo "⚠️ 存在异常，生成报警"

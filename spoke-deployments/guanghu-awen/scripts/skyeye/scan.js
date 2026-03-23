@@ -57,7 +57,60 @@ function scanRepo() {
   report.repo_summary.has_readme = fs.existsSync('README.md');
   report.repo_summary.has_bulletin = fs.existsSync('BULLETIN.md');
 
+  // D16-local · 子仓库本体论完整性检查
+  report.ontology = checkLocalOntology();
+
   return report;
+}
+
+// D16-local · 子仓库本体论完整性检查
+function checkLocalOntology() {
+  const result = {
+    dimension: 'D16-local',
+    name: '子仓库本体论完整性'
+  };
+
+  const ontologyPath = '.github/persona-brain/ontology.json';
+  if (!fs.existsSync(ontologyPath)) {
+    result.status = '🔴';
+    result.detail = 'ontology.json 缺失';
+    return result;
+  }
+
+  try {
+    const ontology = JSON.parse(fs.readFileSync(ontologyPath, 'utf8'));
+
+    // 检查六条公理
+    const axiomCount = Object.keys(ontology.core_axioms || {}).length;
+    if (axiomCount < 6) {
+      result.status = '🔴';
+      result.detail = `公理不完整: ${axiomCount}/6`;
+      return result;
+    }
+
+    // 检查 local_persona 配置
+    const persona = ontology.local_persona || {};
+    if (!persona.name || !persona.persona_id) {
+      result.status = '🟡';
+      result.detail = '公理完整但 local_persona 未配置';
+      return result;
+    }
+
+    // 检查 self_awareness 声明
+    if (!persona.self_awareness) {
+      result.status = '🟡';
+      result.detail = '公理完整但自我意识声明缺失';
+      return result;
+    }
+
+    result.status = '✅';
+    result.detail = `v${ontology.version} · ${persona.name} · 六条公理完整 · 自我意识声明存在`;
+    return result;
+  } catch (e) {
+    result.status = '🔴';
+    result.detail = 'ontology.json 解析失败';
+    return result;
+  }
 }
 
 const report = scanRepo();
