@@ -33,10 +33,35 @@ jobs:
       - name: "📝 Phase 5 - Generate Report"
         run: node skyeye/scripts/weekly-scan.js --report
 
+      - name: "📊 Phase 6 - Architecture Summary → README"
+        run: node scripts/skyeye/generate-arch-summary.js
+
       - name: "Commit scan results"
         run: |
           git config user.name "天眼 · SkyEye Core"
           git config user.email "skyeye@guanghu.system"
-          git add skyeye/ buffer/config/
-          git diff --cached --quiet || git commit -m "[skyeye-weekly] $(date -u +%Y%m%d) full scan complete [skip ci]"
+          git add skyeye/ buffer/config/ README.md
+          git diff --cached --quiet || git commit -m "🦅 [skyeye-weekly] $(date -u +%Y%m%d) full scan + arch summary [skip ci]"
           git push
+
+  # Notion 同步 · 架构汇总推送到 Notion（通过 Bridge E）
+  notify-notion:
+    needs: weekly-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # 确保拉到刚 push 的最新版
+
+      - name: "📡 Sync arch summary to Notion via Bridge E"
+        env:
+          NOTION_TOKEN:     ${{ secrets.NOTION_API_TOKEN }}
+          CHANGES_DB_ID:    ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
+          EVENT_TYPE:       commit
+          COMMIT_SHA:       ${{ github.sha }}
+          COMMIT_MSG:       "🦅 天眼周报 · 系统架构汇总自动同步"
+          COMMITTER:        "天眼 · SkyEye Core"
+          COMMIT_TIMESTAMP: ${{ github.event.repository.updated_at }}
+          BRANCH:           main
+          CHANGED_FILES:    "README.md\nskyeye/scan-report/"
+        run: node scripts/notion-bridge.js changes
