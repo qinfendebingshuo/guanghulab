@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-23T14:04:03.116Z",
+  "generated_at": "2026-03-23T14:38:39.556Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 78,
+    "total_workflows": 79,
     "total_scripts": 75,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -626,6 +626,13 @@
           ]
         },
         {
+          "file": "skyeye-weekly-scan.yml",
+          "name": "\"SkyEye Weekly Full Scan\"",
+          "triggers": [
+            "schedule(0 12 * * 6)"
+          ]
+        },
+        {
           "file": "staging-preview.yml",
           "name": "\"🔍 铸渊预演部署 (Staging Preview)\"",
           "triggers": [
@@ -818,7 +825,7 @@
           ]
         }
       ],
-      "item_count": 78
+      "item_count": 79
     },
     {
       "zone_id": "SCRIPTS",
@@ -2027,6 +2034,9 @@
     ],
     "skyeye-checkin-receiver": [
       "WORKFLOWS::skyeye-checkin-receiver.yml"
+    ],
+    "skyeye-weekly-scan": [
+      "WORKFLOWS::skyeye-weekly-scan.yml"
     ],
     "staging-preview": [
       "WORKFLOWS::staging-preview.yml"
