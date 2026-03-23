@@ -1,0 +1,45 @@
+{
+  "date": "2026-03-23",
+  "workflows": [
+    {
+      "name": "��渊 · 每日自检",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 14,
+      "success_rate": null,
+      "dependencies": []
+    },
+    {
+      "name": "铸渊 · Notion 工单轮询",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 11,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "pages build and deployment",
+      "trigger": "dynamic",
+      "runs_today": 1,
+      "avg_duration_sec": 41,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "Generate Session Summary for Notion",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 14,
+      "success_rate": 1,
+      "dependencies": []
+    }
+  ],
+  "total_workflows": 72,
+  "failed_today": 0,
+  "parallel_capable": 53,
+  "_meta": {
+    "generated_by": "dc-workflow-perf.js",
+    "generated_at": "2026-03-23T01:03:07.029Z",
+    "runs_fetched": 4
+  }
+}
