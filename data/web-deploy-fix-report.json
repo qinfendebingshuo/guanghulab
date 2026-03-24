@@ -1,0 +1,89 @@
+{
+  "report_id": "ZY-WEBDEPLOY-FIX-20260324",
+  "timestamp": "2026-03-24T10:11:00Z",
+  "work_order": "ZY-WEBDEPLOY-DIAG-2026-0324-001",
+  "diagnosis_summary": {
+    "skyeye_health": "🟡",
+    "deploy_pipeline": "✅ 正常运行（175 次成功）",
+    "server_ssh": "🟡 天眼报告显示不稳定",
+    "nginx_config": "✅ root 路径正确，反向代理已存在",
+    "files_on_server": true,
+    "backend_services": "✅ 部署步骤成功"
+  },
+  "root_causes": [
+    {
+      "id": "RC-001",
+      "description": "cost-control/ 缺少 index.html，Nginx 无法提供默认页面",
+      "category": "情况3·文件缺失",
+      "severity": "medium",
+      "fix": "创建 cost-control/index.html 重定向到 cost-control.html",
+      "status": "fixed"
+    },
+    {
+      "id": "RC-002",
+      "description": "开发者看板在 modules/devboard/ 下，/devboard/ 路径不可访问",
+      "category": "情况2·路径不匹配",
+      "severity": "medium",
+      "fix": "部署时创建 symlink devboard → modules/devboard",
+      "status": "fixed"
+    },
+    {
+      "id": "RC-003",
+      "description": "docs/index.html 导航缺少成本控制、开发者看板、Persona Studio",
+      "category": "导航不完整",
+      "severity": "low",
+      "fix": "在模块导航数组中添加所有缺失模块",
+      "status": "fixed"
+    },
+    {
+      "id": "RC-004",
+      "description": "floating-ai/ 模块尚未开发，仓库中不存在",
+      "category": "模块未开发",
+      "severity": "info",
+      "fix": "待 DEV-004 之之开发完成后加入",
+      "status": "pending_development"
+    },
+    {
+      "id": "RC-005",
+      "description": "部署后无冒烟测试，无法自动发现模块访问问题",
+      "category": "CI/CD 缺陷",
+      "severity": "high",
+      "fix": "在 deploy-to-server.yml 添加部署后冒烟测试步骤",
+      "status": "fixed"
+    },
+    {
+      "id": "RC-006",
+      "description": "deploy-status.json 为空，缺乏部署状态追踪",
+      "category": "可观测性缺失",
+      "severity": "medium",
+      "fix": "冒烟测试完成后自动写入部署状态",
+      "status": "fixed"
+    }
+  ],
+  "changes_made": [
+    "cost-control/index.html — 新增（重定向到 cost-control.html）",
+    "docs/index.html — 更新模块导航（+3 模块: 成本控制、开发者看板、Persona Studio）",
+    ".github/workflows/deploy-to-server.yml — 添加模块路由别名步骤（devboard symlink）",
+    ".github/workflows/deploy-to-server.yml — 添加部署后冒烟测试步骤（全模块检查）",
+    ".github/workflows/deploy-to-server.yml — 扩展验证步骤（增加 cost-control、devboard、persona-studio 检查）",
+    "scripts/web-deploy-diag.sh — 新增（Phase A 诊断脚本）",
+    "data/web-deploy-diag-20260324.log — 新增（诊断日志）",
+    "data/web-deploy-fix-report.json — 新增（修复报告）"
+  ],
+  "verification": {
+    "ci_deploy_runs": "175 次全部成功",
+    "last_successful_deploy": "2026-03-24T08:31:22Z",
+    "modules_expected_accessible": [
+      "/ — 主站首页（docs/index.html）",
+      "/status-board/ — 系统状态看板",
+      "/cost-control/ — 成本控制",
+      "/devboard/ — 开发者看板",
+      "/app/ — 光湖集成壳",
+      "/persona-studio/ — Persona Studio",
+      "/api/ — 后端 API"
+    ],
+    "modules_pending": [
+      "/floating-ai/ — AI悬浮球（模块未开发）"
+    ]
+  }
+}

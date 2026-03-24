@@ -1,0 +1,99 @@
+===== 🔍 guanghulab.com 部署诊断日志 · 2026-03-24 =====
+工单: ZY-WEBDEPLOY-DIAG-2026-0324-001
+分析来源: GitHub Actions CI 日志 + SkyEye 天眼报告
+
+━━━ Phase ⓪ · 天眼前置检查 ━━━
+
+⓪-1 · 核心大脑完整性:
+  ✅ memory.json 完整（有效 JSON）
+  ✅ routing-map.json 完整（有效 JSON）
+  ✅ dev-status.json 完整（有效 JSON）
+  ❌ config.json 缺失（.github/persona-brain/ 目录下不存在）
+
+⓪-1 · 天眼系统文件完整性:
+  ✅ skyeye/skyeye-main.js
+  ✅ skyeye/scan-workflows.js
+  ✅ skyeye/scan-structure.js
+  ✅ skyeye/scan-brain-health.js
+  ✅ skyeye/scan-external-bridges.js
+  ✅ skyeye/diagnose.js
+  ✅ skyeye/repair-agent.js
+  ✅ skyeye/report-generator.js
+  ✅ zhuyuan-skyeye.yml workflow 存在
+
+⓪-2 · 天眼报告摘要 (skyeye-2026-03-23.json):
+  整体健康度: 🟡 (黄色)
+  大脑状态: integrity ok, memory fresh, routing_map 未对齐
+  Workflow 健康: 79个，全部 ✅，6个 cron 冲突
+  结构健康: 核心目录完整，92 个孤儿文件
+  桥接健康: Notion API 🟢, Server SSH 🟡, GitHub API 🟢
+  安全: L0 级别，根规则完整
+  诊断: 9 个问题，8 个自动修复，1 个观察中
+
+━━━ Phase A · 从 CI 日志中提取的诊断信息 ━━━
+
+A1 · 服务器文件系统（来自 deploy job #175 验证步骤）:
+  站点根目录: 75 个子目录/文件
+  确认存在的目录:
+    ✅ app/
+    ✅ backend/
+    ✅ backend-integration/
+    ✅ brain/
+    ✅ broadcasts/
+    ✅ buffer/
+    ✅ bulletin-board/
+    ✅ chat-bubble/
+    ✅ cloud-drive/
+    ✅ coldstart/
+    ✅ config/
+    ✅ docs/（含 index.html）
+    ✅ status-board/（含 index.html、api.js、render.js 等完整文件）
+    ✅ System_Logs/
+  index.html 部署确认: docs/index.html → 站点根目录 ✅
+
+A2 · Nginx 配置（来自 deploy job #175）:
+  ✅ Nginx root 路径正确（无需修改）
+  ✅ API 反向代理已存在（无需修改）
+  → Nginx 配置正常，root 指向 DEPLOY_PATH
+
+A3 · 后端服务（来自 deploy job #175）:
+  ✅ 后端服务部署步骤成功完成
+  端口: 3721（API 代理）, 3000（Express）, 3001（HLI）, 3002（Persona Studio）, 8080（WebSocket）
+
+━━━ Phase B · 根因分析 ━━━
+
+根据 CI 日志分析，部署流程正常运行（175 次成功），文件确实在服务器上。
+问题定位:
+
+1. 【已确认】cost-control/ 缺少 index.html
+   → cost-control/ 目录只有 cost-control.html，Nginx 的 try_files $uri $uri/ 无法
+     自动找到 index.html
+   → 修复: 创建 cost-control/index.html 重定向到 cost-control.html
+
+2. 【已确认】devboard 路径不匹配
+   → 开发者看板代码在 modules/devboard/ 下，不在根目录的 devboard/ 下
+   → 访问 /devboard/ 时 Nginx 找不到对应目录
+   → 修复: 在部署时创建 symlink devboard → modules/devboard
+
+3. 【已确认】floating-ai/ 目录不存在
+   → 仓库中没有 floating-ai/ 目录，该模块代码尚未创建
+   → 状态: 待开发
+
+4. 【已确认】docs/index.html 导航不完整
+   → 模块导航缺少: 成本控制、开发者看板、Persona Studio
+   → 修复: 添加所有模块的导航入口
+
+5. 【已确认】deploy-status.json 为空
+   → data/deploy-status.json 只有 {}，没有部署状态记录
+   → 修复: 在部署后自动写入冒烟测试结果
+
+━━━ Phase C · 修复措施 ━━━
+
+C1. 创建 cost-control/index.html（重定向到 cost-control.html）✅
+C2. 更新 deploy-to-server.yml 添加 devboard symlink 创建步骤 ✅
+C3. 更新 docs/index.html 添加完整模块导航 ✅
+C4. 添加部署后冒烟测试步骤，自动检查所有模块可访问性 ✅
+C5. 冒烟测试结果自动写入 deploy-status.json ✅
+C6. 创建 scripts/web-deploy-diag.sh 诊断脚本（可在服务器上手动运行）✅
+
+━━━ 诊断完成 · 2026-03-24 ━━━

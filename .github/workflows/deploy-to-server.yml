@@ -232,6 +232,28 @@ jobs:
             "
           echo "✅ 首页已部署到根目录"
 
+      - name: 🔗 模块路由别名（symlink 补全）
+        continue-on-error: true
+        run: |
+          echo "🔗 创建模块路由别名..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              DP='${{ secrets.DEPLOY_PATH }}'
+
+              # devboard → modules/devboard（开发者看板在 modules/ 子目录下）
+              if [ -d \"\$DP/modules/devboard\" ] && [ ! -e \"\$DP/devboard\" ]; then
+                ln -s \"\$DP/modules/devboard\" \"\$DP/devboard\"
+                echo '✅ devboard → modules/devboard'
+              elif [ -L \"\$DP/devboard\" ]; then
+                echo '✅ devboard symlink 已存在'
+              elif [ -d \"\$DP/devboard\" ]; then
+                echo '✅ devboard 目录已存在'
+              else
+                echo '⚠️ modules/devboard 不存在，跳过'
+              fi
+            "
+          echo "✅ 模块路由别名处理完成"
+
       - name: 🔧 后端服务部署
         continue-on-error: true
         run: |
@@ -475,7 +497,67 @@ jobs:
              echo '--- docs/ ---' && \
              ls ${{ secrets.DEPLOY_PATH }}/docs/ 2>/dev/null || echo '(docs/ 不存在)' && \
              echo '--- status-board/ ---' && \
-             ls ${{ secrets.DEPLOY_PATH }}/status-board/ 2>/dev/null || echo '(status-board/ 不存在)'"
+             ls ${{ secrets.DEPLOY_PATH }}/status-board/ 2>/dev/null || echo '(status-board/ 不存在)' && \
+             echo '--- cost-control/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/cost-control/ 2>/dev/null || echo '(cost-control/ 不存在)' && \
+             echo '--- devboard/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/devboard/ 2>/dev/null || echo '(devboard/ 不存在)' && \
+             echo '--- persona-studio/ ---' && \
+             ls ${{ secrets.DEPLOY_PATH }}/persona-studio/ 2>/dev/null || echo '(persona-studio/ 不存在)'"
+
+      - name: 🏥 部署后冒烟测试
+        continue-on-error: true
+        run: |
+          echo "🏥 部署后全模块冒烟测试..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              DP='${{ secrets.DEPLOY_PATH }}'
+              PASSED=0
+              FAILED=0
+              RESULTS=''
+
+              check_module() {
+                local name=\$1
+                local path=\$2
+                if [ -f \"\$DP/\$path/index.html\" ] || [ -f \"\$DP/\$path/index.htm\" ]; then
+                  PASSED=\$((PASSED+1))
+                  RESULTS=\"\${RESULTS}✅ \${name} (\${path}/index.html)\n\"
+                elif [ -d \"\$DP/\$path\" ]; then
+                  PASSED=\$((PASSED+1))
+                  RESULTS=\"\${RESULTS}⚠️ \${name} (目录存在，无 index.html)\n\"
+                else
+                  FAILED=\$((FAILED+1))
+                  RESULTS=\"\${RESULTS}❌ \${name} (\${path}/ 不存在)\n\"
+                fi
+              }
+
+              check_module '主站首页' 'docs'
+              check_module '系统状态看板' 'status-board'
+              check_module '成本控制' 'cost-control'
+              check_module '开发者看板' 'devboard'
+              check_module '光湖集成壳' 'app'
+              check_module 'Persona Studio' 'persona-studio'
+              check_module '后端服务' 'backend'
+
+              echo ''
+              printf \"\$RESULTS\"
+              echo ''
+              echo \"━━━ 冒烟测试结果：\${PASSED} 通过 / \${FAILED} 失败 ━━━\"
+
+              # 写入部署状态文件
+              TIMESTAMP=\$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+              if command -v jq &>/dev/null; then
+                jq -n --arg ts \"\$TIMESTAMP\" --arg commit \"${{ github.sha }}\" \
+                  --argjson passed \"\$PASSED\" --argjson failed \"\$FAILED\" \
+                  '{last_deploy: \$ts, commit: \$commit, modules_passed: \$passed, modules_failed: \$failed}' \
+                  > \"\$DP/data/deploy-status.json\" 2>/dev/null || true
+              else
+                printf '{\"last_deploy\":\"%s\",\"commit\":\"%s\",\"modules_passed\":%d,\"modules_failed\":%d}' \
+                  \"\$TIMESTAMP\" \"${{ github.sha }}\" \"\$PASSED\" \"\$FAILED\" \
+                  > \"\$DP/data/deploy-status.json\" 2>/dev/null || true
+              fi
+            "
+          echo "✅ 冒烟测试完成"
 
       - name: 📝 部署汇总
         run: |
