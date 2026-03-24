@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-24 08:23 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-24 08:40 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -13,7 +13,7 @@
 | 脚本 | 75 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-24 08:23 CST |
+| 快照生成时间 | 2026-03-24 08:40 CST |
 
 ---
 
@@ -153,7 +153,7 @@
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
 | `sync-notion-to-griddb.yml` | 🧠 Notion → Grid-DB 记忆同步 | schedule(0 */4 * * *), manual |
 | `sync-persona-studio.yml` | 🔄 铸渊跨仓库同步 · persona-studio | push, manual |
-| `sync.yml` | Guanghu Grid Sync | push |
+| `sync-repo-to-drive.yml` | "🪞 光湖格点库 → Google Drive 同步" | push, schedule(0 */6 * * *), manual |
 | `syslog-auto-pipeline.yml` | SYSLOG Auto Pipeline | unknown |
 | `syslog-issue-pipeline.yml` | 📡 SYSLOG Issue Pipeline | issues |
 | `syslog-pipeline.yml` | 铸渊 · SYSLOG Pipeline (A/D/E) | push, manual |

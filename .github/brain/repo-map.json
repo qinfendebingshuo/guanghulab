@@ -1,7 +1,7 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-24T00:23:42.798Z",
+  "generated_at": "2026-03-24T00:40:32.515Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
@@ -699,10 +699,12 @@
           ]
         },
         {
-          "file": "sync.yml",
-          "name": "Guanghu Grid Sync",
+          "file": "sync-repo-to-drive.yml",
+          "name": "\"🪞 光湖格点库 → Google Drive 同步\"",
           "triggers": [
-            "push"
+            "push",
+            "schedule(0 */6 * * *)",
+            "manual"
           ]
         },
         {
@@ -2078,8 +2080,8 @@
     "sync-persona-studio": [
       "WORKFLOWS::sync-persona-studio.yml"
     ],
-    "sync": [
-      "WORKFLOWS::sync.yml"
+    "sync-repo-to-drive": [
+      "WORKFLOWS::sync-repo-to-drive.yml"
     ],
     "syslog-auto-pipeline": [
       "WORKFLOWS::syslog-auto-pipeline.yml"
