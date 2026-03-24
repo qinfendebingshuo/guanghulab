@@ -1,0 +1,23 @@
+name: Guanghu Grid Sync
+
+on:
+  push:
+    branches:
+      - main  # 当你修改仓库代码时自动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Sync to Google Drive
+        uses: wei/rclone@v1
+        env:
+          RCLONE_CONFIG_DRIVE_TYPE: drive
+          RCLONE_CONFIG_DRIVE_SCOPE: drive
+          RCLONE_CONFIG_DRIVE_SERVICE_ACCOUNT_CONTENTS: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
+          RCLONE_CONFIG_DRIVE_ROOT_FOLDER_ID: ${{ secrets.DRIVE_MIRROR_FOLDER_ID }}
+        with:
+          args: sync . drive:
