@@ -1,0 +1,93 @@
+{
+  "audit_id": "ZY-PAT-AUDIT-2026-0324-001",
+  "type": "token-secret-audit",
+  "timestamp": "2026-03-24T07:42:00.000Z",
+  "executor": "ICE-GL-ZY001",
+  "trigger": "issue-directive",
+  "phase_1_findings": {
+    "cross_repo_secrets_found": 3,
+    "secrets": [
+      {
+        "name": "MAIN_REPO_TOKEN",
+        "references": 4,
+        "workflows": [
+          "federation-bridge.yml",
+          "pull-sync-awen.yml"
+        ],
+        "usage_type": "federation-bridge + sub-repo-clone",
+        "is_guanghu_token": true,
+        "details": [
+          {
+            "file": "federation-bridge.yml",
+            "count": 3,
+            "method": "env-var-to-node-script",
+            "target": "qinfendebingshuo org repos"
+          },
+          {
+            "file": "pull-sync-awen.yml",
+            "count": 1,
+            "method": "git-clone-url-auth",
+            "target": "WENZHUOXI/guanghu-awen"
+          }
+        ]
+      },
+      {
+        "name": "CROSS_REPO_TOKEN",
+        "references": 2,
+        "workflows": [
+          "sync-persona-studio.yml"
+        ],
+        "usage_type": "github-api-dispatch",
+        "is_guanghu_token": false,
+        "details": [
+          {
+            "file": "sync-persona-studio.yml",
+            "count": 2,
+            "method": "bearer-token-curl",
+            "target": "qinfendebingshuo/persona-studio"
+          }
+        ]
+      },
+      {
+        "name": "DEPLOY_GITHUB_TOKEN",
+        "references": 1,
+        "workflows": [
+          "auto-deploy-drive-bridge.yml"
+        ],
+        "usage_type": "deploy-git-push",
+        "is_guanghu_token": false,
+        "details": [
+          {
+            "file": "auto-deploy-drive-bridge.yml",
+            "count": 1,
+            "method": "env-var-to-node-script",
+            "target": "self-repo-deploy"
+          }
+        ]
+      }
+    ],
+    "conclusion": "MAIN_REPO_TOKEN is the primary secret corresponding to guanghu-token"
+  },
+  "phase_4_security_scan": {
+    "hardcoded_tokens": {
+      "ghp_prefix": {
+        "found": false,
+        "note": "Only placeholder in dingtalk-bot/.env.example"
+      },
+      "github_pat_prefix": {
+        "found": false
+      },
+      "glpat_prefix": {
+        "found": false
+      }
+    },
+    "total_secrets_referenced": 57,
+    "verdict": "CLEAN"
+  },
+  "summary": {
+    "primary_secret": "MAIN_REPO_TOKEN",
+    "secondary_secrets": ["CROSS_REPO_TOKEN", "DEPLOY_GITHUB_TOKEN"],
+    "security_status": "CLEAN",
+    "action_required": "Human must update MAIN_REPO_TOKEN value in GitHub Settings"
+  }
+}
