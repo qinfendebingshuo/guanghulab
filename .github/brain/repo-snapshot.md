@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-24 19:36 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-24 20:10 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 88 个 GitHub Actions |
+| 工作流 | 90 个 GitHub Actions |
 | 脚本 | 78 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-24 19:36 CST |
+| 快照生成时间 | 2026-03-24 20:10 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 88 项
+**路径**: `.github/workflows` · **数量**: 90 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -75,7 +75,7 @@
 **关键词**: syslog · inbox · log · 系统日志
 
 ### 📄 文档与前端（DOCS）
-**路径**: `docs` · **数量**: 13 项
+**路径**: `docs` · **数量**: 14 项
 **描述**: 铸渊助手聊天界面 · GitHub Pages 部署
 **关键词**: docs · html · chat · pages · 文档 · 聊天室
 
@@ -120,6 +120,7 @@
 | `grid-db-processor.yml` | ⚙️ Grid-DB 消息处理器 | push |
 | `grid-db-training-extract.yml` | 🧬 训练数据提取 | schedule(0 3 * * 0), manual |
 | `hli-contract-check.yml` | HLI Contract Check | push, pull_request |
+| `merge-watchdog.yml` | "👁️ Merge Watchdog · 合并指令看守者" | pull_request, issues, manual |
 | `meta-watchdog.yml` | "🐕 元看门狗 · 巡检健康监控" | schedule(0 */6 * * *), manual |
 | `notion-callback-pipeline.yml` | Notion Callback Pipeline | unknown |
 | `notion-connectivity-test.yml` | 铸渊 · Notion 连通性测试 | manual |
@@ -166,6 +167,7 @@
 | `tcs-semantic-landing.yml` | 🛰️ TCS 语义直连落盘 · Semantic Landing | issues |
 | `test-notion-bridge.yml` | "🧪 Notion Bridge Connectivity Test" | push, manual |
 | `tianyan-daily-patrol.yml` | "🦅 天眼 · 每日巡检" | schedule(30 0 * * *), manual |
+| `tianyan-nightly-scan.yml` | "🌙 天眼夜间自动修复引擎 v3.0" | schedule(0 15 * * *), manual |
 | `update-readme-bulletin.yml` | 📢 更新系统公告区 | push, schedule(0 1 * * *), manual |
 | `update-readme.yml` | 📊 README 仪表盘自动更新 | schedule(0 0 * * *), manual |
 | `update-repo-map.yml` | 铸渊 · 图书馆目录自动更新 | push, schedule(0 0 * * *), manual |
