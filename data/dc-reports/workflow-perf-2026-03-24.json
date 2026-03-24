@@ -1,0 +1,202 @@
+{
+  "date": "2026-03-24",
+  "workflows": [
+    {
+      "name": "���� 冰朔人格体 · 自动部署诊断",
+      "trigger": "issue_comment",
+      "runs_today": 1,
+      "avg_duration_sec": 1,
+      "success_rate": null,
+      "dependencies": []
+    },
+    {
+      "name": "铸渊 · Issue 自动回复",
+      "trigger": "issue_comment",
+      "runs_today": 6,
+      "avg_duration_sec": 1,
+      "success_rate": null,
+      "dependencies": []
+    },
+    {
+      "name": "🧊 冰朔人格体 · 自动部署诊断",
+      "trigger": "issue_comment",
+      "runs_today": 4,
+      "avg_duration_sec": 1,
+      "success_rate": null,
+      "dependencies": [
+        "铸渊 · 光湖纪元 模块文档自动生成"
+      ]
+    },
+    {
+      "name": "铸渊 · Bridge E · GitHub Changes → Notion",
+      "trigger": "pull_request",
+      "runs_today": 6,
+      "avg_duration_sec": 12,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "模块结构检查",
+      "trigger": "pull_request",
+      "runs_today": 8,
+      "avg_duration_sec": 90,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "铸渊 · PR Review",
+      "trigger": "pull_request",
+      "runs_today": 3,
+      "avg_duration_sec": 155,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "Running Copilot coding agent",
+      "trigger": "dynamic",
+      "runs_today": 3,
+      "avg_duration_sec": 199,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "铸渊 · 每日自检",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 14,
+      "success_rate": null,
+      "dependencies": [
+        "wake-brain"
+      ]
+    },
+    {
+      "name": "pages build and deployment",
+      "trigger": "dynamic",
+      "runs_today": 16,
+      "avg_duration_sec": 28,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "📢 更新系统公告区",
+      "trigger": "workflow_run",
+      "runs_today": 6,
+      "avg_duration_sec": 26,
+      "success_rate": 1,
+      "dependencies": [
+        "wake-brain"
+      ]
+    },
+    {
+      "name": "铸渊 · 图书馆目录自动更新",
+      "trigger": "push",
+      "runs_today": 3,
+      "avg_duration_sec": 13,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "🚨 铸渊·智能门禁 · Push Gate Guard",
+      "trigger": "push",
+      "runs_today": 3,
+      "avg_duration_sec": 1,
+      "success_rate": null,
+      "dependencies": []
+    },
+    {
+      "name": "🪞 光湖格点库 → Google Drive 同步",
+      "trigger": "push",
+      "runs_today": 1,
+      "avg_duration_sec": 19,
+      "success_rate": 0,
+      "dependencies": []
+    },
+    {
+      "name": "冰朔主控神经系统 · 自动维护",
+      "trigger": "push",
+      "runs_today": 3,
+      "avg_duration_sec": 21,
+      "success_rate": 1,
+      "dependencies": [
+        "wake-brain"
+      ]
+    },
+    {
+      "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+      "trigger": "push",
+      "runs_today": 3,
+      "avg_duration_sec": 68,
+      "success_rate": 1,
+      "dependencies": [
+        "validate",
+        "deploy"
+      ]
+    },
+    {
+      "name": ".github/workflows/syslog-issue-pipeline.yml",
+      "trigger": "push",
+      "runs_today": 7,
+      "avg_duration_sec": 0,
+      "success_rate": 0,
+      "dependencies": []
+    },
+    {
+      "name": "Guanghu Grid Sync",
+      "trigger": "push",
+      "runs_today": 1,
+      "avg_duration_sec": 17,
+      "success_rate": 0,
+      "dependencies": []
+    },
+    {
+      "name": "🧊 冰朔人格��� · 自动部署诊断",
+      "trigger": "issue_comment",
+      "runs_today": 1,
+      "avg_duration_sec": 1,
+      "success_rate": null,
+      "dependencies": []
+    },
+    {
+      "name": ".github/workflows/sync.yml",
+      "trigger": "push",
+      "runs_today": 1,
+      "avg_duration_sec": 0,
+      "success_rate": 0,
+      "dependencies": []
+    },
+    {
+      "name": "Generate Session Summary for Notion",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 11,
+      "success_rate": 1,
+      "dependencies": []
+    },
+    {
+      "name": "📡 铸渊 · Notion Agent 唤醒监听",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 17,
+      "success_rate": 1,
+      "dependencies": [
+        "wake-brain"
+      ]
+    },
+    {
+      "name": "🪞 Grid-DB → Google Drive 镜���同步",
+      "trigger": "schedule",
+      "runs_today": 1,
+      "avg_duration_sec": 13,
+      "success_rate": 0,
+      "dependencies": []
+    }
+  ],
+  "total_workflows": 80,
+  "failed_today": 11,
+  "parallel_capable": 60,
+  "_meta": {
+    "generated_by": "dc-workflow-perf.js",
+    "generated_at": "2026-03-24T00:55:58.177Z",
+    "runs_fetched": 80
+  }
+}
