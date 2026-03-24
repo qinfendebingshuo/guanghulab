@@ -1,0 +1,73 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🛡️ Token 健康检查（每日安全网）
+#
+# 守护: PER-ZY001 铸渊 (Zhuyuan)
+# 系统: SYS-GLW-0001
+# 主控: TCS-0002∞ (冰朔)
+#
+# CRON: 每天 12:15 CST (04:15 UTC) — 避开日休眠 04:00-04:10 CST
+# 功能: 只检查不刷新，即将过期才紧急刷新
+#
+# 生命线任务：天眼休眠期内豁免执行
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: 🛡️ Token 健康检查（每日安全网）
+
+on:
+  schedule:
+    # 每天 12:15 CST (04:15 UTC) — 在日休眠 04:10 CST 之后
+    - cron: '15 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  check-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🛡️ 检查 Token 健康状态
+        id: health_check
+        run: |
+          node -e "
+          const fs = require('fs');
+          const reg = JSON.parse(fs.readFileSync('config/gdrive-tokens.json', 'utf8'));
+          let urgent = false;
+          for (const t of reg.tokens) {
+            const hoursLeft = (new Date(t.expires_at) - new Date()) / 3600000;
+            console.log(t.user_name + ': ' + hoursLeft.toFixed(1) + 'h remaining');
+            if (hoursLeft < 48) {
+              console.log('  ⚠️ URGENT: < 48h, triggering emergency renewal');
+              urgent = true;
+            }
+          }
+          if (urgent) process.exit(1);
+          console.log('✅ All tokens healthy.');
+          "
+
+      - name: ⚡ 紧急刷新（仅在即将过期时）
+        if: failure()
+        env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_RENEW: 'true'
+          # 新增开发者 Token（每次加人时追加）
+          # GDRIVE_REFRESH_TOKEN_DEV001: ${{ secrets.GDRIVE_REFRESH_TOKEN_DEV001 }}
+          # GDRIVE_REFRESH_TOKEN_DEV002: ${{ secrets.GDRIVE_REFRESH_TOKEN_DEV002 }}
+        run: |
+          npm install tweetsodium
+          node scripts/gdrive/renew-tokens.js
+
+      - name: 📋 提交
+        if: always()
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add config/gdrive-tokens.json grid-db/logs/
+          git diff --cached --quiet || git commit -m "auto: Token health check $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+          git push

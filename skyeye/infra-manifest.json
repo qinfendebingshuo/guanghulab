@@ -105,6 +105,46 @@
         "weekly_hibernation_minutes": 15,
         "monthly_budget_minutes": 210,
         "comment": "日休眠 30天×5min=150 + 周休眠 4×15min=60 ≈ 210 min/month"
+      },
+      "lifeline_tasks": [
+        {
+          "id": "TOKEN-RENEW",
+          "name": "OAuth2 Token 自动续期",
+          "workflow": "renew-gdrive-tokens.yml",
+          "hibernate_exempt": true,
+          "priority": "P0",
+          "alert_on_failure": true,
+          "alert_channels": ["notion-dashboard", "agent-bulletin"]
+        },
+        {
+          "id": "TOKEN-HEALTH",
+          "name": "Token 健康检查",
+          "workflow": "check-token-health.yml",
+          "hibernate_exempt": true,
+          "priority": "P0",
+          "alert_on_failure": true,
+          "alert_channels": ["notion-dashboard", "agent-bulletin"]
+        }
+      ]
+    },
+    "gdrive_oauth2": {
+      "service": "Google Drive OAuth2 Token Management",
+      "plan": "Internal",
+      "description": "OAuth2 Token 自动续期引擎 · 6天刷新 + 三层保险 + 天眼生命线豁免",
+      "registry": "config/gdrive-tokens.json",
+      "scripts": {
+        "renew_tokens": "scripts/gdrive/renew-tokens.js",
+        "check_hibernation": "scripts/gdrive/check-hibernation.js",
+        "push_alerts": "scripts/gdrive/push-token-alerts.js"
+      },
+      "workflows": {
+        "renew": "renew-gdrive-tokens.yml",
+        "health_check": "check-token-health.yml"
+      },
+      "schedule": {
+        "renew_a": "每周一 10:00 CST (02:00 UTC)",
+        "renew_b": "每周四 10:00 CST (02:00 UTC)",
+        "health_check": "每天 12:15 CST (04:15 UTC)"
       }
     }
   }
