@@ -49,16 +49,27 @@ jobs:
 
           echo "✅ OAuth2 credentials validated"
 
+          # Use node to generate token JSON — avoids shell escaping issues with special characters
+          TOKEN_JSON=$(node -e "
+            const token = {
+              access_token: '',
+              token_type: 'Bearer',
+              refresh_token: process.env.GDRIVE_REFRESH_TOKEN,
+              expiry: '2000-01-01T00:00:00Z'
+            };
+            process.stdout.write(JSON.stringify(token));
+          ")
+
           mkdir -p "${HOME}/.config/rclone"
-          {
-            echo "[gdrive]"
-            echo "type = drive"
-            echo "scope = drive"
-            echo "client_id = ${GDRIVE_CLIENT_ID}"
-            echo "client_secret = ${GDRIVE_CLIENT_SECRET}"
-            echo "token = {\"access_token\":\"\",\"token_type\":\"Bearer\",\"refresh_token\":\"${GDRIVE_REFRESH_TOKEN}\",\"expiry\":\"2000-01-01T00:00:00Z\"}"
-            echo "root_folder_id = 1fqWdLPaZkUZYt4OT_h3fJQHnd-q5QN3G"
-          } > "${HOME}/.config/rclone/rclone.conf"
+          cat > "${HOME}/.config/rclone/rclone.conf" <<RCLONE_EOF
+          [gdrive]
+          type = drive
+          scope = drive
+          client_id = ${GDRIVE_CLIENT_ID}
+          client_secret = ${GDRIVE_CLIENT_SECRET}
+          token = ${TOKEN_JSON}
+          root_folder_id = 1fqWdLPaZkUZYt4OT_h3fJQHnd-q5QN3G
+          RCLONE_EOF
           chmod 600 "${HOME}/.config/rclone/rclone.conf"
 
           echo "✅ rclone configured with OAuth2"
