@@ -546,8 +546,16 @@ jobs:
 
               # 写入部署状态文件
               TIMESTAMP=\$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-              printf '{\"last_deploy\":\"%s\",\"commit\":\"${{ github.sha }}\",\"modules_passed\":%d,\"modules_failed\":%d}' \
-                \"\$TIMESTAMP\" \"\$PASSED\" \"\$FAILED\" > \"\$DP/data/deploy-status.json\" 2>/dev/null || true
+              if command -v jq &>/dev/null; then
+                jq -n --arg ts \"\$TIMESTAMP\" --arg commit \"${{ github.sha }}\" \
+                  --argjson passed \"\$PASSED\" --argjson failed \"\$FAILED\" \
+                  '{last_deploy: \$ts, commit: \$commit, modules_passed: \$passed, modules_failed: \$failed}' \
+                  > \"\$DP/data/deploy-status.json\" 2>/dev/null || true
+              else
+                printf '{\"last_deploy\":\"%s\",\"commit\":\"%s\",\"modules_passed\":%d,\"modules_failed\":%d}' \
+                  \"\$TIMESTAMP\" \"${{ github.sha }}\" \"\$PASSED\" \"\$FAILED\" \
+                  > \"\$DP/data/deploy-status.json\" 2>/dev/null || true
+              fi
             "
           echo "✅ 冒烟测试完成"
 

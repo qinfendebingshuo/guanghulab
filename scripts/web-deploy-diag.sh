@@ -151,7 +151,8 @@ for dir in "$DEPLOY_PATH" /var/www/hololake-frontend /var/www/hololake; do
     echo "📂 $dir 最后修改时间："
     stat -c '%y' "$dir" 2>/dev/null || stat -f '%Sm' "$dir" 2>/dev/null || echo "⚠️ 无法获取"
     echo "最新文件："
-    find "$dir" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -5
+    find "$dir" -type f -exec stat -c '%Y %n' {} \; 2>/dev/null | sort -rn | head -5 || \
+      ls -lt "$dir" 2>/dev/null | head -6
   fi
 done
 
