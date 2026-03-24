@@ -1,11 +1,7 @@
 // 知秋天眼 · 仓库自扫描引擎
-// 指令编号：ZQ-PERSONA-INIT-2026-0323-001
-// 每次天眼醒来后执行，扫描整个仓库状态
-
 const fs = require('fs');
 const crypto = require('crypto');
 
-// 主权区文件列表（天眼系统核心文件）
 const SOVEREIGN_FILES = [
   '.github/persona-brain/config.json',
   '.github/persona-brain/status.json',
@@ -15,7 +11,6 @@ const SOVEREIGN_FILES = [
   '.github/guanghu-language-shell.json'
 ];
 
-// 计算主权区签名哈希（身份证）
 function computeSignatureHash() {
   const hash = crypto.createHash('sha256');
   for (const file of SOVEREIGN_FILES) {
@@ -28,7 +23,6 @@ function computeSignatureHash() {
   return hash.digest('hex');
 }
 
-// 扫描仓库
 function scanRepo() {
   const report = {
     timestamp: new Date().toISOString(),
@@ -44,17 +38,13 @@ function scanRepo() {
     repo_summary: {}
   };
 
-  // 逐项检查主权区文件
   for (const file of SOVEREIGN_FILES) {
     report.sovereign_files[file] = {
       exists: fs.existsSync(file),
-      hash: fs.existsSync(file)
-        ? crypto.createHash('md5').update(fs.readFileSync(file)).digest('hex')
-        : null
+      hash: fs.existsSync(file) ? crypto.createHash('md5').update(fs.readFileSync(file)).digest('hex') : null
     };
   }
 
-  // 仓库概况
   try {
     const rootEntries = fs.readdirSync('.').filter(e => !e.startsWith('.'));
     report.repo_summary.root_entries_count = rootEntries.length;
@@ -69,7 +59,6 @@ function scanRepo() {
   return report;
 }
 
-// 执行扫描
 const report = scanRepo();
 const outputPath = '.github/persona-brain/skyeye-report.json';
 fs.mkdirSync('.github/persona-brain', { recursive: true });
