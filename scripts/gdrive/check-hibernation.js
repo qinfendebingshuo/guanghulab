@@ -17,8 +17,9 @@
 
 function isInHibernation() {
   const now = new Date();
-  // 转换为北京时间
-  const cst = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+  // 转换为北京时间（UTC+8），使用 UTC 偏移计算避免 locale 差异
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+  const cst = new Date(utcMs + 8 * 60 * 60 * 1000);
   const day = cst.getDay(); // 0=周日, 6=周六
   const hour = cst.getHours();
   const minute = cst.getMinutes();

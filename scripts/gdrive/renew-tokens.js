@@ -104,8 +104,8 @@ async function main() {
         console.log(`  ✅ 刷新成功！新过期时间: ${token.expires_at}`);
         results.renewed.push(token.user_id);
       } else {
-        // Google 有时不返回新的 refresh_token
-        console.log(`  ⚠️ Google 未返回新 refresh_token，Token 可能仍然有效但无法续期`);
+        // Google 有时不返回新的 refresh_token（access_type 非 offline 或非首次授权时常见）
+        console.log(`  ⚠️ Google 未返回新 refresh_token，需人类重新授权（access_type=offline + prompt=consent）`);
         token.status = 'expiring';
         registry.renew_log.push({
           user_id: token.user_id,
@@ -202,7 +202,7 @@ async function refreshOAuth2Token(refreshToken) {
             resolve(json);
           }
         } catch (e) {
-          reject(new Error(`Invalid response from Google: ${data.substring(0, 200)}`));
+          reject(new Error('Invalid JSON response from Google OAuth2 endpoint'));
         }
       });
     });

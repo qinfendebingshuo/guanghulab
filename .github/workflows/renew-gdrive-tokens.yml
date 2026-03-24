@@ -58,7 +58,8 @@ jobs:
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add config/gdrive-tokens.json grid-db/logs/
+          git add config/gdrive-tokens.json
+          git add -f grid-db/logs/token-alert.json 2>/dev/null || true
           git diff --cached --quiet || git commit -m "auto: Token renewal $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
           git push
 
