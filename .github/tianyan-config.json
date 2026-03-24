@@ -1,0 +1,63 @@
+{
+  "version": "3.0",
+  "engine": "tianyan-nightly-autofix",
+  "copyright": "国作登字-2026-A-00037559 · TCS-0002∞",
+  "schedule": {
+    "scan_time_utc": "15:00",
+    "scan_time_cst": "23:00",
+    "timezone": "Asia/Shanghai"
+  },
+  "safety": {
+    "max_files_per_repair": 5,
+    "max_lines_per_file": 50,
+    "max_retry_rounds": 2,
+    "max_total_changed_lines": 200,
+    "protected_patterns": [
+      "tianyan-*.yml",
+      "CODEOWNERS",
+      ".github/FUNDING.yml"
+    ],
+    "forbidden_operations": [
+      "create_file",
+      "delete_file",
+      "modify_secrets_ref",
+      "modify_protected_file",
+      "push_to_main"
+    ]
+  },
+  "error_classification": {
+    "auto_fixable": [
+      "config_parse",
+      "rclone_oauth_parse",
+      "script_error"
+    ],
+    "partial_fixable": [
+      "token_expired"
+    ],
+    "manual_only": [
+      "network_timeout",
+      "permission_denied",
+      "unknown"
+    ]
+  },
+  "gemini": {
+    "model": "gemini-2.0-flash",
+    "temperature": 0.1,
+    "max_output_tokens": 4096,
+    "response_format": "json"
+  },
+  "dashboard": {
+    "file": "DASHBOARD.md",
+    "history_days": 7,
+    "alert_thresholds": {
+      "persistent_error_days": 3,
+      "urgent_alert_days": 7
+    }
+  },
+  "weekend_mode": {
+    "enabled": true,
+    "saturday_hibernation": "20:00-00:00",
+    "saturday_scan_only": true,
+    "skip_repair_on_saturday": true
+  }
+}

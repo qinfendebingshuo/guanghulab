@@ -1,0 +1,337 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# .github/workflows/merge-watchdog.yml
+# 👁️ Merge Watchdog · 合并指令看守者
+#
+# 事件驱动：当 auto-repair PR 被合并到 main 时触发
+# 跟踪修复是否真正生效
+# 三次失败 → 邮件通知冰朔手动介入
+# 修复成功 → 静默更新仪表盘
+#
+# 指令编号: ZY-MERGE-WATCHDOG-2026-0324-001
+# AG-ZY-088
+
+name: "👁️ Merge Watchdog · 合并指令看守者"
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: '手动指定要观察的 PR 编号'
+        type: number
+        required: false
+
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  MAX_RETRIES: 3
+  OBSERVATION_WINDOW_HOURS: 48
+  WATCHDOG_DATA: "docs/dashboard/watchdog-records.json"
+
+jobs:
+  # ========================================
+  # Gate: 只看行动类（已合并的 auto-repair PR）
+  # ========================================
+  gate:
+    runs-on: ubuntu-latest
+    if: >
+      (github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'fix/auto-repair-'))
+      || github.event_name == 'workflow_dispatch'
+    outputs:
+      should_watch: ${{ steps.check.outputs.should_watch }}
+      target_workflows: ${{ steps.check.outputs.target_workflows }}
+      pr_number: ${{ steps.check.outputs.pr_number }}
+    steps:
+      - name: "🔍 识别修复目标"
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          echo "[Merge Watchdog] 检测到 auto-repair PR 合并"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PR_NUM="${{ github.event.inputs.pr_number }}"
+            if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "0" ]; then
+              echo "should_watch=false" >> $GITHUB_OUTPUT
+              echo "⚠️ 手动触发但未指定 PR 编号"
+              exit 0
+            fi
+            PR_TITLE=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUM" --jq '.title' 2>/dev/null || echo "")
+          else
+            PR_NUM="${{ github.event.pull_request.number }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+          fi
+
+          echo "PR #$PR_NUM: $PR_TITLE"
+
+          # 从 PR body/commits 中提取修复的目标 Workflow
+          # 先尝试从 PR body 获取修复清单，再用 PR 标题作为回退
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            PR_BODY="${{ github.event.pull_request.body }}"
+            # Try to extract workflow names from commit messages or PR body
+            WORKFLOW=$(echo "$PR_BODY" | grep -oP '\b[\w-]+\.yml\b' | sort -u | head -5 | tr '\n' ',' | sed 's/,$//' || echo "")
+          fi
+
+          if [ -z "$WORKFLOW" ]; then
+            # Fallback: use branch name to extract date info, mark as "nightly-repair"
+            BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+            WORKFLOW="nightly-repair-$(echo "$BRANCH_NAME" | grep -oP '\d{8}' || echo 'unknown')"
+          fi
+
+          echo "target_workflows=$WORKFLOW" >> $GITHUB_OUTPUT
+          echo "should_watch=true" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "👁️ 开始看守: PR #$PR_NUM (targets: $WORKFLOW)"
+
+  # ========================================
+  # 注册看守 + 观察目标 Workflow 运行结果
+  # ========================================
+  observe:
+    needs: gate
+    if: needs.gate.outputs.should_watch == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_result: ${{ steps.wait.outputs.result }}
+      run_url: ${{ steps.wait.outputs.run_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "📝 注册看守记录"
+        env:
+          PR_NUM: ${{ needs.gate.outputs.pr_number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          TARGET: ${{ needs.gate.outputs.target_workflows }}
+        run: |
+          node .github/scripts/merge-watchdog.js register "$PR_NUM" "$PR_TITLE" "$TARGET"
+
+          git config user.name "watchdog-bot"
+          git config user.email "watchdog@guanghulab.com"
+          git add docs/dashboard/watchdog-records.json
+          git diff --cached --quiet || git commit -m "[WATCHDOG] 注册看守 PR #$PR_NUM"
+          git push origin main || true
+
+      - name: "⏳ 等待目标 Workflow 运行"
+        id: wait
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          TARGET: ${{ needs.gate.outputs.target_workflows }}
+        run: |
+          echo "[Merge Watchdog] 等待目标 Workflow 下一次运行..."
+
+          MERGE_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          # Wait up to 30 minutes checking every 2 minutes
+          # (the full 48h observation is handled by the nightly scan cycle)
+          MAX_WAIT=1800
+          POLL_INTERVAL=120
+          ELAPSED=0
+          FOUND="false"
+
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+
+            echo "⏳ 检查中... ($ELAPSED / $MAX_WAIT 秒)"
+
+            # Query recent runs that completed after merge
+            RUNS=$(gh api \
+              "repos/${{ github.repository }}/actions/runs?per_page=10&status=completed&created=>$MERGE_TIME" \
+              --jq '.workflow_runs[] | {name: .name, conclusion: .conclusion, html_url: .html_url}' 2>/dev/null || echo "")
+
+            if [ -n "$RUNS" ]; then
+              # Check if any run matches the target
+              CONCLUSION=$(echo "$RUNS" | jq -r 'select(.name != null) | .conclusion' | head -1)
+              RUN_URL=$(echo "$RUNS" | jq -r 'select(.name != null) | .html_url' | head -1)
+
+              if [ "$CONCLUSION" = "success" ]; then
+                echo "result=success" >> $GITHUB_OUTPUT
+                echo "run_url=$RUN_URL" >> $GITHUB_OUTPUT
+                echo "✅ 目标 Workflow 运行成功"
+                FOUND="true"
+                break
+              elif [ "$CONCLUSION" = "failure" ]; then
+                echo "result=failure" >> $GITHUB_OUTPUT
+                echo "run_url=$RUN_URL" >> $GITHUB_OUTPUT
+                echo "❌ 目标 Workflow 仍然失败"
+                FOUND="true"
+                break
+              fi
+            fi
+          done
+
+          if [ "$FOUND" = "false" ]; then
+            echo "result=pending" >> $GITHUB_OUTPUT
+            echo "run_url=" >> $GITHUB_OUTPUT
+            echo "⏰ 初始观察窗口结束 — 将在下次夜间扫描中继续跟踪"
+          fi
+
+  # ========================================
+  # 判定: 成功 → 静默 / 失败 → 计数+告警
+  # ========================================
+  verdict:
+    needs: [gate, observe]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "📊 读取看守记录"
+        id: load
+        env:
+          PR_NUM: ${{ needs.gate.outputs.pr_number }}
+        run: |
+          if [ -f "$WATCHDOG_DATA" ]; then
+            RETRY_COUNT=$(jq -r ".records[] | select(.pr_number == $PR_NUM) | .retry_count // 0" "$WATCHDOG_DATA" | head -1)
+            echo "retry_count=${RETRY_COUNT:-0}" >> $GITHUB_OUTPUT
+          else
+            echo "retry_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      # -------- 成功路径：静默更新 --------
+      - name: "✅ 修复确认 — 静默更新仪表盘"
+        if: needs.observe.outputs.workflow_result == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          PR_NUM: ${{ needs.gate.outputs.pr_number }}
+        run: |
+          echo "[Merge Watchdog] ✅ 修复已生效 — 静默更新仪表盘"
+
+          # Update watchdog records
+          node .github/scripts/merge-watchdog.js success "$PR_NUM"
+
+          # Update DASHBOARD.md
+          if [ -f DASHBOARD.md ]; then
+            sed -i "s/| 活跃看守 | .*/| 活跃看守 | $(jq '.merge_watchdog.active_watches' $WATCHDOG_DATA) |/" DASHBOARD.md
+            sed -i "s/| 已确认修复 | .*/| 已确认修复 | $(jq '.merge_watchdog.resolved_watches' $WATCHDOG_DATA) |/" DASHBOARD.md
+          fi
+
+          git config user.name "watchdog-bot"
+          git config user.email "watchdog@guanghulab.com"
+          git add "$WATCHDOG_DATA" DASHBOARD.md
+          git diff --cached --quiet || git commit -m "[WATCHDOG] ✅ PR #$PR_NUM 修复已确认生效"
+          git push origin main || true
+
+          # Add silent comment to PR
+          gh pr comment "$PR_NUM" \
+            --body "✅ **Merge Watchdog 确认：修复已生效** — 仪表盘已静默更新。" 2>/dev/null || true
+
+          echo "🤫 不发邮件，不通知，安静收工。"
+
+      # -------- 失败路径 --------
+      - name: "❌ 修复未生效 — 判断重试或告警"
+        if: needs.observe.outputs.workflow_result == 'failure'
+        env:
+          RETRY_COUNT: ${{ steps.load.outputs.retry_count }}
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          PR_NUM: ${{ needs.gate.outputs.pr_number }}
+        run: |
+          NEW_COUNT=$((RETRY_COUNT + 1))
+          echo "[Merge Watchdog] ❌ 第 $NEW_COUNT 次失败"
+
+          # Update watchdog records
+          node .github/scripts/merge-watchdog.js failure "$PR_NUM" "$NEW_COUNT"
+
+          if [ $NEW_COUNT -lt ${{ env.MAX_RETRIES }} ]; then
+            echo "🔄 触发重新修复（策略 $NEW_COUNT）"
+
+            # Trigger nightly scan for retry with different strategy
+            gh api "repos/${{ github.repository }}/dispatches" \
+              --method POST \
+              -f event_type="watchdog-retry" \
+              -f "client_payload[pr_number]=$PR_NUM" \
+              -f "client_payload[retry_round]=$NEW_COUNT" \
+              -f "client_payload[run_url]=${{ needs.observe.outputs.run_url }}" 2>/dev/null || true
+
+            git config user.name "watchdog-bot"
+            git config user.email "watchdog@guanghulab.com"
+            git add "$WATCHDOG_DATA"
+            git diff --cached --quiet || git commit -m "[WATCHDOG] 🔄 PR #$PR_NUM 第${NEW_COUNT}次修复失败，触发重试"
+            git push origin main || true
+          else
+            echo "⛔ 三振出局！"
+
+            # Update dashboard
+            if [ -f DASHBOARD.md ]; then
+              sed -i "s/| 已升级（需人工） | .*/| 已升级（需人工） | $(jq '.merge_watchdog.escalated_watches' $WATCHDOG_DATA) |/" DASHBOARD.md
+            fi
+
+            git config user.name "watchdog-bot"
+            git config user.email "watchdog@guanghulab.com"
+            git add "$WATCHDOG_DATA" DASHBOARD.md
+            git diff --cached --quiet || git commit -m "[WATCHDOG] ⛔ PR #$PR_NUM 三次修复失败，已升级通知"
+            git push origin main || true
+
+            # Create Issue as fallback alert (in case email is not configured)
+            gh issue create \
+              --title "⛔ [WATCHDOG] 自动修复三次失败 — PR #$PR_NUM 需手动介入" \
+              --body "## ⛔ Merge Watchdog 三振出局通知
+
+            PR #$PR_NUM 的修复经过 **3轮自动修复** 仍未解决。
+
+            **最新失败日志:** ${{ needs.observe.outputs.run_url }}
+
+            ### 📋 冰朔需要做什么：
+            1. 查看上面的失败日志链接
+            2. 手动定位报错根因
+            3. 修复代码并推送到 main
+            4. 等待下一次 Workflow 运行验证
+
+            > 看守者已暂停对该问题的自动修复。
+            > — 光湖系统 · Merge Watchdog" \
+              --label "tianyan-v3,auto-fix" 2>/dev/null || true
+          fi
+
+      # -------- 三振出局：发邮件（如已配置） --------
+      - name: "📧 发送人类介入邮件"
+        if: >
+          needs.observe.outputs.workflow_result == 'failure' &&
+          steps.load.outputs.retry_count >= 2
+        continue-on-error: true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "⛔ [光湖系统] 自动修复三次失败 — 需要手动介入"
+          to: ${{ secrets.HUMAN_EMAIL }}
+          from: "光湖 Merge Watchdog <noreply@guanghulab.com>"
+          html_body: |
+            <h2>⛔ 合并指令看守者 · 三振出局通知</h2>
+            <p>以下修复经过 <strong>3轮自动修复</strong> 仍未解决：</p>
+            <table border="1" cellpadding="8">
+              <tr><td><b>PR</b></td><td>#${{ needs.gate.outputs.pr_number }}</td></tr>
+              <tr><td><b>目标 Workflow</b></td><td>${{ needs.gate.outputs.target_workflows }}</td></tr>
+              <tr><td><b>最新失败日志</b></td><td><a href="${{ needs.observe.outputs.run_url }}">点击查看</a></td></tr>
+            </table>
+            <h3>📋 你需要做什么：</h3>
+            <ol>
+              <li>打开上面的失败日志链接</li>
+              <li>查看报错信息和上下文</li>
+              <li>手动修复代码并推送到 main</li>
+              <li>等待下一次 Workflow 运行验证</li>
+            </ol>
+            <p>看守者已暂停对该 Workflow 的自动修复。</p>
+            <p style="color:gray;">— 光湖系统 · Merge Watchdog</p>
+
+      # -------- Pending 路径 --------
+      - name: "⏰ 观察待续"
+        if: needs.observe.outputs.workflow_result == 'pending'
+        run: |
+          echo "[Merge Watchdog] ⏰ 初始观察窗口内未检测到目标 Workflow 运行"
+          echo "将在下次天眼夜间扫描中继续跟踪"

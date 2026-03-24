@@ -124,6 +124,16 @@
           "priority": "P0",
           "alert_on_failure": true,
           "alert_channels": ["notion-dashboard", "agent-bulletin"]
+        },
+        {
+          "id": "NIGHTLY-REPAIR",
+          "name": "天眼夜间自动修复引擎 v3.0",
+          "workflow": "tianyan-nightly-scan.yml",
+          "hibernate_exempt": true,
+          "priority": "P0",
+          "alert_on_failure": true,
+          "alert_channels": ["dashboard", "agent-bulletin"],
+          "note": "周六休眠期内仅执行扫描+仪表盘更新，跳过修复/PR"
         }
       ]
     },
@@ -146,6 +156,28 @@
         "renew_b": "每周四 10:00 CST (02:00 UTC)",
         "health_check": "每天 12:15 CST (04:15 UTC)"
       }
+    },
+    "tianyan_nightly_repair": {
+      "service": "TianYan Nightly Auto-Repair Engine v3.0",
+      "plan": "Internal",
+      "description": "天眼夜间自动修复引擎 · 扫描→分析→修复→审核→PR→仪表盘 七阶段闭环",
+      "config": ".github/tianyan-config.json",
+      "scripts": {
+        "analyze": ".github/scripts/tianyan-analyze.js",
+        "repair": ".github/scripts/tianyan-repair.js",
+        "review": ".github/scripts/tianyan-review.js"
+      },
+      "workflows": {
+        "nightly_scan": "tianyan-nightly-scan.yml",
+        "merge_watchdog": "merge-watchdog.yml"
+      },
+      "dashboard": "DASHBOARD.md",
+      "watchdog_records": "docs/dashboard/watchdog-records.json",
+      "schedule": {
+        "nightly_scan": "每天 23:00 CST (15:00 UTC)",
+        "merge_watchdog": "事件驱动（PR合并时触发）"
+      },
+      "agents": ["AG-ZY-087", "AG-ZY-088"]
     }
   }
 }
