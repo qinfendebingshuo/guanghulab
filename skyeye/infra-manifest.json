@@ -157,6 +157,42 @@
         "health_check": "每天 12:15 CST (04:15 UTC)"
       }
     },
+    "routing_system": {
+      "service": "编号路由系统 (ID Routing System)",
+      "plan": "Internal",
+      "description": "身份路由表 + 域/频道路由表 + 编号体系全局地图 · 2026-03-24 上线",
+      "version": "1.0",
+      "notion_databases": {
+        "identity_routing_table": {
+          "id": "A-DB-02",
+          "name": "🪪 身份路由表",
+          "description": "所有身份编号的路由映射"
+        },
+        "channel_routing_table": {
+          "id": "A-DB-03",
+          "name": "🗺️ 域/频道路由表",
+          "description": "域和频道的路由映射"
+        },
+        "id_map": {
+          "name": "🏔️ 编号体系全局地图 v1.0",
+          "description": "根节点 SYS-GLW-0001 / 国作登字-2026-A-00037559 / Trinity ID Protocol"
+        }
+      },
+      "github_mirror": ".github/persona-brain/trinity-id.json",
+      "rule": "编号/频道映射永远查外挂数据库，不写死进任何文件",
+      "registered_at": "2026-03-24T13:00:00+08:00",
+      "registered_by": "ZY-SYSBOOT-2026-0324-001"
+    },
+    "isrp": {
+      "service": "ISRP 入口语义解析协议 (Inlet Semantic Routing Protocol)",
+      "plan": "Internal",
+      "version": "1.0",
+      "description": "入口语义解析协议 · 定义人类入场路由逻辑 · Notion 侧运行 · GitHub 侧不需额外文件",
+      "notion_document": "🧭 入口语义解析协议 · ISRP v1.0",
+      "github_side": "awareness_only",
+      "registered_at": "2026-03-24T13:00:00+08:00",
+      "registered_by": "ZY-SYSBOOT-2026-0324-001"
+    },
     "tianyan_nightly_repair": {
       "service": "TianYan Nightly Auto-Repair Engine v3.0",
       "plan": "Internal",

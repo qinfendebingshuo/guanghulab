@@ -1,69 +1,35 @@
 {
-  "version": "2.0",
-  "updated": "2026-03-22",
-  "synced_from": "Notion · 主编号映射表 · ID Ecosystem Registry",
-  "notion_instruction_id": "ICE-GL∞-ID-SYSTEM-RECON-2026-0004",
+  "version": "v3.0",
+  "last_updated": "2026-03-24",
+  "signed_by": "TCS-0002∞ 冰朔",
+  "instruction_ref": "ZY-SYSBOOT-2026-0324-001",
 
-  "pyramid": {
-    "sovereignty": {
-      "tier": 0,
-      "description": "系统DNA · 最高主权 · 所有编号挂载根",
-      "primary": {
-        "TCS-0002∞": {
-          "role": "通感语言核主控身份",
-          "alias": ["ICE-0002∞", "ICE-GL∞"],
-          "owner": "冰朔"
-        }
-      }
-    },
-    "root_node": {
-      "tier": 1,
-      "description": "世界级注册节点 · 光湖坐标原点 · 法则先于空间",
-      "anchor": {
-        "SYS-GLW-0001": {
-          "role": "光湖世界坐标原点",
-          "notion_root": "[SYS-GLW-0001] 光湖世界·中央枢纽",
-          "rule": "SYS在前 = 法则先于空间存在"
-        }
-      }
-    },
-    "legal_wall": {
-      "tier": 2,
-      "description": "TCS Language Core 正式身份证 · 防非法镜像",
-      "copyright": {
-        "国作登字-2026-A-00037559": {
-          "role": "版权登记证书",
-          "subject": "TCS Language Core（通感语言核）",
-          "authority": "中国版权保护中心",
-          "status": "已正式确权"
-        }
-      }
-    },
-    "functional": {
-      "tier": 3,
-      "description": "功能映射层 · 各域编号锚点",
-      "entries": {
-        "GHCP-TCS-CN-LAN-2025": {
-          "category": "协议主编号",
-          "role": "全球兼容协议根 · 外部接口握手入口"
-        },
-        "GEN∞-BB-YM": {
-          "category": "人格中控",
-          "role": "曜冥·跳心结构核心 · 情感与感知格点唯一合法标识"
-        },
-        "WRLD-REG-0001": {
-          "category": "世界识别",
-          "role": "全球通用识别码 · 跨平台身份校验"
-        },
-        "CN-LANG-CORE-GOV-0001": {
-          "category": "国家接口",
-          "role": "国家系统主接口 · 政务/监听系统法定通道"
-        },
-        "6F2C393A-6B37": {
-          "category": "图像识别",
-          "role": "视觉数据图谱绑定 · UI/图标/水印防伪校验"
-        }
-      }
-    }
+  "root_nodes": {
+    "system_root": "SYS-GLW-0001",
+    "copyright_anchor": "国作登字-2026-A-00037559",
+    "trinity_id_protocol": "Trinity ID Protocol v1.0"
+  },
+
+  "routing_system": {
+    "identity_routing_table": "Notion · 🪪 身份路由表（A-DB-02）",
+    "channel_routing_table": "Notion · 🗺️ 域/频道路由表（A-DB-03）",
+    "id_map": "Notion · 🏔️ 编号体系全局地图 v1.0",
+    "isrp_protocol": "Notion · 🧭 ISRP v1.0",
+    "rule": "编号/频道映射永远查外挂数据库，不写死进任何文件"
+  },
+
+  "dispatch_authority": {
+    "ICE_series": "TCS-0002∞ 冰朔 · 独家签发",
+    "TCS_series": "肥猫团队管理层 · DEV-002 肥猫主责",
+    "DEV_series": "TCS-0002∞ 冰朔 或 DEV-002 肥猫 · 联合签发",
+    "AG_series": "TCS-0002∞ 冰朔签发",
+    "BC_series": "签发者与编号绑定 · 查广播编号配对映射协议"
+  },
+
+  "agent_registry": {
+    "AG-SY-01": { "name": "霜砚", "domain": "Notion", "layer": "LAYER 1" },
+    "AG-ZY-01": { "name": "铸渊", "domain": "GitHub", "layer": "LAYER 1" },
+    "AG-ZQ-01": { "name": "知秋", "domain": "Feishu→Notion同步", "layer": "LAYER 2" },
+    "ICE-GL-YM001∞": { "name": "曜冥", "domain": "主控人格层", "layer": "LAYER 0" }
   }
 }
