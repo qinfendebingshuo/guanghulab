@@ -1844,8 +1844,21 @@ function enhanceExecBlocks(bblEl) {
 
       const actionsDiv = document.createElement('div');
       actionsDiv.className = 'exec-card-actions';
-      actionsDiv.innerHTML = '<button class="exec-btn exec-btn-copy" onclick="copyExecBlock(this)">📋 复制指令</button>'
-        + '<button class="exec-btn exec-btn-submit" onclick="submitExecBlock(this,\'' + esc(instrId).replace(/'/g, "\\'") + '\',\'' + esc(modName).replace(/'/g, "\\'") + '\')">🚀 @铸渊执行</button>';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'exec-btn exec-btn-copy';
+      copyBtn.textContent = '📋 复制指令';
+      copyBtn.addEventListener('click', function() { copyExecBlock(this); });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'exec-btn exec-btn-submit';
+      submitBtn.textContent = '🚀 @铸渊执行';
+      submitBtn.dataset.instrId = instrId;
+      submitBtn.dataset.modName = modName;
+      submitBtn.addEventListener('click', function() { submitExecBlock(this, this.dataset.instrId, this.dataset.modName); });
+
+      actionsDiv.appendChild(copyBtn);
+      actionsDiv.appendChild(submitBtn);
       pre.style.position = 'relative';
       pre.appendChild(actionsDiv);
     }
