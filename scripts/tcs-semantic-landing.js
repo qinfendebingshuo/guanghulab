@@ -11,7 +11,9 @@
  * 完成后在 Issue 下回复文档/表格直连 ID。
  *
  * 环境变量：
- *   - GOOGLE_DRIVE_SERVICE_ACCOUNT: Service Account JSON 密钥
+ *   - GDRIVE_CLIENT_ID: OAuth 客户端 ID
+ *   - GDRIVE_CLIENT_SECRET: OAuth 客户端密钥
+ *   - GDRIVE_REFRESH_TOKEN: 长效刷新令牌
  *   - DRIVE_LANDING_FOLDER_ID: 目标 Drive 文件夹 ID
  *   - GITHUB_TOKEN: GitHub API 令牌
  *   - ISSUE_NUMBER: Issue 编号
@@ -36,35 +38,12 @@ const TAG_TABLE = '[TCS-TABLE]';
 const LANDING_SUBFOLDER = 'tcs-semantic-landing';
 
 // ═══════════════════════════════════════════════
-// Google API 认证
+// Google API 认证（OAuth2 代理人模式）
 // ═══════════════════════════════════════════════
 
-function buildAuth(serviceAccountJson) {
-  let credentials;
-  try {
-    const { validateServiceAccountJSON, formatDiagnosticReport } = require('./skyeye/credential-validator');
-    const validation = validateServiceAccountJSON(serviceAccountJson);
-    if (!validation.valid) {
-      console.error('[semantic-landing] 🔴 Credential validation failed:');
-      console.error(formatDiagnosticReport(validation));
-      throw new Error('Service account credential validation failed');
-    }
-    credentials = validation.credentials;
-    console.log('[semantic-landing] ✅ Service account credentials validated');
-  } catch (err) {
-    if (err.message === 'Service account credential validation failed') throw err;
-    // Fallback: validator module unavailable, try direct parse
-    console.log('[semantic-landing] Validator unavailable, using direct JSON.parse');
-    credentials = JSON.parse(serviceAccountJson);
-  }
-  return new google.auth.GoogleAuth({
-    credentials,
-    scopes: [
-      'https://www.googleapis.com/auth/drive',
-      'https://www.googleapis.com/auth/documents',
-      'https://www.googleapis.com/auth/spreadsheets'
-    ]
-  });
+function buildAuth() {
+  const { getOAuth2Client } = require('./grid-db/drive-auth');
+  return getOAuth2Client();
 }
 
 // ═══════════════════════════════════════════════
@@ -465,7 +444,6 @@ function postIssueComment(token, repo, issueNumber, body) {
 // ═══════════════════════════════════════════════
 
 async function main() {
-  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT;
   const rootFolderId = process.env.DRIVE_LANDING_FOLDER_ID;
   const githubToken = process.env.GITHUB_TOKEN;
   const issueNumber = process.env.ISSUE_NUMBER;
@@ -474,10 +452,6 @@ async function main() {
   const repo = process.env.GITHUB_REPOSITORY;
 
   // 验证必需环境变量
-  if (!serviceAccountJson) {
-    console.error('[semantic-landing] GOOGLE_DRIVE_SERVICE_ACCOUNT not set');
-    process.exit(1);
-  }
   if (!rootFolderId) {
     console.error('[semantic-landing] DRIVE_LANDING_FOLDER_ID not set');
     process.exit(1);
@@ -499,9 +473,10 @@ async function main() {
   console.log(`[semantic-landing] Processing Issue #${issueNumber}: ${issueTitle}`);
   console.log(`[semantic-landing] Type: ${isMemo ? 'MEMO (Google Docs)' : 'TABLE (Google Sheets)'}`);
 
-  // 初始化 Google API
-  const auth = buildAuth(serviceAccountJson);
+  // 初始化 Google API（OAuth2 代理人模式）
+  const auth = buildAuth();
   const drive = google.drive({ version: 'v3', auth });
+  console.log('[semantic-landing] ✅ OAuth2 credentials configured');
 
   // 确保子文件夹存在
   const landingFolderId = await getOrCreateFolder(drive, rootFolderId, LANDING_SUBFOLDER);

@@ -19,7 +19,9 @@
  *   - 不同步 inbox/ 和 processing/（系统内部流转区）
  *
  * 环境变量：
- *   - GOOGLE_DRIVE_SERVICE_ACCOUNT: Service Account JSON 密钥内容
+ *   - GDRIVE_CLIENT_ID: OAuth 客户端 ID
+ *   - GDRIVE_CLIENT_SECRET: OAuth 客户端密钥
+ *   - GDRIVE_REFRESH_TOKEN: 长效刷新令牌
  *   - DRIVE_FOLDER_ID: Drive 镜像根文件夹 ID
  *
  * 守护: PER-ZY001 铸渊
@@ -169,47 +171,23 @@ async function uploadFile(drive, folderId, fileName, content) {
  */
 async function main() {
   // 验证环境变量
-  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT;
   const rootFolderId = process.env.DRIVE_FOLDER_ID;
 
-  if (!serviceAccountJson) {
-    console.log('[sync-to-drive] GOOGLE_DRIVE_SERVICE_ACCOUNT not set, skipping');
-    return;
-  }
   if (!rootFolderId) {
     console.log('[sync-to-drive] DRIVE_FOLDER_ID not set, skipping');
     return;
   }
 
-  // 解析 Service Account 凭证（天眼密钥流校验）
-  let credentials;
+  // OAuth2 认证（统一入口）
+  let drive;
   try {
-    const { validateServiceAccountJSON, formatDiagnosticReport } = require('../skyeye/credential-validator');
-    const validation = validateServiceAccountJSON(serviceAccountJson);
-    if (!validation.valid) {
-      console.error('[sync-to-drive] 🔴 Credential validation failed:');
-      console.error(formatDiagnosticReport(validation));
-      process.exit(1);
-    }
-    credentials = validation.credentials;
-    console.log('[sync-to-drive] ✅ Service account credentials validated');
+    const { getDriveClient } = require('./drive-auth');
+    drive = getDriveClient();
+    console.log('[sync-to-drive] ✅ OAuth2 credentials configured');
   } catch (err) {
-    // Fallback: if validator module is unavailable, try direct parse
-    try {
-      credentials = JSON.parse(serviceAccountJson);
-    } catch (parseErr) {
-      console.error('[sync-to-drive] Failed to parse service account JSON:', parseErr.message);
-      process.exit(1);
-    }
+    console.error(`[sync-to-drive] 🔴 OAuth2 auth failed: ${err.message}`);
+    process.exit(1);
   }
-
-  // 认证 Google Drive API
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ['https://www.googleapis.com/auth/drive']
-  });
-
-  const drive = google.drive({ version: 'v3', auth });
 
   // 预生成 Drive 索引文件
   try {

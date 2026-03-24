@@ -5,8 +5,8 @@
 # 系统: SYS-GLW-0001
 # 主控: TCS-0002∞ (冰朔)
 #
-# 方案: 宿主机直装 rclone（替代 wei/rclone 容器方案）
-# 凭证: GOOGLE_DRIVE_SERVICE_ACCOUNT (Service Account JSON)
+# 方案: 宿主机直装 rclone（OAuth2 代理人模式）
+# 凭证: GDRIVE_CLIENT_ID / GDRIVE_CLIENT_SECRET / GDRIVE_REFRESH_TOKEN
 # 目标: Google Drive 文件夹 1fqWdLPaZkUZYt4OT_h3fJQHnd-q5QN3G
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -36,39 +36,32 @@ jobs:
           sudo apt-get install -y -qq rclone
           rclone version
 
-      - name: "🔑 Configure rclone (Service Account)"
+      - name: "🔑 Configure rclone (OAuth2)"
         env:
-          GOOGLE_DRIVE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
         run: |
-          if [ -z "${GOOGLE_DRIVE_SERVICE_ACCOUNT}" ]; then
-            echo "::error::GOOGLE_DRIVE_SERVICE_ACCOUNT secret is not set"
+          if [ -z "${GDRIVE_CLIENT_ID}" ] || [ -z "${GDRIVE_CLIENT_SECRET}" ] || [ -z "${GDRIVE_REFRESH_TOKEN}" ]; then
+            echo "::error::OAuth2 secrets not set (GDRIVE_CLIENT_ID / GDRIVE_CLIENT_SECRET / GDRIVE_REFRESH_TOKEN)"
             exit 1
           fi
 
-          SA_FILE="$(mktemp "${RUNNER_TEMP}/gd-sa-XXXXXX.json")"
-          printf '%s\n' "${GOOGLE_DRIVE_SERVICE_ACCOUNT}" > "${SA_FILE}"
-          chmod 600 "${SA_FILE}"
-
-          # 天眼密钥流校验：验证 JSON 完整性
-          if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "${SA_FILE}" 2>/dev/null; then
-            echo "::error::GOOGLE_DRIVE_SERVICE_ACCOUNT contains invalid JSON (possible truncation)"
-            rm -f "${SA_FILE}"
-            exit 1
-          fi
-          echo "✅ Service account JSON validated"
+          echo "✅ OAuth2 credentials validated"
 
           mkdir -p "${HOME}/.config/rclone"
           {
             echo "[gdrive]"
             echo "type = drive"
             echo "scope = drive"
-            echo "service_account_file = ${SA_FILE}"
+            echo "client_id = ${GDRIVE_CLIENT_ID}"
+            echo "client_secret = ${GDRIVE_CLIENT_SECRET}"
+            echo "token = {\"access_token\":\"\",\"token_type\":\"Bearer\",\"refresh_token\":\"${GDRIVE_REFRESH_TOKEN}\",\"expiry\":\"2000-01-01T00:00:00Z\"}"
             echo "root_folder_id = 1fqWdLPaZkUZYt4OT_h3fJQHnd-q5QN3G"
           } > "${HOME}/.config/rclone/rclone.conf"
           chmod 600 "${HOME}/.config/rclone/rclone.conf"
 
-          echo "SA_FILE=${SA_FILE}" >> "${GITHUB_ENV}"
-          echo "✅ rclone configured with Service Account"
+          echo "✅ rclone configured with OAuth2"
 
       - name: "🪞 Sync to Google Drive"
         # 使用 copy（非 sync）—— 仅添加/更新文件，不删除 Drive 端已有文件（防误删）
@@ -90,6 +83,5 @@ jobs:
       - name: "🧹 Cleanup credentials"
         if: always()
         run: |
-          rm -f "${SA_FILE}"
           rm -f "${HOME}/.config/rclone/rclone.conf"
           echo "✅ Credentials cleaned up"

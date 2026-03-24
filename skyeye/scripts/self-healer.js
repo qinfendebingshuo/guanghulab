@@ -199,27 +199,27 @@ function ensureDirectories() {
 }
 
 /**
- * 天眼密钥流校验 — 验证 GOOGLE_DRIVE_SERVICE_ACCOUNT 环境变量
+ * 天眼 OAuth2 凭据校验 — 验证 GDRIVE_CLIENT_ID / GDRIVE_CLIENT_SECRET / GDRIVE_REFRESH_TOKEN
  * 仅在环境变量可用时执行（CI 环境）
  */
 function validateCredentials() {
   const result = { status: 'skipped', issues: [] };
 
-  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT;
-  if (!serviceAccountJson) {
-    result.reason = 'GOOGLE_DRIVE_SERVICE_ACCOUNT not available';
+  const hasAnyVar = process.env.GDRIVE_CLIENT_ID || process.env.GDRIVE_CLIENT_SECRET || process.env.GDRIVE_REFRESH_TOKEN;
+  if (!hasAnyVar) {
+    result.reason = 'OAuth2 credentials not available (GDRIVE_CLIENT_ID / GDRIVE_CLIENT_SECRET / GDRIVE_REFRESH_TOKEN)';
     return result;
   }
 
   try {
-    const { validateServiceAccountJSON } = require('../../scripts/skyeye/credential-validator');
-    const validation = validateServiceAccountJSON(serviceAccountJson);
+    const { validateOAuth2Credentials } = require('../../scripts/skyeye/credential-validator');
+    const validation = validateOAuth2Credentials();
     result.status = validation.valid ? 'pass' : 'fail';
     result.issues = validation.issues;
     if (!validation.valid) {
       console.log(`  [CREDENTIAL] 🔴 Validation failed: ${validation.issues.join('; ')}`);
     } else {
-      console.log('  [CREDENTIAL] ✅ Service account credentials valid');
+      console.log('  [CREDENTIAL] ✅ OAuth2 credentials valid');
     }
   } catch (e) {
     result.status = 'error';

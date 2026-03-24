@@ -4,7 +4,7 @@
  * 功能：一键部署 / 一键恢复 Drive 桥接层
  *
  * 读取 grid-db/deploy-queue/*.json 中的部署指令，执行：
- *   ① 用 Service Account 在用户 Drive 创建「光湖格点库」目录结构
+ *   ① 用 OAuth2 代理人在用户 Drive 创建「光湖格点库」目录结构
  *   ② 从仓库同步初始数据到 Drive mirror/
  *   ③ 生成用户专属的 index.json（含 DEV 编号和人格体信息）
  *   ④ 生成 Gemini 启动指令 → 写入 Drive
@@ -14,7 +14,9 @@
  * 用法：node scripts/grid-db/deploy-drive-bridge.js <deploy-command.json>
  *
  * 环境变量：
- *   - GOOGLE_DRIVE_SERVICE_ACCOUNT: Service Account JSON 密钥内容
+ *   - GDRIVE_CLIENT_ID: OAuth 客户端 ID
+ *   - GDRIVE_CLIENT_SECRET: OAuth 客户端密钥
+ *   - GDRIVE_REFRESH_TOKEN: 长效刷新令牌
  *   - DEPLOY_GITHUB_TOKEN: 具有 repo 权限的 GitHub Token（用于配置 Apps Script）
  *
  * 守护: PER-ZY001 铸渊
@@ -296,40 +298,16 @@ async function deploy(commandFilePath) {
 
   console.log(`[deploy] ${action} for ${dev_id} (${dev_name}) → ${google_email}`);
 
-  // 验证环境变量
-  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT;
-  if (!serviceAccountJson) {
-    writeReceipt(deploy_id, dev_id, 'failed', 'GOOGLE_DRIVE_SERVICE_ACCOUNT not set');
+  // OAuth2 认证（统一入口）
+  let drive;
+  try {
+    const { getDriveClient } = require('./drive-auth');
+    drive = getDriveClient();
+    console.log('[deploy] ✅ OAuth2 credentials configured');
+  } catch (err) {
+    writeReceipt(deploy_id, dev_id, 'failed', `OAuth2 auth failed: ${err.message}`);
     return;
   }
-
-  // 认证 Google Drive API（天眼密钥流校验）
-  let credentials;
-  try {
-    const { validateServiceAccountJSON, formatDiagnosticReport } = require('../skyeye/credential-validator');
-    const validation = validateServiceAccountJSON(serviceAccountJson);
-    if (!validation.valid) {
-      console.error('[deploy] 🔴 Credential validation failed:');
-      console.error(formatDiagnosticReport(validation));
-      writeReceipt(deploy_id, dev_id, 'failed', 'Credential validation failed: invalid service account JSON format');
-      return;
-    }
-    credentials = validation.credentials;
-    console.log('[deploy] ✅ Service account credentials validated');
-  } catch (err) {
-    // Fallback: if validator module is unavailable, try direct parse
-    try {
-      credentials = JSON.parse(serviceAccountJson);
-    } catch (parseErr) {
-      writeReceipt(deploy_id, dev_id, 'failed', `JSON parse error: ${parseErr.message}`);
-      return;
-    }
-  }
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ['https://www.googleapis.com/auth/drive']
-  });
-  const drive = google.drive({ version: 'v3', auth });
 
   try {
     // ① 在用户 Drive 创建或复用根目录

@@ -1,0 +1,70 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🔄 OAuth2 Token 自动续期
+#
+# 守护: PER-ZY001 铸渊 (Zhuyuan)
+# 系统: SYS-GLW-0001
+# 主控: TCS-0002∞ (冰朔)
+#
+# CRON 策略：
+#   主刷新 A: 每周一 10:00 CST (02:00 UTC) — 距周六休眠最远
+#   主刷新 B: 每周四 10:00 CST (02:00 UTC) — 3天后补刷
+#   三层保险：周一 + 周四 + 每日安全网（check-token-health.yml）
+#
+# 生命线任务：天眼休眠期内豁免执行
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: 🔄 OAuth2 Token 自动续期
+
+on:
+  schedule:
+    # 主刷新 A: 每周一 10:00 CST (02:00 UTC)
+    - cron: '0 2 * * 1'
+    # 主刷新 B: 每周四 10:00 CST (02:00 UTC)
+    - cron: '0 2 * * 4'
+  workflow_dispatch:
+    inputs:
+      force_renew:
+        description: '强制刷新所有 Token（忽略过期时间检查）'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  renew-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 安装依赖
+        run: npm install tweetsodium
+
+      - name: 🔄 执行 Token 刷新
+        env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_RENEW: ${{ inputs.force_renew || 'false' }}
+          # 新增开发者 Token（每次加人时追加）
+          # GDRIVE_REFRESH_TOKEN_DEV001: ${{ secrets.GDRIVE_REFRESH_TOKEN_DEV001 }}
+          # GDRIVE_REFRESH_TOKEN_DEV002: ${{ secrets.GDRIVE_REFRESH_TOKEN_DEV002 }}
+        run: node scripts/gdrive/renew-tokens.js
+
+      - name: 📋 提交注册表更新
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add config/gdrive-tokens.json
+          git add -f grid-db/logs/token-alert.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "auto: Token renewal $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+          git push
+
+      - name: ⚠️ 失败告警
+        if: failure()
+        run: |
+          echo "⚠️ Token 刷新失败！检查 grid-db/logs/token-alert.json"
+          echo "需要人类手动重新授权。"

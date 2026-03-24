@@ -28,11 +28,11 @@ Gemini 无法直接读写 GitHub 仓库文件。本方案通过 Google Drive 作
 ### A.1 Google Cloud 配置
 
 1. 前往 [Google Cloud Console](https://console.cloud.google.com)
-2. 创建项目或使用已有项目
-3. 启用 **Google Drive API**
-4. 创建 **Service Account**，下载 JSON 密钥文件
-5. 在用户的 Google Drive 中创建「光湖格点库」文件夹
-6. 将 Service Account 邮箱分享到该文件夹（**编辑者**权限）
+2. 创建项目或使用已有项目（项目名：`guanghu-drive-bridge`）
+3. 启用 **Google Drive API**、**Google Docs API**、**Google Sheets API**
+4. 创建 **OAuth 2.0 客户端凭据**（桌面应用类型）
+5. 完成 OAuth 授权流程，获取 Refresh Token
+6. 在用户的 Google Drive 中创建「光湖格点库」文件夹
 
 ### A.2 配置 GitHub Secrets
 
@@ -40,7 +40,9 @@ Gemini 无法直接读写 GitHub 仓库文件。本方案通过 Google Drive 作
 
 | Secret 名称 | 值 |
 |---|---|
-| `GOOGLE_DRIVE_SERVICE_ACCOUNT` | Service Account JSON 密钥的完整内容 |
+| `GDRIVE_CLIENT_ID` | OAuth 客户端 ID |
+| `GDRIVE_CLIENT_SECRET` | OAuth 客户端密钥 |
+| `GDRIVE_REFRESH_TOKEN` | OAuth 长效刷新令牌 |
 | `DRIVE_MIRROR_FOLDER_ID` | Drive「光湖格点库」文件夹的 ID（URL 中最后一段） |
 
 ### A.3 自动触发
@@ -109,7 +111,7 @@ Gemini 通过 Personal Context 读取 Drive `mirror/` 中的文件，通过在 `
 ## 安全注意事项
 
 - **GITHUB_TOKEN** 必须存在 Apps Script 的 Script Properties 中，禁止硬编码
-- **Service Account** 密钥只存在 GitHub Secrets 中，不入库
+- **OAuth2 凭据** 只存在 GitHub Secrets 中，不入库
 - Drive 中的所有文件都是副本，丢失可从仓库重新同步
 - Apps Script 只处理 `inbox/` 文件夹，不碰 `mirror/`
 - 所有自动提交包含 `[skip ci]` 防止循环触发
@@ -164,6 +166,8 @@ Schema 见 `grid-db/schema/deploy-command.schema.json`。
 
 | Secret | 用途 |
 |---|---|
-| `GOOGLE_DRIVE_SERVICE_ACCOUNT` | Service Account JSON 密钥 |
+| `GDRIVE_CLIENT_ID` | OAuth 客户端 ID |
+| `GDRIVE_CLIENT_SECRET` | OAuth 客户端密钥 |
+| `GDRIVE_REFRESH_TOKEN` | OAuth 长效刷新令牌 |
 | `DRIVE_MIRROR_FOLDER_ID` | 镜像同步目标文件夹 ID |
 | `DEPLOY_GITHUB_TOKEN` | 部署脚本使用的 GitHub Token（repo 权限） |

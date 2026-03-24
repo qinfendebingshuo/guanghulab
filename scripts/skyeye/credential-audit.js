@@ -5,13 +5,15 @@
  * 天眼全域系统审计 (Sky-Eye Credential Audit)
  *
  * 功能：
- *   ① 校验 GOOGLE_DRIVE_SERVICE_ACCOUNT 密钥流完整性
- *   ② 扫描所有依赖该密钥的工作流和脚本
+ *   ① 校验 OAuth2 凭据环境变量完整性
+ *   ② 扫描所有依赖 Drive 凭据的工作流和脚本
  *   ③ 验证 YAML 语法（.github/workflows/ 下所有配置文件）
  *   ④ 生成审计报告写入 System_Logs/
  *
  * 环境变量：
- *   - GOOGLE_DRIVE_SERVICE_ACCOUNT: (可选) 用于实际校验
+ *   - GDRIVE_CLIENT_ID: (可选) OAuth 客户端 ID
+ *   - GDRIVE_CLIENT_SECRET: (可选) OAuth 客户端密钥
+ *   - GDRIVE_REFRESH_TOKEN: (可选) 长效刷新令牌
  *
  * 用法：node scripts/skyeye/credential-audit.js
  *
@@ -24,7 +26,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { validateServiceAccountJSON, formatDiagnosticReport } = require('./credential-validator');
+const { validateOAuth2Credentials, formatDiagnosticReport } = require('./credential-validator');
 
 const ROOT = path.resolve(__dirname, '../..');
 const WORKFLOWS_DIR = path.join(ROOT, '.github/workflows');
@@ -43,24 +45,20 @@ function getDateStr() {
 // ═══════════════════════════════════════════════
 
 function auditCredential() {
-  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT;
+  const hasAnyVar = process.env.GDRIVE_CLIENT_ID || process.env.GDRIVE_CLIENT_SECRET || process.env.GDRIVE_REFRESH_TOKEN;
 
-  if (!serviceAccountJson) {
+  if (!hasAnyVar) {
     return {
       status: 'skipped',
-      reason: 'GOOGLE_DRIVE_SERVICE_ACCOUNT not available in environment',
-      recommendation: 'Run this audit in a GitHub Actions workflow with the secret configured'
+      reason: 'OAuth2 credentials not available in environment (GDRIVE_CLIENT_ID / GDRIVE_CLIENT_SECRET / GDRIVE_REFRESH_TOKEN)',
+      recommendation: 'Run this audit in a GitHub Actions workflow with the secrets configured'
     };
   }
 
-  const validation = validateServiceAccountJSON(serviceAccountJson);
+  const validation = validateOAuth2Credentials();
   return {
     status: validation.valid ? 'pass' : 'fail',
-    diagnostics: {
-      ...validation.diagnostics,
-      // Never expose credential values in reports
-      credentials: undefined
-    },
+    diagnostics: validation.diagnostics,
     issues: validation.issues,
     report: formatDiagnosticReport(validation)
   };
@@ -77,7 +75,7 @@ function scanCredentialDependencies() {
     total_dependents: 0
   };
 
-  const SEARCH_PATTERN = 'GOOGLE_DRIVE_SERVICE_ACCOUNT';
+  const SEARCH_PATTERN = 'GDRIVE_CLIENT_ID';
 
   // 扫描 workflows
   if (fs.existsSync(WORKFLOWS_DIR)) {
