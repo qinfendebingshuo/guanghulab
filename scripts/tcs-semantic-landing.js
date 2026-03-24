@@ -53,7 +53,8 @@ function buildAuth(serviceAccountJson) {
     console.log('[semantic-landing] ✅ Service account credentials validated');
   } catch (err) {
     if (err.message === 'Service account credential validation failed') throw err;
-    // Fallback: if validator module is unavailable, try direct parse
+    // Fallback: validator module unavailable, try direct parse
+    console.log('[semantic-landing] Validator unavailable, using direct JSON.parse');
     credentials = JSON.parse(serviceAccountJson);
   }
   return new google.auth.GoogleAuth({

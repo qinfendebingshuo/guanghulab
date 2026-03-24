@@ -50,7 +50,7 @@ jobs:
           chmod 600 "${SA_FILE}"
 
           # 天眼密钥流校验：验证 JSON 完整性
-          if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "${SA_FILE}" 2>/dev/null; then
+          if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "${SA_FILE}" 2>/dev/null; then
             echo "::error::GOOGLE_DRIVE_SERVICE_ACCOUNT contains invalid JSON (possible truncation)"
             rm -f "${SA_FILE}"
             exit 1

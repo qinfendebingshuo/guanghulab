@@ -146,7 +146,8 @@ function validateServiceAccountJSON(jsonStr) {
   }
 
   if (parsed.client_email) {
-    const emailOk = String(parsed.client_email).includes('@') && String(parsed.client_email).includes('.iam.gserviceaccount.com');
+    const emailStr = String(parsed.client_email);
+    const emailOk = /^[^@]+@[^@]+\.iam\.gserviceaccount\.com$/.test(emailStr);
     result.diagnostics.field_checks.client_email_format = emailOk ? 'ok' : 'not a valid service account email';
     if (!emailOk) result.issues.push('Field \'client_email\' does not match service account email pattern');
   }

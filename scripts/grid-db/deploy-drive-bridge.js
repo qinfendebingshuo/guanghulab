@@ -311,7 +311,7 @@ async function deploy(commandFilePath) {
     if (!validation.valid) {
       console.error('[deploy] 🔴 Credential validation failed:');
       console.error(formatDiagnosticReport(validation));
-      writeReceipt(deploy_id, dev_id, 'failed', `Credential validation failed: ${validation.issues.join('; ')}`);
+      writeReceipt(deploy_id, dev_id, 'failed', 'Credential validation failed: invalid service account JSON format');
       return;
     }
     credentials = validation.credentials;
