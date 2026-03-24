@@ -1,0 +1,80 @@
+# ━━━ README UI 风格自动刷新 ━━━
+# 每周一 08:00 CST 自动切换 README 视觉风格
+# Agent: AG-ZY-088 · readme-ui-refresh.yml
+# Parent: SYS-GLW-0001 · Owner: ICE-0002∞
+
+name: 🎨 README UI 风格刷新
+
+on:
+  schedule:
+    # 每周一 08:00 CST = 00:00 UTC Monday
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🎨 Refresh README UI Style
+        run: |
+          node -e "
+            const fs = require('fs');
+
+            // ── 风格池 ──
+            const STYLES = [
+              { name: '极简黑白', badge: 'flat-square', color: '000000', accent: '555555' },
+              { name: '赛博朋克', badge: 'flat-square', color: '0d1117', accent: '58a6ff' },
+              { name: '自然生态', badge: 'flat-square', color: '1a7f37', accent: '2ea44f' },
+              { name: '星空宇宙', badge: 'flat-square', color: '1f0541', accent: '8957e5' },
+              { name: '海洋深蓝', badge: 'flat-square', color: '0550ae', accent: '0969da' },
+              { name: '日落暖橙', badge: 'flat-square', color: 'bc4c00', accent: 'f9a825' }
+            ];
+
+            // 基于周数选择风格
+            const weekNumber = Math.floor((Date.now() - new Date('2026-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
+            const style = STYLES[weekNumber % STYLES.length];
+            console.log('🎨 本周风格: ' + style.name + ' (第 ' + weekNumber + ' 周)');
+
+            let readme = fs.readFileSync('README.md', 'utf8');
+
+            // 只替换 shields.io 徽章的 style 参数（不改变数据内容）
+            // 替换 style=flat-square 或 style=for-the-badge 等
+            readme = readme.replace(/style=(flat-square|flat|for-the-badge|plastic|social)/g, 'style=' + style.badge);
+
+            // 更新页脚时间
+            const now = new Date(Date.now() + 8 * 3600 * 1000);
+            const dateStr = now.toISOString().slice(0, 10);
+            readme = readme.replace(
+              /\*最后更新: [\d-]+ ·/,
+              '*最后更新: ' + dateStr + ' ·'
+            );
+
+            fs.writeFileSync('README.md', readme);
+            console.log('✅ UI 风格刷新完成: ' + style.name);
+          "
+
+      - name: 📤 Commit & Push
+        run: |
+          git config user.name "铸渊 (ZhuYuan Bot)"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "📋 无变更，跳过提交"
+          else
+            git commit -m "🎨 铸渊: README UI 风格周刷新 $(date -u -d '+8 hours' '+%Y-%m-%d') [skip ci]"
+            git push
+            echo "✅ UI 风格已刷新"
+          fi
