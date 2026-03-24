@@ -3,7 +3,7 @@ name: Guanghu Grid Sync
 on:
   push:
     branches:
-      - main  # 当你修改仓库代码时自动触发
+      - main
 
 jobs:
   sync:
@@ -20,4 +20,4 @@ jobs:
           RCLONE_CONFIG_DRIVE_SERVICE_ACCOUNT_CONTENTS: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
           RCLONE_CONFIG_DRIVE_ROOT_FOLDER_ID: ${{ secrets.DRIVE_MIRROR_FOLDER_ID }}
         with:
-          args: sync . drive:
+          args: "sync . drive:"
