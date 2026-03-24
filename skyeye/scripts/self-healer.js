@@ -182,7 +182,8 @@ function ensureDirectories() {
     'skyeye/logs/weekly',
     'buffer/inbox',
     'buffer/staging',
-    'buffer/processed'
+    'buffer/processed',
+    'System_Logs'
   ];
 
   for (const dir of requiredDirs) {
@@ -197,6 +198,37 @@ function ensureDirectories() {
   return results;
 }
 
+/**
+ * 天眼密钥流校验 — 验证 GOOGLE_DRIVE_SERVICE_ACCOUNT 环境变量
+ * 仅在环境变量可用时执行（CI 环境）
+ */
+function validateCredentials() {
+  const result = { status: 'skipped', issues: [] };
+
+  const serviceAccountJson = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT;
+  if (!serviceAccountJson) {
+    result.reason = 'GOOGLE_DRIVE_SERVICE_ACCOUNT not available';
+    return result;
+  }
+
+  try {
+    const { validateServiceAccountJSON } = require('../../scripts/skyeye/credential-validator');
+    const validation = validateServiceAccountJSON(serviceAccountJson);
+    result.status = validation.valid ? 'pass' : 'fail';
+    result.issues = validation.issues;
+    if (!validation.valid) {
+      console.log(`  [CREDENTIAL] 🔴 Validation failed: ${validation.issues.join('; ')}`);
+    } else {
+      console.log('  [CREDENTIAL] ✅ Service account credentials valid');
+    }
+  } catch (e) {
+    result.status = 'error';
+    result.reason = `Validator load error: ${e.message}`;
+  }
+
+  return result;
+}
+
 function run() {
   console.log(`[SkyEye Self-Healer] Starting self-heal process`);
   console.log(`[SkyEye Self-Healer] Timestamp: ${getTimestamp()}`);
@@ -209,6 +241,7 @@ function run() {
     log_cleanup: cleanExpiredLogs(),
     guard_restarts: restartSuspendedGuards(),
     directory_fixes: ensureDirectories(),
+    credential_check: validateCredentials(),
     summary: {}
   };
 
@@ -216,7 +249,8 @@ function run() {
     configs_repaired: healResult.guard_repairs.repaired.length,
     files_cleaned: healResult.buffer_cleanup.files_cleaned + healResult.log_cleanup.files_cleaned,
     guards_restarted: healResult.guard_restarts.restarted.length,
-    directories_created: healResult.directory_fixes.created.length
+    directories_created: healResult.directory_fixes.created.length,
+    credential_status: healResult.credential_check.status
   };
 
   // Write log
@@ -229,6 +263,7 @@ function run() {
   console.log(`[SkyEye Self-Healer] Files cleaned: ${healResult.summary.files_cleaned}`);
   console.log(`[SkyEye Self-Healer] Guards restarted: ${healResult.summary.guards_restarted}`);
   console.log(`[SkyEye Self-Healer] Dirs created: ${healResult.summary.directories_created}`);
+  console.log(`[SkyEye Self-Healer] Credential status: ${healResult.summary.credential_status}`);
   console.log(`[SkyEye Self-Healer] Log saved: ${logPath}`);
 
   console.log('---HEAL_RESULT_JSON---');

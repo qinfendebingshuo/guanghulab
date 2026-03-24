@@ -40,7 +40,22 @@ const LANDING_SUBFOLDER = 'tcs-semantic-landing';
 // ═══════════════════════════════════════════════
 
 function buildAuth(serviceAccountJson) {
-  const credentials = JSON.parse(serviceAccountJson);
+  let credentials;
+  try {
+    const { validateServiceAccountJSON, formatDiagnosticReport } = require('./skyeye/credential-validator');
+    const validation = validateServiceAccountJSON(serviceAccountJson);
+    if (!validation.valid) {
+      console.error('[semantic-landing] 🔴 Credential validation failed:');
+      console.error(formatDiagnosticReport(validation));
+      throw new Error('Service account credential validation failed');
+    }
+    credentials = validation.credentials;
+    console.log('[semantic-landing] ✅ Service account credentials validated');
+  } catch (err) {
+    if (err.message === 'Service account credential validation failed') throw err;
+    // Fallback: if validator module is unavailable, try direct parse
+    credentials = JSON.parse(serviceAccountJson);
+  }
   return new google.auth.GoogleAuth({
     credentials,
     scopes: [

@@ -303,8 +303,28 @@ async function deploy(commandFilePath) {
     return;
   }
 
-  // 认证 Google Drive API
-  const credentials = JSON.parse(serviceAccountJson);
+  // 认证 Google Drive API（天眼密钥流校验）
+  let credentials;
+  try {
+    const { validateServiceAccountJSON, formatDiagnosticReport } = require('../skyeye/credential-validator');
+    const validation = validateServiceAccountJSON(serviceAccountJson);
+    if (!validation.valid) {
+      console.error('[deploy] 🔴 Credential validation failed:');
+      console.error(formatDiagnosticReport(validation));
+      writeReceipt(deploy_id, dev_id, 'failed', `Credential validation failed: ${validation.issues.join('; ')}`);
+      return;
+    }
+    credentials = validation.credentials;
+    console.log('[deploy] ✅ Service account credentials validated');
+  } catch (err) {
+    // Fallback: if validator module is unavailable, try direct parse
+    try {
+      credentials = JSON.parse(serviceAccountJson);
+    } catch (parseErr) {
+      writeReceipt(deploy_id, dev_id, 'failed', `JSON parse error: ${parseErr.message}`);
+      return;
+    }
+  }
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/drive']

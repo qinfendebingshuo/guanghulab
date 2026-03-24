@@ -49,6 +49,14 @@ jobs:
           printf '%s\n' "${GOOGLE_DRIVE_SERVICE_ACCOUNT}" > "${SA_FILE}"
           chmod 600 "${SA_FILE}"
 
+          # 天眼密钥流校验：验证 JSON 完整性
+          if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "${SA_FILE}" 2>/dev/null; then
+            echo "::error::GOOGLE_DRIVE_SERVICE_ACCOUNT contains invalid JSON (possible truncation)"
+            rm -f "${SA_FILE}"
+            exit 1
+          fi
+          echo "✅ Service account JSON validated"
+
           mkdir -p "${HOME}/.config/rclone"
           {
             echo "[gdrive]"

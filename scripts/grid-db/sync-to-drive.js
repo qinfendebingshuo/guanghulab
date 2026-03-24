@@ -181,13 +181,26 @@ async function main() {
     return;
   }
 
-  // 解析 Service Account 凭证
+  // 解析 Service Account 凭证（天眼密钥流校验）
   let credentials;
   try {
-    credentials = JSON.parse(serviceAccountJson);
+    const { validateServiceAccountJSON, formatDiagnosticReport } = require('../skyeye/credential-validator');
+    const validation = validateServiceAccountJSON(serviceAccountJson);
+    if (!validation.valid) {
+      console.error('[sync-to-drive] 🔴 Credential validation failed:');
+      console.error(formatDiagnosticReport(validation));
+      process.exit(1);
+    }
+    credentials = validation.credentials;
+    console.log('[sync-to-drive] ✅ Service account credentials validated');
   } catch (err) {
-    console.error('[sync-to-drive] Failed to parse service account JSON:', err.message);
-    process.exit(1);
+    // Fallback: if validator module is unavailable, try direct parse
+    try {
+      credentials = JSON.parse(serviceAccountJson);
+    } catch (parseErr) {
+      console.error('[sync-to-drive] Failed to parse service account JSON:', parseErr.message);
+      process.exit(1);
+    }
   }
 
   // 认证 Google Drive API
