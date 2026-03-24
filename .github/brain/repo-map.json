@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-24T02:08:43.634Z",
+  "generated_at": "2026-03-24T02:19:49.416Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 81,
+    "total_workflows": 82,
     "total_scripts": 76,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -629,6 +629,14 @@
           ]
         },
         {
+          "file": "skyeye-credential-audit.yml",
+          "name": "\"🛰️ 天眼密钥流审计 (Sky-Eye Credential Audit)\"",
+          "triggers": [
+            "schedule(0 14 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "skyeye-weekly-scan.yml",
           "name": "\"SkyEye Weekly Full Scan\"",
           "triggers": [
@@ -844,7 +852,7 @@
           ]
         }
       ],
-      "item_count": 81
+      "item_count": 82
     },
     {
       "zone_id": "SCRIPTS",
@@ -2059,6 +2067,9 @@
     ],
     "skyeye-checkin-receiver": [
       "WORKFLOWS::skyeye-checkin-receiver.yml"
+    ],
+    "skyeye-credential-audit": [
+      "WORKFLOWS::skyeye-credential-audit.yml"
     ],
     "skyeye-weekly-scan": [
       "WORKFLOWS::skyeye-weekly-scan.yml"
