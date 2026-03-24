@@ -1147,6 +1147,30 @@
       "daily_checkin_required": false,
       "parent_sys": "SYS-GLW-0001",
       "owner": "ICE-0002∞"
+    },
+    {
+      "id": "AG-ZY-089",
+      "name": "铸渊远程执行引擎",
+      "workflow": "zhuyuan-exec-engine.yml",
+      "duty": "监听 zhuyuan-exec Issue → 天眼前置扫描 → 跨仓库代码执行 → PR 创建 → 结果回写",
+      "trigger": "Issue opened/labeled (zhuyuan-exec)",
+      "self_repair": false,
+      "report_to": "ICE-GL-ZY001",
+      "parent_sys": "SYS-GLW-0001",
+      "owner": "ICE-0002∞",
+      "registered": "2026-03-24"
+    },
+    {
+      "id": "AG-ZY-090",
+      "name": "Notion 开发者画像同步",
+      "workflow": "sync-notion-profiles.yml",
+      "duty": "定时同步 Notion 开发者画像到 .github/notion-cache/，供交互页面注入模型上下文",
+      "trigger": "定时 每6小时 + 手动 + repository_dispatch:notion-sync",
+      "self_repair": true,
+      "report_to": "ICE-GL-ZY001",
+      "parent_sys": "SYS-GLW-0001",
+      "owner": "ICE-0002∞",
+      "registered": "2026-03-24"
     }
   ],
   "note": "铸渊已扫描所有workflow文件，按此格式逐一注册，编号从AG-ZY-001开始顺序分配",

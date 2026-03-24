@@ -163,6 +163,24 @@ jobs:
             git push
           fi
 
+      - name: "🦅 Phase 6.5 · 更新天眼报告缓存（供交互页面读取）"
+        if: always()
+        run: |
+          mkdir -p .github/notion-cache/skyeye/
+          if [ -f "/tmp/skyeye/full-report.json" ]; then
+            cp /tmp/skyeye/full-report.json .github/notion-cache/skyeye/latest-report.json
+          elif ls data/skyeye-reports/skyeye-*.json 1>/dev/null 2>&1; then
+            LATEST=$(ls -t data/skyeye-reports/skyeye-*.json | head -1)
+            cp "$LATEST" .github/notion-cache/skyeye/latest-report.json
+          fi
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/notion-cache/skyeye/
+          if ! git diff --cached --quiet; then
+            git commit -m "🦅 天眼报告缓存更新 · $(date +%Y-%m-%d' '%H:%M)"
+            git push || true
+          fi
+
       - name: "📡 Phase 7 · 同步到 Notion"
         if: always()
         env:

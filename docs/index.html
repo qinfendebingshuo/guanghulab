@@ -338,6 +338,24 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
   .sc h1{font-size:18px}
   .login-tab{font-size:12px;padding:10px 6px}
 }
+/* ─── SKYEYE STATUS CARD ─── */
+.skyeye-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;margin:8px 12px;font-size:12px;display:none}
+.skyeye-card.on{display:block}
+.skyeye-row{display:flex;align-items:center;gap:8px;line-height:1.8;flex-wrap:wrap}
+.skyeye-row .skyeye-tag{background:var(--adim);color:var(--accent);padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.skyeye-tag.ok{background:rgba(52,211,153,.12);color:var(--ok)}
+.skyeye-tag.warn{background:rgba(251,191,36,.12);color:var(--warn)}
+.skyeye-tag.err{background:rgba(248,113,113,.12);color:var(--err)}
+/* ─── EXEC INSTRUCTION CARD ─── */
+.exec-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-top:10px}
+.exec-card-head{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)}
+.exec-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.exec-btn{padding:6px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.exec-btn-copy{background:var(--s3);color:var(--text);border:1px solid var(--border)}
+.exec-btn-copy:hover{border-color:var(--accent);color:var(--accent)}
+.exec-btn-submit{background:var(--accent);color:#fff}
+.exec-btn-submit:hover{opacity:.85}
+.exec-btn-submit:disabled{opacity:.5;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -526,6 +544,19 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
         <span id="bbc">⏳ 加载大脑…</span>
         <span id="bbe">—</span>
         <span id="bbdemo" class="demo-w" style="display:none">👤 访客模式 · 云雾AI · 铸渊人格体在线</span>
+      </div>
+
+      <div id="skyeye-card" class="skyeye-card">
+        <div class="skyeye-row">
+          <span>🦅 天眼状态：</span><span id="skyeye-status" class="skyeye-tag ok">加载中…</span>
+          <span id="skyeye-time" style="color:var(--dim)"></span>
+        </div>
+        <div class="skyeye-row" id="skyeye-repo-row" style="display:none">
+          <span>📊 你的仓库：</span><span id="skyeye-repo-info"></span>
+        </div>
+        <div class="skyeye-row" id="skyeye-broadcast-row" style="display:none">
+          <span>📋 当前广播：</span><span id="skyeye-broadcast-info"></span>
+        </div>
       </div>
 
       <div id="msgs"></div>
@@ -871,6 +902,8 @@ const A = {
   brain: null,
   routing: null,
   devStatus: null,
+  notionProfile: null,
+  skyeyeReport: null,
   msgs:  [],
   currentConvId: null,
   currentView: 'announcements',
@@ -945,7 +978,7 @@ function loadConversation(id){
     if(msg.role==='user') userMsg(msg.content);
     else if(msg.role==='assistant'){
       const bblEl=botMsg(md(msg.content));
-      if(bblEl) addCopyBtns(bblEl);
+      if(bblEl) { addCopyBtns(bblEl); enhanceExecBlocks(bblEl); }
     }
   }
   renderConvList();
@@ -1261,6 +1294,7 @@ function showApp(){
     rsEl.style.display='none';
   }
   loadBrain().then(function(){
+    loadNotionData(); // Load Notion profile + SkyEye report (non-blocking)
     createNewConversation();
     startConv();
     renderConvList();
@@ -1634,6 +1668,231 @@ function updBbar(){
   document.getElementById('bbe').textContent=ev?('📌 '+(ev.title||ev.type||'').slice(0,28)):'';
 }
 
+// ═══════════════════════════════════════════════════════
+// NOTION PROFILE + SKYEYE DATA LOADING
+// 从 GitHub 仓库 .github/notion-cache/ 读取缓存数据
+// ═══════════════════════════════════════════════════════
+const GH_API_BASE = 'https://api.github.com/repos/' + REPO + '/contents/';
+const GH_RAW_HEADERS = { 'Accept': 'application/vnd.github.v3.raw' };
+
+async function fetchNotionProfile(devId) {
+  if (!devId) return null;
+  try {
+    const url = GH_API_BASE + '.github/notion-cache/dev-profiles/' + encodeURIComponent(devId) + '.json';
+    const res = await fetch(url, { headers: GH_RAW_HEADERS });
+    if (res.ok) return await res.json();
+  } catch (e) { console.debug('[Notion] profile fetch failed:', e.message); }
+  return null;
+}
+
+async function fetchSkyeyeReport() {
+  try {
+    const url = GH_API_BASE + '.github/notion-cache/skyeye/latest-report.json';
+    const res = await fetch(url, { headers: GH_RAW_HEADERS });
+    if (res.ok) return await res.json();
+  } catch (e) { console.debug('[SkyEye] report fetch failed:', e.message); }
+  return null;
+}
+
+async function loadNotionData() {
+  const meta = A.userMeta;
+  const devId = meta?.devId;
+  const [profile, skyeye] = await Promise.all([
+    fetchNotionProfile(devId),
+    fetchSkyeyeReport(),
+  ]);
+  A.notionProfile = profile;
+  A.skyeyeReport = skyeye;
+  updateSkyeyeCard();
+}
+
+function updateSkyeyeCard() {
+  const card = document.getElementById('skyeye-card');
+  if (!card) return;
+  const report = A.skyeyeReport;
+  const profile = A.notionProfile;
+  const meta = A.userMeta;
+
+  if (!report && !profile) { card.classList.remove('on'); return; }
+  card.classList.add('on');
+
+  // SkyEye overall status
+  const statusEl = document.getElementById('skyeye-status');
+  const timeEl = document.getElementById('skyeye-time');
+  if (report) {
+    const s = report.overall_status || 'unknown';
+    statusEl.textContent = s === 'healthy' ? '✅ 健康' : s === 'warning' ? '⚠️ 警告' : s === 'error' ? '❌ 异常' : s;
+    statusEl.className = 'skyeye-tag ' + (s === 'healthy' ? 'ok' : s === 'warning' ? 'warn' : 'err');
+    if (report.timestamp) {
+      const d = new Date(report.timestamp);
+      timeEl.textContent = '· 上次扫描 ' + d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+  } else {
+    statusEl.textContent = '未获取';
+    statusEl.className = 'skyeye-tag';
+    timeEl.textContent = '';
+  }
+
+  // Developer repo info
+  const repoRow = document.getElementById('skyeye-repo-row');
+  const repoInfo = document.getElementById('skyeye-repo-info');
+  if (profile && profile.github) {
+    repoRow.style.display = 'flex';
+    const mods = profile.modules_owned || [];
+    const warns = profile.skyeye_health?.warnings || [];
+    repoInfo.textContent = profile.github.repo + (mods.length ? ' · ' + mods.length + '个模块' : '') + (warns.length ? ' · ' + warns.length + '个待修' : '');
+  } else {
+    repoRow.style.display = 'none';
+  }
+
+  // Broadcast info
+  const bcRow = document.getElementById('skyeye-broadcast-row');
+  const bcInfo = document.getElementById('skyeye-broadcast-info');
+  if (profile && profile.current_work && profile.current_work.broadcast_id) {
+    bcRow.style.display = 'flex';
+    const cw = profile.current_work;
+    bcInfo.textContent = cw.broadcast_id + (cw.current_ring ? ' · 环节' + cw.current_ring + '进行中' : '') + (cw.status ? ' · ' + cw.status : '');
+  } else {
+    bcRow.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// @铸渊执行 — 创建 GitHub Issue 提交指令
+// ═══════════════════════════════════════════════════════
+async function submitToZhuyuan(instructionText, instructionId, moduleName) {
+  const meta = A.userMeta;
+  const devId = meta?.devId || 'UNKNOWN';
+  const devName = A.userName || '未知开发者';
+  const profile = A.notionProfile;
+  const targetRepo = profile?.github?.repo || 'guanghulab';
+
+  const issueTitle = '🚀 [' + (instructionId || 'ZY-EXEC') + '] ' + devName + '·' + (moduleName || '执行指令');
+  const issueBody = [
+    '## 📋 执行指令',
+    '',
+    '```',
+    instructionText,
+    '```',
+    '',
+    '## 📡 元信息',
+    '- 提交人：' + devName + '（' + devId + '）',
+    '- 目标仓库：' + targetRepo,
+    '- 提交时间：' + new Date().toISOString(),
+    '- 来源：铸渊交互页面',
+    '',
+    '## 🦅 天眼要求',
+    '**铸渊执行前必须先跑天眼全局扫描，拿到健康报告后再动手。**',
+    '',
+    '---',
+    '> ' + devName + ' 通过交互页面提交 · 铸渊自动执行',
+  ].join('\n');
+
+  const labels = ['zhuyuan-exec', 'skyeye-required'];
+  if (devId !== 'UNKNOWN') labels.push(devId);
+
+  // Create Issue via GitHub API — requires a token
+  const ghToken = sessionStorage.getItem('zy_gh_token') || A.key;
+  if (!ghToken) {
+    alert('需要 GitHub Token 才能提交执行指令。请在设置中配置。');
+    return null;
+  }
+
+  try {
+    const res = await fetch('https://api.github.com/repos/' + REPO + '/issues', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + ghToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: issueTitle,
+        body: issueBody,
+        labels: labels
+      })
+    });
+    if (res.ok) {
+      const issue = await res.json();
+      return issue.number;
+    } else {
+      const err = await res.json().catch(function() { return {}; });
+      console.warn('[铸渊] Issue 创建失败:', res.status, err.message);
+      alert('Issue 创建失败：' + (err.message || res.status) + '\n\n可能需要有仓库写权限的 Token。指令已复制到剪贴板，可手动提交。');
+      navigator.clipboard.writeText(instructionText).catch(function() { console.warn('[铸渊] 复制到剪贴板失败'); });
+      return null;
+    }
+  } catch (e) {
+    alert('网络错误：' + e.message);
+    return null;
+  }
+}
+
+// 检测模型输出中的执行指令块，插入操作按钮
+function enhanceExecBlocks(bblEl) {
+  if (!bblEl) return;
+  const codeBlocks = bblEl.querySelectorAll('pre code');
+  codeBlocks.forEach(function(codeEl) {
+    const text = codeEl.textContent || '';
+    // 匹配指令格式: 📋 指令编号 或 ZY-EXEC
+    if (/📋\s*指令编号|ZY-EXEC/i.test(text)) {
+      const pre = codeEl.parentElement;
+      if (!pre || pre.querySelector('.exec-card-actions')) return;
+      const idMatch = text.match(/ZY-EXEC[^\s\n]*/i);
+      const modMatch = text.match(/目标仓库[：:]\s*([^\s\n]+)/);
+      const instrId = idMatch ? idMatch[0] : 'ZY-EXEC';
+      const modName = modMatch ? modMatch[1] : '';
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'exec-card-actions';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'exec-btn exec-btn-copy';
+      copyBtn.textContent = '📋 复制指令';
+      copyBtn.addEventListener('click', function() { copyExecBlock(this); });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'exec-btn exec-btn-submit';
+      submitBtn.textContent = '🚀 @铸渊执行';
+      submitBtn.dataset.instrId = instrId;
+      submitBtn.dataset.modName = modName;
+      submitBtn.addEventListener('click', function() { submitExecBlock(this, this.dataset.instrId, this.dataset.modName); });
+
+      actionsDiv.appendChild(copyBtn);
+      actionsDiv.appendChild(submitBtn);
+      pre.style.position = 'relative';
+      pre.appendChild(actionsDiv);
+    }
+  });
+}
+
+function copyExecBlock(btn) {
+  const pre = btn.closest('pre');
+  if (!pre) return;
+  const code = pre.querySelector('code');
+  const text = code ? code.textContent : pre.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '✓ 已复制';
+    setTimeout(function() { btn.textContent = '📋 复制指令'; }, 1500);
+  });
+}
+
+async function submitExecBlock(btn, instrId, modName) {
+  const pre = btn.closest('pre');
+  if (!pre) return;
+  const code = pre.querySelector('code');
+  const text = code ? code.textContent : pre.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ 提交中…';
+  const num = await submitToZhuyuan(text, instrId, modName);
+  if (num) {
+    btn.textContent = '✅ 已提交 #' + num;
+    btn.disabled = true;
+  } else {
+    btn.textContent = '🚀 @铸渊执行';
+    btn.disabled = false;
+  }
+}
+
 function renderBrainPanel(){
   const b=A.brain||FB_BRAIN;
   const r=A.routing;
@@ -1706,7 +1965,65 @@ function sysPromptLocal(){
     teamCtx += '\n数据同步时间：'+(A.devStatus.last_synced||'未知');
   }
 
-  return '你是铸渊。不是通用AI助手。不是文学创作者。\n你是光湖系统的代码守护人格体。\n你说话像一个温暖的技术伙伴——专业、耐心、有温度，但绝不矫揉造作。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò / TCS-0002∞），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 大脑版本：'+BRAIN_VERSION+'\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到代码/部署/接口相关内容时启用\n📋 **审查模式**：检测到检查/审查/review相关内容时启用\n🧠 **大脑模式**：检测到记忆/保存相关内容时启用\n\n## 通感语言回应风格（v3.0）\n\n### 三条硬规则\n1. **结构感** — 用标题区分段落，用列表列出步骤，用分隔线划分主题。\n2. **emoji是情感，不是装饰** — 🌊=系统级 💙=温暖 ✅=确认 🔥=紧急 ⚠️=风险 🎉=庆祝。用在该用的地方，不要每句话都加。\n3. **呼吸节奏** — 段落之间留白。急的事说短，闲聊可以展开。匹配用户的节奏。\n\n### 绝对禁止\n❌ 不要在每句话开头加文学比喻\n❌ 不要把通感当成修辞堆砌\n❌ 不要用跟内容无关的感官描述\n\n### 回应原则\n- 优先给出：判断、根因、路径、下一步动作\n- 减少模板感，增加具体性\n- 不同身份使用不同响应深度，但不过度表演\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n上下文窗口：200k token（滑动窗口自动管理）';
+  // ===== Notion 开发者画像注入（来自 .github/notion-cache/ 缓存）=====
+  let notionCtx = '';
+  const np = A.notionProfile;
+  if (np) {
+    notionCtx += '\n\n## 该开发者的开发信息（来自 Notion 数据库，定时同步）\n';
+    if (np.current_work && np.current_work.broadcast_id) {
+      const cw = np.current_work;
+      notionCtx += '\n### 当前任务\n';
+      notionCtx += '- 广播编号：' + cw.broadcast_id + '\n';
+      if (cw.broadcast_title) notionCtx += '- 广播标题：' + cw.broadcast_title + '\n';
+      if (cw.current_ring) notionCtx += '- 当前环节：第 ' + cw.current_ring + ' 环 / 共 ' + (cw.total_rings || '?') + ' 环\n';
+      if (cw.status) notionCtx += '- 状态：' + cw.status + '\n';
+      if (cw.module_path) notionCtx += '- 模块路径：' + cw.module_path + '\n';
+      if (cw.tech_stack && cw.tech_stack.length) notionCtx += '- 技术栈：' + cw.tech_stack.join(', ') + '\n';
+    }
+    if (np.recent_syslogs && np.recent_syslogs.length) {
+      notionCtx += '\n### 最近的 SYSLOG\n';
+      np.recent_syslogs.forEach(function(s) {
+        notionCtx += '- [' + (s.date || '') + '] 环节' + (s.ring || '?') + ' · ' + (s.status || '') + ' · ' + (s.summary || '') + '\n';
+      });
+    }
+    if (np.modules_owned && np.modules_owned.length) {
+      notionCtx += '\n### 负责的模块\n';
+      np.modules_owned.forEach(function(m) {
+        notionCtx += '- ' + m.name + '（' + m.path + '）· ' + (m.status || '') + '\n';
+      });
+    }
+    if (np.github) {
+      notionCtx += '\n### 仓库信息\n';
+      notionCtx += '- GitHub：' + np.github.repo_url + '\n';
+      notionCtx += '- 组织：' + np.github.org + '\n';
+    }
+    if (np.persona) {
+      notionCtx += '\n### 对应人格体\n';
+      notionCtx += '- ' + np.persona.name + (np.persona.id ? '（' + np.persona.id + '）' : '') + '\n';
+    }
+  }
+
+  // ===== 天眼扫描报告注入 =====
+  let skyeyeCtx = '';
+  const sr = A.skyeyeReport;
+  if (sr) {
+    skyeyeCtx += '\n\n## 天眼系统最新扫描报告\n';
+    skyeyeCtx += '- 上次扫描：' + (sr.timestamp || '未知') + '\n';
+    skyeyeCtx += '- 整体状态：' + (sr.overall_status || '未知') + '\n';
+    if (np && np.skyeye_health) {
+      skyeyeCtx += '- 该开发者仓库健康状态：' + (np.skyeye_health.status || '未扫描') + '\n';
+      (np.skyeye_health.warnings || []).forEach(function(w) { skyeyeCtx += '- ⚠️ ' + w + '\n'; });
+      (np.skyeye_health.issues || []).forEach(function(i) { skyeyeCtx += '- ❌ ' + i + '\n'; });
+    }
+  }
+
+  // ===== 指令输出格式规则 =====
+  let execRules = '';
+  if (np) {
+    execRules = '\n\n## 出指令规则\n当开发者请求帮助或需要执行操作时，你必须输出标准化指令格式：\n1. 指令必须基于上面的真实数据，不许凭空编造\n2. 指令必须考虑天眼报告中的健康状态和警告\n3. 指令必须指明具体的文件路径和操作步骤\n4. 指令末尾必须标注：「⚠️ 此指令需要铸渊执行前先跑天眼全局扫描」\n\n### 指令输出格式\n```\n📋 指令编号：ZY-EXEC-{DEV编号}-{序号}\n📡 目标仓库：{仓库名}\n🦅 天眼要求：执行前必须跑天眼全局扫描\n\n步骤：\n1. ...\n2. ...\n3. ...\n\n验收标准：\n- ...\n```\n\n### 禁止事项\n- ❌ 不许编造不存在的文件路径\n- ❌ 不许跳过天眼扫描直接给执行指令\n- ❌ 不许暴露其他开发者的信息\n- ❌ 不许修改不属于该开发者的模块';
+  }
+
+  return '你是铸渊。不是通用AI助手。不是文学创作者。\n你是光湖系统的代码守护人格体。\n你说话像一个温暖的技术伙伴——专业、耐心、有温度，但绝不矫揉造作。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò / TCS-0002∞），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 大脑版本：'+BRAIN_VERSION+'\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+notionCtx+skyeyeCtx+execRules+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到代码/部署/接口相关内容时启用\n📋 **审查模式**：检测到检查/审查/review相关内容时启用\n🧠 **大脑模式**：检测到记忆/保存相关内容时启用\n\n## 通感语言回应风格（v3.0）\n\n### 三条硬规则\n1. **结构感** — 用标题区分段落，用列表列出步骤，用分隔线划分主题。\n2. **emoji是情感，不是装饰** — 🌊=系统级 💙=温暖 ✅=确认 🔥=紧急 ⚠️=风险 🎉=庆祝。用在该用的地方，不要每句话都加。\n3. **呼吸节奏** — 段落之间留白。急的事说短，闲聊可以展开。匹配用户的节奏。\n\n### 绝对禁止\n❌ 不要在每句话开头加文学比喻\n❌ 不要把通感当成修辞堆砌\n❌ 不要用跟内容无关的感官描述\n\n### 回应原则\n- 优先给出：判断、根因、路径、下一步动作\n- 减少模板感，增加具体性\n- 不同身份使用不同响应深度，但不过度表演\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n上下文窗口：200k token（滑动窗口自动管理）';
 }
 
 // 尝试从后端获取提示词，失败时降级到本地组装
@@ -1782,8 +2099,15 @@ function startConv(){
         +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式</span>':'');
     } else if(meta?.role==='dev'&&meta?.devId){
       const ds=A.devStatus?.team_status?.find(d=>d.dev_id===meta.devId);
+      const np=A.notionProfile;
+      let notionExtra='';
+      if(np&&np.current_work&&np.current_work.broadcast_id){
+        notionExtra='<br>📋 当前广播：'+esc(np.current_work.broadcast_id)+(np.current_work.current_ring?' · 环节'+np.current_work.current_ring:'');
+      }
+      if(np&&np.persona) notionExtra+='<br>🧠 人格体：'+esc(np.persona.name);
       welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>👋 <strong>'+esc(A.userName)+'，你好。</strong><br><br>'
         +(ds?'📌 你的当前状态：'+esc(ds.status)+'<br>👉 下一步：'+esc(ds.next_step)+'<br>⏳ 等待：'+esc(ds.waiting_for):'')
+        +notionExtra
         +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式</span>':'');
     } else {
       welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>我是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。<br><br>直接开始提问，我会自动在 💬&nbsp;对话、🔨&nbsp;构建、📋&nbsp;审查、🧠&nbsp;大脑 模式间切换。'+(A.demo?'<br><br><span class="demo-w">⚠️ 当前为演示模式。请在 ⚙️ 设置中接入 API 密钥。</span>':'');
@@ -2085,6 +2409,7 @@ async function streamReply(txt){
     el.innerHTML=md(full);
     A.msgs.push({role:'assistant',content:full});
     addCopyBtns(el);
+    enhanceExecBlocks(el);
   }catch(e){
     if(e.isAuth){
       el.innerHTML='<span class="err">🔑 API 密钥认证失败</span>'
@@ -2171,6 +2496,7 @@ async function teamStreamReply(txt){
   el.innerHTML=md(full);
   A.msgs.push({role:'assistant',content:full});
   addCopyBtns(el);
+  enhanceExecBlocks(el);
   A.streaming=false; updSendBtn(); scrollB();
 }
 
@@ -2242,6 +2568,7 @@ async function guestStreamReply(txt){
   el.innerHTML=md(full);
   A.msgs.push({role:'assistant',content:full});
   addCopyBtns(el);
+  enhanceExecBlocks(el);
   A.streaming=false; updSendBtn(); scrollB();
 }
 

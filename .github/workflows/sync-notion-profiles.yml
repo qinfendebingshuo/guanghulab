@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: "📡 同步 Notion 开发者画像"
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # 每6小时同步一次
+  workflow_dispatch:          # 手动触发
+  repository_dispatch:
+    types: [notion-sync]      # 霜砚/铸渊可主动触发
+
+permissions:
+  contents: write
+
+jobs:
+  sync-profiles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync Notion Data
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_CONTROL_PANEL_DB_ID: ${{ secrets.NOTION_CONTROL_PANEL_DB_ID }}
+          NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
+        run: |
+          node scripts/sync-notion-profiles.js
+
+      - name: Commit & Push
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/notion-cache/
+          if git diff --cached --quiet; then
+            echo "📡 Notion 画像无变更，跳过提交"
+            exit 0
+          fi
+          git commit -m "📡 同步 Notion 开发者画像 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
+          git push origin main

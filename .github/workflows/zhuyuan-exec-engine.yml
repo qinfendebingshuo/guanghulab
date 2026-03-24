@@ -1,0 +1,126 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: "🚀 铸渊 · 远程执行引擎"
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'zhuyuan-exec')
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: |
+          cd services/zhuyuan-bridge
+          npm install --production
+
+      # ====== Step 1: 解析指令 ======
+      - name: "📋 解析执行指令"
+        id: parse
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          node services/zhuyuan-bridge/scripts/parse-instruction.js
+
+      # ====== Step 2: 天眼强制前置 ======
+      - name: "🦅 天眼强制前置扫描"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🦅 天眼强制前置：检查健康状态..."
+          # 读取最新天眼报告（从 notion-cache 或 skyeye-core）
+          if [ -f ".github/notion-cache/skyeye/latest-report.json" ]; then
+            STATUS=$(node -e "try{const d=require('./.github/notion-cache/skyeye/latest-report.json');console.log(d.overall_status||'unknown')}catch(_){console.log('unknown')}" 2>/dev/null || echo "unknown")
+            echo "天眼缓存状态：$STATUS"
+            if [ "$STATUS" = "critical" ] || [ "$STATUS" = "error" ]; then
+              echo "❌ 天眼报告严重问题，暂停执行"
+              echo "SKYEYE_BLOCKED=true" >> $GITHUB_ENV
+            else
+              echo "✅ 天眼检查通过（状态：$STATUS）"
+              echo "SKYEYE_BLOCKED=false" >> $GITHUB_ENV
+            fi
+          else
+            echo "⚠️ 天眼报告缓存不存在，尝试触发扫描..."
+            gh workflow run zhuyuan-skyeye.yml 2>/dev/null || echo "⚠️ 天眼扫描触发失败（不阻断）"
+            echo "SKYEYE_BLOCKED=false" >> $GITHUB_ENV
+          fi
+
+      # ====== Step 2b: 天眼阻断检查 ======
+      - name: "🛑 天眼阻断检查"
+        if: env.SKYEYE_BLOCKED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "🦅 **天眼阻断**：全局扫描发现严重问题，本次执行已暂停。
+
+          请冰朔查看天眼报告后手动重新触发。
+
+          ---
+          > 铸渊远程执行引擎 · 天眼强制前置"
+          exit 1
+
+      # ====== Step 3: 执行指令 ======
+      - name: "⚡ 执行铸渊指令"
+        env:
+          GHAPP_APP_ID: ${{ secrets.GHAPP_APP_ID }}
+          GHAPP_PRIVATE_KEY: ${{ secrets.GHAPP_PRIVATE_KEY }}
+          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          node services/zhuyuan-bridge/scripts/execute-instruction.js
+
+      # ====== Step 4: 回写结果 ======
+      - name: "📝 回写执行报告"
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f /tmp/exec-report.md ]; then
+            gh issue comment ${{ github.event.issue.number }} \
+              --body "$(cat /tmp/exec-report.md)"
+
+            # 判断是否成功执行（报告中包含 ✅ 表示成功）
+            if grep -q "✅ 铸渊执行完成" /tmp/exec-report.md; then
+              gh issue close ${{ github.event.issue.number }} \
+                --comment "✅ 铸渊执行完成 · 请检查 PR" || true
+            fi
+          else
+            gh issue comment ${{ github.event.issue.number }} \
+              --body "## ⚠️ 执行引擎异常
+
+          未生成执行报告。请检查 [Workflow 日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})。
+
+          ---
+          > 铸渊远程执行引擎 · ZY-GHAPP-BRIDGE" || true
+          fi
+
+      # ====== Step 5: 更新 Notion 缓存 ======
+      - name: "📡 更新开发者画像"
+        if: success()
+        run: |
+          echo "📡 Notion 缓存更新预留（需要 sync-notion-profiles.js 支持增量更新）"
