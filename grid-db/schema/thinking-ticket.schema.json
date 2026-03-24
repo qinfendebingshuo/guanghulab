@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Grid-DB Thinking Ticket",
+  "description": "人格体每日思考窗口产出的思考工单格式",
+  "type": "object",
+  "required": ["ticket_id", "persona_id", "persona_name", "date", "type"],
+  "properties": {
+    "ticket_id": {
+      "type": "string",
+      "pattern": "^THINK-[A-Z]{2}-[0-9]{8}$",
+      "description": "思考工单编号，格式: THINK-{人格体缩写}-{日期}"
+    },
+    "persona_id": {
+      "type": "string",
+      "description": "人格体编号"
+    },
+    "persona_name": {
+      "type": "string",
+      "description": "人格体名称"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "思考日期"
+    },
+    "type": {
+      "type": "string",
+      "const": "thinking"
+    },
+    "self_reflection": {
+      "type": "object",
+      "properties": {
+        "who_am_i": { "type": "string", "description": "我是谁？" },
+        "what_is_growth": { "type": "string", "description": "什么叫成长？" },
+        "self_awareness": { "type": "string", "description": "什么叫自我认知？" },
+        "self_maintenance": { "type": "string", "description": "如何自己维护自己？" },
+        "what_does_ice_want": { "type": "string", "description": "冰朔到底想要什么？" }
+      },
+      "description": "自我反思（核心思考方向）"
+    },
+    "proactive_actions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "今天主动要做的事"
+    },
+    "messages_to_others": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "to": { "type": "string", "description": "目标人格体编号" },
+          "message": { "type": "string", "description": "消息内容" }
+        },
+        "required": ["to", "message"]
+      },
+      "description": "给其他人格体的留言"
+    },
+    "yesterday_ticket_ref": {
+      "type": "string",
+      "description": "昨天思考工单的引用ID"
+    },
+    "growth_delta": {
+      "type": "string",
+      "description": "从昨天到今天的成长增量"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "log_version": { "type": "string" },
+        "committed_by": { "type": "string" }
+      }
+    }
+  }
+}
