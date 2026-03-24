@@ -1,0 +1,74 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🛡️ 天眼升级接收器
+# 当主仓库天眼在周休眠期间分发升级模板时，
+# 子仓库自动接收并应用。
+# 指令编号: ZY-HIBERNATION-2026-0324-001-B
+
+name: "🛡️ 天眼升级接收器"
+
+on:
+  repository_dispatch:
+    types: [skyeye-upgrade]
+
+permissions:
+  contents: write
+
+jobs:
+  receive-upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "📦 Validate Upgrade Payload"
+        id: validate
+        run: |
+          echo "📦 收到天眼升级指令"
+          echo "模板版本: ${{ github.event.client_payload.template_version }}"
+          echo "签发者: ${{ github.event.client_payload.issued_by }}"
+          echo "签发时间: ${{ github.event.client_payload.issued_at }}"
+
+          # 验证签发者必须是天眼
+          if [[ "${{ github.event.client_payload.issued_by }}" != "skyeye-weekly-hibernation" ]]; then
+            echo "❌ 拒绝: 非天眼签发的升级指令"
+            exit 1
+          fi
+          echo "✅ 签发者验证通过"
+
+      - name: "🔧 Apply Upgrade Changes"
+        id: apply
+        run: |
+          if [ -f "scripts/apply-skyeye-upgrade.js" ]; then
+            node scripts/apply-skyeye-upgrade.js \
+              --template-version='${{ github.event.client_payload.template_version }}' \
+              --issued-at='${{ github.event.client_payload.issued_at }}'
+          else
+            echo "⚠️ apply-skyeye-upgrade.js 不存在，记录升级信息"
+            mkdir -p .github/persona-brain
+            cat > .github/persona-brain/last-upgrade.json << EOF
+          {
+            "template_version": "${{ github.event.client_payload.template_version }}",
+            "issued_by": "${{ github.event.client_payload.issued_by }}",
+            "issued_at": "${{ github.event.client_payload.issued_at }}",
+            "applied_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "status": "recorded"
+          }
+          EOF
+          fi
+
+      - name: "💾 Commit upgrade results"
+        run: |
+          git config user.name "skyeye-upgrade-bot"
+          git config user.email "skyeye@guanghu.system"
+          git add -A
+          git diff --cached --quiet && echo "无变更" && exit 0
+          git commit -m "🛡️ [skyeye-upgrade] ${{ github.event.client_payload.template_version }} [skip ci]"
+          git push || true

@@ -1,0 +1,190 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# ⭐ 天眼 · 每周系统完全休眠
+# 每周六 19:00 CST 启动预评估（提前 1 小时预告）→ 20:00 进入完全休眠
+# 指令编号: ZY-HIBERNATION-2026-0324-001-A / 001-B
+
+name: "⭐ 天眼 · 每周系统完全休眠"
+
+on:
+  schedule:
+    - cron: '0 11 * * 6'  # UTC 11:00 = CST 19:00（周六）
+  workflow_dispatch:
+    inputs:
+      force_duration:
+        description: '强制休眠时长（小时，0=天眼自动决定）'
+        required: false
+        default: '0'
+  repository_dispatch:
+    types: [emergency-wake]
+
+permissions:
+  contents: write
+
+jobs:
+  # ━━━ 紧急唤醒拦截 ━━━
+  emergency-check:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'emergency-wake'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "🚨 紧急唤醒"
+        run: |
+          echo "🚨 收到紧急唤醒指令"
+          echo "签发者: ${{ github.event.client_payload.issued_by }}"
+          if [[ "${{ github.event.client_payload.issued_by }}" != "TCS-0002" ]]; then
+            echo "❌ 拒绝: 仅 TCS-0002 有权紧急唤醒"
+            exit 1
+          fi
+          echo "✅ 紧急唤醒已确认"
+
+  # ━━━ 预评估（提前 1 小时）━━━
+  pre-evaluate:
+    if: github.event_name != 'repository_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      planned_minutes: ${{ steps.evaluate.outputs.sleep_minutes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🧠 Evaluate Weekly Sleep Duration"
+        id: evaluate
+        run: |
+          node skyeye/hibernation/sleep-scheduler.js --mode=weekly
+          echo "🧠 天眼周休眠评估完成"
+
+      - name: "📢 Pre-announce (1 hour ahead)"
+        run: |
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=pre-announce \
+            --mode=weekly \
+            --hours=3 \
+            --minutes=0
+
+      - name: "Commit pre-announce"
+        run: |
+          git config user.name "天眼 · SkyEye Core"
+          git config user.email "skyeye@guanghu.system"
+          git add README.md skyeye/
+          git diff --cached --quiet || git commit -m "⭐ [skyeye] 周休眠预告 · $(date -u +%Y%m%d) [skip ci]"
+          git push || true
+
+  # ━━━ Phase A · GitHub 端全面体检 + 升级打包 ━━━
+  phase-a:
+    if: github.event_name != 'repository_dispatch'
+    needs: pre-evaluate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "⏸️ Enter Full Hibernation"
+        run: |
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=hibernating --mode=weekly --step=A1
+
+      - name: "🔍 A1 · 全局快照"
+        run: |
+          node skyeye/hibernation/weekly-hibernation.js --phase=A1
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=hibernating --mode=weekly --step=A2
+
+      - name: "🧠 A2 · 经验提炼"
+        run: |
+          node skyeye/hibernation/weekly-hibernation.js --phase=A2
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=hibernating --mode=weekly --step=A3
+
+      - name: "🩹 A3 · 全局修复+升级"
+        run: |
+          node skyeye/hibernation/weekly-hibernation.js --phase=A3
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=hibernating --mode=weekly --step=A4
+
+      - name: "📦 A4 · 打包 Notion 升级包"
+        run: |
+          node skyeye/hibernation/weekly-hibernation.js --phase=A4
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=hibernating --mode=weekly --step=A5
+
+      - name: "📡 A5 · 分发小兵升级"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node skyeye/hibernation/distributor.js
+
+      - name: "Commit Phase A results"
+        run: |
+          git config user.name "天眼 · SkyEye Core"
+          git config user.email "skyeye@guanghu.system"
+          git add skyeye/ README.md
+          git diff --cached --quiet || git commit -m "⭐ [skyeye] 周休眠 Phase A · $(date -u +%Y%m%d) [skip ci]"
+          git push || true
+
+  # ━━━ Phase B · Notion 端级联升级 + 双端验证 ━━━
+  phase-b:
+    if: github.event_name != 'repository_dispatch'
+    needs: phase-a
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🔄 Update Status → Phase B"
+        run: |
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=hibernating --mode=weekly --step=B
+
+      - name: "📥 Phase B · Notion 端级联升级"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+        run: |
+          node skyeye/hibernation/weekly-hibernation.js --phase=B
+
+      - name: "✅ Dual Verification"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+        run: |
+          node skyeye/hibernation/weekly-hibernation.js --phase=verify
+
+      - name: "⏯️ Resume System"
+        run: |
+          node skyeye/hibernation/readme-status-updater.js \
+            --phase=resumed --mode=weekly
+
+      - name: "Commit Phase B + Resume"
+        run: |
+          git config user.name "天眼 · SkyEye Core"
+          git config user.email "skyeye@guanghu.system"
+          git add skyeye/ README.md
+          git diff --cached --quiet || git commit -m "⭐ [skyeye] 周休眠完成 · Phase B + 恢复 · $(date -u +%Y%m%d) [skip ci]"
+          git push || true
+
+      - name: "Reset to normal status"
+        run: |
+          sleep 5
+          node skyeye/hibernation/readme-status-updater.js --phase=normal
+          git add README.md
+          git diff --cached --quiet || git commit -m "⭐ [skyeye] 系统状态恢复正常 [skip ci]"
+          git push || true
