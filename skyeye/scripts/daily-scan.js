@@ -48,9 +48,13 @@ function sense() {
 
   // Check last scan freshness (48h threshold)
   if (manifest.last_scan) {
-    const lastScanAge = Date.now() - new Date(manifest.last_scan).getTime();
+    const lastScanTime = new Date(manifest.last_scan).getTime();
+    if (isNaN(lastScanTime)) {
+      result.issues.push('infra-manifest.last_scan 日期格式无效');
+    }
+    const lastScanAge = isNaN(lastScanTime) ? 0 : Date.now() - lastScanTime;
     const hours = Math.round(lastScanAge / (1000 * 60 * 60));
-    if (hours > 48) {
+    if (!isNaN(lastScanTime) && hours > 48) {
       result.issues.push(`infra-manifest 最后扫描距今 ${hours}h，超过 48h 阈值`);
     }
   }
@@ -125,7 +129,7 @@ function auditQuotas() {
   if (ledger.services) {
     for (const [name, data] of Object.entries(ledger.services)) {
       let usagePct = 0;
-      if (data.limit && data.used) {
+      if (data.limit && data.used !== undefined && data.used !== null) {
         usagePct = Math.round((data.used / data.limit) * 100 * 10) / 10;
       }
 

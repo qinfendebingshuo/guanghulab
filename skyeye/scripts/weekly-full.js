@@ -47,8 +47,17 @@ function runPhase(name, scriptPath) {
     return result;
   }
 
+  // Validate scriptPath is within expected directory
+  const resolvedScript = path.resolve(scriptPath);
+  const resolvedScriptsDir = path.resolve(SCRIPTS_DIR);
+  if (!resolvedScript.startsWith(resolvedScriptsDir)) {
+    result.status = 'error';
+    result.error = `Script path outside expected directory: ${scriptPath}`;
+    return result;
+  }
+
   try {
-    result.output = execSync(`node "${scriptPath}"`, {
+    result.output = execSync(`node "${resolvedScript}"`, {
       cwd: path.resolve(SKYEYE_DIR, '..'),
       encoding: 'utf8',
       timeout: 60000,

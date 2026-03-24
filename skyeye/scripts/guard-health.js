@@ -69,9 +69,14 @@ function checkGuardHealth(filePath) {
 
   // Check 5: Last heartbeat freshness (if available)
   if (guard.health_check?.last_check) {
-    const lastCheckAge = Date.now() - new Date(guard.health_check.last_check).getTime();
-    const intervalMs = (guard.health_check.interval_hours || 6) * 60 * 60 * 1000;
-    result.checks.heartbeat_fresh = lastCheckAge < intervalMs * 3; // 3x tolerance
+    const lastCheckTime = new Date(guard.health_check.last_check).getTime();
+    if (!isNaN(lastCheckTime)) {
+      const lastCheckAge = Date.now() - lastCheckTime;
+      const intervalMs = (guard.health_check.interval_hours || 6) * 60 * 60 * 1000;
+      result.checks.heartbeat_fresh = lastCheckAge < intervalMs * 3; // 3x tolerance
+    } else {
+      result.checks.heartbeat_fresh = null; // Invalid date
+    }
   } else {
     result.checks.heartbeat_fresh = null; // No heartbeat recorded yet
   }

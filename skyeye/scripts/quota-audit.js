@@ -48,7 +48,7 @@ function auditService(name, data) {
     actions: []
   };
 
-  if (data.limit && data.used !== undefined) {
+  if (data.limit && data.used !== undefined && data.used !== null) {
     result.usage_percent = data.limit > 0
       ? Math.round((data.used / data.limit) * 100 * 10) / 10
       : 0;
