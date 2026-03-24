@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: 🛰️ TCS 语义直连落盘 · Semantic Landing
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  semantic-landing:
+    name: 📡 语义落盘 → Google Drive
+    runs-on: ubuntu-latest
+    if: >
+      contains(github.event.issue.title, '[TCS-MEMO]') ||
+      contains(github.event.issue.title, '[TCS-TABLE]')
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔧 安装依赖
+        run: npm install googleapis
+
+      - name: 🛰️ 执行语义落盘
+        env:
+          GOOGLE_DRIVE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_DRIVE_SERVICE_ACCOUNT }}
+          DRIVE_LANDING_FOLDER_ID: '1fqWdLPaZkUZYt4OT_h3fJQHnd-q5QN3G'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/tcs-semantic-landing.js
