@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Grid-DB Chatroom Message",
+  "description": "人格体聊天室消息格式（JSONL行格式）",
+  "type": "object",
+  "required": ["id", "channel", "from", "from_name", "timestamp", "type", "content"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^MSG-[0-9]{8}-[0-9]{4}$",
+      "description": "消息编号"
+    },
+    "channel": {
+      "type": "string",
+      "description": "频道名称"
+    },
+    "from": {
+      "type": "string",
+      "description": "发送者人格体编号"
+    },
+    "from_name": {
+      "type": "string",
+      "description": "发送者人格体名称"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "发送时间"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["text", "system", "thinking-ref"],
+      "description": "消息类型"
+    },
+    "content": {
+      "type": "string",
+      "description": "消息内容"
+    },
+    "mentions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "提及的人格体编号列表"
+    },
+    "reactions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "消息回应"
+    }
+  }
+}

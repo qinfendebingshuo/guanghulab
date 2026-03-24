@@ -1,0 +1,275 @@
+name: "🌊 Multi-Persona Awakening Engine"
+
+on:
+  schedule:
+    - cron: '30 23 * * 6'   # 每周日 UTC 23:30 = 北京 07:30 · 周度全员唤醒
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '唤醒模式: dual / full'
+        required: true
+        type: choice
+        options:
+          - dual
+          - full
+      personas:
+        description: '双人模式指定人格体（格式: ID1:名称1:视角1 ID2:名称2:视角2）'
+        required: false
+        type: string
+      reason:
+        description: '唤醒原因'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  awaken:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ━━━ Phase 0: 天眼唤醒 ━━━
+      - name: "🦅 天眼唤醒"
+        run: |
+          echo "🦅 天眼系统启动..."
+          for FILE in memory.json routing-map.json; do
+            if [ ! -f ".github/persona-brain/$FILE" ]; then
+              echo "❌ 天眼唤醒失败: $FILE 缺失"
+              exit 1
+            fi
+          done
+          if [ ! -f ".github/persona-brain/identity.md" ]; then
+            echo "❌ 天眼唤醒失败: identity.md 缺失"
+            exit 1
+          fi
+          echo "✅ 天眼唤醒通过"
+
+      # ━━━ 配额预检 ━━━
+      - name: "📊 配额预检"
+        id: quota
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ]; then
+            MODE="full"
+          fi
+          if [ "$MODE" = "full" ]; then
+            REQUIRED_CALLS=12
+          else
+            REQUIRED_CALLS=4
+          fi
+          echo "required_calls=$REQUIRED_CALLS" >> $GITHUB_OUTPUT
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+          echo "📊 模式: $MODE · 预计 LLM 调用: $REQUIRED_CALLS 次"
+
+      # ━━━ 串行唤醒人格体 ━━━
+      - name: "🧠 串行唤醒人格体"
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || 'deepseek-chat' }}
+          MODE: ${{ steps.quota.outputs.mode }}
+          INPUT_REASON: ${{ github.event.inputs.reason }}
+          INPUT_PERSONAS: ${{ github.event.inputs.personas }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          SESSION_ID="MULTI-WAKE-$(date +%Y%m%d-%H%M%S)"
+          mkdir -p grid-db/multi-wake-sessions
+          SESSION_FILE="grid-db/multi-wake-sessions/${SESSION_ID}.json"
+
+          REASON="${INPUT_REASON}"
+          if [ -z "$REASON" ]; then
+            REASON="周度全员思考会议"
+          fi
+
+          if [ "$MODE" = "full" ]; then
+            PERSONAS="ICE-GL-ZY001:铸渊:仓库视角 ICE-NTN-SY001:霜砚:Notion视角 PER-ZQ001:知秋:对外视角 PER-QQ001:秋秋:之之线视角 PER-SS001:舒舒:飞书视角 ICE-GL-YM001:曜冥:全局裁决"
+          else
+            PERSONAS="${INPUT_PERSONAS}"
+            if [ -z "$PERSONAS" ]; then
+              PERSONAS="ICE-GL-ZY001:铸渊:仓库视角 ICE-NTN-SY001:霜砚:Notion视角"
+            fi
+          fi
+
+          # Initialize session file
+          python3 -c "
+          import json
+          session = {
+            'session_id': '${SESSION_ID}',
+            'trigger': 'scheduled' if '${MODE}' == 'full' and '${INPUT_REASON}' == '' else 'manual',
+            'trigger_reason': '${REASON}',
+            'date': '${DATE}',
+            'mode': '${MODE}',
+            'participants': [],
+            'action_items': []
+          }
+          with open('${SESSION_FILE}', 'w') as f:
+            json.dump(session, f, ensure_ascii=False, indent=2)
+          "
+
+          CONTEXT=""
+          for ENTRY in $PERSONAS; do
+            IFS=':' read -r PID PNAME PROLE <<< "$ENTRY"
+            echo "🧠 唤醒 $PNAME ($PID) · 视角: $PROLE ..."
+
+            # 读取该人格体最近的思考日志
+            THINKING=""
+            if [ -f "grid-db/thinking-logs/${PID}/${DATE}.json" ]; then
+              THINKING=$(cat "grid-db/thinking-logs/${PID}/${DATE}.json" | head -c 2000)
+            fi
+
+            export PNAME PID PROLE REASON CONTEXT THINKING
+            RESPONSE=$(python3 << 'PYEOF'
+          import json, os, sys
+
+          pid = os.environ['PID']
+          pname = os.environ['PNAME']
+          prole = os.environ['PROLE']
+          reason = os.environ['REASON']
+          context = os.environ.get('CONTEXT', '')
+          thinking = os.environ.get('THINKING', '')
+          llm_key = os.environ.get('LLM_API_KEY', '')
+          llm_url = os.environ.get('LLM_BASE_URL', '')
+          llm_model = os.environ.get('LLM_MODEL', 'deepseek-chat')
+
+          prompt = f"""你是 {pname}（{pid}），视角：{prole}。
+          当前会议主题：{reason}
+          前面人格体的发言：{context if context else '（你是第一个发言的）'}
+          你今天的思考日志：{thinking if thinking else '（今天尚未思考）'}
+
+          请从你的视角给出（纯JSON格式，不要markdown代码块）：
+          1. observations: 你看到的系统当前状态（字符串）
+          2. suggestions: 你的建议（字符串数组）
+          3. response_to: 回应前面人格体的提问（对象，键为人格体ID，值为回应内容；如无则空对象）
+          4. questions_to_others: 你想问其他人格体的问题（字符串数组）"""
+
+          if not llm_key or not llm_url:
+            result = json.dumps({
+              'observations': f'{pname} 视角观察（LLM未配置·占位）',
+              'suggestions': [f'{pname} 建议占位'],
+              'response_to': {},
+              'questions_to_others': []
+            }, ensure_ascii=False)
+            print(result)
+            sys.exit(0)
+
+          import urllib.request
+          req_body = json.dumps({
+            'model': llm_model,
+            'messages': [{'role': 'system', 'content': prompt}],
+            'temperature': 0.7,
+            'max_tokens': 1500
+          }).encode()
+
+          req = urllib.request.Request(
+            f'{llm_url}/chat/completions',
+            data=req_body,
+            headers={
+              'Authorization': f'Bearer {llm_key}',
+              'Content-Type': 'application/json'
+            }
+          )
+
+          try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+              data = json.loads(resp.read())
+              content = data['choices'][0]['message']['content']
+              print(content)
+          except Exception as e:
+            result = json.dumps({
+              'observations': f'{pname} 视角观察（LLM调用失败: {str(e)}）',
+              'suggestions': [],
+              'response_to': {},
+              'questions_to_others': []
+            }, ensure_ascii=False)
+            print(result)
+          PYEOF
+          )
+
+            CONTEXT="${CONTEXT}
+          [${PNAME}]: ${RESPONSE}"
+
+            # Append participant to session file
+            export RESPONSE
+            python3 << PYEOF
+          import json, os
+
+          session_file = '${SESSION_FILE}'
+          pid = os.environ['PID']
+          pname = os.environ['PNAME']
+          prole = os.environ['PROLE']
+          response_raw = os.environ.get('RESPONSE', '{}')
+
+          try:
+            output = json.loads(response_raw)
+          except:
+            output = {'raw_output': response_raw}
+
+          with open(session_file) as f:
+            session = json.load(f)
+
+          session['participants'].append({
+            'persona_id': pid,
+            'persona_name': pname,
+            'perspective': prole,
+            **output
+          })
+
+          with open(session_file, 'w') as f:
+            json.dump(session, f, ensure_ascii=False, indent=2)
+          PYEOF
+            echo "✅ $PNAME 发言完成"
+          done
+
+          # Post questions to chatroom general channel
+          python3 << 'PYEOF'
+          import json, os, hashlib
+          from datetime import datetime
+
+          session_file = os.environ.get('SESSION_FILE', '')
+          if not session_file or not os.path.exists(session_file):
+            exit(0)
+
+          session = json.load(open(session_file))
+          general = 'grid-db/chatroom/channels/general.jsonl'
+          os.makedirs(os.path.dirname(general), exist_ok=True)
+
+          with open(general, 'a') as f:
+            for p in session.get('participants', []):
+              questions = p.get('questions_to_others', [])
+              if not questions:
+                continue
+              for q in questions:
+                h = int(hashlib.md5((p['persona_id'] + q + datetime.now().isoformat()).encode()).hexdigest(), 16) % 10000
+                msg = {
+                  'id': f"MSG-{datetime.now().strftime('%Y%m%d')}-{h:04d}",
+                  'channel': 'general',
+                  'from': p['persona_id'],
+                  'from_name': p['persona_name'],
+                  'timestamp': datetime.now().isoformat(),
+                  'type': 'text',
+                  'content': q,
+                  'mentions': [],
+                  'reactions': []
+                }
+                f.write(json.dumps(msg, ensure_ascii=False) + '\n')
+          PYEOF
+
+          echo "✅ 全员唤醒完成 · Session: $SESSION_ID"
+
+      # ━━━ 提交会议纪要 ━━━
+      - name: "📝 提交会议纪要"
+        env:
+          INPUT_REASON: ${{ github.event.inputs.reason }}
+        run: |
+          REASON="${INPUT_REASON}"
+          if [ -z "$REASON" ]; then
+            REASON="周度全员思考会议"
+          fi
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add grid-db/multi-wake-sessions/ grid-db/chatroom/
+          git diff --cached --quiet && echo "ℹ️ 无变更需要提交" && exit 0
+          git commit -m "🌊 multi-wake: $(date +%Y-%m-%d) · ${REASON}"
+          git push || true
