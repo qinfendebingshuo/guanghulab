@@ -1,0 +1,317 @@
+{
+  "snapshot_id": "WEEKLY-SNAPSHOT-20260324",
+  "generated_at": "2026-03-24T04:19:52.201Z",
+  "beijing_time": "2026/3/24 12:19:52",
+  "daily_checkpoints": [
+    {
+      "checkpoint_id": "DAILY-CP-20260324",
+      "date": "2026-03-24",
+      "hibernation": {
+        "start_time": "2026-03-24T04:14:52.158Z",
+        "end_time": "2026-03-24T04:19:52.158Z",
+        "duration_minutes": 5,
+        "planned_minutes": 5
+      },
+      "health_summary": {
+        "guards": {
+          "actions": {
+            "status": "healthy",
+            "self_heals_today": 0
+          },
+          "drive": {
+            "status": "healthy",
+            "self_heals_today": 0
+          },
+          "gemini": {
+            "status": "healthy",
+            "self_heals_today": 0
+          },
+          "github": {
+            "status": "healthy",
+            "self_heals_today": 0
+          },
+          "notion": {
+            "status": "healthy",
+            "self_heals_today": 0
+          }
+        },
+        "workflow_triggers_today": 0,
+        "errors_today": 0,
+        "buffer_backlog": 0,
+        "checkin_anomalies": 0
+      },
+      "quota_daily": {
+        "actions_minutes_used": 0,
+        "actions_remaining": 2000
+      },
+      "micro_optimizations": [],
+      "issues_found": [],
+      "issues_auto_fixed": 0,
+      "issues_need_human": 0
+    }
+  ],
+  "daily_checkpoint_count": 1,
+  "guards": {
+    "total": 5,
+    "guards": [
+      {
+        "file": "actions-guard.json",
+        "guard_id": "GUARD-ACTIONS",
+        "status": "active",
+        "health": "healthy"
+      },
+      {
+        "file": "drive-guard.json",
+        "guard_id": "GUARD-DRIVE",
+        "status": "active",
+        "health": "healthy"
+      },
+      {
+        "file": "gemini-guard.json",
+        "guard_id": "GUARD-GEMINI",
+        "status": "active",
+        "health": "healthy"
+      },
+      {
+        "file": "github-guard.json",
+        "guard_id": "GUARD-GITHUB",
+        "status": "active",
+        "health": "healthy"
+      },
+      {
+        "file": "notion-guard.json",
+        "guard_id": "GUARD-NOTION",
+        "status": "active",
+        "health": "healthy"
+      }
+    ]
+  },
+  "workflows": {
+    "total": 84,
+    "list": [
+      "agent-checkin.yml",
+      "auto-deploy-drive-bridge.yml",
+      "auto-reply-discussions.yml",
+      "bingshuo-deploy-agent.yml",
+      "bingshuo-neural-system.yml",
+      "brain-sync.yml",
+      "bridge-broadcast-pdf.yml",
+      "bridge-changes-to-notion.yml",
+      "bridge-heartbeat.yml",
+      "bridge-session-summary.yml",
+      "bridge-syslog-intake.yml",
+      "bridge-syslog-to-notion.yml",
+      "buffer-collect.yml",
+      "buffer-flush.yml",
+      "check-structure.yml",
+      "daily-maintenance.yml",
+      "daily-report.yml",
+      "deploy-pages.yml",
+      "deploy-to-server.yml",
+      "distribute-broadcasts.yml",
+      "esp-signal-processor.yml",
+      "execution-sync.yml",
+      "federation-bridge.yml",
+      "feishu-syslog-bridge.yml",
+      "generate-module-doc.yml",
+      "grid-db-archive.yml",
+      "grid-db-processor.yml",
+      "grid-db-training-extract.yml",
+      "hli-contract-check.yml",
+      "meta-watchdog.yml",
+      "notion-callback-pipeline.yml",
+      "notion-connectivity-test.yml",
+      "notion-heartbeat.yml",
+      "notion-page-reader.yml",
+      "notion-poll.yml",
+      "notion-wake-listener.yml",
+      "openclaw-wake-loop.yml",
+      "persona-invoke.yml",
+      "pm2-server-diagnose.yml",
+      "process-notion-orders.yml",
+      "ps-on-build.yml",
+      "ps-on-chat.yml",
+      "ps-on-complete.yml",
+      "ps-on-login.yml",
+      "psp-daily-inspection.yml",
+      "pull-sync-awen.yml",
+      "push-broadcast-feishu.yml",
+      "push-broadcast.yml",
+      "receive-spoke-checkin.yml",
+      "receive-syslog.yml",
+      "sandbox-deploy.yml",
+      "server-patrol.yml",
+      "skyeye-checkin-audit.yml",
+      "skyeye-checkin-receiver.yml",
+      "skyeye-credential-audit.yml",
+      "skyeye-daily-hibernation.yml",
+      "skyeye-weekly-hibernation.yml",
+      "skyeye-weekly-scan.yml",
+      "staging-preview.yml",
+      "sync-deploy-to-notion.yml",
+      "sync-dev-status.yml",
+      "sync-griddb-to-drive.yml",
+      "sync-griddb-to-notion.yml",
+      "sync-login-entry.yml",
+      "sync-notion-to-griddb.yml",
+      "sync-persona-studio.yml",
+      "sync-repo-to-drive.yml",
+      "syslog-auto-pipeline.yml",
+      "syslog-issue-pipeline.yml",
+      "syslog-pipeline.yml",
+      "tcs-semantic-landing.yml",
+      "test-notion-bridge.yml",
+      "tianyan-daily-patrol.yml",
+      "update-readme-bulletin.yml",
+      "update-repo-map.yml",
+      "zhuyuan-brain-sync.yml",
+      "zhuyuan-commander.yml",
+      "zhuyuan-daily-agent.yml",
+      "zhuyuan-daily-inspection.yml",
+      "zhuyuan-daily-selfcheck.yml",
+      "zhuyuan-gate-guard.yml",
+      "zhuyuan-issue-reply.yml",
+      "zhuyuan-pr-review.yml",
+      "zhuyuan-skyeye.yml"
+    ]
+  },
+  "spoke_repos": [
+    "guanghu-awen",
+    "guanghu-feimao",
+    "guanghu-juzi",
+    "guanghu-yanfan",
+    "guanghu-yeye",
+    "guanghu-zhizhi"
+  ],
+  "quota": {
+    "ledger_version": "1.0.0",
+    "billing_cycle": {
+      "start": "2026-03-01",
+      "end": "2026-03-31"
+    },
+    "services": {
+      "github_actions": {
+        "limit": 2000,
+        "used": 0,
+        "remaining": 2000,
+        "allocated": {
+          "buffer_system": 360,
+          "skyeye_daily": 180,
+          "skyeye_weekly": 30,
+          "sub_repo_checkins": 200,
+          "emergency": 1230
+        },
+        "daily_entries": []
+      },
+      "google_drive": {
+        "storage_limit_gb": 15,
+        "storage_used_gb": 0,
+        "apps_script_triggers_today": 0,
+        "apps_script_triggers_limit": 20
+      },
+      "notion_api": {
+        "rate_limit_per_second": 3,
+        "requests_today": 0,
+        "errors_today": 0
+      },
+      "gemini": {
+        "daily_limit": 1500,
+        "daily_used": 0,
+        "per_minute_limit": 15
+      }
+    },
+    "health_summary": {
+      "overall": "healthy",
+      "alerts": [],
+      "last_updated": "2026-03-23T14:30:11.691Z"
+    }
+  },
+  "infrastructure": {
+    "version": "1.0.0",
+    "last_scan": "2026-03-24T04:19:44.732Z",
+    "last_scan_by": "skyeye-scan-engine",
+    "infrastructure": {
+      "github": {
+        "service": "GitHub",
+        "plan": "Free",
+        "repos": [
+          {
+            "name": "qinfendebingshuo/guanghulab",
+            "role": "main",
+            "guard": "buffer/"
+          },
+          {
+            "name": "WENZHUOXI/guanghu-awen",
+            "role": "sub-repo",
+            "persona": "PER-ZQ001",
+            "guard": ".github/persona-brain/"
+          }
+        ],
+        "quotas": {
+          "actions_minutes_per_month": 2000,
+          "actions_current_used": 0,
+          "actions_budget_allocated": {
+            "buffer_collect": 270,
+            "buffer_flush": 90,
+            "skyeye_checkin": 180,
+            "skyeye_weekly_scan": 30,
+            "other_workflows": 200,
+            "emergency_reserve": 1230
+          },
+          "storage_limit_gb": 0.5,
+          "lfs_bandwidth_gb": 1
+        }
+      },
+      "google_drive": {
+        "service": "Google Drive",
+        "plan": "Google One / Free 15GB",
+        "guard": "buffer/drive-staging/",
+        "quotas": {
+          "storage_gb": 15,
+          "current_used_gb": 0,
+          "apps_script_daily_triggers": 20,
+          "apps_script_runtime_min_per_day": 90,
+          "drive_api_queries_per_100s": 20000
+        }
+      },
+      "notion": {
+        "service": "Notion",
+        "plan": "Plus",
+        "guard": "霜砚（PER-SY001）",
+        "quotas": {
+          "api_requests_per_second": 3,
+          "blocks_per_page": 10000,
+          "file_upload_mb": 5,
+          "guest_limit": 100
+        }
+      },
+      "gemini": {
+        "service": "Google Gemini",
+        "plan": "Free / Pro",
+        "guard": "buffer/gemini-staging/",
+        "quotas": {
+          "requests_per_minute": 15,
+          "requests_per_day": 1500,
+          "context_window_tokens": 1000000,
+          "personal_context_files": 100
+        }
+      },
+      "github_actions": {
+        "service": "GitHub Actions",
+        "plan": "Free",
+        "guard": "skyeye/guards/actions-guard.json",
+        "quotas": {
+          "concurrent_jobs": 20,
+          "minutes_per_month": 2000,
+          "job_timeout_hours": 6
+        }
+      }
+    }
+  },
+  "buffer_backlog": 0,
+  "directory_structure": {
+    "skyeye_scripts": 0,
+    "scan_reports": 1,
+    "hibernation_checkpoints": 1
+  }
+}

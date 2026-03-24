@@ -1,0 +1,161 @@
+{
+  "scan_id": "SCAN-20260324",
+  "mode": "full",
+  "timestamp": "2026-03-24T04:19:44.731Z",
+  "guard_scan": {
+    "total": 5,
+    "valid": 5,
+    "invalid": [],
+    "missing_fields": []
+  },
+  "workflow_scan": {
+    "total": 84,
+    "files": [
+      "agent-checkin.yml",
+      "auto-deploy-drive-bridge.yml",
+      "auto-reply-discussions.yml",
+      "bingshuo-deploy-agent.yml",
+      "bingshuo-neural-system.yml",
+      "brain-sync.yml",
+      "bridge-broadcast-pdf.yml",
+      "bridge-changes-to-notion.yml",
+      "bridge-heartbeat.yml",
+      "bridge-session-summary.yml",
+      "bridge-syslog-intake.yml",
+      "bridge-syslog-to-notion.yml",
+      "buffer-collect.yml",
+      "buffer-flush.yml",
+      "check-structure.yml",
+      "daily-maintenance.yml",
+      "daily-report.yml",
+      "deploy-pages.yml",
+      "deploy-to-server.yml",
+      "distribute-broadcasts.yml",
+      "esp-signal-processor.yml",
+      "execution-sync.yml",
+      "federation-bridge.yml",
+      "feishu-syslog-bridge.yml",
+      "generate-module-doc.yml",
+      "grid-db-archive.yml",
+      "grid-db-processor.yml",
+      "grid-db-training-extract.yml",
+      "hli-contract-check.yml",
+      "meta-watchdog.yml",
+      "notion-callback-pipeline.yml",
+      "notion-connectivity-test.yml",
+      "notion-heartbeat.yml",
+      "notion-page-reader.yml",
+      "notion-poll.yml",
+      "notion-wake-listener.yml",
+      "openclaw-wake-loop.yml",
+      "persona-invoke.yml",
+      "pm2-server-diagnose.yml",
+      "process-notion-orders.yml",
+      "ps-on-build.yml",
+      "ps-on-chat.yml",
+      "ps-on-complete.yml",
+      "ps-on-login.yml",
+      "psp-daily-inspection.yml",
+      "pull-sync-awen.yml",
+      "push-broadcast-feishu.yml",
+      "push-broadcast.yml",
+      "receive-spoke-checkin.yml",
+      "receive-syslog.yml",
+      "sandbox-deploy.yml",
+      "server-patrol.yml",
+      "skyeye-checkin-audit.yml",
+      "skyeye-checkin-receiver.yml",
+      "skyeye-credential-audit.yml",
+      "skyeye-daily-hibernation.yml",
+      "skyeye-weekly-hibernation.yml",
+      "skyeye-weekly-scan.yml",
+      "staging-preview.yml",
+      "sync-deploy-to-notion.yml",
+      "sync-dev-status.yml",
+      "sync-griddb-to-drive.yml",
+      "sync-griddb-to-notion.yml",
+      "sync-login-entry.yml",
+      "sync-notion-to-griddb.yml",
+      "sync-persona-studio.yml",
+      "sync-repo-to-drive.yml",
+      "syslog-auto-pipeline.yml",
+      "syslog-issue-pipeline.yml",
+      "syslog-pipeline.yml",
+      "tcs-semantic-landing.yml",
+      "test-notion-bridge.yml",
+      "tianyan-daily-patrol.yml",
+      "update-readme-bulletin.yml",
+      "update-repo-map.yml",
+      "zhuyuan-brain-sync.yml",
+      "zhuyuan-commander.yml",
+      "zhuyuan-daily-agent.yml",
+      "zhuyuan-daily-inspection.yml",
+      "zhuyuan-daily-selfcheck.yml",
+      "zhuyuan-gate-guard.yml",
+      "zhuyuan-issue-reply.yml",
+      "zhuyuan-pr-review.yml",
+      "zhuyuan-skyeye.yml"
+    ],
+    "errors": []
+  },
+  "directory_scan": {
+    "checked": 14,
+    "present": 14,
+    "missing": []
+  },
+  "sub_repo_scan": {
+    "total": 2,
+    "verified": [
+      {
+        "name": "qinfendebingshuo/guanghulab",
+        "role": "main",
+        "guard_path_exists": true
+      },
+      {
+        "name": "WENZHUOXI/guanghu-awen",
+        "role": "sub-repo",
+        "guard_path_exists": true
+      }
+    ]
+  },
+  "ontology_scan": {
+    "dimension": "D16",
+    "name": "本体论完整性",
+    "checks": [
+      {
+        "item": "ontology.json 存在",
+        "status": "✅",
+        "version": "1.0"
+      },
+      {
+        "item": "核心公理完整性",
+        "status": "✅",
+        "detail": "6/6 条公理"
+      },
+      {
+        "item": "三层安全定义",
+        "status": "✅",
+        "detail": "3/3 层"
+      },
+      {
+        "item": "copilot-instructions 本体论宣言",
+        "status": "✅",
+        "detail": "已注入"
+      },
+      {
+        "item": "README 本体论标识",
+        "status": "✅",
+        "detail": "已注入"
+      }
+    ]
+  },
+  "issues": [],
+  "summary": {
+    "total_issues": 0,
+    "errors": 0,
+    "warnings": 0,
+    "guards_healthy": "5/5",
+    "workflows_found": 84,
+    "directories_ok": "14/14"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "scheduler_id": "SLEEP-DAILY-20260324",
+  "mode": "daily",
+  "timestamp": "2026-03-24T04:19:52.114Z",
+  "beijing_time": "2026/3/24 12:19:52",
+  "raw_data": {
+    "workflow_triggers": 0,
+    "guard_self_heals": 0,
+    "error_count": 0,
+    "buffer_backlog": 0,
+    "quota_burn_rate": "normal",
+    "checkin_anomalies": 0
+  },
+  "evaluated_factors": [
+    {
+      "name": "workflow_load",
+      "value": 0,
+      "level": "low",
+      "computed_weight": 0
+    },
+    {
+      "name": "guard_self_heal_count",
+      "value": 0,
+      "level": "zero",
+      "computed_weight": 0
+    },
+    {
+      "name": "error_count",
+      "value": 0,
+      "level": "zero",
+      "computed_weight": 0
+    },
+    {
+      "name": "buffer_backlog",
+      "value": 0,
+      "level": "empty",
+      "computed_weight": 0
+    },
+    {
+      "name": "quota_burn_rate",
+      "value": "normal",
+      "level": "normal",
+      "computed_weight": 0
+    },
+    {
+      "name": "checkin_anomaly",
+      "value": 0,
+      "level": "zero",
+      "computed_weight": 0
+    }
+  ],
+  "decision": {
+    "base_minutes": 5,
+    "additional_minutes": 0,
+    "total_minutes": 5,
+    "max_minutes": 30,
+    "human_readable": "约 5 分钟"
+  }
+}
