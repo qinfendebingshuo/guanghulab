@@ -62,6 +62,16 @@ jobs:
 
           if [ -n "${{ github.event.inputs.persona_id }}" ]; then
             PERSONA="${{ github.event.inputs.persona_id }}"
+            # Lookup NAME for manually specified persona_id
+            case "$PERSONA" in
+              ICE-GL-ZY001)  NAME="铸渊" ;;
+              ICE-NTN-SY001) NAME="霜砚" ;;
+              PER-ZQ001)     NAME="知秋" ;;
+              PER-QQ001)     NAME="秋秋" ;;
+              PER-SS001)     NAME="舒舒" ;;
+              ICE-GL-YM001)  NAME="曜冥" ;;
+              *)             NAME="$PERSONA" ;;
+            esac
           fi
 
           echo "persona=$PERSONA" >> $GITHUB_OUTPUT
@@ -122,6 +132,7 @@ jobs:
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || 'deepseek-chat' }}
           PERSONA_ID: ${{ steps.schedule.outputs.persona }}
           PERSONA_NAME: ${{ steps.schedule.outputs.name }}
           YESTERDAY_TICKET: ${{ steps.context.outputs.yesterday_ticket }}
@@ -167,7 +178,7 @@ jobs:
           import json, sys, os
           prompt = os.environ['PROMPT']
           print(json.dumps({
-            'model': 'deepseek-chat',
+            'model': os.environ.get('LLM_MODEL', 'deepseek-chat'),
             'messages': [{'role': 'system', 'content': prompt}],
             'temperature': 0.8,
             'max_tokens': 2000
@@ -243,7 +254,7 @@ jobs:
           with open(general, "a") as f:
             for m in msgs:
               msg = {
-                "id": f"MSG-{datetime.now().strftime('%Y%m%d')}-{abs(hash(m.get('message',''))) % 10000:04d}",
+                "id": f"MSG-{datetime.now().strftime('%Y%m%d')}-{int(__import__('hashlib').md5(m.get('message','').encode()).hexdigest(), 16) % 10000:04d}",
                 "channel": "general",
                 "from": persona_id,
                 "from_name": persona_name,
