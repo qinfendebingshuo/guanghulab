@@ -1,6 +1,11 @@
 /**
  * persona-studio · 登录校验路由
  * POST /api/ps/auth/login  { dev_id: "EXP-000" }
+ * GET  /api/ps/auth/session { token }
+ * POST /api/ps/auth/wechat/callback { code } — 微信登录回调（待配置）
+ * POST /api/ps/auth/bind { openid, dev_id } — 绑定开发者编号（待配置）
+ *
+ * 📜 Copyright: 国作登字-2026-A-00037559
  */
 const express = require('express');
 const router = express.Router();
@@ -10,6 +15,10 @@ const crypto = require('crypto');
 
 const HUMAN_REGISTRY_PATH = path.join(__dirname, '..', '..', 'brain', 'human-registry.json');
 const REGISTRY_PATH = path.join(__dirname, '..', '..', 'brain', 'registry.json');
+const USERS_DB_PATH = path.join(__dirname, '..', '..', '..', 'data', 'users.json');
+
+// In-memory session store (server restart clears sessions)
+const sessions = new Map();
 
 function loadHumanRegistry() {
   try {
@@ -24,6 +33,14 @@ function loadRegistry() {
     return JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf-8'));
   } catch {
     return { developers: {}, guest_mode: {} };
+  }
+}
+
+function loadUsersDB() {
+  try {
+    return JSON.parse(fs.readFileSync(USERS_DB_PATH, 'utf-8'));
+  } catch {
+    return { users: {}, dev_id_map: {} };
   }
 }
 
@@ -63,12 +80,21 @@ router.post('/login', (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
+    sessions.set(token, {
+      dev_id: 'GUEST',
+      name: guestConfig.name || '访客体验者',
+      role: 'visitor',
+      created_at: new Date().toISOString()
+    });
+
     return res.json({
       error: false,
       dev_id: 'GUEST',
       name: guestConfig.name || '访客体验者',
       status: 'guest',
-      token
+      role: 'visitor',
+      token,
+      auth_method: 'guest'
     });
   }
 
@@ -98,16 +124,91 @@ router.post('/login', (req, res) => {
     });
   }
 
-  // 生成简单 session token
+  // 生成 session token
   const token = crypto.randomBytes(32).toString('hex');
+  sessions.set(token, {
+    dev_id,
+    name: entry.name,
+    role: entry.role || 'developer',
+    created_at: new Date().toISOString()
+  });
 
   res.json({
     error: false,
     dev_id,
     name: entry.name,
     status: entry.status,
-    role: entry.role,
-    token
+    role: entry.role || 'developer',
+    token,
+    auth_method: 'dev_id'
+  });
+});
+
+// GET /api/ps/auth/session — 验证 session token
+router.get('/session', (req, res) => {
+  const token = req.headers['x-session-token'] || req.query.token;
+
+  if (!token) {
+    return res.status(401).json({
+      error: true,
+      code: 'NO_TOKEN',
+      message: '未提供 session token'
+    });
+  }
+
+  const session = sessions.get(token);
+  if (!session) {
+    return res.status(401).json({
+      error: true,
+      code: 'INVALID_TOKEN',
+      message: 'Session 已过期或无效'
+    });
+  }
+
+  res.json({
+    error: false,
+    dev_id: session.dev_id,
+    name: session.name,
+    role: session.role
+  });
+});
+
+// POST /api/ps/auth/wechat/callback — 微信登录回调（预留接口）
+router.post('/wechat/callback', (req, res) => {
+  // 微信登录需要冰朔提供 AppID/AppSecret 后才能启用
+  // 当前返回提示信息
+  res.status(501).json({
+    error: true,
+    code: 'WECHAT_NOT_CONFIGURED',
+    message: '微信登录尚未配置。需要冰朔提供微信开放平台 AppID/AppSecret。当前请使用开发者编号登录。'
+  });
+});
+
+// POST /api/ps/auth/bind — 绑定微信 openid 和开发者编号（预留接口）
+router.post('/bind', (req, res) => {
+  res.status(501).json({
+    error: true,
+    code: 'BIND_NOT_CONFIGURED',
+    message: '绑定功能尚未启用。需要先完成微信登录配置。'
+  });
+});
+
+// GET /api/ps/auth/methods — 获取可用登录方式
+router.get('/methods', (_req, res) => {
+  const usersDB = loadUsersDB();
+  const methods = usersDB.auth_methods || {
+    dev_id: { enabled: true },
+    guest: { enabled: true },
+    wechat: { enabled: false }
+  };
+
+  res.json({
+    error: false,
+    methods: {
+      dev_id: { enabled: methods.dev_id ? methods.dev_id.enabled : true },
+      guest: { enabled: methods.guest ? methods.guest.enabled : true },
+      wechat: { enabled: methods.wechat ? methods.wechat.enabled : false }
+    }
   });
 });
 

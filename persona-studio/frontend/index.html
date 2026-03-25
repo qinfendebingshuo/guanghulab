@@ -77,38 +77,59 @@
       <div id="step2" class="login-step" style="display:none;">
         <button class="btn-back" onclick="goBackFromStep2()" title="返回">← 返回</button>
         <div id="welcomeBanner" class="welcome-banner" style="display:none;"></div>
-        <h2>🔑 输入 API 密钥</h2>
-        <p class="hint">输入你的第三方 AI 模型 API Key，系统将自动检测可用模型，选择后即可唤醒铸渊</p>
+        <h2>🔑 选择对话方式</h2>
 
-        <input
-          type="text"
-          id="apiBaseInput"
-          class="apikey-input"
-          placeholder="API Base URL（可留空，系统将自动探测多个平台）"
-          autocomplete="off"
-        />
-        <input
-          type="password"
-          id="apiKeyInput"
-          class="apikey-input"
-          placeholder="请输入你的 API Key（如 sk-xxx）"
-          autocomplete="off"
-        />
-
-        <div class="supported-platforms">
-          <span class="platform-label">支持平台：</span>
-          <span class="platform-tag cn-ok">🇨🇳 DeepSeek</span>
-          <span class="platform-tag cn-ok">🇨🇳 Moonshot</span>
-          <span class="platform-tag cn-ok">🇨🇳 智谱 AI</span>
-          <span class="platform-tag cn-ok">🇨🇳 云雾 AI</span>
-          <span class="platform-tag">OpenAI</span>
-          <span class="platform-tag">Google Gemini</span>
+        <!-- 服务器代理模式（推荐） -->
+        <div id="proxyModeSection" class="proxy-mode-section" style="margin-bottom:1.5rem;">
+          <div id="proxyStatusCard" class="proxy-status-card" style="display:none;">
+            <div class="proxy-status-icon">🌐</div>
+            <div class="proxy-status-text">
+              <strong>服务器代理模式</strong>
+              <span id="proxyStatusMsg">检测中…</span>
+            </div>
+          </div>
+          <button type="button" id="proxyEnterBtn" class="btn-primary-full" style="display:none;background:linear-gradient(135deg,#00d4ff,#0099cc);" onclick="enterWithProxy()">
+            🚀 直接开始对话（无需 API 密钥）
+          </button>
         </div>
-        <p class="hint" style="margin-top:0.5rem;font-size:0.75rem;color:#8899aa;">🇨🇳 标记 = 中国大陆可直接访问，无需国际网络</p>
 
-        <button type="button" id="detectBtn" class="btn-detect" onclick="handleDetectModels()">
-          🔍 检测可用模型
-        </button>
+        <div id="apiKeyDivider" style="display:none;text-align:center;margin:1rem 0;color:#667;font-size:0.85rem;">
+          ── 或使用自有 API 密钥 ──
+        </div>
+
+        <div id="apiKeySection">
+          <p class="hint">输入你的第三方 AI 模型 API Key，系统将自动检测可用模型，选择后即可唤醒铸渊</p>
+
+          <input
+            type="text"
+            id="apiBaseInput"
+            class="apikey-input"
+            placeholder="API Base URL（可留空，系统将自动探测多个平台）"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            id="apiKeyInput"
+            class="apikey-input"
+            placeholder="请输入你的 API Key（如 sk-xxx）"
+            autocomplete="off"
+          />
+
+          <div class="supported-platforms">
+            <span class="platform-label">支持平台：</span>
+            <span class="platform-tag cn-ok">🇨🇳 DeepSeek</span>
+            <span class="platform-tag cn-ok">🇨🇳 Moonshot</span>
+            <span class="platform-tag cn-ok">🇨🇳 智谱 AI</span>
+            <span class="platform-tag cn-ok">🇨🇳 云雾 AI</span>
+            <span class="platform-tag">OpenAI</span>
+            <span class="platform-tag">Google Gemini</span>
+          </div>
+          <p class="hint" style="margin-top:0.5rem;font-size:0.75rem;color:#8899aa;">🇨🇳 标记 = 中国大陆可直接访问，无需国际网络</p>
+
+          <button type="button" id="detectBtn" class="btn-detect" onclick="handleDetectModels()">
+            🔍 检测可用模型
+          </button>
+        </div>
 
         <div id="detectStatus" class="detect-status" style="display:none;"></div>
 
@@ -197,6 +218,7 @@
         verifiedDevName = '访客';
         showWelcomeBanner('👋 访客体验模式', '铸渊将为你提供协助。如需记忆连贯功能，可申请开发者编号。');
         showStep('step2');
+        checkProxyAvailability();
         document.getElementById('apiKeyInput').focus();
       }
     }
@@ -248,8 +270,9 @@
         sessionStorage.setItem('dev_name', verifiedDevName);
         sessionStorage.setItem('session_token', data.token || '');
 
-        showWelcomeBanner('🛡️ ' + verifiedDevName + '（' + devId + '）', '编号已验证。请输入 API Key 唤醒铸渊。');
+        showWelcomeBanner('🛡️ ' + verifiedDevName + '（' + devId + '）', '编号已验证。请选择对话方式。');
         showStep('step2');
+        checkProxyAvailability();
         document.getElementById('apiKeyInput').focus();
       } catch (_err) {
         // 后端不可达时：devId 已通过上方 DEV_ID_RE 格式校验，放行至 API Key 步骤
@@ -265,6 +288,7 @@
           '后端暂时无法连接，已通过本地格式验证。请输入 API Key 唤醒铸渊。'
         );
         showStep('step2');
+        checkProxyAvailability();
         document.getElementById('apiKeyInput').focus();
       }
 
@@ -393,6 +417,60 @@
       var div = document.createElement('div');
       div.appendChild(document.createTextNode(str));
       return div.innerHTML;
+    }
+
+    /* ---- 服务器代理模式检测 ---- */
+    var proxyModel = '';
+    var proxyApiBase = '';
+
+    async function checkProxyAvailability() {
+      var statusCard = document.getElementById('proxyStatusCard');
+      var enterBtn = document.getElementById('proxyEnterBtn');
+      var statusMsg = document.getElementById('proxyStatusMsg');
+      var divider = document.getElementById('apiKeyDivider');
+
+      statusCard.style.display = 'flex';
+      statusMsg.textContent = '检测服务器代理…';
+
+      try {
+        var ctrl = new AbortController();
+        var tid = setTimeout(function () { ctrl.abort(); }, 5000);
+        var res = await fetch(API_BASE + '/api/ps/proxy/status', { signal: ctrl.signal });
+        clearTimeout(tid);
+        var data = await res.json();
+
+        if (data.proxy_available) {
+          proxyModel = data.model || '';
+          proxyApiBase = data.api_base || '';
+          statusMsg.textContent = '✅ 服务器代理可用 · ' + proxyModel;
+          statusMsg.style.color = '#4caf50';
+          enterBtn.style.display = 'block';
+          divider.style.display = 'block';
+        } else {
+          statusMsg.textContent = '服务器代理未配置 · 请使用自有 API 密钥';
+          statusMsg.style.color = '#888';
+          statusCard.style.display = 'none';
+        }
+      } catch (_e) {
+        statusMsg.textContent = '服务器代理不可用 · 请使用自有 API 密钥';
+        statusMsg.style.color = '#888';
+        statusCard.style.display = 'none';
+      }
+    }
+
+    function enterWithProxy() {
+      sessionStorage.setItem('login_mode', currentMode);
+      sessionStorage.setItem('use_server_proxy', 'true');
+      sessionStorage.setItem('user_api_base', proxyApiBase);
+      sessionStorage.setItem('user_api_key', '');
+      sessionStorage.setItem('selected_model', proxyModel);
+
+      if (currentMode === 'guest') {
+        sessionStorage.setItem('dev_id', 'GUEST');
+        sessionStorage.removeItem('session_token');
+      }
+
+      window.location.href = 'chat.html';
     }
   </script>
 </body>

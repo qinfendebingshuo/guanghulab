@@ -1,0 +1,81 @@
+{
+  "signal_id": "SIG-20260325-014",
+  "trace_id": "ZY-HUMANSIDE-FIX-2026-0325-002",
+  "signal_type": "GL-DIAG",
+  "timestamp": "2026-03-25T02:16:00Z",
+  "title": "人类使用侧全面诊断报告",
+  "instruction_id": "ZY-HUMANSIDE-FIX-2026-0325-002",
+  "executor": "AG-ZY-01",
+  "diagnosis": {
+    "server_8_155_62_235": {
+      "status": "requires_verification",
+      "notes": "服务器状态需实际 SSH 登录验证。CD 管线 deploy-to-server.yml 已更新人类使用侧验证步骤。",
+      "pm2_processes": ["guanghulab-proxy(3721)", "guanghulab-backend(3000)", "guanghulab(3001)", "persona-studio(3002)", "guanghulab-ws(8080)"],
+      "nginx": "配置模板已创建: deploy/nginx/hololake.conf"
+    },
+    "domain_guanghulab_com": {
+      "dns": "需验证 A 记录指向 8.155.62.235",
+      "http": "需部署后验证",
+      "https": "Let's Encrypt 配置步骤已文档化（deploy/nginx/hololake.conf 注释中）",
+      "china_access": "域名解析到阿里云服务器，国内可访问（待实际验证）"
+    },
+    "cd_pipeline": {
+      "deploy_to_server_yml": {
+        "status": "updated",
+        "changes": [
+          "新增人类使用侧验证步骤（curl 主站 + Persona Studio + API 健康检查）",
+          "扩展冒烟测试覆盖全部 18 个模块",
+          "部署汇总新增人类使用侧验证状态"
+        ]
+      },
+      "sync_persona_studio_yml": {
+        "status": "existing",
+        "notes": "跨仓库同步工作流，触发条件正常"
+      }
+    },
+    "persona_studio": {
+      "dev_function": {
+        "status": "functional",
+        "notes": "「我要开发」功能后端路由 /api/ps/build/start 存在且逻辑完整。需要 API Key 才能调用 LLM 生成代码。新增服务器代理模式后可免 API Key。"
+      },
+      "dev_log_submit": {
+        "status": "partial",
+        "notes": "后端 chat 路由可存储对话历史。Notion 同步依赖 NOTION_TOKEN 配置。"
+      },
+      "module_navigation": {
+        "status": "fixed",
+        "notes": "10 个缺失模块已创建占位页面（显示「开发中」而非空白报错）",
+        "modules_with_placeholder": [
+          "m10-cloud", "m15-cloud-drive", "m01-login", "m18-health-check",
+          "coldstart", "portal", "notification", "help-center", "frontend", "app"
+        ],
+        "modules_already_working": [
+          "status-board", "cost-control", "modules/devboard", "m05-user-center",
+          "m07-dialogue-ui", "m11-module", "dashboard", "persona-studio"
+        ]
+      },
+      "api_proxy": {
+        "status": "implemented",
+        "notes": "新增 /api/ps/proxy/* 路由，服务器端代理 AI 模型调用。前端新增「服务器代理模式」选项，用户可零密钥使用。需要服务器 .env 配置 MODEL_API_KEY。"
+      }
+    },
+    "auth_system": {
+      "current": {
+        "dev_id_login": "active",
+        "guest_mode": "active",
+        "server_side_session": "implemented"
+      },
+      "wechat_login": {
+        "status": "scaffolded",
+        "notes": "API 端点已预留（/api/ps/auth/wechat/callback, /api/ps/auth/bind）。需要冰朔提供微信开放平台 AppID/AppSecret 后激活。"
+      },
+      "user_database": {
+        "status": "created",
+        "path": "data/users.json",
+        "notes": "JSON 格式用户数据库，支持微信 openid 绑定开发者编号。当前为空结构，后续随用户登录自动填充。"
+      }
+    }
+  },
+  "conclusion": "核心阻塞点：1) CD管线需实际部署验证，已更新人类使用侧检查；2) 模块导航死链已修复；3) API密钥依赖已通过服务器代理模式消除；4) 微信登录需AppID。",
+  "recommendation": "优先执行实际部署（手动触发 deploy-to-server.yml），验证 guanghulab.com 可访问后逐步启用各项功能。"
+}

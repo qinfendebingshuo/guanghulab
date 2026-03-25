@@ -538,6 +538,19 @@ jobs:
               check_module '光湖集成壳' 'app'
               check_module 'Persona Studio' 'persona-studio'
               check_module '后端服务' 'backend'
+              check_module '用户中心' 'm05-user-center'
+              check_module '对话界面' 'm07-dialogue-ui'
+              check_module '云服务' 'm10-cloud'
+              check_module '模块管理' 'm11-module'
+              check_module '云盘' 'm15-cloud-drive'
+              check_module '登录' 'm01-login'
+              check_module '健康检查' 'm18-health-check'
+              check_module '冷启动' 'coldstart'
+              check_module '仪表盘' 'dashboard'
+              check_module '门户' 'portal'
+              check_module '通知' 'notification'
+              check_module '帮助中心' 'help-center'
+              check_module '前端' 'frontend'
 
               echo ''
               printf \"\$RESULTS\"
@@ -559,6 +572,59 @@ jobs:
             "
           echo "✅ 冒烟测试完成"
 
+      - name: 👤 人类使用侧验证
+        continue-on-error: true
+        run: |
+          echo "👤 人类使用侧验证（核心！系统测跑通 ≠ 人类测跑通）..."
+          echo "等待 10 秒让服务启动..."
+          sleep 10
+
+          HUMAN_CHECK_PASSED=0
+          HUMAN_CHECK_FAILED=0
+
+          # 验证主站可访问
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
+            "http://${{ secrets.DEPLOY_HOST }}" 2>/dev/null || echo "000")
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+            echo "✅ 主站 HTTP 响应: $HTTP_CODE"
+            HUMAN_CHECK_PASSED=$((HUMAN_CHECK_PASSED+1))
+          else
+            echo "❌ 主站 HTTP 响应: $HTTP_CODE（人类无法访问）"
+            HUMAN_CHECK_FAILED=$((HUMAN_CHECK_FAILED+1))
+          fi
+
+          # 验证 Persona Studio 可访问
+          PS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
+            "http://${{ secrets.DEPLOY_HOST }}/persona-studio/" 2>/dev/null || echo "000")
+          if [ "$PS_CODE" = "200" ] || [ "$PS_CODE" = "301" ] || [ "$PS_CODE" = "302" ]; then
+            echo "✅ Persona Studio HTTP 响应: $PS_CODE"
+            HUMAN_CHECK_PASSED=$((HUMAN_CHECK_PASSED+1))
+          else
+            echo "⚠️ Persona Studio HTTP 响应: $PS_CODE"
+            HUMAN_CHECK_FAILED=$((HUMAN_CHECK_FAILED+1))
+          fi
+
+          # 验证后端 API 健康
+          API_CODE=$(ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:3002/api/ps/health 2>/dev/null || echo '000'" \
+            2>/dev/null || echo "000")
+          if [ "$API_CODE" = "200" ]; then
+            echo "✅ Persona Studio API 健康: $API_CODE"
+            HUMAN_CHECK_PASSED=$((HUMAN_CHECK_PASSED+1))
+          else
+            echo "⚠️ Persona Studio API 响应: $API_CODE"
+            HUMAN_CHECK_FAILED=$((HUMAN_CHECK_FAILED+1))
+          fi
+
+          echo ""
+          echo "━━━ 人类使用侧验证结果：${HUMAN_CHECK_PASSED} 通过 / ${HUMAN_CHECK_FAILED} 异常 ━━━"
+
+          echo "### 👤 人类使用侧验证" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 通过: ${HUMAN_CHECK_PASSED}" >> $GITHUB_STEP_SUMMARY
+          echo "- 异常: ${HUMAN_CHECK_FAILED}" >> $GITHUB_STEP_SUMMARY
+
       - name: 📝 部署汇总
         run: |
           echo "### 🚀 全站部署完成" >> $GITHUB_STEP_SUMMARY
@@ -567,6 +633,7 @@ jobs:
           echo "- 目标: \`${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- 提交: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- 时间: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')" >> $GITHUB_STEP_SUMMARY
+          echo "- 人类使用侧验证: 已执行" >> $GITHUB_STEP_SUMMARY
 
   # ═══════════════════════════════════════════════════════════════
   # Job 3: Notion 部署通知

@@ -10,6 +10,7 @@ const buildRoutes = require('./routes/build');
 const notifyRoutes = require('./routes/notify');
 const apikeyRoutes = require('./routes/apikey');
 const previewRoutes = require('./routes/preview');
+const proxyRoutes = require('./routes/proxy');
 
 const app = express();
 app.use(cors({
@@ -34,6 +35,7 @@ app.use('/api/ps/chat', chatRoutes);
 app.use('/api/ps/build', buildRoutes);
 app.use('/api/ps/notify', notifyRoutes);
 app.use('/api/ps/apikey', apikeyRoutes);
+app.use('/api/ps/proxy', proxyRoutes);
 
 // ── 健康检查 ──
 // ── 健康检查 ──app.use('/api/ps/preview', previewRoutes);
@@ -73,6 +75,10 @@ app.get('/', (_req, res) => {
       '/api/ps/notify/send',
       '/api/ps/apikey/detect-models',
       '/api/ps/apikey/chat',
+      '/api/ps/proxy/status',
+      '/api/ps/proxy/models',
+      '/api/ps/proxy/chat',
+      '/api/ps/proxy/chat/stream',
       '/api/ps/preview/:devId/:project',
       '/api/ps/health'
     ]
