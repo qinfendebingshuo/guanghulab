@@ -1,20 +1,20 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-25T07:37:47.671Z",
+  "generated_at": "2026-03-25T09:32:23.262Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 98,
-    "total_scripts": 82,
+    "total_workflows": 100,
+    "total_scripts": 83,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
     "hli_coverage_pct": "33%",
     "last_ci_run": "2026-03-05T16:07:24.070Z",
-    "memory_last_updated": "2026-03-24T09:02:12.139Z"
+    "memory_last_updated": "2026-03-25T09:01:18.924Z"
   },
   "zones": [
     {
@@ -356,6 +356,14 @@
           "name": "\"📰 铸渊 · 光湖开发日报\"",
           "triggers": [
             "schedule(0 2 * * *)",
+            "manual"
+          ]
+        },
+        {
+          "file": "deploy-backend.yml",
+          "name": "\"🚀 部署后端中间层到阿里云\"",
+          "triggers": [
+            "push",
             "manual"
           ]
         },
@@ -784,6 +792,14 @@
           ]
         },
         {
+          "file": "sync-notion-cache.yml",
+          "name": "\"📡 同步 Notion 数据到缓存\"",
+          "triggers": [
+            "schedule(0 */6 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "sync-notion-profiles.yml",
           "name": "\"📡 同步 Notion 开发者画像\"",
           "triggers": [
@@ -984,7 +1000,7 @@
           ]
         }
       ],
-      "item_count": 98
+      "item_count": 100
     },
     {
       "zone_id": "SCRIPTS",
@@ -1021,6 +1037,9 @@
         },
         {
           "file": "bridge-app.js"
+        },
+        {
+          "file": "cache"
         },
         {
           "file": "chatroom-post.js"
@@ -1248,7 +1267,7 @@
           "file": "zhuyuan-wakeup.js"
         }
       ],
-      "item_count": 82
+      "item_count": 83
     },
     {
       "zone_id": "SRC",
@@ -1630,6 +1649,9 @@
           "file": "ai-system-doc.md"
         },
         {
+          "file": "css"
+        },
+        {
           "file": "daily-reports"
         },
         {
@@ -1643,6 +1665,9 @@
         },
         {
           "file": "index.html"
+        },
+        {
+          "file": "js"
         },
         {
           "file": "neural-bridge-protocol-v3.md"
@@ -1660,7 +1685,7 @@
           "file": "使用指南.md"
         }
       ],
-      "item_count": 15
+      "item_count": 17
     },
     {
       "zone_id": "TESTS",
@@ -2120,6 +2145,9 @@
     "daily-report": [
       "WORKFLOWS::daily-report.yml"
     ],
+    "deploy-backend": [
+      "WORKFLOWS::deploy-backend.yml"
+    ],
     "deploy-pages": [
       "WORKFLOWS::deploy-pages.yml"
     ],
@@ -2296,6 +2324,9 @@
       "WORKFLOWS::sync-login-entry.yml",
       "SCRIPTS::sync-login-entry.js"
     ],
+    "sync-notion-cache": [
+      "WORKFLOWS::sync-notion-cache.yml"
+    ],
     "sync-notion-profiles": [
       "WORKFLOWS::sync-notion-profiles.yml",
       "SCRIPTS::sync-notion-profiles.js"
@@ -2385,7 +2416,8 @@
       "DEV_NODES"
     ],
     "js": [
-      "SCRIPTS"
+      "SCRIPTS",
+      "DOCS::js"
     ],
     "脚本": [
       "SCRIPTS"
@@ -2407,6 +2439,9 @@
     ],
     "bridge-app": [
       "SCRIPTS::bridge-app.js"
+    ],
+    "cache": [
+      "SCRIPTS::cache"
     ],
     "chatroom-post": [
       "SCRIPTS::chatroom-post.js"
@@ -2852,6 +2887,9 @@
     ],
     "ai-system-doc": [
       "DOCS::ai-system-doc.md"
+    ],
+    "css": [
+      "DOCS::css"
     ],
     "daily-reports": [
       "DOCS::daily-reports"

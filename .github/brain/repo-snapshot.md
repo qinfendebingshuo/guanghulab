@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-25 15:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-25 17:32 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 98 个 GitHub Actions |
-| 脚本 | 82 个执行脚本 |
+| 工作流 | 100 个 GitHub Actions |
+| 脚本 | 83 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-25 15:37 CST |
+| 快照生成时间 | 2026-03-25 17:32 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 98 项
+**路径**: `.github/workflows` · **数量**: 100 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 82 项
+**路径**: `scripts` · **数量**: 83 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -75,7 +75,7 @@
 **关键词**: syslog · inbox · log · 系统日志
 
 ### 📄 文档与前端（DOCS）
-**路径**: `docs` · **数量**: 15 项
+**路径**: `docs` · **数量**: 17 项
 **描述**: 铸渊助手聊天界面 · GitHub Pages 部署
 **关键词**: docs · html · chat · pages · 文档 · 聊天室
 
@@ -108,6 +108,7 @@
 | `check-token-health.yml` | 🛡️ Token 健康检查（每日安全网） | schedule(15 4 * * *), manual |
 | `daily-maintenance.yml` | "🔧 铸渊 · Daily Maintenance Agent" | schedule(0 2 * * *), manual |
 | `daily-report.yml` | "📰 铸渊 · 光湖开发日报" | schedule(0 2 * * *), manual |
+| `deploy-backend.yml` | "🚀 部署后端中间层到阿里云" | push, manual |
 | `deploy-pages.yml` | 🌀 部署铸渊聊天室 (GitHub Pages) | push, manual |
 | `deploy-to-server.yml` | "🚀 铸渊 CD · 自动部署到 guanghulab.com" | push, manual |
 | `distribute-broadcasts.yml` | 铸渊 · 广播分发 | push, manual |
@@ -163,6 +164,7 @@
 | `sync-griddb-to-drive.yml` | 🪞 Grid-DB → Google Drive 镜像同步 | push, schedule(*/15 * * * *), manual |
 | `sync-griddb-to-notion.yml` | 📤 Grid-DB → Notion 增量回传 | push |
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
+| `sync-notion-cache.yml` | "📡 同步 Notion 数据到缓存" | schedule(0 */6 * * *), manual |
 | `sync-notion-profiles.yml` | "📡 同步 Notion 开发者画像" | schedule(0 */6 * * *), manual |
 | `sync-notion-to-griddb.yml` | 🧠 Notion → Grid-DB 记忆同步 | schedule(0 */4 * * *), manual |
 | `sync-persona-studio.yml` | 🔄 铸渊跨仓库同步 · persona-studio | push, manual |
@@ -200,6 +202,7 @@
 - `scripts/brain-bridge-sync.js`
 - `scripts/bridge`
 - `scripts/bridge-app.js`
+- `scripts/cache`
 - `scripts/chatroom-post.js`
 - `scripts/commander-dashboard.js`
 - `scripts/contract-check.js`
@@ -375,9 +378,9 @@
 
 ## 🕐 最近动态（memory.json 最新3条）
 
+- `2026-03-25T09:01:18.924Z` · daily_check — passed
 - `2026-03-24T14:52:45.046Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 - `2026-03-24T09:02:12.139Z` · daily_check — passed
-- `2026-03-23T14:50:42.420Z` · daily_agent_inspection — 铸渊巡检Agent · ✅4 ⚠️2 ❌0 · 1个问题
 
 ---
 
