@@ -1,6 +1,6 @@
 # HoloLake Era 操作系统部署模块
 
-> 📋 **自动生成文档** · 铸渊（ZhùYuān）维护 · 最后更新：2026-03-18 02:55 UTC
+> 📋 **自动生成文档** · 铸渊（ZhùYuān）维护 · 最后更新：2026-03-25 03:56 UTC
 > 
 > 本文档由 GitHub Actions 自动触发生成，每当合作者上传/更新模块时自动刷新。
 > 按合作者编号（DEV-XXX）整理所有已上传模块。
@@ -68,6 +68,7 @@ backend-integration/
 ```
 m01-login/
   README.md
+  index.html
 ```
 
 ### 📦 M03 人格系统
@@ -137,6 +138,7 @@ m10-cloud/
   help.css
   help.html
   help.js
+  index.html
 ```
 
 ### 📦 M15 云盘系统
@@ -159,6 +161,7 @@ m15-cloud-drive/
   cloud-drive-style.css
   cloud-drive.html
   cloud-drive.js
+  index.html
 ```
 
 ---
@@ -371,7 +374,7 @@ m11-module/
 | 已上传模块数 | 12 |
 | 待上传模块数 | 0 |
 | 上传完成率 | 100% |
-| 文档更新时间 | 2026-03-18 02:55 UTC |
+| 文档更新时间 | 2026-03-25 03:56 UTC |
 
 ---
 
