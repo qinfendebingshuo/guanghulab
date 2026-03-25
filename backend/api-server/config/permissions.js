@@ -44,9 +44,10 @@ var PERMISSION_LEVELS = {
       'agent:read',
       'repo:read',
       'deploy:preview', 'deploy:production',
-      'maintenance:log'
+      'maintenance:log',
+      'approval:decide'
     ],
-    description: '可操作自己的模块，含正式站部署'
+    description: '可操作自己的模块，含正式站部署和授权决策'
   },
   3: {
     name: '管理者',
@@ -60,7 +61,9 @@ var PERMISSION_LEVELS = {
       'deploy:preview', 'deploy:production',
       'broadcast:create',
       'maintenance:log',
-      'permission:manage'
+      'permission:manage',
+      'approval:decide', 'approval:create',
+      'system:internal'
     ],
     description: '系统管理员，全部权限'
   }

@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "description": "系统自治运行规则 · Phase 9",
+  "dualLineArchitecture": {
+    "lineA": {
+      "name": "操作系统底座线",
+      "owner": "TCS-0002",
+      "scope": ["权限系统", "部署流水线", "神经网络升级", "执行保护层", "架构变更"],
+      "interactionModes": {
+        "instructionMode": {
+          "description": "冰朔说方向 → 霜砚拆指令 → 铸渊执行",
+          "trigger": ["签发指令", "写个指令", "下发指令"],
+          "suitableFor": "架构级、系统级变更"
+        },
+        "naturalLanguageMode": {
+          "description": "冰朔直接和系统说话，系统即时响应",
+          "trigger": "默认模式（直接说需求/问问题）",
+          "suitableFor": "日常操作、快速调整"
+        }
+      },
+      "priority": "最高 · 冰朔说话 = 最高优先级，无论哪种模式"
+    },
+    "lineB": {
+      "name": "具体功能线",
+      "owners": "开发者团队",
+      "scope": ["Persona Studio", "工单系统", "数据看板", "动态漫画", "各模块功能"],
+      "interactionMode": "日常交互（和铸渊说话 → 系统执行）"
+    }
+  },
+  "autonomyRules": {
+    "systemCanDo": [
+      "自主调整内部运行逻辑（不违反铁律）",
+      "自主升级能力模块（记录到审计日志）",
+      "自主优化瓶颈路径",
+      "定期生成系统健康报告",
+      "异常时主动向霜砚报告"
+    ],
+    "systemMustNot": [
+      "违反语言系统两条铁律",
+      "绕过天眼审核",
+      "绕过人类授权步骤",
+      "修改权限分层（权限变更只有冰朔能触发）"
+    ]
+  },
+  "deploymentFlow": {
+    "stages": [
+      {
+        "stage": 1,
+        "name": "部署到预览站",
+        "target": "GitHub Pages (qinfendebingshuo.github.io/guanghulab/docs/)",
+        "description": "真实可访问的预览环境，让人类确认执行结果"
+      },
+      {
+        "stage": 2,
+        "name": "天眼审核",
+        "checks": ["代码安全", "结构完整性", "功能回归"],
+        "passAction": "进入 Stage 3",
+        "failAction": "标记问题，开发者修复后重新提交"
+      },
+      {
+        "stage": 3,
+        "name": "人类终审授权",
+        "description": "授权人必须手动点击确认，不回应视为不通过",
+        "configFile": "approvers.json"
+      },
+      {
+        "stage": 4,
+        "name": "自动发布到正式站",
+        "target": "guanghulab.com",
+        "trigger": "deploy-to-server.yml",
+        "description": "授权即发布，无需人类再次操作"
+      }
+    ]
+  }
+}

@@ -1,0 +1,165 @@
+/**
+ * 部署授权样式 · Phase 8
+ * 版权：国作登字-2026-A-00037559
+ */
+
+/* 授权提醒徽章 */
+.approval-badge {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: #ff6b35;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 2px 12px rgba(255, 107, 53, 0.4);
+  animation: badge-pulse 2s infinite;
+}
+
+.approval-badge:hover {
+  background: #e65a2a;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* 授权容器 */
+.approval-container {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  z-index: 9998;
+  display: none;
+}
+
+/* 授权面板 */
+.approval-panel {
+  background: #1e1e2e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: 380px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.approval-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #333;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.approval-close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.approval-close-btn:hover {
+  color: #fff;
+}
+
+.approval-panel-body {
+  padding: 8px;
+}
+
+/* 授权条目 */
+.approval-item {
+  background: #252535;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.approval-item-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.approval-item-info strong {
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.approval-channel {
+  background: #3a3a5a;
+  color: #aaa;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.approval-time {
+  color: #666;
+  font-size: 12px;
+}
+
+/* 授权按钮 */
+.approval-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.approval-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.approval-btn.approve {
+  background: rgba(15, 123, 108, 0.2);
+  color: #0F7B6C;
+}
+
+.approval-btn.approve:hover {
+  background: rgba(15, 123, 108, 0.4);
+}
+
+.approval-btn.reject {
+  background: rgba(212, 76, 71, 0.2);
+  color: #D44C47;
+}
+
+.approval-btn.reject:hover {
+  background: rgba(212, 76, 71, 0.4);
+}
+
+/* 通知消息 */
+.approval-notification {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1e1e2e;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 10000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.5s;
+}
+
+.approval-notification.fade-out {
+  opacity: 0;
+}
