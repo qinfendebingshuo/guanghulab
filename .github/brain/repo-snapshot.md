@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-25 15:18 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-25 15:37 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 97 个 GitHub Actions |
+| 工作流 | 98 个 GitHub Actions |
 | 脚本 | 82 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-25 15:18 CST |
+| 快照生成时间 | 2026-03-25 15:37 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 97 项
+**路径**: `.github/workflows` · **数量**: 98 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -134,6 +134,7 @@
 | `persona-invoke.yml` | Persona Invoke Endpoint | manual |
 | `persona-thinking-window.yml` | "🧠 Persona Daily Thinking Window" | schedule(0 22 * * *), manual |
 | `pm2-server-diagnose.yml` | "🔧 铸渊 · PM2 服务诊断与健康检查" | manual |
+| `preview-deploy.yml` | "🧪 Preview Deploy · GitHub Pages" | push, manual |
 | `process-notion-orders.yml` | Process Notion Work Orders | push, manual |
 | `ps-on-build.yml` | "🌊 Persona Studio · 代码生成" | manual |
 | `ps-on-chat.yml` | "🌊 Persona Studio · 对话处理" | manual |

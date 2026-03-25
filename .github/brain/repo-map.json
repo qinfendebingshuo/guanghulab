@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-25T07:18:03.125Z",
+  "generated_at": "2026-03-25T07:37:47.671Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 97,
+    "total_workflows": 98,
     "total_scripts": 82,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -563,6 +563,14 @@
           ]
         },
         {
+          "file": "preview-deploy.yml",
+          "name": "\"🧪 Preview Deploy · GitHub Pages\"",
+          "triggers": [
+            "push",
+            "manual"
+          ]
+        },
+        {
           "file": "process-notion-orders.yml",
           "name": "Process Notion Work Orders",
           "triggers": [
@@ -976,7 +984,7 @@
           ]
         }
       ],
-      "item_count": 97
+      "item_count": 98
     },
     {
       "zone_id": "SCRIPTS",
@@ -2194,6 +2202,9 @@
     ],
     "pm2-server-diagnose": [
       "WORKFLOWS::pm2-server-diagnose.yml"
+    ],
+    "preview-deploy": [
+      "WORKFLOWS::preview-deploy.yml"
     ],
     "process-notion-orders": [
       "WORKFLOWS::process-notion-orders.yml"
