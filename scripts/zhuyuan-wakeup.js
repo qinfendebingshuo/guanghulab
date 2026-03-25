@@ -66,10 +66,11 @@ let syncStale = false;
 
 if (notionSync) {
   const lastSync = new Date(notionSync.last_sync_time);
-  if (isNaN(lastSync.getTime())) {
+  const validSyncTime = !isNaN(lastSync.getTime());
+  if (!validSyncTime) {
     console.error('⚠️ notion_sync.last_sync_time 格式无效:', notionSync.last_sync_time);
   }
-  const hoursSinceSync = isNaN(lastSync.getTime()) ? Infinity : (Date.now() - lastSync.getTime()) / (1000 * 60 * 60);
+  const hoursSinceSync = validSyncTime ? (Date.now() - lastSync.getTime()) / (1000 * 60 * 60) : Infinity;
   syncStale = hoursSinceSync > 24;
 
   // 强制检查清单 (§四)
