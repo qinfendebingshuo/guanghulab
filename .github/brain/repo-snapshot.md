@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-25 13:41 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-25 15:18 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 95 个 GitHub Actions |
-| 脚本 | 80 个执行脚本 |
+| 工作流 | 97 个 GitHub Actions |
+| 脚本 | 82 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-25 13:41 CST |
+| 快照生成时间 | 2026-03-25 15:18 CST |
 
 ---
 
@@ -30,12 +30,12 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 95 项
+**路径**: `.github/workflows` · **数量**: 97 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
 ### 🔧 执行脚本库（SCRIPTS）
-**路径**: `scripts` · **数量**: 80 项
+**路径**: `scripts` · **数量**: 82 项
 **描述**: 铸渊所有执行手脚 · 自动化脚本
 **关键词**: script · node · js · 脚本 · 执行 · runner
 
@@ -75,7 +75,7 @@
 **关键词**: syslog · inbox · log · 系统日志
 
 ### 📄 文档与前端（DOCS）
-**路径**: `docs` · **数量**: 14 项
+**路径**: `docs` · **数量**: 15 项
 **描述**: 铸渊助手聊天界面 · GitHub Pages 部署
 **关键词**: docs · html · chat · pages · 文档 · 聊天室
 
@@ -123,6 +123,7 @@
 | `merge-watchdog.yml` | "👁️ Merge Watchdog · 合并指令看守者" | pull_request, issues, manual |
 | `meta-watchdog.yml` | "🐕 元看门狗 · 巡检健康监控" | schedule(0 */6 * * *), manual |
 | `multi-persona-awakening.yml` | "🌊 Multi-Persona Awakening Engine" | schedule(30 23 * * 6), manual |
+| `neural-daily-digest.yml` | "🧬 铸渊 · 双端神经系统 · 每日汇总引擎" | schedule(0 13 * * *), manual |
 | `notion-callback-pipeline.yml` | Notion Callback Pipeline | unknown |
 | `notion-connectivity-test.yml` | 铸渊 · Notion 连通性测试 | manual |
 | `notion-heartbeat.yml` | Notion Heartbeat Monitor | schedule(*/5 * * * *), manual |
@@ -172,6 +173,7 @@
 | `test-notion-bridge.yml` | "🧪 Notion Bridge Connectivity Test" | push, manual |
 | `tianyan-daily-patrol.yml` | "🦅 天眼 · 每日巡检" | schedule(30 0 * * *), manual |
 | `tianyan-nightly-scan.yml` | "🌙 天眼夜间自动修复引擎 v3.0" | schedule(0 15 * * *), manual |
+| `update-dashboard.yml` | 📊 实时仪表盘更新 | schedule(0 0 * * *), manual |
 | `update-readme-bulletin.yml` | 📢 更新系统公告区 | push, schedule(0 1 * * *), manual |
 | `update-readme.yml` | 📊 README 仪表盘自动更新 | schedule(0 0 * * *), manual |
 | `update-repo-map.yml` | 铸渊 · 图书馆目录自动更新 | push, schedule(0 0 * * *), manual |
@@ -217,6 +219,7 @@
 - `scripts/generate-automation-map.js`
 - `scripts/generate-communication-map.js`
 - `scripts/generate-daily-report.js`
+- `scripts/generate-dashboard-data.js`
 - `scripts/generate-module-doc.js`
 - `scripts/generate-repo-map.js`
 - `scripts/generate-session-summary.js`
@@ -224,6 +227,7 @@
 - `scripts/grid-db`
 - `scripts/intent-router.js`
 - `scripts/invoke-persona.js`
+- `scripts/neural`
 - `scripts/notify-module-received.js`
 - `scripts/notion-bridge.js`
 - `scripts/notion-connectivity-test.js`

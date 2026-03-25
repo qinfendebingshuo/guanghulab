@@ -1,14 +1,14 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-25T05:41:36.518Z",
+  "generated_at": "2026-03-25T07:18:03.125Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 95,
-    "total_scripts": 80,
+    "total_workflows": 97,
+    "total_scripts": 82,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
     "hli_implemented": 7,
@@ -480,6 +480,14 @@
           ]
         },
         {
+          "file": "neural-daily-digest.yml",
+          "name": "\"🧬 铸渊 · 双端神经系统 · 每日汇总引擎\"",
+          "triggers": [
+            "schedule(0 13 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "notion-callback-pipeline.yml",
           "name": "Notion Callback Pipeline",
           "triggers": [
@@ -854,6 +862,14 @@
           ]
         },
         {
+          "file": "update-dashboard.yml",
+          "name": "📊 实时仪表盘更新",
+          "triggers": [
+            "schedule(0 0 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "update-readme-bulletin.yml",
           "name": "📢 更新系统公告区",
           "triggers": [
@@ -960,7 +976,7 @@
           ]
         }
       ],
-      "item_count": 95
+      "item_count": 97
     },
     {
       "zone_id": "SCRIPTS",
@@ -1059,6 +1075,9 @@
           "file": "generate-daily-report.js"
         },
         {
+          "file": "generate-dashboard-data.js"
+        },
+        {
           "file": "generate-module-doc.js"
         },
         {
@@ -1078,6 +1097,9 @@
         },
         {
           "file": "invoke-persona.js"
+        },
+        {
+          "file": "neural"
         },
         {
           "file": "notify-module-received.js"
@@ -1218,7 +1240,7 @@
           "file": "zhuyuan-wakeup.js"
         }
       ],
-      "item_count": 80
+      "item_count": 82
     },
     {
       "zone_id": "SRC",
@@ -1615,6 +1637,9 @@
           "file": "index.html"
         },
         {
+          "file": "neural-bridge-protocol-v3.md"
+        },
+        {
           "file": "notion-bridge-map.md"
         },
         {
@@ -1627,7 +1652,7 @@
           "file": "使用指南.md"
         }
       ],
-      "item_count": 14
+      "item_count": 15
     },
     {
       "zone_id": "TESTS",
@@ -2134,6 +2159,9 @@
     "multi-persona-awakening": [
       "WORKFLOWS::multi-persona-awakening.yml"
     ],
+    "neural-daily-digest": [
+      "WORKFLOWS::neural-daily-digest.yml"
+    ],
     "notion-callback-pipeline": [
       "WORKFLOWS::notion-callback-pipeline.yml"
     ],
@@ -2292,6 +2320,9 @@
     "tianyan-nightly-scan": [
       "WORKFLOWS::tianyan-nightly-scan.yml"
     ],
+    "update-dashboard": [
+      "WORKFLOWS::update-dashboard.yml"
+    ],
     "update-readme-bulletin": [
       "WORKFLOWS::update-readme-bulletin.yml",
       "SCRIPTS::update-readme-bulletin.js"
@@ -2423,6 +2454,9 @@
     "generate-daily-report": [
       "SCRIPTS::generate-daily-report.js"
     ],
+    "generate-dashboard-data": [
+      "SCRIPTS::generate-dashboard-data.js"
+    ],
     "generate-repo-map": [
       "SCRIPTS::generate-repo-map.js"
     ],
@@ -2440,6 +2474,9 @@
     ],
     "invoke-persona": [
       "SCRIPTS::invoke-persona.js"
+    ],
+    "neural": [
+      "SCRIPTS::neural"
     ],
     "notify-module-received": [
       "SCRIPTS::notify-module-received.js"
@@ -2816,6 +2853,9 @@
     ],
     "execution-status": [
       "DOCS::execution-status.md"
+    ],
+    "neural-bridge-protocol-v3": [
+      "DOCS::neural-bridge-protocol-v3.md"
     ],
     "notion-bridge-map": [
       "DOCS::notion-bridge-map.md"
