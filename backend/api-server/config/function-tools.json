@@ -1,0 +1,97 @@
+{
+  "tools": [
+    {
+      "name": "query_tickets",
+      "description": "查询开发者的工单列表。开发者说'我的工单'、'还有几个工单没关'、'查一下Bug'时触发。",
+      "parameters": {
+        "status": { "type": "string", "enum": ["全部", "待处理", "进行中", "已完成"], "default": "全部" }
+      },
+      "api": "GET /api/tickets?devId={devId}&status={status}",
+      "permission": "ticket:read"
+    },
+    {
+      "name": "create_ticket",
+      "description": "创建新工单。开发者说'建个工单'、'提一个Bug'、'报告问题'时触发。",
+      "parameters": {
+        "title": { "type": "string", "required": true },
+        "description": { "type": "string" },
+        "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"], "default": "P2" },
+        "module": { "type": "string" }
+      },
+      "api": "POST /api/tickets/create",
+      "permission": "ticket:create"
+    },
+    {
+      "name": "submit_syslog",
+      "description": "提交系统日志。开发者说'提交日志'、'写SYSLOG'、'记录一下'时触发。",
+      "parameters": {
+        "content": { "type": "string", "required": true },
+        "type": { "type": "string", "enum": ["日常", "Bug修复", "功能完成", "部署", "紧急"], "default": "日常" }
+      },
+      "api": "POST /api/syslog/submit",
+      "permission": "syslog:submit"
+    },
+    {
+      "name": "query_my_status",
+      "description": "查询开发者自己的状态。开发者说'我的进度'、'我现在什么状态'、'我还有什么没做'时触发。",
+      "parameters": {},
+      "api": "GET /api/dev/{devId}",
+      "permission": "dev:read_self"
+    },
+    {
+      "name": "deploy_to_preview",
+      "description": "部署模块到预览站。开发者说'部署一下'、'上预览'、'推到测试站'时触发。",
+      "parameters": {
+        "module": { "type": "string", "required": true }
+      },
+      "api": "POST /api/deploy/preview",
+      "permission": "deploy:preview"
+    },
+    {
+      "name": "deploy_to_production",
+      "description": "部署模块到正式站。开发者说'上线'、'部署到正式站'、'发布到guanghulab.com'时触发。需要二次确认。",
+      "parameters": {
+        "module": { "type": "string", "required": true },
+        "confirmToken": { "type": "string" }
+      },
+      "api": "POST /api/deploy/production",
+      "permission": "deploy:production",
+      "dangerous": true
+    },
+    {
+      "name": "query_agents",
+      "description": "查询Agent注册表。开发者说'有哪些Agent'、'查一下Agent'、'系统里有谁'时触发。",
+      "parameters": {},
+      "api": "GET /api/agents",
+      "permission": "agent:read"
+    },
+    {
+      "name": "query_recent_syslogs",
+      "description": "查最近的系统日志。开发者说'最近有什么日志'、'系统最近怎么样'时触发。",
+      "parameters": {
+        "limit": { "type": "number", "default": 10 }
+      },
+      "api": "GET /api/syslogs?limit={limit}",
+      "permission": "syslog:read"
+    },
+    {
+      "name": "create_broadcast",
+      "description": "创建广播。开发者说'发个广播'、'通知一下'时触发。仅限有广播权限的开发者。",
+      "parameters": {
+        "title": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true },
+        "target": { "type": "string", "description": "目标开发者编号，如 DEV-001，或 ALL" }
+      },
+      "api": "POST /api/broadcasts/create",
+      "permission": "broadcast:create",
+      "dangerous": true
+    },
+    {
+      "name": "query_repo_status",
+      "description": "查询仓库状态。开发者说'仓库怎么样'、'最近有什么PR'、'CI状态'时触发。",
+      "parameters": {},
+      "api": "GET /api/repo/status",
+      "permission": "repo:read"
+    }
+  ]
+}

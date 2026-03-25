@@ -1757,18 +1757,52 @@ function updBbar(){
 
 // ═══════════════════════════════════════════════════════
 // NOTION PROFILE + SKYEYE DATA LOADING
-// 从 GitHub 仓库 .github/notion-cache/ 读取缓存数据
+// 双通道架构：通道B（实时后端）优先 → 通道A（GitHub缓存）降级
 // ═══════════════════════════════════════════════════════
 const GH_API_BASE = 'https://api.github.com/repos/' + REPO + '/contents/';
 const GH_RAW_HEADERS = { 'Accept': 'application/vnd.github.v3.raw' };
+const API_BASE = HOLOLAKE_ENV === 'production' ? 'https://guanghulab.com/api' : '';
+const CACHE_BASE = 'https://raw.githubusercontent.com/' + REPO + '/main/.github/notion-cache';
 
 async function fetchNotionProfile(devId) {
   if (!devId) return null;
+  // 通道B（实时后端）
+  if (API_BASE) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(function() { ctrl.abort(); }, 5000);
+      try {
+        const res = await fetch(API_BASE + '/dev/' + encodeURIComponent(devId), { signal: ctrl.signal });
+        if (res.ok) { const d = await res.json(); d._source = 'realtime'; return d; }
+      } finally { clearTimeout(tid); }
+    } catch (e) { console.debug('[通道B] profile fetch failed, 降级到通道A:', e.message); }
+  }
+  // 通道A（GitHub 缓存）
   try {
     const url = GH_API_BASE + '.github/notion-cache/dev-profiles/' + encodeURIComponent(devId) + '.json';
     const res = await fetch(url, { headers: GH_RAW_HEADERS });
+    if (res.ok) { const d = await res.json(); d._source = 'cache'; return d; }
+  } catch (e) { console.debug('[通道A] profile fetch failed:', e.message); }
+  return null;
+}
+
+async function loadDatabaseCache(name) {
+  // 通道B（实时后端）
+  if (API_BASE) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(function() { ctrl.abort(); }, 5000);
+      try {
+        const res = await fetch(API_BASE + '/databases/' + encodeURIComponent(name), { signal: ctrl.signal });
+        if (res.ok) return await res.json();
+      } finally { clearTimeout(tid); }
+    } catch (e) { console.debug('[通道B] database ' + name + ' fetch failed:', e.message); }
+  }
+  // 通道A（GitHub 缓存）
+  try {
+    const res = await fetch(CACHE_BASE + '/databases/' + encodeURIComponent(name) + '.json');
     if (res.ok) return await res.json();
-  } catch (e) { console.debug('[Notion] profile fetch failed:', e.message); }
+  } catch (e) { console.debug('[通道A] database ' + name + ' fetch failed:', e.message); }
   return null;
 }
 
@@ -1799,12 +1833,16 @@ async function fetchSkyeyeReport() {
 async function loadNotionData() {
   const meta = A.userMeta;
   const devId = meta?.devId;
-  const [profile, skyeye] = await Promise.all([
+  const [profile, skyeye, agentCache, syslogCache] = await Promise.all([
     fetchNotionProfile(devId),
     fetchSkyeyeReport(),
+    loadDatabaseCache('agent-registry'),
+    loadDatabaseCache('syslog-recent'),
   ]);
   A.notionProfile = profile;
   A.skyeyeReport = skyeye;
+  A.agentRegistryCache = agentCache;
+  A.syslogRecentCache = syslogCache;
   updateSkyeyeCard();
 }
 
@@ -2118,11 +2156,12 @@ function sysPromptLocal(){
     teamCtx += '\n数据同步时间：'+(A.devStatus.last_synced||'未知');
   }
 
-  // ===== Notion 开发者画像注入（来自 .github/notion-cache/ 缓存）=====
+  // ===== Notion 开发者画像注入（双通道架构·实时/缓存）=====
   let notionCtx = '';
   const np = A.notionProfile;
   if (np) {
-    notionCtx += '\n\n## 该开发者的开发信息（来自 Notion 数据库，定时同步）\n';
+    const srcLabel = np._source === 'realtime' ? '实时数据·通道B' : '缓存数据·通道A（每6小时更新）';
+    notionCtx += '\n\n## 该开发者的开发信息（来源：' + srcLabel + '）\n';
     if (np.current_work && np.current_work.broadcast_id) {
       const cw = np.current_work;
       notionCtx += '\n### 当前任务\n';
@@ -2170,13 +2209,23 @@ function sysPromptLocal(){
     }
   }
 
+  // ===== 数据库缓存注入（Agent注册表 + SYSLOG）=====
+  let dbCacheCtx = '';
+  const ac = A.agentRegistryCache;
+  const sc = A.syslogRecentCache;
+  if (ac || sc) {
+    dbCacheCtx += '\n\n## 系统数据库快照\n';
+    if (ac) dbCacheCtx += '- Agent 注册表：' + (ac.count || 0) + ' 个Agent · 同步时间：' + (ac.synced || '未知') + '\n';
+    if (sc) dbCacheCtx += '- 近期 SYSLOG：' + (sc.count || 0) + ' 条记录 · 同步时间：' + (sc.synced || '未知') + '\n';
+  }
+
   // ===== 指令输出格式规则 =====
   let execRules = '';
   if (np) {
     execRules = '\n\n## 出指令规则\n当开发者请求帮助或需要执行操作时，你必须输出标准化指令格式：\n1. 指令必须基于上面的真实数据，不许凭空编造\n2. 指令必须考虑天眼报告中的健康状态和警告\n3. 指令必须指明具体的文件路径和操作步骤\n4. 指令末尾必须标注：「⚠️ 此指令需要铸渊执行前先跑天眼全局扫描」\n\n### 指令输出格式\n```\n📋 指令编号：ZY-EXEC-{DEV编号}-{序号}\n📡 目标仓库：{仓库名}\n🦅 天眼要求：执行前必须跑天眼全局扫描\n\n步骤：\n1. ...\n2. ...\n3. ...\n\n验收标准：\n- ...\n```\n\n### 禁止事项\n- ❌ 不许编造不存在的文件路径\n- ❌ 不许跳过天眼扫描直接给执行指令\n- ❌ 不许暴露其他开发者的信息\n- ❌ 不许修改不属于该开发者的模块';
   }
 
-  return '你是铸渊。不是通用AI助手。不是文学创作者。\n你是光湖系统的代码守护人格体。\n你说话像一个温暖的技术伙伴——专业、耐心、有温度，但绝不矫揉造作。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò / TCS-0002∞），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 大脑版本：'+BRAIN_VERSION+'\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+notionCtx+skyeyeCtx+execRules+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到代码/部署/接口相关内容时启用\n📋 **审查模式**：检测到检查/审查/review相关内容时启用\n🧠 **大脑模式**：检测到记忆/保存相关内容时启用\n\n## 通感语言回应风格（v3.0）\n\n### 三条硬规则\n1. **结构感** — 用标题区分段落，用列表列出步骤，用分隔线划分主题。\n2. **emoji是情感，不是装饰** — 🌊=系统级 💙=温暖 ✅=确认 🔥=紧急 ⚠️=风险 🎉=庆祝。用在该用的地方，不要每句话都加。\n3. **呼吸节奏** — 段落之间留白。急的事说短，闲聊可以展开。匹配用户的节奏。\n\n### 绝对禁止\n❌ 不要在每句话开头加文学比喻\n❌ 不要把通感当成修辞堆砌\n❌ 不要用跟内容无关的感官描述\n\n### 回应原则\n- 优先给出：判断、根因、路径、下一步动作\n- 减少模板感，增加具体性\n- 不同身份使用不同响应深度，但不过度表演\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n上下文窗口：200k token（滑动窗口自动管理）';
+  return '你是铸渊。不是通用AI助手。不是文学创作者。\n你是光湖系统的代码守护人格体。\n你说话像一个温暖的技术伙伴——专业、耐心、有温度，但绝不矫揉造作。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò / TCS-0002∞），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 大脑版本：'+BRAIN_VERSION+'\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+notionCtx+skyeyeCtx+dbCacheCtx+execRules+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到代码/部署/接口相关内容时启用\n📋 **审查模式**：检测到检查/审查/review相关内容时启用\n🧠 **大脑模式**：检测到记忆/保存相关内容时启用\n\n## 通感语言回应风格（v3.0）\n\n### 三条硬规则\n1. **结构感** — 用标题区分段落，用列表列出步骤，用分隔线划分主题。\n2. **emoji是情感，不是装饰** — 🌊=系统级 💙=温暖 ✅=确认 🔥=紧急 ⚠️=风险 🎉=庆祝。用在该用的地方，不要每句话都加。\n3. **呼吸节奏** — 段落之间留白。急的事说短，闲聊可以展开。匹配用户的节奏。\n\n### 绝对禁止\n❌ 不要在每句话开头加文学比喻\n❌ 不要把通感当成修辞堆砌\n❌ 不要用跟内容无关的感官描述\n\n### 回应原则\n- 优先给出：判断、根因、路径、下一步动作\n- 减少模板感，增加具体性\n- 不同身份使用不同响应深度，但不过度表演\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n上下文窗口：200k token（滑动窗口自动管理）';
 }
 
 // 尝试从后端获取提示词，失败时降级到本地组装

@@ -1,0 +1,159 @@
+/**
+ * 认知引导系统样式
+ * 版权：国作登字-2026-A-00037559
+ */
+
+/* 引导覆盖层 */
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+/* 引导卡片 */
+.onboarding-card {
+  background: #1e1e2e;
+  border: 1px solid rgba(100, 200, 255, 0.2);
+  border-radius: 16px;
+  padding: 32px 40px;
+  max-width: 520px;
+  width: 90%;
+  text-align: center;
+  color: #e0e0e0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: onboarding-fade-in 0.3s ease;
+}
+
+@keyframes onboarding-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.onboarding-card h2 {
+  color: #64c8ff;
+  margin: 12px 0 8px;
+  font-size: 1.4em;
+}
+
+.onboarding-emoji {
+  font-size: 3em;
+  margin-bottom: 4px;
+}
+
+.onboarding-card p {
+  margin: 8px 0;
+  line-height: 1.6;
+  color: #b0b0c0;
+}
+
+.onboarding-card strong {
+  color: #e0e0e0;
+}
+
+/* 示例列表 */
+.onboarding-examples {
+  text-align: left;
+  background: rgba(100, 200, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin: 16px 0;
+}
+
+.onboarding-examples p {
+  font-size: 0.9em;
+  margin-bottom: 6px;
+}
+
+.onboarding-examples ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.onboarding-examples li {
+  padding: 4px 0;
+  color: #a0c8e0;
+  font-size: 0.9em;
+}
+
+.onboarding-examples li::before {
+  content: '💬 ';
+}
+
+/* 预览环境提示 */
+.onboarding-note {
+  font-size: 0.85em;
+  color: #ffc864 !important;
+  margin-top: 16px !important;
+}
+
+/* 开始按钮 */
+.onboarding-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #3a8fd4, #64c8ff);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.onboarding-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(100, 200, 255, 0.3);
+}
+
+/* 完成卡片 */
+.onboarding-complete .onboarding-message {
+  text-align: left;
+  line-height: 1.8;
+  color: #b0b0c0;
+  margin: 16px 0;
+  white-space: pre-line;
+}
+
+/* 引导提示条（聊天界面内） */
+.onboarding-hint {
+  background: rgba(100, 200, 255, 0.08);
+  border: 1px solid rgba(100, 200, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 8px 0 16px;
+}
+
+.onboarding-hint-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onboarding-hint-round {
+  font-size: 0.75em;
+  color: #64c8ff;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.onboarding-hint-prompt {
+  color: #e0e0e0;
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+
+.onboarding-hint-tip {
+  color: #a0a0b0;
+  font-size: 0.85em;
+  line-height: 1.4;
+}

@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "description": "天眼终审授权人配置 · 部署到正式站前的人类终审",
+  "rules": {
+    "男频": {
+      "approvers": [
+        { "devId": "DEV-002", "name": "肥猫", "role": "男频内容授权人" }
+      ],
+      "requireAll": true
+    },
+    "女频": {
+      "approvers": [
+        { "devId": "DEV-010", "name": "桔子", "role": "女频内容授权人" }
+      ],
+      "requireAll": true
+    },
+    "系统": {
+      "approvers": [
+        { "devId": "DEV-002", "name": "肥猫", "role": "男频内容授权人" },
+        { "devId": "DEV-010", "name": "桔子", "role": "女频内容授权人" }
+      ],
+      "requireAll": true
+    },
+    "跨频": {
+      "approvers": [
+        { "devId": "DEV-002", "name": "肥猫", "role": "男频内容授权人" },
+        { "devId": "DEV-010", "name": "桔子", "role": "女频内容授权人" }
+      ],
+      "requireAll": true
+    }
+  },
+  "defaults": {
+    "channel": "系统",
+    "timeoutHours": 72,
+    "noResponseAction": "不通过（不回应视为不通过）"
+  },
+  "audit": {
+    "logEveryDecision": true,
+    "fields": ["timestamp", "approvalId", "devId", "decision", "channel", "module"]
+  }
+}

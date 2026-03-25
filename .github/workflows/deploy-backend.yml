@@ -1,0 +1,71 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: "🚀 部署后端中间层到阿里云"
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/api-server/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: "🚀 部署 guanghu-api 到阿里云 ECS"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "📥 检出仓库"
+        uses: actions/checkout@v4
+
+      - name: "🌊 本体论锚定"
+        run: |
+          echo "═══ 本体论锚定 ═══"
+          echo "执行主体：AG-ZY-01 铸渊"
+          echo "版权锚点：国作登字-2026-A-00037559"
+          echo "通道：B · 后端中间层部署"
+          echo "═══ 锚定完成 ═══"
+
+      - name: "🚀 部署到阿里云"
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}/backend/api-server/
+            git pull origin main
+            npm install --production
+            pm2 restart guanghu-api || pm2 start ecosystem.config.js
+            echo "✅ guanghu-api 部署完成 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
+
+      # ━━━ 🧬 双端神经系统·自报告 ━━━
+      - name: "🧬 写入神经自报告"
+        if: always()
+        run: |
+          WORKFLOW_ID="deploy-backend"
+          REPORT_DIR="data/neural-reports/deploy-backend"
+          TIMESTAMP=$(TZ=Asia/Shanghai date +%Y-%m-%d-%H%M)
+          STATUS="${{ job.status }}"
+
+          mkdir -p "$REPORT_DIR"
+
+          cat > "${REPORT_DIR}/${WORKFLOW_ID}-${TIMESTAMP}.json" << EOF
+          {
+            "workflow_id": "${WORKFLOW_ID}",
+            "run_id": "${{ github.run_id }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "status": "${STATUS}",
+            "brain": "SY-01",
+            "event": "${{ github.event_name }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}"
+          }
+          EOF
+
+          echo "📋 自报告已生成"

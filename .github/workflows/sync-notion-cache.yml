@@ -1,0 +1,106 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: "📡 同步 Notion 数据到缓存"
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'      # 每6小时同步
+  workflow_dispatch:             # 手动触发
+  repository_dispatch:
+    types: [notion-cache-sync]   # 铸渊/霜砚可远程触发
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: "📡 Notion 全量缓存同步"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "📥 检出仓库"
+        uses: actions/checkout@v4
+
+      - name: "🔧 安装 Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🌊 本体论锚定"
+        run: |
+          echo "═══ 本体论锚定 ═══"
+          echo "执行主体：AG-ZY-01 铸渊"
+          echo "版权锚点：国作登字-2026-A-00037559"
+          echo "通道：A · GitHub 缓存层"
+          echo "═══ 锚定完成 ═══"
+
+      - name: "📡 同步 Notion 数据"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_CONTROL_PANEL_DB_ID: ${{ secrets.NOTION_CONTROL_PANEL_DB_ID }}
+          NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
+          NOTION_AGENT_REGISTRY_DB_ID: ${{ secrets.NOTION_AGENT_REGISTRY_DB_ID }}
+          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          NOTION_MAINTENANCE_DB_ID: ${{ secrets.NOTION_MAINTENANCE_DB_ID }}
+          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+        run: node scripts/cache/sync-notion-cache.js
+
+      - name: "📝 提交缓存文件"
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/notion-cache/
+          if git diff --cached --quiet; then
+            echo "📡 Notion 缓存无变更，跳过提交"
+            exit 0
+          fi
+          git commit -m "📡 Notion缓存同步 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
+          git push origin main
+
+      # ━━━ 🧬 双端神经系统·自报告 ━━━
+      - name: "🧬 写入神经自报告"
+        if: always()
+        run: |
+          WORKFLOW_ID="notion-cache-sync"
+          REPORT_DIR="data/neural-reports/notion-cache-sync"
+          TIMESTAMP=$(TZ=Asia/Shanghai date +%Y-%m-%d-%H%M)
+          STATUS="${{ job.status }}"
+
+          mkdir -p "$REPORT_DIR"
+
+          cat > "${REPORT_DIR}/${WORKFLOW_ID}-${TIMESTAMP}.json" << EOF
+          {
+            "workflow_id": "${WORKFLOW_ID}",
+            "run_id": "${{ github.run_id }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "status": "${STATUS}",
+            "brain": "SY-01",
+            "event": "${{ github.event_name }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}"
+          }
+          EOF
+
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add "$REPORT_DIR/"
+          git diff --cached --quiet || \
+            git commit -m "🧬 ${WORKFLOW_ID} 自报告 · ${TIMESTAMP} [skip ci]"
+          git push || echo "⚠️ 自报告push失败（不阻断主流程）"
+
+      # ━━━ 📡 指令回执·自动同步 ━━━
+      - name: "📡 同步回执到 Notion"
+        if: always()
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+        run: |
+          node scripts/neural/write-receipt-to-notion.js \
+            --instruction-id "ZY-DUALCHANNEL-2026-0325-001" \
+            --status "${{ job.status }}" \
+            --workflow "notion-cache-sync" \
+            --summary "Notion 全量缓存同步" \
+            --related-agent "SY-01"
