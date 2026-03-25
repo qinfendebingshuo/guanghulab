@@ -1,0 +1,136 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+#
+# 天眼 · 合并膜 (SkyEye Merge Membrane)
+#
+# 架构背景：
+#   所有开发者共用 qinfendebingshuo 账号（企业权限单人仓库）
+#   代理（Copilot Agent）以 copilot/* 分支开发（沙箱隔离）
+#   合并到 main 时 → 天眼合并膜自动启动，全系统审核
+#   审核不通过 → 物理层拒绝合并（workflow 失败 = merge 按钮禁用）
+#
+# 沙箱隔离原则：
+#   开发者自由开发（不在天眼包裹内）→ 天眼不干预
+#   触及天眼包裹区域（.github/, scripts/, skyeye/, core/, docs/ 等）→ 必须通过审核
+#   天眼核心配置（security-protocol, gate-guard-config 等）→ 仅限主权者修改
+#
+# 风险检测维度：
+#   R1 · 关键文件覆盖检测
+#   R2 · 天眼包裹区域入侵检测
+#   R3 · 构建产物误入检测
+#   R4 · 天眼核心配置篡改检测
+#   R5 · 大规模删除检测
+#   R6 · 工作流篡改检测
+#
+# 物理层阻塞：
+#   此工作流必须配置为 Required Status Check
+#   Settings → Branches → Branch protection rules → main → Require status checks
+#   添加: "🛡️ 天眼合并膜" 为必需检查
+#
+name: 天眼 · 合并膜
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  merge-membrane:
+    name: 🛡️ 天眼合并膜
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Collect PR metadata
+        id: collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "📂 收集PR变更文件列表..."
+          gh pr diff ${{ github.event.pull_request.number }} --name-only > /tmp/pr_files.txt
+          FILE_COUNT=$(wc -l < /tmp/pr_files.txt)
+          echo "   文件数: $FILE_COUNT"
+          
+          echo ""
+          echo "📊 收集变更统计..."
+          git diff --numstat origin/${{ github.base_ref }}...HEAD > /tmp/pr_stats.txt 2>/dev/null || echo "" > /tmp/pr_stats.txt
+          
+          echo ""
+          echo "📝 收集Commit元数据..."
+          git log origin/${{ github.base_ref }}..HEAD --format="%B---COMMIT_SEP---" > /tmp/pr_commits.txt 2>/dev/null || echo "" > /tmp/pr_commits.txt
+          
+          echo ""
+          echo "📂 PR变更文件:"
+          cat /tmp/pr_files.txt
+          
+          echo ""
+          echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
+
+      - name: 🛡️ 天眼合并膜审核
+        id: membrane
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_FILES: /tmp/pr_files.txt
+          PR_STATS: /tmp/pr_stats.txt
+          PR_COMMITS: /tmp/pr_commits.txt
+        run: node scripts/skyeye/pr-risk-check.js
+
+      - name: 📝 写入天眼审核报告
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const decision = '${{ steps.membrane.outcome }}';
+            const branch = '${{ github.head_ref }}';
+            const author = '${{ github.event.pull_request.user.login }}';
+            const prTitle = context.payload.pull_request.title;
+            const isAgentBranch = branch.startsWith('copilot/') || branch.startsWith('agent/') || branch.startsWith('bot/');
+            
+            let body = '## 🛡️ 天眼 · 合并膜审核报告\n\n';
+            body += `| 项目 | 值 |\n`;
+            body += `|------|-----|\n`;
+            body += `| **PR作者** | ${author} |\n`;
+            body += `| **分支** | \`${branch}\` |\n`;
+            body += `| **代理PR** | ${isAgentBranch ? '是 🤖' : '否 👤'} |\n`;
+            body += `| **检查时间** | ${new Date().toISOString()} |\n\n`;
+            
+            if (decision === 'success') {
+              body += '### ✅ 天眼全系统审核: 通过\n\n';
+              body += '此 PR 已通过天眼全局仓库架构审核，符合系统结构要求，可以合并。\n';
+            } else {
+              body += '### ❌ 天眼合并膜: 物理切断合并通道\n\n';
+              body += '此 PR 不符合仓库整体系统结构要求。\n\n';
+              body += '**处理方式:**\n';
+              body += '1. 🔍 检查上方 Actions 日志中标记的风险项\n';
+              body += '2. 📦 修复不符合仓库结构的变更\n';
+              body += '3. 🔄 推送修复后天眼将自动重新审核\n\n';
+              body += '> ⛔ 天眼合并膜已物理切断合并通道。\n';
+            }
+            
+            body += '\n---\n';
+            body += '> 天眼 · 合并膜 (SkyEye Merge Membrane) · AG-ZY-095\n';
+            body += '> 「地球是圆的，没有缺口 — 语言系统包裹所有入口」';
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

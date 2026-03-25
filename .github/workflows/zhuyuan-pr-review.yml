@@ -27,7 +27,6 @@ jobs:
 
       - name: Run contract check
         id: contract
-        continue-on-error: true
         run: node scripts/contract-check.js 2>&1 | tee /tmp/contract-result.txt
 
       - name: Run route alignment

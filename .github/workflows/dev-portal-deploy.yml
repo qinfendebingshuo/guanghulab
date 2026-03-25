@@ -1,0 +1,131 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+#
+# 开发者门户部署工作流
+# Developer Portal Channel Deploy
+#
+# 触发条件: PR 合并到 main 且修改了 docs/dev-portal/channels/
+# 作用: 更新门户 manifest.json，同步开发者动态到 Notion
+#
+name: 🌐 开发者门户 · 频道部署
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/dev-portal/channels/**'
+
+permissions:
+  contents: write
+
+jobs:
+  update-manifest:
+    name: 📋 更新门户清单
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 检测频道变更
+        id: detect
+        run: |
+          # Find which channels were updated
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- docs/dev-portal/channels/ || true)
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "无频道文件变更"
+            exit 0
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+          # Extract unique DEV-IDs
+          DEV_IDS=$(echo "$CHANGED" | grep -oP 'DEV-\d{3}' | sort -u | tr '\n' ',' | sed 's/,$//')
+          echo "dev_ids=$DEV_IDS" >> "$GITHUB_OUTPUT"
+          echo "变更频道: $DEV_IDS"
+
+          # Count files per channel
+          echo "$CHANGED" | while read f; do echo "  · $f"; done
+
+      - name: 📋 更新 manifest.json
+        if: steps.detect.outputs.skip != 'true'
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+
+          const manifestPath = 'docs/dev-portal/manifest.json';
+          const configPath = '.github/persona-brain/gate-guard-config.json';
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+          const devIds = '${{ steps.detect.outputs.dev_ids }}'.split(',').filter(Boolean);
+          const now = new Date().toISOString();
+
+          for (const devId of devIds) {
+            if (!manifest.channels[devId]) continue;
+
+            // Update channel info
+            const ch = manifest.channels[devId];
+            ch.status = 'active';
+            ch.last_deploy = now;
+            ch.deploy_count = (ch.deploy_count || 0) + 1;
+
+            // Scan channel directory for modules
+            const channelDir = path.join('docs/dev-portal/channels', devId);
+            if (fs.existsSync(channelDir)) {
+              const items = fs.readdirSync(channelDir).filter(f => f !== 'README.md' && f !== '.gitkeep');
+              ch.modules = items;
+              ch.last_deploy_summary = items.length + ' 个文件已部署';
+            }
+
+            // Add activity entry
+            const devConfig = config.developer_permissions && config.developer_permissions[devId];
+            manifest.recent_activity.unshift({
+              time: now,
+              dev_id: devId,
+              dev_name: devConfig ? devConfig.name : devId,
+              persona_id: devConfig ? devConfig.persona_id : null,
+              summary: '部署更新到 ' + devId + ' 频道'
+            });
+          }
+
+          // Keep only last 50 activity entries
+          manifest.recent_activity = manifest.recent_activity.slice(0, 50);
+          manifest.updated_at = now;
+          manifest.updated_by = 'dev-portal-deploy';
+
+          fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+          console.log('✅ manifest.json 已更新');
+          "
+
+      - name: 📡 同步开发者动态到 Notion
+        if: steps.detect.outputs.skip != 'true' && env.NOTION_API_KEY != ''
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          DEV_PROFILE_DB_ID: ${{ secrets.DEV_PROFILE_DB_ID }}
+        run: |
+          node scripts/skyeye/dev-portal-notion-sync.js \
+            --dev-ids "${{ steps.detect.outputs.dev_ids }}" \
+            --action "channel_deploy" \
+            --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          || echo "⚠️ Notion同步失败（非致命）"
+
+      - name: 💾 提交 manifest 更新
+        if: steps.detect.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/dev-portal/manifest.json
+          git diff --cached --quiet && echo "无变更" || git commit -m "📋 开发者门户: 更新频道清单 [${{ steps.detect.outputs.dev_ids }}]"
+          git push 2>&1 || echo "⚠️ manifest 推送失败（非致命）"

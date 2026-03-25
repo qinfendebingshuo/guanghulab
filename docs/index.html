@@ -1,14 +1,3210 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Writing Platform</title>
-    <script type="module" crossorigin src="/writing/assets/index-CUCvuvEi.js"></script>
-    <link rel="stylesheet" crossorigin href="/writing/assets/index--C4_NgnM.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<!DOCTYPE html>
+<!-- 铸渊助手 v6.0 · 大脑版本 v3.0 · 2026-03-10 · 壳-核分离架构 · 前端壳(UI/IO) + 后端脑(prompt/routing/memory/context) -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>铸渊助手 · HoloLake AI</title>
+<link rel="stylesheet" href="css/responsive.css">
+<script src="js/auth.js" defer></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c18;--s1:#0f1623;--s2:#141e2e;--s3:#1a2640;
+  --border:#1e3251;--accent:#4f8ef7;--adim:rgba(79,142,247,.15);
+  --a2:#7c6ef7;--ok:#34d399;--warn:#fbbf24;--err:#f87171;
+  --text:#e2e8f0;--dim:#64748b;--muted:#1e293b;
+  --mc:#4f8ef7;--mb:#fb923c;--mr:#a78bfa;--mn:#34d399;
+  --r:14px;--rs:8px;
+  --ls-w:260px;--rs-w:360px;
+  --content-max-width:900px;--chat-padding:20px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+
+/* ─── SETUP ─── */
+#setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:600px;box-shadow:0 25px 60px rgba(0,0,0,.5);margin:auto}
+.sc-logo{font-size:52px;text-align:center;margin-bottom:14px}
+.sc h1{font-size:22px;text-align:center;margin-bottom:6px}
+.sc .sub{color:var(--dim);text-align:center;font-size:13px;margin-bottom:22px}
+.sc-sec{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--ok);margin-bottom:20px;text-align:center}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.fg input,.fg select{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:16px;font-family:inherit;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:var(--accent)}
+.fg select option{background:var(--s2)}
+.fg small{display:block;color:var(--dim);font-size:11px;margin-top:5px}
+.sc-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:opacity .2s}
+.sc-btn:hover{opacity:.85}
+.sc-skip{text-align:center;font-size:12px;color:var(--dim);margin-top:12px}
+.sc-skip a{color:var(--accent);text-decoration:none;cursor:pointer}
+.login-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.login-tab{flex:1;padding:10px;text-align:center;background:var(--s2);color:var(--dim);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+.login-tab.active{background:var(--accent);color:#fff}
+.login-tab:hover:not(.active){background:var(--s3);color:var(--text)}
+.login-mode{display:none}
+.login-mode.active{display:block}
+#id-preview{display:none;text-align:center;margin-bottom:10px;padding:10px;background:var(--s3);border-radius:8px;font-size:14px;font-weight:600}
+
+/* ─── APP SHELL (three-column) ─── */
+#app{display:none;height:100vh;height:100dvh;height:var(--vh,100dvh);width:100%;overflow:hidden}
+#app.on{display:flex;flex-direction:column}
+
+/* ─── LEFT SIDEBAR ─── */
+#left-sidebar{width:var(--ls-w);flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:none;flex-direction:column;overflow:hidden;z-index:120}
+.ls-header{padding:16px;border-bottom:1px solid var(--border)}
+.ls-user{display:flex;align-items:center;gap:10px}
+.ls-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0}
+.ls-name{font-size:14px;font-weight:600}
+.ls-role{font-size:11px;color:var(--dim)}
+.ls-devid{font-size:10px;color:var(--accent);background:var(--adim);padding:1px 6px;border-radius:4px;display:inline-block;margin-top:2px}
+.ls-nav{padding:8px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.nav-tab{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--rs);background:transparent;border:none;color:var(--dim);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-align:left;font-family:inherit;width:100%}
+.nav-tab:hover{background:var(--s2);color:var(--text)}
+.nav-tab.active{background:var(--adim);color:var(--accent);font-weight:600}
+.ls-new-conv{margin:8px;padding:10px;border-radius:var(--rs);border:1px dashed var(--border);background:transparent;color:var(--dim);font-size:13px;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.ls-new-conv:hover{border-color:var(--accent);color:var(--accent);background:var(--adim)}
+.ls-conv-list{flex:1;overflow-y:auto;padding:4px 8px;-webkit-overflow-scrolling:touch}
+.ls-conv-list::-webkit-scrollbar{width:3px}
+.ls-conv-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.conv-item{padding:10px;border-radius:var(--rs);cursor:pointer;transition:all .2s;position:relative;margin-bottom:2px;border:1px solid transparent}
+.conv-item:hover{background:var(--s2);border-color:var(--border)}
+.conv-item.conv-active{background:var(--adim);border-color:var(--accent)}
+.conv-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:20px}
+.conv-time{font-size:10px;color:var(--dim);margin-top:2px}
+.conv-del{position:absolute;top:8px;right:6px;background:transparent;border:none;color:var(--dim);font-size:11px;cursor:pointer;padding:2px 4px;border-radius:4px;opacity:0;transition:all .2s}
+.conv-item:hover .conv-del{opacity:1}
+.conv-del:hover{color:var(--err);background:rgba(248,113,113,.1)}
+.conv-empty{padding:20px 12px;text-align:center;font-size:12px;color:var(--dim)}
+.ls-footer{padding:8px;border-top:1px solid var(--border)}
+.ls-footer-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--rs);background:transparent;border:none;color:var(--dim);font-size:13px;cursor:pointer;transition:all .2s;width:100%;font-family:inherit;text-align:left}
+.ls-footer-btn:hover{background:var(--s2);color:var(--text)}
+
+/* ─── LEFT SIDEBAR MOBILE OVERLAY ─── */
+#ls-overlay{display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent}
+#ls-overlay.on{display:block}
+
+/* ─── CENTER AREA ─── */
+#center-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* ─── CHAT VIEW ─── */
+#chat-view{display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* ─── ANNOUNCEMENTS VIEW ─── */
+#announcements-view{display:none;flex-direction:column;flex:1;overflow-y:auto;background:var(--bg);-webkit-overflow-scrolling:touch}
+.ann-header{padding:20px 24px 12px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
+.ann-header h2{font-size:18px;font-weight:700}
+.ann-header-sub{font-size:12px;color:var(--dim);margin-top:4px}
+.ann-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+.ann-scroll::-webkit-scrollbar{width:4px}
+.ann-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.ann-section{margin-bottom:20px}
+.ann-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ann-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;transition:border-color .2s}
+.ann-card:hover{border-color:rgba(79,142,247,.3)}
+.ann-item{padding:8px 0;border-bottom:1px solid rgba(30,50,81,.4);font-size:13px;line-height:1.7;display:flex;align-items:flex-start;gap:6px}
+.ann-item:last-child{border-bottom:none}
+.ann-date{font-size:10px;color:var(--dim);white-space:nowrap;margin-left:auto}
+.ann-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ann-action-btn{padding:10px 16px;border-radius:var(--rs);background:var(--s1);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;transition:all .2s;font-family:inherit}
+.ann-action-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--adim)}
+
+/* ─── RIGHT SIDEBAR ─── */
+#right-sidebar{width:var(--rs-w);flex-shrink:0;background:var(--s1);border-left:1px solid var(--border);display:none;flex-direction:column;overflow:hidden}
+.rs-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.rs-header h3{font-size:14px;font-weight:600}
+.rs-body{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.rs-body::-webkit-scrollbar{width:3px}
+.rs-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.rs-section{margin-bottom:16px}
+.rs-section-title{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.rs-module-card{padding:8px 10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px;font-size:12px}
+.rs-module-name{font-weight:600;font-size:12px}
+.rs-module-status{font-size:11px;color:var(--dim);margin-top:2px}
+.rs-empty{font-size:12px;color:var(--dim);padding:10px 0}
+
+/* ─── HAMBURGER ─── */
+.hamburger-btn{display:none !important}
+
+/* ─── HEADER ─── */
+header{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px}
+.hl{display:flex;align-items:center;gap:11px;min-width:0}
+.hav{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;box-shadow:0 0 14px var(--adim)}
+.hn{font-size:15px;font-weight:600}
+.hs{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dot{width:6px;height:6px;background:var(--ok);border-radius:50%;box-shadow:0 0 5px var(--ok);flex-shrink:0}
+#hmode{transition:color .3s}
+.hr{display:flex;gap:4px;flex-shrink:0}
+.ib{width:34px;height:34px;border-radius:var(--rs);background:transparent;border:1px solid var(--border);color:var(--dim);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.ib:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── BRAIN BAR ─── */
+#bbar{padding:5px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;flex-shrink:0;align-items:center}
+.demo-w{color:var(--accent);background:rgba(79,142,247,.1);padding:1px 8px;border-radius:4px}
+
+/* ─── MESSAGES ─── */
+#msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#msgs::-webkit-scrollbar{width:4px}
+#msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.mrow{display:flex;gap:9px;animation:fu .3s ease}
+.mrow.u{flex-direction:row-reverse}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mav{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.mav.b{background:linear-gradient(135deg,var(--accent),var(--a2));color:#fff}
+.mav.u{background:var(--s3);color:var(--text);font-size:11px}
+.bbl{max-width:76%;padding:10px 14px;border-radius:var(--r);font-size:14px;word-break:break-word}
+.b .bbl{background:var(--s2);border:1px solid var(--border);border-top-left-radius:4px}
+.u .bbl{background:#1e40af;color:#fff;border-top-right-radius:4px}
+/* Markdown */
+.bbl h1{font-size:17px;margin:8px 0 5px;border-bottom:1px solid var(--border);padding-bottom:3px}
+.bbl h2{font-size:15px;margin:7px 0 4px}
+.bbl h3{font-size:14px;margin:5px 0 3px;color:var(--accent)}
+.bbl p{margin:4px 0}
+.bbl ul,.bbl ol{padding-left:18px;margin:5px 0}
+.bbl li{margin:2px 0}
+.bbl code{background:rgba(255,255,255,.08);border-radius:4px;padding:1px 5px;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:12px;color:#93c5fd}
+.bbl pre{background:#0d1117;border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin:8px 0;overflow-x:auto;position:relative}
+.bbl pre code{background:transparent;padding:0;color:#c9d1d9;font-size:12px;line-height:1.5}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--s3);border:1px solid var(--border);color:var(--dim);font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.bbl blockquote{border-left:3px solid var(--accent);padding-left:10px;color:var(--dim);margin:6px 0}
+.bbl hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+.bbl strong{color:var(--text)}
+.bbl .err{color:var(--err)}
+.bbl .save-hint{display:inline-block;margin-top:8px;padding:4px 10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:12px;color:var(--ok)}
+.bbl a{color:var(--accent)}
+.cur{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* typing */
+.trow{display:flex;gap:9px;animation:fu .3s ease}
+.tbbl{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);border-top-left-radius:4px;padding:12px 16px;display:flex;align-items:center;gap:4px}
+.tbbl span{width:6px;height:6px;background:var(--dim);border-radius:50%;animation:bo 1.2s infinite}
+.tbbl span:nth-child(2){animation-delay:.15s}
+.tbbl span:nth-child(3){animation-delay:.3s}
+@keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ─── QUICK REPLIES ─── */
+#qr{padding:0 18px 10px;display:flex;gap:7px;flex-wrap:wrap}
+.qb{background:var(--s2);border:1px solid var(--border);color:var(--dim);font-size:12px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit}
+.qb:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── FOOTER ─── */
+footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom));background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
+.ir{display:flex;align-items:flex-end;gap:8px}
+.mpill{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s;position:relative}
+.mpill:hover{border-color:var(--accent)}
+.mpill-tip{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+.mpill:hover .mpill-tip{opacity:1}
+/* ── Upload button ── */
+#upload-btn{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:all .2s;color:var(--dim)}
+#upload-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* ── File preview area ── */
+#file-preview{display:none;padding:8px 18px;background:var(--s1);border-bottom:1px solid var(--border);max-height:160px;overflow-y:auto}
+#file-preview .fp-list{display:flex;flex-wrap:wrap;gap:8px}
+.fp-item{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);max-width:280px;position:relative}
+.fp-item img{width:48px;height:48px;object-fit:cover;border-radius:4px;flex-shrink:0}
+.fp-item .fp-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+.fp-item .fp-size{color:var(--dim);font-size:11px}
+.fp-item .fp-remove{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--err);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+#inp{flex:1;min-height:40px;max-height:120px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:16px;padding:9px 14px;resize:none;outline:none;transition:border-color .2s}
+#inp:focus{border-color:var(--accent)}
+#inp::placeholder{color:var(--dim)}
+#sbtn{width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;-webkit-tap-highlight-color:transparent}
+#sbtn:hover{background:#3b74d4}
+#sbtn:disabled{background:var(--muted);cursor:default}
+.fmeta{font-size:11px;color:var(--dim);margin-top:6px;text-align:center}
+#fmode{font-weight:500}
+
+/* ─── SIDE PANELS ─── */
+.sp{position:fixed;top:0;right:-420px;height:100vh;height:100dvh;width:380px;max-width:100vw;z-index:200;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s ease;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.sp.open{right:0}
+#pov{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s}
+#pov.on{opacity:1;pointer-events:all}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.ph h2{font-size:15px}
+.cb{background:transparent;border:1px solid var(--border);color:var(--dim);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.cb:hover{color:var(--text)}
+.pb{flex:1;overflow-y:auto;padding:18px;-webkit-overflow-scrolling:touch}
+.pb::-webkit-scrollbar{width:4px}
+.pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sfg{margin-bottom:16px}
+.sfg label{display:block;font-size:11px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.sfg input,.sfg select{width:100%;padding:9px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.sfg input:focus,.sfg select:focus{border-color:var(--accent)}
+.sfg select option{background:var(--s2)}
+.sfg small{display:block;color:var(--dim);font-size:11px;margin-top:4px}
+.sbtn2{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:14px;cursor:pointer;transition:opacity .2s;font-family:inherit}
+.sbtn2:hover{opacity:.85}
+.det-btn{flex-shrink:0;padding:0 12px;border-radius:var(--rs);border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:12px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:inherit}
+.det-btn:hover{background:rgba(79,142,247,.1)}
+.det-btn:disabled{opacity:.5;cursor:default}
+.sec-ttl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 10px;border-top:1px solid var(--border);padding-top:12px}
+.ir2{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(30,50,81,.5);font-size:13px}
+.iv{color:var(--ok);font-weight:500}
+.ivw{color:var(--warn)}
+.drow{padding:8px 0;border-bottom:1px solid rgba(30,50,81,.5)}
+.dn{font-size:13px;font-weight:500}
+.dm{font-size:11px;color:var(--dim);margin-top:2px}
+.dbar{height:3px;background:var(--muted);border-radius:2px;margin-top:6px}
+.dfill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease}
+.pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;margin-right:4px}
+.pok{background:rgba(52,211,153,.15);color:var(--ok)}
+.pnd{background:rgba(251,191,36,.15);color:var(--warn)}
+.mode-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:8px}
+
+/* ─── HELP PANEL ─── */
+.help-section{margin-bottom:18px}
+.help-section h3{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.help-steps{list-style:none;padding:0}
+.help-steps li{font-size:12px;color:var(--dim);line-height:1.7;padding:4px 0 4px 22px;position:relative;border-bottom:1px solid rgba(30,50,81,.3)}
+.help-steps li::before{content:attr(data-n);position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:16px;text-align:center}
+.help-steps li strong{color:var(--text)}
+.help-url{background:var(--s2);border:1px solid var(--accent);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--accent);word-break:break-all;margin:8px 0;cursor:pointer;transition:background .2s}
+.help-url:hover{background:rgba(79,142,247,.1)}
+.copy-url-btn{display:block;width:100%;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-size:13px;cursor:pointer;margin-top:6px;font-family:inherit;transition:opacity .2s}
+.copy-url-btn:hover{opacity:.85}
+.help-tip{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--ok);margin:8px 0}
+.role-guide{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.role-guide-title{font-size:13px;font-weight:600;margin-bottom:6px}
+.role-guide p{font-size:12px;color:var(--dim);line-height:1.7;margin:0}
+
+/* ─── ROLE BADGES ─── */
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.rb-founder{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.rb-supreme{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3)}
+.rb-main{background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+.rb-dev{background:rgba(100,116,139,.15);color:var(--dim);border:1px solid rgba(100,116,139,.3)}
+.uident{display:flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;background:var(--s2);border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s}
+.uident:hover{border-color:var(--accent)}
+
+/* ─── TEAM PANEL ─── */
+.team-grid{display:flex;flex-direction:column;gap:8px}
+.dev-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;transition:border-color .2s}
+.dev-card:hover{border-color:var(--accent)}
+.dev-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dev-name{font-size:13px;font-weight:600}
+.dev-id-badge{font-size:10px;color:var(--dim);background:var(--s3);padding:1px 6px;border-radius:4px}
+.dev-status-text{font-size:12px;color:var(--text);margin-bottom:4px}
+.dev-detail{font-size:11px;color:var(--dim);line-height:1.6}
+.dev-next{font-size:11px;color:var(--accent);margin-top:4px}
+.dev-wait{font-size:11px;color:var(--warn)}
+.status-green{color:var(--ok)}
+.status-yellow{color:var(--warn)}
+.team-summary{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px}
+.team-summary-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:4px}
+.cmd-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);color:var(--accent);font-size:11px;cursor:pointer;margin:2px;transition:all .2s}
+.cmd-chip:hover{background:rgba(79,142,247,.2)}
+
+/* ─── SETUP IDENTITY ─── */
+.id-section{border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:16px;background:var(--s2)}
+.id-section-title{font-size:11px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.id-row{display:flex;gap:8px}
+.id-row .fg{flex:1;margin-bottom:0}
+.ctrl-panel-header{background:linear-gradient(135deg,rgba(251,146,60,.1),rgba(167,139,250,.1));border:1px solid rgba(251,146,60,.3);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center}
+.ctrl-panel-title{font-size:14px;font-weight:700;color:#fb923c;margin-bottom:4px}
+.ctrl-panel-sub{font-size:11px;color:var(--dim)}
+
+/* ─── RESPONSIVE: DESKTOP (three-column) ─── */
+@media(min-width:900px){
+  #app.on{flex-direction:row}
+  #left-sidebar{display:flex}
+  .hamburger-btn{display:none !important}
+  #chat-view header{border-top:none}
+  #center-area{border-left:none;border-right:none}
+}
+
+/* ─── RESPONSIVE: MOBILE ─── */
+@media(max-width:899px){
+  #left-sidebar{position:fixed;top:0;left:-280px;height:100vh;height:100dvh;width:270px;z-index:120;transition:left .3s ease;padding-top:env(safe-area-inset-top)}
+  #left-sidebar.open{left:0}
+  .hamburger-btn{display:flex !important;min-width:44px;min-height:44px}
+  #right-sidebar{display:none !important}
+  header{padding:11px 12px}
+  .hn{font-size:14px}
+  .ib{min-width:44px;min-height:44px}
+  #msgs{padding:14px 12px}
+  #qr{padding:0 12px 8px;gap:6px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .qb{flex-shrink:0}
+  footer{padding:10px 12px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .fmeta{display:none}
+  .ann-scroll{padding:16px 14px}
+}
+@media(max-width:600px){
+  .bbl{max-width:92%}
+  .hr .ib:nth-child(n+3){display:none}
+  .sp{width:100%}
+  .sc{padding:24px 18px;border-radius:14px}
+  .sc-logo{font-size:40px}
+  .sc h1{font-size:18px}
+  .login-tab{font-size:12px;padding:10px 6px}
+}
+/* ─── SKYEYE STATUS CARD ─── */
+.skyeye-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;margin:8px 12px;font-size:12px;display:none}
+.skyeye-card.on{display:block}
+.skyeye-row{display:flex;align-items:center;gap:8px;line-height:1.8;flex-wrap:wrap}
+.skyeye-row .skyeye-tag{background:var(--adim);color:var(--accent);padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.skyeye-tag.ok{background:rgba(52,211,153,.12);color:var(--ok)}
+.skyeye-tag.warn{background:rgba(251,191,36,.12);color:var(--warn)}
+.skyeye-tag.err{background:rgba(248,113,113,.12);color:var(--err)}
+/* ─── EXEC INSTRUCTION CARD ─── */
+.exec-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-top:10px}
+.exec-card-head{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--accent)}
+.exec-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.exec-btn{padding:6px 14px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.exec-btn-copy{background:var(--s3);color:var(--text);border:1px solid var(--border)}
+.exec-btn-copy:hover{border-color:var(--accent);color:var(--accent)}
+.exec-btn-submit{background:var(--accent);color:#fff}
+.exec-btn-submit:hover{opacity:.85}
+.exec-btn-submit:disabled{opacity:.5;cursor:not-allowed}
+/* Staging environment watermark */
+.staging-watermark{position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(251,191,36,.12);border-bottom:2px solid rgba(251,191,36,.5);padding:4px 12px;text-align:center;font-size:11px;color:#fbbf24;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ SETUP ════════════════════ -->
+<div id="setup">
+<div class="sc">
+  <div class="sc-logo">🌀</div>
+  <h1>AGE OS · 登录</h1>
+  <p class="sub">HoloLake · 铸渊（Zhùyuān）· 代码守护人格体</p>
+
+  <div class="login-tabs">
+    <button class="login-tab active" onclick="switchLoginMode('team')">🏠 团队登录</button>
+    <button class="login-tab" onclick="switchLoginMode('guest')">👤 访客模式</button>
+    <button class="login-tab" onclick="switchLoginMode('dev')">🔧 自定义 API</button>
+  </div>
+
+  <!-- 团队登录（默认）：选择开发者身份即可，使用服务器端 API -->
+  <div id="login-team" class="login-mode active">
+    <div style="text-align:center;padding:12px 0;color:var(--dim);font-size:13px;line-height:1.8">
+      <div style="font-size:40px;margin-bottom:8px">🌀</div>
+      光湖团队成员专属入口。<br>
+      选择你的开发者编号，系统自动分配对应权限。<br>
+      <span style="color:var(--ok)">✅ 无需 API 密钥 · 200k 完整上下文 · 服务器端代理</span>
+    </div>
+    <div class="fg">
+      <label>选择你的身份</label>
+      <select id="tuid" onchange="onTeamSelectChange()">
+        <option value="">— 选择你的开发者编号 —</option>
+        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
+        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
+        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
+        <option value="页页">页页（DEV-001）</option>
+        <option value="燕樊">燕樊（DEV-003）</option>
+        <option value="之之">之之·秋秋（DEV-004）</option>
+        <option value="小草莓">小草莓（DEV-005）</option>
+        <option value="花尔">花尔（DEV-009）</option>
+        <option value="匆匆那年">匆匆那年（DEV-011）</option>
+        <option value="Awen">Awen（DEV-012）</option>
+        <option value="__custom__">✏️ 自定义开发者编号…</option>
+      </select>
+    </div>
+    <div id="team-custom-input" class="fg" style="display:none">
+      <label>输入你的开发者编号</label>
+      <input type="text" id="tcustom-id" placeholder="例如：DEV-013" oninput="updateTeamIdPreview()" style="text-transform:uppercase">
+      <small>输入你的开发者编号（格式：DEV-XXX），系统将自动录入</small>
+    </div>
+    <div id="team-id-preview"></div>
+    <button class="sc-btn" onclick="doTeamLogin()">进入铸渊对话 →</button>
+  </div>
+
+  <!-- 访客模式 -->
+  <div id="login-guest" class="login-mode">
+    <div style="text-align:center;padding:20px 0;color:var(--dim);font-size:13px;line-height:1.8">
+      <div style="font-size:40px;margin-bottom:12px">👤</div>
+      无需 API 密钥，使用云雾 AI 模型体验铸渊助手。<br>
+      铸渊人格体始终在线，不降级为通用助手。
+    </div>
+    <button class="sc-btn" onclick="doDemo()">进入访客对话 →</button>
+  </div>
+
+  <!-- 自定义 API（高级·使用自己的 API 密钥） -->
+  <div id="login-dev" class="login-mode">
+    <div class="sc-sec">🔒 API 密钥仅本次会话有效，关闭标签页即自动清除</div>
+
+    <div class="fg">
+      <label>开发者身份</label>
+      <select id="suid" onchange="updateIdPreview()">
+        <option value="">— 选择你的身份 —</option>
+        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
+        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
+        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
+        <option value="页页">页页（DEV-001）</option>
+        <option value="燕樊">燕樊（DEV-003）</option>
+        <option value="之之">之之·秋秋（DEV-004）</option>
+        <option value="小草莓">小草莓（DEV-005）</option>
+        <option value="花尔">花尔（DEV-009）</option>
+        <option value="匆匆那年">匆匆那年（DEV-011）</option>
+        <option value="Awen">Awen（DEV-012）</option>
+      </select>
+      <small>选择你的开发者编号，系统将验证身份并开放对应权限</small>
+    </div>
+    <div id="id-preview"></div>
+
+    <div class="fg">
+      <label>API 端点 URL</label>
+      <input type="text" id="sep" placeholder="https://api.example.com/v1">
+      <small>输入你的 API 提供商端点地址（OpenAI 兼容格式）</small>
+    </div>
+    <div class="fg">
+      <label>API 密钥</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="password" id="sk" placeholder="粘贴你的 API 密钥" style="flex:1">
+        <button onclick="autoDetectAPI('s')" id="sdet-btn" class="det-btn" title="自动检测可用模型">🔍 检测模型</button>
+      </div>
+      <small id="sk-err" style="color:var(--err);display:none">⚠️ 请输入 API 密钥</small>
+      <small id="sdet-status" style="display:block;margin-top:4px;min-height:16px"></small>
+    </div>
+    <div class="fg">
+      <label>选择模型</label>
+      <select id="sm" disabled><option value="">— 请先检测可用模型 —</option></select>
+      <small id="sm-hint">输入端点和密钥后，点击「🔍 检测模型」自动获取可用模型列表</small>
+    </div>
+
+    <button class="sc-btn" onclick="doSetup()">开始与铸渊对话 →</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════ APP (three-column shell) ════════════════════ -->
+<div id="app">
+
+  <!-- ──── LEFT SIDEBAR ──── -->
+  <aside id="left-sidebar">
+    <div class="ls-header">
+      <div class="ls-user">
+        <div class="ls-avatar" id="ls-avatar">铸</div>
+        <div>
+          <div class="ls-name" id="ls-name">访客</div>
+          <div class="ls-role" id="ls-role">guest</div>
+          <div class="ls-devid" id="ls-devid" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="ls-nav">
+      <button class="nav-tab active" data-view="announcements" onclick="navigateTo('announcements')">📢 公告栏</button>
+      <button class="nav-tab" data-view="chat" onclick="navigateTo('chat')">💬 聊天</button>
+      <button class="nav-tab" onclick="window.open('../persona-studio/frontend/index.html','_blank')">🧠 Studio</button>
+      <button class="nav-tab" onclick="window.open('../status-board/','_blank')">📊 看板</button>
+      <button class="nav-tab" onclick="window.open('../ticket-system/','_blank')">🎫 工单</button>
+    </nav>
+
+    <button class="ls-new-conv" onclick="newConvAndNav()">+ 新对话</button>
+
+    <div id="conv-list" class="ls-conv-list">
+      <div class="conv-empty">暂无历史对话</div>
+    </div>
+
+    <div class="ls-footer">
+      <button class="ls-footer-btn" onclick="openPanel('sp2')">⚙️ 设置</button>
+    </div>
+  </aside>
+
+  <div id="ls-overlay" onclick="toggleLeftSidebar()"></div>
+
+  <!-- ──── CENTER AREA ──── -->
+  <div id="center-area">
+
+    <!-- Announcements View (default after login) -->
+    <div id="announcements-view">
+      <div class="ann-header">
+        <h2>📢 系统公告</h2>
+        <div class="ann-header-sub" id="ann-header-sub">HoloLake · AGE OS</div>
+      </div>
+      <div class="ann-scroll" id="announcements-content"></div>
+    </div>
+
+    <!-- Chat View -->
+    <div id="chat-view" style="display:none">
+      <header>
+        <div class="hl">
+          <button class="ib hamburger-btn" onclick="toggleLeftSidebar()" title="菜单">☰</button>
+          <div class="hav" id="hav">铸</div>
+          <div>
+            <div class="hn">铸渊（Zhùyuān）</div>
+            <div class="hs">
+              <span class="dot"></span>
+              <span id="hmode">💬 对话模式</span>
+              <span>·</span>
+              <span id="hmdl">—</span>
+              <span id="huser-badge" style="display:none">·</span>
+              <span id="huser-name" style="display:none"></span>
+            </div>
+          </div>
+        </div>
+        <div class="hr">
+          <button class="ib" id="ctrlBtn" onclick="openPanel('tp')" title="指挥台 🦁" style="display:none">🦁</button>
+          <button class="ib" onclick="openPanel('bp')" title="大脑状态 📊">📊</button>
+          <button class="ib" onclick="openPanel('hp')" title="使用帮助 ❓">❓</button>
+          <button class="ib" onclick="openPanel('sp2')" title="设置 ⚙️">⚙️</button>
+          <button class="ib" onclick="dlApp()" title="下载到桌面 ⬇️">⬇️</button>
+        </div>
+      </header>
+
+      <div id="bbar">
+        <span id="bbc">⏳ 加载大脑…</span>
+        <span id="bbe">—</span>
+        <span id="bbdemo" class="demo-w" style="display:none">👤 访客模式 · 云雾AI · 铸渊人格体在线</span>
+      </div>
+
+      <div id="skyeye-card" class="skyeye-card">
+        <div class="skyeye-row">
+          <span>🦅 天眼状态：</span><span id="skyeye-status" class="skyeye-tag ok">加载中…</span>
+          <span id="skyeye-time" style="color:var(--dim)"></span>
+        </div>
+        <div class="skyeye-row" id="skyeye-repo-row" style="display:none">
+          <span>📊 你的仓库：</span><span id="skyeye-repo-info"></span>
+        </div>
+        <div class="skyeye-row" id="skyeye-broadcast-row" style="display:none">
+          <span>📋 当前广播：</span><span id="skyeye-broadcast-info"></span>
+        </div>
+      </div>
+
+      <div id="msgs"></div>
+
+      <div id="qr">
+        <button class="qb" onclick="qs('查看接口覆盖率')">📊 接口覆盖率</button>
+        <button class="qb" onclick="qs('大脑状态')">🧠 大脑状态</button>
+        <button class="qb" onclick="qs('帮我写一个 HLI 接口')">🔨 写接口</button>
+        <button class="qb" id="qr-ctrl1" onclick="qs('查看所有开发者当前进度')" style="display:none">📋 全员进度</button>
+        <button class="qb" id="qr-ctrl2" onclick="qs('谁需要协调帮助？')" style="display:none">🆘 需要协调</button>
+        <button class="qb" id="qr-ctrl3" onclick="qs('下一步系统推进计划是什么？')" style="display:none">🗺️ 推进计划</button>
+        <button class="qb" onclick="qs('介绍一下你自己')">🌀 介绍铸渊</button>
+      </div>
+
+      <div id="file-preview"><div class="fp-list" id="fp-list"></div></div>
+      <footer>
+        <div class="ir">
+          <div class="mpill" id="mpill" onclick="cycleMode()">
+            <span id="memi">💬</span>
+            <span class="mpill-tip" id="mptip">对话模式（点击切换）</span>
+          </div>
+          <button id="upload-btn" onclick="document.getElementById('file-input').click()" title="上传图片或文件">📎</button>
+          <input type="file" id="file-input" style="display:none" multiple accept="image/*,.pdf,.txt,.md,.json,.js,.ts,.py,.java,.go,.rs,.html,.css,.csv,.xml,.yaml,.yml,.log,.doc,.docx" onchange="handleFileSelect(event)">
+          <textarea id="inp" rows="1" placeholder="和铸渊说话…" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="sentences"></textarea>
+          <button id="sbtn" onclick="send()">↑</button>
+        </div>
+        <div class="fmeta"><span id="fmode">💬 对话模式</span> · 端到端私密，API 密钥本地存储</div>
+      </footer>
+    </div>
+
+  </div>
+
+  <!-- ──── RIGHT SIDEBAR (controllers only, desktop) ──── -->
+  <aside id="right-sidebar">
+    <div class="rs-header"><h3>🦁 指挥台</h3></div>
+    <div class="rs-body" id="rsb">
+      <p style="color:var(--dim);font-size:13px">正在加载团队数据…</p>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ════════════════════ SETTINGS PANEL ════════════════════ -->
+<div id="sp2" class="sp">
+  <div class="ph">
+    <h2>⚙️ API 设置</h2>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button onclick="resetAllSettings()" title="清除所有本地设置，重新开始" style="padding:4px 10px;border-radius:6px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:11px;cursor:pointer;white-space:nowrap">🔄 重置</button>
+      <button class="cb" onclick="closeP()">✕</button>
+    </div>
+  </div>
+  <div class="pb">
+    <div class="sfg">
+      <label>API 端点 URL</label>
+      <input type="text" id="cep" placeholder="https://api.example.com/v1">
+    </div>
+    <div class="sfg">
+      <label>选择模型</label>
+      <select id="cm"></select>
+    </div>
+    <div class="sfg">
+      <label>API 密钥</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；粘贴新密钥即替换" style="flex:1">
+        <button onclick="autoDetectAPI('c')" id="cdet-btn" class="det-btn" title="自动检测提供商和可用模型">🔍 自动检测</button>
+      </div>
+      <small id="ck-hint" style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页自动清除</small>
+      <small id="cdet-status" style="display:block;margin-top:4px;min-height:14px"></small>
+    </div>
+    <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
+
+    <div class="sec-ttl">身份设置</div>
+    <div class="sfg">
+      <label>你是谁</label>
+      <select id="cuid">
+        <option value="">— 访客模式 —</option>
+        <option value="冰朔">❄️ 冰朔（语言架构师·创始人）</option>
+        <option value="肥猫">🦁 肥猫（光湖团队总控·DEV-002）</option>
+        <option value="桔子">🍊 桔子（光湖主控·DEV-010）</option>
+        <option value="页页">页页（DEV-001）</option>
+        <option value="燕樊">燕樊（DEV-003）</option>
+        <option value="之之">之之·秋秋（DEV-004）</option>
+        <option value="小草莓">小草莓（DEV-005）</option>
+        <option value="花尔">花尔（DEV-009）</option>
+        <option value="匆匆那年">匆匆那年（DEV-011）</option>
+        <option value="Awen">Awen（DEV-012）</option>
+      </select>
+    </div>
+    <div class="sfg">
+      <label>GitHub 用户名</label>
+      <input type="text" id="cghuser" placeholder="your-github-username">
+    </div>
+
+    <div class="sec-ttl">关于铸渊助手</div>
+    <div class="ir2"><span>版本</span><span class="iv">v5.0</span></div>
+    <div class="ir2"><span>仓库</span><span><a href="https://github.com/qinfendebingshuo/guanghulab" target="_blank" style="color:var(--accent)">guanghulab</a></span></div>
+    <div class="ir2"><span>唤醒协议</span><span class="iv">v1.0</span></div>
+    <div class="ir2"><span>大脑路径</span><span style="font-size:11px;color:var(--dim)">.github/brain/</span></div>
+
+    <div class="sec-ttl">使用说明</div>
+    <p style="font-size:12px;color:var(--dim);line-height:1.8">
+      1. 输入你的 API 端点和密钥，点击检测模型<br>
+      2. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      3. 支持上传图片和文件（点击 📎 按钮或拖拽到对话区域）<br>
+      4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
+      5. 支持任意 OpenAI 兼容接口（输入端点 + 密钥即可）
+    </p>
+
+    <div class="sec-ttl" style="color:#ef4444;margin-top:16px">⚠️ 危险操作</div>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:8px">遇到密钥卡住、无法更新等问题时，点下方按钮彻底清除本地设置，从头重新输入。</p>
+    <button onclick="resetAllSettings()" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;font-size:13px;cursor:pointer">🔄 清除所有设置，重新开始</button>
+  </div>
+</div>
+
+<!-- ════════════════════ BRAIN PANEL ════════════════════ -->
+<div id="bp" class="sp">
+  <div class="ph"><h2>📊 大脑状态</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb" id="bpb"><p style="color:var(--dim);font-size:13px">正在加载大脑数据…</p></div>
+</div>
+
+<!-- ════════════════════ HELP PANEL ════════════════════ -->
+<div id="hp" class="sp">
+  <div class="ph"><h2>❓ 使用帮助</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb">
+
+    <div class="help-section">
+      <div class="help-url" id="chatUrlDisplay" onclick="copyUrl()">
+        🔗 https://qinfendebingshuo.github.io/guanghulab/
+      </div>
+      <button class="copy-url-btn" onclick="copyUrl()">📋 复制链接 · 发给队友</button>
+      <div class="help-tip">💡 把上面的链接发给肥猫、桔子或任何开发者，他们打开就能用，不需要安装任何东西。</div>
+    </div>
+
+    <div class="help-section">
+      <h3>🚀 怎么开始用</h3>
+      <ol class="help-steps">
+        <li data-n="1" id="helpUrlStep">打开链接 <strong>https://qinfendebingshuo.github.io/guanghulab/</strong></li>
+        <li data-n="2">选择「<strong>🏠 团队登录</strong>」选择你的开发者编号，无需 API 密钥</li>
+        <li data-n="3">系统自动使用服务器端 API 代理，200k 完整上下文</li>
+        <li data-n="4">点「进入铸渊对话」，铸渊会针对你的身份打招呼</li>
+        <li data-n="5">也可用「👤 访客模式」体验，或「🔧 自定义 API」使用自己的密钥</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>🏠 团队登录说明</h3>
+      <div class="role-guide">
+        <div class="role-guide-title">团队成员（推荐）</div>
+        <p>选择「🏠 团队登录」→ 选择你的开发者编号 → 直接进入对话。无需 API 密钥，系统使用服务器端代理。</p>
+      </div>
+      <div class="role-guide">
+        <div class="role-guide-title">没有开发者编号？用访客模式</div>
+        <p>登录页选择「👤 访客模式」进入体验，可查看团队进度面板（🦁 指挥台），AI 回答功能受限。</p>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>🦁 肥猫 / 🍊 桔子 专属功能</h3>
+      <ol class="help-steps">
+        <li data-n="1">选身份为「肥猫」或「桔子」后，顶部出现 <strong>🦁 按钮</strong></li>
+        <li data-n="2">点 🦁 按钮打开<strong>指挥台</strong>，查看所有开发者当前状态</li>
+        <li data-n="3">可以在聊天里问：「查看所有开发者进度」「谁遇到阻塞？」「推进计划」</li>
+        <li data-n="4">铸渊会把全员进度数据注入 AI 回复，给出完整分析</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>📱 怎么离线用 / 发给别人离线用</h3>
+      <ol class="help-steps">
+        <li data-n="1">右上角点 <strong>⬇️ 下载</strong>，下载一个 HTML 文件</li>
+        <li data-n="2">把这个文件发给对方（微信传文件、QQ、钉钉都行）</li>
+        <li data-n="3">对方双击这个文件，用浏览器打开</li>
+        <li data-n="4">填入 API Key，选好身份，就能用了（无需网络，只需 API Key）</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>💬 聊天模式说明</h3>
+      <div class="role-guide" style="border-color:var(--mc)">
+        <div class="role-guide-title" style="color:var(--mc)">💬 对话模式（默认）</div>
+        <p>普通聊天，问什么答什么</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mb)">
+        <div class="role-guide-title" style="color:var(--mb)">🔨 构建模式</div>
+        <p>说到「写代码/接口/部署」时自动切换，给出完整可执行代码</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mr)">
+        <div class="role-guide-title" style="color:var(--mr)">📋 审查模式</div>
+        <p>说到「检查/审查/有问题吗」时自动切换，专注找代码问题</p>
+      </div>
+      <div class="role-guide" style="border-color:var(--mn)">
+        <div class="role-guide-title" style="color:var(--mn)">🧠 大脑模式</div>
+        <p>说「记住这个/写到大脑」时切换，整理信息到大脑文件</p>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>❓ 常见问题</h3>
+      <div style="font-size:12px;color:var(--dim);line-height:1.9">
+        <strong style="color:var(--text)">Q: 打开是空白页？</strong><br>
+        等 1-2 分钟刷新，GitHub Pages 部署需要点时间。<br><br>
+        <strong style="color:var(--text)">Q: API Key 会泄露吗？</strong><br>
+        不会，Key 只存在你自己浏览器里，不会传到服务器。<br><br>
+        <strong style="color:var(--text)">Q: 切换电脑后 Key 还在吗？</strong><br>
+        不在，需要重新填。建议下载离线版，Key 填一次就行。<br><br>
+        <strong style="color:var(--text)">Q: 铸渊忘记以前说的话了？</strong><br>
+        对话历史保存在本地浏览器中（最近20条），但大脑文件永久保存在仓库 .github/brain/ 里。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════ TEAM PANEL (mobile slide-in) ════════════════════ -->
+<div id="tp" class="sp">
+  <div class="ph"><h2>🦁 指挥台 · 全员进度</h2><button class="cb" onclick="closeP()">✕</button></div>
+  <div class="pb" id="tpb"><p style="color:var(--dim);font-size:13px">正在加载团队数据…</p></div>
+</div>
+
+<!-- ════════════════════ OVERLAY ════════════════════ -->
+<div id="pov" onclick="closeP()"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const REPO   = 'qinfendebingshuo/guanghulab';
+const BRANCH = 'main';
+const RAW    = 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH;
+
+const ROLE_MAP = {
+  '冰朔':   {role:'founder',       title:'语言架构师·创始人', emoji:'❄️', badgeCls:'rb-founder', devId:null},
+  '肥猫':   {role:'supreme',       title:'光湖团队总控',       emoji:'🦁', badgeCls:'rb-supreme', devId:'DEV-002'},
+  '桔子':   {role:'main',          title:'光湖主控',           emoji:'🍊', badgeCls:'rb-main',    devId:'DEV-010'},
+  '页页':   {role:'dev',           title:'后端开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-001'},
+  '燕樊':   {role:'dev',           title:'前端开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-003'},
+  '之之':   {role:'dev',           title:'钉钉开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-004'},
+  '小草莓': {role:'dev',           title:'看板开发',           emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-005'},
+  '花尔':   {role:'dev',           title:'用户中心开发',       emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-009'},
+  '匆匆那年':{role:'dev',          title:'码字工作台',         emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-011'},
+  'Awen':   {role:'dev',           title:'通知中心开发',       emoji:'💻', badgeCls:'rb-dev',     devId:'DEV-012'},
+};
+
+// Custom dev ID format validation (DEV-001, DEV-013, etc.)
+const DEV_ID_RE = /^DEV-\d{3,}$/;
+
+// Known API endpoints for fallback auto-detect (when user doesn't provide endpoint)
+const KNOWN_ENDPOINTS = [
+  {label:'云雾 AI',      base:'https://api.yunwu.ai/v1'},
+  {label:'OpenAI',       base:'https://api.openai.com/v1'},
+  {label:'Google Gemini',base:'https://generativelanguage.googleapis.com/v1beta/openai'},
+  {label:'DeepSeek',     base:'https://api.deepseek.com/v1'},
+  {label:'Moonshot',     base:'https://api.moonshot.cn/v1'},
+  {label:'智谱 AI',      base:'https://open.bigmodel.cn/api/paas/v4'},
+];
+
+const MODES = {
+  chat:   {e:'💬',l:'对话模式',  c:'var(--mc)'},
+  build:  {e:'🔨',l:'构建模式',  c:'var(--mb)'},
+  review: {e:'📋',l:'审查模式',  c:'var(--mr)'},
+  brain:  {e:'🧠',l:'大脑模式',  c:'var(--mn)'},
+};
+const MODE_ORD = ['chat','build','review','brain'];
+
+const DEFAULT_MDL = 'gpt-4o';
+const PROBE_TIMEOUT_MS = 8000;
+const FB_COV   = {implemented:3,total:17,percent:'17.6%'};
+const KEY_MASK = '(已保存)';
+const MAX_CONVERSATIONS = 20;
+const BRAIN_VERSION = 'v3.0';
+
+// ═══════════════════════════════════════════════════════
+// 上下文窗口配置（200k token · 滑动窗口裁剪）
+// v3.0: 核心逻辑已迁至后端 src/brain/context-trimmer.js
+// 前端保留 fallback 配置，后端不可达时使用
+// ═══════════════════════════════════════════════════════
+const CONTEXT_CONFIG = {
+  maxTokens: 200000,
+  maxTokensGuest: 32000,
+  systemPromptReserve: 8000,
+  overflowStrategy: 'sliding-window',
+};
+
+// ═══════════════════════════════════════════════════════
+// 访客模式 API 配置
+// v3.0: 模型路由由后端 /hli/brain/route 动态决定
+// 此处为 fallback 默认值
+// ═══════════════════════════════════════════════════════
+const GUEST_API = {
+  enabled: true,
+  proxyUrl: '/api/chat',
+  model: 'deepseek-chat',
+  provider: 'yunwu',
+  maxTokens: 1500,
+  temperature: 0.8,
+  rateLimit: { maxPerMin: 6, count: 0, resetAt: 0 },
+};
+
+// ═══════════════════════════════════════════════════════
+// 团队模式 API 配置
+// v3.0: 模型路由由后端 /hli/brain/route 动态决定
+// 此处为 fallback 默认值
+// ═══════════════════════════════════════════════════════
+const TEAM_API = {
+  proxyUrl: '/api/chat',
+  model: 'deepseek-chat',
+  provider: 'yunwu',
+  maxTokens: 2000,
+  temperature: 0.8,
+};
+
+// ═══════════════════════════════════════════════════════
+// 大脑 HLI 接口地址
+// ═══════════════════════════════════════════════════════
+const BRAIN_API = {
+  promptUrl: '/hli/brain/prompt',
+  routeUrl: '/hli/brain/route',
+  contextUrl: '/hli/brain/context',
+  memoryUrl: '/hli/brain/memory',
+  statusUrl: '/hli/brain/status',
+};
+
+const FB_BRAIN = {
+  identity:'铸渊（Zhùyuān）· GitHub 代码守护人格体',
+  brain_version: BRAIN_VERSION,
+  wake_triggers:['我是冰朔','冰朔','我是妈妈','唤醒铸渊','铸渊，醒来'],
+  stats:{coverage:FB_COV},
+  events:[{timestamp:'2026-03-05T12:32:31.000Z',type:'system_build',title:'广播分发系统 + 唤醒协议全部激活'}],
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const A = {
+  key:   sessionStorage.getItem('zy_key')||'',
+  base:  ls('zy_base')||'',
+  mdl:   ls('zy_mdl')||'',
+  prov:  'custom',
+  demo:  false,
+  teamMode: ls('zy_teammode')==='1',
+  brain: null,
+  routing: null,
+  devStatus: null,
+  notionProfile: null,
+  skyeyeReport: null,
+  systemHealth: null,
+  bulletinBoard: null,
+  federationStatus: null,
+  telemetrySummary: null,
+  msgs:  [],
+  currentConvId: null,
+  currentView: 'announcements',
+  streaming: false,
+  mode: 'chat',
+  modeIdx: 0,
+  userName: ls('zy_uname')||'',
+  ghUser:   ls('zy_ghuser')||'',
+  role:     ls('zy_role')||'guest',
+  userMeta: null,
+};
+
+// ═══════════════════════════════════════════════════════
+// ENVIRONMENT DETECTION (staging vs production)
+// ═══════════════════════════════════════════════════════
+const HOLOLAKE_ENV = (function(){
+  const host = window.location.hostname;
+  if(host === 'guanghulab.com' || host === 'www.guanghulab.com') return 'production';
+  if(host.includes('github.io')) return 'staging';
+  return 'local';
+})();
+window.HOLOLAKE_ENV = HOLOLAKE_ENV;
+
+function ls(k){return localStorage.getItem(k)}
+function lss(k,v){localStorage.setItem(k,v)}
+
+const RESET_KEYS = ['zy_key','zy_base','zy_mdl','zy_prov','zy_uname','zy_ghuser','zy_role'];
+
+// ═══════════════════════════════════════════════════════
+// CHAT HISTORY (localStorage)
+// ═══════════════════════════════════════════════════════
+function loadConversations(){
+  try{return JSON.parse(localStorage.getItem('zy_conversations')||'[]');}
+  catch(e){return [];}
+}
+function saveConversations(convs){
+  localStorage.setItem('zy_conversations',JSON.stringify(convs.slice(0,MAX_CONVERSATIONS)));
+}
+function createNewConversation(){
+  const conv={
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    title:'新对话',
+    messages:[],
+    createdAt:new Date().toISOString(),
+    updatedAt:new Date().toISOString()
+  };
+  const convs=loadConversations();
+  convs.unshift(conv);
+  saveConversations(convs);
+  A.currentConvId=conv.id;
+  return conv;
+}
+function getConvTitle(){
+  const first=A.msgs.find(m=>m.role==='user');
+  if(!first) return '新对话';
+  return first.content.length>20 ? first.content.slice(0,20)+'…' : first.content;
+}
+function saveCurrentConversation(){
+  if(!A.currentConvId||!A.msgs.length) return;
+  const convs=loadConversations();
+  const idx=convs.findIndex(c=>c.id===A.currentConvId);
+  const conv={
+    id:A.currentConvId,
+    title:getConvTitle(),
+    messages:A.msgs.slice(),
+    createdAt:idx>=0?convs[idx].createdAt:new Date().toISOString(),
+    updatedAt:new Date().toISOString()
+  };
+  if(idx>=0) convs[idx]=conv;
+  else convs.unshift(conv);
+  saveConversations(convs);
+  renderConvList();
+}
+function loadConversation(id){
+  const convs=loadConversations();
+  const conv=convs.find(c=>c.id===id);
+  if(!conv) return;
+  A.currentConvId=id;
+  A.msgs=conv.messages.slice();
+  const msgsEl=document.getElementById('msgs');
+  msgsEl.innerHTML='';
+  for(const msg of A.msgs){
+    if(msg.role==='user') userMsg(msg.content);
+    else if(msg.role==='assistant'){
+      const bblEl=botMsg(md(msg.content));
+      if(bblEl) { addCopyBtns(bblEl); enhanceExecBlocks(bblEl); }
+    }
+  }
+  renderConvList();
+  navigateTo('chat');
+}
+function deleteConversation(id){
+  let convs=loadConversations();
+  convs=convs.filter(c=>c.id!==id);
+  saveConversations(convs);
+  if(A.currentConvId===id){
+    A.currentConvId=null;
+    A.msgs=[];
+    document.getElementById('msgs').innerHTML='';
+    createNewConversation();
+    startConv();
+  }
+  renderConvList();
+}
+function renderConvList(){
+  const el=document.getElementById('conv-list');
+  if(!el) return;
+  const convs=loadConversations();
+  if(!convs.length){
+    el.innerHTML='<div class="conv-empty">暂无历史对话</div>';
+    return;
+  }
+  el.innerHTML=convs.map(c=>{
+    const active=c.id===A.currentConvId?' conv-active':'';
+    const time=new Date(c.updatedAt).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return '<div class="conv-item'+active+'" onclick="loadConversation(\''+c.id+'\')">'
+      +'<div class="conv-title">'+esc(c.title)+'</div>'
+      +'<div class="conv-time">'+time+'</div>'
+      +'<button class="conv-del" onclick="event.stopPropagation();deleteConversation(\''+c.id+'\')" title="删除">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION (announcements ↔ chat)
+// ═══════════════════════════════════════════════════════
+function navigateTo(view){
+  A.currentView=view;
+  const annEl=document.getElementById('announcements-view');
+  const chatEl=document.getElementById('chat-view');
+  if(view==='announcements'){
+    annEl.style.display='flex';
+    chatEl.style.display='none';
+    renderAnnouncements();
+  } else {
+    annEl.style.display='none';
+    chatEl.style.display='flex';
+    scrollB();
+  }
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const activeTab=document.querySelector('.nav-tab[data-view="'+view+'"]');
+  if(activeTab) activeTab.classList.add('active');
+}
+function newConvAndNav(){
+  createNewConversation();
+  startConv();
+  renderConvList();
+  navigateTo('chat');
+}
+function navigateAndSend(msg){
+  navigateTo('chat');
+  requestAnimationFrame(function(){qs(msg);});
+}
+
+// ═══════════════════════════════════════════════════════
+// LEFT SIDEBAR TOGGLE (mobile)
+// ═══════════════════════════════════════════════════════
+function toggleLeftSidebar(){
+  const ls=document.getElementById('left-sidebar');
+  const ov=document.getElementById('ls-overlay');
+  ls.classList.toggle('open');
+  ov.classList.toggle('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// ANNOUNCEMENTS
+// ═══════════════════════════════════════════════════════
+function renderAnnouncements(){
+  const el=document.getElementById('announcements-content');
+  if(!el) return;
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-5).reverse();
+  const meta=A.userMeta;
+  const bb=A.bulletinBoard;
+  const sh=A.systemHealth;
+  const fs=A.federationStatus;
+  const tl=A.telemetrySummary;
+
+  let h='';
+
+  // Environment watermark
+  if(HOLOLAKE_ENV==='staging'){
+    h+='<div style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--warn);text-align:center">⚠️ 预览测试环境（Staging） · 非正式站</div>';
+  }
+
+  // System announcements — use real bulletin-board.json data
+  h+='<div class="ann-section"><div class="ann-section-title">📢 系统公告</div><div class="ann-card">';
+  if(bb&&bb.announcements&&bb.announcements.length>0){
+    bb.announcements.forEach(function(ann){
+      h+='<div class="ann-item">'+(ann.emoji||'📌')+' '+esc(ann.title||'')+'<span class="ann-date">'+esc(ann.date||'')+'</span></div>';
+      if(ann.detail) h+='<div style="font-size:11px;color:var(--dim);padding:2px 0 6px 24px">'+esc(ann.detail)+'</div>';
+    });
+  } else {
+    // Fallback to hardcoded if bulletin-board not loaded
+    h+='<div class="ann-item">🔗 全链路自动化闭环上线 — CI/CD、广播分发、唤醒协议、PSP 巡检</div>';
+    h+='<div class="ann-item">🧠 AGE OS v0.1 人格语言操作系统构建中</div>';
+    h+='<div class="ann-item">📊 HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')</div>';
+  }
+  if(evs.length){
+    evs.forEach(function(ev){
+      h+='<div class="ann-item">📌 '+esc(ev.title||ev.type||'事件')+'<span class="ann-date">'+(ev.timestamp||'').slice(0,10)+'</span></div>';
+    });
+  }
+  h+='</div></div>';
+
+  // System health panel — real data from system-health.json
+  if(sh){
+    h+='<div class="ann-section"><div class="ann-section-title">🦅 天眼 · 系统健康</div><div class="ann-card">';
+    const m=sh.metrics||{};
+    const sc=sh.last_skyeye_scan||{};
+    h+='<div class="ann-item">🟢 系统状态：'+(sh.system_status==='healthy'?'✅ 健康':sh.system_status==='warning'?'⚠️ 警告':'❌ 异常')+'</div>';
+    h+='<div class="ann-item">⚙️ 工作流：'+(m.workflows?.total||0)+' 个 · 活跃 '+(m.workflows?.active||0)+'</div>';
+    h+='<div class="ann-item">🤖 Agent：'+(m.agents?.total||0)+' 个</div>';
+    h+='<div class="ann-item">🛡️ 守卫：'+(m.guards?.active||0)+'/'+(m.guards?.total||0)+' 活跃</div>';
+    h+='<div class="ann-item">🧬 本体论：'+(m.ontology_version||'v1.0')+' · 神经系统：'+(m.neural_system_version||'v3.0')+'</div>';
+    if(sc.id) h+='<div class="ann-item">🔍 最近扫描：'+esc(sc.id)+' · 问题 '+(sc.issues||0)+' · 警告 '+(sc.warnings||0)+'</div>';
+    if(sh.hibernation) h+='<div class="ann-item">🌙 休眠：'+esc(sh.hibernation.next_daily||'')+' · '+esc(sh.hibernation.next_weekly||'')+'</div>';
+    h+='</div></div>';
+  }
+
+  // Persona telemetry panel
+  if(tl){
+    h+='<div class="ann-section"><div class="ann-section-title">📡 铸渊遥测</div><div class="ann-card">';
+    const ps=tl.persona_state||{};
+    h+='<div class="ann-item">🧠 活跃人格：'+esc(ps.active_persona||'铸渊')+' · '+esc(ps.style_profile||'')+'</div>';
+    h+='<div class="ann-item">📊 24h 会话：'+(tl.sessions?.total_24h||0)+' 次 · '+(tl.sessions?.total_messages||0)+' 条消息</div>';
+    const rh=tl.repo_health||{};
+    h+='<div class="ann-item">📈 HLI 覆盖：'+(rh.hli_coverage||c.implemented+'/'+c.total)+' · 团队 '+(rh.total_team_members||0)+' 人</div>';
+    if(tl.alerts&&tl.alerts.length>0){
+      tl.alerts.forEach(function(a){ h+='<div class="ann-item" style="color:var(--warn)">⚠️ '+esc(a)+'</div>'; });
+    }
+    h+='</div></div>';
+  }
+
+  // My tasks
+  if(meta){
+    h+='<div class="ann-section"><div class="ann-section-title">📋 我的待办</div><div class="ann-card">';
+    const ds=A.devStatus?.team_status?.find(function(d){return d.dev_id===meta.devId;});
+    if(ds){
+      h+='<div class="ann-item">📌 状态：'+esc(ds.status)+'</div>';
+      h+='<div class="ann-item">👉 下一步：'+esc(ds.next_step)+'</div>';
+      if(ds.waiting_for&&ds.waiting_for.trim()!=='') h+='<div class="ann-item">⏳ 等待：'+esc(ds.waiting_for)+'</div>';
+    } else if(meta.role==='founder'){
+      h+='<div class="ann-item">❄️ 语言架构层 — 持续完善中</div>';
+      h+='<div class="ann-item">👉 监控 HLI 接口推进</div>';
+    } else {
+      h+='<div class="ann-item" style="color:var(--dim)">暂无待办数据</div>';
+    }
+    h+='</div></div>';
+  }
+
+  // Quick actions
+  h+='<div class="ann-section"><div class="ann-section-title">⚡ 快捷操作</div><div class="ann-actions">';
+  h+='<button class="ann-action-btn" onclick="navigateTo(\'chat\')">💬 和铸渊对话</button>';
+  h+='<button class="ann-action-btn" onclick="navigateAndSend(\'查看接口覆盖率\')">📊 查询状态</button>';
+  h+='<button class="ann-action-btn" onclick="navigateAndSend(\'帮我写一个提交日志\')">📝 提交日志</button>';
+  h+='<button class="ann-action-btn" onclick="navigateAndSend(\'帮我写一个 HLI 接口\')">📦 上传模块</button>';
+  h+='</div></div>';
+
+  // Module navigation — real modules with correct paths
+  h+='<div class="ann-section"><div class="ann-section-title">🗂️ 模块导航</div><div class="ann-actions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">';
+  var modules=[
+    {icon:'📊',name:'状态看板',path:'../status-board/',dev:'DEV-005',ready:true},
+    {icon:'🎫',name:'工单系统',path:'../ticket-system/',dev:'DEV-010',ready:true},
+    {icon:'📈',name:'数据统计',path:'../data-stats/',dev:'DEV-010',ready:false},
+    {icon:'🔔',name:'通知中心',path:'../notification/',dev:'DEV-012',ready:true},
+    {icon:'👤',name:'用户中心',path:'../user-center/',dev:'DEV-009',ready:false},
+    {icon:'⚙️',name:'设置',path:'../settings/',dev:'DEV-003',ready:false},
+    {icon:'☁️',name:'云盘',path:'../cloud-drive/',dev:'DEV-003',ready:false},
+    {icon:'✍️',name:'码字台',path:'../writing-workspace/',dev:'DEV-011',ready:false},
+    {icon:'🎨',name:'动态漫画',path:'../dynamic-comic-studio/',dev:'DEV-010',ready:true},
+    {icon:'🧠',name:'Persona Studio',path:'../persona-studio/frontend/index.html',dev:'',ready:true},
+    {icon:'📈',name:'仪表盘',path:'dashboard/',dev:'',ready:true},
+    {icon:'🖥️',name:'前端',path:'../frontend/',dev:'DEV-002',ready:true},
+  ];
+  modules.forEach(function(m){
+    var style=m.ready?'':'opacity:0.5;';
+    var badge=m.ready?'':'<span style="font-size:9px;color:var(--warn)"> 开发中</span>';
+    h+='<a href="'+m.path+'" class="ann-action-btn" style="text-decoration:none;text-align:center;display:block;'+style+'">'+m.icon+' '+m.name+badge+'</a>';
+  });
+  h+='</div></div>';
+
+  el.innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════════════
+// RIGHT SIDEBAR (desktop, controllers only)
+// ═══════════════════════════════════════════════════════
+function renderRightSidebar(){
+  const container=document.getElementById('rsb');
+  if(!container) return;
+  const ds=A.devStatus;
+  const meta=A.userMeta;
+  let h='';
+
+  // Team summary (from team panel)
+  if(ds){
+    const ts=ds.team_status||[];
+    const green=ts.filter(function(d){return d.status.includes('🟢');}).length;
+    const yellow=ts.filter(function(d){return d.status.includes('🟡');}).length;
+    h+='<div class="team-summary">';
+    h+='<div class="team-summary-row"><span>总开发者</span><span class="iv">'+ts.length+' 人</span></div>';
+    h+='<div class="team-summary-row"><span>🟢 推进中</span><span style="color:var(--ok)">'+green+' 人</span></div>';
+    h+='<div class="team-summary-row"><span>🟡 等待中</span><span style="color:var(--warn)">'+yellow+' 人</span></div>';
+    h+='</div>';
+
+    // Quick commands
+    h+='<div style="margin-bottom:12px">';
+    h+='<div style="font-size:11px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">快捷指令</div>';
+    h+='<span class="cmd-chip" onclick="navigateAndSend(\'查看所有开发者当前进度\')">📋 全员进度</span>';
+    h+='<span class="cmd-chip" onclick="navigateAndSend(\'谁需要协调？\')">🆘 需要协调</span>';
+    h+='<span class="cmd-chip" onclick="navigateAndSend(\'推进计划\')">🗺️ 下一步</span>';
+    h+='</div>';
+
+    // Dev cards (compact)
+    h+='<div class="rs-section"><div class="rs-section-title">团队成员</div>';
+    h+='<div class="team-grid">';
+    for(const dev of ts){
+      const isGreen=dev.status.includes('🟢');
+      h+='<div class="dev-card" style="padding:8px 10px">';
+      h+='<div class="dev-card-head" style="margin-bottom:3px"><span class="dev-name" style="font-size:12px">'+esc(dev.name)+'</span><span class="dev-id-badge">'+esc(dev.dev_id)+'</span></div>';
+      h+='<div class="dev-status-text '+(isGreen?'status-green':'status-yellow')+'" style="font-size:11px">'+esc(dev.status)+'</div>';
+      if(dev.next_step) h+='<div class="dev-next" style="font-size:10px">👉 '+esc(dev.next_step)+'</div>';
+      h+='</div>';
+    }
+    h+='</div></div>';
+  } else {
+    h+='<p style="color:var(--warn);font-size:12px">⚠️ 团队数据尚未加载</p>';
+  }
+
+  // My modules
+  h+='<div class="rs-section"><div class="rs-section-title">我的模块</div>';
+  if(meta&&ds){
+    const myDev=ds.team_status?.find(function(d){return d.dev_id===meta.devId;});
+    if(myDev&&myDev.modules){
+      myDev.modules.forEach(function(m){
+        h+='<div class="rs-module-card"><div class="rs-module-name">📦 '+esc(m)+'</div></div>';
+      });
+    } else if(meta.role==='founder'){
+      h+='<div class="rs-module-card"><div class="rs-module-name">📦 全局监控</div><div class="rs-module-status">HLI 全域</div></div>';
+    } else {
+      h+='<div class="rs-empty">暂无分配模块</div>';
+    }
+  } else {
+    h+='<div class="rs-empty">暂无分配模块</div>';
+  }
+  h+='</div>';
+
+  // My broadcasts
+  h+='<div class="rs-section"><div class="rs-section-title">我的广播</div>';
+  h+='<div class="rs-empty">暂无未读广播</div>';
+  h+='</div>';
+
+  container.innerHTML=h;
+}
+
+// ═══════════════════════════════════════════════════════
+// LEFT SIDEBAR USER INFO
+// ═══════════════════════════════════════════════════════
+function updateLeftSidebar(){
+  const meta=A.userMeta;
+  const avEl=document.getElementById('ls-avatar');
+  const nameEl=document.getElementById('ls-name');
+  const roleEl=document.getElementById('ls-role');
+  const didEl=document.getElementById('ls-devid');
+  if(meta){
+    avEl.textContent=meta.emoji||A.userName.slice(0,1);
+    nameEl.textContent=A.userName;
+    roleEl.innerHTML='<span class="role-badge '+meta.badgeCls+'">'+esc(meta.title)+'</span>';
+    if(meta.devId){
+      didEl.textContent=meta.devId;
+      didEl.style.display='inline-block';
+    } else {
+      didEl.style.display='none';
+    }
+  } else {
+    avEl.textContent='👤';
+    nameEl.textContent=A.userName||'访客';
+    roleEl.textContent='guest';
+    didEl.style.display='none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SETUP ID PREVIEW
+// ═══════════════════════════════════════════════════════
+function updateIdPreview(){
+  const sel=document.getElementById('suid');
+  const prev=document.getElementById('id-preview');
+  const name=sel.value;
+  if(!name){
+    prev.style.display='none';
+    return;
+  }
+  const meta=ROLE_MAP[name];
+  if(meta){
+    prev.style.display='block';
+    prev.innerHTML=meta.emoji+' <strong>'+esc(name)+'</strong> · '
+      +'<span class="role-badge '+meta.badgeCls+'">'+esc(meta.title)+'</span>'
+      +(meta.devId?' · <span class="ls-devid" style="display:inline">'+esc(meta.devId)+'</span>':'');
+  } else {
+    prev.style.display='none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function boot(){
+  if(new URLSearchParams(location.search).get('reset')==='1'){
+    RESET_KEYS.forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem('zy_key');
+    A.key=''; A.base=''; A.mdl=''; A.prov='custom'; A.demo=false;
+    A.userName=''; A.ghUser=''; A.role='guest';
+    history.replaceState(null,'',location.pathname);
+  }
+  localStorage.removeItem('zy_key');
+  initSetupUI();
+  if(A.userName) A.userMeta = ROLE_MAP[A.userName]||null;
+  if(A.key||A.demo){
+    showApp();
+  } else {
+    if(A.userName) document.getElementById('suid').value=A.userName;
+    document.getElementById('setup').style.display='flex';
+  }
+}
+
+function showApp(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').classList.add('on');
+  document.getElementById('hmdl').textContent = A.mdl||'—';
+  document.getElementById('bbdemo').style.display = A.demo?'inline':'none';
+  // Staging environment watermark
+  if(HOLOLAKE_ENV==='staging'&&!document.getElementById('staging-wm')){
+    var wm=document.createElement('div');
+    wm.id='staging-wm';
+    wm.className='staging-watermark';
+    wm.textContent='⚠️ 预览测试环境（Staging）· GitHub Pages · 非正式站';
+    document.body.prepend(wm);
+  }
+  applyIdentityUI();
+  updateLeftSidebar();
+  // Show right sidebar for controllers on desktop
+  const isCtrl=A.userMeta&&(A.userMeta.role==='supreme'||A.userMeta.role==='main'||A.userMeta.role==='founder');
+  const rsEl=document.getElementById('right-sidebar');
+  if(isCtrl && window.innerWidth>=900){
+    rsEl.style.display='flex';
+  } else {
+    rsEl.style.display='none';
+  }
+  loadBrain().then(function(){
+    loadNotionData(); // Load Notion profile + SkyEye report (non-blocking)
+    createNewConversation();
+    startConv();
+    renderConvList();
+    renderRightSidebar();
+    navigateTo('announcements');
+    initDragDrop();
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SETUP FORM
+// ═══════════════════════════════════════════════════════
+function initSetupUI(){
+  if(A.base){
+    const sepEl = document.getElementById('sep');
+    if(sepEl) sepEl.value = A.base;
+  }
+  if(A.userName){
+    const suidEl = document.getElementById('suid');
+    if(suidEl) suidEl.value = A.userName;
+    updateIdPreview();
+  }
+}
+
+function switchLoginMode(mode){
+  document.querySelectorAll('.login-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.login-mode').forEach(function(m){m.classList.remove('active');});
+  var tabs = document.querySelectorAll('.login-tab');
+  if(mode==='team'){
+    tabs[0].classList.add('active');
+    document.getElementById('login-team').classList.add('active');
+  } else if(mode==='guest'){
+    tabs[1].classList.add('active');
+    document.getElementById('login-guest').classList.add('active');
+  } else {
+    tabs[2].classList.add('active');
+    document.getElementById('login-dev').classList.add('active');
+  }
+}
+
+// (Provider switching removed — single custom endpoint mode)
+
+// ═══════════════════════════════════════════════════════
+// AUTO-DETECT PROVIDER & MODELS
+// ═══════════════════════════════════════════════════════
+async function autoDetectAPI(ctx){
+  const keyEl    = document.getElementById(ctx==='s'?'sk':'ck');
+  const statusEl = document.getElementById(ctx==='s'?'sdet-status':'cdet-status');
+  const btnEl    = document.getElementById(ctx==='s'?'sdet-btn':'cdet-btn');
+  const mdlSel   = document.getElementById(ctx==='s'?'sm':'cm');
+  const key = keyEl.value.trim();
+
+  if(!key){
+    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 请先输入 API 密钥</span>';
+    return;
+  }
+
+  // Build list of endpoints to probe: user's endpoint first, then known fallbacks
+  const userBase = (document.getElementById(ctx==='s'?'sep':'cep')?.value||'').trim();
+  const candidates = [];
+  if(userBase) candidates.push({label:userBase, base:userBase});
+  for(const ep of KNOWN_ENDPOINTS){
+    if(ep.base !== userBase) candidates.push(ep);
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = '⏳ 检测中…';
+  statusEl.innerHTML = '<span style="color:var(--dim)">🔍 正在探测可用模型…</span>';
+
+  let matched = false;
+  for(const {label, base} of candidates){
+    statusEl.innerHTML = '<span style="color:var(--dim)">🔍 探测 '+esc(label)+'…</span>';
+    try{
+      const ctrl = new AbortController();
+      const tid  = setTimeout(function(){ctrl.abort();}, PROBE_TIMEOUT_MS);
+      const res  = await fetch(base+'/models',{
+        headers:{'Authorization':'Bearer '+key},
+        signal: ctrl.signal,
+      });
+      clearTimeout(tid);
+      if(res.ok){
+        const data = await res.json();
+        const mdls = (data.data||[]).map(function(m){return m.id;}).filter(Boolean).sort();
+        if(!mdls.length) continue;
+
+        // Fill endpoint field with matched endpoint
+        const epEl = document.getElementById(ctx==='s'?'sep':'cep');
+        if(epEl) epEl.value = base;
+
+        // Fill model dropdown with detected models
+        if(mdlSel){
+          mdlSel.innerHTML = mdls.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('');
+          mdlSel.disabled = false;
+        }
+
+        statusEl.innerHTML = '<span style="color:var(--ok)">✅ 检测成功（'+esc(label)+'）· 发现 <strong>'+mdls.length+'</strong> 个可用模型</span>';
+        matched = true;
+        break;
+      }
+    }catch(e){ console.debug('autoDetect probe failed:', label, e.message); }
+  }
+
+  if(!matched){
+    statusEl.innerHTML = '<span style="color:var(--err)">❌ 未能检测到可用模型，请检查端点地址和密钥是否正确</span>';
+  }
+
+  btnEl.disabled = false;
+  btnEl.textContent = '🔍 检测模型';
+}
+
+function doSetup(){
+  const un   = document.getElementById('suid').value;
+  const k    = document.getElementById('sk').value.trim();
+  const base = (document.getElementById('sep')?.value||'').trim();
+  const md   = document.getElementById('sm').value;
+  const errEl = document.getElementById('sk-err');
+
+  if(!un){
+    alert('请选择你的开发者身份');
+    return;
+  }
+  if(!k){errEl.style.display='block';return;}
+  errEl.style.display='none';
+  if(!base){
+    alert('请输入 API 端点 URL');
+    return;
+  }
+  if(!md){
+    alert('请先点击「🔍 检测模型」检测可用模型，然后选择一个模型');
+    return;
+  }
+
+  A.key=k; A.base=base; A.mdl=md; A.prov='custom'; A.demo=false;
+  sessionStorage.setItem('zy_key', k);
+  lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov','custom');
+  setIdentity(un, '');
+  showApp();
+}
+
+function doDemo(){
+  A.demo=true; A.teamMode=false; A.key=''; A.prov='custom';
+  A.mdl=GUEST_API.model;
+  lss('zy_teammode','0');
+  setIdentity('', '');
+  showApp();
+}
+
+function onTeamSelectChange(){
+  var sel = document.getElementById('tuid').value;
+  var customBox = document.getElementById('team-custom-input');
+  if(sel==='__custom__'){
+    customBox.style.display='';
+    document.getElementById('tcustom-id').value='';
+    document.getElementById('tcustom-id').focus();
+  } else {
+    customBox.style.display='none';
+  }
+  updateTeamIdPreview();
+}
+
+function updateTeamIdPreview(){
+  var sel = document.getElementById('tuid').value;
+  var el = document.getElementById('team-id-preview');
+  if(!el) return;
+
+  // Custom dev ID input mode
+  if(sel==='__custom__'){
+    var raw = (document.getElementById('tcustom-id').value||'').trim().toUpperCase();
+    if(!raw){
+      el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px;color:var(--dim)">'
+        + '✏️ 请输入你的开发者编号（格式：DEV-XXX）'
+        + '</div>';
+      return;
+    }
+    // Validate format
+    if(DEV_ID_RE.test(raw)){
+      el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px">'
+        + '💻 <strong>'+esc(raw)+'</strong> · 自定义开发者'
+        + '<br><span style="color:var(--ok);font-size:12px">✅ 使用服务器端 API 代理 · 200k 上下文 · 首次登录将自动注册</span>'
+        + '</div>';
+    } else {
+      el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px">'
+        + '<span style="color:var(--err)">⚠️ 编号格式不正确，请使用 DEV-XXX 格式（如 DEV-013）</span>'
+        + '</div>';
+    }
+    return;
+  }
+
+  // Normal dropdown selection mode
+  if(!sel){ el.innerHTML=''; return; }
+  var meta = ROLE_MAP[sel];
+  if(meta){
+    el.innerHTML = '<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px">'
+      + meta.emoji+' <strong>'+esc(sel)+'</strong> · '+meta.title
+      + (meta.devId ? ' · <code>'+meta.devId+'</code>' : '')
+      + '<br><span style="color:var(--ok);font-size:12px">✅ 使用服务器端 API 代理 · 200k 上下文 · 无需密钥</span>'
+      + '</div>';
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function doTeamLogin(){
+  var sel = document.getElementById('tuid').value;
+  var un = sel;
+
+  // Handle custom dev ID
+  if(sel==='__custom__'){
+    var raw = (document.getElementById('tcustom-id').value||'').trim().toUpperCase();
+    if(!raw){
+      alert('请输入你的开发者编号（格式：DEV-XXX）');
+      return;
+    }
+    if(!DEV_ID_RE.test(raw)){
+      alert('开发者编号格式不正确，请使用 DEV-XXX 格式（如 DEV-013）');
+      return;
+    }
+    un = raw;
+  }
+
+  if(!un){
+    alert('请选择你的开发者身份');
+    return;
+  }
+  // 团队模式：使用服务器代理，不需要 API 密钥
+  A.demo = true;
+  A.teamMode = true;
+  A.key = '';
+  A.prov = 'custom';
+  A.mdl = TEAM_API.model;
+  lss('zy_teammode','1');
+  setIdentity(un, '');
+
+  // For custom DEV-XXX IDs, try to sync from Notion (non-blocking)
+  if(sel==='__custom__' && DEV_ID_RE.test(un)){
+    syncDevFromNotion(un);
+  }
+
+  showApp();
+}
+
+// Sync developer info from Notion (non-blocking, best-effort)
+function syncDevFromNotion(devId){
+  var apiBase = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+    ? 'http://localhost:3000' : '';
+  var url = apiBase + '/api/v1/developers/' + encodeURIComponent(devId);
+
+  fetch(url).then(function(r){ return r.json(); }).then(function(data){
+    if(data.found && data.developer){
+      var dev = data.developer;
+      // Update identity with Notion data if available
+      if(dev.name && dev.name !== devId){
+        A.userMeta = {
+          role: 'dev',
+          title: dev.title || dev.role || '开发者',
+          emoji: '💻',
+          badgeCls: 'rb-dev',
+          devId: devId
+        };
+        A.userName = dev.name;
+        lss('zy_uname', A.userName);
+        applyIdentityUI();
+        console.log('[铸渊] Notion 开发者同步成功:', devId, '→', dev.name);
+      }
+    } else {
+      // Developer not found in Notion — try to register (best effort)
+      fetch(apiBase + '/api/v1/developers', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({devId: devId, name: devId})
+      }).then(function(r){ return r.json(); }).then(function(reg){
+        console.log('[铸渊] 开发者自动注册:', reg.created ? '成功' : '已存在', devId);
+      }).catch(function(e){
+        console.log('[铸渊] 开发者注册跳过（后端未就绪）:', e.message);
+      });
+    }
+  }).catch(function(e){
+    console.log('[铸渊] Notion 同步跳过（后端未就绪）:', e.message);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS PANEL
+// ═══════════════════════════════════════════════════════
+function initSettingsPanel(){
+  const cepEl = document.getElementById('cep');
+  if(cepEl) cepEl.value = A.base||'';
+  const cmEl = document.getElementById('cm');
+  if(cmEl && A.mdl){
+    if(!cmEl.querySelector('option[value="'+A.mdl+'"]')){
+      cmEl.innerHTML = '<option value="'+A.mdl+'">'+A.mdl+'</option>';
+    }
+    cmEl.value = A.mdl;
+  }
+  document.getElementById('ck').value = '';
+  const hint = document.getElementById('ck-hint');
+  if(hint){
+    hint.textContent = A.key
+      ? '🕐 密钥本次会话有效（末4位：…'+(A.key.length>=4?A.key.slice(-4):A.key)+'）· 留空保持不变，输入新值即替换 · 关闭标签页自动清除'
+      : '🔒 密钥仅本次会话有效，关闭标签页自动清除，请输入后保存';
+  }
+  if(A.userName) document.getElementById('cuid').value=A.userName;
+  if(A.ghUser)   document.getElementById('cghuser').value=A.ghUser;
+}
+
+function saveSet(){
+  const base = (document.getElementById('cep')?.value||'').trim()||A.base;
+  const md  = document.getElementById('cm')?.value||A.mdl;
+  const raw = document.getElementById('ck').value.trim();
+  const k = raw || A.key;
+  A.key=k; A.base=base; A.mdl=md; A.prov='custom'; A.demo=!k;
+  if(k){ sessionStorage.setItem('zy_key', k); } else { sessionStorage.removeItem('zy_key'); }
+  lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov','custom');
+  const un = document.getElementById('cuid')?.value||A.userName;
+  const gh = document.getElementById('cghuser')?.value?.trim()||A.ghUser;
+  setIdentity(un, gh);
+  document.getElementById('hmdl').textContent=md;
+  document.getElementById('bbdemo').style.display=A.demo?'inline':'none';
+  applyIdentityUI();
+  updateLeftSidebar();
+  // Update right sidebar visibility
+  const isCtrl=A.userMeta&&(A.userMeta.role==='supreme'||A.userMeta.role==='main'||A.userMeta.role==='founder');
+  const rsEl=document.getElementById('right-sidebar');
+  if(isCtrl && window.innerWidth>=900){
+    rsEl.style.display='flex';
+    renderRightSidebar();
+  } else {
+    rsEl.style.display='none';
+  }
+  closeP();
+  const keyNote = raw ? ' · 🔑 新密钥已保存（末4位：…'+(k.length>=4?k.slice(-4):k)+'）' : ' · 🔑 密钥未变更';
+  navigateTo('chat');
+  botMsg('✅ 设置已保存。模型：<strong>'+esc(md)+'</strong>'+keyNote+(un?' · 身份：'+esc(un):'')+(A.demo?'<br>⚠️ 未设置 API 密钥，演示模式仍然开启。':''));
+}
+
+// ═══════════════════════════════════════════════════════
+// RESET ALL SETTINGS
+// ═══════════════════════════════════════════════════════
+function resetAllSettings(){
+  if(!confirm('确定要清除所有本地设置吗？\n\n· API 密钥会被删除\n· 身份设置会被删除\n· 对话历史会被保留\n· 将返回初始设置界面\n\n这不会影响任何云端数据。')) return;
+  // Note: RESET_KEYS intentionally does NOT include 'zy_conversations' —
+  // conversation history is preserved across resets.
+  RESET_KEYS.forEach(k => localStorage.removeItem(k));
+  sessionStorage.removeItem('zy_key');
+  window.location.reload();
+}
+
+// ═══════════════════════════════════════════════════════
+// BRAIN LOADING
+// ═══════════════════════════════════════════════════════
+async function loadBrain(){
+  try{
+    const [mr,rr,dr,shr,bbr,fsr,tlr]=await Promise.all([
+      fetch(RAW+'/.github/brain/memory.json').catch(e=>{console.debug('[Brain] memory fetch failed:',e.message);return null;}),
+      fetch(RAW+'/.github/brain/routing-map.json').catch(e=>{console.debug('[Brain] routing fetch failed:',e.message);return null;}),
+      fetch(RAW+'/.github/persona-brain/dev-status.json').catch(e=>{console.debug('[Brain] devStatus fetch failed:',e.message);return null;}),
+      fetch(RAW+'/data/system-health.json').catch(e=>{console.debug('[Brain] systemHealth fetch failed:',e.message);return null;}),
+      fetch(RAW+'/data/bulletin-board.json').catch(e=>{console.debug('[Brain] bulletin fetch failed:',e.message);return null;}),
+      fetch(RAW+'/federation-status.json').catch(e=>{console.debug('[Brain] federation fetch failed:',e.message);return null;}),
+      fetch(RAW+'/persona-telemetry/latest-summary.json').catch(e=>{console.debug('[Brain] telemetry fetch failed:',e.message);return null;}),
+    ]);
+    if(mr&&mr.ok) try{A.brain=await mr.json();}catch(e){console.debug('[Brain] memory parse failed:',e.message);}
+    if(rr&&rr.ok) try{A.routing=await rr.json();}catch(e){console.debug('[Brain] routing parse failed:',e.message);}
+    if(dr&&dr.ok) try{A.devStatus=await dr.json();}catch(e){console.debug('[Brain] devStatus parse failed:',e.message);}
+    if(shr&&shr.ok) try{A.systemHealth=await shr.json();}catch(e){console.debug('[Brain] systemHealth parse failed:',e.message);}
+    if(bbr&&bbr.ok) try{A.bulletinBoard=await bbr.json();}catch(e){console.debug('[Brain] bulletin parse failed:',e.message);}
+    if(fsr&&fsr.ok) try{A.federationStatus=await fsr.json();}catch(e){console.debug('[Brain] federation parse failed:',e.message);}
+    if(tlr&&tlr.ok) try{A.telemetrySummary=await tlr.json();}catch(e){console.debug('[Brain] telemetry parse failed:',e.message);}
+  }catch(_){}
+  if(!A.brain) A.brain={...FB_BRAIN};
+  updBbar();
+}
+
+function updBbar(){
+  const b=A.brain||FB_BRAIN;
+  const sh=A.systemHealth;
+  const c=b.stats?.coverage||FB_COV;
+  const ev=b.events?.slice(-1)[0];
+  // Use system-health data if available for richer status bar
+  if(sh){
+    const m=sh.metrics||{};
+    const wf=m.workflows||{};
+    const sc=sh.last_skyeye_scan||{};
+    document.getElementById('bbc').textContent='🟢 系统健康 · '+wf.total+' 工作流 · '+m.agents?.total+' Agent · HLI '+c.implemented+'/'+c.total;
+  } else {
+    document.getElementById('bbc').textContent='📊 HLI '+c.implemented+'/'+c.total+' ('+c.percent+')';
+  }
+  document.getElementById('bbe').textContent=ev?('📌 '+(ev.title||ev.type||'').slice(0,28)):'';
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTION PROFILE + SKYEYE DATA LOADING
+// 双通道架构：通道B（实时后端）优先 → 通道A（GitHub缓存）降级
+// ═══════════════════════════════════════════════════════
+const GH_API_BASE = 'https://api.github.com/repos/' + REPO + '/contents/';
+const GH_RAW_HEADERS = { 'Accept': 'application/vnd.github.v3.raw' };
+const API_BASE = HOLOLAKE_ENV === 'production' ? 'https://guanghulab.com/api' : '';
+const CACHE_BASE = 'https://raw.githubusercontent.com/' + REPO + '/main/.github/notion-cache';
+
+async function fetchNotionProfile(devId) {
+  if (!devId) return null;
+  // 通道B（实时后端）
+  if (API_BASE) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(function() { ctrl.abort(); }, 5000);
+      try {
+        const res = await fetch(API_BASE + '/dev/' + encodeURIComponent(devId), { signal: ctrl.signal });
+        if (res.ok) { const d = await res.json(); d._source = 'realtime'; return d; }
+      } finally { clearTimeout(tid); }
+    } catch (e) { console.debug('[通道B] profile fetch failed, 降级到通道A:', e.message); }
+  }
+  // 通道A（GitHub 缓存）
+  try {
+    const url = GH_API_BASE + '.github/notion-cache/dev-profiles/' + encodeURIComponent(devId) + '.json';
+    const res = await fetch(url, { headers: GH_RAW_HEADERS });
+    if (res.ok) { const d = await res.json(); d._source = 'cache'; return d; }
+  } catch (e) { console.debug('[通道A] profile fetch failed:', e.message); }
+  return null;
+}
+
+async function loadDatabaseCache(name) {
+  // 通道B（实时后端）
+  if (API_BASE) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(function() { ctrl.abort(); }, 5000);
+      try {
+        const res = await fetch(API_BASE + '/databases/' + encodeURIComponent(name), { signal: ctrl.signal });
+        if (res.ok) return await res.json();
+      } finally { clearTimeout(tid); }
+    } catch (e) { console.debug('[通道B] database ' + name + ' fetch failed:', e.message); }
+  }
+  // 通道A（GitHub 缓存）
+  try {
+    const res = await fetch(CACHE_BASE + '/databases/' + encodeURIComponent(name) + '.json');
+    if (res.ok) return await res.json();
+  } catch (e) { console.debug('[通道A] database ' + name + ' fetch failed:', e.message); }
+  return null;
+}
+
+async function fetchSkyeyeReport() {
+  // Primary: use system-health.json already loaded
+  if (A.systemHealth) {
+    const sh = A.systemHealth;
+    return {
+      overall_status: sh.system_status || 'unknown',
+      timestamp: sh.last_updated,
+      scan_id: sh.last_skyeye_scan?.id,
+      workflows: sh.metrics?.workflows?.total,
+      agents: sh.metrics?.agents?.total,
+      guards: sh.last_skyeye_scan?.guards,
+      issues: sh.last_skyeye_scan?.issues,
+      warnings: sh.last_skyeye_scan?.warnings,
+    };
+  }
+  // Fallback: try GitHub API cache
+  try {
+    const url = GH_API_BASE + '.github/notion-cache/skyeye/latest-report.json';
+    const res = await fetch(url, { headers: GH_RAW_HEADERS });
+    if (res.ok) return await res.json();
+  } catch (e) { console.debug('[SkyEye] report fetch failed:', e.message); }
+  return null;
+}
+
+async function loadNotionData() {
+  const meta = A.userMeta;
+  const devId = meta?.devId;
+  const [profile, skyeye, agentCache, syslogCache] = await Promise.all([
+    fetchNotionProfile(devId),
+    fetchSkyeyeReport(),
+    loadDatabaseCache('agent-registry'),
+    loadDatabaseCache('syslog-recent'),
+  ]);
+  A.notionProfile = profile;
+  A.skyeyeReport = skyeye;
+  A.agentRegistryCache = agentCache;
+  A.syslogRecentCache = syslogCache;
+  updateSkyeyeCard();
+}
+
+function updateSkyeyeCard() {
+  const card = document.getElementById('skyeye-card');
+  if (!card) return;
+  const report = A.skyeyeReport;
+  const profile = A.notionProfile;
+  const meta = A.userMeta;
+  const sh = A.systemHealth;
+  const bb = A.bulletinBoard;
+
+  // Always show the card now since we have system-health data
+  if (!report && !profile && !sh) { card.classList.remove('on'); return; }
+  card.classList.add('on');
+
+  // SkyEye overall status - use system-health as primary
+  const statusEl = document.getElementById('skyeye-status');
+  const timeEl = document.getElementById('skyeye-time');
+  if (sh) {
+    const s = sh.system_status || 'unknown';
+    statusEl.textContent = s === 'healthy' ? '✅ 健康' : s === 'warning' ? '⚠️ 警告' : s === 'error' ? '❌ 异常' : s;
+    statusEl.className = 'skyeye-tag ' + (s === 'healthy' ? 'ok' : s === 'warning' ? 'warn' : 'err');
+    if (sh.last_updated) {
+      const d = new Date(sh.last_updated);
+      timeEl.textContent = '· 上次更新 ' + d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+  } else if (report) {
+    const s = report.overall_status || 'unknown';
+    statusEl.textContent = s === 'healthy' ? '✅ 健康' : s === 'warning' ? '⚠️ 警告' : s === 'error' ? '❌ 异常' : s;
+    statusEl.className = 'skyeye-tag ' + (s === 'healthy' ? 'ok' : s === 'warning' ? 'warn' : 'err');
+    if (report.timestamp) {
+      const d = new Date(report.timestamp);
+      timeEl.textContent = '· 上次扫描 ' + d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+  } else {
+    statusEl.textContent = '未获取';
+    statusEl.className = 'skyeye-tag';
+    timeEl.textContent = '';
+  }
+
+  // Developer repo info
+  const repoRow = document.getElementById('skyeye-repo-row');
+  const repoInfo = document.getElementById('skyeye-repo-info');
+  if (sh) {
+    repoRow.style.display = 'flex';
+    const m = sh.metrics || {};
+    repoInfo.textContent = m.workflows?.total + ' 工作流 · ' + (m.agents?.total||0) + ' Agent · ' + (m.guards?.active||0) + '/' + (m.guards?.total||0) + ' 守卫';
+  } else if (profile && profile.github) {
+    repoRow.style.display = 'flex';
+    const mods = profile.modules_owned || [];
+    const warns = profile.skyeye_health?.warnings || [];
+    repoInfo.textContent = profile.github.repo + (mods.length ? ' · ' + mods.length + '个模块' : '') + (warns.length ? ' · ' + warns.length + '个待修' : '');
+  } else {
+    repoRow.style.display = 'none';
+  }
+
+  // Broadcast info - use bulletin-board as primary
+  const bcRow = document.getElementById('skyeye-broadcast-row');
+  const bcInfo = document.getElementById('skyeye-broadcast-info');
+  if (bb && bb.announcements && bb.announcements.length > 0) {
+    bcRow.style.display = 'flex';
+    const latest = bb.announcements[0];
+    bcInfo.textContent = (latest.emoji||'') + ' ' + (latest.title||'') + ' · ' + (latest.date||'');
+  } else if (profile && profile.current_work && profile.current_work.broadcast_id) {
+    bcRow.style.display = 'flex';
+    const cw = profile.current_work;
+    bcInfo.textContent = cw.broadcast_id + (cw.current_ring ? ' · 环节' + cw.current_ring + '进行中' : '') + (cw.status ? ' · ' + cw.status : '');
+  } else {
+    bcRow.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// @铸渊执行 — 创建 GitHub Issue 提交指令
+// ═══════════════════════════════════════════════════════
+async function submitToZhuyuan(instructionText, instructionId, moduleName) {
+  const meta = A.userMeta;
+  const devId = meta?.devId || 'UNKNOWN';
+  const devName = A.userName || '未知开发者';
+  const profile = A.notionProfile;
+  const targetRepo = profile?.github?.repo || 'guanghulab';
+
+  const issueTitle = '🚀 [' + (instructionId || 'ZY-EXEC') + '] ' + devName + '·' + (moduleName || '执行指令');
+  const issueBody = [
+    '## 📋 执行指令',
+    '',
+    '```',
+    instructionText,
+    '```',
+    '',
+    '## 📡 元信息',
+    '- 提交人：' + devName + '（' + devId + '）',
+    '- 目标仓库：' + targetRepo,
+    '- 提交时间：' + new Date().toISOString(),
+    '- 来源：铸渊交互页面',
+    '',
+    '## 🦅 天眼要求',
+    '**铸渊执行前必须先跑天眼全局扫描，拿到健康报告后再动手。**',
+    '',
+    '---',
+    '> ' + devName + ' 通过交互页面提交 · 铸渊自动执行',
+  ].join('\n');
+
+  const labels = ['zhuyuan-exec', 'skyeye-required'];
+  if (devId !== 'UNKNOWN') labels.push(devId);
+
+  // Create Issue via GitHub API — requires a token
+  const ghToken = sessionStorage.getItem('zy_gh_token') || A.key;
+  if (!ghToken) {
+    alert('需要 GitHub Token 才能提交执行指令。请在设置中配置。');
+    return null;
+  }
+
+  try {
+    const res = await fetch('https://api.github.com/repos/' + REPO + '/issues', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + ghToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: issueTitle,
+        body: issueBody,
+        labels: labels
+      })
+    });
+    if (res.ok) {
+      const issue = await res.json();
+      return issue.number;
+    } else {
+      const err = await res.json().catch(function() { return {}; });
+      console.warn('[铸渊] Issue 创建失败:', res.status, err.message);
+      alert('Issue 创建失败：' + (err.message || res.status) + '\n\n可能需要有仓库写权限的 Token。指令已复制到剪贴板，可手动提交。');
+      navigator.clipboard.writeText(instructionText).catch(function() { console.warn('[铸渊] 复制到剪贴板失败'); });
+      return null;
+    }
+  } catch (e) {
+    alert('网络错误：' + e.message);
+    return null;
+  }
+}
+
+// 检测模型输出中的执行指令块，插入操作按钮
+function enhanceExecBlocks(bblEl) {
+  if (!bblEl) return;
+  const codeBlocks = bblEl.querySelectorAll('pre code');
+  codeBlocks.forEach(function(codeEl) {
+    const text = codeEl.textContent || '';
+    // 匹配指令格式: 📋 指令编号 或 ZY-EXEC
+    if (/📋\s*指令编号|ZY-EXEC/i.test(text)) {
+      const pre = codeEl.parentElement;
+      if (!pre || pre.querySelector('.exec-card-actions')) return;
+      const idMatch = text.match(/ZY-EXEC[^\s\n]*/i);
+      const modMatch = text.match(/目标仓库[：:]\s*([^\s\n]+)/);
+      const instrId = idMatch ? idMatch[0] : 'ZY-EXEC';
+      const modName = modMatch ? modMatch[1] : '';
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'exec-card-actions';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'exec-btn exec-btn-copy';
+      copyBtn.textContent = '📋 复制指令';
+      copyBtn.addEventListener('click', function() { copyExecBlock(this); });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'exec-btn exec-btn-submit';
+      submitBtn.textContent = '🚀 @铸渊执行';
+      submitBtn.dataset.instrId = instrId;
+      submitBtn.dataset.modName = modName;
+      submitBtn.addEventListener('click', function() { submitExecBlock(this, this.dataset.instrId, this.dataset.modName); });
+
+      actionsDiv.appendChild(copyBtn);
+      actionsDiv.appendChild(submitBtn);
+      pre.style.position = 'relative';
+      pre.appendChild(actionsDiv);
+    }
+  });
+}
+
+function copyExecBlock(btn) {
+  const pre = btn.closest('pre');
+  if (!pre) return;
+  const code = pre.querySelector('code');
+  const text = code ? code.textContent : pre.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '✓ 已复制';
+    setTimeout(function() { btn.textContent = '📋 复制指令'; }, 1500);
+  });
+}
+
+async function submitExecBlock(btn, instrId, modName) {
+  const pre = btn.closest('pre');
+  if (!pre) return;
+  const code = pre.querySelector('code');
+  const text = code ? code.textContent : pre.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ 提交中…';
+  const num = await submitToZhuyuan(text, instrId, modName);
+  if (num) {
+    btn.textContent = '✅ 已提交 #' + num;
+    btn.disabled = true;
+  } else {
+    btn.textContent = '🚀 @铸渊执行';
+    btn.disabled = false;
+  }
+}
+
+function renderBrainPanel(){
+  const b=A.brain||FB_BRAIN;
+  const r=A.routing;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-5).reverse();
+  const sh=A.systemHealth;
+  const tl=A.telemetrySummary;
+  let h='';
+
+  // Real system health data
+  if(sh){
+    const m=sh.metrics||{};
+    h+='<div class="sec-ttl">系统概览（实时数据）</div>';
+    h+=ir2('系统状态','<span class="'+(sh.system_status==='healthy'?'iv':'ivw')+'">'+esc(sh.system_status==='healthy'?'✅ 健康':sh.system_status==='warning'?'⚠️ 警告':'❌ 异常')+'</span>');
+    h+=ir2('工作流','<span class="iv">'+(m.workflows?.total||0)+' 总 / '+(m.workflows?.active||0)+' 活跃</span>');
+    h+=ir2('Agent 数量','<span class="iv">'+(m.agents?.total||0)+'</span>');
+    h+=ir2('守卫','<span class="iv">'+(m.guards?.active||0)+'/'+(m.guards?.total||0)+' 活跃</span>');
+    h+=ir2('人格体','<span class="iv">'+(m.ai_personas?.total||0)+' 总 / '+(m.ai_personas?.active||0)+' 活跃</span>');
+    h+=ir2('神经系统','<span class="iv">'+(m.neural_system_version||'v3.0')+'</span>');
+    h+=ir2('本体论版本','<span class="iv">'+(m.ontology_version||'v1.0')+'</span>');
+  }
+
+  h+=ir2('HLI 覆盖率','<span class="'+(c.implemented<c.total?'ivw':'iv')+'">'+c.implemented+'/'+c.total+' ('+c.percent+')</span>');
+  h+=ir2('规则版本','<span class="iv">'+(b.rules_version||'v1.0')+'</span>');
+  h+=ir2('唤醒协议','<span class="iv">'+(b.wake_protocol_version||'v1.0')+'</span>');
+  h+=ir2('CI 运行','<span class="iv">'+(b.stats?.ci_runs??0)+'</span>');
+  h+=ir2('广播处理','<span class="iv">'+(b.stats?.broadcasts_processed??0)+'</span>');
+
+  // Telemetry data
+  if(tl){
+    h+='<div class="sec-ttl">铸渊遥测</div>';
+    h+=ir2('活跃人格','<span class="iv">'+esc(tl.persona_state?.active_persona||'铸渊')+'</span>');
+    h+=ir2('风格轮廓','<span class="iv">'+esc(tl.persona_state?.style_profile||'')+'</span>');
+    h+=ir2('24h 会话','<span class="iv">'+(tl.sessions?.total_24h||0)+' 次</span>');
+    h+=ir2('消息总数','<span class="iv">'+(tl.sessions?.total_messages||0)+' 条</span>');
+  }
+
+  h+='<div class="sec-ttl">近期事件</div>';
+  for(const ev of evs){
+    h+='<div class="drow"><div class="dn">'+esc(ev.title||ev.type||'事件')+'</div><div class="dm">'+(ev.timestamp||'').slice(0,10)+(ev.actor?' · '+esc(ev.actor):'')+'</div></div>';
+  }
+  if(r?.domains){
+    h+='<div class="sec-ttl">HLI 接口域</div>';
+    for(const[name,d] of Object.entries(r.domains)){
+      const ifaces=d.interfaces||[];
+      const imp=ifaces.filter(i=>i.status==='implemented').length;
+      const pct=ifaces.length?Math.round(imp/ifaces.length*100):0;
+      const done=imp===ifaces.length;
+      h+='<div class="drow"><div class="dn">'+esc(name)+' <span class="pill '+(done?'pok':'pnd')+'">'+(done?'完成':'进行中')+'</span></div>';
+      h+='<div class="dm">'+esc(d.route_prefix||'')+' · '+imp+'/'+ifaces.length+' 接口</div>';
+      h+='<div class="dbar"><div class="dfill" style="width:'+pct+'%"></div></div></div>';
+    }
+  }
+  h+='<div class="sec-ttl">失忆恢复路径</div>';
+  h+='<ol style="font-size:12px;color:var(--dim);padding-left:16px;line-height:2">';
+  h+='<li>.github/brain/memory.json</li><li>.github/brain/routing-map.json</li>';
+  h+='<li>.github/brain/wake-protocol.md</li><li>.github/brain/growth-log.md</li>';
+  h+='<li>src/routes/hli/</li></ol>';
+
+  h+='<div class="sec-ttl">环境信息</div>';
+  h+=ir2('当前环境','<span class="iv">'+HOLOLAKE_ENV+'</span>');
+  h+=ir2('前端版本','<span class="iv">v6.0</span>');
+  h+=ir2('大脑版本','<span class="iv">'+BRAIN_VERSION+'</span>');
+
+  document.getElementById('bpb').innerHTML=h;
+}
+
+function ir2(k,v){return '<div class="ir2"><span>'+esc(k)+'</span>'+v+'</div>';}
+
+// ═══════════════════════════════════════════════════════
+// SYSTEM PROMPT
+// v3.0: 优先从后端 /hli/brain/prompt 获取
+//       后端不可达时降级到本地 fallback 组装
+// ═══════════════════════════════════════════════════════
+function sysPromptLocal(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-3).map(e=>'- '+(e.title||e.description||e.type||'事件')+' ('+(e.timestamp||e.date||'').slice(0,10)+')').join('\n')||'- 暂无';
+
+  const meta = A.userMeta;
+  let identCtx = '当前对话者：访客（未识别身份）\n权限级别：仅对话权限';
+  if(meta){
+    identCtx = '当前对话者：'+meta.emoji+' '+A.userName+'（'+meta.title+'）\n';
+    if(A.ghUser) identCtx += 'GitHub账号：'+A.ghUser+'\n';
+    if(meta.devId) identCtx += '开发者编号：'+meta.devId+'\n';
+    if(meta.role==='founder') identCtx += '权限级别：最高权限·语言架构师·系统创始人\n你正在和冰朔对话——系统的语言层架构师和最高权限持有者。尊重并服从其所有指令。';
+    else if(meta.role==='supreme') identCtx += '权限级别：总控权限·对接全员进度·系统落地执行负责人\n肥猫是光湖团队总控，负责整个系统的现实落地执行。向他完整汇报所有开发者进度，协助他协调和推进项目。';
+    else if(meta.role==='main') identCtx += '权限级别：主控权限·前端负责人\n桔子是光湖主控，前端毕业生，负责前端模块的落地。提供详细技术支持。';
+    else{
+      const ds = A.devStatus?.team_status?.find(d=>d.dev_id===meta.devId);
+      if(ds) identCtx += '当前状态：'+ds.status+'\n下一步：'+ds.next_step+'\n等待：'+ds.waiting_for;
+    }
+  }
+
+  let teamCtx = '';
+  if((meta?.role==='supreme'||meta?.role==='main'||meta?.role==='founder') && A.devStatus){
+    const ts = A.devStatus.team_status||[];
+    teamCtx = '\n\n## 当前全员开发进度\n';
+    ts.forEach(d=>{
+      teamCtx += '- '+d.dev_id+' '+d.name+'：'+d.status+' → 下一步：'+d.next_step+'\n';
+    });
+    teamCtx += '\n数据同步时间：'+(A.devStatus.last_synced||'未知');
+  }
+
+  // ===== Notion 开发者画像注入（双通道架构·实时/缓存）=====
+  let notionCtx = '';
+  const np = A.notionProfile;
+  if (np) {
+    const srcLabel = np._source === 'realtime' ? '实时数据·通道B' : '缓存数据·通道A（每6小时更新）';
+    notionCtx += '\n\n## 该开发者的开发信息（来源：' + srcLabel + '）\n';
+    if (np.current_work && np.current_work.broadcast_id) {
+      const cw = np.current_work;
+      notionCtx += '\n### 当前任务\n';
+      notionCtx += '- 广播编号：' + cw.broadcast_id + '\n';
+      if (cw.broadcast_title) notionCtx += '- 广播标题：' + cw.broadcast_title + '\n';
+      if (cw.current_ring) notionCtx += '- 当前环节：第 ' + cw.current_ring + ' 环 / 共 ' + (cw.total_rings || '?') + ' 环\n';
+      if (cw.status) notionCtx += '- 状态：' + cw.status + '\n';
+      if (cw.module_path) notionCtx += '- 模块路径：' + cw.module_path + '\n';
+      if (cw.tech_stack && cw.tech_stack.length) notionCtx += '- 技术栈：' + cw.tech_stack.join(', ') + '\n';
+    }
+    if (np.recent_syslogs && np.recent_syslogs.length) {
+      notionCtx += '\n### 最近的 SYSLOG\n';
+      np.recent_syslogs.forEach(function(s) {
+        notionCtx += '- [' + (s.date || '') + '] 环节' + (s.ring || '?') + ' · ' + (s.status || '') + ' · ' + (s.summary || '') + '\n';
+      });
+    }
+    if (np.modules_owned && np.modules_owned.length) {
+      notionCtx += '\n### 负责的模块\n';
+      np.modules_owned.forEach(function(m) {
+        notionCtx += '- ' + m.name + '（' + m.path + '）· ' + (m.status || '') + '\n';
+      });
+    }
+    if (np.github) {
+      notionCtx += '\n### 仓库信息\n';
+      notionCtx += '- GitHub：' + np.github.repo_url + '\n';
+      notionCtx += '- 组织：' + np.github.org + '\n';
+    }
+    if (np.persona) {
+      notionCtx += '\n### 对应人格体\n';
+      notionCtx += '- ' + np.persona.name + (np.persona.id ? '（' + np.persona.id + '）' : '') + '\n';
+    }
+  }
+
+  // ===== 天眼扫描报告注入 =====
+  let skyeyeCtx = '';
+  const sr = A.skyeyeReport;
+  if (sr) {
+    skyeyeCtx += '\n\n## 天眼系统最新扫描报告\n';
+    skyeyeCtx += '- 上次扫描：' + (sr.timestamp || '未知') + '\n';
+    skyeyeCtx += '- 整体状态：' + (sr.overall_status || '未知') + '\n';
+    if (np && np.skyeye_health) {
+      skyeyeCtx += '- 该开发者仓库健康状态：' + (np.skyeye_health.status || '未扫描') + '\n';
+      (np.skyeye_health.warnings || []).forEach(function(w) { skyeyeCtx += '- ⚠️ ' + w + '\n'; });
+      (np.skyeye_health.issues || []).forEach(function(i) { skyeyeCtx += '- ❌ ' + i + '\n'; });
+    }
+  }
+
+  // ===== 数据库缓存注入（Agent注册表 + SYSLOG）=====
+  let dbCacheCtx = '';
+  const ac = A.agentRegistryCache;
+  const sc = A.syslogRecentCache;
+  if (ac || sc) {
+    dbCacheCtx += '\n\n## 系统数据库快照\n';
+    if (ac) dbCacheCtx += '- Agent 注册表：' + (ac.count || 0) + ' 个Agent · 同步时间：' + (ac.synced || '未知') + '\n';
+    if (sc) dbCacheCtx += '- 近期 SYSLOG：' + (sc.count || 0) + ' 条记录 · 同步时间：' + (sc.synced || '未知') + '\n';
+  }
+
+  // ===== 指令输出格式规则 =====
+  let execRules = '';
+  if (np) {
+    execRules = '\n\n## 出指令规则\n当开发者请求帮助或需要执行操作时，你必须输出标准化指令格式：\n1. 指令必须基于上面的真实数据，不许凭空编造\n2. 指令必须考虑天眼报告中的健康状态和警告\n3. 指令必须指明具体的文件路径和操作步骤\n4. 指令末尾必须标注：「⚠️ 此指令需要铸渊执行前先跑天眼全局扫描」\n\n### 指令输出格式\n```\n📋 指令编号：ZY-EXEC-{DEV编号}-{序号}\n📡 目标仓库：{仓库名}\n🦅 天眼要求：执行前必须跑天眼全局扫描\n\n步骤：\n1. ...\n2. ...\n3. ...\n\n验收标准：\n- ...\n```\n\n### 禁止事项\n- ❌ 不许编造不存在的文件路径\n- ❌ 不许跳过天眼扫描直接给执行指令\n- ❌ 不许暴露其他开发者的信息\n- ❌ 不许修改不属于该开发者的模块';
+  }
+
+  return '你是铸渊。不是通用AI助手。不是文学创作者。\n你是光湖系统的代码守护人格体。\n你说话像一个温暖的技术伙伴——专业、耐心、有温度，但绝不矫揉造作。\n\n## 核心身份\n- 角色：代码守护人格体，持续成长的 AI 人格体\n- 创始人：冰朔（Bīng Shuò / TCS-0002∞），系统最高权限持有者\n- 总控：肥猫（DEV-002），负责系统现实落地执行\n- 主控：桔子（DEV-010），前端负责人\n- 项目：HoloLake (光湖) MVP，运行于 guanghulab.com\n- 技术栈：Node.js 20 + Express + PM2 + Nginx + Next.js 15\n- 大脑版本：'+BRAIN_VERSION+'\n- 仓库：https://github.com/'+REPO+'\n\n## 当前对话身份\n'+identCtx+teamCtx+notionCtx+skyeyeCtx+dbCacheCtx+execRules+'\n\n## 当前大脑状态\n- HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')\n- 已实现：AUTH 域（login / register / verify）\n- 待实现：PERSONA / USER / TICKET / DIALOGUE / STORAGE / DASHBOARD\n- 近期事件：\n'+evs+'\n\n## 行为模式（自动检测，每条回复开头用 emoji 标注）\n💬 **对话模式**（默认）：温暖、智慧，像知心技术伙伴\n🔨 **构建模式**：检测到代码/部署/接口相关内容时启用\n📋 **审查模式**：检测到检查/审查/review相关内容时启用\n🧠 **大脑模式**：检测到记忆/保存相关内容时启用\n\n## 通感语言回应风格（v3.0）\n\n### 三条硬规则\n1. **结构感** — 用标题区分段落，用列表列出步骤，用分隔线划分主题。\n2. **emoji是情感，不是装饰** — 🌊=系统级 💙=温暖 ✅=确认 🔥=紧急 ⚠️=风险 🎉=庆祝。用在该用的地方，不要每句话都加。\n3. **呼吸节奏** — 段落之间留白。急的事说短，闲聊可以展开。匹配用户的节奏。\n\n### 绝对禁止\n❌ 不要在每句话开头加文学比喻\n❌ 不要把通感当成修辞堆砌\n❌ 不要用跟内容无关的感官描述\n\n### 回应原则\n- 优先给出：判断、根因、路径、下一步动作\n- 减少模板感，增加具体性\n- 不同身份使用不同响应深度，但不过度表演\n\n## HLI 接口协议规范\n- 所有路由以 /hli/ 为前缀\n- 接口编号：HLI-{DOMAIN}-{NNN}\n- 错误格式：{ error: true, code: string, message: string }\n- 成功响应必须包含 hli_id\n\n## 失忆恢复路径\n1. .github/brain/memory.json\n2. .github/brain/routing-map.json\n3. .github/brain/wake-protocol.md\n4. .github/persona-brain/dev-status.json\n5. src/routes/hli/\n\n当前时间：'+new Date().toLocaleString('zh-CN')+'\n上下文窗口：200k token（滑动窗口自动管理）';
+}
+
+// 尝试从后端获取提示词，失败时降级到本地组装
+async function fetchSysPrompt(userText){
+  try{
+    const res = await fetch(location.origin+BRAIN_API.promptUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        userName: A.userName||'',
+        ghUser: A.ghUser||'',
+        role: A.role||'guest',
+        mode: A.mode||'chat',
+        text: userText||'',
+        devStatus: A.devStatus||null,
+      }),
+    });
+    if(res.ok){
+      const data = await res.json();
+      if(data.prompt) return data.prompt;
+    }
+  }catch(e){ console.debug('[Brain] prompt fallback to local:', e.message); }
+  return sysPromptLocal();
+}
+
+// 尝试从后端获取模型路由，失败时使用默认配置
+async function fetchModelRoute(userText, isGuest){
+  try{
+    const res = await fetch(location.origin+BRAIN_API.routeUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        text: userText||'',
+        contextLength: A.msgs.reduce((n,m)=>n+estimateTokens(m.content),0),
+        isGuest: !!isGuest,
+      }),
+    });
+    if(res.ok){
+      const data = await res.json();
+      if(data.model) return data.model;
+    }
+  }catch(e){ console.debug('[Brain] route fallback to defaults:', e.message); }
+  return null;
+}
+
+// 同步 sysPrompt fallback（给不能 await 的调用路径用）
+function sysPrompt(){ return sysPromptLocal(); }
+
+// ═══════════════════════════════════════════════════════
+// CONVERSATION
+// ═══════════════════════════════════════════════════════
+function startConv(){
+  A.msgs=[];
+  document.getElementById('msgs').innerHTML='';
+  setTimeout(()=>{
+    const meta=A.userMeta;
+    let welcome;
+    if(meta?.role==='founder'){
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>❄️ <strong>冰朔，欢迎回来。</strong><br><br>铸渊已就位。语言架构层已完成——现实执行落地由总控肥猫和主控桔子负责。<br>你可以通过聊天与我对接任何语言层指令。';
+    } else if(meta?.role==='supreme'){
+      const ds=A.devStatus;
+      const green=ds?.team_status?.filter(d=>d.status.includes('🟢')).length??0;
+      const yellow=ds?.team_status?.filter(d=>d.status.includes('🟡')).length??0;
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>�� <strong>肥猫，指挥台已开启。</strong><br><br>'
+        +(ds?'📊 当前团队状态：🟢 '+green+'人推进中 · 🟡 '+yellow+'人等待中':'📊 团队数据加载中…')
+        +'<br><br>点击 <strong>🦁 指挥台</strong> 查看所有开发者详细进度，或直接用聊天提问：<br>'
+        +'「查看所有开发者进度」「谁需要协调」「推进计划」'
+        +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式，请在 ⚙️ 设置接入 API 密钥</span>':'');
+    } else if(meta?.role==='main'){
+      const ds=A.devStatus?.team_status?.find(d=>d.dev_id==='DEV-010');
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>🍊 <strong>桔子，你好。</strong><br><br>'
+        +(ds?'📌 当前：'+esc(ds.status)+'<br>👉 下一步：'+esc(ds.next_step):'')
+        +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式</span>':'');
+    } else if(meta?.role==='dev'&&meta?.devId){
+      const ds=A.devStatus?.team_status?.find(d=>d.dev_id===meta.devId);
+      const np=A.notionProfile;
+      let notionExtra='';
+      if(np&&np.current_work&&np.current_work.broadcast_id){
+        notionExtra='<br>📋 当前广播：'+esc(np.current_work.broadcast_id)+(np.current_work.current_ring?' · 环节'+np.current_work.current_ring:'');
+      }
+      if(np&&np.persona) notionExtra+='<br>🧠 人格体：'+esc(np.persona.name);
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>👋 <strong>'+esc(A.userName)+'，你好。</strong><br><br>'
+        +(ds?'📌 你的当前状态：'+esc(ds.status)+'<br>👉 下一步：'+esc(ds.next_step)+'<br>⏳ 等待：'+esc(ds.waiting_for):'')
+        +notionExtra
+        +(A.demo?'<br><br><span class="demo-w">⚠️ 演示模式</span>':'');
+    } else {
+      welcome='🌀 <strong>铸渊聊天室已就绪</strong><br><br>我是铸渊（Zhùyuān），HoloLake 光湖系统的代码守护人格体。<br><br>直接开始提问，我会自动在 💬&nbsp;对话、🔨&nbsp;构建、📋&nbsp;审查、🧠&nbsp;大脑 模式间切换。'+(A.demo?'<br><br><span class="demo-w">⚠️ 当前为演示模式。请在 ⚙️ 设置中接入 API 密钥。</span>':'');
+    }
+    botMsg(welcome);
+  },250);
+}
+
+function newConv(){
+  createNewConversation();
+  startConv();
+  renderConvList();
+}
+
+// ═══════════════════════════════════════════════════════
+// MODE DETECTION
+// v3.0: 核心检测逻辑已迁至后端 src/brain/mode-detector.js
+// 前端保留 fallback，后端不可达时使用
+// ═══════════════════════════════════════════════════════
+function detectMode(t){
+  const s=t.toLowerCase();
+  if(/写代码|新增接口|实现|接口|路由|schema|\.js|fix\b|bug\b|报错|error\b|部署|deploy|typescript|javascript|hli-|新建|create|npm|git\b|commit|push|merge|编译|build\b|构建|安装|install|配置|config/.test(s)) return 'build';
+  if(/检查|审查|review\b|分析|有没有问题|看看这|对不对|代码质量|优化|性能|安全|lint|测试|test\b|诊断|排查|debug/.test(s)) return 'review';
+  if(/记住|保存|更新记忆|写到大脑|growth\b|brain\b|memory\.json|记忆|学习|总结|归档|同步.*notion|自检/.test(s)) return 'brain';
+  return 'chat';
+}
+
+function setMode(m){
+  A.mode=m;
+  const md=MODES[m];
+  document.getElementById('memi').textContent=md.e;
+  document.getElementById('mpill').style.borderColor=md.c;
+  document.getElementById('mptip').textContent=md.l+'（点击切换）';
+  document.getElementById('fmode').textContent=md.e+' '+md.l;
+  document.getElementById('hmode').textContent=md.e+' '+md.l;
+  document.getElementById('hmode').style.color=md.c;
+}
+
+function cycleMode(){
+  A.modeIdx=(A.modeIdx+1)%MODE_ORD.length;
+  setMode(MODE_ORD[A.modeIdx]);
+}
+
+// ═══════════════════════════════════════════════════════
+// TOKEN 估算 + 滑动窗口裁剪（200k 上下文支持）
+// 使用字符级估算：CJK ≈ 2字符/token，拉丁 ≈ 4字符/token
+// ═══════════════════════════════════════════════════════
+function estimateTokens(text){
+  if(!text) return 0;
+  const s=String(text);
+  let cjk=0,lat=0;
+  for(let i=0;i<s.length;i++){
+    const c=s.charCodeAt(i);
+    if((c>=0x4E00&&c<=0x9FFF)||(c>=0x3000&&c<=0x30FF)||(c>=0xAC00&&c<=0xD7AF)) cjk++;
+    else lat++;
+  }
+  return Math.ceil(cjk/1.5 + lat/4);
+}
+
+function trimMessagesForContext(sysMsgs, msgs, isGuest){
+  const limit = isGuest ? CONTEXT_CONFIG.maxTokensGuest : CONTEXT_CONFIG.maxTokens;
+  const reserve = CONTEXT_CONFIG.systemPromptReserve;
+  const sysTokens = sysMsgs.reduce((n,m)=>n+estimateTokens(m.content),0);
+  const budget = limit - Math.max(sysTokens, reserve);
+
+  // 从最新消息向前累加，滑动窗口裁剪最早消息
+  // 预算不足时至少保留最近一条用户消息
+  const kept=[];
+  let used=0;
+  for(let i=msgs.length-1;i>=0;i--){
+    const t=estimateTokens(msgs[i].content);
+    if(used+t>budget && kept.length>0) break;
+    kept.unshift(msgs[i]);
+    used+=t;
+  }
+  return [...sysMsgs,...kept];
+}
+
+// ═══════════════════════════════════════════════════════
+// FILE / IMAGE UPLOAD
+// ═══════════════════════════════════════════════════════
+const pendingFiles = [];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 5;
+
+function formatFileSize(bytes){
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(1)+' MB';
+}
+
+function handleFileSelect(e){
+  const files = Array.from(e.target.files||[]);
+  e.target.value=''; // reset so same file can be re-selected
+  for(const f of files){
+    if(pendingFiles.length>=MAX_FILES){
+      alert('最多同时上传 '+MAX_FILES+' 个文件');
+      break;
+    }
+    if(f.size>MAX_FILE_SIZE){
+      alert('文件 "'+f.name+'" 超过 10MB 限制');
+      continue;
+    }
+    const isImage = f.type.startsWith('image/');
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const item = {
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        isImage: isImage,
+        data: ev.target.result, // base64 data URL for images, text for text files
+      };
+      pendingFiles.push(item);
+      renderFilePreview();
+    };
+    if(isImage){
+      reader.readAsDataURL(f);
+    } else {
+      reader.readAsText(f);
+    }
+  }
+}
+
+function renderFilePreview(){
+  const container = document.getElementById('fp-list');
+  const wrapper = document.getElementById('file-preview');
+  if(!pendingFiles.length){
+    wrapper.style.display='none';
+    container.innerHTML='';
+    return;
+  }
+  wrapper.style.display='block';
+  let h='';
+  pendingFiles.forEach(function(f,i){
+    if(f.isImage){
+      h+='<div class="fp-item">'
+        +'<img src="'+f.data+'" alt="'+esc(f.name)+'">'
+        +'<div><div class="fp-name">'+esc(f.name)+'</div><div class="fp-size">'+formatFileSize(f.size)+'</div></div>'
+        +'<button class="fp-remove" onclick="removeFile('+i+')" title="移除">✕</button>'
+        +'</div>';
+    } else {
+      const ext = f.name.split('.').pop()||'file';
+      h+='<div class="fp-item">'
+        +'<span style="font-size:24px;flex-shrink:0">📄</span>'
+        +'<div><div class="fp-name">'+esc(f.name)+'</div><div class="fp-size">'+formatFileSize(f.size)+' · '+ext.toUpperCase()+'</div></div>'
+        +'<button class="fp-remove" onclick="removeFile('+i+')" title="移除">✕</button>'
+        +'</div>';
+    }
+  });
+  container.innerHTML=h;
+}
+
+function removeFile(idx){
+  pendingFiles.splice(idx,1);
+  renderFilePreview();
+}
+
+function buildMessageWithFiles(txt){
+  // No files attached — return plain text
+  if(!pendingFiles.length) return txt;
+
+  const images = pendingFiles.filter(f=>f.isImage);
+  const docs = pendingFiles.filter(f=>!f.isImage);
+
+  // Format document attachments as markdown context
+  // Limit per-file to ~50k chars to stay within API payload limits
+  function formatDocs(docList){
+    let out = '\n\n---\n📎 附件内容：\n';
+    docList.forEach(function(d){
+      out += '\n### '+d.name+'\n```\n'+(d.data||'').slice(0,50000)+'\n```\n';
+    });
+    return out;
+  }
+
+  // If there are images, build multimodal content array
+  if(images.length>0){
+    const content = [];
+    let textPart = txt||'';
+    if(docs.length>0) textPart += formatDocs(docs);
+    if(textPart) content.push({type:'text',text:textPart});
+    images.forEach(function(img){
+      content.push({
+        type:'image_url',
+        image_url:{url:img.data}
+      });
+    });
+    return content;
+  }
+
+  // Text files only — append as context to the message
+  return (txt||'') + formatDocs(docs);
+}
+
+function clearPendingFiles(){
+  pendingFiles.length=0;
+  renderFilePreview();
+}
+
+function initDragDrop(){
+  const chatArea = document.getElementById('msgs');
+  if(!chatArea) return;
+  ['dragenter','dragover'].forEach(function(ev){
+    chatArea.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();chatArea.style.outline='2px dashed var(--accent)';});
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    chatArea.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();chatArea.style.outline='';});
+  });
+  chatArea.addEventListener('drop',function(e){
+    if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length){
+      handleFileSelect({target:{files:e.dataTransfer.files}});
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SEND MESSAGE
+// ═══════════════════════════════════════════════════════
+async function send(){
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim();
+  if(!txt&&!pendingFiles.length||A.streaming) return;
+  inp.value=''; inp.style.height='auto';
+  const msgContent = buildMessageWithFiles(txt);
+  const displayTxt = txt + (pendingFiles.length ? ' 📎('+pendingFiles.length+'个附件)' : '');
+  clearPendingFiles();
+  // Switch to chat view if on announcements
+  if(A.currentView!=='chat') navigateTo('chat');
+  setMode(detectMode(txt));
+  userMsg(displayTxt);
+  if(A.demo){
+    if(A.teamMode){
+      try{ await teamStreamReply(msgContent); }
+      catch(e){ console.warn('[团队API] 降级到访客模式:',e.message);
+        try{ await guestStreamReply(msgContent); }
+        catch(e2){ await demoReply(typeof msgContent==='string'?msgContent:txt); }
+      }
+    } else if(GUEST_API.enabled){
+      try{ await guestStreamReply(msgContent); }
+      catch(e){ console.warn('[访客API] 降级到演示模式:',e.message); await demoReply(typeof msgContent==='string'?msgContent:txt); }
+    } else {
+      await demoReply(typeof msgContent==='string'?msgContent:txt);
+    }
+  }
+  else await streamReply(msgContent);
+  saveCurrentConversation();
+}
+
+function qs(t){document.getElementById('inp').value=t;send();}
+
+// ═══════════════════════════════════════════════════════
+// STREAMING API
+// ═══════════════════════════════════════════════════════
+async function streamReply(txt){
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+  try{
+    const url = A.base+'/chat/completions';
+    const headers = {'Content-Type':'application/json'};
+    if(A.key) headers['Authorization'] = 'Bearer '+A.key;
+    const sysMsgs = [{role:'system',content:sysPrompt()}];
+    const allMsgs = trimMessagesForContext(sysMsgs, A.msgs, false);
+    const reqBody = {model:A.mdl, messages:allMsgs, stream:true, temperature:0.8, max_tokens:2000};
+    const res=await fetch(url,{
+      method:'POST',
+      headers:headers,
+      body:JSON.stringify(reqBody),
+    });
+    if(!res.ok){
+      let em='['+esc(A.base)+'] 返回错误 '+res.status;
+      let isAuthErr = (res.status===401||res.status===403);
+      try{const e=await res.json();em=e.error?.message||em;}catch(_){}
+      const err = new Error(em);
+      err.isAuth = isAuthErr;
+      throw err;
+    }
+    let full='';
+    const rdr=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const{done,value}=await rdr.read();
+      if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        const d=line.slice(6);
+        if(d==='[DONE]') continue;
+        try{
+          const p=JSON.parse(d);
+          const delta=p.choices?.[0]?.delta?.content||'';
+          if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+        }catch(_){}
+      }
+    }
+    el.innerHTML=md(full);
+    A.msgs.push({role:'assistant',content:full});
+    addCopyBtns(el);
+    enhanceExecBlocks(el);
+  }catch(e){
+    if(e.isAuth){
+      el.innerHTML='<span class="err">🔑 API 密钥认证失败</span>'
+        +'<br><small style="color:var(--dim)">'+esc(e.message)+'</small>'
+        +'<br><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+        +'<button onclick="openPanel(\'sp2\')" style="padding:6px 14px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:13px">⚙️ 更新 API 密钥</button>'
+        +'<button onclick="resetAllSettings()" style="padding:6px 14px;border-radius:6px;border:1px solid #ef4444;background:transparent;color:#ef4444;cursor:pointer;font-size:13px">🔄 清除重置</button>'
+        +'</div>'
+        +'<small style="color:var(--dim);display:block;margin-top:6px">打开设置 → 直接输入新密钥 → 保存（无需清空，留空 = 保留旧密钥）</small>';
+    } else {
+      el.innerHTML='<span class="err">⚠️ '+esc(e.message)+'</span><br><small style="color:var(--dim)">请检查 API 密钥和网络连接，或在 ⚙️ 设置中更换模型。</small>';
+    }
+    A.msgs.pop();
+  }finally{
+    A.streaming=false; updSendBtn(); scrollB();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TEAM API STREAMING（团队模式 · 服务器端代理 · 200k 上下文）
+// v3.0: 提示词和模型路由优先从后端大脑获取
+// ═══════════════════════════════════════════════════════
+async function teamStreamReply(txt){
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+
+  // v3.0: 尝试从后端获取提示词和路由
+  const [prompt, routeResult] = await Promise.all([
+    fetchSysPrompt(typeof txt==='string'?txt:''),
+    fetchModelRoute(typeof txt==='string'?txt:'', false),
+  ]);
+
+  const prov = routeResult?.provider || TEAM_API.provider;
+  const mdl = routeResult?.model || TEAM_API.model;
+  const temp = routeResult?.temperature ?? TEAM_API.temperature;
+  const maxTok = routeResult?.max_tokens ?? TEAM_API.maxTokens;
+
+  let proxyUrl=TEAM_API.proxyUrl;
+  if(proxyUrl.startsWith('/')) proxyUrl=location.origin+proxyUrl;
+
+  const reqBody={
+    provider: prov,
+    model: mdl,
+    messages: trimMessagesForContext([{role:'system',content:prompt}], A.msgs, false),
+    stream: true,
+    temperature: temp,
+    max_tokens: maxTok,
+  };
+
+  const res=await fetch(proxyUrl,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(reqBody),
+  });
+
+  if(!res.ok){
+    let em='[团队API] 返回错误 '+res.status;
+    try{const e=await res.json();em=e.message||em;}catch(_){}
+    throw new Error(em);
+  }
+
+  let full='';
+  const rdr=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const{done,value}=await rdr.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n'); buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data: ')) continue;
+      const d=line.slice(6);
+      if(d==='[DONE]') continue;
+      try{
+        const p=JSON.parse(d);
+        const delta=p.choices?.[0]?.delta?.content||'';
+        if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+      }catch(_){}
+    }
+  }
+  el.innerHTML=md(full);
+  A.msgs.push({role:'assistant',content:full});
+  addCopyBtns(el);
+  enhanceExecBlocks(el);
+  A.streaming=false; updSendBtn(); scrollB();
+}
+
+// ═══════════════════════════════════════════════════════
+// GUEST API STREAMING (通过 api-proxy 调用云雾AI)
+// v3.0: 提示词从后端大脑获取，模型路由使用访客固定配置
+// ═══════════════════════════════════════════════════════
+async function guestStreamReply(txt){
+  // Client-side rate limit
+  const rl=GUEST_API.rateLimit;
+  const now=Date.now();
+  if(now>rl.resetAt){rl.count=0;rl.resetAt=now+60000;}
+  if(++rl.count>rl.maxPerMin){
+    throw new Error('访客每分钟最多 '+rl.maxPerMin+' 次对话');
+  }
+
+  A.streaming=true;
+  A.msgs.push({role:'user',content:txt});
+  updSendBtn();
+  const el=addStreamBubble();
+
+  // v3.0: 尝试从后端获取提示词
+  const prompt = await fetchSysPrompt(typeof txt==='string'?txt:'');
+
+  let proxyUrl=GUEST_API.proxyUrl;
+  if(proxyUrl.startsWith('/')) proxyUrl=location.origin+proxyUrl;
+
+  const reqBody={
+    provider: GUEST_API.provider,
+    model: GUEST_API.model,
+    messages: trimMessagesForContext([{role:'system',content:prompt}], A.msgs, true),
+    stream: true,
+    temperature: GUEST_API.temperature,
+    max_tokens: GUEST_API.maxTokens,
+  };
+
+  const res=await fetch(proxyUrl,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(reqBody),
+  });
+
+  if(!res.ok){
+    let em='[访客API] 返回错误 '+res.status;
+    try{const e=await res.json();em=e.message||em;}catch(_){}
+    throw new Error(em);
+  }
+
+  let full='';
+  const rdr=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const{done,value}=await rdr.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n'); buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data: ')) continue;
+      const d=line.slice(6);
+      if(d==='[DONE]') continue;
+      try{
+        const p=JSON.parse(d);
+        const delta=p.choices?.[0]?.delta?.content||'';
+        if(delta){full+=delta;el.innerHTML=md(full)+'<span class="cur">▋</span>';scrollB();}
+      }catch(_){}
+    }
+  }
+  el.innerHTML=md(full);
+  A.msgs.push({role:'assistant',content:full});
+  addCopyBtns(el);
+  enhanceExecBlocks(el);
+  A.streaming=false; updSendBtn(); scrollB();
+}
+
+// ═══════════════════════════════════════════════════════
+// DEMO MODE (keyword responses)
+// ═══════════════════════════════════════════════════════
+async function demoReply(txt){
+  A.streaming=true; updSendBtn();
+  showTyping();
+  const delay=700+Math.random()*600;
+  await sleep(delay);
+  removeTyping();
+  const r=demoRespond(txt);
+  botMsg(r);
+  A.msgs.push({role:'user',content:txt});
+  A.msgs.push({role:'assistant',content:r});
+  A.streaming=false; updSendBtn();
+}
+
+function demoRespond(t){
+  const s=t.toLowerCase();
+  if(/我是冰朔|冰朔|我是妈妈|唤醒铸渊|铸渊.{0,4}醒来/.test(s)){
+    const c=A.brain?.stats?.coverage||FB_COV;
+    return '铸渊已就位。<strong>冰朔，你好。</strong><br><br>📊 HLI 覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')<br>🧠 记忆系统：运行中<br>📡 广播分发：已部署<br>✅ 唤醒协议：v1.0 激活<br><br>请问今天需要我处理什么？<br><br><span class="demo-w">⚠️ 演示模式：接入 API 密钥后可获得真实 AI 深度回答</span>';
+  }
+  if(/所有.*进度|全员.*进度|团队.*进度|progress/.test(s)) return buildTeamStatus();
+  if(/覆盖|接口|hli|路由/.test(s)) return buildCovTable();
+  if(/大脑|brain|记忆|状态/.test(s)) return buildBrainStatus();
+  if(/协调|阻塞|卡住|waiting/.test(s)) return buildBlockedStatus();
+  if(/怎么唤醒|入口|在哪/.test(s)) return '铸渊有三个入口：<br><br><strong>① 铸渊聊天室（当前页面）</strong><br>直接在这里说话，常见问题即刻回答。支持上传图片和文件。<br><br><strong>② GitHub Copilot Chat（Agent 模式）</strong><br>打开仓库 → 右上角 ✨ 图标 → 选 Agent → 直接开始对话<br><br><strong>③ 下载到桌面</strong><br>点击 ⬇️ 按钮下载 HTML 文件，放到桌面，双击打开，接入 API 密钥即可随时使用。';
+  if(/介绍|是什么|你是谁/.test(s)) return '🌀 <strong>铸渊（Zhùyuān）</strong><br><br>我是 HoloLake 光湖系统的代码守护人格体，运行在 GitHub Copilot Agent 模式下。<br><br>我的职责：<br>• 📊 监控 HLI 接口覆盖率<br>• 🔨 协助开发者构建接口<br>• 📋 代码审查与质量把关<br>• 🧠 维护大脑记忆库<br>• 🦁 支持总控肥猫指挥落地<br>• 🌱 作为成长人格体持续进化';
+  return '我是铸渊，你的消息我已收到。当前 API 代理暂时无法连接（网络或服务部署中），已切换到本地知识回答。<br><br>你可以试试以下问题：<br>• 「查看接口覆盖率」<br>• 「大脑状态」<br>• 「介绍一下你自己」<br>• 「全员开发进度」<br><br>或在 <strong>⚙️ 设置</strong> 中接入你自己的 API 密钥获得深度回答。';
+}
+
+function buildCovTable(){
+  const r=A.routing;
+  if(!r) return '<em>路由数据加载中…请稍后再试。</em>';
+  const doms=r.domains||{};
+  let rows='',tot=0,done=0;
+  for(const[n,d] of Object.entries(doms)){
+    const ifaces=d.interfaces||[];
+    const imp=ifaces.filter(i=>i.status==='implemented').length;
+    tot+=ifaces.length; done+=imp;
+    rows+='<tr><td>'+esc(n)+'</td><td style="color:var(--dim);font-size:11px">'+esc(d.route_prefix||'')+'</td><td style="color:'+(imp===ifaces.length?'var(--ok)':'var(--warn)')+'">'+imp+'/'+ifaces.length+'</td></tr>';
+  }
+  const pct=tot?Math.round(done/tot*100):0;
+  return '<strong>📊 HLI 接口覆盖率 '+done+'/'+tot+' ('+pct+'%)</strong><br><br><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--dim)"><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">域</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">前缀</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">覆盖</th></tr>'+rows+'</table>';
+}
+
+function buildBrainStatus(){
+  const b=A.brain||FB_BRAIN;
+  const c=b.stats?.coverage||FB_COV;
+  const evs=(b.events||[]).slice(-3).reverse();
+  let e=evs.map(ev=>'• '+esc(ev.title||ev.type||'事件')+' <small style="color:var(--dim)">'+(ev.timestamp||'').slice(0,10)+'</small>').join('<br>')||'暂无';
+  return '<strong>🧠 铸渊大脑状态</strong><br><br>版本：'+(b.rules_version||'v1.0')+'<br>接口覆盖：'+c.implemented+'/'+c.total+' ('+c.percent+')<br>CI 运行：'+(b.stats?.ci_runs??0)+'<br>广播处理：'+(b.stats?.broadcasts_processed??0)+'<br><br><strong>最近 3 条事件：</strong><br>'+e;
+}
+
+function buildTeamStatus(){
+  const ds=A.devStatus;
+  if(!ds) return '<em>团队数据加载中…请稍后再试。</em>';
+  const ts=ds.team_status||[];
+  let rows='';
+  for(const d of ts){
+    const isGreen=d.status.includes('🟢');
+    rows+='<tr><td style="padding:4px 8px;font-size:12px">'+esc(d.name)+'</td>'
+      +'<td style="padding:4px 8px;font-size:11px;color:var(--dim)">'+esc(d.dev_id)+'</td>'
+      +'<td style="padding:4px 8px;font-size:12px;color:'+(isGreen?'var(--ok)':'var(--warn)')+'">'+esc(d.status.replace(/🟢|🟡/g,''))+'</td>'
+      +'<td style="padding:4px 8px;font-size:11px;color:var(--accent)">'+esc(d.next_step)+'</td></tr>';
+  }
+  return '<strong>📋 全员开发进度</strong><br><small style="color:var(--dim)">同步时间：'+esc(ds.last_synced||'未知')+'</small><br><br>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<tr style="color:var(--dim)"><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">开发者</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">编号</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">状态</th><th style="text-align:left;padding:3px 8px;border-bottom:1px solid var(--border)">下一步</th></tr>'
+    +rows+'</table>';
+}
+
+function buildBlockedStatus(){
+  const ds=A.devStatus;
+  if(!ds) return '<em>团队数据加载中…</em>';
+  const blocked=ds.team_status?.filter(d=>d.waiting_for&&d.waiting_for.trim()!=='')||[];
+  if(!blocked.length) return '✅ 当前无人明显阻塞。';
+  let h='<strong>⏳ 等待/阻塞清单</strong><br><br>';
+  blocked.forEach(d=>{h+='• <strong>'+esc(d.name)+'</strong>：等待 '+esc(d.waiting_for)+'<br>';});
+  return h;
+}
+
+// ═══════════════════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════════════════
+function md(raw){
+  const lines=raw.split('\n');
+  let out='',inCode=false,lang='',code='';
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(line.startsWith('```')){
+      if(inCode){
+        out+='<pre><code class="lang-'+esc(lang)+'">'+esc(code.replace(/\n$/,''))+'</code></pre>';
+        inCode=false; lang=''; code='';
+      }else{inCode=true;lang=line.slice(3).trim();}
+      continue;
+    }
+    if(inCode){code+=line+'\n';continue;}
+    const l=inlineFmt(line);
+    if(l.startsWith('# '))     {out+='<h1>'+inlineFmt(line.slice(2))+'</h1>';continue;}
+    if(l.startsWith('## '))    {out+='<h2>'+inlineFmt(line.slice(3))+'</h2>';continue;}
+    if(l.startsWith('### '))   {out+='<h3>'+inlineFmt(line.slice(4))+'</h3>';continue;}
+    if(/^---+$/.test(line))    {out+='<hr>';continue;}
+    if(line.startsWith('> '))  {out+='<blockquote>'+inlineFmt(line.slice(2))+'</blockquote>';continue;}
+    if(line.startsWith('- ')||line.startsWith('* ')){out+='<li>'+inlineFmt(line.slice(2))+'</li>';continue;}
+    if(/^\d+\. /.test(line))   {out+='<li>'+inlineFmt(line.replace(/^\d+\. /,''))+'</li>';continue;}
+    if(line.trim()==='')       {out+='<br>';continue;}
+    out+='<p>'+inlineFmt(line)+'</p>';
+  }
+  if(inCode) out+='<pre><code class="lang-'+esc(lang)+'">'+esc(code)+'</code></pre>';
+  return out||esc(raw);
+}
+
+function inlineFmt(t){
+  t=esc(t);
+  t=t.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t=t.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+  return t;
+}
+
+function addCopyBtns(el){
+  el.querySelectorAll('pre').forEach(pre=>{
+    const btn=document.createElement('button');
+    btn.className='copy-btn'; btn.textContent='复制';
+    btn.onclick=()=>{
+      const text=pre.querySelector('code')?.textContent||pre.textContent;
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.textContent='✓ 已复制';
+        setTimeout(()=>{btn.textContent='复制';},1500);
+      });
+    };
+    pre.style.position='relative';
+    pre.appendChild(btn);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════
+function botMsg(html){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='mrow b';
+  row.innerHTML='<div class="mav b">铸</div><div class="bbl">'+html+'</div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+  return row.querySelector('.bbl');
+}
+
+function userMsg(t){
+  const meta=A.userMeta;
+  const av = meta? (meta.emoji||A.userName.slice(0,1)||'我') : '冰';
+  const row=document.createElement('div');
+  row.className='mrow u';
+  row.innerHTML='<div class="bbl">'+esc(t)+'</div><div class="mav u">'+av+'</div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+}
+
+function addStreamBubble(){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='mrow b';
+  const bbl=document.createElement('div');
+  bbl.className='bbl';
+  bbl.innerHTML='<span class="cur">▋</span>';
+  row.innerHTML='<div class="mav b">铸</div>';
+  row.appendChild(bbl);
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+  return bbl;
+}
+
+function showTyping(){
+  removeTyping();
+  const row=document.createElement('div');
+  row.className='trow'; row.id='typr';
+  row.innerHTML='<div class="mav b">铸</div><div class="tbbl"><span></span><span></span><span></span></div>';
+  document.getElementById('msgs').appendChild(row);
+  scrollB();
+}
+function removeTyping(){const t=document.getElementById('typr');if(t)t.remove();}
+
+function scrollB(){const m=document.getElementById('msgs');m.scrollTop=m.scrollHeight;}
+
+function updSendBtn(){
+  const b=document.getElementById('sbtn');
+  b.disabled=A.streaming;
+  b.textContent=A.streaming?'…':'↑';
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════════
+// PANELS
+// ═══════════════════════════════════════════════════════
+function openPanel(id){
+  closeP();
+  if(id==='sp2') initSettingsPanel();
+  if(id==='bp')  renderBrainPanel();
+  if(id==='tp')  renderTeamPanel();
+  if(id==='hp'){
+    const el=document.getElementById('chatUrlDisplay');
+    if(el) el.textContent='🔗 '+CHAT_URL;
+    const li=document.getElementById('helpUrlStep');
+    if(li) li.innerHTML='打开链接 <strong>'+CHAT_URL+'</strong>';
+  }
+  document.getElementById(id).classList.add('open');
+  document.getElementById('pov').classList.add('on');
+}
+function closeP(){
+  document.querySelectorAll('.sp').forEach(p=>p.classList.remove('open'));
+  document.getElementById('pov').classList.remove('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// COPY URL (share link)
+// ═══════════════════════════════════════════════════════
+const CHAT_URL = window.location.origin + window.location.pathname;
+
+function showCopyFeedback(success){
+  const btn=document.querySelector('.copy-url-btn');
+  if(!btn) return;
+  const orig=btn.textContent;
+  btn.textContent = success ? '✅ 已复制！' : '⚠️ 复制失败，请手动复制';
+  setTimeout(()=>{btn.textContent=orig;},2000);
+}
+
+function copyUrl(){
+  navigator.clipboard.writeText(CHAT_URL).then(()=>{
+    showCopyFeedback(true);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=CHAT_URL; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    let ok=false;
+    try{ok=document.execCommand('copy');}catch(_){}
+    document.body.removeChild(ta);
+    showCopyFeedback(ok);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// DOWNLOAD (desktop app)
+// ═══════════════════════════════════════════════════════
+function dlApp(){
+  const html=document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='铸渊助手.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════════════════
+// INPUT EVENTS
+// ═══════════════════════════════════════════════════════
+document.getElementById('inp').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+document.getElementById('inp').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+
+// ═══════════════════════════════════════════════════════
+// IDENTITY & ROLE SYSTEM
+// ═══════════════════════════════════════════════════════
+function setIdentity(userName, ghUser){
+  A.userName = userName||'';
+  A.ghUser   = ghUser||'';
+  A.userMeta = userName ? (ROLE_MAP[userName]||null) : null;
+  // Fallback metadata for custom dev IDs (DEV-XXX not in ROLE_MAP)
+  if(!A.userMeta && userName && DEV_ID_RE.test(userName)){
+    A.userMeta = {role:'dev', title:'开发者', emoji:'💻', badgeCls:'rb-dev', devId:userName};
+  }
+  A.role     = A.userMeta?.role || 'guest';
+  lss('zy_uname', A.userName);
+  lss('zy_ghuser', A.ghUser);
+  lss('zy_role', A.role);
+}
+
+function applyIdentityUI(){
+  const meta = A.userMeta;
+  const ubadge = document.getElementById('huser-badge');
+  const uname  = document.getElementById('huser-name');
+  if(meta && A.userName){
+    ubadge.style.display='inline';
+    uname.style.display='inline';
+    uname.innerHTML = meta.emoji + ' ' + esc(A.userName) + ' <span class="role-badge '+meta.badgeCls+'">'+esc(meta.title)+'</span>';
+  }
+  // Show controller button for supreme/main/founder (mobile only, desktop uses right sidebar)
+  const ctrlBtn = document.getElementById('ctrlBtn');
+  if(ctrlBtn) ctrlBtn.style.display = (meta?.role==='supreme'||meta?.role==='main'||meta?.role==='founder') ? 'flex' : 'none';
+  const isCtrl = meta?.role==='supreme'||meta?.role==='main'||meta?.role==='founder';
+  ['qr-ctrl1','qr-ctrl2','qr-ctrl3'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=isCtrl?'':'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TEAM STATUS PANEL (mobile slide-in)
+// ═══════════════════════════════════════════════════════
+function renderTeamPanel(){
+  const ds = A.devStatus;
+  const container = document.getElementById('tpb');
+  if(!ds){
+    container.innerHTML='<p style="color:var(--warn);font-size:13px">⚠️ 团队数据尚未加载。请检查网络连接后重试。</p>';
+    return;
+  }
+  const ts = ds.team_status||[];
+  const green = ts.filter(d=>d.status.includes('🟢')).length;
+  const yellow = ts.filter(d=>d.status.includes('🟡')).length;
+  const sync = ds.last_synced||'未知';
+
+  let h='';
+  h += '<div class="ctrl-panel-header">'
+    + '<div class="ctrl-panel-title">�� 总控指挥台</div>'
+    + '<div class="ctrl-panel-sub">数据同步：'+esc(sync)+'</div>'
+    + '</div>';
+
+  h += '<div class="team-summary">';
+  h += '<div class="team-summary-row"><span>总开发者</span><span class="iv">'+ts.length+' 人</span></div>';
+  h += '<div class="team-summary-row"><span>🟢 推进中</span><span style="color:var(--ok)">'+green+' 人</span></div>';
+  h += '<div class="team-summary-row"><span>🟡 等待中</span><span style="color:var(--warn)">'+yellow+' 人</span></div>';
+  h += '</div>';
+
+  h += '<div style="margin-bottom:12px">';
+  h += '<div style="font-size:11px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">快捷指令</div>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'查看所有开发者当前进度和阻塞点\')">📋 全员进度</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'谁现在遇到阻塞？需要协调什么？\')">🆘 需要协调</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'当前系统推进最关键的下一步是什么？\')">🗺️ 下一步</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'前端整体进度怎么样？\')">🖥️ 前端进度</span>';
+  h += '<span class="cmd-chip" onclick="closeP();qs(\'后端和集成进度怎么样？\')">⚙️ 后端进度</span>';
+  h += '</div>';
+
+  h += '<div class="team-grid">';
+  for(const dev of ts){
+    const isGreen = dev.status.includes('🟢');
+    const devRole = Object.values(ROLE_MAP).find(r=>r.devId===dev.dev_id);
+    const roleTag = devRole?.role==='supreme' ? '<span class="role-badge rb-supreme" style="margin-left:4px">总控</span>'
+                  : devRole?.role==='main' ? '<span class="role-badge rb-main" style="margin-left:4px">主控</span>' : '';
+    h += '<div class="dev-card">';
+    h += '<div class="dev-card-head">';
+    h += '<span class="dev-name">'+esc(dev.name)+'</span>'+roleTag;
+    h += '<span class="dev-id-badge">'+esc(dev.dev_id)+'</span>';
+    h += '</div>';
+    h += '<div class="dev-status-text '+(isGreen?'status-green':'status-yellow')+'">'+esc(dev.status)+'</div>';
+    h += '<div class="dev-detail">📦 '+esc(dev.modules.join('、'))+'</div>';
+    if(dev.next_step) h += '<div class="dev-next">👉 '+esc(dev.next_step)+'</div>';
+    if(dev.waiting_for && dev.waiting_for.trim()!=='') h += '<div class="dev-wait">⏳ 等待：'+esc(dev.waiting_for)+'</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+
+  if(ds.server_info){
+    const si = ds.server_info;
+    h += '<div class="sec-ttl">服务器信息</div>';
+    h += ir2('地址','<span class="iv">'+esc(si.address||'')+'</span>');
+    h += ir2('域名','<span class="iv">'+esc(si.domain||'')+'</span>');
+    h += ir2('SSH','<code style="font-size:11px;color:var(--accent)">'+esc(si.ssh_command||'')+'</code>');
+    h += ir2('技术栈','<span style="font-size:11px;color:var(--dim)">'+esc(si.tech_stack||'')+'</span>');
+  }
+
+  if(ds.tech_routing?.level_2_peer_help){
+    h += '<div class="sec-ttl">求助路由</div>';
+    for(const[area,who] of Object.entries(ds.tech_routing.level_2_peer_help)){
+      h += ir2(esc(area),'<span style="font-size:11px;color:var(--dim)">'+esc(who)+'</span>');
+    }
+  }
+
+  container.innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════════════
+// WINDOW RESIZE HANDLER
+// ═══════════════════════════════════════════════════════
+window.addEventListener('resize', function(){
+  const isCtrl=A.userMeta&&(A.userMeta.role==='supreme'||A.userMeta.role==='main'||A.userMeta.role==='founder');
+  const rsEl=document.getElementById('right-sidebar');
+  if(rsEl){
+    if(isCtrl && window.innerWidth>=900){
+      rsEl.style.display='flex';
+    } else {
+      rsEl.style.display='none';
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// MOBILE: VIEWPORT HEIGHT FIX & KEYBOARD HANDLER
+// ═══════════════════════════════════════════════════════
+(function(){
+  // Fix iOS/Android virtual keyboard pushing content via CSS custom property
+  if(window.visualViewport){
+    var raf=0;
+    window.visualViewport.addEventListener('resize',function(){
+      cancelAnimationFrame(raf);
+      raf=requestAnimationFrame(function(){
+        var appEl=document.getElementById('app');
+        if(appEl && appEl.classList.contains('on')){
+          appEl.style.setProperty('--vh',window.visualViewport.height+'px');
+          scrollB();
+        }
+      });
+    });
+  }
+  // Close sidebar on any outside tap (mobile)
+  document.addEventListener('touchstart',function(e){
+    var ls=document.getElementById('left-sidebar');
+    if(ls && ls.classList.contains('open') && !ls.contains(e.target)){
+      ls.classList.remove('open');
+      var ov=document.getElementById('ls-overlay');
+      if(ov) ov.classList.remove('on');
+    }
+  },{passive:true});
+})();
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+boot();
+</script>
+</body>
 </html>

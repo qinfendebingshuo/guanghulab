@@ -1217,6 +1217,26 @@
       "owner": "ICE-0002∞",
       "registered": "2026-03-25",
       "description": "每次系统执行后自动更新仪表盘数据 + README + GitHub Pages 实时仪表盘"
+    },
+    {
+      "id": "AG-ZY-095",
+      "name": "天眼合并膜引擎",
+      "type": "workflow",
+      "file": ".github/workflows/skyeye-pr-risk-check.yml",
+      "parent_sys": "SYS-GLW-0001",
+      "owner": "ICE-0002∞",
+      "registered": "2026-03-25",
+      "description": "天眼系统PR级合并膜 — 同账号沙箱隔离 + 全系统审核。R1关键文件/R2天眼区域入侵/R3构建产物/R4核心配置篡改/R5大规模删除/R6工作流篡改。物理层阻塞：workflow失败=merge按钮禁用"
+    },
+    {
+      "id": "AG-ZY-096",
+      "name": "开发者门户频道部署引擎",
+      "type": "workflow",
+      "file": ".github/workflows/dev-portal-deploy.yml",
+      "parent_sys": "SYS-GLW-0001",
+      "owner": "ICE-0002∞",
+      "registered": "2026-03-25",
+      "description": "开发者频道部署后自动更新manifest.json + Notion画像数据库同步"
     }
   ],
   "note": "铸渊已扫描所有workflow文件，按此格式逐一注册，编号从AG-ZY-001开始顺序分配",
