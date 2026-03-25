@@ -1,0 +1,30 @@
+{
+  "instruction_id": "ZY-NGINX-ROOTFIX-2026-0325-001",
+  "executed_at": "2026-03-25T05:04:00Z",
+  "executor": "AG-ZY-01 铸渊",
+  "root_cause": "Nginx root 指向 /var/www/hololake-frontend（旧残留），实际部署目录为 /var/www/guanghulab",
+  "diagnosis_by": "DEV-004 之之",
+  "fixes_applied": [
+    "Nginx root 路径修正: deploy-to-server.yml 增加 hololake-frontend → guanghulab 迁移逻辑",
+    "Nginx 模板更新: deploy/nginx/hololake.conf 添加 DEV-004, DEV-005 沙盒 alias 路由",
+    "沙盒 alias 路由补充: deploy-to-server.yml 自动生成 guanghulab-sandbox.conf snippet",
+    "API 反向代理确认: /api/, /api/ps/ 已在模板和工作流中配置",
+    "_shared 目录补建: deploy-to-server.yml 自动创建 /var/www/_shared",
+    "PM2 errored 进程: 需在服务器上手动执行 pm2 restart --only-errored"
+  ],
+  "changes_in_repo": [
+    ".github/workflows/deploy-to-server.yml — 增加 hololake-frontend root 路径迁移、沙盒路由配置、_shared 目录创建",
+    "deploy/nginx/hololake.conf — 添加 DEV-004, DEV-005 沙盒 alias 路由",
+    "data/nginx-rootfix-report-20260325.json — 本修复回执"
+  ],
+  "verification": {
+    "note": "修复已提交到仓库，下次部署到服务器时将自动应用。服务器验证需在部署后通过 Phase 5 脚本确认。",
+    "expected_fix_on_deploy": [
+      "Nginx root 路径从 hololake-frontend 修正为 guanghulab",
+      "/var/www/_shared 目录自动创建",
+      "沙盒路由 /DEV-004/ 和 /DEV-005/ 自动配置"
+    ]
+  },
+  "nginx_test": "将在下次部署时自动执行 nginx -t",
+  "status": "COMMITTED_PENDING_DEPLOY"
+}
