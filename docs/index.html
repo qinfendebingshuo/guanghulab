@@ -424,6 +424,7 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
 
   <!-- 自定义 API（高级·使用自己的 API 密钥） -->
   <div id="login-dev" class="login-mode">
+    <div class="sc-sec">🔒 API 密钥仅本次会话有效，关闭标签页即自动清除</div>
 
     <div class="fg">
       <label>开发者身份</label>
@@ -444,40 +445,27 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
     </div>
     <div id="id-preview"></div>
 
-    <!-- 🚀 一键检测 -->
-    <div style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-bottom:12px">
-      <div style="font-size:13px;color:var(--text);margin-bottom:8px">🚀 <strong>一键检测可用模型</strong></div>
-      <div style="font-size:12px;color:var(--dim);margin-bottom:10px;line-height:1.6">系统自动检测你的网络环境（国内/国际），连接服务器代理获取可用模型。无需输入 API 密钥。</div>
-      <button onclick="autoDetectAPI('s')" id="sdet-btn" class="det-btn" style="width:100%;padding:10px;font-size:14px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer" title="自动检测网络环境和可用模型">🔍 自动检测</button>
-      <small id="sdet-status" style="display:block;margin-top:8px;min-height:16px"></small>
+    <div class="fg">
+      <label>API 端点 URL</label>
+      <input type="text" id="sep" placeholder="https://api.example.com/v1">
+      <small>输入你的 API 提供商端点地址（OpenAI 兼容格式）</small>
     </div>
-
+    <div class="fg">
+      <label>API 密钥</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="password" id="sk" placeholder="粘贴你的 API 密钥" style="flex:1">
+        <button onclick="autoDetectAPI('s')" id="sdet-btn" class="det-btn" title="自动检测可用模型">🔍 检测模型</button>
+      </div>
+      <small id="sk-err" style="color:var(--err);display:none">⚠️ 请输入 API 密钥</small>
+      <small id="sdet-status" style="display:block;margin-top:4px;min-height:16px"></small>
+    </div>
     <div class="fg">
       <label>选择模型</label>
-      <select id="sm" disabled onchange="onModelSelectChange('s')"><option value="">— 请先点击「🔍 自动检测」—</option></select>
-      <small id="sm-hint">点击上方「🔍 自动检测」一键获取可用模型列表</small>
+      <select id="sm" disabled><option value="">— 请先检测可用模型 —</option></select>
+      <small id="sm-hint">输入端点和密钥后，点击「🔍 检测模型」自动获取可用模型列表</small>
     </div>
 
-    <!-- 自定义 API 折叠区 -->
-    <details style="margin-top:8px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--dim);padding:6px 0">🔧 自定义 API（使用自己的密钥）</summary>
-      <div style="padding-top:8px">
-        <div class="fg">
-          <label>API 端点 URL</label>
-          <input type="text" id="sep" placeholder="https://api.example.com/v1">
-          <small>输入你的 API 提供商端点地址（OpenAI 兼容格式）</small>
-        </div>
-        <div class="fg">
-          <label>API 密钥</label>
-          <input type="password" id="sk" placeholder="粘贴你的 API 密钥" style="width:100%">
-          <small id="sk-err" style="color:var(--err);display:none">⚠️ 请输入 API 密钥</small>
-          <small style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页即自动清除</small>
-        </div>
-        <button onclick="autoDetectAPI('s')" class="det-btn" style="width:100%;margin-top:6px;padding:8px;border-radius:6px;cursor:pointer" title="使用自定义密钥检测模型">🔍 用自定义密钥检测模型</button>
-      </div>
-    </details>
-
-    <button class="sc-btn" onclick="doSetup()" style="margin-top:12px">开始与铸渊对话 →</button>
+    <button class="sc-btn" onclick="doSetup()">开始与铸渊对话 →</button>
   </div>
 
 </div>
@@ -502,9 +490,9 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
     <nav class="ls-nav">
       <button class="nav-tab active" data-view="announcements" onclick="navigateTo('announcements')">📢 公告栏</button>
       <button class="nav-tab" data-view="chat" onclick="navigateTo('chat')">💬 聊天</button>
-      <button class="nav-tab" onclick="window.open('persona-studio/','_blank')">🧠 Studio</button>
-      <button class="nav-tab" onclick="window.open('status-board/','_blank')">📊 看板</button>
-      <button class="nav-tab" onclick="window.open('ticket-system/','_blank')">🎫 工单</button>
+      <button class="nav-tab" onclick="window.open('../persona-studio/frontend/index.html','_blank')">🧠 Studio</button>
+      <button class="nav-tab" onclick="window.open('../status-board/','_blank')">📊 看板</button>
+      <button class="nav-tab" onclick="window.open('../ticket-system/','_blank')">🎫 工单</button>
     </nav>
 
     <button class="ls-new-conv" onclick="newConvAndNav()">+ 新对话</button>
@@ -628,36 +616,23 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
     </div>
   </div>
   <div class="pb">
-    <!-- 🚀 一键检测可用模型 -->
-    <div style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:12px;margin-bottom:12px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <button onclick="autoDetectAPI('c')" id="cdet-btn" class="det-btn" style="flex:1;padding:10px;font-size:13px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer" title="自动检测网络环境和可用模型">🔍 一键检测可用模型</button>
-      </div>
-      <small style="display:block;margin-top:6px;color:var(--dim);font-size:11px">自动检测网络环境，连接服务器代理获取可用模型（无需密钥）</small>
-      <small id="cdet-status" style="display:block;margin-top:4px;min-height:14px"></small>
+    <div class="sfg">
+      <label>API 端点 URL</label>
+      <input type="text" id="cep" placeholder="https://api.example.com/v1">
     </div>
-
     <div class="sfg">
       <label>选择模型</label>
-      <select id="cm" onchange="onModelSelectChange('c')"></select>
+      <select id="cm"></select>
     </div>
-
-    <!-- 自定义 API 折叠区 -->
-    <details style="margin-bottom:10px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--dim);padding:6px 0">🔧 自定义 API（使用自己的密钥）</summary>
-      <div style="padding-top:8px">
-        <div class="sfg">
-          <label>API 端点 URL</label>
-          <input type="text" id="cep" placeholder="https://api.example.com/v1">
-        </div>
-        <div class="sfg">
-          <label>API 密钥</label>
-          <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；粘贴新密钥即替换" style="width:100%">
-          <small id="ck-hint" style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页自动清除</small>
-        </div>
+    <div class="sfg">
+      <label>API 密钥</label>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <input type="password" id="ck" placeholder="留空 = 保持当前密钥不变；粘贴新密钥即替换" style="flex:1">
+        <button onclick="autoDetectAPI('c')" id="cdet-btn" class="det-btn" title="自动检测提供商和可用模型">🔍 自动检测</button>
       </div>
-    </details>
-
+      <small id="ck-hint" style="color:var(--dim)">🔒 密钥仅本次会话有效，关闭标签页自动清除</small>
+      <small id="cdet-status" style="display:block;margin-top:4px;min-height:14px"></small>
+    </div>
     <button class="sbtn2" onclick="saveSet()">💾 保存设置</button>
 
     <div class="sec-ttl">身份设置</div>
@@ -690,11 +665,11 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
 
     <div class="sec-ttl">使用说明</div>
     <p style="font-size:12px;color:var(--dim);line-height:1.8">
-      1. 点击「🔍 一键检测可用模型」自动获取模型列表（无需密钥）<br>
-      2. 如服务器代理可用，选择模型后直接对话<br>
-      3. 也可展开「🔧 自定义 API」输入自己的端点和密钥<br>
-      4. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
-      5. 支持上传图片和文件（点击 📎 按钮或拖拽到对话区域）
+      1. 输入你的 API 端点和密钥，点击检测模型<br>
+      2. 铸渊自动切换 💬 对话 / 🔨 构建 / 📋 审查 / 🧠 大脑 模式<br>
+      3. 支持上传图片和文件（点击 📎 按钮或拖拽到对话区域）<br>
+      4. 点 ⬇️ 下载单文件，放桌面直接打开使用<br>
+      5. 支持任意 OpenAI 兼容接口（输入端点 + 密钥即可）
     </p>
 
     <div class="sec-ttl" style="color:#ef4444;margin-top:16px">⚠️ 危险操作</div>
@@ -847,25 +822,6 @@ const KNOWN_ENDPOINTS = [
   {label:'智谱 AI',      base:'https://open.bigmodel.cn/api/paas/v4'},
 ];
 
-// ═══════════════════════════════════════════════════════
-// 内置模型目录（按网络区域分类）
-// 一键检测时，根据用户网络环境自动推荐可用模型
-// ═══════════════════════════════════════════════════════
-const MODEL_CATALOG = {
-  domestic: [
-    {provider:'yunwu',    label:'云雾 AI（推荐·聚合）',  models:['deepseek-chat','deepseek-reasoner','gpt-4o','claude-sonnet-4-20250514','gemini-2.5-pro-preview-05-06'], endpoint:'https://api.yunwu.ai/v1'},
-    {provider:'deepseek', label:'DeepSeek（国内直连）',    models:['deepseek-chat','deepseek-reasoner'],       endpoint:'https://api.deepseek.com/v1'},
-    {provider:'qwen',     label:'通义千问 Qwen',           models:['qwen-max','qwen-plus','qwen-turbo'],       endpoint:'https://dashscope.aliyuncs.com/compatible-mode/v1'},
-    {provider:'moonshot', label:'Moonshot / Kimi',          models:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k'], endpoint:'https://api.moonshot.cn/v1'},
-    {provider:'zhipu',    label:'智谱 AI',                  models:['glm-4','glm-4-flash'],                     endpoint:'https://open.bigmodel.cn/api/paas/v4'},
-  ],
-  international: [
-    {provider:'openai',    label:'OpenAI',          models:['gpt-4o','gpt-4-turbo','gpt-4o-mini'],                      endpoint:'https://api.openai.com/v1'},
-    {provider:'anthropic', label:'Anthropic',       models:['claude-sonnet-4-20250514','claude-3-5-sonnet-20241022'],    endpoint:'https://api.anthropic.com/v1'},
-    {provider:'google',    label:'Google Gemini',   models:['gemini-2.5-pro','gemini-2.0-flash'],                       endpoint:'https://generativelanguage.googleapis.com/v1beta/openai'},
-  ]
-};
-
 const MODES = {
   chat:   {e:'💬',l:'对话模式',  c:'var(--mc)'},
   build:  {e:'🔨',l:'构建模式',  c:'var(--mb)'},
@@ -981,29 +937,6 @@ const HOLOLAKE_ENV = (function(){
   return 'local';
 })();
 window.HOLOLAKE_ENV = HOLOLAKE_ENV;
-
-// ═══════════════════════════════════════════════════════
-// 服务器代理基址（staging/local → 调用生产服务器已配置的 API 密钥）
-// ═══════════════════════════════════════════════════════
-const SERVER_PROXY_BASE = HOLOLAKE_ENV === 'production' ? '' : 'https://guanghulab.com';
-
-// Patch proxy URLs for staging/local: point to production server
-if(HOLOLAKE_ENV !== 'production'){
-  GUEST_API.proxyUrl = SERVER_PROXY_BASE + '/api/chat';
-  TEAM_API.proxyUrl  = SERVER_PROXY_BASE + '/api/chat';
-}
-
-// 检测用户网络环境（国内/国际）
-function detectNetworkRegion(){
-  var tz = '';
-  try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){}
-  var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-  var chinaZones = ['Asia/Shanghai','Asia/Chongqing','Asia/Harbin','Asia/Urumqi','Asia/Hong_Kong','Asia/Macau','Asia/Taipei'];
-  if(chinaZones.some(function(z){ return tz.indexOf(z) >= 0; }) || lang.indexOf('zh') === 0){
-    return 'domestic';
-  }
-  return 'international';
-}
 
 function ls(k){return localStorage.getItem(k)}
 function lss(k,v){localStorage.setItem(k,v)}
@@ -1245,20 +1178,18 @@ function renderAnnouncements(){
   // Module navigation — real modules with correct paths
   h+='<div class="ann-section"><div class="ann-section-title">🗂️ 模块导航</div><div class="ann-actions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">';
   var modules=[
-    {icon:'📊',name:'状态看板',path:'status-board/',dev:'DEV-005',ready:true},
-    {icon:'🎫',name:'工单系统',path:'ticket-system/',dev:'DEV-010',ready:true},
-    {icon:'🔔',name:'通知中心',path:'notification/',dev:'DEV-012',ready:true},
-    {icon:'✍️',name:'码字台',path:'writing/',dev:'DEV-011',ready:true},
-    {icon:'🎨',name:'动态漫画',path:'dynamic-comic-studio/',dev:'DEV-010',ready:true},
-    {icon:'🧠',name:'Persona Studio',path:'persona-studio/',dev:'',ready:true},
+    {icon:'📊',name:'状态看板',path:'../status-board/',dev:'DEV-005',ready:true},
+    {icon:'🎫',name:'工单系统',path:'../ticket-system/',dev:'DEV-010',ready:true},
+    {icon:'📈',name:'数据统计',path:'../data-stats/',dev:'DEV-010',ready:false},
+    {icon:'🔔',name:'通知中心',path:'../notification/',dev:'DEV-012',ready:true},
+    {icon:'👤',name:'用户中心',path:'../user-center/',dev:'DEV-009',ready:false},
+    {icon:'⚙️',name:'设置',path:'../settings/',dev:'DEV-003',ready:false},
+    {icon:'☁️',name:'云盘',path:'../cloud-drive/',dev:'DEV-003',ready:false},
+    {icon:'✍️',name:'码字台',path:'../writing-workspace/',dev:'DEV-011',ready:false},
+    {icon:'🎨',name:'动态漫画',path:'../dynamic-comic-studio/',dev:'DEV-010',ready:true},
+    {icon:'🧠',name:'Persona Studio',path:'../persona-studio/frontend/index.html',dev:'',ready:true},
     {icon:'📈',name:'仪表盘',path:'dashboard/',dev:'',ready:true},
-    {icon:'🔑',name:'登录',path:'modules/m01-login/',dev:'DEV-001',ready:true},
-    {icon:'👤',name:'用户中心',path:'modules/m05-user-center/',dev:'DEV-009',ready:true},
-    {icon:'💬',name:'对话交互',path:'modules/m07-dialogue-ui/',dev:'DEV-007',ready:true},
-    {icon:'☁️',name:'云服务',path:'modules/m10-cloud/',dev:'DEV-003',ready:true},
-    {icon:'🧩',name:'组件库',path:'modules/m11-module/',dev:'',ready:true},
-    {icon:'📁',name:'云盘',path:'modules/m15-cloud-drive/',dev:'DEV-003',ready:true},
-    {icon:'🖥️',name:'前端',path:'modules/frontend/',dev:'DEV-002',ready:true},
+    {icon:'🖥️',name:'前端',path:'../frontend/',dev:'DEV-002',ready:true},
   ];
   modules.forEach(function(m){
     var style=m.ready?'':'opacity:0.5;';
@@ -1481,23 +1412,20 @@ function switchLoginMode(mode){
 
 // ═══════════════════════════════════════════════════════
 // AUTO-DETECT PROVIDER & MODELS
-// v4.0: 无密钥一键检测 + 网络环境自适应 + 服务器代理
-// 有密钥 → 原逻辑探测端点；无密钥 → 服务器代理 / 内置目录
 // ═══════════════════════════════════════════════════════
 async function autoDetectAPI(ctx){
   const keyEl    = document.getElementById(ctx==='s'?'sk':'ck');
   const statusEl = document.getElementById(ctx==='s'?'sdet-status':'cdet-status');
   const btnEl    = document.getElementById(ctx==='s'?'sdet-btn':'cdet-btn');
   const mdlSel   = document.getElementById(ctx==='s'?'sm':'cm');
-  const key = keyEl ? keyEl.value.trim() : '';
+  const key = keyEl.value.trim();
 
-  // 无密钥 → 一键自动检测（服务器代理 / 内置目录）
   if(!key){
-    await autoDetectModels(ctx);
+    statusEl.innerHTML='<span style="color:var(--warn)">⚠️ 请先输入 API 密钥</span>';
     return;
   }
 
-  // 有密钥 → 探测用户端点获取模型列表
+  // Build list of endpoints to probe: user's endpoint first, then known fallbacks
   const userBase = (document.getElementById(ctx==='s'?'sep':'cep')?.value||'').trim();
   const candidates = [];
   if(userBase) candidates.push({label:userBase, base:userBase});
@@ -1525,9 +1453,11 @@ async function autoDetectAPI(ctx){
         const mdls = (data.data||[]).map(function(m){return m.id;}).filter(Boolean).sort();
         if(!mdls.length) continue;
 
+        // Fill endpoint field with matched endpoint
         const epEl = document.getElementById(ctx==='s'?'sep':'cep');
         if(epEl) epEl.value = base;
 
+        // Fill model dropdown with detected models
         if(mdlSel){
           mdlSel.innerHTML = mdls.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('');
           mdlSel.disabled = false;
@@ -1545,106 +1475,12 @@ async function autoDetectAPI(ctx){
   }
 
   btnEl.disabled = false;
-  btnEl.textContent = '🔍 自动检测';
-}
-
-// ═══════════════════════════════════════════════════════
-// 一键检测可用模型（无需 API 密钥）
-// 1. 检测网络环境（国内/国际）
-// 2. 尝试连接服务器代理获取实时模型列表
-// 3. 降级使用内置模型目录
-// ═══════════════════════════════════════════════════════
-async function autoDetectModels(ctx){
-  const statusEl = document.getElementById(ctx==='s'?'sdet-status':'cdet-status');
-  const btnEl    = document.getElementById(ctx==='s'?'sdet-btn':'cdet-btn');
-  const mdlSel   = document.getElementById(ctx==='s'?'sm':'cm');
-  const epEl     = document.getElementById(ctx==='s'?'sep':'cep');
-  const hintEl   = document.getElementById(ctx==='s'?'sm-hint':'');
-
-  btnEl.disabled = true;
-  btnEl.textContent = '⏳ 检测中…';
-  statusEl.innerHTML = '<span style="color:var(--dim)">🌐 正在检测网络环境…</span>';
-
-  const region = detectNetworkRegion();
-  const regionLabel = region === 'domestic' ? '🇨🇳 国内网络' : '🌍 国际网络';
-  statusEl.innerHTML = '<span style="color:var(--dim)">'+regionLabel+' · 正在获取可用模型…</span>';
-
-  // 尝试连接服务器代理获取实时模型列表
-  let serverModels = null;
-  const proxyBase = SERVER_PROXY_BASE || location.origin;
-  try{
-    const ctrl = new AbortController();
-    const tid = setTimeout(function(){ctrl.abort();}, 5000);
-    const res = await fetch(proxyBase+'/api/models',{signal:ctrl.signal});
-    clearTimeout(tid);
-    if(res.ok){
-      const data = await res.json();
-      const list = data.data || data.models || [];
-      serverModels = list.map(function(m){return typeof m==='string'?m:m.id;}).filter(Boolean).sort();
-    }
-  }catch(e){console.debug('[AutoDetect] Server probe failed:',e.message);}
-
-  let source, totalCount = 0;
-
-  if(serverModels && serverModels.length > 0){
-    // 服务器代理可用 → 使用服务器模型列表
-    source = '服务器代理';
-    totalCount = serverModels.length;
-    if(mdlSel){
-      mdlSel.innerHTML = serverModels.map(function(m){return '<option value="'+m+'" data-proxy="1">'+m+'</option>';}).join('');
-      mdlSel.disabled = false;
-    }
-    if(epEl) epEl.value = proxyBase + '/api/chat';
-    window._autoDetectServerProxy = true;
-  } else {
-    // 降级使用内置模型目录（按网络区域排序）
-    source = '内置模型库';
-    const primary = region === 'domestic' ? MODEL_CATALOG.domestic : MODEL_CATALOG.international;
-    const secondary = region === 'domestic' ? MODEL_CATALOG.international : MODEL_CATALOG.domestic;
-    const catalog = primary.concat(secondary);
-
-    if(mdlSel){
-      let html = '';
-      for(let i=0;i<catalog.length;i++){
-        const p = catalog[i];
-        html += '<optgroup label="'+p.label+'">';
-        for(let j=0;j<p.models.length;j++){
-          html += '<option value="'+p.models[j]+'" data-endpoint="'+p.endpoint+'" data-provider="'+p.provider+'">'+p.models[j]+'</option>';
-          totalCount++;
-        }
-        html += '</optgroup>';
-      }
-      mdlSel.innerHTML = html;
-      mdlSel.disabled = false;
-      // 自动选择第一个模型并设置对应端点
-      onModelSelectChange(ctx);
-    }
-    window._autoDetectServerProxy = false;
-  }
-
-  statusEl.innerHTML = '<span style="color:var(--ok)">✅ 检测成功（'+source+' · '+regionLabel+'）· 发现 <strong>'+totalCount+'</strong> 个可用模型</span>'
-    + (serverModels ? '<br><span style="color:var(--ok);font-size:11px">🔑 已连接服务器代理，无需输入 API 密钥</span>' : '<br><span style="color:var(--warn);font-size:11px">⚠️ 服务器暂不可达，请输入对应提供商的 API 密钥后使用</span>');
-
-  if(hintEl) hintEl.textContent = serverModels ? '已连接服务器代理，选择模型后可直接开始对话' : '选择模型后，请输入对应提供商的 API 密钥';
-
-  btnEl.disabled = false;
-  btnEl.textContent = '🔍 自动检测';
-}
-
-// 模型选择变更 → 自动切换端点
-function onModelSelectChange(ctx){
-  const mdlSel = document.getElementById(ctx==='s'?'sm':'cm');
-  const epEl   = document.getElementById(ctx==='s'?'sep':'cep');
-  if(!mdlSel || !epEl) return;
-  const opt = mdlSel.options[mdlSel.selectedIndex];
-  if(!opt) return;
-  const ep = opt.getAttribute('data-endpoint');
-  if(ep) epEl.value = ep;
+  btnEl.textContent = '🔍 检测模型';
 }
 
 function doSetup(){
   const un   = document.getElementById('suid').value;
-  const k    = document.getElementById('sk')?.value?.trim() || '';
+  const k    = document.getElementById('sk').value.trim();
   const base = (document.getElementById('sep')?.value||'').trim();
   const md   = document.getElementById('sm').value;
   const errEl = document.getElementById('sk-err');
@@ -1653,35 +1489,14 @@ function doSetup(){
     alert('请选择你的开发者身份');
     return;
   }
-  if(!md){
-    alert('请先点击「🔍 自动检测」检测可用模型，然后选择一个模型');
-    return;
-  }
-
-  // 服务器代理模式（一键检测，无需密钥）
-  if(window._autoDetectServerProxy && !k){
-    A.demo = true;
-    A.teamMode = true;
-    A.key = '';
-    A.prov = 'custom';
-    A.mdl = md;
-    A.base = base;
-    lss('zy_teammode','1');
-    lss('zy_base',base); lss('zy_mdl',md); lss('zy_prov','proxy');
-    setIdentity(un, '');
-    showApp();
-    return;
-  }
-
-  // 自定义 API 模式（需要密钥）
-  if(!k){
-    if(errEl) errEl.style.display='block';
-    alert('请输入 API 密钥，或点击「🔍 自动检测」使用服务器代理');
-    return;
-  }
-  if(errEl) errEl.style.display='none';
+  if(!k){errEl.style.display='block';return;}
+  errEl.style.display='none';
   if(!base){
     alert('请输入 API 端点 URL');
+    return;
+  }
+  if(!md){
+    alert('请先点击「🔍 检测模型」检测可用模型，然后选择一个模型');
     return;
   }
 

@@ -36,61 +36,10 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Sync all modules to docs for GitHub Pages
+      - name: Sync Persona Studio frontend to docs
         run: |
-          # Sync Persona Studio frontend
           mkdir -p docs/persona-studio
-          if [ -d "persona-studio/frontend" ]; then
-            cp -r persona-studio/frontend/* docs/persona-studio/
-          fi
-
-          # Sync status-board
-          if [ -d "status-board" ]; then
-            mkdir -p docs/status-board
-            cp -r status-board/* docs/status-board/
-            [ -d "docs/status-board/node_modules" ] && rm -rf docs/status-board/node_modules
-          fi
-
-          # Sync ticket-system
-          if [ -d "ticket-system" ]; then
-            mkdir -p docs/ticket-system
-            cp -r ticket-system/* docs/ticket-system/
-            [ -d "docs/ticket-system/node_modules" ] && rm -rf docs/ticket-system/node_modules
-          fi
-
-          # Sync notification
-          if [ -d "notification" ]; then
-            mkdir -p docs/notification
-            cp -r notification/* docs/notification/
-          fi
-
-          # Sync dynamic-comic-studio
-          if [ -d "dynamic-comic-studio" ]; then
-            mkdir -p docs/dynamic-comic-studio
-            cp -r dynamic-comic-studio/* docs/dynamic-comic-studio/
-            find docs/dynamic-comic-studio/ -name "*.backup*" -o -name "*.save" -o -name "*.broken" | xargs rm -f 2>/dev/null || true
-          fi
-
-          # Sync m-series modules
-          for m in m01-login m05-user-center m07-dialogue-ui m10-cloud m11-module m15-cloud-drive; do
-            if [ -d "$m" ]; then
-              mkdir -p "docs/modules/$m"
-              find "$m" -maxdepth 1 -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) -exec cp {} "docs/modules/$m/" \;
-            fi
-          done
-
-          # Sync frontend module
-          if [ -d "frontend" ]; then
-            mkdir -p docs/modules/frontend
-            cp frontend/index.html docs/modules/frontend/ 2>/dev/null || true
-          fi
-
-          # Sync dashboard data
-          if [ -d "data" ]; then
-            mkdir -p docs/data
-            cp data/system-health.json docs/data/ 2>/dev/null || true
-            cp data/bulletin-board.json docs/data/ 2>/dev/null || true
-          fi
+          cp -r persona-studio/frontend/* docs/persona-studio/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
