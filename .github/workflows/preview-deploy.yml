@@ -57,26 +57,30 @@ jobs:
           # Sync status-board into docs for GitHub Pages access
           if [ -d "status-board" ]; then
             mkdir -p docs/status-board
-            cp -r status-board/* docs/status-board/ 2>/dev/null || true
+            echo "Copying status-board..."
+            cp -r status-board/* docs/status-board/ || echo "⚠️ status-board copy had errors"
             [ -d "docs/status-board/node_modules" ] && rm -rf docs/status-board/node_modules
           fi
 
           # Sync ticket-system
           if [ -d "ticket-system" ]; then
             mkdir -p docs/ticket-system
-            cp -r ticket-system/* docs/ticket-system/ 2>/dev/null || true
+            echo "Copying ticket-system..."
+            cp -r ticket-system/* docs/ticket-system/ || echo "⚠️ ticket-system copy had errors"
           fi
 
           # Sync notification
           if [ -d "notification" ]; then
             mkdir -p docs/notification
-            cp -r notification/* docs/notification/ 2>/dev/null || true
+            echo "Copying notification..."
+            cp -r notification/* docs/notification/ || echo "⚠️ notification copy had errors"
           fi
 
           # Sync dynamic-comic-studio
           if [ -d "dynamic-comic-studio" ]; then
             mkdir -p docs/dynamic-comic-studio
-            cp -r dynamic-comic-studio/* docs/dynamic-comic-studio/ 2>/dev/null || true
+            echo "Copying dynamic-comic-studio..."
+            cp -r dynamic-comic-studio/* docs/dynamic-comic-studio/ || echo "⚠️ dynamic-comic-studio copy had errors"
           fi
 
           # Sync dashboard data

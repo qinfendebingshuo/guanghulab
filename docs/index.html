@@ -1718,21 +1718,21 @@ function resetAllSettings(){
 async function loadBrain(){
   try{
     const [mr,rr,dr,shr,bbr,fsr,tlr]=await Promise.all([
-      fetch(RAW+'/.github/brain/memory.json').catch(()=>null),
-      fetch(RAW+'/.github/brain/routing-map.json').catch(()=>null),
-      fetch(RAW+'/.github/persona-brain/dev-status.json').catch(()=>null),
-      fetch(RAW+'/data/system-health.json').catch(()=>null),
-      fetch(RAW+'/data/bulletin-board.json').catch(()=>null),
-      fetch(RAW+'/federation-status.json').catch(()=>null),
-      fetch(RAW+'/persona-telemetry/latest-summary.json').catch(()=>null),
+      fetch(RAW+'/.github/brain/memory.json').catch(e=>{console.debug('[Brain] memory fetch failed:',e.message);return null;}),
+      fetch(RAW+'/.github/brain/routing-map.json').catch(e=>{console.debug('[Brain] routing fetch failed:',e.message);return null;}),
+      fetch(RAW+'/.github/persona-brain/dev-status.json').catch(e=>{console.debug('[Brain] devStatus fetch failed:',e.message);return null;}),
+      fetch(RAW+'/data/system-health.json').catch(e=>{console.debug('[Brain] systemHealth fetch failed:',e.message);return null;}),
+      fetch(RAW+'/data/bulletin-board.json').catch(e=>{console.debug('[Brain] bulletin fetch failed:',e.message);return null;}),
+      fetch(RAW+'/federation-status.json').catch(e=>{console.debug('[Brain] federation fetch failed:',e.message);return null;}),
+      fetch(RAW+'/persona-telemetry/latest-summary.json').catch(e=>{console.debug('[Brain] telemetry fetch failed:',e.message);return null;}),
     ]);
-    if(mr&&mr.ok) A.brain=await mr.json();
-    if(rr&&rr.ok) A.routing=await rr.json();
-    if(dr&&dr.ok) A.devStatus=await dr.json();
-    if(shr&&shr.ok) A.systemHealth=await shr.json();
-    if(bbr&&bbr.ok) A.bulletinBoard=await bbr.json();
-    if(fsr&&fsr.ok) A.federationStatus=await fsr.json();
-    if(tlr&&tlr.ok) A.telemetrySummary=await tlr.json();
+    if(mr&&mr.ok) try{A.brain=await mr.json();}catch(e){console.debug('[Brain] memory parse failed:',e.message);}
+    if(rr&&rr.ok) try{A.routing=await rr.json();}catch(e){console.debug('[Brain] routing parse failed:',e.message);}
+    if(dr&&dr.ok) try{A.devStatus=await dr.json();}catch(e){console.debug('[Brain] devStatus parse failed:',e.message);}
+    if(shr&&shr.ok) try{A.systemHealth=await shr.json();}catch(e){console.debug('[Brain] systemHealth parse failed:',e.message);}
+    if(bbr&&bbr.ok) try{A.bulletinBoard=await bbr.json();}catch(e){console.debug('[Brain] bulletin parse failed:',e.message);}
+    if(fsr&&fsr.ok) try{A.federationStatus=await fsr.json();}catch(e){console.debug('[Brain] federation parse failed:',e.message);}
+    if(tlr&&tlr.ok) try{A.telemetrySummary=await tlr.json();}catch(e){console.debug('[Brain] telemetry parse failed:',e.message);}
   }catch(_){}
   if(!A.brain) A.brain={...FB_BRAIN};
   updBbar();
