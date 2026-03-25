@@ -153,22 +153,6 @@ jobs:
             git commit -m "🧬 双端日报 · ${DATE} [skip ci]"
           git push || echo "⚠️ push失败（不阻断）"
 
-      # ━━━ Phase 6.5: Notion 指令同步（方案B · 汇总引擎附带同步）━━━
-      - name: "🔄 同步 Notion 指令到 memory.json"
-        if: always()
-        env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          DIRECTIVES_DB_ID: ${{ secrets.DIRECTIVES_DB_ID }}
-        run: |
-          echo "🔄 执行 Notion 指令同步..."
-          node scripts/neural/sync-notion-directives.js || \
-            echo "⚠️ Notion 指令同步失败（不阻断主流程）"
-          # 如果 memory.json 有更新，追加提交
-          git add .github/persona-brain/memory.json
-          git diff --cached --quiet || \
-            git commit -m "🔄 Notion 指令同步 · $(TZ=Asia/Shanghai date +%Y-%m-%d) [skip ci]"
-          git push || echo "⚠️ 指令同步push失败（不阻断）"
-
       # ━━━ Phase 7: 推送到 Notion ━━━
       - name: "📡 推送日报到 Notion"
         if: always()
