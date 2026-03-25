@@ -287,14 +287,14 @@
 <!-- BINGSHUO_BULLETIN_START -->
 | 时间 | 检查项 | 状态 |
 |------|--------|------|
+| 03-25 15:19 | ✅ 🚀 铸渊 CD · 自动部署到 guanghulab.com · 成功 | 冰朔 |
+| 03-25 15:18 | 🔧 系统更新: `docs/` | 铸渊 (ZhuYuan Bot) |
+| 03-25 15:18 | ✅ 📢 更新系统公告区 · 成功 | 冰朔 |
+| 03-25 15:18 | 🔧 系统更新: `.github/` | github-actions[bot] |
 | 03-25 15:18 | ❌ 🧪 Notion Bridge Connectivity Test · 失败 | 冰朔 |
 | 03-25 15:18 | ✅ 铸渊 · Bridge E · GitHub Changes → Notion · 成功 | 冰朔 |
 | 03-25 15:17 | 🔵 铸渊 · Bridge E · GitHub Changes → Notion · action_required | 冰朔 |
-| 03-25 15:14 | 🔧 系统更新: `.github/` | 铸渊 (Copilot) |
-| 03-25 15:14 | 🔧 系统更新: `docs/` | 铸渊 (Copilot) |
 | 03-25 15:14 | 🔧 系统更新: `scripts/` | 铸渊 (Copilot) |
-| 03-25 15:02 | ✅ 📡 同步 Notion 开发者画像 · 成功 | 冰朔 |
-| 03-25 14:43 | ✅ 📡 铸渊 · Notion Agent 唤醒监听 · 成功 | 冰朔 |
 | 03-24 17:02 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
 | 03-23 17:08 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
 | 03-22 16:47 | ✅ 每日巡检 ✅ 通过 | 冰朔 |
