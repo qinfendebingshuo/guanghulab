@@ -20,7 +20,7 @@ var TERMINAL_STATUSES = ['CLOSED', 'ESCALATED', 'VERIFIED'];
 var RECEIPT_TRACKER_CONFIG = {
   // 指令回执追踪表 · Notion Database ID
   // 位于：光湖语言壳 > 统一网关 > 指令回执追踪表
-  // 实际 ID 通过环境变量 RECEIPT_DB_ID 传入（安全考虑不硬编码）
+  // 实际 Database ID 通过此环境变量名读取（安全考虑不硬编码）
   databaseIdEnvVar: 'RECEIPT_DB_ID',
 
   // 字段映射（与 Notion 数据库字段名一一对应）
