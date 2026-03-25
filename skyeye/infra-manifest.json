@@ -241,6 +241,36 @@
       "instruction_ref": "ZY-DEVSYNC-REBUILD-2026-0325-001",
       "created": "2026-03-25",
       "status": "active"
+    },
+    "guanghulab_website": {
+      "service": "guanghulab.com Web Deployment",
+      "server_ip": "8.155.62.235",
+      "domain": "guanghulab.com",
+      "deploy_path": "/var/www/guanghulab",
+      "stack": {
+        "runtime": "Node.js 20",
+        "process_manager": "PM2",
+        "web_server": "Nginx",
+        "ssl": "Let's Encrypt (pending)"
+      },
+      "services": {
+        "api_proxy": { "port": 3721, "name": "guanghulab-proxy", "desc": "AI 聊天代理 SSE" },
+        "backend": { "port": 3000, "name": "guanghulab-backend", "desc": "Express 主后端" },
+        "hli": { "port": 3001, "name": "guanghulab", "desc": "HLI 中间层" },
+        "persona_studio": { "port": 3002, "name": "persona-studio", "desc": "Persona Studio 后端" },
+        "websocket": { "port": 8080, "name": "guanghulab-ws", "desc": "看板 WebSocket" }
+      },
+      "cd_workflow": "deploy-to-server.yml",
+      "guard": "skyeye/guards/web-deploy-guard.json",
+      "human_side_checks": [
+        "国内手机浏览器可访问 guanghulab.com",
+        "Persona Studio 核心功能可用",
+        "模块导航无死链",
+        "无需手动输入 API 密钥（服务器代理模式）"
+      ],
+      "instruction_ref": "ZY-HUMANSIDE-FIX-2026-0325-002",
+      "created": "2026-03-25",
+      "status": "active"
     }
   }
 }

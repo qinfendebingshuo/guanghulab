@@ -1,0 +1,98 @@
+{
+  "guard_id": "GUARD-WEB-DEPLOY",
+  "guard_name": "Web 部署守卫",
+  "target_service": "guanghulab.com Web Deploy",
+  "status": "active",
+  "mode": "monitor",
+  "version": "1.0",
+  "created_by": "ZY-HUMANSIDE-FIX-2026-0325-002",
+  "target": {
+    "domain": "guanghulab.com",
+    "server_ip": "8.155.62.235",
+    "deploy_path": "/var/www/guanghulab",
+    "pm2_processes": [
+      "guanghulab-proxy",
+      "guanghulab-backend",
+      "guanghulab-ws",
+      "persona-studio"
+    ],
+    "nginx_config": "/etc/nginx/conf.d/hololake.conf",
+    "cd_workflow": "deploy-to-server.yml"
+  },
+  "health_checks": [
+    {
+      "name": "网站可访问性",
+      "type": "http",
+      "url": "https://guanghulab.com",
+      "expected_status": [200, 301, 302],
+      "interval_hours": 1,
+      "timeout_seconds": 10
+    },
+    {
+      "name": "后端API健康",
+      "type": "http",
+      "url": "https://guanghulab.com/api/health",
+      "expected_status": [200],
+      "interval_hours": 1,
+      "timeout_seconds": 10
+    },
+    {
+      "name": "Persona Studio API健康",
+      "type": "http",
+      "url": "https://guanghulab.com/api/ps/health",
+      "expected_status": [200],
+      "interval_hours": 1,
+      "timeout_seconds": 10
+    },
+    {
+      "name": "人类使用侧抽检",
+      "type": "human_side",
+      "check_pages": [
+        "/",
+        "/persona-studio/",
+        "/status-board/",
+        "/devboard/"
+      ],
+      "interval_hours": 6,
+      "description": "验证核心页面从浏览器可正常加载"
+    }
+  ],
+  "alert_rules": [
+    {
+      "condition": "网站不可访问超过 30 分钟",
+      "severity": "critical",
+      "action": "触发三次修复闭环 + 创建 GitHub Issue"
+    },
+    {
+      "condition": "人类使用侧抽检失败",
+      "severity": "high",
+      "action": "创建工单到 Notion 工单簿 + 通知霜砚"
+    },
+    {
+      "condition": "CD管线连续3次失败",
+      "severity": "high",
+      "action": "暂停自动部署 + 通知铸渊自主诊断"
+    }
+  ],
+  "human_side_awareness": {
+    "principle": "系统测跑通 ≠ 人类测跑通",
+    "deploy_validation": "每次部署后必须验证人类能否打开·能否操作·能否看到结果",
+    "check_dimensions": [
+      "国内手机浏览器可访问",
+      "核心功能点击不报错",
+      "模块导航无死链",
+      "无需手动输入API密钥"
+    ]
+  },
+  "health_check": {
+    "enabled": true,
+    "method": "http_endpoint_check",
+    "interval_hours": 1,
+    "last_check": null,
+    "last_status": "initializing",
+    "consecutive_failures": 0,
+    "max_failures_before_alert": 3
+  },
+  "last_updated_by": "AG-ZY-01",
+  "last_updated_at": "2026-03-25T02:16:00Z"
+}
