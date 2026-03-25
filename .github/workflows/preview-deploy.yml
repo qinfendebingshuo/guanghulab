@@ -1,0 +1,107 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: "🧪 Preview Deploy · GitHub Pages"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'frontend/**'
+      - 'status-board/**'
+      - 'ticket-system/**'
+      - 'notification/**'
+      - 'dynamic-comic-studio/**'
+      - 'user-center/**'
+      - 'persona-studio/frontend/**'
+      - 'data/bulletin-board.json'
+      - 'data/system-health.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: preview-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-preview:
+    name: "🧪 Build & Deploy Preview"
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: 🏗️ Build preview site
+        run: |
+          echo "[PREVIEW] Building site for GitHub Pages..."
+          echo "[PREVIEW] Injecting environment marker..."
+
+          # Sync Persona Studio frontend into docs
+          mkdir -p docs/persona-studio
+          if [ -d "persona-studio/frontend" ]; then
+            cp -r persona-studio/frontend/* docs/persona-studio/
+          fi
+
+          # Sync status-board into docs for GitHub Pages access
+          if [ -d "status-board" ]; then
+            mkdir -p docs/status-board
+            cp -r status-board/* docs/status-board/ 2>/dev/null || true
+            [ -d "docs/status-board/node_modules" ] && rm -rf docs/status-board/node_modules
+          fi
+
+          # Sync ticket-system
+          if [ -d "ticket-system" ]; then
+            mkdir -p docs/ticket-system
+            cp -r ticket-system/* docs/ticket-system/ 2>/dev/null || true
+          fi
+
+          # Sync notification
+          if [ -d "notification" ]; then
+            mkdir -p docs/notification
+            cp -r notification/* docs/notification/ 2>/dev/null || true
+          fi
+
+          # Sync dynamic-comic-studio
+          if [ -d "dynamic-comic-studio" ]; then
+            mkdir -p docs/dynamic-comic-studio
+            cp -r dynamic-comic-studio/* docs/dynamic-comic-studio/ 2>/dev/null || true
+          fi
+
+          # Sync dashboard data
+          if [ -d "data" ]; then
+            mkdir -p docs/data
+            cp data/system-health.json docs/data/ 2>/dev/null || true
+            cp data/bulletin-board.json docs/data/ 2>/dev/null || true
+          fi
+
+          echo "✅ Preview build complete"
+
+      - name: 📦 Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 📝 Summary
+        run: |
+          echo "### 🧪 Preview Deploy Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Staging (GitHub Pages)" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

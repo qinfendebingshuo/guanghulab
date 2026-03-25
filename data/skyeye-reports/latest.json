@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0",
+  "scan_id": "SKYEYE-FULLSITE-2026-0325",
+  "timestamp": "2026-03-25T07:22:00Z",
+  "overall_status": "healthy",
+  "summary": {
+    "total_modules": 10,
+    "deployable": 4,
+    "needs_fix": 3,
+    "unavailable": 3,
+    "workflows": 97,
+    "guards": 7,
+    "agents": 94
+  },
+  "modules": [
+    {
+      "name": "状态看板",
+      "path": "status-board/",
+      "dev": "DEV-005",
+      "readiness": "deployable",
+      "notes": "可直接嵌入主页"
+    },
+    {
+      "name": "工单系统",
+      "path": "ticket-system/",
+      "dev": "DEV-010",
+      "readiness": "deployable",
+      "notes": "前端完整，localStorage 持久化"
+    },
+    {
+      "name": "动态漫画工作室",
+      "path": "dynamic-comic-studio/",
+      "dev": "DEV-010",
+      "readiness": "deployable",
+      "notes": "Canvas 动画编辑器可用"
+    },
+    {
+      "name": "通知中心",
+      "path": "notification/",
+      "dev": "DEV-012",
+      "readiness": "needs_fix",
+      "notes": "占位页面，需补充前端组件"
+    },
+    {
+      "name": "用户中心",
+      "path": "user-center/",
+      "dev": "DEV-009",
+      "readiness": "needs_fix",
+      "notes": "仅有 README，需补充前端页面"
+    },
+    {
+      "name": "前端登录",
+      "path": "frontend/",
+      "dev": "DEV-002",
+      "readiness": "needs_fix",
+      "notes": "占位页面，需对接真实验证"
+    },
+    {
+      "name": "设置",
+      "path": "settings/",
+      "dev": "DEV-003",
+      "readiness": "unavailable",
+      "notes": "仅有 README"
+    },
+    {
+      "name": "云盘",
+      "path": "cloud-drive/",
+      "dev": "DEV-003",
+      "readiness": "unavailable",
+      "notes": "仅有 README"
+    },
+    {
+      "name": "码字台",
+      "path": "writing-workspace/",
+      "dev": "DEV-011",
+      "readiness": "unavailable",
+      "notes": "目录不存在"
+    },
+    {
+      "name": "后端中间层",
+      "path": "backend/",
+      "dev": "DEV-001",
+      "readiness": "deployable",
+      "notes": "Express 服务，需服务器端运行"
+    }
+  ],
+  "fake_data_points": [
+    {
+      "location": "docs/index.html:544",
+      "element": "#bbc",
+      "current": "⏳ 加载大脑…",
+      "fix": "已替换为真实 system-health.json 数据"
+    },
+    {
+      "location": "docs/index.html:551",
+      "element": "#skyeye-status",
+      "current": "加载中…",
+      "fix": "已替换为真实 system-health.json 数据"
+    },
+    {
+      "location": "docs/index.html:596",
+      "element": "#rsb",
+      "current": "正在加载团队数据…",
+      "fix": "已替换为真实 dev-status.json 数据"
+    },
+    {
+      "location": "docs/index.html:677",
+      "element": "#bpb",
+      "current": "正在加载大脑数据…",
+      "fix": "已替换为真实 memory.json 数据"
+    },
+    {
+      "location": "docs/index.html:776",
+      "element": "#tpb",
+      "current": "正在加载团队数据…",
+      "fix": "已替换为真实 dev-status.json 数据"
+    },
+    {
+      "location": "docs/index.html:1073-1076",
+      "element": "announcements",
+      "current": "硬编码公告",
+      "fix": "已替换为真实 bulletin-board.json 数据"
+    }
+  ]
+}

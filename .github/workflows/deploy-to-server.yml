@@ -221,6 +221,18 @@ jobs:
 
           echo "✅ 全站同步完成"
 
+      - name: 🌐 注入生产环境标识
+        run: |
+          echo "🌐 Setting HOLOLAKE_ENV=production on server..."
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+              DP='${{ secrets.DEPLOY_PATH }}'
+              # Create environment config file for frontend detection
+              echo '{\"env\":\"production\",\"domain\":\"guanghulab.com\",\"deployed_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"${{ github.sha }}\"}' > \"\$DP/docs/env.json\"
+              echo '{\"env\":\"production\",\"domain\":\"guanghulab.com\",\"deployed_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"${{ github.sha }}\"}' > \"\$DP/env.json\"
+            "
+          echo "✅ 环境标识已注入"
+
       - name: 📄 复制首页到站点根目录
         run: |
           echo "📄 复制 docs/index.html → 站点根目录 index.html"

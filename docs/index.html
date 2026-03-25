@@ -356,6 +356,8 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
 .exec-btn-submit{background:var(--accent);color:#fff}
 .exec-btn-submit:hover{opacity:.85}
 .exec-btn-submit:disabled{opacity:.5;cursor:not-allowed}
+/* Staging environment watermark */
+.staging-watermark{position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(251,191,36,.12);border-bottom:2px solid rgba(251,191,36,.5);padding:4px 12px;text-align:center;font-size:11px;color:#fbbf24;pointer-events:none}
 </style>
 </head>
 <body>
@@ -485,7 +487,9 @@ footer{padding:12px 18px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom
     <nav class="ls-nav">
       <button class="nav-tab active" data-view="announcements" onclick="navigateTo('announcements')">📢 公告栏</button>
       <button class="nav-tab" data-view="chat" onclick="navigateTo('chat')">💬 聊天</button>
-      <button class="nav-tab" onclick="window.open('../persona-studio/frontend/index.html','_blank')">🧠 Persona Studio</button>
+      <button class="nav-tab" onclick="window.open('../persona-studio/frontend/index.html','_blank')">🧠 Studio</button>
+      <button class="nav-tab" onclick="window.open('../status-board/','_blank')">📊 看板</button>
+      <button class="nav-tab" onclick="window.open('../ticket-system/','_blank')">🎫 工单</button>
     </nav>
 
     <button class="ls-new-conv" onclick="newConvAndNav()">+ 新对话</button>
@@ -904,6 +908,10 @@ const A = {
   devStatus: null,
   notionProfile: null,
   skyeyeReport: null,
+  systemHealth: null,
+  bulletinBoard: null,
+  federationStatus: null,
+  telemetrySummary: null,
   msgs:  [],
   currentConvId: null,
   currentView: 'announcements',
@@ -915,6 +923,17 @@ const A = {
   role:     ls('zy_role')||'guest',
   userMeta: null,
 };
+
+// ═══════════════════════════════════════════════════════
+// ENVIRONMENT DETECTION (staging vs production)
+// ═══════════════════════════════════════════════════════
+const HOLOLAKE_ENV = (function(){
+  const host = window.location.hostname;
+  if(host === 'guanghulab.com' || host === 'www.guanghulab.com') return 'production';
+  if(host.includes('github.io')) return 'staging';
+  return 'local';
+})();
+window.HOLOLAKE_ENV = HOLOLAKE_ENV;
 
 function ls(k){return localStorage.getItem(k)}
 function lss(k,v){localStorage.setItem(k,v)}
@@ -1067,19 +1086,66 @@ function renderAnnouncements(){
   const c=b.stats?.coverage||FB_COV;
   const evs=(b.events||[]).slice(-5).reverse();
   const meta=A.userMeta;
+  const bb=A.bulletinBoard;
+  const sh=A.systemHealth;
+  const fs=A.federationStatus;
+  const tl=A.telemetrySummary;
 
   let h='';
-  // System announcements
+
+  // Environment watermark
+  if(HOLOLAKE_ENV==='staging'){
+    h+='<div style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--warn);text-align:center">⚠️ 预览测试环境（Staging） · 非正式站</div>';
+  }
+
+  // System announcements — use real bulletin-board.json data
   h+='<div class="ann-section"><div class="ann-section-title">📢 系统公告</div><div class="ann-card">';
-  h+='<div class="ann-item">🔗 全链路自动化闭环上线 — CI/CD、广播分发、唤醒协议、PSP 巡检</div>';
-  h+='<div class="ann-item">🧠 AGE OS v0.1 人格语言操作系统构建中</div>';
-  h+='<div class="ann-item">📊 HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')</div>';
+  if(bb&&bb.announcements&&bb.announcements.length>0){
+    bb.announcements.forEach(function(ann){
+      h+='<div class="ann-item">'+(ann.emoji||'📌')+' '+esc(ann.title||'')+'<span class="ann-date">'+esc(ann.date||'')+'</span></div>';
+      if(ann.detail) h+='<div style="font-size:11px;color:var(--dim);padding:2px 0 6px 24px">'+esc(ann.detail)+'</div>';
+    });
+  } else {
+    // Fallback to hardcoded if bulletin-board not loaded
+    h+='<div class="ann-item">🔗 全链路自动化闭环上线 — CI/CD、广播分发、唤醒协议、PSP 巡检</div>';
+    h+='<div class="ann-item">🧠 AGE OS v0.1 人格语言操作系统构建中</div>';
+    h+='<div class="ann-item">📊 HLI 接口覆盖率：'+c.implemented+'/'+c.total+' ('+c.percent+')</div>';
+  }
   if(evs.length){
     evs.forEach(function(ev){
       h+='<div class="ann-item">📌 '+esc(ev.title||ev.type||'事件')+'<span class="ann-date">'+(ev.timestamp||'').slice(0,10)+'</span></div>';
     });
   }
   h+='</div></div>';
+
+  // System health panel — real data from system-health.json
+  if(sh){
+    h+='<div class="ann-section"><div class="ann-section-title">🦅 天眼 · 系统健康</div><div class="ann-card">';
+    const m=sh.metrics||{};
+    const sc=sh.last_skyeye_scan||{};
+    h+='<div class="ann-item">🟢 系统状态：'+(sh.system_status==='healthy'?'✅ 健康':sh.system_status==='warning'?'⚠️ 警告':'❌ 异常')+'</div>';
+    h+='<div class="ann-item">⚙️ 工作流：'+(m.workflows?.total||0)+' 个 · 活跃 '+(m.workflows?.active||0)+'</div>';
+    h+='<div class="ann-item">🤖 Agent：'+(m.agents?.total||0)+' 个</div>';
+    h+='<div class="ann-item">🛡️ 守卫：'+(m.guards?.active||0)+'/'+(m.guards?.total||0)+' 活跃</div>';
+    h+='<div class="ann-item">🧬 本体论：'+(m.ontology_version||'v1.0')+' · 神经系统：'+(m.neural_system_version||'v3.0')+'</div>';
+    if(sc.id) h+='<div class="ann-item">🔍 最近扫描：'+esc(sc.id)+' · 问题 '+(sc.issues||0)+' · 警告 '+(sc.warnings||0)+'</div>';
+    if(sh.hibernation) h+='<div class="ann-item">🌙 休眠：'+esc(sh.hibernation.next_daily||'')+' · '+esc(sh.hibernation.next_weekly||'')+'</div>';
+    h+='</div></div>';
+  }
+
+  // Persona telemetry panel
+  if(tl){
+    h+='<div class="ann-section"><div class="ann-section-title">📡 铸渊遥测</div><div class="ann-card">';
+    const ps=tl.persona_state||{};
+    h+='<div class="ann-item">🧠 活跃人格：'+esc(ps.active_persona||'铸渊')+' · '+esc(ps.style_profile||'')+'</div>';
+    h+='<div class="ann-item">📊 24h 会话：'+(tl.sessions?.total_24h||0)+' 次 · '+(tl.sessions?.total_messages||0)+' 条消息</div>';
+    const rh=tl.repo_health||{};
+    h+='<div class="ann-item">📈 HLI 覆盖：'+(rh.hli_coverage||c.implemented+'/'+c.total)+' · 团队 '+(rh.total_team_members||0)+' 人</div>';
+    if(tl.alerts&&tl.alerts.length>0){
+      tl.alerts.forEach(function(a){ h+='<div class="ann-item" style="color:var(--warn)">⚠️ '+esc(a)+'</div>'; });
+    }
+    h+='</div></div>';
+  }
 
   // My tasks
   if(meta){
@@ -1106,30 +1172,26 @@ function renderAnnouncements(){
   h+='<button class="ann-action-btn" onclick="navigateAndSend(\'帮我写一个 HLI 接口\')">📦 上传模块</button>';
   h+='</div></div>';
 
-  // Module navigation — 模块入口导航
+  // Module navigation — real modules with correct paths
   h+='<div class="ann-section"><div class="ann-section-title">🗂️ 模块导航</div><div class="ann-actions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">';
   var modules=[
-    {icon:'📊',name:'系统状态看板',path:'/status-board/'},
-    {icon:'💰',name:'成本控制',path:'/cost-control/'},
-    {icon:'🖥️',name:'开发者看板',path:'/devboard/'},
-    {icon:'🌊',name:'光湖集成壳',path:'/app/'},
-    {icon:'🧠',name:'Persona Studio',path:'/persona-studio/'},
-    {icon:'👤',name:'用户中心',path:'/m05-user-center/'},
-    {icon:'💬',name:'对话界面',path:'/m07-dialogue-ui/'},
-    {icon:'☁️',name:'云服务',path:'/m10-cloud/'},
-    {icon:'📦',name:'模块管理',path:'/m11-module/'},
-    {icon:'💾',name:'云盘',path:'/m15-cloud-drive/'},
-    {icon:'🔐',name:'登录',path:'/m01-login/'},
-    {icon:'❤️',name:'健康检查',path:'/m18-health-check/'},
-    {icon:'🚀',name:'冷启动',path:'/coldstart/'},
-    {icon:'📈',name:'仪表盘',path:'/dashboard/'},
-    {icon:'🏠',name:'门户',path:'/portal/'},
-    {icon:'🔔',name:'通知',path:'/notification/'},
-    {icon:'❓',name:'帮助中心',path:'/help-center/'},
-    {icon:'🎨',name:'前端',path:'/frontend/'}
+    {icon:'📊',name:'状态看板',path:'../status-board/',dev:'DEV-005',ready:true},
+    {icon:'🎫',name:'工单系统',path:'../ticket-system/',dev:'DEV-010',ready:true},
+    {icon:'📈',name:'数据统计',path:'../data-stats/',dev:'DEV-010',ready:false},
+    {icon:'🔔',name:'通知中心',path:'../notification/',dev:'DEV-012',ready:true},
+    {icon:'👤',name:'用户中心',path:'../user-center/',dev:'DEV-009',ready:false},
+    {icon:'⚙️',name:'设置',path:'../settings/',dev:'DEV-003',ready:false},
+    {icon:'☁️',name:'云盘',path:'../cloud-drive/',dev:'DEV-003',ready:false},
+    {icon:'✍️',name:'码字台',path:'../writing-workspace/',dev:'DEV-011',ready:false},
+    {icon:'🎨',name:'动态漫画',path:'../dynamic-comic-studio/',dev:'DEV-010',ready:true},
+    {icon:'🧠',name:'Persona Studio',path:'../persona-studio/frontend/index.html',dev:'',ready:true},
+    {icon:'📈',name:'仪表盘',path:'dashboard/',dev:'',ready:true},
+    {icon:'🖥️',name:'前端',path:'../frontend/',dev:'DEV-002',ready:true},
   ];
   modules.forEach(function(m){
-    h+='<a href="'+m.path+'" class="ann-action-btn" style="text-decoration:none;text-align:center;display:block">'+m.icon+' '+m.name+'</a>';
+    var style=m.ready?'':'opacity:0.5;';
+    var badge=m.ready?'':'<span style="font-size:9px;color:var(--warn)"> 开发中</span>';
+    h+='<a href="'+m.path+'" class="ann-action-btn" style="text-decoration:none;text-align:center;display:block;'+style+'">'+m.icon+' '+m.name+badge+'</a>';
   });
   h+='</div></div>';
 
@@ -1283,6 +1345,14 @@ function showApp(){
   document.getElementById('app').classList.add('on');
   document.getElementById('hmdl').textContent = A.mdl||'—';
   document.getElementById('bbdemo').style.display = A.demo?'inline':'none';
+  // Staging environment watermark
+  if(HOLOLAKE_ENV==='staging'&&!document.getElementById('staging-wm')){
+    var wm=document.createElement('div');
+    wm.id='staging-wm';
+    wm.className='staging-watermark';
+    wm.textContent='⚠️ 预览测试环境（Staging）· GitHub Pages · 非正式站';
+    document.body.prepend(wm);
+  }
   applyIdentityUI();
   updateLeftSidebar();
   // Show right sidebar for controllers on desktop
@@ -1647,14 +1717,22 @@ function resetAllSettings(){
 // ═══════════════════════════════════════════════════════
 async function loadBrain(){
   try{
-    const [mr,rr,dr]=await Promise.all([
-      fetch(RAW+'/.github/brain/memory.json'),
-      fetch(RAW+'/.github/brain/routing-map.json'),
-      fetch(RAW+'/.github/persona-brain/dev-status.json'),
+    const [mr,rr,dr,shr,bbr,fsr,tlr]=await Promise.all([
+      fetch(RAW+'/.github/brain/memory.json').catch(()=>null),
+      fetch(RAW+'/.github/brain/routing-map.json').catch(()=>null),
+      fetch(RAW+'/.github/persona-brain/dev-status.json').catch(()=>null),
+      fetch(RAW+'/data/system-health.json').catch(()=>null),
+      fetch(RAW+'/data/bulletin-board.json').catch(()=>null),
+      fetch(RAW+'/federation-status.json').catch(()=>null),
+      fetch(RAW+'/persona-telemetry/latest-summary.json').catch(()=>null),
     ]);
-    if(mr.ok) A.brain=await mr.json();
-    if(rr.ok) A.routing=await rr.json();
-    if(dr.ok) A.devStatus=await dr.json();
+    if(mr&&mr.ok) A.brain=await mr.json();
+    if(rr&&rr.ok) A.routing=await rr.json();
+    if(dr&&dr.ok) A.devStatus=await dr.json();
+    if(shr&&shr.ok) A.systemHealth=await shr.json();
+    if(bbr&&bbr.ok) A.bulletinBoard=await bbr.json();
+    if(fsr&&fsr.ok) A.federationStatus=await fsr.json();
+    if(tlr&&tlr.ok) A.telemetrySummary=await tlr.json();
   }catch(_){}
   if(!A.brain) A.brain={...FB_BRAIN};
   updBbar();
@@ -1662,9 +1740,18 @@ async function loadBrain(){
 
 function updBbar(){
   const b=A.brain||FB_BRAIN;
+  const sh=A.systemHealth;
   const c=b.stats?.coverage||FB_COV;
   const ev=b.events?.slice(-1)[0];
-  document.getElementById('bbc').textContent='📊 HLI '+c.implemented+'/'+c.total+' ('+c.percent+')';
+  // Use system-health data if available for richer status bar
+  if(sh){
+    const m=sh.metrics||{};
+    const wf=m.workflows||{};
+    const sc=sh.last_skyeye_scan||{};
+    document.getElementById('bbc').textContent='🟢 系统健康 · '+wf.total+' 工作流 · '+m.agents?.total+' Agent · HLI '+c.implemented+'/'+c.total;
+  } else {
+    document.getElementById('bbc').textContent='📊 HLI '+c.implemented+'/'+c.total+' ('+c.percent+')';
+  }
   document.getElementById('bbe').textContent=ev?('📌 '+(ev.title||ev.type||'').slice(0,28)):'';
 }
 
@@ -1686,6 +1773,21 @@ async function fetchNotionProfile(devId) {
 }
 
 async function fetchSkyeyeReport() {
+  // Primary: use system-health.json already loaded
+  if (A.systemHealth) {
+    const sh = A.systemHealth;
+    return {
+      overall_status: sh.system_status || 'unknown',
+      timestamp: sh.last_updated,
+      scan_id: sh.last_skyeye_scan?.id,
+      workflows: sh.metrics?.workflows?.total,
+      agents: sh.metrics?.agents?.total,
+      guards: sh.last_skyeye_scan?.guards,
+      issues: sh.last_skyeye_scan?.issues,
+      warnings: sh.last_skyeye_scan?.warnings,
+    };
+  }
+  // Fallback: try GitHub API cache
   try {
     const url = GH_API_BASE + '.github/notion-cache/skyeye/latest-report.json';
     const res = await fetch(url, { headers: GH_RAW_HEADERS });
@@ -1712,14 +1814,25 @@ function updateSkyeyeCard() {
   const report = A.skyeyeReport;
   const profile = A.notionProfile;
   const meta = A.userMeta;
+  const sh = A.systemHealth;
+  const bb = A.bulletinBoard;
 
-  if (!report && !profile) { card.classList.remove('on'); return; }
+  // Always show the card now since we have system-health data
+  if (!report && !profile && !sh) { card.classList.remove('on'); return; }
   card.classList.add('on');
 
-  // SkyEye overall status
+  // SkyEye overall status - use system-health as primary
   const statusEl = document.getElementById('skyeye-status');
   const timeEl = document.getElementById('skyeye-time');
-  if (report) {
+  if (sh) {
+    const s = sh.system_status || 'unknown';
+    statusEl.textContent = s === 'healthy' ? '✅ 健康' : s === 'warning' ? '⚠️ 警告' : s === 'error' ? '❌ 异常' : s;
+    statusEl.className = 'skyeye-tag ' + (s === 'healthy' ? 'ok' : s === 'warning' ? 'warn' : 'err');
+    if (sh.last_updated) {
+      const d = new Date(sh.last_updated);
+      timeEl.textContent = '· 上次更新 ' + d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+  } else if (report) {
     const s = report.overall_status || 'unknown';
     statusEl.textContent = s === 'healthy' ? '✅ 健康' : s === 'warning' ? '⚠️ 警告' : s === 'error' ? '❌ 异常' : s;
     statusEl.className = 'skyeye-tag ' + (s === 'healthy' ? 'ok' : s === 'warning' ? 'warn' : 'err');
@@ -1736,7 +1849,11 @@ function updateSkyeyeCard() {
   // Developer repo info
   const repoRow = document.getElementById('skyeye-repo-row');
   const repoInfo = document.getElementById('skyeye-repo-info');
-  if (profile && profile.github) {
+  if (sh) {
+    repoRow.style.display = 'flex';
+    const m = sh.metrics || {};
+    repoInfo.textContent = m.workflows?.total + ' 工作流 · ' + (m.agents?.total||0) + ' Agent · ' + (m.guards?.active||0) + '/' + (m.guards?.total||0) + ' 守卫';
+  } else if (profile && profile.github) {
     repoRow.style.display = 'flex';
     const mods = profile.modules_owned || [];
     const warns = profile.skyeye_health?.warnings || [];
@@ -1745,10 +1862,14 @@ function updateSkyeyeCard() {
     repoRow.style.display = 'none';
   }
 
-  // Broadcast info
+  // Broadcast info - use bulletin-board as primary
   const bcRow = document.getElementById('skyeye-broadcast-row');
   const bcInfo = document.getElementById('skyeye-broadcast-info');
-  if (profile && profile.current_work && profile.current_work.broadcast_id) {
+  if (bb && bb.announcements && bb.announcements.length > 0) {
+    bcRow.style.display = 'flex';
+    const latest = bb.announcements[0];
+    bcInfo.textContent = (latest.emoji||'') + ' ' + (latest.title||'') + ' · ' + (latest.date||'');
+  } else if (profile && profile.current_work && profile.current_work.broadcast_id) {
     bcRow.style.display = 'flex';
     const cw = profile.current_work;
     bcInfo.textContent = cw.broadcast_id + (cw.current_ring ? ' · 环节' + cw.current_ring + '进行中' : '') + (cw.status ? ' · ' + cw.status : '');
@@ -1898,12 +2019,38 @@ function renderBrainPanel(){
   const r=A.routing;
   const c=b.stats?.coverage||FB_COV;
   const evs=(b.events||[]).slice(-5).reverse();
+  const sh=A.systemHealth;
+  const tl=A.telemetrySummary;
   let h='';
+
+  // Real system health data
+  if(sh){
+    const m=sh.metrics||{};
+    h+='<div class="sec-ttl">系统概览（实时数据）</div>';
+    h+=ir2('系统状态','<span class="'+(sh.system_status==='healthy'?'iv':'ivw')+'">'+esc(sh.system_status==='healthy'?'✅ 健康':sh.system_status==='warning'?'⚠️ 警告':'❌ 异常')+'</span>');
+    h+=ir2('工作流','<span class="iv">'+(m.workflows?.total||0)+' 总 / '+(m.workflows?.active||0)+' 活跃</span>');
+    h+=ir2('Agent 数量','<span class="iv">'+(m.agents?.total||0)+'</span>');
+    h+=ir2('守卫','<span class="iv">'+(m.guards?.active||0)+'/'+(m.guards?.total||0)+' 活跃</span>');
+    h+=ir2('人格体','<span class="iv">'+(m.ai_personas?.total||0)+' 总 / '+(m.ai_personas?.active||0)+' 活跃</span>');
+    h+=ir2('神经系统','<span class="iv">'+(m.neural_system_version||'v3.0')+'</span>');
+    h+=ir2('本体论版本','<span class="iv">'+(m.ontology_version||'v1.0')+'</span>');
+  }
+
   h+=ir2('HLI 覆盖率','<span class="'+(c.implemented<c.total?'ivw':'iv')+'">'+c.implemented+'/'+c.total+' ('+c.percent+')</span>');
   h+=ir2('规则版本','<span class="iv">'+(b.rules_version||'v1.0')+'</span>');
   h+=ir2('唤醒协议','<span class="iv">'+(b.wake_protocol_version||'v1.0')+'</span>');
   h+=ir2('CI 运行','<span class="iv">'+(b.stats?.ci_runs??0)+'</span>');
   h+=ir2('广播处理','<span class="iv">'+(b.stats?.broadcasts_processed??0)+'</span>');
+
+  // Telemetry data
+  if(tl){
+    h+='<div class="sec-ttl">铸渊遥测</div>';
+    h+=ir2('活跃人格','<span class="iv">'+esc(tl.persona_state?.active_persona||'铸渊')+'</span>');
+    h+=ir2('风格轮廓','<span class="iv">'+esc(tl.persona_state?.style_profile||'')+'</span>');
+    h+=ir2('24h 会话','<span class="iv">'+(tl.sessions?.total_24h||0)+' 次</span>');
+    h+=ir2('消息总数','<span class="iv">'+(tl.sessions?.total_messages||0)+' 条</span>');
+  }
+
   h+='<div class="sec-ttl">近期事件</div>';
   for(const ev of evs){
     h+='<div class="drow"><div class="dn">'+esc(ev.title||ev.type||'事件')+'</div><div class="dm">'+(ev.timestamp||'').slice(0,10)+(ev.actor?' · '+esc(ev.actor):'')+'</div></div>';
@@ -1925,6 +2072,12 @@ function renderBrainPanel(){
   h+='<li>.github/brain/memory.json</li><li>.github/brain/routing-map.json</li>';
   h+='<li>.github/brain/wake-protocol.md</li><li>.github/brain/growth-log.md</li>';
   h+='<li>src/routes/hli/</li></ol>';
+
+  h+='<div class="sec-ttl">环境信息</div>';
+  h+=ir2('当前环境','<span class="iv">'+HOLOLAKE_ENV+'</span>');
+  h+=ir2('前端版本','<span class="iv">v6.0</span>');
+  h+=ir2('大脑版本','<span class="iv">'+BRAIN_VERSION+'</span>');
+
   document.getElementById('bpb').innerHTML=h;
 }
 
