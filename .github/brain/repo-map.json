@@ -1,13 +1,13 @@
 {
   "description": "铸渊图书馆目录 · Library Catalog for 铸渊 (Zhùyuān)",
   "version": "2.0",
-  "generated_at": "2026-03-24T17:18:17.762Z",
+  "generated_at": "2026-03-25T02:15:57.889Z",
   "generated_by": "scripts/generate-repo-map.js",
   "repo": "qinfendebingshuo/guanghulab",
   "stats": {
     "zones": 13,
     "total_modules": 10,
-    "total_workflows": 94,
+    "total_workflows": 95,
     "total_scripts": 80,
     "total_dev_nodes": 8,
     "hli_interfaces": 21,
@@ -694,6 +694,15 @@
           ]
         },
         {
+          "file": "skyeye-devsync-repair.yml",
+          "name": "\"🦅 天眼 · dev-status 同步修复闭环\"",
+          "triggers": [
+            "issues",
+            "schedule(30 0 * * *)",
+            "manual"
+          ]
+        },
+        {
           "file": "skyeye-weekly-hibernation.yml",
           "name": "\"⭐ 天眼 · 每周系统完全休眠\"",
           "triggers": [
@@ -726,7 +735,7 @@
         },
         {
           "file": "sync-dev-status.yml",
-          "name": "\"📡 铸渊 · dev-status 自动同步\"",
+          "name": "\"🔄 dev-status.json 同步 · 霜砚签发制 v1.0\"",
           "triggers": [
             "schedule(0 1 * * *)",
             "manual"
@@ -948,7 +957,7 @@
           ]
         }
       ],
-      "item_count": 94
+      "item_count": 95
     },
     {
       "zone_id": "SCRIPTS",
@@ -1499,10 +1508,13 @@
           "file": "2026-03"
         },
         {
+          "file": "diag-devsync-20260325.json"
+        },
+        {
           "file": "index.json"
         }
       ],
-      "item_count": 2
+      "item_count": 3
     },
     {
       "zone_id": "NOTION_PUSH",
@@ -2203,6 +2215,9 @@
     "skyeye-daily-hibernation": [
       "WORKFLOWS::skyeye-daily-hibernation.yml"
     ],
+    "skyeye-devsync-repair": [
+      "WORKFLOWS::skyeye-devsync-repair.yml"
+    ],
     "skyeye-weekly-hibernation": [
       "WORKFLOWS::skyeye-weekly-hibernation.yml"
     ],
@@ -2702,6 +2717,9 @@
     ],
     "2026-03": [
       "SIGNAL_LOG::2026-03"
+    ],
+    "diag-devsync-20260325": [
+      "SIGNAL_LOG::diag-devsync-20260325.json"
     ],
     "notion": [
       "NOTION_PUSH"

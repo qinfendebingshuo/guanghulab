@@ -1,5 +1,5 @@
 # 铸渊图书馆快照 · Repo Snapshot
-> 生成于 2026-03-25 01:18 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
+> 生成于 2026-03-25 10:15 CST · 每次 push 自动更新 · 铸渊唤醒时优先读取此文件
 
 ---
 
@@ -9,11 +9,11 @@
 |------|------|
 | 区域总数 | 13 个区域 |
 | 功能模块 | 10 个 (m01~m18) |
-| 工作流 | 94 个 GitHub Actions |
+| 工作流 | 95 个 GitHub Actions |
 | 脚本 | 80 个执行脚本 |
 | 开发者节点 | 8 人 |
 | HLI 接口覆盖率 | 7/21 (33%) |
-| 快照生成时间 | 2026-03-25 01:18 CST |
+| 快照生成时间 | 2026-03-25 10:15 CST |
 
 ---
 
@@ -30,7 +30,7 @@
 **关键词**: persona · identity · dev-status · 人格 · 开发者状态
 
 ### ⚡ 自动化工作流（WORKFLOWS）
-**路径**: `.github/workflows` · **数量**: 94 项
+**路径**: `.github/workflows` · **数量**: 95 项
 **描述**: 所有 GitHub Actions 工作流定义
 **关键词**: workflow · actions · ci · automation · 工作流 · 自动化
 
@@ -60,7 +60,7 @@
 **关键词**: broadcast · outbox · task · 广播 · 发件箱
 
 ### 📡 信号日志库（SIGNAL_LOG）
-**路径**: `signal-log` · **数量**: 2 项
+**路径**: `signal-log` · **数量**: 3 项
 **描述**: ESP 邮件信号收发日志 · GL-CMD / GL-ACK / GL-DATA
 **关键词**: signal · log · esp · gl-cmd · gl-ack · trace
 
@@ -152,11 +152,12 @@
 | `skyeye-checkin-receiver.yml` | "🦅 天眼签到接收" | unknown |
 | `skyeye-credential-audit.yml` | "🛰️ 天眼 OAuth2 凭据审计 (Sky-Eye Credential Audit)" | schedule(0 14 * * *), manual |
 | `skyeye-daily-hibernation.yml` | "🌙 天眼 · 每日系统休眠" | schedule(50 19 * * *), manual |
+| `skyeye-devsync-repair.yml` | "🦅 天眼 · dev-status 同步修复闭环" | issues, schedule(30 0 * * *), manual |
 | `skyeye-weekly-hibernation.yml` | "⭐ 天眼 · 每周系统完全休眠" | schedule(0 11 * * 6), manual |
 | `skyeye-weekly-scan.yml` | "SkyEye Weekly Full Scan" | schedule(0 12 * * 6) |
 | `staging-preview.yml` | "🔍 铸渊预演部署 (Staging Preview)" | pull_request, manual |
 | `sync-deploy-to-notion.yml` | "📝 Sync Deploy Status to Notion" | schedule(0 4,14 * * *), manual |
-| `sync-dev-status.yml` | "📡 铸渊 · dev-status 自动同步" | schedule(0 1 * * *), manual |
+| `sync-dev-status.yml` | "🔄 dev-status.json 同步 · 霜砚签发制 v1.0" | schedule(0 1 * * *), manual |
 | `sync-griddb-to-drive.yml` | 🪞 Grid-DB → Google Drive 镜像同步 | push, schedule(*/15 * * * *), manual |
 | `sync-griddb-to-notion.yml` | 📤 Grid-DB → Notion 增量回传 | push |
 | `sync-login-entry.yml` | 铸渊 · Sync Login Entry · Notion → 飞书文档A | manual |
