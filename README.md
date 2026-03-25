@@ -10,7 +10,7 @@
 
 &nbsp;
 
-![Workflows](https://img.shields.io/badge/Workflows-98-0969da?style=flat-square&logo=github-actions&logoColor=white)
+![Workflows](https://img.shields.io/badge/Workflows-100-0969da?style=flat-square&logo=github-actions&logoColor=white)
 ![Agents](https://img.shields.io/badge/Agents-94-8957e5?style=flat-square&logo=dependabot&logoColor=white)
 ![Personas](https://img.shields.io/badge/Personas-17-e85aad?style=flat-square&logo=openaigym&logoColor=white)
 ![Developers](https://img.shields.io/badge/Developers-11_(8_active)-2ea44f?style=flat-square&logo=people&logoColor=white)
@@ -32,7 +32,7 @@
 <!-- HERO_METRICS_START -->
 | 📈 系统规模 | ⚡ 自动化能力 | 🛡️ 系统稳定性 | 🔄 协作效率 |
 |:---:|:---:|:---:|:---:|
-| **98** 条自动化流水线 | **94** 个智能代理 24h 运行 | **100%** 流水线成功率 | **< 3min** 从提交到部署 |
+| **100** 条自动化流水线 | **94** 个智能代理 24h 运行 | **100%** 流水线成功率 | **< 3min** 从提交到部署 |
 <!-- HERO_METRICS_END -->
 
 &nbsp;
@@ -83,7 +83,7 @@
 <!-- CAPABILITY_START -->
 | 能力维度 | 指标 | 说明 |
 |----------|------|------|
-| 🔄 **自动化流水线** | 98 条 Workflow · 100% 成功率 | 覆盖：CI/CD 部署、代码审查、健康检查、数据同步 |
+| 🔄 **自动化流水线** | 100 条 Workflow · 100% 成功率 | 覆盖：CI/CD 部署、代码审查、健康检查、数据同步 |
 | 🤖 **智能代理集群** | 94 个 Agent 全天候运行 | 自主完成：部署、监控、自愈、告警、报告生成 |
 | 🎭 **AI 人格体** | 17 个（17 在线） | 每位开发者配备 AI 协作伙伴，辅助代码生成与审查 |
 | 🧬 **双端神经同步** | v3.0 · 11 核心流水线映射 | GitHub ↔ Notion 实时双向同步，认知层与执行层联动 |
