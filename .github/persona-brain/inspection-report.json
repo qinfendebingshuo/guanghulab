@@ -1,7 +1,7 @@
 {
-  "title": "[铸渊巡检] 2026-03-24 每日巡检报告",
+  "title": "[铸渊巡检] 2026-03-25 每日巡检报告",
   "type": "巡检报告",
-  "date": "2026-03-24",
+  "date": "2026-03-25",
   "checked_in": [
     {
       "agent_id": "AG-ZY-004",
@@ -54,12 +54,32 @@
     {
       "agent_id": "AG-ZY-058",
       "agent_name": "铸渊 · 每日自检"
+    },
+    {
+      "agent_id": "AG-ZY-090",
+      "agent_name": "Notion 开发者画像同步"
     }
   ],
   "missing_agents": [
     {
       "agent_id": "AG-ZY-017",
       "agent_name": "铸渊 · 广播分发"
+    },
+    {
+      "agent_id": "AG-ZY-089",
+      "agent_name": "铸渊远程执行引擎"
+    },
+    {
+      "agent_id": "AG-ZY-091",
+      "agent_name": "人格体每日思考窗口"
+    },
+    {
+      "agent_id": "AG-ZY-092",
+      "agent_name": "多人格体同时唤醒引擎"
+    },
+    {
+      "agent_id": "AG-ZY-093",
+      "agent_name": "人格体聊天室消息工具"
     }
   ],
   "auto_repaired": [],
@@ -70,14 +90,42 @@
       "workflow": "distribute-broadcasts.yml",
       "reason": "不支持自修复",
       "recent_failures": []
+    },
+    {
+      "agent_id": "AG-ZY-089",
+      "agent_name": "铸渊远程执行引擎",
+      "workflow": "zhuyuan-exec-engine.yml",
+      "reason": "不支持自修复",
+      "recent_failures": []
+    },
+    {
+      "agent_id": "AG-ZY-091",
+      "agent_name": "人格体每日思考窗口",
+      "workflow": "persona-thinking-window.yml",
+      "reason": "自修复失败：workflow_dispatch 触发失败",
+      "recent_failures": []
+    },
+    {
+      "agent_id": "AG-ZY-092",
+      "agent_name": "多人格体同时唤醒引擎",
+      "workflow": "multi-persona-awakening.yml",
+      "reason": "自修复失败：workflow_dispatch 触发失败",
+      "recent_failures": []
+    },
+    {
+      "agent_id": "AG-ZY-093",
+      "agent_name": "人格体聊天室消息工具",
+      "workflow": "N/A (scripts/chatroom-post.js)",
+      "reason": "不支持自修复",
+      "recent_failures": []
     }
   ],
   "summary": {
-    "total": 14,
-    "checked_in": 13,
-    "missing": 1,
+    "total": 19,
+    "checked_in": 14,
+    "missing": 5,
     "auto_repaired": 0,
-    "needs_intervention": 1
+    "needs_intervention": 5
   },
   "push_targets": [
     "零点原核",
