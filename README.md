@@ -10,8 +10,8 @@
 
 &nbsp;
 
-![Workflows](https://img.shields.io/badge/Workflows-90-0969da?style=flat-square&logo=github-actions&logoColor=white)
-![Agents](https://img.shields.io/badge/Agents-88-8957e5?style=flat-square&logo=dependabot&logoColor=white)
+![Workflows](https://img.shields.io/badge/Workflows-94-0969da?style=flat-square&logo=github-actions&logoColor=white)
+![Agents](https://img.shields.io/badge/Agents-93-8957e5?style=flat-square&logo=dependabot&logoColor=white)
 ![Personas](https://img.shields.io/badge/Personas-17-e85aad?style=flat-square&logo=openaigym&logoColor=white)
 ![Developers](https://img.shields.io/badge/Developers-11_(8_active)-2ea44f?style=flat-square&logo=people&logoColor=white)
 ![Modules](https://img.shields.io/badge/Modules-10-f9a825?style=flat-square&logo=puzzle-piece&logoColor=white)
