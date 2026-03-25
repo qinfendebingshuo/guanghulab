@@ -11,6 +11,12 @@
   },
   "recent_events": [
     {
+      "date": "2026-03-25",
+      "type": "receipt_system_deploy",
+      "description": "指令回执自动闭环系统上线 · 11 Workflow 追加回执写入 · 本地兜底+Notion 双写",
+      "by": "铸渊"
+    },
+    {
       "date": "2026-03-24",
       "type": "skyeye_scan",
       "description": "天眼扫描 · 🟡 · 问题:12 自动修复:11 需人工:0",
@@ -123,12 +129,6 @@
       "type": "broadcast_received",
       "description": "接收广播: 示例广播：新增 NOTIFICATION 业务域",
       "by": "霜砚"
-    },
-    {
-      "date": "2026-03-10",
-      "type": "ci_run",
-      "description": "CI完成 · schema 3/17 · 路由 4 个",
-      "by": "GitHub Actions"
     }
   ],
   "last_updated": "2026-03-25T01:48:03Z",
@@ -197,5 +197,14 @@
     "signed_by": "TCS-0002∞",
     "status": "active",
     "notion_source": "数字地球本体论 · 光湖语言膜架构 v1.0"
+  },
+  "receipt_system": {
+    "version": "1.0.0",
+    "deployed": "2026-03-25",
+    "script": "scripts/neural/write-receipt-to-notion.js",
+    "tracker": "scripts/neural/track-work-orders.js",
+    "receipt_dir": "data/neural-reports/receipts",
+    "workflows_count": 11,
+    "notion_db_env_var": "RECEIPT_DB_ID"
   }
 }

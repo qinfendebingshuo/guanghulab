@@ -70,3 +70,17 @@ jobs:
           git diff --cached --quiet || \
             git commit -m "🧬 ${WORKFLOW_ID} 自报告 · ${TIMESTAMP} [skip ci]"
           git push || echo "⚠️ 自报告push失败（不阻断主流程）"
+      # ━━━ 📡 指令回执·自动同步 ━━━
+      - name: "📡 同步回执到 Notion"
+        if: always()
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+        run: |
+          node scripts/neural/write-receipt-to-notion.js \
+            --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \
+            --status "${{ job.status }}" \
+            --workflow "broadcast" \
+            --summary "broadcast 自动执行" \
+            --related-agent "SY-03"
+
