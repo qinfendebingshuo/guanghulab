@@ -16,6 +16,13 @@ on:
       - 'dynamic-comic-studio/**'
       - 'user-center/**'
       - 'persona-studio/frontend/**'
+      - 'writing-platform/frontend/**'
+      - 'm01-login/**'
+      - 'm05-user-center/**'
+      - 'm07-dialogue-ui/**'
+      - 'm10-cloud/**'
+      - 'm11-module/**'
+      - 'm15-cloud-drive/**'
       - 'data/bulletin-board.json'
       - 'data/system-health.json'
   workflow_dispatch:
@@ -42,6 +49,11 @@ jobs:
 
       - name: 🔧 Setup Pages
         uses: actions/configure-pages@v5
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: 🏗️ Build preview site
         run: |
@@ -89,6 +101,37 @@ jobs:
             cp data/system-health.json docs/data/ 2>/dev/null || true
             cp data/bulletin-board.json docs/data/ 2>/dev/null || true
           fi
+
+          # Sync m-series modules
+          for m in m01-login m05-user-center m07-dialogue-ui m10-cloud m11-module m15-cloud-drive; do
+            if [ -d "$m" ]; then
+              mkdir -p "docs/modules/$m"
+              echo "Copying $m..."
+              find "$m" -maxdepth 1 -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) -exec cp {} "docs/modules/$m/" \;
+            fi
+          done
+
+          # Sync frontend module
+          if [ -d "frontend" ]; then
+            mkdir -p docs/modules/frontend
+            cp frontend/index.html docs/modules/frontend/ 2>/dev/null || true
+          fi
+
+          # Build and sync writing-platform (码字台)
+          if [ -d "writing-platform/frontend" ] && [ -f "writing-platform/frontend/package.json" ]; then
+            echo "Building writing-platform frontend..."
+            cd writing-platform/frontend
+            npm ci --ignore-scripts 2>/dev/null || npm install 2>/dev/null
+            npm run build 2>/dev/null && {
+              mkdir -p ../../docs/writing
+              cp -r dist/* ../../docs/writing/
+              echo "✅ Writing platform built and synced"
+            } || echo "⚠️ Writing platform build failed, using pre-built files if available"
+            cd ../..
+          fi
+
+          # Remove any backup/temporary files
+          find docs/ -name "*.backup" -o -name "*.backup2" -o -name "*.save" -o -name "*.broken" | xargs rm -f 2>/dev/null || true
 
           echo "✅ Preview build complete"
 

@@ -1178,18 +1178,20 @@ function renderAnnouncements(){
   // Module navigation — real modules with correct paths
   h+='<div class="ann-section"><div class="ann-section-title">🗂️ 模块导航</div><div class="ann-actions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">';
   var modules=[
-    {icon:'📊',name:'状态看板',path:'../status-board/',dev:'DEV-005',ready:true},
-    {icon:'🎫',name:'工单系统',path:'../ticket-system/',dev:'DEV-010',ready:true},
-    {icon:'📈',name:'数据统计',path:'../data-stats/',dev:'DEV-010',ready:false},
-    {icon:'🔔',name:'通知中心',path:'../notification/',dev:'DEV-012',ready:true},
-    {icon:'👤',name:'用户中心',path:'../user-center/',dev:'DEV-009',ready:false},
-    {icon:'⚙️',name:'设置',path:'../settings/',dev:'DEV-003',ready:false},
-    {icon:'☁️',name:'云盘',path:'../cloud-drive/',dev:'DEV-003',ready:false},
-    {icon:'✍️',name:'码字台',path:'../writing-workspace/',dev:'DEV-011',ready:false},
-    {icon:'🎨',name:'动态漫画',path:'../dynamic-comic-studio/',dev:'DEV-010',ready:true},
-    {icon:'🧠',name:'Persona Studio',path:'../persona-studio/frontend/index.html',dev:'',ready:true},
+    {icon:'📊',name:'状态看板',path:'status-board/',dev:'DEV-005',ready:true},
+    {icon:'🎫',name:'工单系统',path:'ticket-system/',dev:'DEV-010',ready:true},
+    {icon:'🔔',name:'通知中心',path:'notification/',dev:'DEV-012',ready:true},
+    {icon:'✍️',name:'码字台',path:'writing/',dev:'DEV-011',ready:true},
+    {icon:'🎨',name:'动态漫画',path:'dynamic-comic-studio/',dev:'DEV-010',ready:true},
+    {icon:'🧠',name:'Persona Studio',path:'persona-studio/',dev:'',ready:true},
     {icon:'📈',name:'仪表盘',path:'dashboard/',dev:'',ready:true},
-    {icon:'🖥️',name:'前端',path:'../frontend/',dev:'DEV-002',ready:true},
+    {icon:'🔑',name:'登录',path:'modules/m01-login/',dev:'DEV-001',ready:true},
+    {icon:'👤',name:'用户中心',path:'modules/m05-user-center/',dev:'DEV-009',ready:true},
+    {icon:'💬',name:'对话交互',path:'modules/m07-dialogue-ui/',dev:'DEV-007',ready:true},
+    {icon:'☁️',name:'云服务',path:'modules/m10-cloud/',dev:'DEV-003',ready:true},
+    {icon:'🧩',name:'组件库',path:'modules/m11-module/',dev:'',ready:true},
+    {icon:'📁',name:'云盘',path:'modules/m15-cloud-drive/',dev:'DEV-003',ready:true},
+    {icon:'🖥️',name:'前端',path:'modules/frontend/',dev:'DEV-002',ready:true},
   ];
   modules.forEach(function(m){
     var style=m.ready?'':'opacity:0.5;';

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>铸渊 · 对话</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="chat-layout" id="chatLayout">
+    <!-- ── 左侧边栏 ── -->
+    <aside class="chat-sidebar" id="chatSidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">🌀</span>
+        <span class="sidebar-title">铸渊</span>
+        <button class="sidebar-toggle-close" onclick="toggleSidebar()" title="收起侧栏">✕</button>
+      </div>
+
+      <!-- 人格体介绍 -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">🧠 人格体信息</div>
+        <div class="persona-info-card">
+          <div class="persona-info-name">铸渊 Zhùyuān</div>
+          <div class="persona-info-role">光湖系统 · 代码守护人格体</div>
+          <div class="persona-info-desc">基于 AGE OS 人格语言操作系统，专注代码守护、需求分析与智能开发协助。</div>
+        </div>
+      </div>
+
+      <!-- 系统信息 -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">⚙️ 系统信息</div>
+        <div class="sidebar-info-list">
+          <div class="sidebar-info-item">
+            <span class="info-label">系统</span>
+            <span class="info-value">HoloLake Era</span>
+          </div>
+          <div class="sidebar-info-item">
+            <span class="info-label">架构</span>
+            <span class="info-value">AGE OS</span>
+          </div>
+          <div class="sidebar-info-item">
+            <span class="info-label">模型</span>
+            <span class="info-value" id="sidebarModel">-</span>
+          </div>
+          <div class="sidebar-info-item">
+            <span class="info-label">用户</span>
+            <span class="info-value" id="sidebarUser">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对话记录 -->
+      <div class="sidebar-section sidebar-history-section">
+        <div class="sidebar-section-title">💬 对话记录</div>
+        <div class="sidebar-history" id="sidebarHistory">
+          <div class="sidebar-history-empty">暂无对话记录</div>
+        </div>
+        <button class="btn-new-chat" onclick="startNewChat()">+ 新对话</button>
+      </div>
+    </aside>
+
+    <!-- ── 主聊天区域（分屏左侧） ── -->
+    <div class="chat-main" id="chatMain">
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="sidebar-toggle" onclick="toggleSidebar()" title="展开侧栏" id="sidebarToggleBtn">☰</button>
+          <span class="persona-name">🌀 铸渊</span>
+          <span class="persona-role">光湖系统·代码守护人格体</span>
+        </div>
+        <div class="header-right">
+          <span id="devIdDisplay" class="dev-id-badge"></span>
+          <span id="modelDisplay" class="model-badge"></span>
+          <button class="btn-secondary" onclick="handleLogout()">退出</button>
+        </div>
+      </header>
+
+      <main class="chat-body" id="chatBody">
+        <!-- Messages rendered here -->
+      </main>
+
+      <div class="chat-input-area">
+        <div class="input-toolbar">
+          <label class="toolbar-btn" title="上传图片" for="imageUpload">
+            🖼️
+            <input type="file" id="imageUpload" accept="image/*" style="display:none" onchange="handleFileSelect(event, 'image')" aria-label="上传图片">
+          </label>
+          <label class="toolbar-btn" title="上传文件" for="fileUpload">
+            📎
+            <input type="file" id="fileUpload" style="display:none" onchange="handleFileSelect(event, 'file')" aria-label="上传文件">
+          </label>
+          <div id="uploadPreview" class="upload-preview" style="display:none;"></div>
+        </div>
+        <div class="input-row">
+          <textarea
+            id="msgInput"
+            placeholder="跟铸渊说点什么…"
+            rows="1"
+            onkeydown="handleKeyDown(event)"
+          ></textarea>
+          <button id="sendBtn" onclick="sendMessage()">发送</button>
+        </div>
+        <div class="action-row">
+          <button id="buildBtn" class="btn-build" onclick="handleBuild()" style="display:none;">
+            🚀 我要开发
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 可拖拽分割线 ── -->
+    <div class="resizer" id="resizer" style="display:none;"></div>
+
+    <!-- ── 右侧预览面板 ── -->
+    <div class="preview-panel" id="previewPanel" style="display:none;">
+      <div class="preview-header">
+        <div class="preview-title">
+          <span class="preview-icon">🌊</span>
+          <span>实时预览 · <span id="previewProjectName">项目</span></span>
+        </div>
+        <div class="preview-status" id="previewStatus">
+          <span class="status-dot status-waiting"></span>
+          <span class="status-text">等待中</span>
+        </div>
+        <div class="preview-actions">
+          <button class="preview-btn" onclick="refreshPreview()" title="刷新预览">↻ 刷新</button>
+          <button class="preview-btn" onclick="openPreviewNewWindow()" title="新窗口打开">↗ 新窗口</button>
+        </div>
+      </div>
+      <iframe id="previewFrame" class="preview-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+  </div>
+
+  <!-- Email Modal (增强版：邮箱+联系方式+二次校验) -->
+  <div id="emailModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>📧 开发完成后，代码将发送到你的邮箱</h3>
+      <div class="modal-field">
+        <label class="modal-label" for="emailInput">邮箱地址 <span class="required">*</span></label>
+        <input
+          type="email"
+          id="emailInput"
+          placeholder="your@email.com"
+          required
+        />
+        <div class="modal-error" id="emailError" style="display:none;"></div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="contactInput">联系方式 <span class="optional">（选填）</span></label>
+        <input
+          type="text"
+          id="contactInput"
+          placeholder="微信号 / 手机号（选填）"
+        />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="confirmBuild()">确认</button>
+        <button class="btn-secondary" onclick="closeEmailModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="chat.js"></script>
+</body>
+</html>
