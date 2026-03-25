@@ -1,0 +1,129 @@
+# ━━━ 铸渊实时仪表盘更新 ━━━
+# 每次系统执行后自动更新仪表盘数据
+# Agent: AG-ZY-094 · update-dashboard.yml
+# Parent: SYS-GLW-0001 · Owner: ICE-0002∞
+
+name: 📊 实时仪表盘更新
+
+on:
+  # 当其他关键工作流完成时触发
+  workflow_run:
+    workflows:
+      - "铸渊 · 每日自检"
+      - "🚀 铸渊 CD · 自动部署到 guanghulab.com"
+      - "🦅 天眼 · 每日巡检"
+      - "🦅 天眼 · 每周全量扫描"
+      - "📢 更新系统公告区"
+      - "铸渊 · 服务器巡逻"
+      - "🧬 铸渊 神经系统 · 每日汇总"
+    types: [completed]
+
+  # 每 6 小时定时更新
+  schedule:
+    - cron: '0 0 * * *'    # 08:00 CST
+    - cron: '0 6 * * *'    # 14:00 CST
+    - cron: '0 12 * * *'   # 20:00 CST
+    - cron: '0 18 * * *'   # 02:00 CST
+
+  # 手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dashboard-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📊 生成仪表盘数据
+        id: dashboard
+        run: node scripts/generate-dashboard-data.js
+
+      - name: 📋 同步数据到 GitHub Pages
+        run: |
+          # 复制最新 system-health.json 到 docs/dashboard/ 供实时仪表盘页面使用
+          cp data/system-health.json docs/dashboard/system-health.json
+          echo "✅ 数据已同步到 docs/dashboard/"
+
+      - name: 📤 提交更新
+        run: |
+          git config user.name "铸渊 (ZhuYuan Bot)"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/system-health.json README.md docs/dashboard/system-health.json
+          if git diff --cached --quiet; then
+            echo "📋 无变更，跳过提交"
+          else
+            git commit -m "📊 实时仪表盘更新 $(date -u -d '+8 hours' '+%Y-%m-%d %H:%M') CST [skip ci]"
+            for i in 1 2 3; do
+              if git push; then
+                echo "✅ 仪表盘已更新"
+                break
+              fi
+              echo "⚠️ 推送失败（第 $i 次），重试..."
+              git pull --rebase origin main
+              if [ $i -eq 3 ]; then
+                echo "❌ 推送失败 3 次"
+                exit 1
+              fi
+            done
+          fi
+
+      # ━━━ 🧬 双端神经系统·自报告 ━━━
+      - name: "🧬 写入神经自报告"
+        if: always()
+        run: |
+          WORKFLOW_ID="dashboard-update"
+          BRAIN="AG-TY-01"
+          REPORT_DIR="data/neural-reports/dashboard"
+          TIMESTAMP=$(TZ=Asia/Shanghai date +%Y-%m-%d-%H%M)
+          STATUS="${{ job.status }}"
+
+          mkdir -p "$REPORT_DIR"
+
+          cat > "${REPORT_DIR}/${WORKFLOW_ID}-${TIMESTAMP}.json" << EOF
+          {
+            "workflow_id": "${WORKFLOW_ID}",
+            "run_id": "${{ github.run_id }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "status": "${STATUS}",
+            "brain": "${BRAIN}",
+            "event": "${{ github.event_name }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}"
+          }
+          EOF
+
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add "$REPORT_DIR/"
+          git diff --cached --quiet || \
+            git commit -m "🧬 ${WORKFLOW_ID} 自报告 · ${TIMESTAMP} [skip ci]"
+          git push || echo "⚠️ 自报告push失败（不阻断主流程）"
+
+      # ━━━ 📡 指令回执·自动同步 ━━━
+      - name: "📡 同步回执到 Notion"
+        if: always()
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+        run: |
+          node scripts/neural/write-receipt-to-notion.js \
+            --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \
+            --status "${{ job.status }}" \
+            --workflow "dashboard-update" \
+            --summary "dashboard-update 自动执行" \
+            --related-agent "AG-TY-01"

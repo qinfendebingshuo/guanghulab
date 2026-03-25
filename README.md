@@ -10,7 +10,7 @@
 
 &nbsp;
 
-![Workflows](https://img.shields.io/badge/Workflows-96-0969da?style=flat-square&logo=github-actions&logoColor=white)
+![Workflows](https://img.shields.io/badge/Workflows-97-0969da?style=flat-square&logo=github-actions&logoColor=white)
 ![Agents](https://img.shields.io/badge/Agents-93-8957e5?style=flat-square&logo=dependabot&logoColor=white)
 ![Personas](https://img.shields.io/badge/Personas-17-e85aad?style=flat-square&logo=openaigym&logoColor=white)
 ![Developers](https://img.shields.io/badge/Developers-11_(8_active)-2ea44f?style=flat-square&logo=people&logoColor=white)
@@ -32,10 +32,12 @@
 <!-- HERO_METRICS_START -->
 | 📈 系统规模 | ⚡ 自动化能力 | 🛡️ 系统稳定性 | 🔄 协作效率 |
 |:---:|:---:|:---:|:---:|
-| **96** 条自动化流水线 | **93** 个智能代理 24h 运行 | **100%** 流水线成功率 | **< 3min** 从提交到部署 |
+| **97** 条自动化流水线 | **93** 个智能代理 24h 运行 | **100%** 流水线成功率 | **< 3min** 从提交到部署 |
 <!-- HERO_METRICS_END -->
 
 &nbsp;
+
+[![🔴 实时仪表盘](https://img.shields.io/badge/🔴_LIVE-实时仪表盘_↗-ff4444?style=for-the-badge)](https://guanghulab.com/dashboard/)
 
 </div>
 
@@ -73,17 +75,19 @@
 <!-- DASHBOARD_START -->
 
 > 📡 **实时数据** · 由系统每次执行后自动更新 · 数据源: `data/system-health.json`
+>
+> 🔴 **[点击查看实时动态仪表盘 →](https://guanghulab.com/dashboard/)** — 图表、仪表、实时刷新
 
 ### ⚡ 系统能力概览
 
 <!-- CAPABILITY_START -->
 | 能力维度 | 指标 | 说明 |
 |----------|------|------|
-| 🔄 **自动化流水线** | 96 条 Workflow · 100% 成功率 | 覆盖：CI/CD 部署、代码审查、健康检查、数据同步 |
+| 🔄 **自动化流水线** | 97 条 Workflow · 100% 成功率 | 覆盖：CI/CD 部署、代码审查、健康检查、数据同步 |
 | 🤖 **智能代理集群** | 93 个 Agent 全天候运行 | 自主完成：部署、监控、自愈、告警、报告生成 |
-| 🎭 **AI 人格体** | 17 个（全部在线） | 每位开发者配备 AI 协作伙伴，辅助代码生成与审查 |
+| 🎭 **AI 人格体** | 17 个（17 在线） | 每位开发者配备 AI 协作伙伴，辅助代码生成与审查 |
 | 🧬 **双端神经同步** | v3.0 · 11 核心流水线映射 | GitHub ↔ Notion 实时双向同步，认知层与执行层联动 |
-| 🛡️ **自动化守卫** | 6 个 Guard · 5 在线 | 持续监控系统健康、配额使用、部署状态、凭证有效期 |
+| 🛡️ **自动化守卫** | 7 个 Guard · 6 在线 | 持续监控系统健康、配额使用、部署状态、凭证有效期 |
 | 🌍 **分布式联邦** | 1 主仓库 + 6 子仓库 | Hub-Spoke 架构，每位开发者独立子仓库，状态自动汇总 |
 <!-- CAPABILITY_END -->
 
