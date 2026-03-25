@@ -3,21 +3,33 @@
 # 📜 Copyright: 国作登字-2026-A-00037559
 # ═══════════════════════════════════════════════
 #
-# 天眼 · PR 合并风险检查
-# SkyEye PR Merge Risk Check
+# 天眼 · 合并膜 (SkyEye Merge Membrane)
 #
-# 弥补天眼系统在 PR 合并环节的安全缺口：
-#   gate-guard v1/v2 保护 push 事件
-#   本工作流保护 pull_request 事件（合并前风险评估）
+# 架构背景：
+#   所有开发者共用 qinfendebingshuo 账号（企业权限单人仓库）
+#   代理（Copilot Agent）以 copilot/* 分支开发（沙箱隔离）
+#   合并到 main 时 → 天眼合并膜自动启动，全系统审核
+#   审核不通过 → 物理层拒绝合并（workflow 失败 = merge 按钮禁用）
+#
+# 沙箱隔离原则：
+#   开发者自由开发（不在天眼包裹内）→ 天眼不干预
+#   触及天眼包裹区域（.github/, scripts/, skyeye/, core/, docs/ 等）→ 必须通过审核
+#   天眼核心配置（security-protocol, gate-guard-config 等）→ 仅限主权者修改
 #
 # 风险检测维度：
-#   R1 · 关键文件覆盖检测（docs/index.html 等）
-#   R2 · 受保护路径入侵检测
+#   R1 · 关键文件覆盖检测
+#   R2 · 天眼包裹区域入侵检测
 #   R3 · 构建产物误入检测
-#   R4 · 开发者路径权限检测
+#   R4 · 天眼核心配置篡改检测
 #   R5 · 大规模删除检测
+#   R6 · 工作流篡改检测
 #
-name: 天眼 · PR风险检查
+# 物理层阻塞：
+#   此工作流必须配置为 Required Status Check
+#   Settings → Branches → Branch protection rules → main → Require status checks
+#   添加: "🛡️ 天眼合并膜" 为必需检查
+#
+name: 天眼 · 合并膜
 
 on:
   pull_request:
@@ -29,8 +41,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  risk-check:
-    name: 🛡️ PR合并风险评估
+  merge-membrane:
+    name: 🛡️ 天眼合并膜
     runs-on: ubuntu-latest
 
     steps:
@@ -44,73 +56,103 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Collect PR changed files
+      - name: Collect PR metadata
+        id: collect
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Get the list of files changed in this PR
-          gh pr diff ${{ github.event.pull_request.number }} --name-only > /tmp/pr_files.txt || true
+          echo "📂 收集PR变更文件列表..."
+          gh pr diff ${{ github.event.pull_request.number }} --name-only > /tmp/pr_files.txt
+          FILE_COUNT=$(wc -l < /tmp/pr_files.txt)
+          echo "   文件数: $FILE_COUNT"
           
-          # Get diff stats
-          gh pr diff ${{ github.event.pull_request.number }} --stat > /tmp/pr_stats_raw.txt || true
-          
-          # Parse stats into numstat-like format for the script
-          # Extract additions/deletions from the stat output
-          git diff --numstat origin/${{ github.base_ref }}...origin/${{ github.head_ref }} > /tmp/pr_stats.txt 2>/dev/null || true
-          
-          echo "📂 Changed files:"
-          cat /tmp/pr_files.txt
           echo ""
-          echo "📊 Stats:"
-          cat /tmp/pr_stats.txt
+          echo "📊 收集变更统计..."
+          git diff --numstat origin/${{ github.base_ref }}...HEAD > /tmp/pr_stats.txt 2>/dev/null || echo "" > /tmp/pr_stats.txt
+          
+          echo ""
+          echo "📝 收集Commit元数据..."
+          git log origin/${{ github.base_ref }}..HEAD --format="%B---COMMIT_SEP---" > /tmp/pr_commits.txt 2>/dev/null || echo "" > /tmp/pr_commits.txt
+          
+          echo ""
+          echo "📂 PR变更文件:"
+          cat /tmp/pr_files.txt
+          
+          echo ""
+          echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
 
-      - name: 🔍 天眼 PR 风险检查
-        id: risk_check
+      - name: 🛡️ 天眼合并膜审核
+        id: membrane
         env:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
           PR_FILES: /tmp/pr_files.txt
           PR_STATS: /tmp/pr_stats.txt
+          PR_COMMITS: /tmp/pr_commits.txt
         run: node scripts/skyeye/pr-risk-check.js
 
-      - name: 📝 Write risk report comment
+      - name: 🧠 天眼全系统审计
+        if: failure()
+        id: skyeye_audit
+        run: |
+          echo "━━━ 天眼全系统审计（合并被阻止后触发）━━━"
+          echo ""
+          
+          # Run SkyEye scan dimensions that can be checked locally
+          echo "📡 D1 · 目录结构检查..."
+          node scripts/skyeye/scan-structure.js 2>/dev/null || echo "⚠️ scan-structure 执行失败"
+          
+          echo ""
+          echo "🧠 D2 · 大脑健康检查..."
+          node scripts/skyeye/scan-brain-health.js 2>/dev/null || echo "⚠️ scan-brain-health 执行失败"
+          
+          echo ""
+          echo "🔐 D3 · 安全协议完整性检查..."
+          node scripts/skyeye/scan-security-protocol.js 2>/dev/null || echo "⚠️ scan-security-protocol 执行失败"
+          
+          echo ""
+          echo "━━━ 天眼审计完成 ━━━"
+
+      - name: 📝 写入天眼审核报告
         if: always()
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            const decision = '${{ steps.risk_check.outcome }}';
-            const riskLevel = '${{ steps.risk_check.outputs.risk_level }}' || 'unknown';
-            const riskSummary = '${{ steps.risk_check.outputs.risk_summary }}' || '';
+            const decision = '${{ steps.membrane.outcome }}';
+            const branch = '${{ github.head_ref }}';
             const author = '${{ github.event.pull_request.user.login }}';
+            const prTitle = context.payload.pull_request.title;
+            const isAgentBranch = branch.startsWith('copilot/') || branch.startsWith('agent/') || branch.startsWith('bot/');
             
-            let body = '## 🛡️ 天眼 · PR合并风险检查报告\n\n';
-            body += `**PR作者:** ${author}\n`;
-            body += `**检查时间:** ${new Date().toISOString()}\n\n`;
+            let body = '## 🛡️ 天眼 · 合并膜审核报告\n\n';
+            body += `| 项目 | 值 |\n`;
+            body += `|------|-----|\n`;
+            body += `| **PR作者** | ${author} |\n`;
+            body += `| **分支** | \`${branch}\` |\n`;
+            body += `| **代理PR** | ${isAgentBranch ? '是 🤖' : '否 👤'} |\n`;
+            body += `| **检查时间** | ${new Date().toISOString()} |\n\n`;
             
             if (decision === 'success') {
-              body += '### ✅ 风险检查通过\n\n';
-              body += `风险等级: **${riskLevel}**\n\n`;
-              if (riskSummary && riskSummary !== '仓库主人 PR，直接放行' && riskSummary !== '白名单用户 PR，直接放行') {
-                body += '> ⚠️ 注意事项:\n';
-                body += `> ${riskSummary}\n\n`;
+              body += '### ✅ 天眼合并膜: 通过\n\n';
+              body += '此 PR 的变更已通过天眼系统审核，可以安全合并。\n\n';
+              if (!isAgentBranch) {
+                body += '> 💡 非代理分支（主权者手动操作），天眼合并膜自动放行\n';
               }
-              body += '此 PR 可以安全合并。\n';
             } else {
-              body += '### ❌ 风险检查未通过\n\n';
-              body += `风险等级: **${riskLevel}**\n\n`;
-              body += '**检测到的风险:**\n';
-              if (riskSummary) {
-                const items = riskSummary.split(' | ');
-                for (const item of items) {
-                  body += `- 🔴 ${item}\n`;
-                }
-              }
-              body += '\n⛔ **此 PR 已被天眼系统阻止合并。**\n';
-              body += '请联系仓库管理员 (TCS-0002∞) 审核。\n';
+              body += '### ❌ 天眼合并膜: 物理层拒绝合并\n\n';
+              body += '此 PR 的变更触及了天眼系统包裹区域且未通过审核。\n\n';
+              body += '**处理方式:**\n';
+              body += '1. 🔍 检查上方日志中标记的风险项\n';
+              body += '2. 📦 确保代理PR的变更限制在沙箱区域内\n';
+              body += '3. 👑 如需修改天眼包裹区域，请联系主权者 TCS-0002∞ 审核\n\n';
+              body += '> ⛔ 天眼合并膜已阻止此PR合并。\n';
+              body += '> 主权者可手动批准后合并（需在 Branch Protection 中 bypass）。\n';
             }
             
             body += '\n---\n';
-            body += '> 天眼 · PR合并风险检查引擎 · SkyEye PR Risk Check';
+            body += '> 天眼 · 合并膜 (SkyEye Merge Membrane) · AG-ZY-095\n';
+            body += '> 「地球是圆的，没有缺口 — 语言系统包裹所有入口」';
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
