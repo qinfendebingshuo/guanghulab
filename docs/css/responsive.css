@@ -1,0 +1,97 @@
+/**
+ * responsive.css — 全屏响应式适配样式表
+ *
+ * Phase 1 · UI 全屏响应式适配
+ * 桌面版：对话界面铺满浏览器窗口，无大片空白
+ * 手机版：768px 以下切换为移动布局，触摸友好
+ *
+ * 版权：国作登字-2026-A-00037559
+ */
+
+/* ─── 核心响应式框架变量 ─── */
+:root {
+  --content-max-width: 900px;
+  --chat-padding: 20px;
+}
+
+/* ─── 桌面版：内容区域铺满 ─── */
+.app-container,
+#app.on {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+#center-area {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 聊天消息区域使用最大宽度控制可读性 */
+#msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--chat-padding);
+}
+
+/* ─── 登录卡片：桌面版加宽 ─── */
+.sc {
+  max-width: 600px;
+}
+
+/* ─── 768px 手机版断点 ─── */
+@media (max-width: 768px) {
+  :root {
+    --chat-padding: 12px;
+  }
+
+  /* 登录卡片：手机版全宽 */
+  .sc {
+    max-width: 100%;
+    margin: 0 16px;
+    border-radius: 12px;
+  }
+
+  /* 消息气泡自适应宽度 */
+  .bbl {
+    max-width: 85%;
+  }
+
+  /* 触摸友好：按钮最小 44px × 44px（Apple HIG 标准） */
+  button,
+  .btn,
+  .sc-btn,
+  .login-tab {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 输入区域底部固定 */
+  footer {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ─── iPhone / iOS 安全区域适配 ─── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  #app.on {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  #setup {
+    padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  }
+}

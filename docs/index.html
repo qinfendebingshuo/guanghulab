@@ -8,6 +8,8 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>铸渊助手 · HoloLake AI</title>
+<link rel="stylesheet" href="css/responsive.css">
+<script src="js/auth.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18,12 +20,13 @@
   --mc:#4f8ef7;--mb:#fb923c;--mr:#a78bfa;--mn:#34d399;
   --r:14px;--rs:8px;
   --ls-w:260px;--rs-w:360px;
+  --content-max-width:900px;--chat-padding:20px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 
 /* ─── SETUP ─── */
 #setup{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));overflow-y:auto;-webkit-overflow-scrolling:touch}
-.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,.5);margin:auto}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:600px;box-shadow:0 25px 60px rgba(0,0,0,.5);margin:auto}
 .sc-logo{font-size:52px;text-align:center;margin-bottom:14px}
 .sc h1{font-size:22px;text-align:center;margin-bottom:6px}
 .sc .sub{color:var(--dim);text-align:center;font-size:13px;margin-bottom:22px}

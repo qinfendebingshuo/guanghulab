@@ -43,6 +43,9 @@ app.use('/api', require('./routes/databases'));
 app.use('/api', require('./routes/chat'));
 app.use('/api', require('./routes/receipt'));
 
+// 开发者编号免配置登录路由
+app.use('/api', require('./routes/auth'));
+
 // 写入类路由（需认证 + 权限 + 审计）
 app.use('/api', require('./routes/write'));
 
