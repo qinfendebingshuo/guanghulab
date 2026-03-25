@@ -133,6 +133,54 @@ function isDirectDeploySource(devId, instructionId, signedBy) {
   return false;
 }
 
+/**
+ * 判断部署是否为开发者自己频道内的变更 (S6)
+ *
+ * S6 规则：
+ * - 开发者在自己频道内拥有完全自主权
+ * - 频道内变更由自己审核，不需要天眼/授权人
+ * - 开发者自己确认 → 直接部署到正式站（自己频道区域）
+ *
+ * 天眼只管：跨频操作、系统级变更、频道生命周期、公共区域
+ *
+ * @param {string} devId - 开发者编号
+ * @param {string} module - 部署模块路径
+ * @param {string} channel - 频道类型
+ * @returns {{ selfChannel: boolean, reason: string }}
+ */
+function isChannelSelfDeploy(devId, module, channel) {
+  // 系统级/跨频频道 → 不是自治范围，走天眼审批
+  if (channel === '系统' || channel === '跨频') {
+    return { selfChannel: false, reason: '系统级或跨频变更需天眼审核' };
+  }
+
+  // 获取开发者拥有的模块
+  var permissions = require('../config/permissions');
+  var devModules = permissions.DEV_MODULES[devId] || [];
+
+  // 没有模块映射 → 不是自治范围
+  if (devModules.length === 0) {
+    return { selfChannel: false, reason: '开发者无模块映射' };
+  }
+
+  // 通配符 → 管理员走 S5 直通，不走 S6 频道自治
+  // 原因：管理员有全局权限，应使用 S5 的冰朔直通规则而非 S6 的频道自治
+  if (devModules.indexOf('*') !== -1) {
+    return { selfChannel: false, reason: '管理员走 S5 直通' };
+  }
+
+  // 检查模块是否在开发者自己的频道内
+  var modulePath = module.replace(/\/+$/, '') + '/';
+  for (var i = 0; i < devModules.length; i++) {
+    var owned = devModules[i].replace(/\/+$/, '') + '/';
+    if (modulePath.indexOf(owned) === 0 || owned.indexOf(modulePath) === 0 || module === devModules[i].replace(/\/+$/, '')) {
+      return { selfChannel: true, reason: '模块 ' + module + ' 属于 ' + devId + ' 的个人频道' };
+    }
+  }
+
+  return { selfChannel: false, reason: '模块 ' + module + ' 不在 ' + devId + ' 的频道内' };
+}
+
 module.exports = {
   checkAutonomyCompliance: checkAutonomyCompliance,
   detectInteractionMode: detectInteractionMode,
@@ -140,5 +188,6 @@ module.exports = {
   getDeploymentStages: getDeploymentStages,
   getDualLineConfig: getDualLineConfig,
   writeAutonomyLog: writeAutonomyLog,
-  isDirectDeploySource: isDirectDeploySource
+  isDirectDeploySource: isDirectDeploySource,
+  isChannelSelfDeploy: isChannelSelfDeploy
 };

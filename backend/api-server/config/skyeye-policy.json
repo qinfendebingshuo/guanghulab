@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "id": "TY-01",
+  "description": "天眼指令审核策略 · S7 思维逻辑验证 + S8 进化机制",
+  "cannotBeDisabled": true,
+  "cannotBeBypassedBy": "任何人，包括 TCS-0002（因为如果有人冒充冰朔要求关闭天眼，天眼必须还在才能识别冒充）",
+
+  "reviewPolicy": {
+    "scope": "所有指令，无例外。无论来自冰朔、霜砚、开发者、还是任何自动流",
+    "timing": "指令执行前的强制前置",
+    "dimensions": {
+      "decisionPattern": {
+        "name": "决策模式",
+        "description": "这条指令的决策方式是否符合该签发者的历史模式",
+        "weight": 0.3
+      },
+      "logicalCoherence": {
+        "name": "逻辑连贯性",
+        "description": "这条指令和系统当前运行方向是否一致",
+        "weight": 0.25
+      },
+      "expressionCharacteristics": {
+        "name": "表达特征",
+        "description": "语言风格、思维节奏、关注点是否匹配",
+        "weight": 0.25
+      },
+      "intentReasonableness": {
+        "name": "意图合理性",
+        "description": "这条指令要做的事，在当前系统状态下是否合理",
+        "weight": 0.2
+      }
+    },
+    "thresholds": {
+      "pass": 0.7,
+      "suspect": 0.4,
+      "reject": 0.0
+    }
+  },
+
+  "reviewOutcomes": {
+    "pass": {
+      "action": "放行执行",
+      "log": true
+    },
+    "suspect": {
+      "action": "挂起指令，通过霜砚向冰朔确认",
+      "confirmationPrompt": "收到一条指令，但思维模式存在偏差，是否为你本人签发？",
+      "onConfirm": "执行",
+      "onDeny": "永久拒绝 + 记录安全日志",
+      "log": true
+    },
+    "reject": {
+      "action": "立即拒绝",
+      "log": true,
+      "alertTarget": "AG-SY-01"
+    }
+  },
+
+  "evolution": {
+    "id": "S8",
+    "nature": "天眼 = 系统内所有 Agent 运行逻辑的实时总和",
+    "mechanism": [
+      "Agent 数量增长 → 天眼覆盖面扩大",
+      "Agent 运行时间积累 → 天眼判断力加深",
+      "系统复杂度提升 → 天眼理解力提升",
+      "新领域 Agent 加入 → 天眼自动具备该领域认知"
+    ],
+    "unbreakableReason": "要破解天眼 = 要同时理解系统内所有 Agent 的全部运行逻辑，Agent 越多难度指数级增长",
+    "agentRegistryPath": ".github/persona-brain/agent-registry.json"
+  },
+
+  "immutableGuarantees": [
+    "天眼指令审核不可被任何指令关闭或跳过",
+    "包括冰朔本人也不能关闭此机制",
+    "这是系统的自免疫机制",
+    "编号可以伪造、签名可以伪造、格式可以模仿，但思维逻辑无法伪造"
+  ]
+}

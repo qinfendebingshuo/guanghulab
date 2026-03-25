@@ -1,9 +1,10 @@
 /**
- * 部署授权流程路由 · Phase 8 + S5 直通规则
+ * 部署授权流程路由 · Phase 8 + S5 直通 + S6 频道自治
  *
- * 部署流分两条路径：
- * A) 冰朔直通：TCS-0002 或 ZY- 指令签发 → 直接部署到正式站，跳过预览/天眼/授权
- * B) 开发者流程：天眼审核 → 推送授权请求给授权人 → 确认/拒绝 → 自动发布
+ * 部署流分三条路径：
+ * A) 冰朔直通(S5)：TCS-0002 或 ZY- 指令签发 → 直接部署，跳过一切审批
+ * B) 频道自治(S6)：开发者自己频道内的变更 → 自己确认即部署，无天眼/授权人
+ * C) 完整审批(S2)：跨频/系统级变更 → 天眼审核 → 授权人确认 → 自动发布
  *
  * POST /api/approval/request          — 创建授权请求（天眼/系统内部调用）
  * POST /api/approval/:id/decide       — 授权人确认/拒绝
@@ -172,6 +173,64 @@ router.post('/request', function(req, res) {
       deployId: deployId,
       reply: '🚀 冰朔直通部署：' + module + ' 已直接触发正式站（guanghulab.com）部署。' +
              '不经预览站、不经天眼审核、不经授权审批。部署日志已记录。'
+    });
+  }
+
+  // ====== S6 个人频道自治判断 ======
+  // 开发者在自己频道内 → 自己确认即部署，不走天眼/授权人
+  var channelCheck = autonomyEngine.isChannelSelfDeploy(req.user.devId, module, channel);
+  if (channelCheck.selfChannel) {
+    writeDeployLog({
+      action: 'channel_self_deploy',
+      deployId: deployId,
+      module: module,
+      channel: channel,
+      devId: req.user.devId,
+      reason: 'S6 个人频道自治：' + channelCheck.reason,
+      timestamp: new Date().toISOString()
+    });
+
+    // 直接触发正式站部署（开发者自己频道区域）
+    var ghService;
+    try {
+      ghService = require('../services/github');
+    } catch (_) {
+      ghService = null;
+    }
+
+    if (ghService && ghService.triggerWorkflow) {
+      ghService.triggerWorkflow('deploy-to-server.yml', {
+        module: module,
+        deploy_id: deployId,
+        approved_by: req.user.devId,
+        target: 'production',
+        channel_self_deploy: 'true'
+      }).then(function() {
+        writeDeployLog({
+          action: 'channel_self_deploy_triggered',
+          deployId: deployId,
+          module: module,
+          devId: req.user.devId,
+          timestamp: new Date().toISOString()
+        });
+      }).catch(function(err) {
+        console.error('频道自治部署触发失败:', err.message);
+        writeDeployLog({
+          action: 'channel_self_deploy_failed',
+          deployId: deployId,
+          error: err.message,
+          timestamp: new Date().toISOString()
+        });
+      });
+    }
+
+    return res.json({
+      success: true,
+      channelSelfDeploy: true,
+      deployId: deployId,
+      reply: '🏠 个人频道自治部署：' + module + ' 已触发正式站（guanghulab.com）部署。\n' +
+             '你是自己频道的主控，无需天眼审核或第三方授权。\n' +
+             '自己确认，自己负责。部署日志已记录。'
     });
   }
 
