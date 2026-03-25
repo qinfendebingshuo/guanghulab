@@ -86,7 +86,8 @@ async function fetchDevStatusFromNotion() {
   // 解析 Notion 页面属性为 dev-status 格式（霜砚签发制格式）
   const team = pages.map(page => {
     const props = page.properties || {};
-    const lastSyslog = getNotionText(props['最后SYSLOG']) || getNotionDate(props['最后SYSLOG']);
+    const syslogProp = props['最后SYSLOG'];
+    const lastSyslog = getNotionDate(syslogProp) || getNotionText(syslogProp);
     return {
       dev_id: getNotionText(props['编号']) || getNotionTitle(props['Name']) || '',
       name: getNotionText(props['昵称']) || getNotionTitle(props['Name']) || '',

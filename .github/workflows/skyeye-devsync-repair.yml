@@ -29,6 +29,7 @@ env:
   SYNC_LOG_PATH: ".github/persona-brain/dev-status-sync-log.json"
   YELLOW_THRESHOLD_HOURS: 14
   RED_THRESHOLD_HOURS: 48
+  SYNC_FRESHNESS_MINUTES: 10
 
 jobs:
   check-sync-status:
@@ -152,7 +153,7 @@ jobs:
                   const d = JSON.parse(require('fs').readFileSync('$SYNC_LOG_PATH','utf8'));
                   const syncTime = new Date(d.last_sync || '2000-01-01');
                   const diffMin = (Date.now() - syncTime.getTime()) / 60000;
-                  if (d.status === 'success' && diffMin < 10) console.log('success');
+                  if (d.status === 'success' && diffMin < ${{ env.SYNC_FRESHNESS_MINUTES }}) console.log('success');
                   else console.log('stale');
                 } catch { console.log('error'); }
               ")
