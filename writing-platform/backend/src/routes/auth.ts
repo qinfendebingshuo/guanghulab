@@ -6,6 +6,13 @@ import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
+function maskPhone(phone: string): string {
+  if (phone.length >= 7) {
+    return phone.slice(0, 3) + '****' + phone.slice(-4);
+  }
+  return '***';
+}
+
 // Send verification code
 router.post('/send-code', rateLimiter(5, 60000), async (req: Request, res: Response): Promise<void> => {
   const { phone } = req.body;
@@ -66,7 +73,7 @@ router.post('/register', rateLimiter(5, 60000), async (req: Request, res: Respon
       id: user.id,
       nickname: user.nickname,
       role: user.role,
-      phone: user.phone,
+      phone: maskPhone(user.phone),
       aiCompanion: user.aiCompanion,
       creditScore: user.creditScore,
     },
@@ -106,7 +113,7 @@ router.post('/login', rateLimiter(10, 60000), async (req: Request, res: Response
       id: user.id,
       nickname: user.nickname,
       role: user.role,
-      phone: user.phone,
+      phone: maskPhone(user.phone),
       aiCompanion: user.aiCompanion,
       creditScore: user.creditScore,
     },

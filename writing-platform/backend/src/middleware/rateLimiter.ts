@@ -5,7 +5,7 @@ const requestCounts = new Map<string, { count: number; resetTime: number }>();
 
 export function rateLimiter(maxRequests: number = 10, windowMs: number = 60000) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const ip = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for']?.toString() || 'unknown';
     const now = Date.now();
     const record = requestCounts.get(ip);
 

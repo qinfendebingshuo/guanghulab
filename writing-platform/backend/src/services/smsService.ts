@@ -14,7 +14,8 @@ export async function sendVerificationCode(phone: string): Promise<{ success: bo
 
   // Check rate limit (1 code per 60 seconds per phone)
   const existing = codeStore.get(phone);
-  if (existing && existing.expiresAt - Date.now() > 4 * 60 * 1000) {
+  if (existing && (existing.expiresAt - Date.now()) > 4 * 60 * 1000) {
+    // Code was stored less than 60 seconds ago (5min total - 4min remaining = 1min elapsed)
     return { success: false, message: '验证码发送过于频繁，请稍后再试' };
   }
 
@@ -57,3 +58,13 @@ function storeCode(phone: string, code: string): void {
     expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
   });
 }
+
+// Cleanup expired codes periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of codeStore.entries()) {
+    if (now > value.expiresAt) {
+      codeStore.delete(key);
+    }
+  }
+}, 60000);

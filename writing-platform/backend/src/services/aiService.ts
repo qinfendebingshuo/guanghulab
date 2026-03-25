@@ -6,7 +6,34 @@ const openai = new OpenAI({
 });
 
 // Per-user conversation history (in-memory; use Redis in production)
-const conversationCache = new Map<string, Array<{ role: 'user' | 'assistant'; content: string }>>();
+const MAX_CACHE_USERS = 1000;
+const conversationCache = new Map<string, { messages: Array<{ role: 'user' | 'assistant'; content: string }>; lastAccess: number }>();
+
+// Evict least-recently-used entries when cache exceeds limit
+function getHistory(userId: string): Array<{ role: 'user' | 'assistant'; content: string }> {
+  const entry = conversationCache.get(userId);
+  if (entry) {
+    entry.lastAccess = Date.now();
+    return entry.messages;
+  }
+  return [];
+}
+
+function setHistory(userId: string, messages: Array<{ role: 'user' | 'assistant'; content: string }>): void {
+  if (conversationCache.size >= MAX_CACHE_USERS) {
+    // Evict oldest entry
+    let oldestKey = '';
+    let oldestTime = Infinity;
+    for (const [key, val] of conversationCache.entries()) {
+      if (val.lastAccess < oldestTime) {
+        oldestTime = val.lastAccess;
+        oldestKey = key;
+      }
+    }
+    if (oldestKey) conversationCache.delete(oldestKey);
+  }
+  conversationCache.set(userId, { messages, lastAccess: Date.now() });
+}
 
 export async function callAI(params: {
   systemPrompt: string;
@@ -16,7 +43,7 @@ export async function callAI(params: {
   const { systemPrompt, userMessage, userId } = params;
 
   // Get recent conversation history (last 10 turns = 20 messages)
-  const history = conversationCache.get(userId) || [];
+  const history = getHistory(userId);
 
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     { role: 'system', content: systemPrompt },
@@ -40,7 +67,7 @@ export async function callAI(params: {
       { role: 'user' as const, content: userMessage },
       { role: 'assistant' as const, content: aiResponse },
     ].slice(-20);
-    conversationCache.set(userId, updatedHistory);
+    setHistory(userId, updatedHistory);
 
     return aiResponse;
   } catch (err: any) {
