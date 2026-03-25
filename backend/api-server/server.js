@@ -13,6 +13,7 @@
 const express = require('express');
 const cors = require('cors');
 const executionLock = require('./middleware/execution-lock');
+const skyeyeReview = require('./middleware/skyeye-review');
 const watchdog = require('./services/execution-watchdog');
 
 const app = express();
@@ -31,6 +32,9 @@ app.use(express.json());
 
 // 执行锁取消拦截（全局中间件，在所有路由之前）
 app.use(executionLock.blockCancellation);
+
+// 天眼指令审核（S7/S8/S9 全局强制前置，不可关闭，不可绕过）
+app.use(skyeyeReview.skyeyeReview);
 
 // 读取类路由（公开，无需认证）
 app.use('/api', require('./routes/health'));
@@ -56,12 +60,13 @@ app.get('/', function(_req, res) {
   res.json({
     status: 'ok',
     service: 'guanghu-api-server',
-    version: '4.0.0',
+    version: '5.0.0',
     channel: 'B',
     description: '光湖后端中间层 · 语言驱动操作系统',
     capabilities: [
       'read', 'write', 'intent-routing', 'permission-sandbox',
-      'onboarding', 'execution-guard', 'approval-flow', 'autonomy'
+      'onboarding', 'execution-guard', 'approval-flow', 'autonomy',
+      'skyeye-review', 'identity-verification'
     ]
   });
 });
@@ -69,8 +74,8 @@ app.get('/', function(_req, res) {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '127.0.0.1', function() {
   console.log('🔗 光湖后端中间层启动 · 端口 ' + PORT);
-  console.log('   通道B · 语言驱动操作系统 v4.0.0');
-  console.log('   能力：读取 + 写入 + 意图路由 + 权限沙箱 + 认知引导 + 执行保护 + 授权流程 + 系统自治');
+  console.log('   通道B · 语言驱动操作系统 v5.0.0');
+  console.log('   能力：读取 + 写入 + 意图路由 + 权限沙箱 + 认知引导 + 执行保护 + 授权流程 + 系统自治 + 天眼审核 + 身份验证');
   console.log('   监听地址：127.0.0.1:' + PORT + '（仅本机访问）');
 
   // 启动执行看门狗

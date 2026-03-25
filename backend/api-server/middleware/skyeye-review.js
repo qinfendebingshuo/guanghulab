@@ -1,14 +1,20 @@
 /**
- * 天眼指令审核中间件 · S7 思维逻辑验证 + S8 进化机制
+ * 天眼指令审核中间件 · S7 思维逻辑验证 + S8 进化机制 + S9 全员身份验证
  *
  * 系统每次接收到任何指令后，必须唤醒天眼（TY-01）进行全局审核。
  * 无例外。无论来自冰朔、霜砚、开发者、还是任何自动流。
  *
- * 审核维度：
+ * S7 审核维度：
  * 1. 决策模式 — 是否符合签发者历史模式
  * 2. 逻辑连贯性 — 是否与系统运行方向一致
  * 3. 表达特征 — 语言风格/思维节奏/关注点是否匹配
  * 4. 意图合理性 — 在当前系统状态下是否合理
+ *
+ * S9 全员身份验证：
+ * - 每个参与者都有属于自己的思维逻辑模型，自动积累
+ * - 任何人签发的指令都必须通过对应该人的模型校验
+ * - 新成员冷启动期需额外人工确认
+ * - 参与越深 → 模型越精确 → 越不可能被冒充（正反馈循环）
  *
  * 不可关闭。不可绕过。包括冰朔本人也不能关闭此机制。
  * 这是系统的自免疫机制。
@@ -80,28 +86,77 @@ function summarizePatterns(history) {
   }
 
   return {
-    established: history.length >= 5,
+    established: history.length >= COLD_START_THRESHOLD,
     typicalMethods: methods,
     typicalPaths: paths,
     activeHours: hours
   };
 }
 
+// ====== S9 · 全员思维逻辑身份验证 ======
+
+// 冷启动阈值：模型至少需要积累这么多操作记录才算成熟
+var COLD_START_THRESHOLD = skyeyePolicy.identityModel.coldStart.maturityThreshold;
+
 /**
- * 执行思维逻辑审核
+ * 获取指定身份的思维逻辑模型成熟度 (S9)
+ *
+ * @param {string} devId - 开发者编号
+ * @returns {{ mature: boolean, actionCount: number, threshold: number, confidence: number }}
+ */
+function getIdentityMaturity(devId) {
+  var history = reviewHistory.get(devId) || [];
+  var actionCount = history.length;
+  var confidence = Math.min(1.0, actionCount / (COLD_START_THRESHOLD * 2));
+  return {
+    mature: actionCount >= COLD_START_THRESHOLD,
+    actionCount: actionCount,
+    threshold: COLD_START_THRESHOLD,
+    confidence: Math.round(confidence * 100) / 100
+  };
+}
+
+/**
+ * 判断指令是否处于冷启动期需额外人工确认 (S9)
+ *
+ * 新成员思维模型尚未成熟时，写入类指令需要管理者或天眼授权人额外确认。
+ *
+ * @param {string} devId - 开发者编号
+ * @returns {{ coldStart: boolean, reason: string }}
+ */
+function checkColdStart(devId) {
+  var maturity = getIdentityMaturity(devId);
+  if (maturity.mature) {
+    return { coldStart: false, reason: '模型已成熟（' + maturity.actionCount + '/' + maturity.threshold + '）' };
+  }
+  return {
+    coldStart: true,
+    reason: '思维模型尚在冷启动期（' + maturity.actionCount + '/' + maturity.threshold + '），需额外人工确认'
+  };
+}
+
+/**
+ * 执行思维逻辑审核 (S7 + S9)
+ *
+ * S9: 每个人签发的指令都唤醒对应该人的思维逻辑模型校验。
+ * 冷启动期的成员自动降低通过阈值（需要额外确认）。
  *
  * @param {Object} instruction - 指令信息
  * @param {string} instruction.devId - 发起者
  * @param {string} instruction.method - HTTP 方法
  * @param {string} instruction.path - 请求路径
  * @param {Object} instruction.body - 请求体
- * @returns {{ outcome: string, score: number, details: Object }}
+ * @returns {{ outcome: string, score: number, details: Object, identity: Object }}
  */
 function reviewInstruction(instruction) {
   var devId = instruction.devId;
   var profile = getSignerProfile(devId);
   var dimensions = skyeyePolicy.reviewPolicy.dimensions;
   var thresholds = skyeyePolicy.reviewPolicy.thresholds;
+
+  // S9: 获取该身份的思维模型成熟度
+  var maturity = getIdentityMaturity(devId);
+  var coldStartInfo = checkColdStart(devId);
 
   var scores = {};
   var totalScore = 0;
@@ -152,7 +207,12 @@ function reviewInstruction(instruction) {
   // 确定审核结果
   var outcome;
   if (totalScore >= thresholds.pass) {
-    outcome = 'pass';
+    // S9: 冷启动期即使分数通过，也标记为 suspect 需额外确认
+    if (coldStartInfo.coldStart) {
+      outcome = 'suspect';
+    } else {
+      outcome = 'pass';
+    }
   } else if (totalScore >= thresholds.suspect) {
     outcome = 'suspect';
   } else {
@@ -163,6 +223,13 @@ function reviewInstruction(instruction) {
     outcome: outcome,
     score: Math.round(totalScore * 100) / 100,
     details: scores,
+    identity: {
+      devId: devId,
+      mature: maturity.mature,
+      actionCount: maturity.actionCount,
+      confidence: maturity.confidence,
+      coldStart: coldStartInfo.coldStart
+    },
     profile: {
       established: profile.patterns.established,
       totalActions: profile.totalActions
@@ -241,9 +308,14 @@ function skyeyeReview(req, res, next) {
   if (result.outcome === 'suspect') {
     // 挂起指令
     var suspendId = 'SUSPEND-' + Date.now();
+    var suspendReason = result.identity.coldStart
+      ? '身份 ' + devId + ' 处于冷启动期，需额外人工确认'
+      : '思维模式存在偏差';
+
     suspendedInstructions.set(suspendId, {
       instruction: instruction,
       review: result,
+      reason: suspendReason,
       createdAt: new Date().toISOString()
     });
 
@@ -251,18 +323,26 @@ function skyeyeReview(req, res, next) {
       action: 'instruction_suspended',
       suspendId: suspendId,
       devId: devId,
-      reason: '思维模式存在偏差',
+      reason: suspendReason,
       score: result.score,
+      identity: result.identity,
       timestamp: new Date().toISOString()
     });
+
+    var replyMsg = result.identity.coldStart
+      ? '👁️ 天眼审核：身份 ' + devId + ' 的思维模型尚在冷启动期（' +
+        result.identity.actionCount + '/' + COLD_START_THRESHOLD + '），需额外人工确认。\n\n' +
+        '指令已挂起，等待管理者或天眼授权人确认。'
+      : '👁️ 天眼审核：此指令的思维模式存在偏差，已挂起等待确认。\n\n' +
+        '系统已向 ' + devId + ' 本人发送确认请求。\n' +
+        '审核得分：' + result.score + ' / 1.0（阈值 0.7）';
 
     return res.status(202).json({
       error: false,
       code: 'SKYEYE_SUSPENDED',
       suspendId: suspendId,
-      reply: '👁️ 天眼审核：此指令的思维模式存在偏差，已挂起等待确认。\n\n' +
-             '系统已通过霜砚向冰朔发送确认请求。\n' +
-             '审核得分：' + result.score + ' / 1.0（阈值 0.7）'
+      coldStart: result.identity.coldStart,
+      reply: replyMsg
     });
   }
 
@@ -312,7 +392,7 @@ function confirmSuspended(suspendId) {
 }
 
 /**
- * 拒绝挂起的指令（冰朔否认）
+ * 拒绝挂起的指令（本人否认或管理者拒绝）
  */
 function denySuspended(suspendId) {
   var item = suspendedInstructions.get(suspendId);
@@ -322,7 +402,7 @@ function denySuspended(suspendId) {
       action: 'suspended_denied_permanently',
       suspendId: suspendId,
       devId: item.instruction.devId,
-      reason: '冰朔否认此指令为本人签发',
+      reason: '身份本人否认此指令为本人签发',
       timestamp: new Date().toISOString()
     });
     return item;
@@ -352,6 +432,8 @@ module.exports = {
   skyeyeReview: skyeyeReview,
   reviewInstruction: reviewInstruction,
   recordAction: recordAction,
+  getIdentityMaturity: getIdentityMaturity,
+  checkColdStart: checkColdStart,
   getSuspendedInstruction: getSuspendedInstruction,
   confirmSuspended: confirmSuspended,
   denySuspended: denySuspended,
