@@ -25,7 +25,8 @@
       });
       if (res.ok) {
         var data = await res.json();
-        return !data.started && !data.completed && data.permissionLevel === 0;
+        // Show onboarding if not completed (handles both new and resumed sessions)
+        return !data.completed && data.permissionLevel === 0;
       }
     } catch (e) {
       console.debug('[Onboarding] check failed:', e.message);

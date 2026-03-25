@@ -45,14 +45,17 @@ function auditLog(req, res, next) {
     logEntry.statusCode = res.statusCode;
 
     // 异步写入日志，不阻塞响应
-    try {
-      fs.mkdirSync(AUDIT_LOG_DIR, { recursive: true });
+    fs.mkdir(AUDIT_LOG_DIR, { recursive: true }, function(mkdirErr) {
+      if (mkdirErr) {
+        console.error('审计日志目录创建失败:', mkdirErr.message);
+        return;
+      }
       var today = new Date().toISOString().split('T')[0];
       var logFile = path.join(AUDIT_LOG_DIR, 'audit-' + today + '.jsonl');
-      fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
-    } catch (e) {
-      console.error('审计日志写入失败:', e.message);
-    }
+      fs.appendFile(logFile, JSON.stringify(logEntry) + '\n', function(writeErr) {
+        if (writeErr) console.error('审计日志写入失败:', writeErr.message);
+      });
+    });
 
     return originalSend.call(this, body);
   };

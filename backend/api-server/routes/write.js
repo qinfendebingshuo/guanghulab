@@ -62,6 +62,25 @@ function rateLimit(req, res, next) {
 
 router.use(rateLimit);
 
+// 模块路径归一化（确保带末尾斜杠）
+function normalizeModule(mod) {
+  if (!mod) return '';
+  mod = mod.trim();
+  if (mod !== '*' && !mod.endsWith('/')) mod += '/';
+  return mod;
+}
+
+// 检查开发者是否拥有指定模块
+function hasModuleAccess(userModules, module) {
+  if (!userModules || !module) return false;
+  if (userModules.includes('*')) return true;
+  var normalized = normalizeModule(module);
+  for (var i = 0; i < userModules.length; i++) {
+    if (normalizeModule(userModules[i]) === normalized) return true;
+  }
+  return false;
+}
+
 // 获取实际数据库 ID（沙箱环境使用沙箱 DB）
 function getDbId(req, configKey) {
   if (req.sandbox && req.sandboxDbIds && req.sandboxDbIds[configKey]) {
@@ -251,7 +270,7 @@ router.post('/deploy/preview',
       }
 
       // 检查开发者是否拥有该模块
-      if (!req.user.modules.includes('*') && !req.user.modules.includes(module)) {
+      if (!hasModuleAccess(req.user.modules, module)) {
         return res.status(403).json({
           error: true,
           code: 'MODULE_DENIED',
@@ -290,7 +309,7 @@ router.post('/deploy/production',
       }
 
       // 检查模块权限
-      if (!req.user.modules.includes('*') && !req.user.modules.includes(module)) {
+      if (!hasModuleAccess(req.user.modules, module)) {
         return res.status(403).json({
           error: true,
           code: 'MODULE_DENIED',
@@ -431,6 +450,11 @@ router.patch('/dev/:devId/status',
     try {
       var devId = req.params.devId;
       var status = req.body.status;
+
+      // 验证 devId 格式
+      if (!/^DEV-\d{3}$/.test(devId) && !/^TCS-\d{4}$/.test(devId)) {
+        return res.status(400).json({ error: true, code: 'INVALID_DEV_ID', message: '无效的开发者编号' });
+      }
 
       // 开发者只能更新自己的状态（管理者除外）
       if (req.user.devId !== devId && !req.user.permissions.includes('dev:update_all')) {
