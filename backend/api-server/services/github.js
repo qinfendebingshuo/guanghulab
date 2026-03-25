@@ -125,8 +125,97 @@ async function getWorkflowRuns(repoName, count) {
   return result;
 }
 
+// ====== 触发 GitHub Actions Workflow ======
+function triggerWorkflow(workflowFile, inputs) {
+  return new Promise(function(resolve, reject) {
+    var data = JSON.stringify({
+      ref: 'main',
+      inputs: inputs || {}
+    });
+
+    var headers = {
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'guanghu-api-server/1.0',
+      'Content-Length': Buffer.byteLength(data)
+    };
+    if (GITHUB_TOKEN) {
+      headers['Authorization'] = 'Bearer ' + GITHUB_TOKEN;
+    }
+
+    var options = {
+      hostname: 'api.github.com',
+      port: 443,
+      path: '/repos/' + ORG + '/guanghulab/actions/workflows/' + workflowFile + '/dispatches',
+      method: 'POST',
+      headers: headers
+    };
+
+    var req = https.request(options, function(res) {
+      if (res.statusCode === 204) {
+        resolve({ success: true });
+      } else {
+        var body = '';
+        res.on('data', function(chunk) { body += chunk; });
+        res.on('end', function() {
+          reject(new Error('GitHub API ' + res.statusCode + ': ' + body));
+        });
+      }
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
+// ====== 创建 GitHub 文件 ======
+function createFile(filePath, content, message) {
+  return new Promise(function(resolve, reject) {
+    var data = JSON.stringify({
+      message: message,
+      content: Buffer.from(content).toString('base64'),
+      committer: {
+        name: '铸渊 (ZhùYuān)',
+        email: 'zhuyuan@guanghulab.com'
+      }
+    });
+
+    var headers = {
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'guanghu-api-server/1.0',
+      'Content-Length': Buffer.byteLength(data)
+    };
+    if (GITHUB_TOKEN) {
+      headers['Authorization'] = 'Bearer ' + GITHUB_TOKEN;
+    }
+
+    var options = {
+      hostname: 'api.github.com',
+      port: 443,
+      path: '/repos/' + ORG + '/guanghulab/contents/' + filePath,
+      method: 'PUT',
+      headers: headers
+    };
+
+    var req = https.request(options, function(res) {
+      var body = '';
+      res.on('data', function(chunk) { body += chunk; });
+      res.on('end', function() {
+        try { resolve(JSON.parse(body)); }
+        catch (e) { resolve({ raw: body }); }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
 module.exports = {
   getRepoStatus: getRepoStatus,
   getRecentCommits: getRecentCommits,
-  getWorkflowRuns: getWorkflowRuns
+  getWorkflowRuns: getWorkflowRuns,
+  triggerWorkflow: triggerWorkflow,
+  createFile: createFile
 };
