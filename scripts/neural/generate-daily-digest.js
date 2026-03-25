@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const DIGEST_DIR = '/tmp/neural-digest';
+const CRITICAL_FAILURE_RATE_THRESHOLD = 20; // percentage - matches neural-analysis-rules.json P0 threshold
 
 function loadJSON(filePath) {
   try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); }
@@ -55,7 +56,7 @@ function generateDigest() {
   const failureRate = totalWorkflows > 0 ? (totalFailures / totalWorkflows * 100).toFixed(1) : 0;
   let overallHealth = '🟢';
   if (totalFailures > 0) overallHealth = '🟡';
-  if (parseFloat(failureRate) > 20) overallHealth = '🔴';
+  if (parseFloat(failureRate) > CRITICAL_FAILURE_RATE_THRESHOLD) overallHealth = '🔴';
 
   // ━━━ Guard 汇总 ━━━
   let guardsActive = 0, guardsSuspended = 0, guardsTotal = 0;

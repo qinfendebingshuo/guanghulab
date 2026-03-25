@@ -6,9 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const WORK_ORDER_DIR = 'data/neural-reports/work-orders';
-const COMPLETED_DIR = 'data/deploy-queue/completed';
-const TRACKER_DIR = 'data/neural-reports/work-orders';
+var WORK_ORDER_DIR = 'data/neural-reports/work-orders';
+var COMPLETED_DIR = 'data/deploy-queue/completed';
+var TRACKER_DIR = 'data/neural-reports/work-orders';
+var TERMINAL_STATUSES = ['CLOSED', 'ESCALATED', 'VERIFIED'];
 
 function loadJSON(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
@@ -32,7 +33,7 @@ function getActiveWorkOrders() {
   }
 
   return allOrders.filter(function(wo) {
-    return wo.status !== 'CLOSED' && wo.status !== 'ESCALATED' && wo.status !== 'VERIFIED';
+    return TERMINAL_STATUSES.indexOf(wo.status) === -1;
   });
 }
 

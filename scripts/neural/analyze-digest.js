@@ -5,9 +5,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const DIGEST_DIR = 'data/neural-reports/daily-digest';
 const RULES_PATH = 'skyeye/neural-analysis-rules.json';
 const WORK_ORDER_DIR = 'data/neural-reports/work-orders';
+const TERMINAL_STATUSES = ['CLOSED', 'ESCALATED', 'VERIFIED'];
 
 function loadJSON(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; }
@@ -103,7 +105,7 @@ function generateWorkOrders(digest, rules, trendAlerts) {
       var condition = rule.conditions[c];
       if (evaluateCondition(digest, condition)) {
         workOrders.push({
-          id: 'WO-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          id: 'WO-' + Date.now() + '-' + crypto.randomBytes(2).toString('hex'),
           created: now,
           source: 'neural-analysis-engine',
           source_digest: digest.digest_id,
@@ -123,7 +125,7 @@ function generateWorkOrders(digest, rules, trendAlerts) {
   for (var t = 0; t < trendAlerts.length; t++) {
     var alert = trendAlerts[t];
     workOrders.push({
-      id: 'WO-TREND-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+      id: 'WO-TREND-' + Date.now() + '-' + crypto.randomBytes(2).toString('hex'),
       created: now,
       source: 'neural-trend-detection',
       source_digest: digest.digest_id,

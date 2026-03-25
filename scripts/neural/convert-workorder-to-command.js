@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const DEPLOY_QUEUE = 'data/deploy-queue/pending';
 const NEURAL_MAP_PATH = 'skyeye/neural-map.json';
@@ -19,7 +20,7 @@ function generateCommandId() {
   var now = new Date();
   var cst = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   var date = cst.toISOString().split('T')[0].replace(/-/g, '');
-  var seq = Math.random().toString(36).substr(2, 4).toUpperCase();
+  var seq = crypto.randomBytes(2).toString('hex').toUpperCase();
   return 'CMD-' + date + '-' + seq;
 }
 
