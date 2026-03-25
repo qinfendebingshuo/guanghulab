@@ -355,15 +355,34 @@ jobs:
               # 一次性迁移：更新 root 路径（从旧的 status-board 子目录改为站点根目录）
               if grep -q 'root.*guanghulab/status-board' /etc/nginx/sites-available/default 2>/dev/null || \
                  grep -q 'root.*guanghulab/status-board' /etc/nginx/conf.d/*.conf 2>/dev/null; then
-                echo '🔄 更新 Nginx root 路径...'
+                echo '🔄 更新 Nginx root 路径（status-board → 站点根）...'
                 sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
                   /etc/nginx/sites-available/default 2>/dev/null || true
                 sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
                   /etc/nginx/conf.d/*.conf 2>/dev/null || true
                 NGINX_CHANGED=true
-                echo '✅ Nginx root 路径已更新'
+                echo '✅ Nginx root 路径已更新（status-board 迁移）'
+              fi
+
+              # 一次性迁移：修正 root 路径（从旧残留 hololake-frontend 改为 guanghulab）
+              # 根因：ZY-NGINX-ROOTFIX-2026-0325-001 · DEV-004 之之诊断
+              if grep -q 'root.*/var/www/hololake-frontend' /etc/nginx/sites-available/default 2>/dev/null || \
+                 grep -q 'root.*/var/www/hololake-frontend' /etc/nginx/conf.d/*.conf 2>/dev/null; then
+                echo '🔄 更新 Nginx root 路径（hololake-frontend → guanghulab）...'
+                sudo sed -i 's|root /var/www/hololake-frontend|root ${{ secrets.DEPLOY_PATH }}|g' \
+                  /etc/nginx/sites-available/default 2>/dev/null || true
+                sudo sed -i 's|root /var/www/hololake-frontend|root ${{ secrets.DEPLOY_PATH }}|g' \
+                  /etc/nginx/conf.d/*.conf 2>/dev/null || true
+                NGINX_CHANGED=true
+                echo '✅ Nginx root 路径已更新（hololake-frontend → guanghulab）'
+              fi
+
+              # 验证 root 路径确实正确（防御性检查）
+              if ! grep -q "root ${{ secrets.DEPLOY_PATH }}" /etc/nginx/conf.d/*.conf 2>/dev/null && \
+                 ! grep -q "root ${{ secrets.DEPLOY_PATH }}" /etc/nginx/sites-available/default 2>/dev/null; then
+                echo '⚠️ Nginx root 路径可能未正确设置，请手动检查'
               else
-                echo '✅ Nginx root 路径正确，无需修改'
+                echo '✅ Nginx root 路径正确，指向 ${{ secrets.DEPLOY_PATH }}'
               fi
 
               # 配置 API + WebSocket 反向代理
@@ -478,6 +497,49 @@ jobs:
                 fi
               else
                 echo '✅ API 反向代理已存在，无需修改'
+              fi
+
+              # 补建 _shared 目录（沙盒共享资源）
+              if [ ! -d /var/www/_shared ]; then
+                sudo mkdir -p /var/www/_shared
+                sudo chmod 755 /var/www/_shared
+                echo '✅ _shared 目录已创建'
+              fi
+
+              # 沙盒 alias 路由补充（DEV-004, DEV-005）
+              # 根因：ZY-NGINX-ROOTFIX-2026-0325-001 · 沙盒模块需通过域名访问
+              SANDBOX_CONF='/etc/nginx/snippets/guanghulab-sandbox.conf'
+              if [ ! -f \"\$SANDBOX_CONF\" ]; then
+                printf '%s\n' \
+                  '# guanghulab 沙盒路由（由 CD 工作流自动生成）' \
+                  '' \
+                  '# DEV-004 之之 · 沙盒路由' \
+                  'location /DEV-004/ {' \
+                  '    alias /var/www/DEV-004/;' \
+                  '    index index.html;' \
+                  '    try_files \$uri \$uri/ =404;' \
+                  '}' \
+                  '' \
+                  '# DEV-005 小草莓 · 沙盒路由' \
+                  'location /DEV-005/ {' \
+                  '    alias /var/www/DEV-005/;' \
+                  '    index index.html;' \
+                  '    try_files \$uri \$uri/ =404;' \
+                  '}' \
+                  | sudo tee \"\$SANDBOX_CONF\" > /dev/null
+
+                # 在 server 块中加入 sandbox include 指令
+                NGINX_MAIN=\$(grep -rl 'server_name' /etc/nginx/sites-available/ 2>/dev/null | head -1)
+                if [ -z \"\$NGINX_MAIN\" ]; then
+                  NGINX_MAIN='/etc/nginx/sites-available/default'
+                fi
+                if [ -f \"\$NGINX_MAIN\" ] && ! grep -q 'guanghulab-sandbox' \"\$NGINX_MAIN\" 2>/dev/null; then
+                  sudo sed -i '/server_name/a\\    include /etc/nginx/snippets/guanghulab-sandbox.conf;' \"\$NGINX_MAIN\" 2>/dev/null && \
+                    NGINX_CHANGED=true && echo '✅ 沙盒路由已自动配置' || \
+                    echo '⚠️ 沙盒路由自动配置失败，请手动添加'
+                fi
+              else
+                echo '✅ 沙盒路由配置已存在'
               fi
 
               # 如果有变更，验证并重新加载 Nginx
