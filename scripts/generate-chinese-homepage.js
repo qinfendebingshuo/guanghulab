@@ -59,15 +59,15 @@ function generateTeamRows(devStatus) {
   const rows = [];
 
   for (const dev of devs) {
-    const display = TEAM_DISPLAY[dev.dev_id] || {};
+    const display = TEAM_DISPLAY[dev.dev_id];
+    // Only show developers that are in the active display mapping
+    if (!display) continue;
+
     const name = display.human || dev.name;
     const ai = display.ai || '—';
     const mod = display.module || dev.module || '—';
-    const isInactive = dev.status === 'waiting_syslog' && dev.waiting?.includes('72h');
-    const statusClass = isInactive ? 'status-inactive' : 'status-active';
-    const statusText = isInactive ? '>72h 未活跃' : 'active';
 
-    rows.push(`    <tr><td>${escapeHtml(dev.dev_id)}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(ai)}</td><td>${escapeHtml(mod)}</td><td><span class="${statusClass}">${statusText}</span></td></tr>`);
+    rows.push(`    <tr><td>${escapeHtml(dev.dev_id)}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(ai)}</td><td>${escapeHtml(mod)}</td><td><span class="status-active">active</span></td></tr>`);
   }
 
   return rows.join('\n');
