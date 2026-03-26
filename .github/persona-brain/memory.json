@@ -206,5 +206,32 @@
     "receipt_dir": "data/neural-reports/receipts",
     "workflows_count": 11,
     "notion_db_env_var": "RECEIPT_DB_ID"
+  },
+  "notion_sync": {
+    "last_sync_time": "2026-03-26T00:15:00+08:00",
+    "sync_source": "AG-SY-01 霜砚",
+    "active_directives": [
+      {
+        "id": "ZY-MERGEMEMBRANE-SYNC-2026-0326-001",
+        "title": "天眼合并膜v3 双路径分离规范",
+        "priority": "P0",
+        "status": "active",
+        "summary": "双路径分离：主站docs/全审，门户docs/dev-portal/沙箱。禁碰主站关键文件。"
+      }
+    ],
+    "architecture_version": {
+      "skyeye": "v2.0 + 合并膜v3",
+      "neural_system": "v3.0",
+      "triple_architecture": "Notion+GitHub+GoogleDrive 合龙",
+      "dual_path": "主站全审 / 门户沙箱隔离"
+    },
+    "recent_incidents": [
+      {
+        "date": "2026-03-25",
+        "description": "肥猫通过语言通道误覆盖备用网站",
+        "resolution": "天眼合并膜v3上线 + Branch Protection配置",
+        "lesson": "所有PR必须过天眼审核，测试内容必须走dev-portal路径"
+      }
+    ]
   }
 }
