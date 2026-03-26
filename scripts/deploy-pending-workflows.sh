@@ -109,8 +109,9 @@ for (const filename of order) {
     // 获取文件当前 SHA（如果存在）
     let sha = '';
     try {
+      const repoName = process.env.REPO || '$REPO';
       const result = execSync(
-        'gh api repos/' + process.env.REPO || '$REPO' + '/contents/' + targetPath + ' --jq .sha 2>/dev/null',
+        'gh api repos/' + repoName + '/contents/' + targetPath + ' --jq .sha 2>/dev/null',
         { encoding: 'utf8', env: { ...process.env, GH_TOKEN: process.env.GITHUB_TOKEN } }
       ).trim();
       sha = result;
@@ -132,7 +133,7 @@ for (const filename of order) {
     fs.writeFileSync(tmpFile, JSON.stringify(apiData));
 
     execSync(
-      'gh api repos/$REPO/contents/' + targetPath + ' -X PUT --input ' + tmpFile,
+      'gh api repos/' + repoName + '/contents/' + targetPath + ' -X PUT --input ' + tmpFile,
       { encoding: 'utf8', stdio: 'pipe', env: { ...process.env, GH_TOKEN: process.env.GITHUB_TOKEN } }
     );
 

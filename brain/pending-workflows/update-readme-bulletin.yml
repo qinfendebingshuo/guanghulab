@@ -91,7 +91,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 50
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
 
       - name: 🟢 设置 Node.js
         uses: actions/setup-node@v4

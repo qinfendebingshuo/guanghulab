@@ -23,6 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

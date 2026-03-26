@@ -63,8 +63,8 @@ jobs:
 
           PENDING_COUNT=$(node -e "
             const m = require('./brain/pending-workflows/manifest.json');
-            const pending = m.pending_workflows.filter(w => w.action !== 'deployed');
-            console.log(pending.length);
+            if (m.status === 'deployed') { console.log(0); }
+            else { console.log(m.pending_workflows.length); }
           ")
 
           if [ "$PENDING_COUNT" = "0" ]; then

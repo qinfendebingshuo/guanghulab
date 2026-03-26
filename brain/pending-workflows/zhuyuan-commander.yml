@@ -27,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
