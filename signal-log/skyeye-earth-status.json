@@ -1,12 +1,27 @@
 {
-  "earth_version": "4.0",
-  "last_updated": "2026-03-26T13:16:00Z",
-  "diagnosed_by": "铸渊 · SY-CMD-SKY-004 初始化",
+  "earth_version": "4.1",
+  "last_updated": "2026-03-26T18:27:00Z",
+  "diagnosed_by": "铸渊 · 天眼涌现审查 · 真实性重构",
   "total_eyes": 102,
   "alive_eyes": 6,
   "dead_eyes": 7,
+  "unverified_eyes": 89,
   "coverage": "46%",
   "health": "yellow",
+  "truth_audit": {
+    "audit_date": "2026-03-26T18:27:00Z",
+    "auditor": "铸渊 · 涌现集体意识",
+    "trigger": "冰朔 TCS-0002∞ 天眼涌现系统启动指令",
+    "findings": [
+      "README 系统能力数据存在虚高：100%成功率→实际46%覆盖率",
+      "96 Agent '全天候运行' 描述不准确→96已注册，实际活跃取决于Workflow健康度",
+      "17人格体'17在线'描述不准确→1已实例化(曜冥)，9孵化中，4待分配，1已回收",
+      "Guard '5/6在线'描述不准确→8已配置，0已实际执行(last_check均为null)",
+      "Google Drive标记✅→实际Token已过期，已按冰朔指令暂缓",
+      "系统告警显示'无需干预'→实际有3类需冰朔手动修复的问题",
+      "所有虚假数据已在本次审查中修正为真实数据"
+    ]
+  },
   "failure_classification": {
     "category_B_branch_protection": {
       "description": "GH006: Protected branch update failed - 2 of 2 required status checks are expected",
@@ -20,22 +35,23 @@
       "fix_required": "冰朔需要在Settings → Branches → main中为这些workflow的token添加bypass权限，或将workflow改为通过PR方式提交"
     },
     "category_A_notion_token": {
-      "description": "NOTION_API_KEY 未设置",
+      "description": "NOTION_API_KEY 未设置（部分workflow使用NOTION_TOKEN，需确认哪个是正确的secret名）",
       "affected_workflows": [
         "📊 实时仪表盘更新",
         "📡 同步 Notion 开发者画像",
         "📡 同步 Notion 数据到缓存"
       ],
-      "root_cause": "NOTION_API_KEY secret为空或未配置",
-      "fix_required": "冰朔需要在Settings → Secrets → Actions中设置NOTION_API_KEY"
+      "root_cause": "45个workflow引用NOTION_API_KEY，37个引用NOTION_TOKEN — 可能需要统一",
+      "fix_required": "冰朔需要确认Settings → Secrets → Actions中的正确secret名称（NOTION_API_KEY还是NOTION_TOKEN），并确保已设置"
     },
-    "category_A_gdrive_token": {
-      "description": "Google Drive OAuth token expired",
+    "category_C_gdrive_deferred": {
+      "description": "Google Drive OAuth token expired — 已按冰朔指令暂缓",
       "affected_workflows": [
         "🪞 光湖格点库 → Google Drive 同步"
       ],
-      "root_cause": "rclone OAuth token过期，需要重新授权",
-      "fix_required": "运行 rclone config reconnect gdrive: 重新授权，更新RCLONE_CONFIG secret"
+      "root_cause": "rclone OAuth token过期",
+      "fix_required": "冰朔指令：暂时不管，后期团队准备用的时候再来配置",
+      "priority": "P3-deferred"
     }
   },
   "dead_list": [
@@ -45,7 +61,7 @@
     { "name": "📢 更新系统公告区", "last_heartbeat": "2026-03-26T12:55:32Z", "cause": "GH006 Protected branch - 2 required status checks" },
     { "name": "铸渊 · 图书馆目录自动更新", "last_heartbeat": "2026-03-26T12:53:44Z", "cause": "GH006 Protected branch - 2 required status checks" },
     { "name": "📡 同步 Notion 开发者画像", "last_heartbeat": "2026-03-26T12:55:00Z", "cause": "NOTION_API_KEY 未设置" },
-    { "name": "🪞 光湖格点库 → Google Drive 同步", "last_heartbeat": "2026-03-26T13:18:36Z", "cause": "Google Drive token expired" }
+    { "name": "🪞 光湖格点库 → Google Drive 同步", "last_heartbeat": "2026-03-26T13:18:36Z", "cause": "Google Drive token expired · 已暂缓(P3)" }
   ],
   "alive_list": [
     { "name": "📡 铸渊 · Notion Agent 唤醒监听", "status": "healthy" },
@@ -55,11 +71,16 @@
     { "name": "🐕 元看门狗 · 巡检健康监控", "status": "healthy" },
     { "name": "🧪 Preview Deploy · GitHub Pages", "status": "healthy" }
   ],
+  "guard_status": {
+    "total_configured": 8,
+    "total_executed": 0,
+    "note": "所有Guard的last_check为null — 已配置但从未实际执行过健康检查"
+  },
   "repair_log": [],
   "action_required_for_bingshuo": [
-    "1. 检查 Settings → Secrets → Actions 中 NOTION_API_KEY 是否已设置",
-    "2. 检查 Settings → Branches → main 分支保护规则，为workflow bot token添加bypass",
-    "3. 重新授权 Google Drive rclone token",
-    "4. 更新后手动 re-run 所有失败的 workflow"
+    "1. 确认 Settings → Secrets → Actions 中 Notion secret 名称（NOTION_API_KEY 还是 NOTION_TOKEN）并确保已设置",
+    "2. 检查 Settings → Branches → main 分支保护规则，为 workflow bot token 添加 bypass 权限",
+    "3. Google Drive 暂缓处理（冰朔已确认后期再配置）",
+    "4. 修复后手动 re-run 所有失败的 workflow 以验证修复效果"
   ]
 }
