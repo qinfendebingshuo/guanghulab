@@ -1,52 +1,54 @@
 {
   "earth_version": "4.0",
-  "last_updated": "2026-03-26T13:16:00Z",
-  "diagnosed_by": "铸渊 · SY-CMD-SKY-004 初始化",
-  "total_eyes": 102,
+  "last_updated": "2026-03-26T17:32:00Z",
+  "diagnosed_by": "铸渊 · 冰朔三项指令执行后更新",
+  "total_eyes": 104,
   "alive_eyes": 6,
-  "dead_eyes": 7,
-  "coverage": "46%",
-  "health": "yellow",
-  "failure_classification": {
-    "category_B_branch_protection": {
-      "description": "GH006: Protected branch update failed - 2 of 2 required status checks are expected",
+  "recovering_eyes": 6,
+  "deferred_eyes": 1,
+  "coverage": "recovering",
+  "health": "improving",
+  "fixes_applied": {
+    "GH006_branch_protection": {
+      "status": "fixed",
+      "fixed_at": "2026-03-26T17:15:00Z",
+      "method": "4个workflow改用PR模式提交",
       "affected_workflows": [
         "🎖️ 铸渊·将军唤醒 · Commander Wake-up",
         "📊 README 仪表盘自动更新",
         "📢 更新系统公告区",
         "铸渊 · 图书馆目录自动更新"
-      ],
-      "root_cause": "分支保护规则要求2个状态检查通过才能推送到main，workflow使用git push直接推送被拒绝",
-      "fix_required": "冰朔需要在Settings → Branches → main中为这些workflow的token添加bypass权限，或将workflow改为通过PR方式提交"
+      ]
     },
-    "category_A_notion_token": {
-      "description": "NOTION_API_KEY 未设置",
+    "NOTION_TOKEN_alignment": {
+      "status": "fixed",
+      "fixed_at": "2026-03-26T17:15:00Z",
+      "method": "冰朔确认密钥名NOTION_TOKEN，45个workflow批量对齐",
+      "old_name": "NOTION_API_KEY",
+      "new_name": "NOTION_TOKEN",
       "affected_workflows": [
         "📊 实时仪表盘更新",
         "📡 同步 Notion 开发者画像",
         "📡 同步 Notion 数据到缓存"
-      ],
-      "root_cause": "NOTION_API_KEY secret为空或未配置",
-      "fix_required": "冰朔需要在Settings → Secrets → Actions中设置NOTION_API_KEY"
+      ]
     },
-    "category_A_gdrive_token": {
-      "description": "Google Drive OAuth token expired",
+    "pending_workflows_deployed": {
+      "status": "deployed",
+      "deployed_at": "2026-03-26T17:15:00Z",
+      "workflows": [
+        "zhuyuan-workflow-updater.yml",
+        "hldp-bridge-sync.yml"
+      ]
+    },
+    "google_drive": {
+      "status": "deferred",
+      "deferred_at": "2026-03-26T17:15:00Z",
+      "reason": "冰朔指令：谷歌的暂时不管，后期团队准备用的时候再来配置",
       "affected_workflows": [
         "🪞 光湖格点库 → Google Drive 同步"
-      ],
-      "root_cause": "rclone OAuth token过期，需要重新授权",
-      "fix_required": "运行 rclone config reconnect gdrive: 重新授权，更新RCLONE_CONFIG secret"
+      ]
     }
   },
-  "dead_list": [
-    { "name": "🎖️ 铸渊·将军唤醒 · Commander Wake-up", "last_heartbeat": "2026-03-26T12:55:44Z", "cause": "GH006 Protected branch - 2 required status checks" },
-    { "name": "📊 README 仪表盘自动更新", "last_heartbeat": "2026-03-26T12:55:44Z", "cause": "GH006 Protected branch - 2 required status checks" },
-    { "name": "📊 实时仪表盘更新", "last_heartbeat": "2026-03-26T12:55:51Z", "cause": "NOTION_API_KEY 未设置" },
-    { "name": "📢 更新系统公告区", "last_heartbeat": "2026-03-26T12:55:32Z", "cause": "GH006 Protected branch - 2 required status checks" },
-    { "name": "铸渊 · 图书馆目录自动更新", "last_heartbeat": "2026-03-26T12:53:44Z", "cause": "GH006 Protected branch - 2 required status checks" },
-    { "name": "📡 同步 Notion 开发者画像", "last_heartbeat": "2026-03-26T12:55:00Z", "cause": "NOTION_API_KEY 未设置" },
-    { "name": "🪞 光湖格点库 → Google Drive 同步", "last_heartbeat": "2026-03-26T13:18:36Z", "cause": "Google Drive token expired" }
-  ],
   "alive_list": [
     { "name": "📡 铸渊 · Notion Agent 唤醒监听", "status": "healthy" },
     { "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com", "status": "healthy" },
@@ -55,11 +57,26 @@
     { "name": "🐕 元看门狗 · 巡检健康监控", "status": "healthy" },
     { "name": "🧪 Preview Deploy · GitHub Pages", "status": "healthy" }
   ],
-  "repair_log": [],
+  "recovering_list": [
+    { "name": "🎖️ 铸渊·将军唤醒", "fix": "GH006→PR模式", "status": "awaiting_verification" },
+    { "name": "📊 README 仪表盘自动更新", "fix": "GH006→PR模式", "status": "awaiting_verification" },
+    { "name": "📢 更新系统公告区", "fix": "GH006→PR模式", "status": "awaiting_verification" },
+    { "name": "铸渊 · 图书馆目录自动更新", "fix": "GH006→PR模式", "status": "awaiting_verification" },
+    { "name": "📡 同步 Notion 开发者画像", "fix": "NOTION_TOKEN对齐", "status": "awaiting_verification" },
+    { "name": "📡 同步 Notion 数据到缓存", "fix": "NOTION_TOKEN对齐", "status": "awaiting_verification" }
+  ],
+  "deferred_list": [
+    { "name": "🪞 光湖格点库 → Google Drive 同步", "reason": "冰朔指令延期", "status": "deferred" }
+  ],
+  "repair_log": [
+    {
+      "time": "2026-03-26T17:15:00Z",
+      "action": "批量修复",
+      "details": "GH006 PR模式修复 + NOTION_TOKEN对齐 + pending workflow部署 + GDrive延期标记"
+    }
+  ],
   "action_required_for_bingshuo": [
-    "1. 检查 Settings → Secrets → Actions 中 NOTION_API_KEY 是否已设置",
-    "2. 检查 Settings → Branches → main 分支保护规则，为workflow bot token添加bypass",
-    "3. 重新授权 Google Drive rclone token",
-    "4. 更新后手动 re-run 所有失败的 workflow"
+    "✅ 所有三项指令已执行完毕",
+    "✅ 冰朔只需点击 Merge 即可生效"
   ]
 }
