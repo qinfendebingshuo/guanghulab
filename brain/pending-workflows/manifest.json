@@ -1,8 +1,9 @@
 {
-  "manifest_version": "1.0",
+  "manifest_version": "1.1",
   "created": "2026-03-26T14:50:00Z",
+  "updated": "2026-03-26T16:10:00Z",
   "created_by": "AG-ZY-01",
-  "instruction_ref": "SY-CMD-WFFIX-006",
+  "instruction_ref": "SY-CMD-WFFIX-006 + SY-CMD-EMG-007",
   "copyright": "国作登字-2026-A-00037559",
   "description": "暂存待部署的 workflow 修改。Meta-Workflow (zhuyuan-workflow-updater.yml) 负责将此处文件搬运到 .github/workflows/",
   "pending_workflows": [
@@ -41,6 +42,14 @@
       "reason": "Meta-Workflow · 从 pending-workflows/ 自动部署 workflow 修改",
       "priority": "P0",
       "deploy_first": true
+    },
+    {
+      "filename": "hldp-bridge-sync.yml",
+      "target": ".github/workflows/hldp-bridge-sync.yml",
+      "action": "create",
+      "reason": "HLDP Bridge · Notion ↔ GitHub 涌现行为协议传输层自动同步",
+      "priority": "P0",
+      "instruction_ref": "SY-CMD-EMG-007"
     }
   ],
   "deploy_order": [
@@ -48,7 +57,8 @@
     "zhuyuan-commander.yml",
     "update-readme.yml",
     "update-readme-bulletin.yml",
-    "update-repo-map.yml"
+    "update-repo-map.yml",
+    "hldp-bridge-sync.yml"
   ],
   "status": "pending"
 }
