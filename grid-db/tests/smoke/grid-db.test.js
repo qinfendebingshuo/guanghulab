@@ -39,7 +39,8 @@ function assert(condition, message) {
  * @returns {string}
  */
 function makeTempDir(suffix) {
-  const dir = path.join(os.tmpdir(), `griddb-test-${suffix}-${Date.now()}`);
+  const { randomUUID } = require('crypto');
+  const dir = path.join(os.tmpdir(), `griddb-test-${suffix}-${randomUUID().slice(0, 8)}`);
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
