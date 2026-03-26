@@ -30,9 +30,13 @@ const ROOT = path.resolve(__dirname, '..');
 const jsonOutput = process.argv.includes('--json');
 
 function readJSON(filePath) {
+  const fullPath = path.join(ROOT, filePath);
   try {
-    return JSON.parse(fs.readFileSync(path.join(ROOT, filePath), 'utf8'));
-  } catch {
+    return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+  } catch (err) {
+    if (err.code !== 'ENOENT' && !jsonOutput) {
+      console.error(`  ⚠️ ${filePath}: ${err.message}`);
+    }
     return null;
   }
 }
