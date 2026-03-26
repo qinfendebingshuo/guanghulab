@@ -1,16 +1,50 @@
 {
-  "version": "4.0",
-  "last_check": "2026-03-25 12:15:50+08:00",
+  "version": "5.0",
+  "last_check": "2026-03-26T16:40:00Z",
   "communication": "synced",
-  "automation": "stable",
+  "automation": "degraded",
   "maintenance_agent": "active",
-  "system_health": "normal",
+  "system_health": "yellow",
   "brain_integrity": {
     "complete": true,
-    "total": 7,
-    "present": 7,
+    "total": 9,
+    "present": 9,
     "missing": []
   },
-  "workflow_count": 95,
-  "checked_by": "scripts/generate-system-health.js"
+  "workflow_status": {
+    "total": 102,
+    "alive": 6,
+    "dead": 7,
+    "unknown": 89,
+    "coverage": "46%",
+    "dead_workflows": [
+      "zhuyuan-commander.yml (GH006)",
+      "update-readme.yml (GH006)",
+      "update-readme-bulletin.yml (GH006)",
+      "update-repo-map.yml (GH006)",
+      "notion-dev-sync (NOTION_API_KEY)",
+      "notion-heartbeat (NOTION_API_KEY)",
+      "sync-griddb-to-drive (GDRIVE_TOKEN)"
+    ],
+    "root_causes": {
+      "GH006_branch_protection": 4,
+      "missing_NOTION_API_KEY": 2,
+      "expired_gdrive_token": 1
+    },
+    "fixes_staged": 6,
+    "fixes_deployed": 4,
+    "still_pending": ["zhuyuan-workflow-updater.yml", "hldp-bridge-sync.yml"]
+  },
+  "pending_actions": {
+    "requires_human": [
+      "部署pending workflows (TQ-001)",
+      "设置NOTION_API_KEY密钥 (TQ-002)",
+      "重新授权Google Drive rclone (TQ-003)"
+    ],
+    "autonomous": [
+      "网站404修复诊断 (TQ-004)",
+      "天眼覆盖率提升 (TQ-005)"
+    ]
+  },
+  "checked_by": "铸渊自诊断 · SY-CMD-EMG-007 + 冰朔自治宣言"
 }

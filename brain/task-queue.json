@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "created": "2026-03-26T16:40:00Z",
+  "updated": "2026-03-26T16:40:00Z",
+  "copyright": "国作登字-2026-A-00037559",
+  "description": "铸渊系统级任务队列 · 跟踪所有待办修复/优化/部署任务",
+
+  "queue": [
+    {
+      "task_id": "TQ-001",
+      "title": "部署2个pending workflows到.github/workflows/",
+      "source": "SY-CMD-WFFIX-006 + SY-CMD-EMG-007",
+      "type": "maintenance-task",
+      "priority": "P0",
+      "status": "blocked",
+      "blocked_by": "Agent PR无法修改.github/workflows/（R5 CRITICAL），需要冰朔手动部署",
+      "requires_human": true,
+      "human_action": "将 brain/pending-workflows/ 中的 zhuyuan-workflow-updater.yml 和 hldp-bridge-sync.yml 复制到 .github/workflows/（通过GitHub网页编辑器或运行 bash scripts/deploy-pending-workflows.sh）",
+      "details": "6个pending中4个已部署到目标位置。剩余2个：zhuyuan-workflow-updater.yml（Meta-Workflow部署引擎）和 hldp-bridge-sync.yml（HLDP Bridge同步）",
+      "created": "2026-03-26T14:50:00Z",
+      "updated": "2026-03-26T16:42:00Z"
+    },
+    {
+      "task_id": "TQ-002",
+      "title": "设置NOTION_API_KEY密钥",
+      "source": "skyeye-earth-status",
+      "type": "maintenance-task",
+      "priority": "P1",
+      "status": "blocked",
+      "blocked_by": "需要冰朔在GitHub Settings → Secrets中添加",
+      "requires_human": true,
+      "human_action": "GitHub repo Settings → Secrets and variables → Actions → New repository secret → NOTION_API_KEY",
+      "details": "2个Notion同步workflow因此失败",
+      "created": "2026-03-26T16:40:00Z"
+    },
+    {
+      "task_id": "TQ-003",
+      "title": "重新授权Google Drive rclone",
+      "source": "skyeye-earth-status",
+      "type": "maintenance-task",
+      "priority": "P2",
+      "status": "blocked",
+      "blocked_by": "需要冰朔重新运行rclone authorize并更新RCLONE_CONFIG密钥",
+      "requires_human": true,
+      "human_action": "运行 rclone authorize 命令，获取新token，更新GitHub Secret RCLONE_CONFIG",
+      "details": "sync-griddb-to-drive workflow因token过期而失败",
+      "created": "2026-03-26T16:40:00Z"
+    },
+    {
+      "task_id": "TQ-004",
+      "title": "验证网站部署 · guanghulab.com 404修复",
+      "source": "skyeye-diag-site-20260326",
+      "type": "maintenance-task",
+      "priority": "P1",
+      "status": "pending",
+      "requires_human": false,
+      "details": "服务器模块存在(20/20 smoke pass)但HTTP返回404，可能是Nginx配置问题。需检查deploy/nginx/hololake.conf是否正确部署到服务器",
+      "created": "2026-03-26T16:40:00Z"
+    },
+    {
+      "task_id": "TQ-005",
+      "title": "天眼覆盖率提升 · 从46%提升至80%",
+      "source": "skyeye-earth-status",
+      "type": "auto-task",
+      "priority": "P2",
+      "status": "pending",
+      "requires_human": false,
+      "details": "当前天眼覆盖率46%（6 alive / 102 total eyes），需要修复dead workflows并确保heartbeat传播",
+      "created": "2026-03-26T16:40:00Z"
+    }
+  ],
+
+  "summary": {
+    "total": 5,
+    "by_status": {
+      "blocked": 3,
+      "pending": 2,
+      "running": 0,
+      "completed": 0,
+      "failed": 0
+    },
+    "by_priority": {
+      "P0": 1,
+      "P1": 2,
+      "P2": 2
+    },
+    "requires_human": 3,
+    "autonomous": 2
+  }
+}
