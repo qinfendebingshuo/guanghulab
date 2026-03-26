@@ -1,0 +1,23 @@
+# 📡 README Auto-Update
+# NOTE: 此文件由 Agent PR 创建，可能需要手动合并（SkyEye R5 限制）
+name: 📡 README Auto-Update
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate README
+        run: node scripts/agents/readme-generator.js --auto
+      - name: Commit
+        run: |
+          git config user.name "铸渊 (AG-ZY-01)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "📡 README auto-update"
+          git push || true

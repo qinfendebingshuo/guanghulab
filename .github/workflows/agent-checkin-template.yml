@@ -1,0 +1,26 @@
+# 📋 Agent Checkin Template
+# NOTE: 此文件由 Agent PR 创建，可能需要手动合并（SkyEye R5 限制）
+name: 📋 Agent Checkin Template
+on:
+  workflow_call:
+    inputs:
+      agent_id:
+        required: true
+        type: string
+      script_path:
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  agent-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkin
+        run: node scripts/tianyen/agent-checkin-module.js checkin ${{ inputs.agent_id }}
+      - name: Execute
+        run: node ${{ inputs.script_path }}
+      - name: Checkout
+        if: always()
+        run: node scripts/tianyen/agent-checkin-module.js checkout ${{ inputs.agent_id }} ${{ job.status }}

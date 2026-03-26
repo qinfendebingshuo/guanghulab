@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "last_evaluation": null,
+  "agents": {
+    "AG-ZY-README": {
+      "cron": "0 */4 * * *",
+      "mode": "scheduled",
+      "reason": "建设期，首页变动频繁",
+      "min_interval": "1h",
+      "max_interval": "12h"
+    },
+    "AG-ZY-TWIN": {
+      "cron": "0 9,15,21 * * *",
+      "mode": "scheduled",
+      "reason": "EXE+GDB 双线并行，需要频繁平衡检查",
+      "min_interval": "4h",
+      "max_interval": "24h"
+    },
+    "AG-ZY-REPAIR": {
+      "cron": null,
+      "mode": "event_driven",
+      "trigger": "ci_failure OR security_alert",
+      "reason": "只在出问题时醒来"
+    }
+  }
+}

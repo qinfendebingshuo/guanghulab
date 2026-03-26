@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "rules": {
+    "L1": {
+      "name": "自动修复",
+      "types": ["test_flaky", "lint_error", "stub_missing", "format_issue"],
+      "handler": "auto_repair",
+      "notify": null
+    },
+    "L2": {
+      "name": "技术干预",
+      "types": ["test_persistent_fail", "dependency_conflict", "performance_regression", "security_alert"],
+      "handler": "manual",
+      "notify": { "target": "DEV-002-肥猫", "channel": "github_issue" }
+    },
+    "L3": {
+      "name": "架构干预",
+      "types": ["balance_long_drift", "ontology_conflict", "cross_system_architecture"],
+      "handler": "manual",
+      "notify": { "target": "TCS-0002∞-冰朔", "channel": "github_issue" }
+    }
+  },
+  "updated_at": "2026-03-26T15:00:00+08:00"
+}

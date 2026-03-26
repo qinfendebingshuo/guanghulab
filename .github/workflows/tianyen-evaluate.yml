@@ -1,0 +1,23 @@
+# 👁️ TianYen Evaluate
+# NOTE: 此文件由 Agent PR 创建，可能需要手动合并（SkyEye R5 限制）
+name: 👁️ TianYen Evaluate
+on:
+  schedule:
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TianYen Schedule Evaluation
+        run: node scripts/tianyen/scheduler.js
+      - name: Commit
+        run: |
+          git config user.name "天眼 (TIANYEN)"
+          git config user.email "tianyen@guanghulab.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "👁️ TianYen: schedule evaluation"
+          git push || true
