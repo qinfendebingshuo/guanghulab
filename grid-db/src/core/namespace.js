@@ -16,7 +16,7 @@
  * 命名空间名称规则：非空字符串，仅允许字母、数字、连字符、下划线。
  */
 
-const NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
+const NAMESPACE_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 class NamespaceManager {
   /**
@@ -128,7 +128,7 @@ class NamespaceManager {
     if (!name || typeof name !== 'string') {
       throw new Error('NamespaceManager: 命名空间名称必须是非空字符串');
     }
-    if (!NAME_PATTERN.test(name)) {
+    if (!NAMESPACE_NAME_PATTERN.test(name)) {
       throw new Error(`NamespaceManager: 命名空间名称只能包含字母、数字、连字符和下划线，收到: '${name}'`);
     }
   }

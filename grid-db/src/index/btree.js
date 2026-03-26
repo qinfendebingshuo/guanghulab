@@ -258,7 +258,7 @@ class BTree {
     const newNode = new BTreeNode(child.isLeaf);
 
     if (child.isLeaf) {
-      // 叶子节点分裂：右半部分复制到新节点，提升中间键的副本
+      // 叶子节点分裂：splice 从 mid 处截断 child，返回值作为 newNode 内容
       newNode.keys = child.keys.splice(mid);
       newNode.children = child.children.splice(mid);
 
