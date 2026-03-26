@@ -82,7 +82,7 @@ jobs:
 
       - name: DC-01 Notion Usage Snapshot
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: node scripts/dc-notion-usage.js
 
       - name: DC-02 Workflow Performance Snapshot
@@ -165,7 +165,7 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \

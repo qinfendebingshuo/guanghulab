@@ -39,7 +39,7 @@ jobs:
 
       - name: "📡 同步 Notion 数据"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_CONTROL_PANEL_DB_ID: ${{ secrets.NOTION_CONTROL_PANEL_DB_ID }}
           NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
           NOTION_AGENT_REGISTRY_DB_ID: ${{ secrets.NOTION_AGENT_REGISTRY_DB_ID }}
@@ -95,7 +95,7 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \

@@ -29,5 +29,5 @@ jobs:
       - name: 📤 回传增量到 Notion
         if: steps.changes.outputs.files != ''
         env:
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: node scripts/grid-db/sync-griddb-to-notion.js

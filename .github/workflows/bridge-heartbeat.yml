@@ -65,7 +65,7 @@ jobs:
       - name: 💓 执行心跳检测
         id: heartbeat
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
         run: node scripts/bridge/heartbeat.js
 

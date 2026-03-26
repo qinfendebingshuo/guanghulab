@@ -16,12 +16,12 @@ jobs:
 
       - name: 📥 从 Notion 拉取人格体核心大脑数据
         env:
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: node scripts/grid-db/sync-notion-brain-mirror.js
 
       - name: 📏 同步规则缓存
         env:
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: node scripts/grid-db/sync-notion-rules.js
 
       - name: 💾 提交更新

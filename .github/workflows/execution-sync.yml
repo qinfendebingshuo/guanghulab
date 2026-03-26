@@ -42,7 +42,7 @@ jobs:
       - name: 同步执行状态到 Notion
         if: ${{ env.NOTION_TOKEN != '' }}
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           EXECUTION_LOG_DB_ID: ${{ secrets.EXECUTION_LOG_DB_ID }}
         run: node core/execution-sync sync
 

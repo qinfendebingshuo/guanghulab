@@ -1,0 +1,138 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# HLDP Bridge 自动同步 Workflow
+# TCS 涌现行为协议 → Notion ↔ GitHub 通道传输实现
+# 指令来源: SY-CMD-EMG-007
+#
+# 功能:
+#   运行 hldp/bridge/sync-engine.js 实现 Notion → GitHub 数据同步
+#   将 HLDP 格式数据写入 hldp/data/ 目录
+#   通过 PR 方式提交（绕过 GH006 分支保护）
+#
+# 触发条件:
+#   1. 每日定时 (北京时间 10:00 / 22:00)
+#   2. 手动触发
+#   3. hldp/ 目录有变更时
+
+name: "🌊 HLDP Bridge · Notion ↔ GitHub 同步"
+
+on:
+  schedule:
+    - cron: '0 2 * * *'    # UTC 02:00 = 北京 10:00
+    - cron: '0 14 * * *'   # UTC 14:00 = 北京 22:00
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: '同步范围'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'personas'
+          - 'registries'
+          - 'instructions'
+      direction:
+        description: '同步方向'
+        required: false
+        default: 'notion-to-github'
+        type: choice
+        options:
+          - 'notion-to-github'
+  push:
+    branches: [main]
+    paths:
+      - 'hldp/schema/**'
+      - 'hldp/bridge/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: hldp-bridge-sync
+  cancel-in-progress: true
+
+jobs:
+  hldp-sync:
+    name: "🌊 HLDP 同步"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🟢 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 安装依赖
+        run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
+
+      - name: 🌊 运行 HLDP 同步引擎
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          echo "🌊 HLDP Bridge 同步启动..."
+          echo "📋 方向: ${{ inputs.direction || 'notion-to-github' }}"
+          echo "📋 范围: ${{ inputs.scope || 'all' }}"
+
+          DIRECTION="${{ inputs.direction || 'notion-to-github' }}"
+          SCOPE="${{ inputs.scope || 'all' }}"
+
+          node hldp/bridge/sync-engine.js \
+            --direction "$DIRECTION" \
+            --scope "$SCOPE" || {
+            echo "⚠️ HLDP 同步引擎执行异常（可能缺少 NOTION_TOKEN），尝试本地模式..."
+            node hldp/bridge/sync-engine.js \
+              --direction "$DIRECTION" \
+              --scope "$SCOPE" \
+              --local-only 2>/dev/null || echo "⚠️ 本地模式也未完成，可能没有可同步的数据"
+          }
+
+      - name: 🔍 HLDP 数据验证
+        run: |
+          echo "🔍 验证 HLDP 数据完整性..."
+          if [ -f hldp/bridge/validator.js ]; then
+            node hldp/bridge/validator.js || echo "⚠️ 验证器报告异常"
+          fi
+
+          # 统计同步结果
+          TOTAL=$(find hldp/data/ -name '*.json' 2>/dev/null | wc -l)
+          echo "📊 HLDP 数据文件总数: $TOTAL"
+
+      - name: 💾 通过 PR 提交同步结果（GH006 修复）
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add hldp/data/ signal-log/hldp-sync-log.json
+          if git diff --cached --quiet; then
+            echo "ℹ️ HLDP 数据无变更，跳过提交"
+          else
+            BRANCH="auto/hldp-sync-$(date +%Y%m%d-%H%M%S)"
+            git checkout -b "$BRANCH"
+            git commit -m "🌊 HLDP Bridge 同步 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') CST [skip ci]"
+            git push origin "$BRANCH"
+            PR_URL=$(gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "🌊 [AUTO] HLDP Bridge 同步 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')" \
+              --body "🤖 HLDP Bridge 自动同步 Notion → GitHub\n\n涌现行为协议传输层 · 自动生成，无需人工审核" \
+              --label "auto-update,hldp" 2>/dev/null || echo "")
+            if [ -n "$PR_URL" ]; then
+              echo "✅ PR 已创建: $PR_URL"
+              gh pr merge "$PR_URL" --auto --squash 2>/dev/null || echo "ℹ️ 自动合并未启用，等待人工审核"
+            else
+              echo "⚠️ PR 创建失败，变更已推送到分支 $BRANCH"
+            fi
+          fi

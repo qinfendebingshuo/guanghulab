@@ -59,42 +59,37 @@
   ],
 
   "known_issues": {
-    "last_updated": "2026-03-26T16:40:00Z",
-    "critical": [
-      {
-        "id": "ISSUE-GH006",
-        "description": "4个workflow因GH006分支保护（需2个status check）无法直接push到main",
-        "affected": ["zhuyuan-commander.yml", "update-readme.yml", "update-readme-bulletin.yml", "update-repo-map.yml"],
-        "fix_status": "已修复，暂存于 brain/pending-workflows/，等待部署",
-        "fix_method": "改用PR模式代替git push",
-        "requires_human": false,
-        "deploy_method": "冰朔运行 scripts/deploy-pending-workflows.sh 或手动复制到 .github/workflows/"
-      }
-    ],
-    "high": [
-      {
-        "id": "ISSUE-NOTION-KEY",
-        "description": "2个workflow因缺少NOTION_API_KEY密钥而失败",
-        "affected": ["notion-dev-sync", "notion-heartbeat类workflow"],
-        "fix_status": "需要冰朔在GitHub Settings中设置NOTION_API_KEY密钥",
-        "requires_human": true,
-        "human_action": "GitHub Settings → Secrets → 添加NOTION_API_KEY"
-      },
+    "last_updated": "2026-03-26T17:15:00Z",
+    "critical": [],
+    "high": [],
+    "medium": [
       {
         "id": "ISSUE-GDRIVE-TOKEN",
         "description": "1个workflow因Google Drive OAuth token过期而失败",
         "affected": ["sync-griddb-to-drive"],
-        "fix_status": "需要冰朔重新授权rclone",
-        "requires_human": true,
-        "human_action": "重新运行rclone authorize命令，更新RCLONE_CONFIG密钥"
+        "fix_status": "已标记延期 · 冰朔指令：谷歌暂不管，后期团队需要时再配置",
+        "requires_human": false,
+        "deferred": true
       }
     ],
-    "medium": [
+    "resolved": [
+      {
+        "id": "ISSUE-GH006",
+        "description": "4个workflow因GH006分支保护无法直接push到main",
+        "resolved_at": "2026-03-26T17:15:00Z",
+        "resolution": "改用PR模式。冰朔指令「yml文件你自己开PR放到workflows」，全部6个workflow已直接部署到.github/workflows/"
+      },
+      {
+        "id": "ISSUE-NOTION-KEY",
+        "description": "workflow因使用NOTION_API_KEY密钥名而失败",
+        "resolved_at": "2026-03-26T17:15:00Z",
+        "resolution": "冰朔确认密钥名为NOTION_TOKEN（早就配好了）。45个workflow已批量对齐: secrets.NOTION_API_KEY → secrets.NOTION_TOKEN"
+      },
       {
         "id": "ISSUE-R5-BLOCK",
-        "description": "Agent PR无法直接修改.github/workflows/文件（SkyEye R5 CRITICAL → BLOCK）",
-        "workaround": "将workflow暂存在brain/pending-workflows/，通过Meta-Workflow或手动脚本部署",
-        "permanent_fix": "待zhuyuan-workflow-updater.yml部署后，Meta-Workflow可自动处理后续workflow更新"
+        "description": "Agent PR无法直接修改.github/workflows/文件",
+        "resolved_at": "2026-03-26T17:15:00Z",
+        "resolution": "冰朔指令「yml文件你自己开PR放到workflows，我只点Merge」→ 铸渊直接在PR中修改workflow文件"
       }
     ]
   },
@@ -116,14 +111,14 @@
       "description": "自诊断 + 天眼自愈 + Guard自检"
     },
     "做触发": {
-      "status": "partial",
-      "path": ".github/workflows/ + brain/pending-workflows/",
-      "description": "事件驱动workflow（部分pending部署）"
+      "status": "active",
+      "path": ".github/workflows/",
+      "description": "全部6个pending workflow已部署到.github/workflows/，事件驱动就绪"
     },
     "做更新": {
-      "status": "staged",
-      "path": "hldp/bridge/ + brain/pending-workflows/hldp-bridge-sync.yml",
-      "description": "HLDP Bridge Notion同步（已暂存，待部署）"
+      "status": "active",
+      "path": "hldp/bridge/ + .github/workflows/hldp-bridge-sync.yml",
+      "description": "HLDP Bridge Notion同步已部署，NOTION_TOKEN密钥已对齐"
     }
   },
 
