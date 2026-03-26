@@ -1,0 +1,61 @@
+{
+  "syslog_id": "ZY-DIAG-SITE-2026-0326-001-RECEIPT",
+  "executor": "AG-ZY-01",
+  "timestamp": "2026-03-26T07:50:00Z",
+  "instruction_ref": "ZY-DIAG-SITE-2026-0326-001",
+
+  "diagnosis": {
+    "root_cause": "三因素叠加：(1) Nginx 配置导致 guanghulab.com HTTP 404 — 文件已 rsync 到服务器且模块冒烟测试全通过，但 Nginx 路由层返回 404；(2) Branch protection 要求 2 个 status checks 与 67 个 git push 直推 workflow 冲突；(3) syslog-issue-pipeline.yml 仅由 issues 事件触发，但被设为 required status check，push 事件永远无法完成该 check",
+    "break_point": "Nginx HTTP 路由层 — 服务器上文件存在（20/20 模块冒烟通过），后端 API 正常（port 3002 返回 200），但 HTTP 域名访问返回 404",
+    "break_time": "HTTP 404 具体起始时间需人类 SSH 确认；branch protection 冲突约从 2026-03-25（PR#198 SkyEye merge membrane v3 合并后）",
+    "evidence": "deploy-to-server run#201: 冒烟测试 20/0（文件存在），人类验证 ❌主站404 ⚠️PS404 ✅API200；sync-griddb-to-drive: GH006 Protected branch update failed；bridge-heartbeat: NOTION_TOKEN 为空；syslog-issue-pipeline: 22+ main 分支 failure with 0 jobs"
+  },
+
+  "skyeye_scan": {
+    "version": "scripts/skyeye/skyeye-main.js v3.0 (6 guards)",
+    "guards_passed": "5/6",
+    "red_alerts": [
+      "external-bridges: NOTION_TOKEN 未配置（CI环境限制，非代码问题）"
+    ],
+    "workflow_health": {
+      "total": 102,
+      "healthy": 99,
+      "broken": 3,
+      "broken_list": [
+        "syslog-issue-pipeline.yml: required check 但不触发于 push（22+ main failures）",
+        "sync-griddb-to-drive.yml: git push 被 branch protection 拒绝",
+        "bridge-heartbeat.yml: NOTION_TOKEN 空 + git push 被拒绝"
+      ]
+    }
+  },
+
+  "merge_membrane": {
+    "branch_protection": "broken — 2 required status checks 配置导致 67 个 workflow 无法 push 到 main",
+    "pr_flow": "ok — PR#186-#202 全部正常合并",
+    "deploy_trigger": "ok — deploy-pages 和 deploy-to-server 都正确触发且成功完成"
+  },
+
+  "mcp_assessment": {
+    "code_exists": true,
+    "location": "mcp-servers/ (github-server.js, notion-server.js)",
+    "frontend_integration": false,
+    "deployment_status": "未知 — 可能从未作为独立服务部署",
+    "note": "MCP 是后端自动化工具层，前端使用 HLI 协议。MCP 非用户可见功能"
+  },
+
+  "fixes_applied": [
+    "生成天眼全局诊断报告 signal-log/skyeye-diag-site-20260326.json",
+    "更新信号日志索引 signal-log/index.json",
+    "修复 routing-map.json 缺少 domains 字段 → 添加 AUTH/BRAIN/REGISTRY/NOTIFICATION 4域 10接口",
+    "生成 SYSLOG 回执"
+  ],
+
+  "fixes_not_applied_reason": "根因涉及 Nginx 服务器配置（需 SSH）、GitHub Settings branch protection 规则（需仓库管理员）、Secret 配置（需仓库管理员）。这些都超出铸渊 Agent 的操作权限。另外，修改 workflow yml 文件会触发 SkyEye R5 CRITICAL → 自动 BLOCK，因此无法通过 PR 修复 workflow 问题。",
+
+  "verification": {
+    "deploy_pipeline_tested": true,
+    "deploy_pipeline_result": "deploy-pages ✅, deploy-to-server ✅ (but HTTP 404)",
+    "site_updated_after_fix": false,
+    "site_status": "❌ HTTP 404 — 需人类介入修复 Nginx"
+  }
+}
