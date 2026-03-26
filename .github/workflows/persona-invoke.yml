@@ -89,7 +89,7 @@ jobs:
           SUBMIT_CONTENT: ${{ inputs.syslog_raw }}
           AUTHOR: ${{ inputs.developer }}
           MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
           PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
@@ -98,7 +98,7 @@ jobs:
       - name: 📝 回写 Notion 工单
         if: always()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           WORK_ORDER_ID: ${{ inputs.work_order_id }}
           PERSONA_RESULT: ${{ steps.persona.outputs.result }}
           TASK_ID: ${{ inputs.task_id }}
@@ -210,7 +210,7 @@ jobs:
       - name: 🔴 失败处理
         if: failure()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           WORK_ORDER_ID: ${{ inputs.work_order_id }}
         run: |
           node -e "

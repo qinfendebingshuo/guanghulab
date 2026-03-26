@@ -158,13 +158,13 @@ jobs:
 
       - name: "📥 Phase B · Notion 端级联升级"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: |
           node skyeye/hibernation/weekly-hibernation.js --phase=B
 
       - name: "✅ Dual Verification"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: |
           node skyeye/hibernation/weekly-hibernation.js --phase=verify
 

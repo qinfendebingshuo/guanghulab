@@ -41,7 +41,7 @@ jobs:
       - name: 🧪 执行连通性测试
         id: test
         env:
-          NOTION_TOKEN:      ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN:      ${{ secrets.NOTION_TOKEN }}
           SIGNAL_LOG_DB_ID:  ${{ vars.SIGNAL_LOG_DB_ID }}
           CHANGES_DB_ID:     ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
           SYSLOG_DB_ID:      ${{ secrets.NOTION_SYSLOG_DB_ID }}

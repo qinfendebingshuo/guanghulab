@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "created": "2026-03-26T16:40:00Z",
+  "updated": "2026-03-26T16:40:00Z",
+  "copyright": "国作登字-2026-A-00037559",
+  "description": "铸渊系统级任务队列 · 跟踪所有待办修复/优化/部署任务",
+
+  "queue": [
+    {
+      "task_id": "TQ-001",
+      "title": "部署6个pending workflows到.github/workflows/",
+      "source": "SY-CMD-WFFIX-006 + SY-CMD-EMG-007",
+      "type": "maintenance-task",
+      "priority": "P0",
+      "status": "completed",
+      "completed_at": "2026-03-26T17:15:00Z",
+      "resolution": "冰朔指令「yml文件你自己开PR放到workflows」→ 铸渊直接在PR中部署全部6个workflow到.github/workflows/，冰朔只需点Merge",
+      "details": "zhuyuan-workflow-updater.yml + hldp-bridge-sync.yml 已部署。此前4个GH006修复的workflow也已就位。"
+    },
+    {
+      "task_id": "TQ-002",
+      "title": "Notion密钥变量名对齐",
+      "source": "冰朔确认 · 2026-03-26",
+      "type": "maintenance-task",
+      "priority": "P1",
+      "status": "completed",
+      "completed_at": "2026-03-26T17:15:00Z",
+      "resolution": "冰朔确认仓库密钥名为 NOTION_TOKEN（早就配好了）。铸渊批量修复45个workflow：secrets.NOTION_API_KEY → secrets.NOTION_TOKEN",
+      "details": "47个workflow现在统一使用 secrets.NOTION_TOKEN。Notion相关workflow将在Merge后恢复正常。"
+    },
+    {
+      "task_id": "TQ-003",
+      "title": "Google Drive rclone（已标记延期）",
+      "source": "冰朔指令 · 2026-03-26",
+      "type": "maintenance-task",
+      "priority": "P3",
+      "status": "deferred",
+      "deferred_reason": "冰朔指令：「谷歌的暂时不管，目前还用不上，请你标记，后期团队准备用的时候再来配置」",
+      "deferred_at": "2026-03-26T17:15:00Z",
+      "details": "sync-griddb-to-drive workflow因token过期而失败。标记为延期，后期团队需要时再配置。"
+    },
+    {
+      "task_id": "TQ-004",
+      "title": "验证网站部署 · guanghulab.com 404修复",
+      "source": "skyeye-diag-site-20260326",
+      "type": "maintenance-task",
+      "priority": "P1",
+      "status": "pending",
+      "requires_human": false,
+      "details": "服务器模块存在(20/20 smoke pass)但HTTP返回404，可能是Nginx配置问题。需检查deploy/nginx/hololake.conf是否正确部署到服务器",
+      "created": "2026-03-26T16:40:00Z"
+    },
+    {
+      "task_id": "TQ-005",
+      "title": "天眼覆盖率提升 · 从46%提升至80%",
+      "source": "skyeye-earth-status",
+      "type": "auto-task",
+      "priority": "P2",
+      "status": "pending",
+      "requires_human": false,
+      "details": "当前天眼覆盖率46%（6 alive / 102 total eyes），需要修复dead workflows并确保heartbeat传播",
+      "created": "2026-03-26T16:40:00Z"
+    }
+  ],
+
+  "summary": {
+    "total": 5,
+    "by_status": {
+      "completed": 2,
+      "deferred": 1,
+      "pending": 2,
+      "blocked": 0,
+      "running": 0,
+      "failed": 0
+    },
+    "by_priority": {
+      "P0": 1,
+      "P1": 2,
+      "P2": 1,
+      "P3": 1
+    },
+    "requires_human": 0,
+    "autonomous": 2,
+    "deferred": 1
+  }
+}

@@ -17,7 +17,7 @@ jobs:
 
       - name: ⚙️ 处理 inbox 消息
         env:
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: node scripts/grid-db/process-inbox.js
 
       - name: 💾 提交处理结果

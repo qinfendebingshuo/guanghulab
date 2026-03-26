@@ -85,7 +85,7 @@ jobs:
       - name: 📡 轮询 Notion 唤醒请求数据库
         id: poll
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           WAKE_REQUEST_DB_ID: ${{ secrets.WAKE_REQUEST_DB_ID }}
           SIGNAL_LOG_DB_ID: ${{ secrets.SIGNAL_LOG_DB_ID }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}

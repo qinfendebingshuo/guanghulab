@@ -107,7 +107,7 @@ jobs:
           AUTHOR: notion-callback
           MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
           NOTION_CALLBACK_RESULT: ${{ steps.callback.outputs.notion_result }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
           PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
@@ -125,7 +125,7 @@ jobs:
       - name: 📝 回写 Notion 工单状态
         if: steps.callback.outputs.ticket_id
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           TICKET_ID: ${{ steps.callback.outputs.ticket_id }}
           CALLBACK_STATUS: ${{ steps.callback.outputs.status }}
         run: |

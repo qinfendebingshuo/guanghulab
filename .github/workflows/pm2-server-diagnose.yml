@@ -299,7 +299,7 @@ jobs:
       # ━━━ 阶段三：生成 Notion 诊断报告 ━━━
       - name: "📋 阶段三 · 写入 Notion 工单"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID || '84edd0640bf146a9a5a7840107013e8c' }}
           PM2_REPORT: ${{ steps.pm2_diagnose.outputs.pm2_report }}
           CLEANUP_REPORT: ${{ steps.pm2_cleanup.outputs.cleanup_report }}

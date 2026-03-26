@@ -42,7 +42,7 @@ jobs:
 
       - name: 💓 执行心跳检测
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SMTP_USER: ${{ secrets.SMTP_USER }}

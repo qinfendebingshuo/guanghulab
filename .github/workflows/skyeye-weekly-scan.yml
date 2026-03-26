@@ -55,7 +55,7 @@ jobs:
 
       - name: "📡 Sync arch summary to Notion via Bridge E"
         env:
-          NOTION_TOKEN:     ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN:     ${{ secrets.NOTION_TOKEN }}
           CHANGES_DB_ID:    ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
           EVENT_TYPE:       commit
           COMMIT_SHA:       ${{ github.sha }}
@@ -101,7 +101,7 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \

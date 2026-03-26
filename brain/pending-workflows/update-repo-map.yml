@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# GH006 修复: git push → PR 模式
+# 修复指令: SY-CMD-WFFIX-006
+name: 铸渊 · 图书馆目录自动更新
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * *'   # UTC 00:00 = 北京时间 08:00 每日更新
+  workflow_dispatch:        # 手动触发
+
+jobs:
+  update-repo-map:
+    name: 📚 更新图书馆目录
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 生成 repo-map.json + repo-snapshot.md
+        run: node scripts/generate-repo-map.js
+
+      - name: 通过 PR 提交图书馆目录更新（GH006 修复）
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          git config user.name "铸渊 (ZhùYuān)"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add .github/brain/repo-map.json .github/brain/repo-snapshot.md
+          if git diff --cached --quiet; then
+            echo "📚 图书馆目录无变化，跳过提交"
+          else
+            BRANCH="auto/repo-map-$(date +%Y%m%d-%H%M%S)"
+            git checkout -b "$BRANCH"
+            git commit -m "📚 铸渊图书馆目录更新 · $(date +%Y-%m-%dT%H:%M)"
+            git push origin "$BRANCH"
+            PR_URL=$(gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "📚 [AUTO] 图书馆目录更新 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')" \
+              --body "🤖 铸渊自动更新图书馆目录 (repo-map.json + repo-snapshot.md)\n\n自动生成，无需人工审核" \
+              --label "auto-update" 2>/dev/null || echo "")
+            if [ -n "$PR_URL" ]; then
+              echo "✅ PR 已创建: $PR_URL"
+              gh pr merge "$PR_URL" --auto --squash 2>/dev/null || echo "ℹ️ 自动合并未启用，等待人工审核"
+            else
+              echo "⚠️ PR 创建失败，变更已推送到分支 $BRANCH"
+            fi
+          fi

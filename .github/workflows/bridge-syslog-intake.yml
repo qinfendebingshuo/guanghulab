@@ -67,7 +67,7 @@ jobs:
       - name: 📥 批量处理 SYSLOG
         id: process
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
           SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
           COMMIT_SHA: ${{ github.sha }}

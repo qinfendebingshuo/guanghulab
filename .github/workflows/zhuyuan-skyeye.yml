@@ -55,7 +55,7 @@ jobs:
 
       - name: "📡 Phase 1.6 · 拉取 Agent 集群公告板"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
         run: |
           echo "[BRIDGE-BULLETIN-READ] 🔄 拉取 Agent 集群公告板"
@@ -65,7 +65,7 @@ jobs:
       - name: "🦅 Phase 2 · 全局扫描"
         id: scan
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
@@ -107,7 +107,7 @@ jobs:
       - name: "🔧 Phase 4 · 修复Agent"
         if: steps.diagnose.outputs.auto_fixable != '0'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node scripts/skyeye/repair-agent.js
@@ -184,7 +184,7 @@ jobs:
       - name: "📡 Phase 7 · 同步到 Notion"
         if: always()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
           SKYEYE_PERSONA_DB_ID: ${{ secrets.SKYEYE_PERSONA_DB_ID }}
         run: |
@@ -249,7 +249,7 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \

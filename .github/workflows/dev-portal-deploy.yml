@@ -112,7 +112,7 @@ jobs:
       - name: 📡 同步开发者动态到 Notion
         if: steps.detect.outputs.skip != 'true' && env.NOTION_API_KEY != ''
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           DEV_PROFILE_DB_ID: ${{ secrets.DEV_PROFILE_DB_ID }}
         run: |
           node scripts/skyeye/dev-portal-notion-sync.js \

@@ -1,16 +1,67 @@
 {
-  "version": "4.0",
-  "last_check": "2026-03-25 12:15:50+08:00",
+  "version": "5.1",
+  "last_check": "2026-03-26T17:15:00Z",
   "communication": "synced",
-  "automation": "stable",
+  "automation": "recovering",
   "maintenance_agent": "active",
-  "system_health": "normal",
+  "system_health": "improving",
   "brain_integrity": {
     "complete": true,
-    "total": 7,
-    "present": 7,
+    "total": 9,
+    "present": 9,
     "missing": []
   },
-  "workflow_count": 95,
-  "checked_by": "scripts/generate-system-health.js"
+  "workflow_status": {
+    "total": 104,
+    "alive": 6,
+    "dead": 1,
+    "recovering": 6,
+    "unknown": 91,
+    "coverage": "46%",
+    "fixed_this_session": [
+      "zhuyuan-workflow-updater.yml (新部署 · Meta-Workflow引擎)",
+      "hldp-bridge-sync.yml (新部署 · HLDP Bridge同步)",
+      "45个workflow密钥修复: secrets.NOTION_API_KEY → secrets.NOTION_TOKEN"
+    ],
+    "dead_workflows": [
+      "sync-griddb-to-drive (GDRIVE_TOKEN · 已标记延期，后期配置)"
+    ],
+    "recovering_workflows": [
+      "zhuyuan-commander.yml (GH006已修复 · PR模式)",
+      "update-readme.yml (GH006已修复 · PR模式)",
+      "update-readme-bulletin.yml (GH006已修复 · PR模式)",
+      "update-repo-map.yml (GH006已修复 · PR模式)",
+      "notion-heartbeat (NOTION_TOKEN密钥名已对齐)",
+      "其他Notion类workflow (NOTION_TOKEN密钥名已对齐)"
+    ],
+    "root_causes": {
+      "GH006_branch_protection": "已修复 · 4个workflow改用PR模式",
+      "missing_NOTION_API_KEY": "已修复 · 冰朔确认密钥名为NOTION_TOKEN，45个workflow已对齐",
+      "expired_gdrive_token": "已标记延期 · 冰朔指令暂不处理"
+    },
+    "fixes_staged": 6,
+    "fixes_deployed": 6,
+    "still_pending": []
+  },
+  "notion_secret": {
+    "confirmed_name": "NOTION_TOKEN",
+    "confirmed_by": "冰朔 · 2026-03-26",
+    "note": "冰朔原话：「NOTION_TOKEN 早就配好了」。已从 NOTION_API_KEY 统一更名。"
+  },
+  "gdrive_status": {
+    "status": "deferred",
+    "deferred_by": "冰朔 · 2026-03-26",
+    "note": "冰朔原话：「谷歌的暂时不管，目前还用不上，后期团队准备用的时候再来配置」"
+  },
+  "pending_actions": {
+    "requires_human": [],
+    "autonomous": [
+      "网站404修复诊断 (TQ-004)",
+      "天眼覆盖率提升 (TQ-005)"
+    ],
+    "deferred": [
+      "Google Drive rclone配置 (TQ-003 · 后期团队需要时)"
+    ]
+  },
+  "checked_by": "铸渊 · 冰朔三项指令执行"
 }

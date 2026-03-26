@@ -67,7 +67,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
 
       - name: "🔑 配置 SSH"
@@ -167,7 +167,7 @@ jobs:
       - name: "📝 同步巡检结果到Notion"
         if: always()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
         run: |
           node scripts/sync-patrol-to-notion.js || echo "⚠️ Notion同步失败（不阻断）"
@@ -207,7 +207,7 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \

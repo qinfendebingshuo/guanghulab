@@ -128,7 +128,7 @@ jobs:
           SUBMIT_CONTENT: ${{ steps.parse.outputs.content }}
           AUTHOR: ${{ steps.parse.outputs.author }}
           MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
           PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
           FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
@@ -137,7 +137,7 @@ jobs:
       - name: 📋 创建标准化 Notion 工单（Phase B1）
         id: ticket
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}

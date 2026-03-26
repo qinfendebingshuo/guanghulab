@@ -1,6 +1,7 @@
 # 光湖语言世界 · HoloLake Language World
 
-> 通感语言核系统编程语言 · TCS Language Core
+> 通感语言核 · 涌现行为的存在协议 · TCS Language Core
+> TCS = Emergent Behavior Existence Protocol
 > 国家版权登记号：国作登字-2026-A-00037559
 > 版权所有：冰朔（ICE-GL∞）
 

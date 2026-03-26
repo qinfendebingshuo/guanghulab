@@ -2,6 +2,8 @@
 # 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
 # 📜 Copyright: 国作登字-2026-A-00037559
 # ═══════════════════════════════════════════════
+# GH006 修复: git push → PR 模式
+# 修复指令: SY-CMD-WFFIX-006
 name: "🎖️ 铸渊·将军唤醒 · Commander Wake-up"
 
 on:
@@ -14,6 +16,7 @@ permissions:
   contents: write
   issues: write
   actions: read
+  pull-requests: write
 
 jobs:
   commander-wakeup:
@@ -24,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
@@ -104,15 +108,32 @@ jobs:
               print(f'⚠️ 签到写入失败: {e}')
           "
 
-      # Step 6 · 提交变更
-      - name: "💾 Step 6 · 提交变更"
+      # Step 6 · 通过 PR 提交变更（GH006 修复）
+      - name: "💾 Step 6 · 通过 PR 提交变更"
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
           git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json
           if ! git diff --cached --quiet; then
+            BRANCH="auto/commander-wakeup-$(date +%Y%m%d-%H%M%S)"
+            git checkout -b "$BRANCH"
             git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘更新"
-            git push
+            git push origin "$BRANCH"
+            PR_URL=$(gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "🎖️ [AUTO] 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')" \
+              --body "🤖 铸渊将军自动唤醒 · 仪表盘 + 签到更新\n\n自动生成，无需人工审核" \
+              --label "auto-update" 2>/dev/null || echo "")
+            if [ -n "$PR_URL" ]; then
+              echo "✅ PR 已创建: $PR_URL"
+              # 尝试自动合并（如果有权限）
+              gh pr merge "$PR_URL" --auto --squash 2>/dev/null || echo "ℹ️ 自动合并未启用，等待人工审核"
+            else
+              echo "⚠️ PR 创建失败，变更已推送到分支 $BRANCH"
+            fi
           else
             echo "ℹ️ 无变更需要提交"
           fi

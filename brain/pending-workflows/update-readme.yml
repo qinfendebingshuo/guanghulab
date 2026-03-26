@@ -1,0 +1,152 @@
+# ━━━ 铸渊自动更新 README 仪表盘 ━━━
+# 每日自动更新：仪表盘 + 共生动态 + 联邦状态
+# Agent: AG-ZY-087 · update-readme.yml
+# Parent: SYS-GLW-0001 · Owner: ICE-0002∞
+# GH006 修复: git push → PR 模式
+# 修复指令: SY-CMD-WFFIX-006
+
+name: 📊 README 仪表盘自动更新
+
+on:
+  schedule:
+    # 每日 08:00 CST = 00:00 UTC
+    - cron: '0 0 * * *'
+    # 每日 20:00 CST = 12:00 UTC
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📊 Update Dashboard Data
+        run: |
+          echo "📊 开始更新 README 仪表盘..."
+
+          # ── 收集实时统计 ──
+          WORKFLOW_COUNT=$(find .github/workflows -name '*.yml' -o -name '*.yaml' 2>/dev/null | wc -l)
+          AGENT_COUNT=$(node -e "try{const d=require('./.github/persona-brain/agent-registry.json');console.log(d.agents?d.agents.length:0)}catch(e){console.log(0)}")
+          PERSONA_COUNT=$(node -e "try{const d=require('./.github/persona-brain/persona-registry.json');console.log(d.personas?d.personas.length:0)}catch(e){console.log(0)}")
+          GUARD_COUNT=$(find skyeye/guards -name '*.json' ! -name 'template*' 2>/dev/null | wc -l)
+          MODULE_COUNT=$(find . -maxdepth 1 -type d -name 'm[0-9]*' 2>/dev/null | wc -l)
+          BUFFER_COUNT=$(find buffer/inbox -type f ! -name '.gitkeep' 2>/dev/null | wc -l)
+
+          echo "Workflows: $WORKFLOW_COUNT"
+          echo "Agents: $AGENT_COUNT"
+          echo "Personas: $PERSONA_COUNT"
+          echo "Guards: $GUARD_COUNT"
+          echo "Modules: $MODULE_COUNT"
+          echo "Buffer: $BUFFER_COUNT"
+
+          # ── 更新 data/system-health.json ──
+          NOW=$(date -u -d '+8 hours' '+%Y-%m-%dT%H:%M:%S+08:00')
+          if [ -f data/system-health.json ]; then
+            node -e "
+              const fs = require('fs');
+              try {
+                const health = JSON.parse(fs.readFileSync('data/system-health.json', 'utf8'));
+                health.last_updated = '$NOW';
+                health.metrics.workflows.total = $WORKFLOW_COUNT;
+                health.metrics.ai_personas.total = $PERSONA_COUNT;
+                health.metrics.guards.total = $GUARD_COUNT;
+                health.metrics.guards.active = $GUARD_COUNT;
+                health.metrics.modules.total = $MODULE_COUNT;
+                health.metrics.buffer_pending = $BUFFER_COUNT;
+                fs.writeFileSync('data/system-health.json', JSON.stringify(health, null, 2) + '\n');
+                console.log('✅ system-health.json 已更新');
+              } catch (e) {
+                console.error('⚠️ system-health.json 更新失败: ' + e.message);
+              }
+            "
+          else
+            echo "⚠️ data/system-health.json 不存在，跳过更新"
+          fi
+
+          # ── 更新 README 中的 shields.io 徽章数字 ──
+          sed -i "s|Workflows-[0-9]*-0969da|Workflows-${WORKFLOW_COUNT}-0969da|g" README.md
+          sed -i "s|Agents-[0-9]*-8957e5|Agents-${AGENT_COUNT}-8957e5|g" README.md
+          sed -i "s|Personas-[0-9]*-e85aad|Personas-${PERSONA_COUNT}-e85aad|g" README.md
+          sed -i "s|Modules-[0-9]*-f9a825|Modules-${MODULE_COUNT}-f9a825|g" README.md
+
+          echo "✅ README 徽章数字已更新"
+
+      - name: 🌍 Update Federation Status
+        run: |
+          echo "🌍 更新联邦状态..."
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+
+            const spokeDir = 'spoke-status';
+            if (!fs.existsSync(spokeDir)) {
+              console.log('⚠️ spoke-status/ 目录不存在，跳过');
+              process.exit(0);
+            }
+
+            const files = fs.readdirSync(spokeDir).filter(f => f.startsWith('DEV-') && f.endsWith('.json'));
+            const now = Date.now();
+            const DAY_MS = 24 * 60 * 60 * 1000;
+
+            for (const file of files) {
+              try {
+                const data = JSON.parse(fs.readFileSync(path.join(spokeDir, file), 'utf8'));
+                if (data.last_checkin) {
+                  const checkinTime = new Date(data.last_checkin).getTime();
+                  const diff = now - checkinTime;
+                  if (diff > 72 * DAY_MS) {
+                    data.status = 'alert_72h';
+                  } else if (diff > DAY_MS) {
+                    data.status = 'warning_24h';
+                  } else {
+                    data.status = 'active';
+                  }
+                  fs.writeFileSync(path.join(spokeDir, file), JSON.stringify(data, null, 2) + '\n');
+                }
+              } catch (e) {
+                console.log('⚠️ 跳过 ' + file + ': ' + e.message);
+              }
+            }
+            console.log('✅ 联邦状态检查完成');
+          "
+
+      - name: 📤 通过 PR 提交更新（GH006 修复）
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          git config user.name "铸渊 (ZhuYuan Bot)"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/system-health.json README.md spoke-status/
+          if git diff --cached --quiet; then
+            echo "📋 无变更，跳过提交"
+          else
+            BRANCH="auto/readme-dashboard-$(date +%Y%m%d-%H%M%S)"
+            git checkout -b "$BRANCH"
+            git commit -m "📊 铸渊: 仪表盘自动更新 $(date -u -d '+8 hours' '+%Y-%m-%d %H:%M') CST [skip ci]"
+            git push origin "$BRANCH"
+            PR_URL=$(gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "📊 [AUTO] 仪表盘更新 · $(date -u -d '+8 hours' '+%Y-%m-%d %H:%M') CST" \
+              --body "🤖 铸渊自动更新 README 仪表盘 + 联邦状态\n\n自动生成，无需人工审核" \
+              --label "auto-update" 2>/dev/null || echo "")
+            if [ -n "$PR_URL" ]; then
+              echo "✅ PR 已创建: $PR_URL"
+              gh pr merge "$PR_URL" --auto --squash 2>/dev/null || echo "ℹ️ 自动合并未启用，等待人工审核"
+            else
+              echo "⚠️ PR 创建失败，变更已推送到分支 $BRANCH"
+            fi
+          fi

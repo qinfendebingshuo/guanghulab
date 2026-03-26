@@ -45,7 +45,7 @@ jobs:
 
       - name: 📖 读取 Notion 页面内容
         env:
-          NOTION_TOKEN:      ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN:      ${{ secrets.NOTION_TOKEN }}
           NOTION_PAGE_URL:   ${{ github.event.client_payload.notion_page_url || github.event.inputs.notion_page_url }}
           NOTION_OUTPUT_DIR: ${{ (github.event.client_payload.save_to_repo == 'true' || github.event.inputs.save_to_repo == 'true') && 'data/notion-pages' || '' }}
         run: node scripts/notion-page-reader.js
