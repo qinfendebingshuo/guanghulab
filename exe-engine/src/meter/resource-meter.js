@@ -187,8 +187,8 @@ class ResourceMeter {
         records: this._records.slice(-500),
         summary: this._summary
       }, null, 2));
-    } catch {
-      // 写入失败不阻断主流程
+    } catch (err) {
+      this._lastPersistError = err.message;
     }
   }
 
@@ -203,8 +203,8 @@ class ResourceMeter {
           this._rebuildSummary();
         }
       }
-    } catch {
-      // 加载失败则从空开始
+    } catch (err) {
+      this._lastLoadError = err.message;
     }
   }
 }

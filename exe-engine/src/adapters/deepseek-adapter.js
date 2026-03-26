@@ -110,8 +110,9 @@ class DeepSeekAdapter extends BaseAdapter {
       });
 
       this._healthy = true;
-    } catch {
+    } catch (err) {
       this._healthy = false;
+      this._lastHealthError = err.message;
     }
     this._lastHealthCheck = new Date().toISOString();
     return this._healthy;

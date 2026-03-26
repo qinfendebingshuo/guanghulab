@@ -242,7 +242,9 @@ class AGERouter {
         _failover: true,
         _originalError: originalError.message
       };
-    } catch {
+    } catch (failoverErr) {
+      // Failover also failed - return null to trigger error response
+      this._lastFailoverError = failoverErr.message;
       return null;
     }
   }
