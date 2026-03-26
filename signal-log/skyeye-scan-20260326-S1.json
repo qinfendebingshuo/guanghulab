@@ -1,0 +1,87 @@
+{
+  "scan_id": "SKYEYE-SCAN-20260326-S1",
+  "instruction": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+  "timestamp": "2026-03-26T11:37:52Z",
+  "executor": "AG-ZY-01 铸渊",
+  "skyeye_version": "3.0.0",
+  "trigger": "Phase S0 · 天眼系统全局启动",
+  "config_loaded": {
+    "config_file": "skyeye/config.json",
+    "guard_rules_file": "skyeye/guard-rules.json",
+    "version": "3.0.0",
+    "status": "✅ 已加载"
+  },
+  "guard_scan_results": {
+    "workflow_guard": {
+      "status": "🟡",
+      "total_workflows": 102,
+      "healthy": 102,
+      "failing": 0,
+      "cron_conflicts": 11,
+      "issues": [
+        "11 组 cron 冲突（P2 · 不阻塞）"
+      ]
+    },
+    "secret_guard": {
+      "status": "🟡",
+      "note": "Secrets 在 GitHub 侧已配置，CI 环境无法直接验证",
+      "configured_secrets": [
+        "DEPLOY_HOST", "DEPLOY_USER", "DEPLOY_KEY", "DEPLOY_PATH",
+        "NOTION_TOKEN", "LLM_API_KEY", "LLM_BASE_URL",
+        "SMTP_USER", "SMTP_PASS"
+      ],
+      "security_protocol": {
+        "exists": true,
+        "root_rules_intact": true,
+        "level": "L0",
+        "copyright_anchor": true
+      }
+    },
+    "file_integrity_guard": {
+      "status": "✅",
+      "core_dirs_intact": true,
+      "protected_dirs": ["docs/", ".github/persona-brain/", "skyeye/", "signal-log/"],
+      "orphan_files": 97,
+      "orphan_severity": "P2"
+    },
+    "brain_guard": {
+      "status": "✅",
+      "memory_fresh": true,
+      "routing_map_aligned": true,
+      "dev_status_sync": "2026-03-25T23:03:22+08:00",
+      "knowledge_base_entries": 3
+    },
+    "merge_membrane_guard": {
+      "status": "🟡",
+      "branch_protection": "已开启（需人工验证详细规则）",
+      "pr_review_workflow": "skyeye-pr-risk-check.yml 存在",
+      "merge_watchdog": "merge-watchdog.yml 存在",
+      "note": "合并膜 v3 双路径分离已部署"
+    },
+    "deploy_guard": {
+      "status": "🟡",
+      "server_ip": "8.155.62.235",
+      "domain": "guanghulab.com",
+      "nginx_config": "deploy/nginx/dev-sandbox.conf 已更新",
+      "note": "服务器端部署需人工执行 scripts/deploy-sandbox-server.sh"
+    }
+  },
+  "overall_status": "🟡",
+  "red_alerts": 0,
+  "yellow_alerts": 4,
+  "summary": "天眼 v3.0 已启动 · 配置文件已创建 · 6 项守卫扫描完成 · 无 RED 阻塞项 · 4 项 YELLOW 需关注（cron 冲突 / Secret 验证 / 合并膜详细规则 / 服务器部署）",
+  "next_actions": [
+    {
+      "priority": "P1",
+      "action": "人工执行 scripts/deploy-sandbox-server.sh 部署沙箱到服务器"
+    },
+    {
+      "priority": "P2",
+      "action": "清理 97 个孤儿文件"
+    },
+    {
+      "priority": "P2",
+      "action": "分散 11 组 cron 冲突的 workflow 执行时间"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "system": "天眼系统 · SkyEye",
+  "version": "3.0.0",
+  "version_codename": "数字地球将军",
+  "copyright": "国作登字-2026-A-00037559",
+  "sovereign": "TCS-0002∞ · ICE-GL∞",
+  "guardian": "AG-ZY-01 铸渊",
+  "activated_at": "2026-03-26T11:37:00+08:00",
+  "instruction": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+  "scan_modules": [
+    {
+      "id": "M-SCAN-WF",
+      "name": "Workflow 守卫",
+      "script": "scripts/skyeye/scan-workflows.js",
+      "output": "workflow-health.json",
+      "schedule": "daily + on_demand"
+    },
+    {
+      "id": "M-SCAN-STRUCT",
+      "name": "文件完整性守卫",
+      "script": "scripts/skyeye/scan-structure.js",
+      "output": "structure-health.json",
+      "schedule": "daily + on_demand"
+    },
+    {
+      "id": "M-SCAN-BRAIN",
+      "name": "人格体大脑守卫",
+      "script": "scripts/skyeye/scan-brain-health.js",
+      "output": "brain-health.json",
+      "schedule": "daily + on_demand"
+    },
+    {
+      "id": "M-SCAN-SEC",
+      "name": "Secret 守卫",
+      "script": "scripts/skyeye/scan-security-protocol.js",
+      "output": "security-health.json",
+      "schedule": "daily + on_demand"
+    },
+    {
+      "id": "M-SCAN-BRIDGE",
+      "name": "桥接守卫",
+      "script": "scripts/skyeye/scan-external-bridges.js",
+      "output": "bridge-health.json",
+      "schedule": "daily + on_demand"
+    },
+    {
+      "id": "M-SCAN-SFP",
+      "name": "安全指纹守卫",
+      "script": "scripts/skyeye/scan-bulletin-sfp.js",
+      "output": "sfp-health.json",
+      "schedule": "daily + on_demand"
+    },
+    {
+      "id": "M-SCAN-SOLDIER",
+      "name": "小兵健康守卫",
+      "script": "scripts/skyeye/scan-soldier-health.js",
+      "output": "soldier-health.json",
+      "schedule": "daily + on_demand"
+    }
+  ],
+  "orchestrator": "scripts/skyeye/skyeye-main.js",
+  "report_generator": "scripts/skyeye/report-generator.js",
+  "diagnose_engine": "scripts/skyeye/diagnose.js",
+  "repair_agent": "scripts/skyeye/repair-agent.js",
+  "output_dir": "/tmp/skyeye",
+  "signal_log_dir": "signal-log",
+  "guard_rules": "skyeye/guard-rules.json",
+  "guards_dir": "skyeye/guards",
+  "merge_membrane": {
+    "version": "v3.0",
+    "dual_path": true,
+    "main_site_full_audit": true,
+    "dev_portal_sandbox": true,
+    "pr_risk_check": "scripts/skyeye/pr-risk-check.js"
+  },
+  "alert_config": {
+    "red_alert_max_retries": 3,
+    "alert_email": "565183519@qq.com",
+    "escalation": "P0 工单 + 邮件告警"
+  },
+  "timezone": "Asia/Shanghai"
+}

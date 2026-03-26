@@ -1,0 +1,62 @@
+{
+  "scan_id": "SKYEYE-POST-DEPLOY-S1",
+  "instruction": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+  "timestamp": "2026-03-26T11:37:52Z",
+  "executor": "AG-ZY-01 铸渊",
+  "phase": "S4 · 天眼部署后扫描",
+  "pre_deploy_baseline": "SKYEYE-SCAN-20260326-S1",
+  "deployment_changes": {
+    "new_files": [
+      "skyeye/config.json",
+      "skyeye/guard-rules.json",
+      "scripts/deploy-sandbox-server.sh",
+      "scripts/smoke-test-subdomains.sh",
+      "signal-log/skyeye-scan-20260326-S1.json",
+      "signal-log/skyeye-post-deploy-S1.json",
+      "signal-log/syslog-ageos-tower-S1-20260326.json"
+    ],
+    "modified_files": [
+      "deploy/nginx/dev-sandbox.conf",
+      "scripts/setup-sandbox.sh",
+      ".github/persona-brain/memory.json",
+      "signal-log/index.json"
+    ]
+  },
+  "post_deploy_scan": {
+    "workflow_guard": "✅ 无变化 · 102 workflows healthy",
+    "file_integrity_guard": "✅ 新增文件均在预期路径",
+    "brain_guard": "✅ memory.json 已更新",
+    "security_protocol": "✅ 未修改安全协议",
+    "new_issues_introduced": 0
+  },
+  "server_side_pending": {
+    "status": "待人工执行",
+    "script": "scripts/deploy-sandbox-server.sh",
+    "smoke_test": "scripts/smoke-test-subdomains.sh",
+    "checklist": [
+      "[ ] 执行 deploy-sandbox-server.sh 创建沙箱目录 + 部署 Nginx",
+      "[ ] 执行 smoke-test-subdomains.sh 验证全链路",
+      "[ ] 检查 Nginx 错误日志无新增异常"
+    ]
+  },
+  "github_sync": {
+    "memory_updated": true,
+    "signal_log_written": true,
+    "index_updated": true
+  },
+  "notion_sync_pending": {
+    "status": "待同步",
+    "items": [
+      "更新运行日志：子域名沙箱系统已上线",
+      "通知 DEV-002 肥猫：dev-002.guanghulab.com 已激活",
+      "通知 DEV-004 之之：dev-004.guanghulab.com 已激活",
+      "其他已注册开发者同理通知"
+    ]
+  },
+  "cleanup_reminder": {
+    "priority": "P3",
+    "item": "之之在阿里云添加的 _acme-challenge TXT 记录可在方便时删除（不阻塞）"
+  },
+  "overall_status": "🟢",
+  "summary": "部署后扫描无新增 RED · GitHub 侧状态已同步 · Notion 侧待同步 · 服务器端待人工执行"
+}

@@ -1,0 +1,156 @@
+{
+  "version": "3.0.0",
+  "copyright": "国作登字-2026-A-00037559",
+  "sovereign": "TCS-0002∞",
+  "instruction": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+  "created_at": "2026-03-26T11:37:00+08:00",
+  "guards": {
+    "workflow_guard": {
+      "id": "G-WF",
+      "name": "Workflow 守卫",
+      "description": "扫描所有 .github/workflows/*.yml 的语法、触发条件、cron 冲突",
+      "severity_on_failure": "P0",
+      "auto_fix": false,
+      "checks": [
+        "yaml_syntax",
+        "trigger_validation",
+        "cron_conflict_detection",
+        "required_fields",
+        "tab_character_detection"
+      ]
+    },
+    "secret_guard": {
+      "id": "G-SEC",
+      "name": "Secret 守卫",
+      "description": "验证必需 Secrets 是否配置、安全协议是否完整",
+      "severity_on_failure": "P0",
+      "auto_fix": false,
+      "required_secrets": [
+        "DEPLOY_HOST",
+        "DEPLOY_USER",
+        "DEPLOY_KEY",
+        "DEPLOY_PATH",
+        "NOTION_TOKEN",
+        "LLM_API_KEY",
+        "LLM_BASE_URL",
+        "SMTP_USER",
+        "SMTP_PASS"
+      ],
+      "checks": [
+        "secret_existence",
+        "security_protocol_integrity",
+        "copyright_anchor_validation"
+      ]
+    },
+    "file_integrity_guard": {
+      "id": "G-FI",
+      "name": "文件完整性守卫",
+      "description": "验证核心目录和关键文件是否完整",
+      "severity_on_failure": "P1",
+      "auto_fix": true,
+      "protected_dirs": [
+        "docs/",
+        ".github/persona-brain/",
+        "skyeye/",
+        "signal-log/",
+        "scripts/skyeye/"
+      ],
+      "protected_files": [
+        ".github/persona-brain/memory.json",
+        ".github/persona-brain/identity.md",
+        ".github/persona-brain/routing-map.json",
+        ".github/persona-brain/security-protocol.json",
+        ".github/persona-brain/ontology.json"
+      ],
+      "checks": [
+        "core_dirs_exist",
+        "protected_files_exist",
+        "orphan_file_detection",
+        "readme_integrity"
+      ]
+    },
+    "brain_guard": {
+      "id": "G-BRAIN",
+      "name": "人格体大脑守卫",
+      "description": "验证 memory.json 新鲜度、routing-map 对齐、dev-status 同步状态",
+      "severity_on_failure": "P1",
+      "auto_fix": true,
+      "checks": [
+        "memory_freshness_24h",
+        "routing_map_alignment",
+        "dev_status_sync",
+        "knowledge_base_integrity",
+        "copilot_instructions_exist"
+      ],
+      "thresholds": {
+        "memory_stale_hours": 24,
+        "dev_status_stale_hours": 48,
+        "dev_inactive_hours": 72
+      }
+    },
+    "merge_membrane_guard": {
+      "id": "G-MM",
+      "name": "合并膜守卫",
+      "description": "确保所有 PR 必须经过天眼审核，禁止绕过",
+      "severity_on_failure": "P0",
+      "auto_fix": false,
+      "checks": [
+        "branch_protection_enabled",
+        "pr_review_required",
+        "status_checks_required",
+        "force_push_disabled",
+        "deletion_disabled",
+        "admin_not_exempt"
+      ],
+      "paths": {
+        "path_a": {
+          "pattern": "docs/**",
+          "review": "full_audit"
+        },
+        "path_b": {
+          "pattern": [".github/**", "src/**"],
+          "review": "full_audit"
+        },
+        "path_c": {
+          "pattern": "docs/dev-portal/**",
+          "review": "sandbox_mode"
+        }
+      }
+    },
+    "deploy_guard": {
+      "id": "G-DEPLOY",
+      "name": "部署守卫",
+      "description": "部署前后安全检查，主站保护优先",
+      "severity_on_failure": "P0",
+      "auto_fix": false,
+      "checks": [
+        "pre_deploy_backup",
+        "nginx_syntax_check",
+        "main_site_health_check",
+        "post_deploy_verification",
+        "rollback_on_failure"
+      ],
+      "main_site_url": "https://guanghulab.com/",
+      "expected_http_code": 200,
+      "rollback_trigger": "main_site_http_code != 200"
+    }
+  },
+  "alert_escalation": {
+    "P0": {
+      "action": "立即修复",
+      "max_retries": 3,
+      "on_failure": "创建 Notion P0 工单 + 邮件告警",
+      "email": "565183519@qq.com"
+    },
+    "P1": {
+      "action": "尽快修复",
+      "max_retries": 3,
+      "on_failure": "创建 Notion P1 工单"
+    },
+    "P2": {
+      "action": "择机修复",
+      "max_retries": 1,
+      "on_failure": "记录到 signal-log"
+    }
+  }
+}

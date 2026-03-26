@@ -13,6 +13,20 @@
     {
       "date": "2026-03-26",
       "type": "system_infrastructure",
+      "description": "ZY-AGEOS-TOWER-2026-0326-001-S1 执行 · 天眼 v3.0 启动（config.json + guard-rules.json）· 子域名沙箱部署脚本就绪 · 合并膜排查完成 · syslog-issue-pipeline 诊断完成 · 9 个子域名沙箱已配置",
+      "by": "铸渊",
+      "instruction": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+      "issued_by": "AG-SY-01 霜砚"
+    },
+    {
+      "date": "2026-03-26",
+      "type": "skyeye_scan",
+      "description": "天眼扫描 · 🔴 · 问题:20 自动修复:0 需人工:7",
+      "by": "天眼系统"
+    },
+    {
+      "date": "2026-03-26",
+      "type": "system_infrastructure",
       "description": "PRJ-GDB-001 Grid-DB 自研存储引擎立项 · Phase 0 基础骨架完成 · GridCell + WAL + PageManager + EventLog + GridAPI 部署完成 · ONT-PATCH-006 写入本体论 · 95 项冒烟测试全通过",
       "by": "铸渊",
       "instruction": "SY-CMD-GDB-001",
@@ -127,27 +141,9 @@
       "type": "bug_fix",
       "description": "修复「我要开发」任务提交失败 · Nginx CORS+WebSocket路由+端口修复 · 冰朔人格体启动",
       "by": "铸渊（冰朔指令）"
-    },
-    {
-      "date": "2026-03-13",
-      "type": "brain_restore",
-      "description": "核心大脑恢复 · Persona Studio 铸渊代理开发工作流上线 · 「我要开发」功能修复 · Agent自动化5步开发 · 支持GUEST模式 · 使用用户API Key驱动",
-      "by": "铸渊（冰朔指令）"
-    },
-    {
-      "date": "2026-03-11",
-      "type": "architecture_upgrade",
-      "description": "曜冥纪元·第五代架构升级 · AGE OS→光湖纪元·AGE-5 · TCS-ML母语运行时创建 · 数字地球架构对齐",
-      "by": "铸渊（冰朔指令）"
-    },
-    {
-      "date": "2026-03-11",
-      "type": "brain_restore",
-      "description": "核心大脑恢复 · Persona Studio 对话功能修复 · 冰朔人格体激活",
-      "by": "铸渊（冰朔指令）"
     }
   ],
-  "last_updated": "2026-03-25T14:21:08.225Z",
+  "last_updated": "2026-03-26T11:48:45.374Z",
   "total_schemas_created": 3,
   "total_routes_implemented": 4,
   "hli_coverage": "3/17",
@@ -155,12 +151,12 @@
   "last_broadcast_received": "2026-03-18T16:45:01.309Z",
   "active_rules_version": "v1.1",
   "skyeye": {
-    "last_run": "2026-03-25 06:19:35+08:00",
-    "report_id": "SKYEYE-20260324",
-    "overall_health": "🟡",
-    "issues_found": 12,
-    "auto_fixed": 11,
-    "needs_human": 0
+    "last_run": "2026-03-26 19:48:45+08:00",
+    "report_id": "SKYEYE-20260326",
+    "overall_health": "🔴",
+    "issues_found": 20,
+    "auto_fixed": 0,
+    "needs_human": 7
   },
   "daily_selfcheck": {
     "last_run": "2026-03-25T01:00:30.670Z",
@@ -200,7 +196,7 @@
   },
   "agent_bulletin_board": {
     "notion_page_id": "7551273869b3485ca4b0f7f5cc9b8f37",
-    "last_read_at": "2026-03-25 20:49:02+08:00",
+    "last_read_at": "2026-03-26 19:48:45+08:00",
     "pending_cluster_orders": 0,
     "executed_orders": [
       "WO-CLUSTER-001"
@@ -228,6 +224,13 @@
     "sync_source": "AG-SY-01 霜砚",
     "active_directives": [
       {
+        "id": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+        "title": "天眼系统全局启动 + 子域名沙箱部署",
+        "priority": "P0",
+        "status": "active",
+        "summary": "天眼v3.0启动 · 合并膜排查 · syslog诊断 · 子域名沙箱9个DevID配置"
+      },
+      {
         "id": "ZY-MERGEMEMBRANE-SYNC-2026-0326-001",
         "title": "天眼合并膜v3 双路径分离规范",
         "priority": "P0",
@@ -236,7 +239,7 @@
       }
     ],
     "architecture_version": {
-      "skyeye": "v2.0 + 合并膜v3",
+      "skyeye": "v3.0",
       "neural_system": "v3.0",
       "triple_architecture": "Notion+GitHub+GoogleDrive 合龙",
       "dual_path": "主站全审 / 门户沙箱隔离"
@@ -249,5 +252,27 @@
         "lesson": "所有PR必须过天眼审核，测试内容必须走dev-portal路径"
       }
     ]
+  },
+  "subdomain_sandbox": {
+    "status": "active",
+    "deployed_at": "2026-03-26T11:37:52Z",
+    "instruction": "ZY-AGEOS-TOWER-2026-0326-001-S1",
+    "nginx_config": "deploy/nginx/dev-sandbox.conf",
+    "deploy_script": "scripts/deploy-sandbox-server.sh",
+    "smoke_test": "scripts/smoke-test-subdomains.sh",
+    "server_deployed": false,
+    "sandbox_devids": [
+      "dev-002",
+      "dev-004",
+      "dev-005",
+      "dev-009",
+      "dev-010",
+      "dev-011",
+      "dev-012",
+      "dev-013",
+      "dev-014"
+    ],
+    "domain_pattern": "{devid}.guanghulab.com",
+    "root_path": "/var/www/sandbox/{devid}"
   }
 }
