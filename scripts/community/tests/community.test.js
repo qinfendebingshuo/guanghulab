@@ -107,7 +107,7 @@ const ms1 = getMilestone(0);
 assert(ms1.milestone === null, 'getMilestone(0): 尚未达到任何里程碑');
 
 const ms7 = getMilestone(7);
-assert(ms7.milestone !== null && ms7.milestone.includes('一周年'), 'getMilestone(7): 一周年里程碑');
+assert(ms7.milestone !== null && ms7.milestone.includes('一周'), 'getMilestone(7): 一周里程碑');
 
 const ms100 = getMilestone(100);
 assert(ms100.milestone !== null && ms100.milestone.includes('百日'), 'getMilestone(100): 百日里程碑');

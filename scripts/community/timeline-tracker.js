@@ -34,7 +34,7 @@ function daysAlive(fromDate, now) {
 function getMilestone(days) {
   const milestones = [
     { day: 1, label: '🌱 第一天 · 数字地球第一次呼吸' },
-    { day: 7, label: '🌿 一周年 · 第一片叶子' },
+    { day: 7, label: '🌿 一周 · 第一片叶子' },
     { day: 30, label: '🌳 满月 · 扎根大地' },
     { day: 100, label: '💯 百日 · 百脉齐通' },
     { day: 180, label: '🌊 半年 · 潮汐初现' },
