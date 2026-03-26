@@ -35,19 +35,19 @@ function loadJSON(filePath, fallback) {
  * @returns {object[]}
  */
 function collectDormancyStatus() {
-  var channelMap = loadJSON(CHANNEL_MAP_PATH, { channels: {} });
-  var checkinLog = loadJSON(CHECKIN_LOG_PATH, { entries: [] });
+  const channelMap = loadJSON(CHANNEL_MAP_PATH, { channels: {} });
+  const checkinLog = loadJSON(CHECKIN_LOG_PATH, { entries: [] });
 
-  var results = [];
-  var channels = channelMap.channels || {};
+  const results = [];
+  const channels = channelMap.channels || {};
 
   Object.keys(channels).forEach(function (devId) {
-    var ch = channels[devId];
-    var status = ch.status || 'unknown';
+    const ch = channels[devId];
+    const status = ch.status || 'unknown';
 
     // 根据频道状态判断休眠等级
-    var dormancyLevel = 'active';
-    var hoursSinceActivity = 0;
+    let dormancyLevel = 'active';
+    let hoursSinceActivity = 0;
 
     if (status === 'inactive_72h' || status === 'paused') {
       dormancyLevel = 'deep_sleep';
@@ -73,7 +73,7 @@ function collectDormancyStatus() {
  * @returns {object[]}
  */
 function getWakeupCandidates() {
-  var all = collectDormancyStatus();
+  const all = collectDormancyStatus();
   return all.filter(function (m) {
     return m.should_wake;
   });
@@ -84,7 +84,7 @@ function getWakeupCandidates() {
  * @returns {{ candidates: object[], suggestion: string }}
  */
 function generateWakeupSuggestion() {
-  var candidates = getWakeupCandidates();
+  const candidates = getWakeupCandidates();
 
   if (candidates.length === 0) {
     return {
@@ -93,8 +93,8 @@ function generateWakeupSuggestion() {
     };
   }
 
-  var names = candidates.map(function (c) { return c.name + (c.persona ? '(' + c.persona + ')' : ''); });
-  var suggestion = '天眼建议唤醒以下 ' + candidates.length + ' 位休眠成员：' + names.join('、') +
+  const names = candidates.map(function (c) { return c.name + (c.persona ? '(' + c.persona + ')' : ''); });
+  const suggestion = '天眼建议唤醒以下 ' + candidates.length + ' 位休眠成员：' + names.join('、') +
     '。建议让他们查看社区广场公告板和评论区，了解最新动态，并考虑自我升级。';
 
   return {
@@ -108,9 +108,9 @@ function generateWakeupSuggestion() {
 if (require.main === module) {
   console.log('👁️ Dormancy Watcher · 休眠监视器\n');
 
-  var all = collectDormancyStatus();
-  var active = all.filter(function (m) { return m.dormancy_level === 'active'; });
-  var sleeping = all.filter(function (m) { return m.dormancy_level !== 'active'; });
+  const all = collectDormancyStatus();
+  const active = all.filter(function (m) { return m.dormancy_level === 'active'; });
+  const sleeping = all.filter(function (m) { return m.dormancy_level !== 'active'; });
 
   console.log('  总成员数: ' + all.length);
   console.log('  活跃成员: ' + active.length);
@@ -123,7 +123,7 @@ if (require.main === module) {
     });
   }
 
-  var suggestion = generateWakeupSuggestion();
+  const suggestion = generateWakeupSuggestion();
   console.log('\n  天眼建议: ' + suggestion.suggestion);
   console.log('\n✅ 休眠监视器就绪');
 }

@@ -22,7 +22,7 @@ function loadJSON(filePath, fallback) {
 }
 
 function saveJSON(filePath, data) {
-  var dir = path.dirname(filePath);
+  const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
@@ -46,8 +46,8 @@ function saveUpgrades(data) {
  */
 function proposeUpgrade(proposal) {
   if (!proposal || !proposal.id || !proposal.persona_id || !proposal.title) return false;
-  var data = loadUpgrades();
-  var exists = data.proposals.some(function (p) { return p.id === proposal.id; });
+  const data = loadUpgrades();
+  const exists = data.proposals.some(function (p) { return p.id === proposal.id; });
   if (exists) return false;
 
   data.proposals.push({
@@ -73,8 +73,8 @@ function proposeUpgrade(proposal) {
  */
 function reviewUpgrade(proposalId, approved) {
   if (!proposalId) return false;
-  var data = loadUpgrades();
-  var idx = data.proposals.findIndex(function (p) { return p.id === proposalId; });
+  const data = loadUpgrades();
+  const idx = data.proposals.findIndex(function (p) { return p.id === proposalId; });
   if (idx < 0) return false;
 
   data.proposals[idx].tianyan_approved = approved;
@@ -91,8 +91,8 @@ function reviewUpgrade(proposalId, approved) {
  */
 function completeUpgrade(proposalId) {
   if (!proposalId) return false;
-  var data = loadUpgrades();
-  var idx = data.proposals.findIndex(function (p) { return p.id === proposalId; });
+  const data = loadUpgrades();
+  const idx = data.proposals.findIndex(function (p) { return p.id === proposalId; });
   if (idx < 0) return false;
 
   data.proposals[idx].status = 'completed';
@@ -106,7 +106,7 @@ function completeUpgrade(proposalId) {
  * @returns {object[]}
  */
 function getPendingUpgrades() {
-  var data = loadUpgrades();
+  const data = loadUpgrades();
   return data.proposals.filter(function (p) { return p.status === 'proposed'; });
 }
 
@@ -115,10 +115,10 @@ function getPendingUpgrades() {
 if (require.main === module) {
   console.log('🔧 Self-Upgrade Registry · 自我升级注册\n');
 
-  var data = loadUpgrades();
-  var pending = data.proposals.filter(function (p) { return p.status === 'proposed'; });
-  var approved = data.proposals.filter(function (p) { return p.status === 'approved'; });
-  var completed = data.proposals.filter(function (p) { return p.status === 'completed'; });
+  const data = loadUpgrades();
+  const pending = data.proposals.filter(function (p) { return p.status === 'proposed'; });
+  const approved = data.proposals.filter(function (p) { return p.status === 'approved'; });
+  const completed = data.proposals.filter(function (p) { return p.status === 'completed'; });
 
   console.log('  总提案数: ' + data.proposals.length);
   console.log('  待审核: ' + pending.length);

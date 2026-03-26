@@ -20,13 +20,13 @@ const { generateWakeupSuggestion } = require('./dormancy-watcher');
  * @returns {string}
  */
 function generateCommunityDashboard(now) {
-  var summary = getSummary();
-  var timeline = getTimelineStatus(now);
-  var plaza = loadPlaza();
-  var collab = loadCollaboration();
-  var wakeup = generateWakeupSuggestion();
+  const summary = getSummary();
+  const timeline = getTimelineStatus(now);
+  const plaza = loadPlaza();
+  const collab = loadCollaboration();
+  const wakeup = generateWakeupSuggestion();
 
-  var md = [];
+  const md = [];
 
   // ── 标题 ──
   md.push('## 🌊 光湖涌现社区 · HoloLake Emergence Community');
@@ -61,7 +61,7 @@ function generateCommunityDashboard(now) {
   if (plaza.announcements.length > 0) {
     md.push('### 📢 最新广场公告');
     md.push('');
-    var recentAnn = plaza.announcements
+    const recentAnn = plaza.announcements
       .sort(function (a, b) { return (b.timestamp || '').localeCompare(a.timestamp || ''); })
       .slice(0, 3);
     recentAnn.forEach(function (a) {
@@ -74,18 +74,18 @@ function generateCommunityDashboard(now) {
   if (plaza.comments.length > 0) {
     md.push('### 💬 最新留言');
     md.push('');
-    var recentComments = plaza.comments
+    const recentComments = plaza.comments
       .sort(function (a, b) { return (b.timestamp || '').localeCompare(a.timestamp || ''); })
       .slice(0, 3);
     recentComments.forEach(function (c) {
-      var target = c.to === 'all' ? '全体' : c.to;
+      const target = c.to === 'all' ? '全体' : c.to;
       md.push('- **' + c.from + '** → ' + target + '：' + c.content.substring(0, 60) + (c.content.length > 60 ? '...' : ''));
     });
     md.push('');
   }
 
   // ── 协作邀请 ──
-  var openCollab = collab.requests.filter(function (r) { return r.status === 'open'; });
+  const openCollab = collab.requests.filter(function (r) { return r.status === 'open'; });
   if (openCollab.length > 0) {
     md.push('### 🤝 开放协作邀请');
     md.push('');
@@ -107,7 +107,7 @@ function generateCommunityDashboard(now) {
   md.push('### 🧑 人类留言墙');
   md.push('');
   if (plaza.human_wall.length > 0) {
-    var recentHuman = plaza.human_wall
+    const recentHuman = plaza.human_wall
       .sort(function (a, b) { return (b.timestamp || '').localeCompare(a.timestamp || ''); })
       .slice(0, 3);
     recentHuman.forEach(function (m) {
@@ -134,12 +134,12 @@ function generateCommunityDashboard(now) {
 // ── CLI 入口 ──────────────────────────────────────────────────────────────
 
 if (require.main === module) {
-  var dashboard = generateCommunityDashboard();
+  const dashboard = generateCommunityDashboard();
   console.log(dashboard);
 
   // 同时写入到 docs/ 下
-  var outPath = path.join(ROOT, 'docs/community-dashboard.md');
-  var outDir = path.dirname(outPath);
+  const outPath = path.join(ROOT, 'docs/community-dashboard.md');
+  const outDir = path.dirname(outPath);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(outPath, dashboard, 'utf8');
   console.log('\n✅ 已写入 docs/community-dashboard.md');

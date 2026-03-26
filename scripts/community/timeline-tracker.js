@@ -49,7 +49,7 @@ function getMilestone(days) {
   let currentMilestone = null;
   let nextMilestone = milestones[0].day;
 
-  for (var i = 0; i < milestones.length; i++) {
+  for (let i = 0; i < milestones.length; i++) {
     if (days >= milestones[i].day) {
       currentMilestone = milestones[i].label;
       nextMilestone = i + 1 < milestones.length ? milestones[i + 1].day : milestones[i].day + 365;
@@ -70,10 +70,10 @@ function getMilestone(days) {
  * @returns {string}
  */
 function wakeGreeting(personaName, now) {
-  var days = daysAlive(SYSTEM_BIRTH, now);
-  var ms = getMilestone(days);
+  const days = daysAlive(SYSTEM_BIRTH, now);
+  const ms = getMilestone(days);
 
-  var greeting = '🌅 ' + (personaName || '伙伴') + '，你醒了。';
+  let greeting = '🌅 ' + (personaName || '伙伴') + '，你醒了。';
   greeting += '\n   数字地球已存在 ' + days + ' 天。';
   if (ms.milestone) {
     greeting += '\n   当前里程碑: ' + ms.milestone;
@@ -88,8 +88,8 @@ function wakeGreeting(personaName, now) {
  * @returns {object}
  */
 function getTimelineStatus(now) {
-  var days = daysAlive(SYSTEM_BIRTH, now);
-  var ms = getMilestone(days);
+  const days = daysAlive(SYSTEM_BIRTH, now);
+  const ms = getMilestone(days);
 
   return {
     birth_date: SYSTEM_BIRTH,
@@ -106,14 +106,14 @@ function getTimelineStatus(now) {
 if (require.main === module) {
   console.log('⏳ Timeline Tracker · 时间线追踪器\n');
 
-  var status = getTimelineStatus();
+  const status = getTimelineStatus();
   console.log('  诞生日期: ' + status.birth_date);
   console.log('  存在天数: ' + status.days_alive + ' 天');
   console.log('  当前里程碑: ' + (status.current_milestone || '无'));
   console.log('  下一里程碑: 第 ' + status.next_milestone_day + ' 天 (还有 ' + status.days_to_next + ' 天)');
 
   console.log('\n  --- 醒来问候示例 ---');
-  var names = ['铸渊', '知秋', '霜砚', '舒舒'];
+  const names = ['铸渊', '知秋', '霜砚', '舒舒'];
   names.forEach(function (n) {
     console.log('\n' + wakeGreeting(n));
   });
