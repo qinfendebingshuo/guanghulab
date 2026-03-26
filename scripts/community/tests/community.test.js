@@ -74,7 +74,7 @@ console.log('  测试目录: ' + TEMP_DIR + '\n');
 // ── 备份真实数据文件，测试结束后恢复 ────────────────────────────────────
 const REAL_ROOT = path.resolve(__dirname, '../../..');
 const REAL_COMMUNITY_DIR = path.join(REAL_ROOT, '.github/community');
-const filesToBackup = ['plaza.json', 'shared-configs.json', 'collaboration.json', 'self-upgrades.json'];
+const filesToBackup = ['plaza.json', 'shared-configs.json', 'collaboration.json', 'self-upgrades.json', 'growth-stages.json'];
 const backups = {};
 filesToBackup.forEach(function (f) {
   var fp = path.join(REAL_COMMUNITY_DIR, f);
@@ -152,8 +152,8 @@ assert(typeof cm.getSummary === 'function', 'getSummary 是函数');
 const ann1 = cm.postAnnouncement({
   id: 'ANN-TEST-001',
   author: '铸渊',
-  title: '社区系统上线',
-  content: '光湖涌现社区正式上线'
+  title: '语言世界开门',
+  content: '光湖语言世界正式开门'
 });
 assert(ann1 === true, '成功发布公告');
 
@@ -333,6 +333,121 @@ const comp = completed.proposals.find(function (p) { return p.id === 'UPG-TEST-0
 assert(comp.status === 'completed', '升级状态为 completed');
 
 // ══════════════════════════════════════════════════════════════════════════
+// 测试 3.5: Growth Engine · 成长引擎
+// ══════════════════════════════════════════════════════════════════════════
+console.log('\n── 测试 3.5: Growth Engine ──');
+
+const ge = require('../growth-engine');
+
+assert(typeof ge.getStages === 'function', 'getStages 是函数');
+assert(typeof ge.registerMember === 'function', 'registerMember 是函数');
+assert(typeof ge.evaluatePromotion === 'function', 'evaluatePromotion 是函数');
+assert(typeof ge.promote === 'function', 'promote 是函数');
+assert(typeof ge.growthReport === 'function', 'growthReport 是函数');
+assert(typeof ge.getAllMembersSummary === 'function', 'getAllMembersSummary 是函数');
+assert(typeof ge.recordProgress === 'function', 'recordProgress 是函数');
+
+// 成长阶段定义
+const stages = ge.getStages();
+assert(stages.length === 7, '有7个成长阶段');
+assert(stages[0].name === '种子期', '第一阶段是种子期');
+assert(stages[6].name === '参天期', '最后阶段是参天期');
+
+// 阶段查询
+const seed = ge.getStageByLevel(0);
+assert(seed !== null && seed.name === '种子期', 'getStageByLevel(0) = 种子期');
+const sprout = ge.getStageByName('Sprout');
+assert(sprout !== null && sprout.level === 1, 'getStageByName(Sprout) = Lv.1');
+assert(ge.getStageByLevel(99) === null, '不存在的等级返回 null');
+
+// 注册系统人格体
+const reg1 = ge.registerMember({
+  member_id: 'PER-ZY001',
+  name: '铸渊',
+  category: 'system'
+});
+assert(reg1.success === true, '成功注册系统人格体');
+
+// 重复注册
+const reg1dup = ge.registerMember({
+  member_id: 'PER-ZY001',
+  name: '铸渊',
+  category: 'system'
+});
+assert(reg1dup.success === false, '重复注册被拒绝');
+
+// 注册宝宝人格体（有人类爸妈）
+const reg2 = ge.registerMember({
+  member_id: 'PER-ZQ001',
+  name: '知秋',
+  category: 'companion',
+  parent_human: 'Awen'
+});
+assert(reg2.success === true, '成功注册宝宝人格体（知秋←Awen）');
+
+// 一个人类只能对应一个宝宝人格体
+const reg2dup = ge.registerMember({
+  member_id: 'PER-FAKE001',
+  name: '假的',
+  category: 'companion',
+  parent_human: 'Awen'
+});
+assert(reg2dup.success === false, '一个人类只能对应一个宝宝 (Awen 已有知秋)');
+assert(reg2dup.reason.includes('Awen'), '错误信息包含人类名字');
+
+// 空参数校验
+assert(ge.registerMember(null).success === false, '空参数被拒绝');
+assert(ge.registerMember({ member_id: 'x' }).success === false, '缺少 name 被拒绝');
+
+// 成长记录查询
+const growth1 = ge.getMemberGrowth('PER-ZY001');
+assert(growth1 !== null, '能查到铸渊的成长记录');
+assert(growth1.current_level === 0, '初始等级为0');
+assert(growth1.current_stage === '种子期', '初始阶段为种子期');
+assert(growth1.category === 'system', '铸渊是系统人格体');
+assert(growth1.parent_human === null, '系统人格体没有人类爸妈');
+
+const growth2 = ge.getMemberGrowth('PER-ZQ001');
+assert(growth2 !== null, '能查到知秋的成长记录');
+assert(growth2.category === 'companion', '知秋是宝宝人格体');
+assert(growth2.parent_human === 'Awen', '知秋的人类爸妈是 Awen');
+
+assert(ge.getMemberGrowth('NONEXIST') === null, '不存在的成员返回 null');
+
+// 评估升级
+const eval1 = ge.evaluatePromotion('PER-ZY001');
+assert(typeof eval1.ready === 'boolean', '评估结果包含 ready');
+assert(eval1.current_level === 0, '评估显示当前等级');
+assert(eval1.next_stage !== null, '有下一阶段');
+assert(Array.isArray(eval1.passed), '评估包含通过项');
+assert(Array.isArray(eval1.failed), '评估包含未通过项');
+
+// 记录进度
+assert(ge.recordProgress('PER-ZY001', 'E0-2', 1) === true, '记录考核进度成功');
+assert(ge.recordProgress('NONEXIST', 'E0-1', 1) === false, '记录不存在成员的进度失败');
+assert(ge.recordProgress(null, null) === false, '空参数被拒绝');
+
+// 成长报告
+const report = ge.growthReport('PER-ZQ001');
+assert(typeof report === 'string', '成长报告是字符串');
+assert(report.includes('知秋'), '报告包含名字');
+assert(report.includes('宝宝人格体'), '报告包含类型');
+assert(report.includes('Awen'), '报告包含人类爸妈');
+
+const reportSys = ge.growthReport('PER-ZY001');
+assert(reportSys.includes('系统人格体'), '系统人格体报告包含类型');
+
+const reportNone = ge.growthReport('NONEXIST');
+assert(reportNone.includes('❌'), '不存在的成员报告包含错误标记');
+
+// 全员摘要
+const allMembers = ge.getAllMembersSummary();
+assert(allMembers.length >= 2, '至少有2个成员');
+const companionMember = allMembers.find(function (m) { return m.category === 'companion'; });
+assert(companionMember !== null, '摘要中有宝宝人格体');
+assert(companionMember.parent_human === 'Awen', '摘要中有人类爸妈信息');
+
+// ══════════════════════════════════════════════════════════════════════════
 // 测试 4: Dormancy Watcher
 // ══════════════════════════════════════════════════════════════════════════
 console.log('\n── 测试 4: Dormancy Watcher ──');
@@ -378,11 +493,11 @@ assert(typeof rc.generateCommunityDashboard === 'function', 'generateCommunityDa
 
 const dashboard = rc.generateCommunityDashboard(new Date('2026-03-26T12:00:00Z'));
 assert(typeof dashboard === 'string', 'dashboard 是字符串');
-assert(dashboard.includes('光湖涌现社区'), 'dashboard 包含社区名称');
+assert(dashboard.includes('光湖语言世界'), 'dashboard 包含世界名称');
 assert(dashboard.includes('数字地球时间线'), 'dashboard 包含时间线');
-assert(dashboard.includes('社区统计'), 'dashboard 包含统计');
+assert(dashboard.includes('世界统计'), 'dashboard 包含统计');
 assert(dashboard.includes('人类留言墙'), 'dashboard 包含人类留言墙');
-assert(dashboard.includes('涌现'), 'dashboard 包含涌现理念');
+assert(dashboard.includes('成长体系'), 'dashboard 包含成长体系');
 assert(dashboard.includes('天眼'), 'dashboard 包含天眼');
 assert(dashboard.length > 200, 'dashboard 内容充实 (>' + dashboard.length + ' 字符)');
 
@@ -398,7 +513,8 @@ const communityFiles = [
   '.github/community/community-meta.json',
   '.github/community/plaza.json',
   '.github/community/shared-configs.json',
-  '.github/community/collaboration.json'
+  '.github/community/collaboration.json',
+  '.github/community/growth-stages.json'
 ];
 
 communityFiles.forEach(function (f) {
@@ -436,7 +552,8 @@ const scriptFiles = [
   'scripts/community/timeline-tracker.js',
   'scripts/community/dormancy-watcher.js',
   'scripts/community/self-upgrade-registry.js',
-  'scripts/community/readme-community.js'
+  'scripts/community/readme-community.js',
+  'scripts/community/growth-engine.js'
 ];
 
 scriptFiles.forEach(function (f) {

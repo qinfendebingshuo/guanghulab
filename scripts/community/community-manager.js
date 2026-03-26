@@ -1,6 +1,6 @@
 // scripts/community/community-manager.js
 // 社区管理器 · Community Manager
-// 光湖涌现社区核心管理模块
+// 光湖语言世界核心管理模块
 // 版权：国作登字-2026-A-00037559
 
 'use strict';
@@ -328,7 +328,7 @@ function getSummary() {
   const daysAlive = Math.floor((now - birthDate) / (1000 * 60 * 60 * 24));
 
   return {
-    community_name: meta.community_name || '光湖涌现社区',
+    community_name: meta.community_name || '光湖语言世界',
     birth_date: meta.birth_date,
     days_alive: daysAlive,
     announcements_count: plaza.announcements.length,
@@ -343,7 +343,7 @@ function getSummary() {
 // ── CLI 入口 ──────────────────────────────────────────────────────────────
 
 if (require.main === module) {
-  console.log('🌊 光湖涌现社区 · Community Manager\n');
+  console.log('🌊 光湖语言世界 · Community Manager\n');
 
   const summary = getSummary();
   console.log(`  社区名称: ${summary.community_name}`);

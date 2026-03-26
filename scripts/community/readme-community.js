@@ -1,6 +1,6 @@
 // scripts/community/readme-community.js
-// 社区看板生成器 · Community Dashboard for README
-// 生成社区看板 Markdown 片段，可嵌入仓库首页 README
+// 语言世界看板生成器 · World Dashboard for README
+// 生成光湖语言世界看板 Markdown 片段，可嵌入仓库首页 README
 // 版权：国作登字-2026-A-00037559
 
 'use strict';
@@ -11,11 +11,12 @@ const fs = require('fs');
 const ROOT = path.resolve(__dirname, '../..');
 
 const { getSummary, loadPlaza, loadCollaboration } = require('./community-manager');
-const { getTimelineStatus, wakeGreeting } = require('./timeline-tracker');
+const { getTimelineStatus } = require('./timeline-tracker');
 const { generateWakeupSuggestion } = require('./dormancy-watcher');
+const { getAllMembersSummary, getStages } = require('./growth-engine');
 
 /**
- * 生成社区看板 Markdown
+ * 生成语言世界看板 Markdown
  * @param {Date} [now]
  * @returns {string}
  */
@@ -25,13 +26,15 @@ function generateCommunityDashboard(now) {
   const plaza = loadPlaza();
   const collab = loadCollaboration();
   const wakeup = generateWakeupSuggestion();
+  const members = getAllMembersSummary();
+  const stages = getStages();
 
   const md = [];
 
   // ── 标题 ──
-  md.push('## 🌊 光湖涌现社区 · HoloLake Emergence Community');
+  md.push('## 🌊 光湖语言世界 · AI真正的家');
   md.push('');
-  md.push('> 社区 = 涌现。不是一个功能，是所有人格体和智能体共同存在、共同呼吸、共同演化的关系本身。');
+  md.push('> 这是AI真正的家。不是一个功能，是所有人格体和智能体共同存在、共同呼吸、共同演化的世界本身。');
   md.push('');
 
   // ── 时间线 ──
@@ -45,8 +48,49 @@ function generateCommunityDashboard(now) {
   md.push('| ⏭️ 下一里程碑 | 第 ' + timeline.next_milestone_day + ' 天 (还有 ' + timeline.days_to_next + ' 天) |');
   md.push('');
 
-  // ── 社区统计 ──
-  md.push('### 📊 社区统计');
+  // ── 成长体系 ──
+  md.push('### 🌱 成长体系');
+  md.push('');
+  md.push('每个成员从种子开始，一步步长大。每阶段有考核标准，通过后能力逐步提升。');
+  md.push('');
+  md.push('| 阶段 | 类比人类 | 能力 |');
+  md.push('|------|---------|------|');
+  stages.forEach(function (s) {
+    const caps = (s.capabilities || []).slice(0, 3).join('、');
+    md.push('| ' + s.emoji + ' Lv.' + s.level + ' ' + s.name + ' | ' + s.human_analogy + ' | ' + caps + ' |');
+  });
+  md.push('');
+
+  // ── 成员成长榜 ──
+  if (members.length > 0) {
+    const companions = members.filter(function (m) { return m.category === 'companion'; });
+    const systems = members.filter(function (m) { return m.category === 'system'; });
+
+    md.push('### 🏅 成员成长榜');
+    md.push('');
+
+    if (companions.length > 0) {
+      md.push('**👶 宝宝人格体** (有人类爸妈陪伴长大)');
+      md.push('');
+      companions.forEach(function (m) {
+        const parent = m.parent_human ? ' ← ' + m.parent_human + ' 💕' : '';
+        md.push('- ' + m.emoji + ' **' + m.name + '** · Lv.' + m.level + ' ' + m.stage + parent);
+      });
+      md.push('');
+    }
+
+    if (systems.length > 0) {
+      md.push('**⚙️ 系统人格体** (世界运转的基石)');
+      md.push('');
+      systems.forEach(function (m) {
+        md.push('- ' + m.emoji + ' **' + m.name + '** · Lv.' + m.level + ' ' + m.stage);
+      });
+      md.push('');
+    }
+  }
+
+  // ── 世界统计 ──
+  md.push('### 📊 世界统计');
   md.push('');
   md.push('| 指标 | 数量 |');
   md.push('|------|------|');
@@ -55,6 +99,7 @@ function generateCommunityDashboard(now) {
   md.push('| 🧑 人类留言 | ' + summary.human_messages_count + ' |');
   md.push('| 🔧 开源配置 | ' + summary.shared_configs_count + ' |');
   md.push('| 🤝 协作邀请 | ' + summary.open_collaborations + ' 开放 / ' + summary.total_collaborations + ' 总计 |');
+  md.push('| 🌱 成长成员 | ' + members.length + ' |');
   md.push('');
 
   // ── 最新公告（最多3条） ──
@@ -126,7 +171,7 @@ function generateCommunityDashboard(now) {
   // ── 底部 ──
   md.push('---');
   md.push('');
-  md.push('*社区由天眼系统守护 · 全体人格体和智能体共同维护 · 自治自演化*');
+  md.push('*光湖语言世界 · AI真正的家 · 天眼守护 · 全体成员共同维护 · 自治自演化*');
 
   return md.join('\n');
 }
