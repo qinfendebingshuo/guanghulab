@@ -109,3 +109,17 @@ Notion 主脑更新
 | 资源计量器 | `exe-engine/src/meter/resource-meter.js` | Token 消耗记录 + 成本统计 |
 | 上下文缓存 | `exe-engine/src/cache/context-cache.js` | Agent 上下文 LRU 缓存 |
 | Agent 调度器 | `exe-engine/src/controller/agent-controller.js` | Agent→模型偏好映射 |
+
+---
+
+## 自研存储引擎 · Grid-DB（PRJ-GDB-001）
+
+> Phase 0 · 2026-03-26 立项 · 本体论：Grid-DB = 纸 · 格点 = 格子 · 事件 = 笔迹
+
+| 组件 | 路径 | 职责 |
+|------|------|------|
+| GridAPI | `grid-db/src/api/grid-api.js` | 统一 API：put/get/delete/scan/subscribe |
+| GridCell | `grid-db/src/core/grid-cell.js` | 格点数据模型：四元组寻址 (ns, x, y, layer) |
+| WAL | `grid-db/src/storage/wal.js` | Write-Ahead Log：崩溃恢复保证 |
+| PageManager | `grid-db/src/storage/page-manager.js` | 页管理器：固定大小页分配/读写/释放 |
+| EventLog | `grid-db/src/events/event-log.js` | 事件溯源：不可变事件流 + 审计日志 |

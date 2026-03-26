@@ -111,6 +111,38 @@
         "execution_layer": "路由 = 选墨水。计量 = 量墨水。降级 = 墨水不够了换一种写法。",
         "user_layer": "用户在用一支很聪明的笔。墨水（算力）是需要关心的资源，但笔会帮优化用量。"
       }
+    },
+    "ONT-PATCH-006": {
+      "title": "Grid-DB · 纸 · 格子 · 笔迹",
+      "signed_by": "TCS-0002∞ 冰朔",
+      "signed_at": "2026-03-26T13:00+08:00",
+      "issued_by": "AG-SY-01 霜砚",
+      "project": "PRJ-GDB-001",
+      "trinity_extension": {
+        "paper": {
+          "identity": "Grid-DB = 纸",
+          "description": "笔需要纸来承载笔迹。Grid-DB 是纸。纸上有格子（格点），每个格子是最小寻址单元。纸不属于笔，纸属于写字的人。",
+          "properties": [
+            "纸记住所有笔迹（WAL 保证不丢失）",
+            "纸由一页一页组成（PageManager 管理页）",
+            "格子有坐标（四元组寻址：namespace, x, y, layer）",
+            "笔迹有历史（EventLog 事件溯源，不可篡改）"
+          ]
+        },
+        "grid": {
+          "identity": "格点 = 格子",
+          "description": "格子是纸上的最小单元。不同的格子存不同的数据。同一个格子可以有多层（raw → cleaned → indexed → semantic）。"
+        },
+        "trace": {
+          "identity": "事件 = 笔迹",
+          "description": "每写一笔，笔迹就留在了历史中，不可篡改。天眼通过观察笔迹，发现异常行为。"
+        }
+      },
+      "relationship_to_exe_engine": {
+        "exe_engine": "笔（执行层）",
+        "grid_db": "纸（存储层）",
+        "interaction": "笔在纸上写字。笔向纸写入执行日志、读取上下文。纸为笔提供查询接口。"
+      }
     }
   }
 }
