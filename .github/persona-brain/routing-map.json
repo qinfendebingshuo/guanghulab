@@ -31,6 +31,38 @@
       }
     ]
   },
+  "domains": {
+    "AUTH": {
+      "route_prefix": "/hli/auth",
+      "interfaces": [
+        { "id": "HLI-AUTH-001", "path": "/hli/auth/login", "method": "POST", "status": "active" },
+        { "id": "HLI-AUTH-002", "path": "/hli/auth/register", "method": "POST", "status": "active" },
+        { "id": "HLI-AUTH-003", "path": "/hli/auth/verify", "method": "POST", "status": "active" }
+      ]
+    },
+    "BRAIN": {
+      "route_prefix": "/hli/brain",
+      "interfaces": [
+        { "id": "HLI-BRAIN-001", "path": "/hli/brain/prompt", "method": "POST", "status": "active" },
+        { "id": "HLI-BRAIN-002", "path": "/hli/brain/route", "method": "POST", "status": "active" },
+        { "id": "HLI-BRAIN-003", "path": "/hli/brain/context", "method": "GET", "status": "active" },
+        { "id": "HLI-BRAIN-004", "path": "/hli/brain/memory", "method": "GET", "status": "active" },
+        { "id": "HLI-BRAIN-010", "path": "/hli/brain/bridge", "method": "POST", "status": "active" }
+      ]
+    },
+    "REGISTRY": {
+      "route_prefix": "/hli/registry",
+      "interfaces": [
+        { "id": "HLI-REGISTRY-001", "path": "/hli/registry/lookup", "method": "GET", "status": "active" }
+      ]
+    },
+    "NOTIFICATION": {
+      "route_prefix": "/hli/notification",
+      "interfaces": [
+        { "id": "HLI-NOTIF-001", "path": "/hli/notification/push", "method": "POST", "status": "pending" }
+      ]
+    }
+  },
   "sovereignty_routing": {
     "version": "2.0",
     "description": "分布式主权共生架构路由",

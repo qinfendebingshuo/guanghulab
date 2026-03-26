@@ -1,0 +1,295 @@
+{
+  "scan_id": "SKYEYE-DIAG-SITE-20260326-001",
+  "instruction_id": "ZY-DIAG-SITE-2026-0326-001",
+  "trigger": "霜砚 AG-SY-01 排查指令",
+  "executor": "AG-ZY-01 铸渊",
+  "authorization": "TCS-0002∞ 冰朔",
+  "priority": "P0",
+  "timestamp": "2026-03-26T07:50:00Z",
+  "skyeye_version": "scripts/skyeye/skyeye-main.js v3.0",
+
+  "phase_d0_skyeye_startup": {
+    "status": "✅ 天眼已启动",
+    "guards_run": [
+      "scan-workflows.js",
+      "scan-structure.js",
+      "scan-brain-health.js",
+      "scan-security-protocol.js",
+      "scan-soldier-health.js",
+      "scan-external-bridges.js"
+    ],
+    "scan_results": {
+      "workflows": {
+        "total": 102,
+        "syntax_ok": 102,
+        "syntax_errors": 0,
+        "using_git_push": 67,
+        "cron_conflicts": 11,
+        "potential_loops": 17
+      },
+      "structure": {
+        "core_dirs_ok": true,
+        "missing_dirs": 0,
+        "orphan_files": 96,
+        "readme_ok": true
+      },
+      "brain_health": {
+        "memory_fresh": true,
+        "routing_map_aligned": true,
+        "routing_map_fix_applied": "添加 domains 字段（AUTH/BRAIN/REGISTRY/NOTIFICATION 4域 10接口）",
+        "dev_status_fresh": true,
+        "knowledge_base_ok": true,
+        "copilot_instructions_ok": true
+      },
+      "security_protocol": {
+        "status": "✅",
+        "root_rules_intact": true,
+        "copyright_anchor": true
+      },
+      "soldier_health": {
+        "total_soldiers": 94,
+        "healthy": 0,
+        "needs_optimization": 94,
+        "failure_rate": 0
+      },
+      "external_bridges": {
+        "notion_api": "🔴 NOTION_TOKEN 未设置（CI环境）",
+        "github_api": "🟡 403（CI环境权限不足）",
+        "server_ssh": "🟡 DEPLOY_HOST 未设置（CI环境）",
+        "note": "以上为 CI runner 本地扫描结果。通过 workflow 日志判断：DEPLOY_HOST/USER/KEY 有效，NOTION_TOKEN 在部分 workflow 为空"
+      }
+    }
+  },
+
+  "phase_d1_deployment_chain": {
+    "d1_1_repository_side": {
+      "docs_index_html": {
+        "exists": true,
+        "size_lines": 3210,
+        "version": "铸渊助手 v6.0 · 大脑版本 v3.0 · 壳-核分离架构",
+        "latest_commit": "26025d0a (2026-03-26T06:02:03Z) Sync from WENZHUOXI/guanghu-Awen",
+        "features_present": [
+          "API 自动检测 v4.0",
+          "多种登录方式",
+          "壳-核分离架构",
+          "模块导航（14+模块）",
+          "HLI 协议接口"
+        ]
+      },
+      "docs_structure": {
+        "CNAME": "guanghulab.com",
+        "nojekyll": true,
+        "subdirs": ["css/", "js/", "daily-reports/", "dashboard/", "dev-portal/"]
+      },
+      "recent_merged_prs": [
+        "PR#202: AGE OS Tower Architecture upgrade (2026-03-26)",
+        "PR#200: Notion sync via wakeup script (2026-03-26)",
+        "PR#199: 码字台部署到 dev-portal (2026-03-25)",
+        "PR#198: SkyEye merge membrane v3 (2026-03-25)",
+        "PR#196: AI写网文平台 (2026-03-25)",
+        "PR#194: UI responsive + smart model router (2026-03-25)",
+        "PR#192: Language-driven OS execution layer (2026-03-25)",
+        "PR#191: Real data integration + dual-env deploy (2026-03-25)",
+        "PR#190: Live dynamic dashboard (2026-03-25)",
+        "PR#189: Nginx hololake→guanghulab migration (2026-03-25)",
+        "PR#186: 人类使用侧全面修复 (2026-03-25)"
+      ],
+      "code_completeness": "✅ 所有近期 PR 已合并到 main，代码完整"
+    },
+
+    "d1_2_cicd_pipeline": {
+      "deploy_pages": {
+        "workflow": "deploy-pages.yml",
+        "name": "🌀 部署铸渊聊天室 (GitHub Pages)",
+        "trigger": "push to main on docs/** or persona-studio/frontend/**",
+        "status": "✅ 正常",
+        "total_runs": 63,
+        "last_success": "2026-03-25T23:26:45Z (PR#199)",
+        "recent_10_runs": "全部成功",
+        "verdict": "GitHub Pages 部署管道完全正常"
+      },
+      "deploy_to_server": {
+        "workflow": "deploy-to-server.yml",
+        "name": "🚀 铸渊 CD · 自动部署到 guanghulab.com",
+        "trigger": "push to main (excludes persona-brain, broadcasts, syslog, signal-log)",
+        "status": "⚠️ 部署成功但站点返回 404",
+        "total_runs": 201,
+        "last_success": "2026-03-26T06:02:06Z (Awen sync)",
+        "recent_10_runs": "全部成功",
+        "smoke_test_results": {
+          "module_smoke_test": "20 通过 / 0 失败（服务器文件存在）",
+          "human_use_verification": {
+            "main_site_http": "❌ 404（人类无法访问）",
+            "persona_studio_http": "⚠️ 404",
+            "persona_studio_api": "✅ 200（后端 API 健康）"
+          },
+          "diagnosis": "文件已同步到服务器但 Nginx 路由返回 404，疑似 Nginx server_name 或 root 目录配置问题"
+        }
+      },
+      "deploy_backend": {
+        "workflow": "deploy-backend.yml",
+        "name": "🚀 部署后端中间层到阿里云",
+        "trigger": "push to main on backend/api-server/**",
+        "status": "✅ 正常",
+        "total_runs": 3,
+        "last_success": "2026-03-26 (PR#202)"
+      },
+      "syslog_issue_pipeline": {
+        "workflow": "syslog-issue-pipeline.yml",
+        "name": "📡 SYSLOG Issue Pipeline",
+        "trigger": "issues [opened, labeled]",
+        "status": "🔴 连续失败（conclusion=failure, 0 jobs）",
+        "total_runs": 463,
+        "main_branch_failures": "22+ 次",
+        "root_cause": "workflow 仅由 issues 事件触发，但可能被设为 branch protection 的 required status check。每次 push 到 main 时，GitHub 期望该 check 完成，但 check 从不运行（0 jobs），导致状态显示为 failure。",
+        "evidence": "run#454-#463 全部 conclusion=failure, total_jobs=0, event=push"
+      },
+      "branch_protection_conflict": {
+        "status": "🔴 严重冲突",
+        "description": "main 分支保护规则要求 2 个 status checks，但 67 个 workflow 试图直接 git push 到 main",
+        "affected_workflows": 67,
+        "error_message": "GH006: Protected branch update failed - 2 of 2 required status checks are expected",
+        "examples": [
+          "sync-griddb-to-drive.yml: 同步成功但无法推送日志到 main",
+          "bridge-heartbeat.yml: 心跳检测完成但无法推送结果到 main"
+        ],
+        "impact": "所有需要写回日志/状态文件到 main 的 workflow 都会在 git push 步骤失败"
+      }
+    },
+
+    "d1_3_secrets_credentials": {
+      "deployment_secrets": {
+        "DEPLOY_HOST": "✅ 存在且有效（deploy-to-server 成功连接）",
+        "DEPLOY_USER": "✅ 存在且有效",
+        "DEPLOY_KEY": "✅ 存在且有效（SSH 连接成功）",
+        "DEPLOY_PATH": "✅ 存在"
+      },
+      "notion_secrets": {
+        "NOTION_TOKEN": "🔴 在 bridge-heartbeat 中为空（secrets.NOTION_API_KEY 引用，可能 secret 名称不匹配）",
+        "NOTION_API_TOKEN": "⚠️ 未验证（syslog-issue-pipeline 使用此名称）",
+        "BRIDGE_QUEUE_DB_ID": "🔴 为空",
+        "evidence": "bridge-heartbeat 日志: ⚠️ NOTION_TOKEN 未配置，跳过 Notion 检测"
+      },
+      "llm_secrets": {
+        "LLM_API_KEY": "⚠️ 状态不确定（syslog-issue-pipeline 从未在 push 事件上运行过）",
+        "LLM_BASE_URL": "⚠️ 状态不确定"
+      },
+      "gdrive_secrets": {
+        "GDRIVE_CLIENT_ID": "✅ 存在且有效（sync-to-drive OAuth2 成功）",
+        "GDRIVE_CLIENT_SECRET": "✅ 存在且有效",
+        "GDRIVE_REFRESH_TOKEN": "✅ 存在且有效",
+        "DRIVE_MIRROR_FOLDER_ID": "✅ 存在"
+      },
+      "smtp_secrets": {
+        "SMTP_USER": "⚠️ 未验证",
+        "SMTP_PASS": "⚠️ 未验证"
+      }
+    },
+
+    "d1_4_server_side": {
+      "server_ip": "8.155.62.235",
+      "server_stack": "Node.js 20 + PM2 + Nginx",
+      "file_sync_status": "✅ rsync 同步成功（20/20 模块存在）",
+      "backend_api_health": "✅ Persona Studio API port 3002 返回 200",
+      "http_access": {
+        "main_site": "❌ 404",
+        "persona_studio": "❌ 404",
+        "diagnosis": "文件在服务器上存在，后端 API 正常，但 Nginx HTTP 路由返回 404"
+      },
+      "nginx_diagnosis": {
+        "issue": "Nginx 配置可能存在 server_name 或 root 路径不匹配问题",
+        "evidence": "deploy-to-server 包含 Nginx 配置更新步骤并成功执行，但 HTTP 访问仍返回 404",
+        "needs_human_check": true,
+        "check_items": [
+          "检查 Nginx server_name 是否正确绑定 guanghulab.com",
+          "检查 root 指令是否指向正确的文件目录",
+          "检查是否有 default_server 冲突",
+          "检查 HTTPS/SSL 证书配置（如果启用 HTTPS）",
+          "运行 nginx -t 检查语法",
+          "检查 Nginx error log: /var/log/nginx/error.log"
+        ]
+      }
+    }
+  },
+
+  "phase_d1_5_mcp_service": {
+    "mcp_code_location": "mcp-servers/ (根目录)",
+    "mcp_files": [
+      "mcp-servers/github-server.js",
+      "mcp-servers/notion-server.js"
+    ],
+    "mcp_purpose": "MCP 服务器工具层（GitHub + Notion 操作）",
+    "mcp_frontend_integration": "❌ 未集成到 docs/index.html（前端使用 HLI 协议，非 MCP）",
+    "mcp_deployment_status": {
+      "has_deploy_workflow": false,
+      "server_process": "未知（需 SSH 检查）",
+      "assessment": "MCP 是后端自动化工具（非用户可见的前端功能），代码存在但部署状态未知"
+    },
+    "mcp_break_point": {
+      "ever_successfully_deployed": "不确定",
+      "likely_scenario": "MCP 代码写完但可能从未作为独立服务部署到服务器",
+      "note": "MCP 工具由 GitHub Actions 和其他自动化脚本直接引用，可能不需要独立运行的服务进程"
+    }
+  },
+
+  "phase_d2_merge_membrane": {
+    "branch_protection": {
+      "status": "⚠️ 配置存在但有副作用",
+      "rules": "需要 2 个 required status checks",
+      "issue": "syslog-issue-pipeline.yml 可能是其中一个 required check，但该 workflow 仅触发于 issues 事件，不触发于 push 事件",
+      "impact": "导致 push 事件的 check 永远处于 pending/expected 状态"
+    },
+    "pr_flow": {
+      "status": "✅ 正常",
+      "evidence": "PR#186-#202 全部成功通过审核并合并"
+    },
+    "deploy_trigger": {
+      "deploy_pages": "✅ push to main + docs/** → 自动触发 → 成功",
+      "deploy_to_server": "✅ push to main → 自动触发 → 成功（但站点 404）"
+    },
+    "workflow_global_health": {
+      "total": 102,
+      "syntax_ok": 102,
+      "deploy_related_healthy": true,
+      "syslog_pipeline_broken": true,
+      "direct_push_workflows_broken": 67,
+      "broken_list": [
+        {
+          "name": "syslog-issue-pipeline.yml",
+          "issue": "Required status check 但不触发于 push 事件",
+          "severity": "high"
+        },
+        {
+          "name": "sync-griddb-to-drive.yml",
+          "issue": "git push 被 branch protection 拒绝",
+          "severity": "medium"
+        },
+        {
+          "name": "bridge-heartbeat.yml",
+          "issue": "NOTION_TOKEN 为空 + git push 被拒绝",
+          "severity": "medium"
+        }
+      ]
+    },
+    "timeline_retrospective": {
+      "last_successful_deploy": "2026-03-26T06:02:06Z (deploy-to-server 成功但 HTTP 404)",
+      "last_deploy_pages_success": "2026-03-25T23:26:45Z (GitHub Pages 正常)",
+      "branch_protection_break_point": "约 2026-03-25 (PR#198 合并 SkyEye merge membrane v3 后开始出现)",
+      "http_404_timeline": "需人类 SSH 检查服务器确认具体开始时间",
+      "syslog_pipeline_failures_start": "连续失败至少从 run#428+ 开始"
+    }
+  },
+
+  "phase_d3_diagnosis_summary": {
+    "root_cause": "多因素叠加：1) Nginx 配置导致 HTTP 404；2) Branch protection 与 67 个直推 workflow 冲突；3) syslog-issue-pipeline 作为 required status check 但不触发于 push",
+    "break_point": "Nginx HTTP 路由层（服务器文件存在，后端 API 正常，但 HTTP 访问 404）",
+    "break_time": "HTTP 404 具体起始时间需人类确认；branch protection 冲突约从 2026-03-25 开始",
+    "evidence": [
+      "deploy-to-server run#201 冒烟测试: 20 通过 / 0 失败（文件在服务器存在）",
+      "人类使用侧验证: ❌ 主站 HTTP 404, ⚠️ Persona Studio 404, ✅ API 200",
+      "sync-griddb-to-drive: GH006 Protected branch update failed",
+      "bridge-heartbeat: NOTION_TOKEN 为空",
+      "syslog-issue-pipeline: 22+ 次 main 分支上 conclusion=failure, total_jobs=0"
+    ]
+  }
+}
