@@ -73,7 +73,7 @@ jobs:
       # Step 3 · 读取公告板 + 指纹验证
       - name: "📡 Step 3 · 读取公告板"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
         run: |
           echo "[GH-COMMANDER-BULLETIN] 📡 读取Agent集群公告板..."

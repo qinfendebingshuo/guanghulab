@@ -78,8 +78,8 @@ jobs:
 
       - name: 🌊 运行 HLDP 同步引擎
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
         run: |
           echo "🌊 HLDP Bridge 同步启动..."
           echo "📋 方向: ${{ inputs.direction || 'notion-to-github' }}"
