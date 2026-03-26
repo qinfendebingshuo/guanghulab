@@ -55,4 +55,7 @@ Object.entries(HLI_ROUTES).forEach(([hliId, route]) => {
 console.log(`\n\n📊 覆盖率: ${implemented} / ${implemented + missing}`);
 if (missing === 0) {
   console.log('✅ Route Alignment PASSED - 所有 HLI 接口均已实现');
+} else {
+  console.error(`❌ Route Alignment FAILED - ${missing} 个 HLI 接口未实现`);
+  process.exit(1);
 }

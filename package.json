@@ -5,7 +5,11 @@
   "main": "broadcast-generator.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test:contract": "node scripts/hli-contract-check.js",
+    "test:route-align": "node scripts/route-align-check.js",
+    "start": "node server.js",
+    "start:test": "node src/index.js",
+    "test:smoke": "node tests/smoke/hli-smoke.test.js"
   },
   "keywords": [],
   "author": "",
