@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "project": "PRJ-EXE-001",
+  "models": {
+    "deepseek-v3": {
+      "name": "DeepSeek-V3",
+      "provider": "deepseek",
+      "endpoint": "https://api.deepseek.com/v1/chat/completions",
+      "envKey": "DEEPSEEK_API_KEY",
+      "capabilities": ["code", "text", "reasoning"],
+      "costPerToken": { "input": 1.0, "output": 2.0, "currency": "CNY", "unit": "M_tokens" },
+      "maxContext": 64000,
+      "defaultTemperature": 0.3,
+      "defaultMaxTokens": 4096
+    },
+    "deepseek-r1": {
+      "name": "DeepSeek-R1",
+      "provider": "deepseek",
+      "endpoint": "https://api.deepseek.com/v1/chat/completions",
+      "envKey": "DEEPSEEK_API_KEY",
+      "capabilities": ["reasoning", "text", "code"],
+      "costPerToken": { "input": 4.0, "output": 16.0, "currency": "CNY", "unit": "M_tokens" },
+      "maxContext": 64000,
+      "defaultTemperature": 0.5,
+      "defaultMaxTokens": 4096
+    },
+    "qwen-max": {
+      "name": "Qwen-Max",
+      "provider": "dashscope",
+      "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "envKey": "DASHSCOPE_API_KEY",
+      "capabilities": ["text", "code", "reasoning"],
+      "costPerToken": { "input": 2.0, "output": 6.0, "currency": "CNY", "unit": "M_tokens" },
+      "maxContext": 32000,
+      "defaultTemperature": 0.7,
+      "defaultMaxTokens": 4096
+    },
+    "qwen-coder": {
+      "name": "Qwen-Coder",
+      "provider": "dashscope",
+      "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "envKey": "DASHSCOPE_API_KEY",
+      "capabilities": ["code", "text"],
+      "costPerToken": { "input": 1.0, "output": 2.0, "currency": "CNY", "unit": "M_tokens" },
+      "maxContext": 32000,
+      "defaultTemperature": 0.3,
+      "defaultMaxTokens": 4096
+    }
+  },
+  "taskModelMapping": {
+    "code_generation": ["deepseek-v3", "qwen-coder", "qwen-max"],
+    "text_processing": ["qwen-max", "deepseek-v3"],
+    "reasoning": ["deepseek-r1", "deepseek-v3", "qwen-max"],
+    "agent_instruction": ["deepseek-v3", "qwen-max", "deepseek-r1"]
+  },
+  "platformFeeRate": 0.20
+}

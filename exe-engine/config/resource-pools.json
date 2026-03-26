@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "pools": {
+    "system": {
+      "name": "系统资源池",
+      "description": "AGE OS 内部系统调用专用（天眼、SYSBOOT 等）",
+      "mode": "pool",
+      "quotaLimit": null,
+      "rateLimitPerMinute": 60,
+      "priority": "high"
+    },
+    "default": {
+      "name": "默认资源池",
+      "description": "通用资源池，供未配置独立 Key 的用户使用",
+      "mode": "pool",
+      "quotaLimit": null,
+      "rateLimitPerMinute": 30,
+      "priority": "normal"
+    }
+  },
+  "degradation": {
+    "warningThreshold": 0.20,
+    "degradeThreshold": 0.05,
+    "circuitBreakThreshold": 0
+  }
+}

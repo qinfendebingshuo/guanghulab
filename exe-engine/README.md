@@ -1,0 +1,142 @@
+# EXE-Engine · 自研执行引擎
+
+> **项目编号**：PRJ-EXE-001
+> **版权**：国作登字-2026-A-00037559
+> **阶段**：Phase 0 · 基础建设
+
+---
+
+## 本体论锚定 [ONT-PATCH-005]
+
+**AGE OS = 笔** · **算力 = 墨水** · **用户 = 写字的人**
+
+AGE OS 是一支智能的、有生命的笔。它不制造墨水（不拥有算力），它使用墨水。
+用户可以自带墨水（BYOK），也可以从 AGE OS 的墨水池里取用（资源池）。
+
+---
+
+## 系统架构
+
+```
+┌──────────────────────────────────────────────┐
+│                   用户层                      │
+│         用户 / 开发者 / Agent                 │
+└───────────────────┬──────────────────────────┘
+                    │
+┌───────────────────▼──────────────────────────┐
+│              AGE-Router 路由网关              │
+│  鉴权 → 分类 → 模型选择 → 限流降级           │
+└───────────────────┬──────────────────────────┘
+                    │
+┌───────────────────▼──────────────────────────┐
+│            LoadBalancer 负载均衡器            │
+│  cost / balanced / quality 策略              │
+│  故障转移 · 并发控制                          │
+└──────┬────────────┬──────────────┬───────────┘
+       │            │              │
+┌──────▼───┐  ┌─────▼────┐  ┌─────▼────┐
+│DeepSeek  │  │  Qwen    │  │ Other    │
+│Adapter   │  │ Adapter  │  │ Adapter  │
+└──────┬───┘  └─────┬────┘  └─────┬────┘
+       │            │              │
+┌──────▼────────────▼──────────────▼───────────┐
+│          ResourceMeter 资源计量器             │
+│  token 消耗 · 成本计算 · 数据回流 DC v1.0    │
+└──────────────────────────────────────────────┘
+```
+
+## 目录结构
+
+```
+exe-engine/
+├── package.json
+├── README.md
+├── config/
+│   ├── models.json            # 模型配置（端点、成本、能力）
+│   └── resource-pools.json    # 资源池配置
+├── src/
+│   ├── index.js               # 主入口 + createEngine()
+│   ├── router/
+│   │   └── age-router.js      # AGE-Router 路由网关
+│   ├── adapters/
+│   │   ├── base-adapter.js    # EXEModelAdapter 基类
+│   │   ├── deepseek-adapter.js # DeepSeek-V3/R1 适配器
+│   │   └── qwen-adapter.js    # Qwen-Max/Coder 适配器
+│   ├── balancer/
+│   │   └── load-balancer.js   # 负载均衡器
+│   ├── meter/
+│   │   └── resource-meter.js  # 资源计量器
+│   ├── cache/
+│   │   └── context-cache.js   # 上下文缓存
+│   └── controller/
+│       └── agent-controller.js # Agent 调度器
+├── docs/
+│   └── architecture.md        # 详细架构文档
+└── tests/
+    └── smoke/
+        └── exe-engine.test.js # 冒烟测试
+```
+
+## 快速开始
+
+```bash
+# 查看引擎状态
+node exe-engine/src/index.js status
+
+# 运行冒烟测试
+node exe-engine/tests/smoke/exe-engine.test.js
+```
+
+## API 接口
+
+### POST /api/exe/v1/execute
+
+```json
+{
+  "agentId": "AG-ZY-01",
+  "taskType": "code_generation",
+  "prompt": "...",
+  "context": { "repo": "...", "branch": "..." },
+  "preferences": {
+    "model": "auto",
+    "priority": "balanced",
+    "maxTokens": 4096
+  },
+  "resourcePool": "default"
+}
+```
+
+### 响应
+
+```json
+{
+  "requestId": "exe-xxxxx",
+  "model": "deepseek-v3",
+  "output": "...",
+  "usage": {
+    "inputTokens": 1200,
+    "outputTokens": 800,
+    "cost": 0.0012,
+    "unit": "CNY"
+  },
+  "latency": 2340,
+  "status": "success"
+}
+```
+
+## 接入模式
+
+| 模式 | 说明 | 适用 |
+|------|------|------|
+| BYOK | 用户自带 API Key | 有自己 API 账户的开发者 |
+| 资源池 | AGE OS 统一资源池 | 轻量用户 |
+| 混合 | BYOK + 资源池 fallback | 企业用户 |
+
+## Phase 路线
+
+| Phase | 目标 | 状态 |
+|-------|------|------|
+| P0 基础建设 | Router + DeepSeek Adapter + Meter | 🟢 当前 |
+| P1 影子模式 | Qwen Adapter + LoadBalancer + 并行验证 | ⚪ 待开始 |
+| P2 灰度切换 | Agent Controller 双轨 + BYOK + 计费 | ⚪ 待开始 |
+| P3 全面切换 | 完全替代 Copilot | ⚪ 待开始 |

@@ -93,3 +93,19 @@ Notion 主脑更新
         ↓
 生成下一任务（自动开发循环）
 ```
+
+---
+
+## 自研执行引擎 · EXE-Engine（PRJ-EXE-001）
+
+> Phase 0 · 2026-03-26 立项 · 本体论：AGE OS = 笔 · 算力 = 墨水 · 用户 = 写字的人
+
+| 组件 | 路径 | 职责 |
+|------|------|------|
+| AGE-Router | `exe-engine/src/router/age-router.js` | 路由网关：鉴权、分类、模型选择、限流降级 |
+| DeepSeek 适配器 | `exe-engine/src/adapters/deepseek-adapter.js` | DeepSeek-V3/R1 模型调用 |
+| Qwen 适配器 | `exe-engine/src/adapters/qwen-adapter.js` | Qwen-Max/Coder 模型调用 |
+| 负载均衡器 | `exe-engine/src/balancer/load-balancer.js` | 成本/质量/均衡策略选择 |
+| 资源计量器 | `exe-engine/src/meter/resource-meter.js` | Token 消耗记录 + 成本统计 |
+| 上下文缓存 | `exe-engine/src/cache/context-cache.js` | Agent 上下文 LRU 缓存 |
+| Agent 调度器 | `exe-engine/src/controller/agent-controller.js` | Agent→模型偏好映射 |
