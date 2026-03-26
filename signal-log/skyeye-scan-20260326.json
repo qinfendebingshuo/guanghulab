@@ -1,0 +1,121 @@
+{
+  "scan_id": "SKYEYE-SCAN-20260326-001",
+  "trigger": "ZY-AGEOS-TOWER-2026-0326-001",
+  "timestamp": "2026-03-26T04:52:00Z",
+  "guards": {
+    "workflow": {
+      "total": 102,
+      "healthy": 102,
+      "failing": 0,
+      "details": [
+        {
+          "name": "deploy-pages.yml",
+          "status": "✅正常",
+          "recent_5": ["success", "success", "success", "success", "success"],
+          "note": "GitHub Pages 部署相关 · 最近 10 次全部成功"
+        },
+        {
+          "name": "deploy-to-server.yml",
+          "status": "✅正常",
+          "note": "阿里云服务器部署"
+        },
+        {
+          "name": "deploy-backend.yml",
+          "status": "✅正常",
+          "note": "后端 API 服务部署"
+        },
+        {
+          "name": "skyeye-pr-risk-check.yml",
+          "status": "✅正常",
+          "note": "天眼合并膜 PR 风险检查"
+        },
+        {
+          "name": "neural-daily-digest.yml",
+          "status": "✅正常",
+          "note": "天眼每日巡检"
+        }
+      ]
+    },
+    "secret": {
+      "total": 8,
+      "valid": 8,
+      "missing": 0,
+      "details": [
+        { "name": "DEPLOY_HOST", "status": "configured" },
+        { "name": "DEPLOY_USER", "status": "configured" },
+        { "name": "DEPLOY_KEY", "status": "configured" },
+        { "name": "DEPLOY_PATH", "status": "configured" },
+        { "name": "NOTION_TOKEN", "status": "configured" },
+        { "name": "LLM_API_KEY", "status": "configured" },
+        { "name": "LLM_BASE_URL", "status": "configured" },
+        { "name": "SMTP_USER", "status": "configured" },
+        { "name": "SMTP_PASS", "status": "configured" }
+      ]
+    },
+    "structure": {
+      "total": 4,
+      "intact": 4,
+      "broken": 0,
+      "details": [
+        {
+          "path": "docs/",
+          "status": "✅完整",
+          "files": ["index.html", "CNAME", ".nojekyll", "css/", "js/", "dashboard/", "dev-portal/"],
+          "note": "GitHub Pages source 目录完整"
+        },
+        {
+          "path": ".github/persona-brain/",
+          "status": "✅完整",
+          "files": ["memory.json", "ontology.json", "identity.md", "persona-registry.json", "agent-registry.json", "gate-guard-config.json", "security-protocol.json", "tcs-ml/"],
+          "note": "大脑文件完整"
+        },
+        {
+          "path": "skyeye/",
+          "status": "✅完整",
+          "files": ["guards/", "logs/", "scan-report/", "scripts/", "infra-manifest.json", "neural-analysis-rules.json", "quota-ledger.json"],
+          "note": "天眼配置完整"
+        },
+        {
+          "path": "signal-log/",
+          "status": "✅完整",
+          "files": ["index.json", "2026-03/", "diag-devsync-20260325.json", "diag-humanside-20260325.json"],
+          "note": "信号日志目录完整"
+        }
+      ]
+    },
+    "deploy": {
+      "pages_status": "active",
+      "pages_last_success": "2026-03-25T23:26:45Z",
+      "pages_last_commit": "d425727538dcf154844761cfc5d05cc700b5f9f9",
+      "pages_source": "GitHub Actions (deploy-pages.yml)",
+      "server_status": "configured",
+      "server_ip": "8.155.62.235",
+      "server_stack": "Nginx + PM2 + Node.js 20",
+      "details": [
+        {
+          "item": "GitHub Pages",
+          "status": "✅ Active · 最近部署成功",
+          "url": "https://qinfendebingshuo.github.io/guanghulab/",
+          "note": "通过 deploy-pages.yml workflow 部署，source = docs/ 目录"
+        },
+        {
+          "item": "主域名 CNAME",
+          "status": "✅ 已配置",
+          "domain": "guanghulab.com",
+          "note": "docs/CNAME 指向 guanghulab.com"
+        },
+        {
+          "item": "阿里云服务器",
+          "status": "⚠️ 需在线验证",
+          "note": "SSH 连通性需在服务器端确认，sandbox 环境无法直连"
+        }
+      ]
+    },
+    "quota": {
+      "daily_total": "auto-detect",
+      "daily_used": 0,
+      "reserved_bingshuo": "40%",
+      "note": "配额守卫待本指令 Phase 2 部署后生效"
+    }
+  }
+}

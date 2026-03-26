@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "description": "行业代表制仓库映射表 · 铸渊接入行业而非个人",
+  "instruction": "ZY-AGEOS-TOWER-2026-0326-001",
+  "copyright": "国作登字-2026-A-00037559",
+  "data_policy": {
+    "we_store": ["industry_id", "rep_dev_id", "github_username", "repo_url", "pat_hash", "member_count", "daily_call_count"],
+    "we_do_not_store": ["user_personal_data", "user_manuscripts", "user_private_content"],
+    "reason": "铸渊管理行业仓库，行业数据归代表人所有"
+  },
+  "industries": {
+    "IND-001": {
+      "name": "网文行业",
+      "representative": {
+        "dev_id": "DEV-002",
+        "name": "肥猫",
+        "github_username": "",
+        "repo_url": "",
+        "pat_status": "not_registered",
+        "membership": "yearly_enterprise",
+        "membership_start": null
+      },
+      "subdomain": "writing.guanghulab.com",
+      "users": [],
+      "status": "pending_setup",
+      "created_at": null
+    }
+  },
+  "system": {
+    "representative": {
+      "dev_id": "TCS-0002",
+      "name": "冰朔",
+      "repo_url": "qinfendebingshuo/guanghulab",
+      "role": "系统层 · 不承接行业开发调用"
+    }
+  }
+}

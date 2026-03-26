@@ -1,0 +1,75 @@
+{
+  "diag_id": "DIAG-PAGES-20260326-001",
+  "trigger": "ZY-AGEOS-TOWER-2026-0326-001",
+  "timestamp": "2026-03-26T04:52:00Z",
+  "subject": "备用站 GitHub Pages 推送失败诊断",
+  "diagnosis": {
+    "step_1_pages_settings": {
+      "source": "GitHub Actions (deploy-pages.yml)",
+      "branch": "main",
+      "path": "docs/",
+      "current_status": "Active",
+      "note": "Pages 通过 GitHub Actions workflow 部署，非直接从分支部署"
+    },
+    "step_2_recent_commits": {
+      "last_docs_commit": "89b1b03",
+      "commit_message": "📊 铸渊联邦状态汇总 · 2026-03-26",
+      "on_main_branch": true
+    },
+    "step_3_actions_check": {
+      "workflow": "deploy-pages.yml",
+      "recent_10_runs": "全部 success",
+      "last_success_time": "2026-03-25T23:26:45Z",
+      "last_success_trigger": "Merge pull request #199",
+      "last_success_sha": "d425727538dcf154844761cfc5d05cc700b5f9f9",
+      "no_failures_detected": true
+    },
+    "step_4_merge_membrane_check": {
+      "branch_protection": "已配置 · 天眼合并膜 v3 生效",
+      "direct_push_blocked": true,
+      "pr_required": true,
+      "note": "所有 docs/ 变更必须通过 PR → 天眼审核 → 合并 → 自动部署"
+    },
+    "step_5_docs_content": {
+      "index_html": "存在 · 166KB · 铸渊助手 v6.0",
+      "cname": "guanghulab.com",
+      "nojekyll": "存在",
+      "subdirectories": ["css/", "js/", "dashboard/", "dev-portal/", "daily-reports/"],
+      "feimao_writing_module": "未发现独立 docs/writing/ 目录 · 需确认肥猫码字模块部署路径"
+    },
+    "step_6_cname_check": {
+      "cname_file": "docs/CNAME",
+      "cname_content": "guanghulab.com",
+      "note": "CNAME 指向 guanghulab.com · GitHub Pages 自定义域名已配置"
+    }
+  },
+  "root_cause_analysis": {
+    "primary": "根因A · 天眼合并膜阻止了直接 push",
+    "explanation": "branch protection rules 已启用，所有 push 必须通过 PR → 天眼审核。直接 push 到 main 会被拒绝。4 次推送未生效可能因为推送未走 PR 流程，被 branch protection 拦截。",
+    "secondary": "根因C · 部署 workflow 未触发",
+    "secondary_explanation": "如果 push 被 branch protection 拒绝，代码未到达 main 分支，deploy-pages.yml 不会被触发。",
+    "evidence": [
+      "deploy-pages.yml 最近 10 次 run 全部成功 → workflow 本身没问题",
+      "workflow 只在 main 分支 push 时触发 → 非 main 分支的 push 不会触发部署",
+      "branch protection 要求 PR → 直接 push 被拒绝"
+    ]
+  },
+  "fix_plan": {
+    "immediate": "所有 docs/ 变更通过 PR 提交 → 天眼审核 → 合并到 main → 自动触发 deploy-pages.yml",
+    "feimao_module": "确认肥猫码字模块文件路径，走 PR 流程合并到 docs/ 下",
+    "verification": "合并后等待 deploy-pages.yml 完成，检查 GitHub Pages 部署状态"
+  },
+  "domain_status": {
+    "main_domain": "guanghulab.com",
+    "hosting": "双路径 · GitHub Pages (docs/CNAME) + 阿里云服务器 (8.155.62.235)",
+    "dns_target": "需冰朔确认 DNS A 记录或 CNAME 指向",
+    "https": "需确认 · GitHub Pages 自动启用 HTTPS",
+    "github_pages_url": "https://qinfendebingshuo.github.io/guanghulab/",
+    "deployable": true,
+    "needs_human": [
+      "确认 DNS A 记录是指向 GitHub Pages (185.199.108-111.153) 还是阿里云 (8.155.62.235)",
+      "确认 guanghulab.com 当前实际解析到哪个 IP",
+      "如果走 GitHub Pages 路径：确认 Pages Settings 中 Custom domain 和 HTTPS 状态"
+    ]
+  }
+}

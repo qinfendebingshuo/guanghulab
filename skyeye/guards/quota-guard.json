@@ -1,0 +1,55 @@
+{
+  "guard_id": "QUOTA-GUARD",
+  "guard_name": "天眼配额守卫",
+  "version": "1.0",
+  "instruction": "ZY-AGEOS-TOWER-2026-0326-001",
+  "copyright": "国作登字-2026-A-00037559",
+  "quota_pool": {
+    "description": "冰朔企业会员每日总调用配额",
+    "source": "GitHub Copilot Enterprise",
+    "daily_total": "auto-detect"
+  },
+  "priority_tiers": {
+    "P0": {
+      "name": "冰朔保留区",
+      "allocation_percent": 40,
+      "members": ["TCS-0002"],
+      "borrowable": false,
+      "description": "永不可被其他人借用，即使全团队配额耗尽"
+    },
+    "P1": {
+      "name": "核心开发者",
+      "allocation_percent": 40,
+      "members": ["DEV-002", "DEV-004", "DEV-010"],
+      "per_member_daily_cap": "equal_split",
+      "borrowable_to_P2": true,
+      "description": "闲置配额可临时借给P2"
+    },
+    "P2": {
+      "name": "一般成员",
+      "allocation_percent": 20,
+      "members": ["DEV-001", "DEV-003", "DEV-005", "DEV-009", "DEV-011", "DEV-012"],
+      "per_member_daily_cap": "equal_split",
+      "borrowable": false
+    }
+  },
+  "dynamic_adjustment": {
+    "enabled": true,
+    "trigger": "daily",
+    "logic": "基于前一天实际使用量动态调整P1/P2分配比例，P0保留区不变"
+  },
+  "alerts": [
+    {
+      "condition": "P0保留区被尝试访问（非冰朔）",
+      "action": "拒绝 + 记录日志"
+    },
+    {
+      "condition": "任一成员达到当日上限80%",
+      "action": "预警通知"
+    },
+    {
+      "condition": "总配额消耗达到90%",
+      "action": "全员预警 + 限制P2调用"
+    }
+  ]
+}

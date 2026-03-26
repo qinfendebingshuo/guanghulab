@@ -58,6 +58,9 @@ app.use('/api/execution', require('./routes/execution'));
 // 部署授权流程路由（需认证）
 app.use('/api/approval', require('./routes/approval'));
 
+// 行业代表制路由（需认证）
+app.use('/api', require('./routes/industry'));
+
 // 根路由
 app.get('/', function(_req, res) {
   res.json({

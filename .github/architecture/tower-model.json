@@ -1,0 +1,65 @@
+{
+  "architecture": "tower-model",
+  "version": "1.0",
+  "defined_by": "ZY-AGEOS-TOWER-2026-0326-001",
+  "copyright": "国作登字-2026-A-00037559",
+  "control_plane": {
+    "name": "AGE OS Tower",
+    "domain": "guanghulab.com",
+    "capabilities": ["auth", "channel-panel", "command-relay", "status-display"],
+    "restrictions": ["no-code-execution", "no-direct-deploy", "no-pause-during-execution"],
+    "description": "操作系统网站只做指令中转，真正的执行在代码仓库和部署服务器"
+  },
+  "execution_plane": {
+    "primary": {
+      "name": "guanghulab",
+      "type": "github-repo",
+      "agent": "AG-ZY-01",
+      "repo": "qinfendebingshuo/guanghulab"
+    },
+    "federation": {
+      "description": "开发者子仓库，通过令牌对接",
+      "auth_method": "PAT",
+      "data_policy": "代码和文档留在开发者自己的仓库，主仓库只存编号路径映射"
+    },
+    "server": {
+      "ip": "8.155.62.235",
+      "stack": "Nginx + PM2 + Node.js"
+    }
+  },
+  "communication_protocol": {
+    "flow": [
+      "① 开发者在 AGE OS 面板登录（DEV-XXX 身份）",
+      "② 进入自己的频道面板",
+      "③ 通过对话界面向人格体下发指令",
+      "④ AGE OS 后端接收指令",
+      "⑤ 指令格式化为标准 JSON",
+      "⑥ 通过 GitHub API / MCP 转发给铸渊",
+      "⑦ 铸渊在仓库端执行",
+      "⑧ 执行结果回写 signal-log",
+      "⑨ AGE OS 轮询/webhook 获取结果",
+      "⑩ 面板回显执行状态"
+    ],
+    "key_principle": "AGE OS 本身不执行任何代码操作，只做信号中转和状态回显"
+  },
+  "no_pause_rule": {
+    "description": "指令一旦接收，不可暂停，不可撤回",
+    "reason": "100+ workflows + multi-agent cluster stability",
+    "enforcement": "frontend removes pause/cancel UI; backend rejects cancel API",
+    "details": [
+      "系统有 100+ 工作流",
+      "多个 Agent 集群协同",
+      "执行期间突然暂停 → 不可预测的系统错误",
+      "系统一切以整体维稳为最高优先级"
+    ]
+  },
+  "industry_model": {
+    "description": "行业代表制 · 铸渊接入行业而非个人",
+    "principle": "每个行业有一个代表人，代表人开自己的企业会员，铸渊管理代表人的仓库",
+    "first_industry": {
+      "id": "IND-001",
+      "name": "网文行业",
+      "representative": "DEV-002"
+    }
+  }
+}
