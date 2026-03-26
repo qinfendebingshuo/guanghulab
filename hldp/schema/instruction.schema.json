@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab.com/hldp/schema/instruction.schema.json",
+  "title": "HLDP Instruction Schema · 指令数据格式",
+  "description": "定义铸渊协作指令的 payload 结构",
+  "protocol": "HLDP",
+  "version": "1.0",
+  "parent_language": "TCS Language Core",
+  "copyright": "国作登字-2026-A-00037559",
+  "designer": "TCS-0002∞ 冰朔",
+  "allOf": [
+    { "$ref": "hldp-core.schema.json" }
+  ],
+  "properties": {
+    "data_type": { "const": "instruction" },
+    "payload": {
+      "type": "object",
+      "required": ["instruction_id", "title", "level"],
+      "properties": {
+        "instruction_id": {
+          "type": "string",
+          "pattern": "^SY-CMD-[A-Z]+-[0-9]+$",
+          "description": "指令编号"
+        },
+        "title": {
+          "type": "string",
+          "description": "指令标题"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["S", "A", "B", "C"],
+          "description": "指令等级"
+        },
+        "issuer": {
+          "type": "string",
+          "description": "签发人"
+        },
+        "authorizer": {
+          "type": "string",
+          "description": "授权人"
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "签发时间"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "前置指令"
+        },
+        "execution_order": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "执行步骤顺序"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_id", "description"],
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "任务编号"
+              },
+              "description": {
+                "type": "string",
+                "description": "任务描述"
+              },
+              "acceptance_criteria": {
+                "type": "string",
+                "description": "验收标准"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["pending", "in_progress", "done", "failed"],
+                "description": "任务状态"
+              }
+            }
+          }
+        },
+        "syslog_template": {
+          "type": "string",
+          "description": "SYSLOG 回执模板"
+        }
+      }
+    }
+  }
+}

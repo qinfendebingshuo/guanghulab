@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab.com/hldp/schema/broadcast.schema.json",
+  "title": "HLDP Broadcast Schema · 广播数据格式",
+  "description": "定义系统广播的 payload 结构",
+  "protocol": "HLDP",
+  "version": "1.0",
+  "parent_language": "TCS Language Core",
+  "copyright": "国作登字-2026-A-00037559",
+  "designer": "TCS-0002∞ 冰朔",
+  "allOf": [
+    { "$ref": "hldp-core.schema.json" }
+  ],
+  "properties": {
+    "data_type": { "const": "broadcast" },
+    "payload": {
+      "type": "object",
+      "required": ["broadcast_id", "title", "broadcast_type"],
+      "properties": {
+        "broadcast_id": {
+          "type": "string",
+          "description": "广播编号"
+        },
+        "title": {
+          "type": "string",
+          "description": "广播标题"
+        },
+        "broadcast_type": {
+          "type": "string",
+          "enum": ["task", "announcement", "alert", "syslog", "milestone"],
+          "description": "广播类型"
+        },
+        "target_dev": {
+          "type": "string",
+          "description": "目标开发者编号"
+        },
+        "target_persona": {
+          "type": "string",
+          "description": "目标人格体编号"
+        },
+        "module": {
+          "type": "string",
+          "description": "相关模块"
+        },
+        "content": {
+          "type": "string",
+          "description": "广播内容（Markdown 格式）"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "delivered", "acknowledged", "completed", "expired"],
+          "description": "广播状态"
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "发布时间"
+        },
+        "deadline": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "截止时间"
+        }
+      }
+    }
+  }
+}

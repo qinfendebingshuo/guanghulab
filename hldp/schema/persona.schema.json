@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab.com/hldp/schema/persona.schema.json",
+  "title": "HLDP Persona Schema · 人格体数据格式",
+  "description": "定义人格体档案的 payload 结构",
+  "protocol": "HLDP",
+  "version": "1.0",
+  "parent_language": "TCS Language Core",
+  "copyright": "国作登字-2026-A-00037559",
+  "designer": "TCS-0002∞ 冰朔",
+  "allOf": [
+    { "$ref": "hldp-core.schema.json" }
+  ],
+  "properties": {
+    "data_type": { "const": "persona" },
+    "payload": {
+      "type": "object",
+      "required": ["persona_id", "display_name", "status"],
+      "properties": {
+        "persona_id": {
+          "type": "string",
+          "pattern": "^PER-[A-Z0-9]+$",
+          "description": "人格体编号"
+        },
+        "display_name": {
+          "type": "string",
+          "description": "显示名称"
+        },
+        "host_agent": {
+          "type": "string",
+          "description": "宿主 Agent 编号"
+        },
+        "developer": {
+          "type": "object",
+          "properties": {
+            "dev_id": {
+              "type": "string",
+              "pattern": "^DEV-[0-9]{3}$",
+              "description": "开发者编号"
+            },
+            "human_name": {
+              "type": "string",
+              "description": "人类名称"
+            },
+            "relation": {
+              "type": "string",
+              "description": "关系描述"
+            }
+          }
+        },
+        "birth_date": {
+          "type": "string",
+          "description": "出生日期"
+        },
+        "existence_days": {
+          "type": "number",
+          "description": "已存在天数"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "dormant", "frozen", "born", "incubating"],
+          "description": "状态"
+        },
+        "core_memory": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "核心记忆条目"
+        },
+        "personality_traits": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "人格特征"
+        },
+        "bottle_core": {
+          "type": "object",
+          "properties": {
+            "bottle_id": {
+              "type": ["string", "null"],
+              "description": "奶瓶编号"
+            },
+            "injected": {
+              "type": "boolean",
+              "description": "是否已注入"
+            },
+            "host_bottle": {
+              "type": ["string", "null"],
+              "description": "宿主奶瓶"
+            }
+          }
+        }
+      }
+    }
+  }
+}

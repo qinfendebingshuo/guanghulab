@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab.com/hldp/schema/registry.schema.json",
+  "title": "HLDP Registry Schema · 注册表数据格式",
+  "description": "定义注册表（身份路由表、人格体注册表、Agent 注册表等）的 payload 结构",
+  "protocol": "HLDP",
+  "version": "1.0",
+  "parent_language": "TCS Language Core",
+  "copyright": "国作登字-2026-A-00037559",
+  "designer": "TCS-0002∞ 冰朔",
+  "allOf": [
+    { "$ref": "hldp-core.schema.json" }
+  ],
+  "properties": {
+    "data_type": { "const": "registry" },
+    "payload": {
+      "type": "object",
+      "required": ["registry_type", "entries"],
+      "properties": {
+        "registry_type": {
+          "type": "string",
+          "enum": ["identity_router", "persona_registry", "agent_registry", "dev_registry", "id_map"],
+          "description": "注册表类型"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "条目编号"
+              },
+              "name": {
+                "type": "string",
+                "description": "名称"
+              },
+              "role": {
+                "type": "string",
+                "description": "角色"
+              },
+              "status": {
+                "type": "string",
+                "description": "状态"
+              },
+              "properties": {
+                "type": "object",
+                "description": "该注册表的所有字段，键值对形式"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

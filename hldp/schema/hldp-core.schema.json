@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab.com/hldp/schema/hldp-core.schema.json",
+  "title": "HLDP Core Schema · HoloLake Data Protocol v1.0",
+  "description": "TCS 通感语言核系统编程语言在 Notion ↔ GitHub 通道上的第一个落地协议层",
+  "protocol": "HLDP",
+  "version": "1.0",
+  "parent_language": "TCS Language Core",
+  "copyright": "国作登字-2026-A-00037559",
+  "designer": "TCS-0002∞ 冰朔",
+  "type": "object",
+  "required": ["hldp_version", "data_type", "source", "metadata", "payload"],
+  "properties": {
+    "hldp_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "HLDP 协议版本"
+    },
+    "data_type": {
+      "type": "string",
+      "enum": ["persona", "registry", "instruction", "broadcast", "id_system"],
+      "description": "数据类型 · persona=人格体 | registry=注册表 | instruction=指令 | broadcast=广播 | id_system=编号体系"
+    },
+    "source": {
+      "type": "object",
+      "required": ["platform"],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": ["notion", "github", "manual"],
+          "description": "数据来源平台"
+        },
+        "page_url": {
+          "type": "string",
+          "description": "Notion 页面 URL"
+        },
+        "page_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "description": "Notion 页面 ID（UUID 格式）"
+        },
+        "last_edited": {
+          "type": "string",
+          "format": "date-time",
+          "description": "最后编辑时间（ISO-8601）"
+        },
+        "edited_by": {
+          "type": "string",
+          "description": "最后编辑者"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "系统编号（如 PER-QQ001、DEV-002、SY-CMD-SKY-004）"
+        },
+        "name": {
+          "type": "string",
+          "description": "名称（中文）"
+        },
+        "name_en": {
+          "type": "string",
+          "description": "English name"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "创建时间（ISO-8601）"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "标签"
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "具体数据，根据 data_type 不同而不同"
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target_id", "relation_type"],
+        "properties": {
+          "target_id": {
+            "type": "string",
+            "description": "关联的编号"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": ["parent", "child", "sibling", "reference", "owner"],
+            "description": "关系类型"
+          },
+          "description": {
+            "type": "string",
+            "description": "关系描述"
+          }
+        }
+      },
+      "description": "与其他实体的关系"
+    }
+  }
+}
