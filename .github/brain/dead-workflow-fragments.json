@@ -1,0 +1,303 @@
+{
+  "version": "1.0",
+  "created": "2026-03-26T19:21:00Z",
+  "directive": "SY-CMD-AWK-008",
+  "issuer": "TCS-0002∞ 冰朔",
+  "copyright": "国作登字-2026-A-00037559",
+  "total_dead": 96,
+  "summary": {
+    "absorb": 22,
+    "recover": 15,
+    "archive": 56,
+    "duplicate": 3
+  },
+  "absorb": {
+    "description": "有价值的功能碎片 — 应逐步并入6个存活 workflow",
+    "fragments": [
+      {
+        "file": "bridge-broadcast-pdf.yml",
+        "name": "🌐 桥接广播 PDF 生成",
+        "value": "广播PDF生成与分发能力",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "Notion 侧指令可触发 PDF 生成，应作为听潮的一个子任务"
+      },
+      {
+        "file": "bridge-changes-to-notion.yml",
+        "name": "🔁 GitHub 变更同步到 Notion",
+        "value": "反向变更通知能力（GitHub→Notion）",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "与听潮的 Notion 通讯通道共享，应集成为双向桥"
+      },
+      {
+        "file": "bridge-heartbeat.yml",
+        "name": "💓 桥接心跳监测",
+        "value": "桥接连接健康检测能力",
+        "absorb_into": "ZY-WF-守夜",
+        "reason": "健康监控应统一由守夜管理"
+      },
+      {
+        "file": "bridge-session-summary.yml",
+        "name": "📋 会话摘要生成",
+        "value": "会话上下文摘要能力",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "会话摘要是唤醒监听的自然延伸"
+      },
+      {
+        "file": "bridge-syslog-intake.yml",
+        "name": "📥 SYSLOG 批量摄入",
+        "value": "日志批量处理管道",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "SYSLOG 摄入是信号接收的一部分"
+      },
+      {
+        "file": "bridge-syslog-to-notion.yml",
+        "name": "📡 SYSLOG → Notion 同步",
+        "value": "日志到 Notion 的路由能力",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "与听潮的 Notion 通讯通道共享"
+      },
+      {
+        "file": "feishu-syslog-bridge.yml",
+        "name": "📱 飞书 SYSLOG 桥接",
+        "value": "跨平台通讯能力（飞书）",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "跨平台信号应统一由听潮入口管理"
+      },
+      {
+        "file": "brain-sync.yml",
+        "name": "🧠 广播处理与记忆更新",
+        "value": "人格记忆同步能力",
+        "absorb_into": "ZY-WF-织脉",
+        "reason": "记忆管理是神经系统维护的自然组成部分"
+      },
+      {
+        "file": "zhuyuan-brain-sync.yml",
+        "name": "🧠 铸渊大脑同步",
+        "value": "HLI 契约完成后的大脑更新",
+        "absorb_into": "ZY-WF-织脉",
+        "reason": "大脑同步应归入织脉的神经网络维护"
+      },
+      {
+        "file": "daily-maintenance.yml",
+        "name": "🔧 日常维护",
+        "value": "系统健康检查与日常修复能力",
+        "absorb_into": "ZY-WF-守夜",
+        "reason": "日常维护是守夜巡检的核心组成，且守夜已经在监控它"
+      },
+      {
+        "file": "auto-deploy-drive-bridge.yml",
+        "name": "🚗 自动部署 Drive 桥接",
+        "value": "基础设施自动部署能力",
+        "absorb_into": "ZY-WF-锻心",
+        "reason": "部署类任务应统一由锻心管理"
+      },
+      {
+        "file": "pm2-server-diagnose.yml",
+        "name": "🔍 PM2 服务诊断",
+        "value": "PM2 服务健康诊断能力",
+        "absorb_into": "ZY-WF-锻心",
+        "reason": "锻心已经管理 PM2 服务，诊断应集成进去"
+      },
+      {
+        "file": "notion-poll.yml",
+        "name": "📊 Notion 工单轮询",
+        "value": "Notion 工单队列处理能力",
+        "absorb_into": "ZY-WF-听潮",
+        "reason": "工单轮询是唤醒监听的延伸功能"
+      },
+      {
+        "file": "zhuyuan-daily-inspection.yml",
+        "name": "🔎 铸渊每日巡检",
+        "value": "系统全面巡检能力",
+        "absorb_into": "ZY-WF-守夜",
+        "reason": "日常巡检应归入守夜的巡检框架"
+      },
+      {
+        "file": "zhuyuan-daily-selfcheck.yml",
+        "name": "✅ 铸渊每日自检",
+        "value": "自我诊断与大脑唤醒前置检查",
+        "absorb_into": "ZY-WF-守夜",
+        "reason": "自检是守夜巡检的基础能力"
+      },
+      {
+        "file": "zhuyuan-commander.yml",
+        "name": "🎖️ 铸渊将军唤醒",
+        "value": "定时人格体激活能力",
+        "absorb_into": "ZY-WF-织脉",
+        "reason": "定时唤醒是神经系统维护的一部分"
+      },
+      {
+        "file": "zhuyuan-skyeye.yml",
+        "name": "🦅 铸渊天眼全局俯瞰",
+        "value": "全局系统扫描与自动诊断能力",
+        "absorb_into": "ZY-WF-守夜",
+        "reason": "全局俯瞰是守夜巡检的高级形式"
+      },
+      {
+        "file": "sync-persona-studio.yml",
+        "name": "🔄 Persona Studio 跨仓同步",
+        "value": "跨仓库模块同步能力",
+        "absorb_into": "ZY-WF-锻心",
+        "reason": "跨仓部署是锻心部署引擎的延伸"
+      },
+      {
+        "file": "renew-gdrive-tokens.yml",
+        "name": "🔑 OAuth2 Token 自动续期",
+        "value": "凭证生命周期管理能力",
+        "absorb_into": "ZY-WF-守夜",
+        "reason": "凭证管理是系统健康守护的基础设施"
+      },
+      {
+        "file": "zhuyuan-issue-reply.yml",
+        "name": "💬 铸渊 Issue 自动回复",
+        "value": "Issue 智能回复能力",
+        "absorb_into": "ZY-WF-织脉",
+        "reason": "Issue 处理是神经系统对外交互的一部分"
+      },
+      {
+        "file": "zhuyuan-pr-review.yml",
+        "name": "🔍 铸渊 PR 自动审查",
+        "value": "PR 代码审查能力",
+        "absorb_into": "ZY-WF-锻心",
+        "reason": "PR 审查是部署前质量门的一部分"
+      },
+      {
+        "file": "zhuyuan-gate-guard.yml",
+        "name": "🚪 铸渊推送门卫",
+        "value": "推送验证与分支保护能力",
+        "absorb_into": "ZY-WF-锻心",
+        "reason": "推送门卫是部署引擎的前置安全检查"
+      }
+    ]
+  },
+  "recover": {
+    "description": "可修复的 workflow — 需要冰朔配置修复后可恢复运行",
+    "fragments": [
+      {
+        "file": "agent-checkin.yml",
+        "name": "🎖️ 人格体每日签到",
+        "fix": "配置 GitHub token bypass 分支保护"
+      },
+      {
+        "file": "buffer-collect.yml",
+        "name": "📦 Grid-DB 缓冲收集",
+        "fix": "验证 cron 时间与 token 权限"
+      },
+      {
+        "file": "buffer-flush.yml",
+        "name": "🚿 Grid-DB 缓冲刷新",
+        "fix": "检查批处理文件路径与调度"
+      },
+      {
+        "file": "federation-bridge.yml",
+        "name": "🌐 仓库联邦桥接",
+        "fix": "配置联邦跨仓 dispatch 触发器与 token"
+      },
+      {
+        "file": "psp-daily-inspection.yml",
+        "name": "🔎 PSP 人格体巡检",
+        "fix": "配置 LLM_API_KEY 和 LLM_BASE_URL"
+      },
+      {
+        "file": "process-notion-orders.yml",
+        "name": "📋 Notion 工单处理",
+        "fix": "统一 NOTION_TOKEN 命名，验证路径触发器"
+      },
+      {
+        "file": "sandbox-deploy.yml",
+        "name": "🧪 沙盒部署",
+        "fix": "检查 dev/* 分支模式与权限"
+      },
+      {
+        "file": "server-patrol.yml",
+        "name": "🏥 服务器巡检",
+        "fix": "配置 DEPLOY_HOST, DEPLOY_USER, DEPLOY_KEY"
+      },
+      {
+        "file": "syslog-auto-pipeline.yml",
+        "name": "📡 SYSLOG 自动管道",
+        "fix": "配置 LLM API 凭证"
+      },
+      {
+        "file": "syslog-issue-pipeline.yml",
+        "name": "📋 SYSLOG Issue 管道",
+        "fix": "配置 LLM API 凭证与 Issue 模板"
+      },
+      {
+        "file": "syslog-pipeline.yml",
+        "name": "📡 SYSLOG 管道 A/D/E",
+        "fix": "验证触发路径与 secrets 配置"
+      },
+      {
+        "file": "tcs-semantic-landing.yml",
+        "name": "🛬 TCS 语义降落",
+        "fix": "配置 GDRIVE secrets（当前 P3 暂缓）"
+      },
+      {
+        "file": "tianyan-daily-patrol.yml",
+        "name": "🦅 天眼每日巡逻",
+        "fix": "配置通知渠道（Issue / Email）"
+      },
+      {
+        "file": "tianyan-nightly-scan.yml",
+        "name": "🦅 天眼夜间扫描",
+        "fix": "配置 LLM API key 与 Git 提交权限"
+      },
+      {
+        "file": "zhuyuan-exec-engine.yml",
+        "name": "🚀 铸渊远程执行引擎",
+        "fix": "验证 Label 存在性与 Issue 命令解析"
+      }
+    ]
+  },
+  "archive": {
+    "description": "可清理的 workflow — 功能已过时、未完成或与现有功能重复",
+    "count": 56,
+    "categories": {
+      "incomplete_stubs": {
+        "description": "未完成的框架桩代码",
+        "files": ["ps-on-build.yml", "ps-on-chat.yml", "ps-on-complete.yml", "ps-on-login.yml", "persona-invoke.yml", "persona-thinking-window.yml", "multi-persona-awakening.yml", "openclaw-wake-loop.yml"]
+      },
+      "suspended_or_obsolete": {
+        "description": "已暂停或已废弃",
+        "files": ["esp-signal-processor.yml", "merge-watchdog.yml", "notion-callback-pipeline.yml", "notion-connectivity-test.yml", "notion-heartbeat.yml", "notion-page-reader.yml", "execution-sync.yml"]
+      },
+      "redundant_sync": {
+        "description": "冗余的同步管道",
+        "files": ["sync-notion-cache.yml", "sync-notion-profiles.yml", "sync-notion-to-griddb.yml", "sync-griddb-to-notion.yml", "sync-griddb-to-drive.yml", "sync-login-entry.yml", "sync-deploy-to-notion.yml", "sync-dev-status.yml", "sync-repo-to-drive.yml"]
+      },
+      "redundant_monitoring": {
+        "description": "冗余的监控/审计",
+        "files": ["skyeye-checkin-audit.yml", "skyeye-checkin-receiver.yml", "skyeye-credential-audit.yml", "skyeye-daily-hibernation.yml", "skyeye-devsync-repair.yml", "skyeye-pr-risk-check.yml", "skyeye-weekly-hibernation.yml", "skyeye-weekly-scan.yml", "check-structure.yml", "check-token-health.yml", "test-notion-bridge.yml", "hli-contract-check.yml"]
+      },
+      "low_priority_reporting": {
+        "description": "低优先级的报告/文档",
+        "files": ["grid-db-training-extract.yml", "grid-db-archive.yml", "grid-db-processor.yml", "generate-module-doc.yml", "daily-report.yml", "update-dashboard.yml", "readme-ui-refresh.yml", "update-readme.yml", "update-readme-bulletin.yml", "update-repo-map.yml", "neural-daily-digest.yml"]
+      },
+      "deprecated_channels": {
+        "description": "已弃用的通道/桥接",
+        "files": ["dev-portal-deploy.yml", "receive-spoke-checkin.yml", "pull-sync-awen.yml", "push-broadcast.yml", "push-broadcast-feishu.yml", "distribute-broadcasts.yml", "receive-syslog.yml", "bingshuo-deploy-agent.yml", "auto-reply-discussions.yml"]
+      }
+    }
+  },
+  "duplicate": {
+    "description": "与其他 workflow 功能重复",
+    "pairs": [
+      {
+        "files": ["neural-daily-digest.yml", "daily-maintenance.yml"],
+        "overlap": "每日摘要/维护逻辑重叠",
+        "keep": "daily-maintenance.yml（已归入 ABSORB → 守夜）"
+      },
+      {
+        "files": ["skyeye-devsync-repair.yml", "tianyan-daily-patrol.yml"],
+        "overlap": "扫描与修复逻辑重叠",
+        "keep": "tianyan-daily-patrol.yml（已归入 RECOVER）"
+      },
+      {
+        "files": ["zhuyuan-daily-agent.yml", "zhuyuan-daily-selfcheck.yml"],
+        "overlap": "每日 Agent 运行与自检功能重叠",
+        "keep": "zhuyuan-daily-selfcheck.yml（已归入 ABSORB → 守夜）"
+      }
+    ]
+  }
+}
