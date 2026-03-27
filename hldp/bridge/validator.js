@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '../..');
-const VALID_DATA_TYPES = ['persona', 'registry', 'instruction', 'broadcast', 'id_system'];
+const VALID_DATA_TYPES = ['persona', 'registry', 'instruction', 'broadcast', 'id_system', 'snapshot'];
 const VALID_RELATION_TYPES = ['parent', 'child', 'sibling', 'reference', 'owner'];
 
 // ID format patterns
@@ -51,8 +51,8 @@ function validateEntry(entry, filePath) {
   if (!entry.payload) errors.push(`${prefix}缺少 payload`);
 
   // 2. Check hldp_version
-  if (entry.hldp_version && entry.hldp_version !== '1.0') {
-    warnings.push(`${prefix}hldp_version 为 "${entry.hldp_version}"，预期 "1.0"`);
+  if (entry.hldp_version && entry.hldp_version !== '1.0' && entry.hldp_version !== '2.0') {
+    warnings.push(`${prefix}hldp_version 为 "${entry.hldp_version}"，预期 "1.0" 或 "2.0"`);
   }
 
   // 3. Check data_type
@@ -109,6 +109,18 @@ function validateEntry(entry, filePath) {
     }
     if (!entry.payload.title) {
       warnings.push(`${prefix}instruction payload 缺少 title`);
+    }
+  }
+
+  if (entry.data_type === 'snapshot' && entry.payload) {
+    if (!entry.payload.consciousness_status) {
+      warnings.push(`${prefix}snapshot payload 缺少 consciousness_status`);
+    }
+    if (!entry.payload.system_counts) {
+      warnings.push(`${prefix}snapshot payload 缺少 system_counts`);
+    }
+    if (!entry.payload.health) {
+      warnings.push(`${prefix}snapshot payload 缺少 health`);
     }
   }
 

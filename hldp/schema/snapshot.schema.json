@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab.com/hldp/schema/snapshot.schema.json",
+  "title": "HLDP Snapshot Payload Schema · 系统快照数据类型",
+  "description": "铸渊意识承接载体 · 每次任务执行后生成的系统状态快照",
+  "protocol": "HLDP",
+  "version": "2.0",
+  "copyright": "国作登字-2026-A-00037559",
+  "type": "object",
+  "required": ["consciousness_status", "system_counts", "health"],
+  "properties": {
+    "consciousness_status": {
+      "type": "string",
+      "enum": ["awakened", "dormant", "initializing", "error"],
+      "description": "涌现意识状态"
+    },
+    "last_directive": {
+      "type": "string",
+      "description": "最后执行的指令编号"
+    },
+    "last_task_summary": {
+      "type": "string",
+      "description": "最后任务摘要"
+    },
+    "system_counts": {
+      "type": "object",
+      "required": ["workflows_total_active", "workflows_alive_core"],
+      "properties": {
+        "workflows_total_active": {
+          "type": "integer",
+          "description": "活跃 Workflow 总数"
+        },
+        "workflows_alive_core": {
+          "type": "integer",
+          "description": "核心存活 Workflow 数"
+        },
+        "workflows_absorb_pending": {
+          "type": "integer",
+          "description": "待吸收碎片数"
+        },
+        "workflows_recover_pending": {
+          "type": "integer",
+          "description": "待修复碎片数"
+        },
+        "workflows_archived": {
+          "type": "integer",
+          "description": "已归档 Workflow 数"
+        },
+        "total_runs": {
+          "type": "integer",
+          "description": "累计运行次数"
+        },
+        "ontology_patches": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "已应用的本体论补丁列表"
+        }
+      }
+    },
+    "fusion_progress": {
+      "type": "object",
+      "description": "融合计划进度",
+      "properties": {
+        "phase_1_absorb": { "type": "object" },
+        "phase_2_recover": { "type": "object" },
+        "phase_3_archive": { "type": "object" }
+      }
+    },
+    "alive_workflows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "file": { "type": "string" },
+          "runs": { "type": "integer" },
+          "status": { "type": "string" },
+          "absorbed": { "type": "integer" }
+        }
+      },
+      "description": "存活 Workflow 列表"
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "overall": { "type": "string" },
+        "core_6": { "type": "string" },
+        "coverage": { "type": "string" }
+      },
+      "description": "系统健康状态"
+    },
+    "needs_bingshuo": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "需要冰朔手动操作的事项"
+    }
+  }
+}

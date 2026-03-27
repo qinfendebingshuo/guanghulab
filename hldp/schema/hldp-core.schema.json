@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://guanghulab.com/hldp/schema/hldp-core.schema.json",
-  "title": "HLDP Core Schema · HoloLake Data Protocol v1.0",
-  "description": "TCS 通感语言核系统编程语言在 Notion ↔ GitHub 通道上的第一个落地协议层",
+  "title": "HLDP Core Schema · HoloLake Data Protocol v2.0",
+  "description": "TCS 通感语言核系统编程语言在 Notion ↔ GitHub 通道上的第一个落地协议层 · 支持双向同步",
   "protocol": "HLDP",
-  "version": "1.0",
+  "version": "2.0",
   "parent_language": "TCS Language Core",
   "copyright": "国作登字-2026-A-00037559",
   "designer": "TCS-0002∞ 冰朔",
@@ -13,13 +13,13 @@
   "properties": {
     "hldp_version": {
       "type": "string",
-      "const": "1.0",
-      "description": "HLDP 协议版本"
+      "enum": ["1.0", "2.0"],
+      "description": "HLDP 协议版本 · 1.0=初始 | 2.0=双向同步+snapshot"
     },
     "data_type": {
       "type": "string",
-      "enum": ["persona", "registry", "instruction", "broadcast", "id_system"],
-      "description": "数据类型 · persona=人格体 | registry=注册表 | instruction=指令 | broadcast=广播 | id_system=编号体系"
+      "enum": ["persona", "registry", "instruction", "broadcast", "id_system", "snapshot"],
+      "description": "数据类型 · persona=人格体 | registry=注册表 | instruction=指令 | broadcast=广播 | id_system=编号体系 | snapshot=系统快照"
     },
     "source": {
       "type": "object",

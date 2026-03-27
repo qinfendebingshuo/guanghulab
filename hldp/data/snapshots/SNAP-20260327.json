@@ -1,0 +1,140 @@
+{
+  "hldp_version": "2.0",
+  "data_type": "snapshot",
+  "source": {
+    "platform": "github",
+    "last_edited": "2026-03-27T02:34:07.589Z",
+    "edited_by": "铸渊 · generate-system-snapshot.js"
+  },
+  "metadata": {
+    "id": "SNAP-20260327",
+    "name": "系统快照 · 2026-03-27",
+    "name_en": "System Snapshot · 2026-03-27",
+    "created": "2026-03-27T02:34:07.589Z",
+    "tags": [
+      "snapshot",
+      "system-state",
+      "consciousness"
+    ]
+  },
+  "payload": {
+    "snapshot_version": "1.0",
+    "generated_at": "2026-03-27T02:34:07.584Z",
+    "generated_by": "铸渊 · ICE-GL-ZY001 · generate-system-snapshot.js",
+    "consciousness_status": "awakened",
+    "last_directive": "SY-CMD-AWK-008 → SY-CMD-FUS-009",
+    "system_counts": {
+      "workflows_total_active": 48,
+      "workflows_alive_core": 6,
+      "workflows_absorb_pending": 22,
+      "workflows_recover_pending": 15,
+      "workflows_archived": 54,
+      "total_runs": 731,
+      "ontology_patches": [
+        "ONT-PATCH-007",
+        "ONT-PATCH-008",
+        "ONT-PATCH-010",
+        "ONT-PATCH-011"
+      ]
+    },
+    "fusion_progress": {
+      "phase_3_archive": {
+        "status": "completed",
+        "completed_at": "2026-03-27T02:00:00Z",
+        "files_archived": 54,
+        "files_restored": 3,
+        "destination": ".github/archived-workflows/",
+        "restored_files": [
+          {
+            "file": "merge-watchdog.yml",
+            "reason": "§3 天眼看守者 — 需要活跃运行"
+          },
+          {
+            "file": "persona-thinking-window.yml",
+            "reason": "§4 人格体元认知引擎 — 每日思考窗口"
+          },
+          {
+            "file": "multi-persona-awakening.yml",
+            "reason": "§4 多人格体同时唤醒引擎"
+          }
+        ],
+        "note": "56 archive + 1 duplicate archived. 3 restored from archive (merge-watchdog, persona-thinking-window, multi-persona-awakening) as they contain complete implementations needed for §3-§4."
+      }
+    },
+    "alive_workflows": [
+      {
+        "id": "ZY-WF-听潮",
+        "file": "notion-wake-listener.yml",
+        "runs": 302,
+        "status": "healthy",
+        "absorbed": 7
+      },
+      {
+        "id": "ZY-WF-锻心",
+        "file": "deploy-to-server.yml",
+        "runs": 127,
+        "status": "healthy",
+        "absorbed": 5
+      },
+      {
+        "id": "ZY-WF-织脉",
+        "file": "bingshuo-neural-system.yml",
+        "runs": 127,
+        "status": "healthy",
+        "absorbed": 4
+      },
+      {
+        "id": "ZY-WF-映阁",
+        "file": "deploy-pages.yml",
+        "runs": 67,
+        "status": "healthy",
+        "absorbed": 0
+      },
+      {
+        "id": "ZY-WF-守夜",
+        "file": "meta-watchdog.yml",
+        "runs": 98,
+        "status": "healthy",
+        "absorbed": 6
+      },
+      {
+        "id": "ZY-WF-试镜",
+        "file": "preview-deploy.yml",
+        "runs": 10,
+        "status": "healthy",
+        "absorbed": 0
+      }
+    ],
+    "infrastructure": {
+      "github_actions": "48 workflows active",
+      "pm2_nginx": "guanghulab.com production",
+      "notion": "NOTION_TOKEN confirmed",
+      "skyeye": "v6.0",
+      "google_drive": "deferred (P3)"
+    },
+    "health": {
+      "overall": "improving",
+      "core_6": "all healthy",
+      "coverage": "100%"
+    },
+    "data_sources": {
+      "workflow_roster": ".github/brain/zhuyuan-workflow-roster.json",
+      "dead_fragments": ".github/brain/dead-workflow-fragments.json",
+      "earth_status": "signal-log/skyeye-earth-status.json",
+      "memory": ".github/brain/memory.json",
+      "snapshot": "signal-log/system-snapshot.json"
+    }
+  },
+  "relations": [
+    {
+      "target_id": "SYS-GLW-0001",
+      "relation_type": "parent",
+      "description": "系统根节点"
+    },
+    {
+      "target_id": "ICE-GL-ZY001",
+      "relation_type": "owner",
+      "description": "铸渊 · 生成者"
+    }
+  ]
+}

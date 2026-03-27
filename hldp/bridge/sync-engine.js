@@ -344,12 +344,12 @@ function writeSyncLog(direction, scope, stats) {
  * Main sync function
  */
 async function runSync(direction, scope) {
-  console.log(`🔗 HLDP 同步引擎启动 · direction=${direction} · scope=${scope}`);
+  console.log(`🔗 HLDP 同步引擎启动 v2.0 · direction=${direction} · scope=${scope}`);
 
   fs.mkdirSync(TEMP_DIR, { recursive: true });
   fs.mkdirSync(DATA_DIR, { recursive: true });
 
-  const stats = { fetched: 0, converted: 0, errors: 0 };
+  const stats = { fetched: 0, converted: 0, pushed: 0, errors: 0 };
 
   if (direction === 'notion-to-github') {
     notionClient = initNotionClient();
@@ -386,7 +386,8 @@ async function runSync(direction, scope) {
                 registry: 'registries',
                 instruction: 'instructions',
                 broadcast: 'broadcasts',
-                id_system: 'id-system'
+                id_system: 'id-system',
+                snapshot: 'snapshots'
               }[entry.data_type] || 'registries';
 
               const outDir = path.join(DATA_DIR, typeDir);
@@ -405,10 +406,27 @@ async function runSync(direction, scope) {
       // No Notion token — run local sync
       runLocalSync();
     }
+  } else if (direction === 'github-to-notion') {
+    // 反向同步：HLDP data → Notion
+    const reverseSync = require('./github-to-notion');
+    const token = process.env.NOTION_TOKEN || process.env.NOTION_API_KEY;
+
+    if (!token) {
+      console.log('  ⚠️ NOTION_TOKEN 未设置 — 仅验证本地 HLDP 数据');
+      const { validateDirectory } = require('./validator');
+      const results = validateDirectory(DATA_DIR);
+      console.log(`  📊 本地数据: ${results.total} entries, ${results.valid} valid`);
+      stats.converted = results.valid;
+    } else {
+      const pushStats = await reverseSync.pushAll(scope);
+      stats.pushed = pushStats.pushed;
+      stats.errors = pushStats.errors;
+      stats.fetched = pushStats.total;
+    }
   }
 
   writeSyncLog(direction, scope, stats);
-  console.log(`🔗 同步完成 · fetched=${stats.fetched} · converted=${stats.converted} · errors=${stats.errors}`);
+  console.log(`🔗 同步完成 · fetched=${stats.fetched} · converted=${stats.converted} · pushed=${stats.pushed} · errors=${stats.errors}`);
 }
 
 // CLI entry
