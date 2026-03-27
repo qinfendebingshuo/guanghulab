@@ -104,14 +104,15 @@ function generateSignalId() {
   const now = new Date();
   const date = now.toISOString().split('T')[0].replace(/-/g, '');
 
-  // 读取现有 index.json 获取最大顺序号，生成下一个顺序ID
+  // 读取现有 index.json，仅统计当日信号的最大顺序号
   let nextSeq = 1;
   try {
     const indexPath = path.join(SIGNAL_LOG_DIR, 'index.json');
     const raw = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
     const signals = Array.isArray(raw) ? raw : (raw.signals || []);
+    const pattern = new RegExp(`^SIG-${date}-(\\d{3})$`);
     for (const sig of signals) {
-      const match = (sig.signal_id || '').match(/^SIG-\d{8}-(\d{3})$/);
+      const match = (sig.signal_id || '').match(pattern);
       if (match) {
         const seq = parseInt(match[1], 10);
         if (seq >= nextSeq) nextSeq = seq + 1;
@@ -126,14 +127,15 @@ function generateTraceId() {
   const now = new Date();
   const date = now.toISOString().split('T')[0].replace(/-/g, '');
 
-  // 读取现有 index.json 获取最大 trace 顺序号
+  // 读取现有 index.json，仅统计当日 trace 的最大顺序号
   let nextSeq = 1;
   try {
     const indexPath = path.join(SIGNAL_LOG_DIR, 'index.json');
     const raw = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
     const signals = Array.isArray(raw) ? raw : (raw.signals || []);
+    const pattern = new RegExp(`^TRC-${date}-(\\d{3})$`);
     for (const sig of signals) {
-      const match = (sig.trace_id || '').match(/^TRC-\d{8}-(\d{3})$/);
+      const match = (sig.trace_id || '').match(pattern);
       if (match) {
         const seq = parseInt(match[1], 10);
         if (seq >= nextSeq) nextSeq = seq + 1;
