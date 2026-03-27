@@ -103,15 +103,45 @@ function notionRequest(method, endpoint, body) {
 function generateSignalId() {
   const now = new Date();
   const date = now.toISOString().split('T')[0].replace(/-/g, '');
-  const ms = String(now.getTime()).slice(-6);
-  return `SIG-${date}-${ms}`;
+
+  // 读取现有 index.json 获取最大顺序号，生成下一个顺序ID
+  let nextSeq = 1;
+  try {
+    const indexPath = path.join(SIGNAL_LOG_DIR, 'index.json');
+    const raw = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    const signals = Array.isArray(raw) ? raw : (raw.signals || []);
+    for (const sig of signals) {
+      const match = (sig.signal_id || '').match(/^SIG-\d{8}-(\d{3})$/);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        if (seq >= nextSeq) nextSeq = seq + 1;
+      }
+    }
+  } catch {}
+
+  return `SIG-${date}-${String(nextSeq).padStart(3, '0')}`;
 }
 
 function generateTraceId() {
   const now = new Date();
   const date = now.toISOString().split('T')[0].replace(/-/g, '');
-  const ms = String(now.getTime()).slice(-6);
-  return `TRC-${date}-${ms}`;
+
+  // 读取现有 index.json 获取最大 trace 顺序号
+  let nextSeq = 1;
+  try {
+    const indexPath = path.join(SIGNAL_LOG_DIR, 'index.json');
+    const raw = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    const signals = Array.isArray(raw) ? raw : (raw.signals || []);
+    for (const sig of signals) {
+      const match = (sig.trace_id || '').match(/^TRC-\d{8}-(\d{3})$/);
+      if (match) {
+        const seq = parseInt(match[1], 10);
+        if (seq >= nextSeq) nextSeq = seq + 1;
+      }
+    }
+  } catch {}
+
+  return `TRC-${date}-${String(nextSeq).padStart(3, '0')}`;
 }
 
 function readSnapshot() {
@@ -231,17 +261,16 @@ function writeLocalSignalLog(signalId, traceId, summary) {
       }
     } catch {}
 
-    indexData.signals.push({
+    indexData.signals.unshift({
       signal_id: signalId,
       trace_id: traceId,
       type: 'GL-SNAPSHOT',
       timestamp: now.toISOString(),
       summary: summary.substring(0, 200),
-      related_dev: null,
       file: `${now.toISOString().slice(0, 7)}/${signalId}.json`,
     });
 
-    if (indexData.signals.length > 200) indexData.signals = indexData.signals.slice(-200);
+    if (indexData.signals.length > 200) indexData.signals = indexData.signals.slice(0, 200);
     indexData.last_updated = now.toISOString();
     indexData.total_count = indexData.signals.length;
 
