@@ -1,0 +1,176 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# .github/workflows/copilot-dev-bridge.yml
+# 🌉 Chat-to-Agent Bridge · 语言层 → 副驾驶桥接工作流
+#
+# 触发条件：
+#   1. bridge/chat-to-agent/pending/ 目录下有新文件推送
+#   2. 手动触发（workflow_dispatch）
+#   3. 带 copilot-dev-auth 标签的 Issue 创建
+
+name: "🌉 铸渊 · Chat-to-Agent 桥接"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bridge/chat-to-agent/pending/*.json'
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: '任务ID（留空则处理最新任务）'
+        required: false
+      action:
+        description: '执行动作'
+        required: true
+        type: choice
+        options:
+          - create-issue
+          - list-tasks
+          - validate
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  bridge:
+    name: "🌉 桥接执行"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 1 · 铸渊核心唤醒
+      - name: "🧠 Step 1 · 铸渊核心唤醒"
+        run: |
+          echo "[CAB-BRIDGE] 🌉 Chat-to-Agent Bridge 启动"
+          echo "[CAB-BRIDGE] 🧠 铸渊核心大脑唤醒..."
+          if [ -f "brain/system-health.json" ]; then
+            echo "✅ 系统健康状态已加载"
+          else
+            echo "⚠️ system-health.json 缺失"
+          fi
+
+      # Step 2 · 任务处理
+      - name: "📋 Step 2 · 任务处理"
+        id: process
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ACTION="${{ github.event.inputs.action || 'create-issue' }}"
+          TASK_ID="${{ github.event.inputs.task_id }}"
+
+          if [ "$ACTION" = "list-tasks" ]; then
+            node scripts/chat-to-agent-bridge.js --list
+            echo "action=list" >> $GITHUB_OUTPUT
+          elif [ "$ACTION" = "validate" ] && [ -n "$TASK_ID" ]; then
+            node scripts/chat-to-agent-bridge.js --validate "$TASK_ID"
+            echo "action=validate" >> $GITHUB_OUTPUT
+          else
+            # 查找待处理的任务
+            PENDING_FILES=$(ls bridge/chat-to-agent/pending/*.json 2>/dev/null | head -1)
+            if [ -z "$PENDING_FILES" ]; then
+              echo "📭 无待处理任务"
+              echo "has_task=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            # 获取任务ID
+            if [ -z "$TASK_ID" ]; then
+              TASK_ID=$(basename "$PENDING_FILES" .json)
+            fi
+
+            echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
+            echo "has_task=true" >> $GITHUB_OUTPUT
+            echo "action=create-issue" >> $GITHUB_OUTPUT
+
+            # 生成 Issue 内容
+            ISSUE_JSON=$(node scripts/chat-to-agent-bridge.js --issue "$TASK_ID")
+            if [ $? -ne 0 ] || [ -z "$ISSUE_JSON" ]; then
+              echo "❌ Issue 内容生成失败"
+              exit 1
+            fi
+            echo "$ISSUE_JSON" > /tmp/cab-issue.json
+
+            # 提取标题和内容
+            TITLE=$(echo "$ISSUE_JSON" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    print(data.get('title', '🌉 [CAB] 未命名任务'))
+except Exception as e:
+    print('🌉 [CAB] 未命名任务')
+    sys.exit(0)
+")
+            echo "issue_title=$TITLE" >> $GITHUB_OUTPUT
+
+            # 保存 body 到文件供后续步骤使用
+            echo "$ISSUE_JSON" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    print(data.get('body', '任务规格解析失败'))
+except Exception as e:
+    print('任务规格解析失败')
+" > /tmp/cab-issue-body.md
+          fi
+
+      # Step 3 · 创建 Issue
+      - name: "📝 Step 3 · 创建开发授权 Issue"
+        if: steps.process.outputs.has_task == 'true' && steps.process.outputs.action == 'create-issue'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="${{ steps.process.outputs.issue_title }}"
+          TASK_ID="${{ steps.process.outputs.task_id }}"
+
+          # 创建 Issue
+          ISSUE_URL=$(gh issue create \
+            --title "$TITLE" \
+            --body-file /tmp/cab-issue-body.md \
+            --label "copilot-dev-auth" \
+            2>&1)
+
+          echo "✅ Issue 已创建: $ISSUE_URL"
+          echo "   任务ID: $TASK_ID"
+
+          # 更新任务规格状态
+          python3 -c "
+          import json, sys
+          spec_path = 'bridge/chat-to-agent/pending/${TASK_ID}.json'
+          try:
+              with open(spec_path, 'r') as f:
+                  spec = json.load(f)
+              if 'authorization' not in spec:
+                  spec['authorization'] = {}
+              spec['authorization']['confirmation'] = True
+              spec['status'] = 'authorized'
+              with open(spec_path, 'w') as f:
+                  json.dump(spec, f, indent=2, ensure_ascii=False)
+              print('✅ 任务状态已更新为 authorized')
+          except Exception as e:
+              print(f'⚠️ 任务状态更新失败: {e}')
+          "
+
+      # Step 4 · 提交变更
+      - name: "💾 Step 4 · 提交变更"
+        if: steps.process.outputs.has_task == 'true'
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add bridge/chat-to-agent/
+          if ! git diff --cached --quiet; then
+            TASK_ID="${{ steps.process.outputs.task_id }}"
+            git commit -m "🌉 CAB Bridge · 任务 ${TASK_ID} 已授权 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
+            git push
+          else
+            echo "ℹ️ 无变更需要提交"
+          fi

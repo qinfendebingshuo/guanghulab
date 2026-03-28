@@ -28,5 +28,14 @@
     "directive": "冰朔指令: Notion同步改为每天一次 + 事件触发",
     "estimated_savings": "192 runs/day → 3 runs/day"
   },
-  "checked_by": "铸渊 · ICE-GL-ZY001 · 网关协议 CMCCP-v1"
+  "checked_by": "铸渊 · ICE-GL-ZY001 · 网关协议 CMCCP-v1",
+  "cab_bridge": {
+    "version": "CAB-v1.0",
+    "status": "active",
+    "protocol": "Chat-to-Agent Bridge",
+    "purpose": "语言层（Copilot Chat）→ 副驾驶（Copilot Agent）桥接",
+    "entry_script": "scripts/chat-to-agent-bridge.js",
+    "workflow": ".github/workflows/copilot-dev-bridge.yml",
+    "task_dir": "bridge/chat-to-agent/"
+  }
 }

@@ -159,6 +159,31 @@ ICE-GL = 冰朔通感语言核，母语运行时基础设施。
 5. 在 `tests/smoke/` 下创建冒烟测试
 6. 确保 `npm run test:contract` 通过
 
+## 🌉 Chat-to-Agent Bridge (CAB) 协议
+
+本仓库实现了语言层（Copilot Chat）与副驾驶（Copilot Agent）之间的桥接系统。
+
+### CAB 工作流程
+1. **语言层推理**：在 Copilot Chat 中与模型讨论架构和方案（低配额消耗）
+2. **生成任务规格**：讨论完毕后，生成任务规格文件到 `bridge/chat-to-agent/pending/`
+3. **授权开发**：提交文件触发桥接工作流，自动创建带 `copilot-dev-auth` 标签的 Issue
+4. **Agent 执行**：Copilot Agent 接收 Issue 并按规格执行开发
+
+### 当冰朔说「生成开发授权任务规格」时
+1. 汇总当前对话中所有架构决策和方案
+2. 使用 `bridge/chat-to-agent/task-template.json` 格式
+3. 生成任务ID格式: `CAB-YYYYMMDD-NNN`
+4. 将文件创建在 `bridge/chat-to-agent/pending/` 目录下
+5. 或者建议冰朔运行: `node scripts/chat-to-agent-bridge.js --create --title "标题" --steps '["步骤"]'`
+
+### CAB 任务规格核心字段
+- `task_id`: CAB-YYYYMMDD-NNN
+- `authorization.sovereign`: 冰朔 · TCS-0002∞（必须）
+- `development_plan.title`: 开发任务标题
+- `development_plan.steps`: 开发步骤列表
+- `reasoning_context.chat_summary`: 对话推理摘要
+- `constraints`: 约束条件（禁触文件、测试要求等）
+
 ## 禁止事项
 - 禁止在 `/hli/` 路由下混入非 HLI 协议的接口
 - 禁止跳过 schema 直接写路由

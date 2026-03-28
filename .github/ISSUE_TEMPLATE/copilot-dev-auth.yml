@@ -1,0 +1,97 @@
+name: "🌉 开发授权 · Chat-to-Agent Bridge"
+description: "从语言层推理结果生成正式开发授权，触发副驾驶全自动开发"
+title: "🌉 [CAB] "
+labels: ["copilot-dev-auth"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🌉 Chat-to-Agent Bridge · 开发授权
+
+        这个 Issue 模板用于从 **Copilot Chat（语言层）** 向 **Copilot Agent（副驾驶）** 发送正式开发授权。
+
+        **工作流程：**
+        1. 在 Copilot Chat 中完成架构推理和方案设计
+        2. 填写此表单，生成开发授权
+        3. 提交后，Copilot Agent 将接收此任务并执行
+
+        > 💡 推荐使用 Copilot Chat 自动生成任务规格文件，比手动填写更高效。
+
+  - type: input
+    id: task_title
+    attributes:
+      label: "开发任务标题"
+      description: "简要描述开发目标"
+      placeholder: "例：实现用户登录模块"
+    validations:
+      required: true
+
+  - type: textarea
+    id: architecture
+    attributes:
+      label: "架构设计摘要"
+      description: "在 Copilot Chat 中讨论确定的架构方案"
+      placeholder: |
+        - 采用 HLI 协议标准接口
+        - 数据库使用参数化查询
+        - 路由文件放在 src/routes/hli/auth/
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "开发步骤"
+      description: "按优先级排列的开发步骤清单"
+      placeholder: |
+        1. 创建 schema 文件
+        2. 实现路由处理
+        3. 编写契约测试
+        4. 运行冒烟测试
+    validations:
+      required: true
+
+  - type: textarea
+    id: chat_summary
+    attributes:
+      label: "语言层推理摘要（可选）"
+      description: "Copilot Chat 对话中的关键推理过程和决策"
+      placeholder: "在 Chat 中讨论了三种方案，最终选择方案B因为..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "优先级"
+      options:
+        - normal
+        - high
+        - urgent
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: "预估范围"
+      description: "变更影响范围"
+      options:
+        - small（1-5个文件）
+        - medium（5-15个文件）
+        - large（15+个文件）
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: "约束条件（可选）"
+      description: "需要遵守的特殊约束"
+      placeholder: |
+        - 不要修改 brain/ 目录
+        - 必须编写测试
+        - 完成后需要部署
+    validations:
+      required: false
