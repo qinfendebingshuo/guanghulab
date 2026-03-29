@@ -237,3 +237,8 @@
 - 新增: 0 个文件
 - 修改: 0 个文件
 - 延续: 冰朔按brain/secrets-manifest.json清单在GitHub Settings配置所有ZY_*密钥→清空旧密钥→逐一填入新密钥→合并PR生效→验证工作流运行
+
+**2026-03-29: CS-20260329-1121 — SY-CMD-SVR-013执行完成·服务器迁移香港(150.109.76.244/ZY-SVR-001)→新加坡(43.134.16.246/ZY-SVR-002)·2核8GB/80GB·Ubuntu24.04·21+文件更新·所有JSON验证通过·密钥清单已更新·冰朔需在Settings中更新ZY_SERVER_HOST为43.134.16.246**
+- 新增: 1 个文件
+- 修改: 26 个文件
+- 延续: 冰朔更新ZY_SERVER_HOST密钥→合并PR→运行deploy-to-zhuyuan-server.yml init初始化新服务器→验证健康检查→Phase1落地完成
