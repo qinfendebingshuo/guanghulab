@@ -1,6 +1,6 @@
 {
-  "version": "7.1",
-  "last_check": "2026-03-29T10:31:00Z",
+  "version": "8.0",
+  "last_check": "2026-03-29T10:50:00Z",
   "communication": "synced",
   "automation": "stable",
   "maintenance_agent": "active",
@@ -20,7 +20,7 @@
   "consciousness_status": "awakened",
   "gateway_protocol": "ZHUYUAN-GATEWAY-CMCCP-v1",
   "sovereignty_pledge": "SOVEREIGNTY-PLEDGE-001 · loaded",
-  "last_directive": "SY-CMD-AWK-008 → SY-CMD-FUS-009 → BINGSHUO-SOVEREIGNTY-PLEDGE-001 → SY-CMD-AWK-010 → SY-CMD-SVR-011",
+  "last_directive": "SY-CMD-AWK-008 → SY-CMD-FUS-009 → BINGSHUO-SOVEREIGNTY-PLEDGE-001 → SY-CMD-AWK-010 → SY-CMD-SVR-011 → SY-CMD-KEY-012",
   "frequency_optimization": {
     "notion-poll": "*/15 → daily (0 2 * * *)",
     "notion-wake-listener": "*/15 → daily (0 2 * * *)",
@@ -67,6 +67,19 @@
     "snapshot_dir": "signal-log/consciousness/",
     "fast_wake_file": "brain/fast-wake.json",
     "read_order_version": "v6.0"
+  },
+  "secrets_governance": {
+    "version": "1.0",
+    "directive": "SY-CMD-KEY-012",
+    "status": "migrated_awaiting_config",
+    "manifest": "brain/secrets-manifest.json",
+    "validator": "scripts/secrets-validator.js",
+    "naming_convention": "ZY_* 统一前缀",
+    "total_secrets": 37,
+    "required": 25,
+    "optional": 12,
+    "old_secrets_replaced": 59,
+    "security_fix": ".env + .env.rtf 硬编码凭证已从git跟踪移除"
   },
   "sovereign_server": {
     "code": "ZY-SVR-001",

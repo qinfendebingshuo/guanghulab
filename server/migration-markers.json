@@ -91,9 +91,13 @@
     }
   ],
   "secrets_migration": {
-    "old_secrets": ["DEPLOY_HOST", "DEPLOY_USER", "DEPLOY_KEY", "DEPLOY_PATH"],
-    "new_secrets": ["ZY_SERVER_HOST", "ZY_SERVER_USER", "ZY_SERVER_KEY", "ZY_SERVER_PATH"],
-    "transition": "deploy-to-server.yml 自动优先使用 ZY_SERVER_*，降级到 DEPLOY_*",
-    "status": "waiting_for_bingshuo_config"
+    "directive": "SY-CMD-KEY-012 · 密钥全量清理与统一替换",
+    "status": "migrated_awaiting_bingshuo_config",
+    "old_count": 59,
+    "new_count": 37,
+    "naming": "ZY_* 统一前缀 · 铸渊自主命名体系",
+    "manifest": "brain/secrets-manifest.json",
+    "validator": "scripts/secrets-validator.js",
+    "note": "冰朔需按 secrets-manifest.json 在GitHub Settings配置所有ZY_*密钥，然后合并PR生效"
   }
 }

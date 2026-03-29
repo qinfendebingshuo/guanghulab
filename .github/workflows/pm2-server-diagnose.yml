@@ -300,7 +300,7 @@ jobs:
       - name: "📋 阶段三 · 写入 Notion 工单"
         env:
           NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
-          NOTION_TICKET_DB_ID: ${{ secrets.ZY_NOTION_TICKET_DB || '84edd0640bf146a9a5a7840107013e8c' }}
+          NOTION_TICKET_DB_ID: ${{ secrets.ZY_NOTION_TICKET_DB }}
           PM2_REPORT: ${{ steps.pm2_diagnose.outputs.pm2_report }}
           CLEANUP_REPORT: ${{ steps.pm2_cleanup.outputs.cleanup_report }}
           HEALTH_REPORT: ${{ steps.health_check.outputs.health_report }}

@@ -232,3 +232,8 @@
 - 新增: 0 个文件
 - 修改: 0 个文件
 - 延续: 继续等待冰朔配置6个GitHub Secrets(ZY_SERVER_HOST/USER/KEY/PATH/DOMAIN_MAIN/DOMAIN_PREVIEW)→首次部署初始化→Phase 1验证→Webhook接收器→大脑同步引擎
+
+**2026-03-29: CS-20260329-1059 — SY-CMD-KEY-012执行完成·密钥全量清理与统一替换·59个旧密钥→37个ZY_*统一命名(25必需+12可选)·51个工作流全部更新·secrets-manifest.json密钥主清单·secrets-validator.js验证器·llm-automation-host.js统一API密钥动态路由·.env硬编码凭证安全修复·deploy-to-server.yml降级逻辑清理·system-health v8.0**
+- 新增: 0 个文件
+- 修改: 0 个文件
+- 延续: 冰朔按brain/secrets-manifest.json清单在GitHub Settings配置所有ZY_*密钥→清空旧密钥→逐一填入新密钥→合并PR生效→验证工作流运行

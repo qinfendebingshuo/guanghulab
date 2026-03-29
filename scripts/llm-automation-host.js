@@ -159,6 +159,14 @@ function detectAvailableBackends() {
   const apiKey = process.env.ZY_LLM_API_KEY || process.env.LLM_API_KEY || '';
   const baseUrl = (process.env.ZY_LLM_BASE_URL || process.env.LLM_BASE_URL || '').replace(/\/+$/, '');
 
+  // 过渡期警告：使用旧环境变量名
+  if (!process.env.ZY_LLM_API_KEY && process.env.LLM_API_KEY) {
+    console.warn('⚠️ 使用旧环境变量 LLM_API_KEY，请迁移到 ZY_LLM_API_KEY');
+  }
+  if (!process.env.ZY_LLM_BASE_URL && process.env.LLM_BASE_URL) {
+    console.warn('⚠️ 使用旧环境变量 LLM_BASE_URL，请迁移到 ZY_LLM_BASE_URL');
+  }
+
   if (!apiKey || !baseUrl) {
     return [];
   }
