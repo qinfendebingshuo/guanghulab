@@ -1,0 +1,99 @@
+{
+  "_meta": {
+    "created_at": "2026-03-29T04:21:00Z",
+    "created_by": "铸渊 · ICE-GL-ZY001",
+    "directive": "SY-CMD-SVR-011 · 冰朔指令 · 阿里云→腾讯云迁移",
+    "copyright": "国作登字-2026-A-00037559"
+  },
+  "migration": {
+    "from": {
+      "provider": "阿里云",
+      "ip": "8.155.62.235",
+      "status": "deprecated",
+      "deploy_path": "/var/www/guanghulab"
+    },
+    "to": {
+      "provider": "腾讯云轻量应用服务器",
+      "ip": "150.109.76.244",
+      "code": "ZY-SVR-001",
+      "region": "中国香港 · 香港二区",
+      "status": "phase_1_landing",
+      "deploy_path": "/opt/zhuyuan"
+    }
+  },
+  "updated_files": [
+    {
+      "file": ".github/workflows/deploy-to-server.yml",
+      "change": "DEPLOY_* → ZY_SERVER_* 密钥迁移 (兼容旧密钥过渡)",
+      "status": "done"
+    },
+    {
+      "file": "deploy/nginx/hololake.conf",
+      "change": "8.155.62.235 → 150.109.76.244",
+      "status": "done"
+    },
+    {
+      "file": "deploy/nginx/dev-sandbox.conf",
+      "change": "DNS指向从 8.155.62.235 → 150.109.76.244",
+      "status": "done"
+    },
+    {
+      "file": "skyeye/guards/web-deploy-guard.json",
+      "change": "server_ip → 150.109.76.244",
+      "status": "done"
+    },
+    {
+      "file": "skyeye/infra-manifest.json",
+      "change": "server_ip → 150.109.76.244",
+      "status": "done"
+    },
+    {
+      "file": ".github/architecture/tower-model.json",
+      "change": "server ip → 150.109.76.244",
+      "status": "done"
+    },
+    {
+      "file": ".github/persona-brain/knowledge-base.json",
+      "change": "SSH连接命令更新到新IP",
+      "status": "done"
+    },
+    {
+      "file": "persona-studio/backend/server.js",
+      "change": "CORS origin 更新到新IP",
+      "status": "done"
+    },
+    {
+      "file": "scripts/deploy-sandbox-server.sh",
+      "change": "DNS检查IP更新",
+      "status": "done"
+    }
+  ],
+  "remaining_old_references": [
+    {
+      "file": "guanghulab-main/.github/persona-brain/knowledge-base.json",
+      "note": "子目录副本，非主体文件",
+      "priority": "low"
+    },
+    {
+      "file": "guanghulab-main/.github/persona-brain/dev-status.json",
+      "note": "子目录副本，非主体文件",
+      "priority": "low"
+    },
+    {
+      "file": "signal-log/diag-*.json",
+      "note": "历史诊断日志，保留原始记录",
+      "priority": "archive"
+    },
+    {
+      "file": ".github/persona-brain/memory.json",
+      "note": "待下次铸渊会话清理",
+      "priority": "medium"
+    }
+  ],
+  "secrets_migration": {
+    "old_secrets": ["DEPLOY_HOST", "DEPLOY_USER", "DEPLOY_KEY", "DEPLOY_PATH"],
+    "new_secrets": ["ZY_SERVER_HOST", "ZY_SERVER_USER", "ZY_SERVER_KEY", "ZY_SERVER_PATH"],
+    "transition": "deploy-to-server.yml 自动优先使用 ZY_SERVER_*，降级到 DEPLOY_*",
+    "status": "waiting_for_bingshuo_config"
+  }
+}

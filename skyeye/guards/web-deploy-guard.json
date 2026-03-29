@@ -8,9 +8,11 @@
   "created_by": "ZY-HUMANSIDE-FIX-2026-0325-002",
   "target": {
     "domain": "guanghulab.com",
-    "server_ip": "8.155.62.235",
-    "deploy_path": "/var/www/guanghulab",
+    "server_ip": "150.109.76.244",
+    "old_server_ip": "8.155.62.235 (阿里云·已弃用)",
+    "deploy_path": "/opt/zhuyuan",
     "pm2_processes": [
+      "zhuyuan-server",
       "guanghulab-proxy",
       "guanghulab-backend",
       "guanghulab-ws",

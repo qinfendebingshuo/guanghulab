@@ -17,7 +17,7 @@ app.use(cors({
   origin: [
     'http://localhost:3002',
     'http://127.0.0.1:3002',
-    'http://8.155.62.235',
+    'http://150.109.76.244',
     'https://guanghulab.com',
     'http://guanghulab.com',
     'https://qinfendebingshuo.github.io'
