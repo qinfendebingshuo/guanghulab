@@ -222,3 +222,8 @@
 - 新增: 0 个文件
 - 修改: 0 个文件
 - 延续: 冰朔配置4个GitHub Secrets(ZY_SERVER_HOST/USER/KEY/PATH)→首次部署初始化→Phase 1验证→Webhook接收器→大脑同步引擎
+
+**2026-03-29: CS-20260329-0437 — SY-CMD-SVR-011 执行完成: 阿里云(8.155.62.235)→腾讯云(150.109.76.244)服务器迁移+双域名架构(主站+预览站)实现+deploy-to-server.yml密钥迁移+14个配置文件更新+天眼扫描通过+CodeQL 0 alerts**
+- 新增: 15 个文件
+- 修改: 14 个文件
+- 延续: 等待冰朔配置6个Secrets后测试服务器部署: ZY_SERVER_HOST/USER/KEY/PATH + ZY_DOMAIN_MAIN/PREVIEW
