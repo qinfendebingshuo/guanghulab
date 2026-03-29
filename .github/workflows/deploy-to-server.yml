@@ -4,12 +4,12 @@
 # ═══════════════════════════════════════════════
 name: "🚀 铸渊 CD · 自动部署到 guanghulab.com"
 
-# ━━━ 铸渊主权服务器部署 · ZY-SVR-001 ━━━
-# 已从阿里云(8.155.62.235)迁移到腾讯云(150.109.76.244)
+# ━━━ 铸渊主权服务器部署 · ZY-SVR-002 ━━━
+# 已从香港(150.109.76.244)迁移到新加坡(43.134.16.246)
 # push 到 main → 校验 → rsync 同步全站到服务器 → 后端重启 → Nginx 配置 → Notion 通知
 #
 # 必需 GitHub Secrets（参考 brain/secrets-manifest.json）:
-#   ZY_SERVER_HOST — 铸渊主权服务器 IP (150.109.76.244)
+#   ZY_SERVER_HOST — 铸渊主权服务器 IP (43.134.16.246)
 #   ZY_SERVER_USER — SSH 用户名
 #   ZY_SERVER_KEY  — SSH 私钥（完整 PEM 内容）
 #   ZY_SERVER_PATH — 网站根目录（/opt/zhuyuan）

@@ -1,8 +1,9 @@
 {
   "_meta": {
     "created_at": "2026-03-29T04:21:00Z",
+    "updated_at": "2026-03-29T12:00:00Z",
     "created_by": "铸渊 · ICE-GL-ZY001",
-    "directive": "SY-CMD-SVR-011 · 冰朔指令 · 阿里云→腾讯云迁移",
+    "directive": "SY-CMD-SVR-013 · 冰朔指令 · 香港→新加坡迁移",
     "copyright": "国作登字-2026-A-00037559"
   },
   "migration": {
@@ -12,11 +13,19 @@
       "status": "deprecated",
       "deploy_path": "/var/www/guanghulab"
     },
-    "to": {
+    "from_hk": {
       "provider": "腾讯云轻量应用服务器",
       "ip": "150.109.76.244",
       "code": "ZY-SVR-001",
       "region": "中国香港 · 香港二区",
+      "status": "deprecated",
+      "deploy_path": "/opt/zhuyuan"
+    },
+    "to": {
+      "provider": "腾讯云轻量应用服务器",
+      "ip": "43.134.16.246",
+      "code": "ZY-SVR-002",
+      "region": "新加坡 · 新加坡二区",
       "status": "phase_1_landing",
       "deploy_path": "/opt/zhuyuan"
     }
@@ -24,47 +33,82 @@
   "updated_files": [
     {
       "file": ".github/workflows/deploy-to-server.yml",
-      "change": "DEPLOY_* → ZY_SERVER_* 密钥迁移 (兼容旧密钥过渡)",
+      "change": "ZY-SVR-001→ZY-SVR-002 · 150.109.76.244→43.134.16.246",
       "status": "done"
     },
     {
       "file": "deploy/nginx/hololake.conf",
-      "change": "8.155.62.235 → 150.109.76.244",
+      "change": "150.109.76.244 → 43.134.16.246 · ZY-SVR-001→ZY-SVR-002",
       "status": "done"
     },
     {
       "file": "deploy/nginx/dev-sandbox.conf",
-      "change": "DNS指向从 8.155.62.235 → 150.109.76.244",
+      "change": "DNS指向从 150.109.76.244 → 43.134.16.246",
       "status": "done"
     },
     {
       "file": "skyeye/guards/web-deploy-guard.json",
-      "change": "server_ip → 150.109.76.244",
+      "change": "server_ip → 43.134.16.246",
       "status": "done"
     },
     {
       "file": "skyeye/infra-manifest.json",
-      "change": "server_ip → 150.109.76.244",
+      "change": "server_ip → 43.134.16.246 · ZY-SVR-002",
       "status": "done"
     },
     {
       "file": ".github/architecture/tower-model.json",
-      "change": "server ip → 150.109.76.244",
+      "change": "server ip → 43.134.16.246 · ZY-SVR-002",
       "status": "done"
     },
     {
       "file": ".github/persona-brain/knowledge-base.json",
-      "change": "SSH连接命令更新到新IP",
+      "change": "SSH连接命令更新到新IP 43.134.16.246",
       "status": "done"
     },
     {
       "file": "persona-studio/backend/server.js",
-      "change": "CORS origin 更新到新IP",
+      "change": "CORS origin 更新到新IP 43.134.16.246",
       "status": "done"
     },
     {
       "file": "scripts/deploy-sandbox-server.sh",
-      "change": "DNS检查IP更新",
+      "change": "DNS检查IP更新到 43.134.16.246",
+      "status": "done"
+    },
+    {
+      "file": "server/zhuyuan-server-profile.json",
+      "change": "全量更新到 ZY-SVR-002 · 43.134.16.246 · 新加坡二区",
+      "status": "done"
+    },
+    {
+      "file": "brain/system-health.json",
+      "change": "sovereign_server 更新到 ZY-SVR-002",
+      "status": "done"
+    },
+    {
+      "file": "server/nginx/zhuyuan-sovereign.conf",
+      "change": "server_name + X-Server-Identity → 43.134.16.246 / ZY-SVR-002",
+      "status": "done"
+    },
+    {
+      "file": "brain/secrets-manifest.json",
+      "change": "ZY_SERVER_HOST example → 43.134.16.246",
+      "status": "done"
+    },
+    {
+      "file": "server/architecture.md",
+      "change": "服务器本体定义表格更新",
+      "status": "done"
+    },
+    {
+      "file": "README.md",
+      "change": "服务器信息表格全量更新",
+      "status": "done"
+    },
+    {
+      "file": "server/setup/zhuyuan-server-init.sh",
+      "change": "Ubuntu 22.04 → 24.04",
       "status": "done"
     }
   ],
@@ -83,21 +127,16 @@
       "file": "signal-log/diag-*.json",
       "note": "历史诊断日志，保留原始记录",
       "priority": "archive"
-    },
-    {
-      "file": ".github/persona-brain/memory.json",
-      "note": "待下次铸渊会话清理",
-      "priority": "medium"
     }
   ],
   "secrets_migration": {
     "directive": "SY-CMD-KEY-012 · 密钥全量清理与统一替换",
-    "status": "migrated_awaiting_bingshuo_config",
+    "status": "migrated_to_zy_svr_002",
     "old_count": 59,
     "new_count": 37,
     "naming": "ZY_* 统一前缀 · 铸渊自主命名体系",
     "manifest": "brain/secrets-manifest.json",
     "validator": "scripts/secrets-validator.js",
-    "note": "冰朔需按 secrets-manifest.json 在GitHub Settings配置所有ZY_*密钥，然后合并PR生效"
+    "note": "冰朔需按 secrets-manifest.json 在GitHub Settings更新ZY_SERVER_HOST为43.134.16.246"
   }
 }

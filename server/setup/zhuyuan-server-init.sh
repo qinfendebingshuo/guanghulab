@@ -11,7 +11,7 @@
 #   chmod +x zhuyuan-server-init.sh
 #   sudo ./zhuyuan-server-init.sh
 #
-# 此脚本在全新 Ubuntu 22.04 LTS 上执行，完成：
+# 此脚本在全新 Ubuntu 24.04 LTS 上执行，完成：
 #   1. 系统更新与安全加固
 #   2. Node.js 20 LTS 安装
 #   3. PM2 全局安装
