@@ -1,0 +1,168 @@
+{
+  "scan_id": "DAILY-SCAN-20260329",
+  "timestamp": "2026-03-29T03:41:48.708Z",
+  "type": "daily",
+  "sense": {
+    "status": "ok",
+    "nodes": [
+      {
+        "id": "github",
+        "service": "GitHub",
+        "plan": "Free"
+      },
+      {
+        "id": "google_drive",
+        "service": "Google Drive",
+        "plan": "Google One / Free 15GB"
+      },
+      {
+        "id": "notion",
+        "service": "Notion",
+        "plan": "Plus"
+      },
+      {
+        "id": "gemini",
+        "service": "Google Gemini",
+        "plan": "Free / Pro"
+      },
+      {
+        "id": "github_actions",
+        "service": "GitHub Actions",
+        "plan": "Free"
+      },
+      {
+        "id": "hibernation_system",
+        "service": "SkyEye Hibernation",
+        "plan": "Internal"
+      },
+      {
+        "id": "gdrive_oauth2",
+        "service": "Google Drive OAuth2 Token Management",
+        "plan": "Internal"
+      },
+      {
+        "id": "routing_system",
+        "service": "编号路由系统 (ID Routing System)",
+        "plan": "Internal"
+      },
+      {
+        "id": "isrp",
+        "service": "ISRP 入口语义解析协议 (Inlet Semantic Routing Protocol)",
+        "plan": "Internal"
+      },
+      {
+        "id": "tianyan_nightly_repair",
+        "service": "TianYan Nightly Auto-Repair Engine v3.0",
+        "plan": "Internal"
+      },
+      {
+        "id": "sync_dev_status",
+        "service": "dev-status.json 同步 · 霜砚签发制",
+        "plan": "Internal"
+      },
+      {
+        "id": "guanghulab_website",
+        "service": "guanghulab.com Web Deployment",
+        "plan": "unknown"
+      }
+    ],
+    "issues": [
+      "infra-manifest 最后扫描距今 93h，超过 48h 阈值"
+    ]
+  },
+  "guard_check": {
+    "total": 7,
+    "healthy": 6,
+    "issues": [
+      "QUOTA-GUARD: status=undefined, failures=0"
+    ],
+    "guards": [
+      {
+        "file": "actions-guard.json",
+        "guard_id": "GUARD-ACTIONS",
+        "status": "active",
+        "mode": "buffer",
+        "last_check": null,
+        "consecutive_failures": 0
+      },
+      {
+        "file": "drive-guard.json",
+        "guard_id": "GUARD-DRIVE",
+        "status": "active",
+        "mode": "buffer",
+        "last_check": null,
+        "consecutive_failures": 0
+      },
+      {
+        "file": "gemini-guard.json",
+        "guard_id": "GUARD-GEMINI",
+        "status": "active",
+        "mode": "buffer",
+        "last_check": null,
+        "consecutive_failures": 0
+      },
+      {
+        "file": "github-guard.json",
+        "guard_id": "GUARD-GITHUB",
+        "status": "active",
+        "mode": "buffer",
+        "last_check": null,
+        "consecutive_failures": 0
+      },
+      {
+        "file": "notion-guard.json",
+        "guard_id": "GUARD-NOTION",
+        "status": "active",
+        "mode": "buffer",
+        "last_check": null,
+        "consecutive_failures": 0
+      },
+      {
+        "file": "quota-guard.json",
+        "guard_id": "QUOTA-GUARD",
+        "last_check": null,
+        "consecutive_failures": 0
+      },
+      {
+        "file": "web-deploy-guard.json",
+        "guard_id": "GUARD-WEB-DEPLOY",
+        "status": "active",
+        "mode": "monitor",
+        "last_check": null,
+        "consecutive_failures": 0
+      }
+    ]
+  },
+  "quota_audit": {
+    "status": "healthy",
+    "alerts": [],
+    "services": {
+      "github_actions": {
+        "usage_percent": 0,
+        "status": "normal"
+      },
+      "google_drive": {
+        "usage_percent": 0,
+        "status": "normal"
+      },
+      "notion_api": {
+        "usage_percent": 0,
+        "status": "normal"
+      },
+      "gemini": {
+        "usage_percent": 0,
+        "status": "normal"
+      }
+    }
+  },
+  "summary": {
+    "nodes_registered": 12,
+    "guards_healthy": "6/7",
+    "quota_status": "healthy",
+    "total_issues": 2,
+    "issues": [
+      "infra-manifest 最后扫描距今 93h，超过 48h 阈值",
+      "QUOTA-GUARD: status=undefined, failures=0"
+    ]
+  }
+}

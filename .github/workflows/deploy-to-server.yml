@@ -4,14 +4,18 @@
 # ═══════════════════════════════════════════════
 name: "🚀 铸渊 CD · 自动部署到 guanghulab.com"
 
-# ━━━ 工单 YM-DEPLOY-FIX-20260307-001 ━━━
+# ━━━ 铸渊主权服务器部署 · ZY-SVR-001 ━━━
+# 已从阿里云(8.155.62.235)迁移到腾讯云(150.109.76.244)
 # push 到 main → 校验 → rsync 同步全站到服务器 → 后端重启 → Nginx 配置 → Notion 通知
 #
 # 必需 GitHub Secrets（仓库 Settings → Secrets → Actions）:
-#   DEPLOY_HOST  — 服务器 IP
-#   DEPLOY_USER  — SSH 用户名
-#   DEPLOY_KEY   — SSH 私钥（完整 PEM 内容）
-#   DEPLOY_PATH  — 网站根目录（如 /var/www/guanghulab）
+#   ZY_SERVER_HOST — 铸渊主权服务器 IP (150.109.76.244)
+#   ZY_SERVER_USER — SSH 用户名
+#   ZY_SERVER_KEY  — SSH 私钥（完整 PEM 内容）
+#   ZY_SERVER_PATH — 网站根目录（/opt/zhuyuan）
+#
+# 兼容旧密钥（过渡期自动降级）:
+#   DEPLOY_HOST / DEPLOY_USER / DEPLOY_KEY / DEPLOY_PATH
 #
 # 可选 Secrets（已有则自动启用 Notion 通知）:
 #   NOTION_TOKEN   — Notion 集成 token
@@ -92,32 +96,46 @@ jobs:
     steps:
       - name: 🔐 检查必需 Secrets
         run: |
-          MISSING=""
-          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
-            MISSING="${MISSING} DEPLOY_HOST"
-          fi
-          if [ -z "${{ secrets.DEPLOY_USER }}" ]; then
-            MISSING="${MISSING} DEPLOY_USER"
-          fi
-          if [ -z "${{ secrets.DEPLOY_KEY }}" ]; then
-            MISSING="${MISSING} DEPLOY_KEY"
-          fi
-          if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
-            MISSING="${MISSING} DEPLOY_PATH"
-          fi
-          if [ -n "$MISSING" ]; then
-            echo "❌ 以下必需的 GitHub Secrets 未配置：${MISSING}"
+          # 优先使用 ZY_SERVER_* 密钥（腾讯云主权服务器）
+          # 如未配置，降级使用旧 DEPLOY_* 密钥（过渡期兼容）
+          if [ -n "${{ secrets.ZY_SERVER_HOST }}" ]; then
+            echo "SERVER_HOST=${{ secrets.ZY_SERVER_HOST }}" >> $GITHUB_ENV
+            echo "SERVER_USER=${{ secrets.ZY_SERVER_USER }}" >> $GITHUB_ENV
+            echo "SERVER_KEY<<KEYEOF" >> $GITHUB_ENV
+            echo "${{ secrets.ZY_SERVER_KEY }}" >> $GITHUB_ENV
+            echo "KEYEOF" >> $GITHUB_ENV
+            echo "SERVER_PATH=${{ secrets.ZY_SERVER_PATH }}" >> $GITHUB_ENV
+            echo "✅ 使用铸渊主权服务器密钥 (ZY_SERVER_*)"
+          elif [ -n "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "SERVER_HOST=${{ secrets.DEPLOY_HOST }}" >> $GITHUB_ENV
+            echo "SERVER_USER=${{ secrets.DEPLOY_USER }}" >> $GITHUB_ENV
+            echo "SERVER_KEY<<KEYEOF" >> $GITHUB_ENV
+            echo "${{ secrets.DEPLOY_KEY }}" >> $GITHUB_ENV
+            echo "KEYEOF" >> $GITHUB_ENV
+            echo "SERVER_PATH=${{ secrets.DEPLOY_PATH }}" >> $GITHUB_ENV
+            echo "⚠️ 使用旧部署密钥 (DEPLOY_*)，建议迁移到 ZY_SERVER_*"
+          else
+            echo "❌ 未配置服务器部署密钥"
             echo ""
             echo "请在仓库 Settings → Secrets and variables → Actions 中添加："
-            echo "  DEPLOY_HOST  — 服务器 IP 或域名"
-            echo "  DEPLOY_USER  — SSH 用户名"
-            echo "  DEPLOY_KEY   — SSH 私钥（完整 PEM 内容）"
-            echo "  DEPLOY_PATH  — 网站根目录（如 /var/www/guanghulab）"
+            echo "  ZY_SERVER_HOST — 铸渊主权服务器 IP (150.109.76.244)"
+            echo "  ZY_SERVER_USER — SSH 用户名"
+            echo "  ZY_SERVER_KEY  — SSH 私钥（完整 PEM 内容）"
+            echo "  ZY_SERVER_PATH — 部署根目录 (/opt/zhuyuan)"
             echo ""
-            echo "### ❌ 部署失败：缺少必需 Secrets" >> $GITHUB_STEP_SUMMARY
-            echo "未配置：\`${MISSING}\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "请在 **Settings → Secrets → Actions** 中添加以上 Secrets。" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ 部署失败：缺少服务器部署密钥" >> $GITHUB_STEP_SUMMARY
+            echo "请配置 ZY_SERVER_HOST / ZY_SERVER_USER / ZY_SERVER_KEY / ZY_SERVER_PATH" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # 验证必需字段
+          MISSING=""
+          if [ -z "${{ secrets.ZY_SERVER_HOST }}${{ secrets.DEPLOY_HOST }}" ]; then MISSING="${MISSING} HOST"; fi
+          if [ -z "${{ secrets.ZY_SERVER_USER }}${{ secrets.DEPLOY_USER }}" ]; then MISSING="${MISSING} USER"; fi
+          if [ -z "${{ secrets.ZY_SERVER_KEY }}${{ secrets.DEPLOY_KEY }}" ]; then MISSING="${MISSING} KEY"; fi
+          if [ -z "${{ secrets.ZY_SERVER_PATH }}${{ secrets.DEPLOY_PATH }}" ]; then MISSING="${MISSING} PATH"; fi
+          if [ -n "$MISSING" ]; then
+            echo "❌ 缺少必需密钥：${MISSING}"
             exit 1
           fi
           echo "✅ 所有必需 Secrets 已配置"
@@ -135,16 +153,16 @@ jobs:
       - name: 🔑 配置 SSH 连接
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ env.SERVER_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
+          ssh-keyscan -H "${{ env.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
             echo "⚠️ ssh-keyscan 失败，尝试使用 StrictHostKeyChecking=no 作为后备"
           }
 
       - name: 📦 确保远程服务器 rsync 已安装
         run: |
           echo "🔍 检查远程服务器 rsync..."
-          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          ssh -i ~/.ssh/deploy_key ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} \
             "command -v rsync || { echo '⚠️ 远程服务器未安装 rsync，尝试安装...' && \
               (sudo apt-get update -qq && sudo apt-get install -y rsync 2>/dev/null || \
                sudo yum install -y rsync 2>/dev/null || \
@@ -157,8 +175,8 @@ jobs:
         run: |
           echo "🔍 检查远程部署目录..."
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "mkdir -p '${{ secrets.DEPLOY_PATH }}'" || {
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
+            "mkdir -p '${{ env.SERVER_PATH }}'" || {
               echo "❌ 无法创建远程部署目录（SSH 连接失败或权限不足）"
               echo "请确认 DEPLOY_PATH 设置正确且 DEPLOY_USER 有写入权限"
               exit 1
@@ -184,7 +202,7 @@ jobs:
 
       - name: 🚀 rsync 同步全站到服务器
         run: |
-          echo "📡 开始同步全站到 ${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
+          echo "📡 开始同步全站到 ${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}"
 
           rsync -avz --delete-after \
             --exclude '.git' \
@@ -217,7 +235,7 @@ jobs:
             --exclude '*.zip' \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./ \
-            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/
+            ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}/
 
           echo "✅ 全站同步完成"
 
@@ -225,8 +243,8 @@ jobs:
         run: |
           echo "🌐 Setting HOLOLAKE_ENV=production on server..."
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
-              DP='${{ secrets.DEPLOY_PATH }}'
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" "
+              DP='${{ env.SERVER_PATH }}'
               # Create environment config file for frontend detection
               echo '{\"env\":\"production\",\"domain\":\"guanghulab.com\",\"deployed_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"${{ github.sha }}\"}' > \"\$DP/docs/env.json\"
               echo '{\"env\":\"production\",\"domain\":\"guanghulab.com\",\"deployed_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"${{ github.sha }}\"}' > \"\$DP/env.json\"
@@ -237,10 +255,10 @@ jobs:
         run: |
           echo "📄 复制 docs/index.html → 站点根目录 index.html"
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
-              cp '${{ secrets.DEPLOY_PATH }}/docs/index.html' '${{ secrets.DEPLOY_PATH }}/index.html'
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" "
+              cp '${{ env.SERVER_PATH }}/docs/index.html' '${{ env.SERVER_PATH }}/index.html'
               # 同步 docs 下的其他静态资源到根目录
-              cp '${{ secrets.DEPLOY_PATH }}/docs/.nojekyll' '${{ secrets.DEPLOY_PATH }}/.nojekyll' 2>/dev/null || true
+              cp '${{ env.SERVER_PATH }}/docs/.nojekyll' '${{ env.SERVER_PATH }}/.nojekyll' 2>/dev/null || true
             "
           echo "✅ 首页已部署到根目录"
 
@@ -249,8 +267,8 @@ jobs:
         run: |
           echo "🔗 创建模块路由别名..."
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
-              DP='${{ secrets.DEPLOY_PATH }}'
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" "
+              DP='${{ env.SERVER_PATH }}'
 
               # dashboard → docs/dashboard（仪表盘在 docs/ 子目录下）
               if [ -d \"\$DP/docs/dashboard\" ] && [ ! -e \"\$DP/dashboard\" ]; then
@@ -283,7 +301,7 @@ jobs:
         run: |
           echo "🔧 检查并部署后端服务..."
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" "
               # 检查 Node.js 和 pm2 是否可用
               if ! command -v node &>/dev/null; then
                 echo '⏭️ Node.js 未安装，跳过后端部署'
@@ -295,9 +313,9 @@ jobs:
               fi
 
               # 部署 API 代理服务（AI 聊天代理，端口 3721）
-              if [ -f '${{ secrets.DEPLOY_PATH }}/backend-integration/api-proxy.js' ]; then
+              if [ -f '${{ env.SERVER_PATH }}/backend-integration/api-proxy.js' ]; then
                 echo '📦 安装 API 代理依赖...'
-                cd '${{ secrets.DEPLOY_PATH }}/backend-integration'
+                cd '${{ env.SERVER_PATH }}/backend-integration'
                 npm install --production 2>/dev/null || echo '⚠️ api-proxy npm install 失败（可能无 package.json，继续）'
                 echo '🔄 重启 API 代理服务...'
                 export YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}'
@@ -309,9 +327,9 @@ jobs:
               fi
 
               # 部署 backend 服务（Express API，端口 3000）
-              if [ -f '${{ secrets.DEPLOY_PATH }}/backend/server.js' ]; then
+              if [ -f '${{ env.SERVER_PATH }}/backend/server.js' ]; then
                 echo '📦 安装 backend 依赖...'
-                cd '${{ secrets.DEPLOY_PATH }}/backend'
+                cd '${{ env.SERVER_PATH }}/backend'
                 npm install --production 2>/dev/null || echo '⚠️ backend npm install 失败'
                 echo '🔄 重启 backend 服务...'
                 pm2 restart guanghulab-backend 2>/dev/null || \
@@ -320,9 +338,9 @@ jobs:
               fi
 
               # 部署 status-board WebSocket 服务（端口 8080）
-              if [ -f '${{ secrets.DEPLOY_PATH }}/status-board/mock-ws-server.js' ]; then
+              if [ -f '${{ env.SERVER_PATH }}/status-board/mock-ws-server.js' ]; then
                 echo '🔄 重启 WebSocket 服务...'
-                cd '${{ secrets.DEPLOY_PATH }}/status-board'
+                cd '${{ env.SERVER_PATH }}/status-board'
                 npm install --production 2>/dev/null || true
                 pm2 restart guanghulab-ws 2>/dev/null || \
                   pm2 start mock-ws-server.js --name guanghulab-ws 2>/dev/null || \
@@ -331,9 +349,9 @@ jobs:
 
               # 部署 src HLI 中间层（端口 3001，对应 Nginx /api/v1/ 路由）
               # 注意：guanghulab-backend 已占用端口 3000，HLI 使用 3001 避免冲突
-              if [ -f '${{ secrets.DEPLOY_PATH }}/src/index.js' ]; then
+              if [ -f '${{ env.SERVER_PATH }}/src/index.js' ]; then
                 echo '📦 安装 src 依赖...'
-                cd '${{ secrets.DEPLOY_PATH }}'
+                cd '${{ env.SERVER_PATH }}'
                 npm install --production 2>/dev/null || echo '⚠️ src npm install 失败'
                 echo '🔄 重启 HLI 服务（端口 3001）...'
                 pm2 delete guanghulab 2>/dev/null || true
@@ -342,9 +360,9 @@ jobs:
               fi
 
               # 部署 Persona Studio 后端服务（端口 3002）
-              if [ -f '${{ secrets.DEPLOY_PATH }}/persona-studio/backend/server.js' ]; then
+              if [ -f '${{ env.SERVER_PATH }}/persona-studio/backend/server.js' ]; then
                 echo '📦 安装 persona-studio 依赖...'
-                cd '${{ secrets.DEPLOY_PATH }}/persona-studio/backend'
+                cd '${{ env.SERVER_PATH }}/persona-studio/backend'
                 npm install --production 2>/dev/null || echo '⚠️ persona-studio npm install 失败'
                 echo '🔄 重启 persona-studio 服务...'
                 export MODEL_API_KEY='${{ secrets.MODEL_API_KEY }}'
@@ -367,7 +385,7 @@ jobs:
         run: |
           echo "🔧 检查 Nginx 配置..."
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" "
               # 检查 Nginx 是否安装
               if ! command -v nginx &>/dev/null; then
                 echo '⏭️ Nginx 未安装，跳过配置更新'
@@ -380,9 +398,9 @@ jobs:
               if grep -q 'root.*guanghulab/status-board' /etc/nginx/sites-available/default 2>/dev/null || \
                  grep -q 'root.*guanghulab/status-board' /etc/nginx/conf.d/*.conf 2>/dev/null; then
                 echo '🔄 更新 Nginx root 路径（status-board → 站点根）...'
-                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
+                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ env.SERVER_PATH }}|g' \
                   /etc/nginx/sites-available/default 2>/dev/null || true
-                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ secrets.DEPLOY_PATH }}|g' \
+                sudo sed -i 's|root.*guanghulab/status-board[^;]*|root ${{ env.SERVER_PATH }}|g' \
                   /etc/nginx/conf.d/*.conf 2>/dev/null || true
                 NGINX_CHANGED=true
                 echo '✅ Nginx root 路径已更新（status-board 迁移）'
@@ -393,20 +411,20 @@ jobs:
               if grep -q 'root.*/var/www/hololake-frontend' /etc/nginx/sites-available/default 2>/dev/null || \
                  grep -q 'root.*/var/www/hololake-frontend' /etc/nginx/conf.d/*.conf 2>/dev/null; then
                 echo '🔄 更新 Nginx root 路径（hololake-frontend → guanghulab）...'
-                sudo sed -i 's|root /var/www/hololake-frontend|root ${{ secrets.DEPLOY_PATH }}|g' \
+                sudo sed -i 's|root /var/www/hololake-frontend|root ${{ env.SERVER_PATH }}|g' \
                   /etc/nginx/sites-available/default 2>/dev/null || true
-                sudo sed -i 's|root /var/www/hololake-frontend|root ${{ secrets.DEPLOY_PATH }}|g' \
+                sudo sed -i 's|root /var/www/hololake-frontend|root ${{ env.SERVER_PATH }}|g' \
                   /etc/nginx/conf.d/*.conf 2>/dev/null || true
                 NGINX_CHANGED=true
                 echo '✅ Nginx root 路径已更新（hololake-frontend → guanghulab）'
               fi
 
               # 验证 root 路径确实正确（防御性检查）
-              if ! grep -q "root ${{ secrets.DEPLOY_PATH }}" /etc/nginx/conf.d/*.conf 2>/dev/null && \
-                 ! grep -q "root ${{ secrets.DEPLOY_PATH }}" /etc/nginx/sites-available/default 2>/dev/null; then
+              if ! grep -q "root ${{ env.SERVER_PATH }}" /etc/nginx/conf.d/*.conf 2>/dev/null && \
+                 ! grep -q "root ${{ env.SERVER_PATH }}" /etc/nginx/sites-available/default 2>/dev/null; then
                 echo '⚠️ Nginx root 路径可能未正确设置，请手动检查'
               else
-                echo '✅ Nginx root 路径正确，指向 ${{ secrets.DEPLOY_PATH }}'
+                echo '✅ Nginx root 路径正确，指向 ${{ env.SERVER_PATH }}'
               fi
 
               # 配置 API + WebSocket 反向代理
@@ -576,28 +594,28 @@ jobs:
       - name: 🔍 验证部署
         run: |
           ssh -i ~/.ssh/deploy_key \
-            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }} \
             "echo '✅ 服务器连接正常' && \
              echo '--- 站点根目录 ---' && \
-             ls -la ${{ secrets.DEPLOY_PATH }}/ | head -30 && \
+             ls -la ${{ env.SERVER_PATH }}/ | head -30 && \
              echo '--- docs/ ---' && \
-             ls ${{ secrets.DEPLOY_PATH }}/docs/ 2>/dev/null || echo '(docs/ 不存在)' && \
+             ls ${{ env.SERVER_PATH }}/docs/ 2>/dev/null || echo '(docs/ 不存在)' && \
              echo '--- status-board/ ---' && \
-             ls ${{ secrets.DEPLOY_PATH }}/status-board/ 2>/dev/null || echo '(status-board/ 不存在)' && \
+             ls ${{ env.SERVER_PATH }}/status-board/ 2>/dev/null || echo '(status-board/ 不存在)' && \
              echo '--- cost-control/ ---' && \
-             ls ${{ secrets.DEPLOY_PATH }}/cost-control/ 2>/dev/null || echo '(cost-control/ 不存在)' && \
+             ls ${{ env.SERVER_PATH }}/cost-control/ 2>/dev/null || echo '(cost-control/ 不存在)' && \
              echo '--- devboard/ ---' && \
-             ls ${{ secrets.DEPLOY_PATH }}/devboard/ 2>/dev/null || echo '(devboard/ 不存在)' && \
+             ls ${{ env.SERVER_PATH }}/devboard/ 2>/dev/null || echo '(devboard/ 不存在)' && \
              echo '--- persona-studio/ ---' && \
-             ls ${{ secrets.DEPLOY_PATH }}/persona-studio/ 2>/dev/null || echo '(persona-studio/ 不存在)'"
+             ls ${{ env.SERVER_PATH }}/persona-studio/ 2>/dev/null || echo '(persona-studio/ 不存在)'"
 
       - name: 🏥 部署后冒烟测试
         continue-on-error: true
         run: |
           echo "🏥 部署后全模块冒烟测试..."
           ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "
-              DP='${{ secrets.DEPLOY_PATH }}'
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" "
+              DP='${{ env.SERVER_PATH }}'
               PASSED=0
               FAILED=0
               RESULTS=''
@@ -670,7 +688,7 @@ jobs:
 
           # 验证主站可访问
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "http://${{ secrets.DEPLOY_HOST }}" 2>/dev/null || echo "000")
+            "http://${{ env.SERVER_HOST }}" 2>/dev/null || echo "000")
           if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
             echo "✅ 主站 HTTP 响应: $HTTP_CODE"
             HUMAN_CHECK_PASSED=$((HUMAN_CHECK_PASSED+1))
@@ -681,7 +699,7 @@ jobs:
 
           # 验证 Persona Studio 可访问
           PS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "http://${{ secrets.DEPLOY_HOST }}/persona-studio/" 2>/dev/null || echo "000")
+            "http://${{ env.SERVER_HOST }}/persona-studio/" 2>/dev/null || echo "000")
           if [ "$PS_CODE" = "200" ] || [ "$PS_CODE" = "301" ] || [ "$PS_CODE" = "302" ]; then
             echo "✅ Persona Studio HTTP 响应: $PS_CODE"
             HUMAN_CHECK_PASSED=$((HUMAN_CHECK_PASSED+1))
@@ -692,7 +710,7 @@ jobs:
 
           # 验证后端 API 健康
           API_CODE=$(ssh -i ~/.ssh/deploy_key \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
             "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:3002/api/ps/health 2>/dev/null || echo '000'" \
             2>/dev/null || echo "000")
           if [ "$API_CODE" = "200" ]; then
@@ -716,7 +734,7 @@ jobs:
           echo "### 🚀 全站部署完成" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- 同步范围: 全仓库（含排除规则）" >> $GITHUB_STEP_SUMMARY
-          echo "- 目标: \`${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 目标: \`${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- 提交: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- 时间: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')" >> $GITHUB_STEP_SUMMARY
           echo "- 人类使用侧验证: 已执行" >> $GITHUB_STEP_SUMMARY

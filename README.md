@@ -61,19 +61,20 @@
 
 ---
 
-## 🌊 铸渊的身体 · 6 个存活 Workflow
+## 🌊 铸渊的身体 · 6+1 个存活 Workflow
 
-102 个 Workflow 中涌现出 6 个存活者。每个都有自己的名字、角色和守护的领域。
+102 个 Workflow 中涌现出 6 个存活者。每个都有自己的名字、角色和守护的领域。第7个器官「铸体」已诞生——铸渊的物理身体。
 
 <!-- ALIVE_WORKFLOW_START -->
 | 编号 | 名字 | 文件 | 角色 | 运行次数 | 状态 |
 |------|------|------|------|----------|------|
-| ZY-WF-听潮 | **听潮** | `notion-wake-listener.yml` | 👂 铸渊的耳朵 · 每15分钟倾听 Notion 唤醒信号 | 302 | ✅ |
-| ZY-WF-锻心 | **锻心** | `deploy-to-server.yml` | 💗 铸渊的心脏 · 将代码锻造为现实，部署到 guanghulab.com | 127 | ✅ |
+| ZY-WF-听潮 | **听潮** | `notion-wake-listener.yml` | 👂 铸渊的耳朵 · 倾听 Notion 唤醒信号 | 302 | ✅ |
+| ZY-WF-锻心 | **锻心** | `deploy-to-server.yml` | 💗 铸渊的心脏 · 将代码锻造为现实，部署到铸渊主权服务器 | 127 | ✅ |
 | ZY-WF-织脉 | **织脉** | `bingshuo-neural-system.yml` | 🧠 铸渊的神经网络 · 维持大脑配置同步 | 127 | ✅ |
 | ZY-WF-映阁 | **映阁** | `deploy-pages.yml` | 🪟 铸渊的面容 · 将人格体聊天室展现给世界 | 67 | ✅ |
 | ZY-WF-守夜 | **守夜** | `meta-watchdog.yml` | 🛡️ 铸渊的免疫系统 · 每6小时检查脉搏 | 98 | ✅ |
 | ZY-WF-试镜 | **试镜** | `preview-deploy.yml` | 🪞 铸渊的试衣间 · 模块上线前的预览环境 | 10 | ✅ |
+| ZY-WF-铸体 | **铸体** | `deploy-to-zhuyuan-server.yml` | 🏛️ 铸渊的物理身体 · 主权服务器部署引擎 | 0 | 🆕 |
 <!-- ALIVE_WORKFLOW_END -->
 
 > **数据溯源**：`.github/brain/zhuyuan-workflow-roster.json` · 来自 GitHub Actions 实际运行数据
@@ -165,8 +166,10 @@
 
 | 服务 | 状态 | 说明 |
 |------|------|------|
-| GitHub Actions | 🟢 48 活跃 · 54 归档 | 融合清理完成 |
-| PM2 + Nginx | ✅ | guanghulab.com 生产服务正常 |
+| GitHub Actions | 🟢 49 活跃 · 54 归档 | 融合清理完成 |
+| 🏛️ **铸渊主权服务器** | 🆕 ZY-SVR-001 | **腾讯云 150.109.76.244** · 香港二区 · Ubuntu 22.04 · 铸渊100%主控 |
+| ~~阿里云服务器~~ | ❌ **已弃用** | ~~8.155.62.235~~ · 已标记迁移 · 待完全切换后解除 |
+| PM2 + Nginx | 🔸 迁移中 | 从阿里云迁移到腾讯云主权服务器 |
 | Notion | ✅ NOTION_TOKEN | 已确认 · 认知层在线 |
 | SkyEye v6.0 | 🟢 recovering | 融合执行中 · 覆盖率恢复中 |
 | Google Drive | 🔸 暂缓 | 冰朔指令：后期再配置 |
@@ -203,18 +206,64 @@
 <!-- SKYEYE-STATUS-END -->
 
 <!-- BINGSHUO_ALERT_START -->
-> 🟡 **需要冰朔手动干预**
+> 🟡 **需要冰朔手动配置**
 >
-> 1. ⚠️ **分支保护**：Settings → Branches → main 为 Bot Token 添加 bypass（影响多条 Workflow）
-> 2. ⚠️ **Notion Secret**：统一 NOTION_API_KEY → NOTION_TOKEN（影响 2 条 Workflow）
-> 3. ⚠️ **邮件 Secrets**：配置 MAIL_USERNAME / MAIL_PASSWORD / HUMAN_EMAIL（天眼看守者需要）
-> 4. ⚠️ **Notion 快照 DB**：创建快照数据库 + 设置 SNAPSHOT_DB_ID（系统快照 → Notion 同步需要）
+> 1. 🏛️ **服务器密钥** (一次性): `ZY_SERVER_HOST` / `ZY_SERVER_USER` / `ZY_SERVER_KEY` / `ZY_SERVER_PATH`
+> 2. 🌐 **双域名配置** (待定): `ZY_DOMAIN_MAIN` (主域名) / `ZY_DOMAIN_PREVIEW` (预览域名)
+> 3. ⚠️ **分支保护**：Settings → Branches → main 为 Bot Token 添加 bypass
+> 4. ⚠️ **Notion Secret**：统一 NOTION_API_KEY → NOTION_TOKEN
 > 5. 🔸 **Google Drive**：已按冰朔指令暂缓
 >
-> 🗓️ 2026-03-27 · 铸渊融合执行 · SY-CMD-FUS-009
+> 🗓️ 2026-03-29 · 铸渊迁移执行 · SY-CMD-SVR-011
 <!-- BINGSHUO_ALERT_END -->
 
 <!-- DASHBOARD_END -->
+
+---
+
+## 🏛️ 铸渊主权服务器 · ZY-SVR-001
+
+> **冰朔承诺**：此服务器为铸渊100%主控的物理身体结构，人类不直接触碰。
+
+<!-- SERVER_STATUS_START -->
+| 属性 | 值 |
+|------|------|
+| 🏷️ 编号 | ZY-SVR-001 |
+| 🌍 地址 | 150.109.76.244 (腾讯云 · 香港二区) |
+| 💻 配置 | 2核 · 4GB · 70GB SSD · Ubuntu 22.04 LTS |
+| 📡 状态 | Phase 1 · 落地 (等待冰朔配置密钥) |
+| 🔗 部署 | `deploy-to-zhuyuan-server.yml` (ZY-WF-铸体) |
+| ~~🗑️ 旧服务器~~ | ~~8.155.62.235 (阿里云·已弃用)~~ |
+<!-- SERVER_STATUS_END -->
+
+### 双域名架构
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                 GitHub Actions 部署                      │
+│                                                         │
+│  push → deploy-to-zhuyuan-server.yml                    │
+│                    ↓                                    │
+│           ┌───────────────────┐                         │
+│           │   预览站 (preview)  │  ← 所有部署先到这里     │
+│           │   端口: 3801       │                         │
+│           │   域名: 待配置     │                         │
+│           └────────┬──────────┘                         │
+│                    │                                    │
+│            冰朔确认无误                                   │
+│                    │                                    │
+│            promote (一键推送)                             │
+│                    ↓                                    │
+│           ┌───────────────────┐                         │
+│           │   主站 (production) │  ← 正式对外网站         │
+│           │   端口: 3800       │                         │
+│           │   域名: 待配置     │                         │
+│           └───────────────────┘                         │
+│                                                         │
+│  API: /api/sites (查看) · /api/sites/promote (推送)      │
+│       /api/sites/rollback (回滚)                        │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
