@@ -1,0 +1,23 @@
+{
+  "name": "zhuyuan-server",
+  "version": "1.0.0",
+  "description": "铸渊主权服务器应用 · Zhuyuan Sovereign Server · ICE-GL-ZY001",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "health": "curl -s http://localhost:3800/api/health | jq ."
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.4.0",
+    "better-sqlite3": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "铸渊 · ICE-GL-ZY001",
+  "license": "UNLICENSED",
+  "private": true
+}

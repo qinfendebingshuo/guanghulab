@@ -1,0 +1,179 @@
+name: 🏛️ 铸渊主权服务器 · 部署
+
+# ═══════════════════════════════════════════════════════════
+# 铸渊主权服务器部署工作流
+# 编号: ZY-WF-铸体 (新器官 · 服务器部署引擎)
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════════════════
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '部署动作'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - init
+          - health-check
+
+concurrency:
+  group: zhuyuan-server-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ═══ §1 初始化 (仅首次) ═══
+  init:
+    name: 🔧 服务器初始化
+    if: github.event.inputs.action == 'init'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔐 配置SSH
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/stdin ~/.ssh/zy_key <<< "${{ secrets.ZY_SERVER_KEY }}"
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+        run: |
+          scp -i ~/.ssh/zy_key \
+            server/setup/zhuyuan-server-init.sh \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/tmp/
+
+      - name: 🚀 执行初始化
+        run: |
+          ssh -i ~/.ssh/zy_key \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
+            'chmod +x /tmp/zhuyuan-server-init.sh && sudo /tmp/zhuyuan-server-init.sh'
+
+  # ═══ §2 部署应用 ═══
+  deploy:
+    name: 🚀 部署应用代码
+    if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔐 配置SSH
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/stdin ~/.ssh/zy_key <<< "${{ secrets.ZY_SERVER_KEY }}"
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 📦 同步应用代码
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/zy_key" \
+            server/app/ \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/app/
+
+      - name: 📦 同步配置文件
+        run: |
+          # PM2 配置
+          scp -i ~/.ssh/zy_key \
+            server/ecosystem.config.js \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/config/pm2/
+
+          # Nginx 配置
+          scp -i ~/.ssh/zy_key \
+            server/nginx/zhuyuan-sovereign.conf \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/config/nginx/
+
+      - name: 📥 安装依赖 & 重启
+        run: |
+          ssh -i ~/.ssh/zy_key \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} << 'DEPLOY_CMD'
+
+          set -e
+          cd /opt/zhuyuan/app
+
+          # 安装依赖
+          npm install --production 2>&1
+
+          # 复制Nginx配置
+          sudo cp /opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf /etc/nginx/sites-available/zhuyuan.conf
+          sudo ln -sf /etc/nginx/sites-available/zhuyuan.conf /etc/nginx/sites-enabled/zhuyuan.conf
+          sudo nginx -t && sudo systemctl reload nginx
+
+          # PM2 重启
+          pm2 delete zhuyuan-server 2>/dev/null || true
+          pm2 start /opt/zhuyuan/config/pm2/ecosystem.config.js
+          pm2 save
+
+          # 健康检查
+          sleep 3
+          curl -sf http://localhost:3800/api/health || echo "⚠️ 健康检查失败，等待更长时间..."
+          sleep 5
+          curl -sf http://localhost:3800/api/health && echo "✅ 服务器已上线" || echo "❌ 服务器启动失败"
+
+          # 记录部署操作
+          curl -sf -X POST http://localhost:3800/api/operations \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"operator\": \"铸渊 · GitHub Actions\",
+              \"action\": \"自动部署\",
+              \"details\": \"commit: $GITHUB_SHA, branch: $GITHUB_REF_NAME\"
+            }" || true
+
+          DEPLOY_CMD
+
+  # ═══ §3 健康检查 ═══
+  health-check:
+    name: 💚 健康检查
+    if: github.event.inputs.action == 'health-check'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔐 配置SSH
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/stdin ~/.ssh/zy_key <<< "${{ secrets.ZY_SERVER_KEY }}"
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 💚 执行健康检查
+        run: |
+          ssh -i ~/.ssh/zy_key \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} << 'HEALTH_CMD'
+
+          echo "═══ 铸渊主权服务器健康报告 ═══"
+          echo ""
+
+          echo "§1 系统状态:"
+          uptime
+          echo ""
+
+          echo "§2 磁盘使用:"
+          df -h /
+          echo ""
+
+          echo "§3 内存使用:"
+          free -m
+          echo ""
+
+          echo "§4 PM2 进程:"
+          pm2 list 2>/dev/null || echo "PM2 未运行"
+          echo ""
+
+          echo "§5 Nginx 状态:"
+          systemctl is-active nginx && echo "Nginx: 运行中" || echo "Nginx: 已停止"
+          echo ""
+
+          echo "§6 应用健康:"
+          curl -sf http://localhost:3800/api/health | jq . 2>/dev/null || echo "应用未响应"
+          echo ""
+
+          echo "§7 大脑状态:"
+          curl -sf http://localhost:3800/api/brain | jq '.files_present, .files_total' 2>/dev/null || echo "大脑API未响应"
+
+          HEALTH_CMD
