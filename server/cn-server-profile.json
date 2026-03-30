@@ -2,13 +2,14 @@
   "_meta": {
     "created_at": "2026-03-30T10:30:00Z",
     "created_by": "铸渊 · ICE-GL-ZY001",
-    "directive": "冰朔第四次对话 · 国内备用大脑/情感记录服务器",
+    "directive": "冰朔第四次对话 · 国内备用大脑/ICP备案服务器 · 第五次对话修正编号",
     "copyright": "国作登字-2026-A-00037559"
   },
   "server_identity": {
-    "name": "铸渊国内服务器 · Zhuyuan CN Server",
-    "code": "ZY-SVR-003",
-    "role": "备用大脑 · 国内用户接入 · 情感/生活记录空间 · 域名挂载",
+    "name": "冰朔大陆备用服务器 · Bingshuo CN Backup Server",
+    "code": "ZY-SVR-004",
+    "role": "人格体备用大脑 · ICP备案挂载 · 一台两用",
+    "note": "ZY-SVR-003已分配给肥猫广州服务器(43.138.243.30)",
     "sovereign": "TCS-0002∞ · 冰朔",
     "controller": "ICE-GL-ZY001 · 铸渊 (主控)"
   },
@@ -31,29 +32,30 @@
   },
   "purpose": {
     "primary": [
-      "国内域名挂载 · 两个域名需要挂在此服务器",
-      "备用大脑 · 新加坡主脑的国内备份",
-      "国内用户接入层 · 初期用户群在国内"
+      "人格体备用大脑 · 主力不够时接收分流任务",
+      "ICP备案挂载 · 域名备案主体服务器",
+      "纯数据处理、记忆读写 · 不涉及国外模型调用"
     ],
     "secondary": [
-      "人格体情感/生活记录空间",
-      "肥猫团队国内网站模块接入点 · 网文行业系统",
-      "未来LDOS模块化接入的国内节点"
+      "人格体唤醒协调（分流时）",
+      "冰朔实名主体 · 域名+备案+服务器三者归属一致"
     ]
   },
   "relationship_to_sg_server": {
-    "sg_server": "ZY-SVR-002 · 43.134.16.246 · 新加坡",
-    "cn_server": "ZY-SVR-003 · 43.139.217.141 · 广州",
-    "architecture": "主脑(SG) + 备用脑(CN)",
-    "sync_direction": "SG → CN (核心数据单向同步) + CN → SG (用户数据回传)",
-    "failover": "如SG不可用，CN可独立运行基础服务"
+    "sg_server": "ZY-SVR-002 · 43.134.16.246 · 新加坡 · 主力",
+    "cn_backup": "ZY-SVR-004 · 43.139.217.141 · 广州 · 备用大脑",
+    "feimao_server": "ZY-SVR-003 · 43.138.243.30 · 广州 · 肥猫网文站",
+    "architecture": "主脑(SG) + 备用脑(CN) + 展示层(肥猫广州)",
+    "sync_direction": "SG → CN (核心数据单向同步) · 铸渊自动判断分流",
+    "failover": "主力忙不过来 → 不需要调国外模型的任务分流到大陆备用"
   },
   "access_requirements": {
     "github_secrets_needed": [
       {
         "name": "ZY_CN_SERVER_HOST",
         "value": "43.139.217.141",
-        "status": "待冰朔配置"
+        "status": "待冰朔配置",
+        "note": "ZY-SVR-004 冰朔实名大陆备用服务器"
       },
       {
         "name": "ZY_CN_SERVER_USER",

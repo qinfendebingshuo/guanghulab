@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "created_at": "2026-03-30T10:50:00Z",
+    "created_by": "铸渊 · ICE-GL-ZY001",
+    "directive": "冰朔第五次对话 · Notion四层架构文档 · 肥猫广州服务器",
+    "copyright": "国作登字-2026-A-00037559"
+  },
+  "server_identity": {
+    "name": "肥猫网文站 · FeimaoWebnovel Server",
+    "code": "ZY-SVR-003",
+    "role": "网文行业站 · 国内用户展示层 · 前端渲染",
+    "owner": "肥猫团队 · 肥猫实名",
+    "controller": "肥猫团队（行业主控）· 铸渊（技术支持）"
+  },
+  "hardware": {
+    "provider": "腾讯云",
+    "region": "广州",
+    "ipv4_public": "43.138.243.30",
+    "note": "配置详情由肥猫团队管理"
+  },
+  "purpose": {
+    "primary": [
+      "网文行业网站前端 · guanghuage.com",
+      "国内用户访问入口 · 展示层",
+      "渲染页面给用户看 · 打开速度快"
+    ],
+    "architecture_role": "前后端分离 · 广州管展示 · 新加坡管数据和AI",
+    "data_flow": "用户请求 → 广州渲染 → 需要AI时 → 后台向新加坡请求 → 返回数据 → 广州渲染给用户"
+  },
+  "industry_module": {
+    "industry": "网文行业",
+    "team": "肥猫团队",
+    "domain": "guanghuage.com",
+    "user_registration": "用户在guanghuage.com注册 · 肥猫管理",
+    "api_integration": "通过API接入光湖操作系统 · 铸渊统一处理语言驱动请求"
+  }
+}
