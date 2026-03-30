@@ -50,14 +50,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          # 写入私钥（支持多种格式）
-          printf '%s\n' "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/zy_key
+          echo "$SSH_KEY" > ~/.ssh/zy_key
           chmod 600 ~/.ssh/zy_key
-          # 验证私钥格式
-          if head -1 ~/.ssh/zy_key | grep -q "BEGIN"; then
-            echo "✅ SSH私钥格式正确"
+          # 验证私钥格式完整性
+          if head -1 ~/.ssh/zy_key | grep -q "BEGIN" && tail -1 ~/.ssh/zy_key | grep -q "END"; then
+            echo "✅ SSH私钥格式正确（BEGIN/END标记完整）"
           else
             echo "❌ SSH私钥格式异常 — 请检查 GitHub Secrets 中 ZY_SERVER_KEY 的内容"
             echo "   应以 '-----BEGIN' 开头，以 '-----END' 结尾"
@@ -116,11 +117,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/zy_key
+          echo "$SSH_KEY" > ~/.ssh/zy_key
           chmod 600 ~/.ssh/zy_key
           ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 📦 同步应用代码
         run: |
           # 确定部署目标: preview (默认) 或 production
           TARGET="${{ github.event.inputs.deploy_target || 'preview' }}"
@@ -198,9 +203,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/zy_key
+          echo "$SSH_KEY" > ~/.ssh/zy_key
           chmod 600 ~/.ssh/zy_key
           ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
@@ -254,9 +261,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/zy_key
+          echo "$SSH_KEY" > ~/.ssh/zy_key
           chmod 600 ~/.ssh/zy_key
           ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 

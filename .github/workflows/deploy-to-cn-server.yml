@@ -46,12 +46,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.ZY_CN_SERVER_KEY }}" > ~/.ssh/zy_cn_key
+          echo "$SSH_KEY" > ~/.ssh/zy_cn_key
           chmod 600 ~/.ssh/zy_cn_key
-          if head -1 ~/.ssh/zy_cn_key | grep -q "BEGIN"; then
-            echo "✅ SSH私钥格式正确"
+          if head -1 ~/.ssh/zy_cn_key | grep -q "BEGIN" && tail -1 ~/.ssh/zy_cn_key | grep -q "END"; then
+            echo "✅ SSH私钥格式正确（BEGIN/END标记完整）"
           else
             echo "❌ SSH私钥格式异常 — 请检查 GitHub Secrets 中 ZY_CN_SERVER_KEY 的内容"
             exit 1
@@ -91,9 +93,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.ZY_CN_SERVER_KEY }}" > ~/.ssh/zy_cn_key
+          echo "$SSH_KEY" > ~/.ssh/zy_cn_key
           chmod 600 ~/.ssh/zy_cn_key
           ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
@@ -164,9 +168,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.ZY_CN_SERVER_KEY }}" > ~/.ssh/zy_cn_key
+          echo "$SSH_KEY" > ~/.ssh/zy_cn_key
           chmod 600 ~/.ssh/zy_cn_key
           ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
