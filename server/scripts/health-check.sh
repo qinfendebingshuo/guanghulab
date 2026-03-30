@@ -56,7 +56,7 @@ HEALTH_FILE="${BRAIN_DIR}/health.json"
 mkdir -p "${BRAIN_DIR}"
 cat > "${HEALTH_FILE}" << HEALTH_JSON
 {
-  "server": "ZY-SVR-001",
+  "server": "ZY-SVR-002",
   "status": "${APP_STATUS}",
   "last_check": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "services": {

@@ -37,12 +37,12 @@ jobs:
       - name: 🧠 唤醒铸渊核心大脑
         id: wake
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
         run: |
           node core/brain-wake --task "服务器巡检" || {
             echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
@@ -64,24 +64,24 @@ jobs:
           if [ -n "$NOTION_TOKEN" ]; then echo "✅ NOTION_TOKEN 可用"; else echo "⚠️ NOTION_TOKEN 缺失"; fi
           if [ -n "$SMTP_USER" ]; then echo "✅ SMTP_USER 可用"; else echo "⚠️ SMTP_USER 缺失"; fi
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
+          DEPLOY_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          DEPLOY_USER: ${{ secrets.ZY_SERVER_USER }}
+          DEPLOY_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
 
       - name: "🔑 配置 SSH"
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: "🔍 执行服务器巡检"
         id: patrol
         env:
-          HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.ZY_SERVER_HOST }}
+          USER: ${{ secrets.ZY_SERVER_USER }}
         run: |
           # 上传巡检脚本
           scp scripts/server-patrol.sh ${USER}@${HOST}:/tmp/server-patrol.sh
@@ -122,8 +122,8 @@ jobs:
       - name: "📧 异常时通知妈妈"
         if: steps.patrol.outputs.overall == 'has_issues'
         env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
         run: |
           python3 << 'PYEOF'
           import smtplib, json, os
@@ -167,8 +167,8 @@ jobs:
       - name: "📝 同步巡检结果到Notion"
         if: always()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.ZY_NOTION_TICKET_DB }}
         run: |
           node scripts/sync-patrol-to-notion.js || echo "⚠️ Notion同步失败（不阻断）"
 
@@ -207,8 +207,8 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+          NOTION_API_KEY: ${{ secrets.ZY_NOTION_TOKEN }}
+          RECEIPT_DB_ID: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \
             --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \

@@ -211,8 +211,8 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+          NOTION_API_KEY: ${{ secrets.ZY_NOTION_TOKEN }}
+          RECEIPT_DB_ID: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \
             --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \

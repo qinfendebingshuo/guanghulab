@@ -78,8 +78,8 @@ jobs:
       - name: 📝 写入 Notion SYSLOG 收件箱
         if: steps.parse.outputs.has_syslog == 'true'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_DB_SYSLOG: ${{ secrets.NOTION_DB_SYSLOG }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_DB_SYSLOG: ${{ secrets.ZY_NOTION_SYSLOG_DB }}
         run: node scripts/write-notion-syslog.js "${{ steps.parse.outputs.syslog_file }}"
 
       # Step 2: 处理 syslog-inbox 条目（归档到 syslog-processed/）
@@ -128,12 +128,12 @@ jobs:
       - name: 🧠 唤醒人格体处理 SYSLOG
         id: persona
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
-          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
-          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.ZY_NOTION_BRAIN_PAGE }}
+          PORTRAIT_DB_ID: ${{ secrets.ZY_NOTION_PORTRAIT_DB }}
+          FINGERPRINT_DB_ID: ${{ secrets.ZY_NOTION_FINGERPRINT_DB }}
           SUBMIT_TYPE: syslog
           SYSLOG_FILE: ${{ needs.pipeline-a-syslog.outputs.syslog_file }}
           AUTHOR: ${{ needs.pipeline-a-syslog.outputs.sender_name }}
@@ -199,7 +199,7 @@ jobs:
       - name: 📢 推送广播到飞书
         env:
           PUSH_URL: https://guanghulab.com/webhook/push-broadcast
-          PUSH_TOKEN: ${{ secrets.PUSH_BROADCAST_TOKEN }}
+          PUSH_TOKEN: ${{ secrets.ZY_PUSH_TOKEN }}
           CHAT_ID: ${{ needs.pipeline-a-syslog.outputs.chat_id }}
           SENDER_OPEN_ID: ${{ needs.pipeline-a-syslog.outputs.sender_open_id }}
           BROADCAST_TITLE: ${{ needs.pipeline-b-persona.outputs.broadcast_title }}
@@ -351,8 +351,8 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+          NOTION_API_KEY: ${{ secrets.ZY_NOTION_TOKEN }}
+          RECEIPT_DB_ID: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \
             --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \

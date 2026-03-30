@@ -50,9 +50,9 @@ jobs:
       - name: 🔑 配置 SSH 连接
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
+          ssh-keyscan -H "${{ secrets.ZY_SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || {
             echo "⚠️ ssh-keyscan 失败，使用 StrictHostKeyChecking=no 后备"
           }
 
@@ -66,7 +66,7 @@ jobs:
 
           PM2_REPORT=$(ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" '
+            "${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}" '
             echo "══════════════════════════════════════"
             echo "  PM2 进程状态概览"
             echo "══════════════════════════════════════"
@@ -163,7 +163,7 @@ jobs:
 
           CLEANUP_REPORT=$(ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" '
+            "${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}" '
             ERRORED_LIST=$(pm2 jlist 2>/dev/null | python3 -c "
             import sys, json
             try:
@@ -220,7 +220,7 @@ jobs:
 
           HEALTH_REPORT=$(ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" '
+            "${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}" '
             echo "══════════════════════════════════════"
             echo "  Nginx 状态"
             echo "══════════════════════════════════════"
@@ -299,8 +299,8 @@ jobs:
       # ━━━ 阶段三：生成 Notion 诊断报告 ━━━
       - name: "📋 阶段三 · 写入 Notion 工单"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID || '84edd0640bf146a9a5a7840107013e8c' }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.ZY_NOTION_TICKET_DB }}
           PM2_REPORT: ${{ steps.pm2_diagnose.outputs.pm2_report }}
           CLEANUP_REPORT: ${{ steps.pm2_cleanup.outputs.cleanup_report }}
           HEALTH_REPORT: ${{ steps.health_check.outputs.health_report }}

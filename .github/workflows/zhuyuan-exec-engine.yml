@@ -85,11 +85,11 @@ jobs:
       # ====== Step 3: 执行指令 ======
       - name: "⚡ 执行铸渊指令"
         env:
-          GHAPP_APP_ID: ${{ secrets.GHAPP_APP_ID }}
-          GHAPP_PRIVATE_KEY: ${{ secrets.GHAPP_PRIVATE_KEY }}
-          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          GHAPP_APP_ID: ${{ secrets.ZY_GHAPP_ID }}
+          GHAPP_PRIVATE_KEY: ${{ secrets.ZY_GHAPP_KEY }}
+          MAIN_REPO_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           node services/zhuyuan-bridge/scripts/execute-instruction.js
@@ -160,8 +160,8 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+          NOTION_API_KEY: ${{ secrets.ZY_NOTION_TOKEN }}
+          RECEIPT_DB_ID: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \
             --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \

@@ -174,17 +174,17 @@ jobs:
       - name: 🧠 Auto-detect and wake up persona
         id: persona
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
           SUBMIT_CONTENT: ${{ steps.parse.outputs.content }}
           AUTHOR: ${{ steps.parse.outputs.author }}
           MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
-          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
-          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.ZY_NOTION_BRAIN_PAGE }}
+          PORTRAIT_DB_ID: ${{ secrets.ZY_NOTION_PORTRAIT_DB }}
+          FINGERPRINT_DB_ID: ${{ secrets.ZY_NOTION_FINGERPRINT_DB }}
         run: node scripts/wake-persona.js
 
       - name: 📋 步骤 4/8 · 唤醒核心大脑（成功）
@@ -209,14 +209,14 @@ jobs:
           STEP_DETAIL: 'API 调用失败，请检查 Secrets: LLM_API_KEY / LLM_BASE_URL 是否配置正确'
         run: node scripts/pipeline-reporter.js
 
-      # ✅ 修复点：原来是 if: $ secrets.NOTION_API_KEY ，会报 Unrecognized named-value: 'secrets'
+      # ✅ 修复点：原来是 if: $ secrets.ZY_NOTION_TOKEN ，会报 Unrecognized named-value: 'secrets'
       # secrets 不能在 if: 里直接用，必须改成 != '' 的形式
       - name: 📋 创建标准化 Notion 工单（Phase B1）
         id: ticket
-        if: ${{ secrets.NOTION_API_KEY != '' }}
+        if: ${{ secrets.ZY_NOTION_TOKEN != '' }}
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.ZY_NOTION_TICKET_DB }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
           PERSONA_RESULT: ${{ steps.persona.outputs.result }}
@@ -305,8 +305,8 @@ jobs:
       - name: 📧 Send email to developer
         id: email
         env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
           EMAIL_TO: ${{ steps.parse.outputs.email }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}

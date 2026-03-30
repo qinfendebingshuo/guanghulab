@@ -31,9 +31,9 @@ jobs:
 
       - name: 🛰️ 执行语义落盘
         env:
-          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
-          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
-          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          GDRIVE_CLIENT_ID: ${{ secrets.ZY_GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.ZY_GDRIVE_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.ZY_GDRIVE_REFRESH_TOKEN }}
           DRIVE_LANDING_FOLDER_ID: '1fqWdLPaZkUZYt4OT_h3fJQHnd-q5QN3G'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}

@@ -48,7 +48,7 @@ jobs:
       - name: 定时任务 · 公告或汇总
         if: github.event_name == 'schedule'
         env:
-          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          MAIN_REPO_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           GITHUB_ORG: qinfendebingshuo
         run: |
           HOUR=$(date -u +%H)
@@ -61,7 +61,7 @@ jobs:
       - name: 手动触发
         if: github.event_name == 'workflow_dispatch'
         env:
-          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          MAIN_REPO_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           GITHUB_ORG: qinfendebingshuo
         run: |
           ACTION="${{ github.event.inputs.action }}"
@@ -75,7 +75,7 @@ jobs:
       - name: Push触发 · 公告+广播
         if: github.event_name == 'push'
         env:
-          MAIN_REPO_TOKEN: ${{ secrets.MAIN_REPO_TOKEN }}
+          MAIN_REPO_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           GITHUB_ORG: qinfendebingshuo
         run: |
           node scripts/bridge-app.js bulletin

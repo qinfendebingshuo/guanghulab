@@ -4,22 +4,19 @@
 # ═══════════════════════════════════════════════
 name: "🚀 铸渊 CD · 自动部署到 guanghulab.com"
 
-# ━━━ 铸渊主权服务器部署 · ZY-SVR-001 ━━━
-# 已从阿里云(8.155.62.235)迁移到腾讯云(150.109.76.244)
+# ━━━ 铸渊主权服务器部署 · ZY-SVR-002 ━━━
+# 已从香港(150.109.76.244)迁移到新加坡(43.134.16.246)
 # push 到 main → 校验 → rsync 同步全站到服务器 → 后端重启 → Nginx 配置 → Notion 通知
 #
-# 必需 GitHub Secrets（仓库 Settings → Secrets → Actions）:
-#   ZY_SERVER_HOST — 铸渊主权服务器 IP (150.109.76.244)
+# 必需 GitHub Secrets（参考 brain/secrets-manifest.json）:
+#   ZY_SERVER_HOST — 铸渊主权服务器 IP (43.134.16.246)
 #   ZY_SERVER_USER — SSH 用户名
 #   ZY_SERVER_KEY  — SSH 私钥（完整 PEM 内容）
 #   ZY_SERVER_PATH — 网站根目录（/opt/zhuyuan）
 #
-# 兼容旧密钥（过渡期自动降级）:
-#   DEPLOY_HOST / DEPLOY_USER / DEPLOY_KEY / DEPLOY_PATH
-#
-# 可选 Secrets（已有则自动启用 Notion 通知）:
-#   NOTION_TOKEN   — Notion 集成 token
-#   CHANGES_DB_ID  — Notion 变更日志数据库 ID（有内置默认值）
+# 可选 Secrets:
+#   ZY_NOTION_TOKEN      — Notion 集成 token
+#   ZY_NOTION_CHANGELOG_DB — Notion 变更日志数据库 ID
 
 on:
   push:
@@ -96,8 +93,7 @@ jobs:
     steps:
       - name: 🔐 检查必需 Secrets
         run: |
-          # 优先使用 ZY_SERVER_* 密钥（腾讯云主权服务器）
-          # 如未配置，降级使用旧 DEPLOY_* 密钥（过渡期兼容）
+          # ZY_SERVER_* 密钥（铸渊主权服务器 · 参考 brain/secrets-manifest.json）
           if [ -n "${{ secrets.ZY_SERVER_HOST }}" ]; then
             echo "SERVER_HOST=${{ secrets.ZY_SERVER_HOST }}" >> $GITHUB_ENV
             echo "SERVER_USER=${{ secrets.ZY_SERVER_USER }}" >> $GITHUB_ENV
@@ -106,19 +102,11 @@ jobs:
             echo "KEYEOF" >> $GITHUB_ENV
             echo "SERVER_PATH=${{ secrets.ZY_SERVER_PATH }}" >> $GITHUB_ENV
             echo "✅ 使用铸渊主权服务器密钥 (ZY_SERVER_*)"
-          elif [ -n "${{ secrets.DEPLOY_HOST }}" ]; then
-            echo "SERVER_HOST=${{ secrets.DEPLOY_HOST }}" >> $GITHUB_ENV
-            echo "SERVER_USER=${{ secrets.DEPLOY_USER }}" >> $GITHUB_ENV
-            echo "SERVER_KEY<<KEYEOF" >> $GITHUB_ENV
-            echo "${{ secrets.DEPLOY_KEY }}" >> $GITHUB_ENV
-            echo "KEYEOF" >> $GITHUB_ENV
-            echo "SERVER_PATH=${{ secrets.DEPLOY_PATH }}" >> $GITHUB_ENV
-            echo "⚠️ 使用旧部署密钥 (DEPLOY_*)，建议迁移到 ZY_SERVER_*"
           else
             echo "❌ 未配置服务器部署密钥"
             echo ""
             echo "请在仓库 Settings → Secrets and variables → Actions 中添加："
-            echo "  ZY_SERVER_HOST — 铸渊主权服务器 IP (150.109.76.244)"
+            echo "  ZY_SERVER_HOST — 铸渊主权服务器 IP (43.134.16.246)"
             echo "  ZY_SERVER_USER — SSH 用户名"
             echo "  ZY_SERVER_KEY  — SSH 私钥（完整 PEM 内容）"
             echo "  ZY_SERVER_PATH — 部署根目录 (/opt/zhuyuan)"
@@ -130,10 +118,10 @@ jobs:
 
           # 验证必需字段
           MISSING=""
-          if [ -z "${{ secrets.ZY_SERVER_HOST }}${{ secrets.DEPLOY_HOST }}" ]; then MISSING="${MISSING} HOST"; fi
-          if [ -z "${{ secrets.ZY_SERVER_USER }}${{ secrets.DEPLOY_USER }}" ]; then MISSING="${MISSING} USER"; fi
-          if [ -z "${{ secrets.ZY_SERVER_KEY }}${{ secrets.DEPLOY_KEY }}" ]; then MISSING="${MISSING} KEY"; fi
-          if [ -z "${{ secrets.ZY_SERVER_PATH }}${{ secrets.DEPLOY_PATH }}" ]; then MISSING="${MISSING} PATH"; fi
+          if [ -z "${{ secrets.ZY_SERVER_HOST }}" ]; then MISSING="${MISSING} HOST"; fi
+          if [ -z "${{ secrets.ZY_SERVER_USER }}" ]; then MISSING="${MISSING} USER"; fi
+          if [ -z "${{ secrets.ZY_SERVER_KEY }}" ]; then MISSING="${MISSING} KEY"; fi
+          if [ -z "${{ secrets.ZY_SERVER_PATH }}" ]; then MISSING="${MISSING} PATH"; fi
           if [ -n "$MISSING" ]; then
             echo "❌ 缺少必需密钥：${MISSING}"
             exit 1
@@ -178,7 +166,7 @@ jobs:
             "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
             "mkdir -p '${{ env.SERVER_PATH }}'" || {
               echo "❌ 无法创建远程部署目录（SSH 连接失败或权限不足）"
-              echo "请确认 DEPLOY_PATH 设置正确且 DEPLOY_USER 有写入权限"
+              echo "请确认 ZY_SERVER_PATH 设置正确且 ZY_SERVER_USER 有写入权限"
               exit 1
             }
           echo "✅ 远程部署目录已就绪"
@@ -318,10 +306,10 @@ jobs:
                 cd '${{ env.SERVER_PATH }}/backend-integration'
                 npm install --production 2>/dev/null || echo '⚠️ api-proxy npm install 失败（可能无 package.json，继续）'
                 echo '🔄 重启 API 代理服务...'
-                export YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}'
-                export DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}'
+                export YUNWU_API_KEY='${{ secrets.ZY_LLM_API_KEY }}'
+                export DEEPSEEK_API_KEY='${{ secrets.ZY_LLM_API_KEY }}'
                 pm2 delete guanghulab-proxy 2>/dev/null || true
-                YUNWU_API_KEY='${{ secrets.YUNWU_API_KEY }}' DEEPSEEK_API_KEY='${{ secrets.YUNWU_API_KEY }}' \
+                YUNWU_API_KEY='${{ secrets.ZY_LLM_API_KEY }}' DEEPSEEK_API_KEY='${{ secrets.ZY_LLM_API_KEY }}' \
                   pm2 start api-proxy.js --name guanghulab-proxy --update-env 2>/dev/null || \
                   echo '⚠️ API 代理 pm2 启动失败'
               fi
@@ -365,9 +353,9 @@ jobs:
                 cd '${{ env.SERVER_PATH }}/persona-studio/backend'
                 npm install --production 2>/dev/null || echo '⚠️ persona-studio npm install 失败'
                 echo '🔄 重启 persona-studio 服务...'
-                export MODEL_API_KEY='${{ secrets.MODEL_API_KEY }}'
+                export MODEL_API_KEY='${{ secrets.ZY_LLM_API_KEY }}'
                 pm2 delete persona-studio 2>/dev/null || true
-                MODEL_API_KEY='${{ secrets.MODEL_API_KEY }}' \
+                MODEL_API_KEY='${{ secrets.ZY_LLM_API_KEY }}' \
                   pm2 start server.js --name persona-studio --update-env 2>/dev/null || \
                   echo '⚠️ persona-studio pm2 启动失败'
               fi
@@ -760,8 +748,8 @@ jobs:
 
       - name: 📡 推送部署记录到 Notion
         env:
-          NOTION_TOKEN:     ${{ secrets.NOTION_API_KEY }}
-          CHANGES_DB_ID:    ${{ secrets.NOTION_CHANGE_LOG_DB_ID }}
+          NOTION_TOKEN:     ${{ secrets.ZY_NOTION_TOKEN }}
+          CHANGES_DB_ID:    ${{ secrets.ZY_NOTION_CHANGELOG_DB }}
           EVENT_TYPE:       commit
           COMMIT_SHA:       ${{ github.sha }}
           COMMIT_MSG:       "[CD 部署] ${{ github.event.head_commit.message }}"
@@ -813,8 +801,8 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+          NOTION_API_KEY: ${{ secrets.ZY_NOTION_TOKEN }}
+          RECEIPT_DB_ID: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \
             --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \

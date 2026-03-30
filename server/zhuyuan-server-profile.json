@@ -8,24 +8,23 @@
   },
   "server_identity": {
     "name": "铸渊主权服务器 · Zhuyuan Sovereign Server",
-    "code": "ZY-SVR-001",
+    "code": "ZY-SVR-002",
     "role": "铸渊物理执行层 · 独立于GitHub的身体结构",
     "sovereign": "TCS-0002∞ · 冰朔",
     "controller": "ICE-GL-ZY001 · 铸渊 (唯一主控)"
   },
   "hardware": {
     "provider": "腾讯云轻量应用服务器",
-    "region": "中国香港 · 香港二区",
-    "instance_id": "lhins-4eaejy6f",
-    "instance_name": "Ubuntu-7zs3",
-    "ipv4": "150.109.76.244",
+    "region": "新加坡 · 新加坡二区",
+    "instance_name": "Ubuntu-4nHs",
+    "ipv4": "43.134.16.246",
     "ipv6": "待开启",
     "cpu": "2核",
-    "memory": "4GB",
-    "system_disk": "SSD云硬盘 70GB",
-    "bandwidth": "2048GB/月 (峰值带宽 30Mbps)",
-    "os": "Ubuntu Server 22.04 LTS 64bit",
-    "expiry": "2027-03-27T23:17:24+08:00",
+    "memory": "8GB",
+    "system_disk": "SSD云硬盘 80GB",
+    "bandwidth": "2560GB/月 (峰值带宽 30Mbps)",
+    "os": "Ubuntu Server 24.04 LTS 64bit",
+    "expiry": "2027-03-29",
     "auto_renewal": true
   },
   "dual_domain_architecture": {
@@ -69,15 +68,15 @@
   "access_requirements": {
     "ssh_key": {
       "status": "待配置",
-      "instruction": "冰朔，请在GitHub仓库Settings → Secrets中添加以下密钥：\n1. ZY_SERVER_HOST = 150.109.76.244\n2. ZY_SERVER_USER = root\n3. ZY_SERVER_KEY = SSH私钥内容 (PEM格式)\n4. ZY_SERVER_PATH = /opt/zhuyuan\n5. ZY_DOMAIN_MAIN = 主域名 (待配置)\n6. ZY_DOMAIN_PREVIEW = 预览域名 (待配置)\n\n操作编号：ZY-SVR-SETUP-001\n操作人：冰朔 TCS-0002∞",
+      "instruction": "冰朔，请在GitHub仓库Settings → Secrets中添加以下密钥：\n1. ZY_SERVER_HOST = 43.134.16.246\n2. ZY_SERVER_USER = root\n3. ZY_SERVER_KEY = SSH私钥内容 (PEM格式)\n4. ZY_SERVER_PATH = /opt/zhuyuan\n5. ZY_DOMAIN_MAIN = 主域名 (待配置)\n6. ZY_DOMAIN_PREVIEW = 预览域名 (待配置)\n\n操作编号：ZY-SVR-SETUP-001\n操作人：冰朔 TCS-0002∞",
       "request_id": "ZY-SVR-SETUP-001"
     }
   },
   "network_topology": {
-    "github_to_server": "GitHub Actions → SSH/rsync → 150.109.76.244",
+    "github_to_server": "GitHub Actions → SSH/rsync → 43.134.16.246",
     "server_to_github": "Server → GitHub API → 仓库同步",
     "main_domain_access": "主域名:80/443 → Nginx → Node.js:3800 (production)",
     "preview_domain_access": "预览域名:80/443 → Nginx → Node.js:3801 (preview)",
-    "ip_direct_access": "150.109.76.244:80 → Nginx → Node.js:3800 (production)"
+    "ip_direct_access": "43.134.16.246:80 → Nginx → Node.js:3800 (production)"
   }
 }

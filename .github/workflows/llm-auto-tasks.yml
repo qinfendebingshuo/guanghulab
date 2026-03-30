@@ -72,26 +72,26 @@ jobs:
       # Step 2 · 模型状态检查
       - name: "📊 模型状态检查"
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
         run: |
           node scripts/llm-automation-host.js --status
 
       # Step 3 · 执行 LLM 任务
       - name: "🤖 执行 LLM 任务"
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          YUNWU_API_KEY: ${{ secrets.YUNWU_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          YUNWU_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
         run: |
           TASK="${{ github.event.inputs.task }}"
           TASK_TYPE="${{ github.event.inputs.task_type }}"

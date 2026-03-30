@@ -59,7 +59,7 @@ async function checkServerHealth() {
   const profile = loadServerProfile();
   if (!profile) {
     return {
-      server: 'ZY-SVR-001',
+      server: 'ZY-SVR-002',
       status: 'error',
       message: 'server/zhuyuan-server-profile.json 未找到',
       timestamp: new Date().toISOString()
@@ -68,7 +68,7 @@ async function checkServerHealth() {
 
   const ip = profile.hardware.ipv4;
   const report = {
-    server: 'ZY-SVR-001',
+    server: 'ZY-SVR-002',
     ip,
     timestamp: new Date().toISOString(),
     checks: {}
@@ -137,7 +137,7 @@ function updateSystemHealth(report) {
   try {
     const health = JSON.parse(fs.readFileSync(SYSTEM_HEALTH, 'utf8'));
     health.sovereign_server = {
-      code: 'ZY-SVR-001',
+      code: 'ZY-SVR-002',
       ip: report.ip,
       status: report.summary.overall,
       last_check: report.timestamp,
@@ -169,7 +169,7 @@ async function main() {
   } else {
     console.log('');
     console.log('═══════════════════════════════════════════════════════════');
-    console.log('  🏛️ 铸渊主权服务器健康报告 · ZY-SVR-001');
+    console.log('  🏛️ 铸渊主权服务器健康报告 · ZY-SVR-002');
     console.log('═══════════════════════════════════════════════════════════');
     console.log('');
     console.log(`  服务器: ${report.ip}`);

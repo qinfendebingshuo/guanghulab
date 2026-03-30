@@ -55,7 +55,7 @@ jobs:
       - name: "🔍 识别修复目标"
         id: check
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
         run: |
           echo "[Merge Watchdog] 检测到 auto-repair PR 合并"
 
@@ -126,7 +126,7 @@ jobs:
       - name: "⏳ 等待目标 Workflow 运行"
         id: wait
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           TARGET: ${{ needs.gate.outputs.target_workflows }}
         run: |
           echo "[Merge Watchdog] 等待目标 Workflow 下一次运行..."
@@ -205,7 +205,7 @@ jobs:
       - name: "✅ 修复确认 — 静默更新仪表盘"
         if: needs.observe.outputs.workflow_result == 'success'
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           PR_NUM: ${{ needs.gate.outputs.pr_number }}
         run: |
           echo "[Merge Watchdog] ✅ 修复已生效 — 静默更新仪表盘"
@@ -236,7 +236,7 @@ jobs:
         if: needs.observe.outputs.workflow_result == 'failure'
         env:
           RETRY_COUNT: ${{ steps.load.outputs.retry_count }}
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           PR_NUM: ${{ needs.gate.outputs.pr_number }}
         run: |
           NEW_COUNT=$((RETRY_COUNT + 1))
@@ -306,10 +306,10 @@ jobs:
           server_address: smtp.gmail.com
           server_port: 465
           secure: true
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
+          username: ${{ secrets.ZY_SMTP_USER }}
+          password: ${{ secrets.ZY_SMTP_PASS }}
           subject: "⛔ [光湖系统] 自动修复三次失败 — 需要手动介入"
-          to: ${{ secrets.HUMAN_EMAIL }}
+          to: ${{ secrets.ZY_SMTP_USER }}
           from: "光湖 Merge Watchdog <noreply@guanghulab.com>"
           html_body: |
             <h2>⛔ 合并指令看守者 · 三振出局通知</h2>

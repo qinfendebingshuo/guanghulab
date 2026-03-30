@@ -32,7 +32,7 @@ Phase 3: 服务器(完全独立) + GitHub仓库(归档)
 
 | 密钥名称 | 说明 | 操作编号 |
 |----------|------|---------|
-| `ZY_SERVER_HOST` | `150.109.76.244` | ZY-SVR-SETUP-001 |
+| `ZY_SERVER_HOST` | `43.134.16.246` | ZY-SVR-SETUP-002 |
 | `ZY_SERVER_USER` | SSH用户名 (建议 `root`) | ZY-SVR-SETUP-001 |
 | `ZY_SERVER_KEY` | SSH私钥 (PEM格式完整内容) | ZY-SVR-SETUP-001 |
 | `ZY_SERVER_PATH` | `/opt/zhuyuan` | ZY-SVR-SETUP-001 |
@@ -44,15 +44,15 @@ Phase 3: 服务器(完全独立) + GitHub仓库(归档)
 - [ ] 冰朔配置4个GitHub Secrets
 - [ ] 运行 `deploy-to-zhuyuan-server.yml` (init动作) 初始化服务器
 - [ ] 运行 `deploy-to-zhuyuan-server.yml` (deploy动作) 部署应用
-- [ ] 验证 `http://150.109.76.244/api/health` 返回正常
-- [ ] 验证 `http://150.109.76.244/api/brain` 返回大脑状态
+- [ ] 验证 `http://43.134.16.246/api/health` 返回正常
+- [ ] 验证 `http://43.134.16.246/api/brain` 返回大脑状态
 - [ ] 运行 `node scripts/zhuyuan-server-health.js` 确认健康
 
 ### Phase 1 交付物
 
 | 组件 | 状态 | 说明 |
 |------|------|------|
-| 服务器OS | ✅ 已就绪 | Ubuntu 22.04 LTS |
+| 服务器OS | ✅ 已就绪 | Ubuntu 24.04 LTS |
 | 初始化脚本 | ✅ 已完成 | `server/setup/zhuyuan-server-init.sh` |
 | 应用代码 | ✅ 已完成 | `server/app/server.js` |
 | PM2配置 | ✅ 已完成 | `server/ecosystem.config.js` |

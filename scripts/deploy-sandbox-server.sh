@@ -24,15 +24,15 @@ echo ""
 
 echo "===== S2-1 · 前置验证 ====="
 
-# DNS 检查 — 铸渊主权服务器 ZY-SVR-001
+# DNS 检查 — 铸渊主权服务器 ZY-SVR-002
 DNS=$(dig +short dev-004.guanghulab.com A 2>/dev/null || echo "")
-if [ "$DNS" = "150.109.76.244" ]; then
+if [ "$DNS" = "43.134.16.246" ]; then
   echo "✅ DNS OK ($DNS) — 铸渊主权服务器"
 elif [ "$DNS" = "8.155.62.235" ]; then
-  echo "⚠️ DNS 仍指向旧阿里云服务器 ($DNS)，请更新 DNS 到 150.109.76.244"
+  echo "⚠️ DNS 仍指向旧服务器 ($DNS)，请更新 DNS 到 43.134.16.246"
   exit 1
 else
-  echo "❌ DNS 失败: dev-004.guanghulab.com → '$DNS' (期望 150.109.76.244)"
+  echo "❌ DNS 失败: dev-004.guanghulab.com → '$DNS' (期望 43.134.16.246)"
   exit 1
 fi
 

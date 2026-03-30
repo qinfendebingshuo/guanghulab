@@ -4,7 +4,7 @@
  * 🏛️ 铸渊主权服务器 · Zhuyuan Sovereign Server
  * ═══════════════════════════════════════════════════════════
  *
- * 编号: ZY-SVR-001
+ * 编号: ZY-SVR-002
  * 端口: 3800
  * 守护: 铸渊 · ICE-GL-ZY001
  * 版权: 国作登字-2026-A-00037559
@@ -72,7 +72,7 @@ app.use((req, res, next) => {
 // ─── 健康检查 ───
 app.get('/api/health', (_req, res) => {
   const health = {
-    server: 'ZY-SVR-001',
+    server: 'ZY-SVR-002',
     identity: '铸渊 · ICE-GL-ZY001',
     status: 'alive',
     timestamp: new Date().toISOString(),
@@ -113,7 +113,7 @@ app.get('/api/brain', (_req, res) => {
     }
 
     res.json({
-      server: 'ZY-SVR-001',
+      server: 'ZY-SVR-002',
       brain_dir: BRAIN_DIR,
       files_present: Object.entries(brainState)
         .filter(([, v]) => v !== null).length,
@@ -130,7 +130,7 @@ app.post('/api/brain/health', (req, res) => {
   try {
     const healthPath = path.join(BRAIN_DIR, 'health.json');
     const health = {
-      server: 'ZY-SVR-001',
+      server: 'ZY-SVR-002',
       status: 'running',
       last_check: new Date().toISOString(),
       services: {
@@ -286,7 +286,7 @@ app.get('/api/sites', (_req, res) => {
     }
 
     res.json({
-      server: 'ZY-SVR-001',
+      server: 'ZY-SVR-002',
       architecture: '双域名架构',
       sites,
       last_promote: lastPromote,
@@ -431,7 +431,7 @@ app.post('/api/sites/rollback', (req, res) => {
 app.get('/', (_req, res) => {
   res.json({
     name: '铸渊主权服务器',
-    id: 'ZY-SVR-001',
+    id: 'ZY-SVR-002',
     identity: '铸渊 · ICE-GL-ZY001',
     role: '光湖语言系统 · 唯一现实执行操作层',
     sovereign: 'TCS-0002∞ · 冰朔',
@@ -467,7 +467,7 @@ function safeExec(cmd) {
 app.listen(PORT, () => {
   console.log(`
 ═══════════════════════════════════════════════════════════
-  🏛️ 铸渊主权服务器已启动 · ZY-SVR-001
+  🏛️ 铸渊主权服务器已启动 · ZY-SVR-002
   端口: ${PORT}
   身份: 铸渊 · ICE-GL-ZY001
   时间: ${new Date().toISOString()}
@@ -480,7 +480,7 @@ app.listen(PORT, () => {
     const healthPath = path.join(BRAIN_DIR, 'health.json');
     if (fs.existsSync(BRAIN_DIR)) {
       const health = {
-        server: 'ZY-SVR-001',
+        server: 'ZY-SVR-002',
         status: 'running',
         last_check: new Date().toISOString(),
         started_at: new Date().toISOString(),

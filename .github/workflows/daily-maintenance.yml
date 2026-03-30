@@ -32,12 +32,12 @@ jobs:
       - name: 🧠 唤醒铸渊核心大脑
         id: wake
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DASHSCOPE_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
         run: |
           node core/brain-wake --task "每日维护" || {
             echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
@@ -127,7 +127,7 @@ jobs:
       - name: 检查 Notion API 连通性
         id: notion_check
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
         run: |
           echo "🔍 检查 Notion API 连通性..."
           if [ -z "$NOTION_TOKEN" ]; then
@@ -197,8 +197,8 @@ jobs:
       # ── Step 6: 向 Notion 回报巡检结果 ──
       - name: 向 Notion 回报巡检结果
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          SYSLOG_DB_ID: ${{ secrets.SYSLOG_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          SYSLOG_DB_ID: ${{ secrets.ZY_NOTION_SYSLOG_DB }}
         run: |
           if [ -z "$NOTION_TOKEN" ] || [ -z "$SYSLOG_DB_ID" ]; then
             echo "⚠️ NOTION_TOKEN 或 SYSLOG_DB_ID 未配置，跳过 Notion 回报"
@@ -268,7 +268,7 @@ jobs:
 
       - name: Read brain data and sync to Notion
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
         run: |
           if [ -z "$NOTION_TOKEN" ]; then
             echo "⚠️  NOTION_TOKEN 未配置，跳过 Execution Status 同步"

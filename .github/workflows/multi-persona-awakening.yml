@@ -66,8 +66,8 @@ jobs:
       # ━━━ 串行唤醒人格体 ━━━
       - name: "🧠 串行唤醒人格体"
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
           LLM_MODEL: ${{ vars.LLM_MODEL || 'deepseek-chat' }}
           MODE: ${{ steps.quota.outputs.mode }}
           INPUT_REASON: ${{ github.event.inputs.reason }}

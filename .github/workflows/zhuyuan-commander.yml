@@ -69,8 +69,8 @@ jobs:
       # Step 3 · 读取公告板 + 指纹验证
       - name: "📡 Step 3 · 读取公告板"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.ZY_NOTION_BULLETIN_PAGE }}
         run: |
           echo "[GH-COMMANDER-BULLETIN] 📡 读取Agent集群公告板..."
           mkdir -p /tmp/skyeye

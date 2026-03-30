@@ -121,24 +121,24 @@ jobs:
       - name: 🧠 Auto-detect and wake up persona
         id: persona
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
           SUBMIT_CONTENT: ${{ steps.parse.outputs.content }}
           AUTHOR: ${{ steps.parse.outputs.author }}
           MODULE_VERIFY_RESULT: ${{ steps.verify.outputs.verify_report }}
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          CORE_BRAIN_PAGE_ID: ${{ secrets.CORE_BRAIN_PAGE_ID }}
-          PORTRAIT_DB_ID: ${{ secrets.PORTRAIT_DB_ID }}
-          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          CORE_BRAIN_PAGE_ID: ${{ secrets.ZY_NOTION_BRAIN_PAGE }}
+          PORTRAIT_DB_ID: ${{ secrets.ZY_NOTION_PORTRAIT_DB }}
+          FINGERPRINT_DB_ID: ${{ secrets.ZY_NOTION_FINGERPRINT_DB }}
         run: node scripts/wake-persona.js
 
       - name: 📋 创建标准化 Notion 工单（Phase B1）
         id: ticket
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_TICKET_DB_ID: ${{ secrets.NOTION_TICKET_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_TICKET_DB_ID: ${{ secrets.ZY_NOTION_TICKET_DB }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}
           PERSONA_RESULT: ${{ steps.persona.outputs.result }}
@@ -164,8 +164,8 @@ jobs:
 
       - name: 📧 Send email to developer
         env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
           EMAIL_TO: ${{ steps.parse.outputs.email }}
           BROADCAST_ID: ${{ steps.parse.outputs.broadcast_id }}
           SUBMIT_TYPE: ${{ steps.parse.outputs.type }}

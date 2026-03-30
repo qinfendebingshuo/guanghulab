@@ -41,8 +41,8 @@ jobs:
       - name: 🧠 唤醒铸渊核心大脑
         id: wake
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
         run: |
           node core/brain-wake --task "桥接广播PDF生成分发" || {
             echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
@@ -69,15 +69,15 @@ jobs:
       - name: 📡 检查调度队列
         id: check
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          BRIDGE_QUEUE_DB_ID: ${{ secrets.ZY_NOTION_BRIDGE_DB }}
         run: node scripts/bridge/check-queue.js BROADCAST_READY
 
       - name: 📥 拉取广播内容
         if: steps.check.outputs.task_count != '0'
         id: fetch
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
           QUEUE_FILE: ${{ steps.check.outputs.queue_file }}
         run: node scripts/bridge/fetch-broadcast.js
 
@@ -96,19 +96,19 @@ jobs:
         env:
           PDF_MANIFEST: ${{ steps.pdf.outputs.pdf_manifest }}
           UPLOAD_MODE: ${{ vars.BRIDGE_UPLOAD_MODE || 'server' }}
-          OSS_ACCESS_KEY: ${{ secrets.OSS_ACCESS_KEY }}
-          OSS_SECRET_KEY: ${{ secrets.OSS_SECRET_KEY }}
+          OSS_ACCESS_KEY: ${{ secrets.ZY_OSS_KEY }}
+          OSS_SECRET_KEY: ${{ secrets.ZY_OSS_SECRET }}
         run: node scripts/bridge/upload-pdf.js
 
       - name: 📢 分发到IM
         if: steps.check.outputs.task_count != '0'
         env:
           DIST_MANIFEST: ${{ steps.upload.outputs.dist_manifest }}
-          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
-          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
-          DINGTALK_TOKEN: ${{ secrets.DINGTALK_TOKEN }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          FEISHU_APP_ID: ${{ secrets.ZY_FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.ZY_FEISHU_APP_SECRET }}
+          DINGTALK_TOKEN: ${{ secrets.ZY_DINGTALK_TOKEN }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
           ALERT_EMAIL: ${{ vars.ALERT_EMAIL || '565183519@qq.com' }}
           FEISHU_BROADCAST_CHAT_ID: ${{ vars.FEISHU_BROADCAST_CHAT_ID }}
         run: node scripts/bridge/distribute.js
@@ -116,7 +116,7 @@ jobs:
       - name: ✅ 更新调度队列状态
         if: steps.check.outputs.task_count != '0'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
           QUEUE_FILE: ${{ steps.check.outputs.queue_file }}
         run: node scripts/bridge/update-queue-status.js
 

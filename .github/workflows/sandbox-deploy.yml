@@ -63,17 +63,17 @@ jobs:
       - name: "🔑 配置 SSH"
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.ZY_SERVER_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: "🏠 部署到沙盒"
         id: deploy
         env:
           DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
           MODULE: ${{ needs.parse-and-validate.outputs.module }}
-          HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.ZY_SERVER_HOST }}
+          USER: ${{ secrets.ZY_SERVER_USER }}
         run: |
           SANDBOX="/var/www/${DEV_ID}/${MODULE}"
           echo "📦 部署目标: ${SANDBOX}"
@@ -102,8 +102,8 @@ jobs:
         env:
           DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
           MODULE: ${{ needs.parse-and-validate.outputs.module }}
-          HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.ZY_SERVER_HOST }}
+          USER: ${{ secrets.ZY_SERVER_USER }}
         run: |
           # 上传自检脚本
           scp scripts/deploy-check.sh ${USER}@${HOST}:/tmp/deploy-check.sh
@@ -123,8 +123,8 @@ jobs:
       - name: "🔥 运行 smoke-test.sh"
         id: smoke
         env:
-          HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          HOST: ${{ secrets.ZY_SERVER_HOST }}
+          USER: ${{ secrets.ZY_SERVER_USER }}
         run: |
           scp scripts/smoke-test.sh ${USER}@${HOST}:/tmp/smoke-test.sh
           SMOKE=$(ssh ${USER}@${HOST} "bash /tmp/smoke-test.sh" 2>&1) || true
@@ -189,8 +189,8 @@ jobs:
       - name: "📧 发送部署结果邮件"
         if: needs.parse-and-validate.outputs.email != ''
         env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
           TO_EMAIL: ${{ needs.parse-and-validate.outputs.email }}
           DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
           MODULE: ${{ needs.parse-and-validate.outputs.module }}
@@ -232,8 +232,8 @@ jobs:
 
       - name: "📝 同步到 Notion 部署注册表"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          FINGERPRINT_DB_ID: ${{ secrets.FINGERPRINT_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          FINGERPRINT_DB_ID: ${{ secrets.ZY_NOTION_FINGERPRINT_DB }}
           DEV_ID: ${{ needs.parse-and-validate.outputs.dev_id }}
           MODULE: ${{ needs.parse-and-validate.outputs.module }}
           RESULT: ${{ needs.deploy-to-sandbox.outputs.deploy_result }}

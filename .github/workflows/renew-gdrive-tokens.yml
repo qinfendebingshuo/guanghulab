@@ -44,14 +44,14 @@ jobs:
 
       - name: 🔄 执行 Token 刷新
         env:
-          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
-          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
-          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          GDRIVE_CLIENT_ID: ${{ secrets.ZY_GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.ZY_GDRIVE_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.ZY_GDRIVE_REFRESH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FORCE_RENEW: ${{ inputs.force_renew || 'false' }}
           # 新增开发者 Token（每次加人时追加）
-          # GDRIVE_REFRESH_TOKEN_DEV001: ${{ secrets.GDRIVE_REFRESH_TOKEN_DEV001 }}
-          # GDRIVE_REFRESH_TOKEN_DEV002: ${{ secrets.GDRIVE_REFRESH_TOKEN_DEV002 }}
+          # GDRIVE_REFRESH_TOKEN_DEV001: ${{ secrets.ZY_GDRIVE_REFRESH_TOKEN }}
+          # GDRIVE_REFRESH_TOKEN_DEV002: ${{ secrets.ZY_GDRIVE_REFRESH_TOKEN }}
         run: node scripts/gdrive/renew-tokens.js
 
       - name: 📋 提交注册表更新

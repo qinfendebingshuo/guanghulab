@@ -34,11 +34,11 @@ jobs:
       - name: "🚀 部署到阿里云"
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
+          host: ${{ secrets.ZY_SERVER_HOST }}
+          username: ${{ secrets.ZY_SERVER_USER }}
+          key: ${{ secrets.ZY_SERVER_KEY }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}/backend/api-server/
+            cd ${{ secrets.ZY_SERVER_PATH }}/backend/api-server/
             git pull origin main
             npm install --production
             pm2 restart guanghu-api || pm2 start ecosystem.config.js

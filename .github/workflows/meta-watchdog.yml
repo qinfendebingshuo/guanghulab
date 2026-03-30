@@ -53,7 +53,7 @@ jobs:
       - name: 写入 Notion 告警（仅在失败时触发）
         if: failure()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
         run: |
           if [ -z "$NOTION_TOKEN" ]; then
             echo "⚠️ NOTION_API_KEY 未配置，跳过 Notion 告警"

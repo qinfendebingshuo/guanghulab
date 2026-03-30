@@ -56,7 +56,7 @@ jobs:
       - name: "🔭 扫描过去24小时 Workflow 运行记录"
         id: scan
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
         run: |
           echo "[天眼 v3.0] Phase A 启动 — 夜间巡查扫描"
           echo "═══════════════════════════════════════════"
@@ -123,7 +123,7 @@ jobs:
       - name: "🧠 Phase B — Gemini 报错分析"
         id: analyze
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
           ERROR_REPORT: ${{ needs.nightly-scan.outputs.error_report }}
         run: |
           echo "[铸渊核心大脑] Phase B 启动 — 报错智能分析"
@@ -133,8 +133,8 @@ jobs:
       - name: "⚒️ Phase C — 铸渊自动修复"
         id: repair
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
         run: |
           echo "[铸渊核心大脑] Phase C 启动 — 自动修复"
 
@@ -230,7 +230,7 @@ jobs:
       - name: "🔄 Phase D 重试（如审核未通过）"
         if: steps.review.outputs.pr_needed == 'false' && steps.repair.outputs.branch_name != ''
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
         run: |
           echo "[天眼 v3.0] 审核未通过 — 进入重试流程"
           RETRY=0
@@ -274,7 +274,7 @@ jobs:
       - name: "📦 Phase E — 创建 Pull Request"
         id: create_pr
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           BRANCH: ${{ needs.analyze-and-repair.outputs.repair_branch }}
           SUMMARY: ${{ needs.analyze-and-repair.outputs.repair_summary }}
           FIX_COUNT: ${{ needs.analyze-and-repair.outputs.fix_count }}
@@ -314,7 +314,7 @@ jobs:
 
       - name: "📊 Phase F — 更新仪表盘"
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           PR_URL: ${{ steps.create_pr.outputs.pr_url }}
           FIX_COUNT: ${{ needs.analyze-and-repair.outputs.fix_count }}
         run: |
@@ -352,7 +352,7 @@ jobs:
 
       - name: "✅ 更新仪表盘 — 今日无异常"
         env:
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
         run: |
           DATE=$(date +%Y-%m-%d)
           TIME=$(date +%H:%M)

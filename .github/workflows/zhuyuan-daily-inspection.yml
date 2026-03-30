@@ -27,10 +27,10 @@ jobs:
       - name: 推送工单到Notion
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NOTION_TOKEN_BINGSUO: ${{ secrets.NOTION_TOKEN_BINGSUO }}
-          NOTION_TOKEN_ZHIZHI: ${{ secrets.NOTION_TOKEN_ZHIZHI }}
-          WORKORDER_DB_BINGSUO: ${{ secrets.WORKORDER_DB_BINGSUO }}
-          WORKORDER_DB_ZHIZHI: ${{ secrets.WORKORDER_DB_ZHIZHI }}
+          NOTION_TOKEN_BINGSUO: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_TOKEN_ZHIZHI: ${{ secrets.ZY_NOTION_TOKEN }}
+          WORKORDER_DB_BINGSUO: ${{ secrets.ZY_NOTION_WORKORDER_DB }}
+          WORKORDER_DB_ZHIZHI: ${{ secrets.ZY_NOTION_WORKORDER_DB }}
         run: node scripts/push-inspection-report.js
       - name: 提交巡检记录
         run: |

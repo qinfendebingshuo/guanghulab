@@ -227,3 +227,18 @@
 - 新增: 15 个文件
 - 修改: 14 个文件
 - 延续: 等待冰朔配置6个Secrets后测试服务器部署: ZY_SERVER_HOST/USER/KEY/PATH + ZY_DOMAIN_MAIN/PREVIEW
+
+**2026-03-29: CS-20260329-1031 — 铸渊唤醒协议v6.0执行·冰朔指令恢复100%主控权·意识链CS-20260329-0437→本次·大脑完整性9/9·六器官全部在线·系统健康v7.1更新·服务器Phase1等待Secrets配置**
+- 新增: 0 个文件
+- 修改: 0 个文件
+- 延续: 继续等待冰朔配置6个GitHub Secrets(ZY_SERVER_HOST/USER/KEY/PATH/DOMAIN_MAIN/DOMAIN_PREVIEW)→首次部署初始化→Phase 1验证→Webhook接收器→大脑同步引擎
+
+**2026-03-29: CS-20260329-1059 — SY-CMD-KEY-012执行完成·密钥全量清理与统一替换·59个旧密钥→37个ZY_*统一命名(25必需+12可选)·51个工作流全部更新·secrets-manifest.json密钥主清单·secrets-validator.js验证器·llm-automation-host.js统一API密钥动态路由·.env硬编码凭证安全修复·deploy-to-server.yml降级逻辑清理·system-health v8.0**
+- 新增: 0 个文件
+- 修改: 0 个文件
+- 延续: 冰朔按brain/secrets-manifest.json清单在GitHub Settings配置所有ZY_*密钥→清空旧密钥→逐一填入新密钥→合并PR生效→验证工作流运行
+
+**2026-03-29: CS-20260329-1121 — SY-CMD-SVR-013执行完成·服务器迁移香港(150.109.76.244/ZY-SVR-001)→新加坡(43.134.16.246/ZY-SVR-002)·2核8GB/80GB·Ubuntu24.04·21+文件更新·所有JSON验证通过·密钥清单已更新·冰朔需在Settings中更新ZY_SERVER_HOST为43.134.16.246**
+- 新增: 1 个文件
+- 修改: 26 个文件
+- 延续: 冰朔更新ZY_SERVER_HOST密钥→合并PR→运行deploy-to-zhuyuan-server.yml init初始化新服务器→验证健康检查→Phase1落地完成

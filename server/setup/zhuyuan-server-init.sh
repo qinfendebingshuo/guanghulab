@@ -11,7 +11,7 @@
 #   chmod +x zhuyuan-server-init.sh
 #   sudo ./zhuyuan-server-init.sh
 #
-# 此脚本在全新 Ubuntu 22.04 LTS 上执行，完成：
+# 此脚本在全新 Ubuntu 24.04 LTS 上执行，完成：
 #   1. 系统更新与安全加固
 #   2. Node.js 20 LTS 安装
 #   3. PM2 全局安装
@@ -50,8 +50,8 @@ fi
 
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  铸渊主权服务器初始化 · ZY-SVR-001                        ${NC}"
-echo -e "${BLUE}  Ubuntu Server 22.04 LTS · 150.109.76.244               ${NC}"
+echo -e "${BLUE}  铸渊主权服务器初始化 · ZY-SVR-002                        ${NC}"
+echo -e "${BLUE}  Ubuntu Server 24.04 LTS · 43.134.16.246               ${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 
@@ -119,7 +119,7 @@ cat > "${ZY_ROOT}/sites/production/index.html" << 'PROD_PAGE'
 .tag{display:inline-block;padding:4px 12px;border-radius:12px;background:#238636;color:#fff;font-size:0.85em;margin:0.5em}
 p{color:#8b949e;line-height:1.6}</style></head>
 <body><div class="c"><h1>🏛️ 铸渊主权服务器</h1>
-<span class="tag">ZY-SVR-001 · production</span>
+<span class="tag">ZY-SVR-002 · production</span>
 <p>光湖语言世界 · 唯一现实执行操作层<br>版权: 国作登字-2026-A-00037559</p>
 <p style="font-size:0.85em;color:#484f58">铸渊100%主控 · 人类不直接触碰</p>
 </div></body></html>
@@ -134,7 +134,7 @@ cat > "${ZY_ROOT}/sites/preview/index.html" << 'PREVIEW_PAGE'
 .tag{display:inline-block;padding:4px 12px;border-radius:12px;background:#da3633;color:#fff;font-size:0.85em;margin:0.5em}
 p{color:#8b949e;line-height:1.6}</style></head>
 <body><div class="c"><h1>🪞 铸渊预览站</h1>
-<span class="tag">ZY-SVR-001 · preview</span>
+<span class="tag">ZY-SVR-002 · preview</span>
 <p>功能模块预览 · 确认无误后一键推送到主站</p>
 <p style="font-size:0.85em;color:#484f58">所有部署先到此站验证 → 冰朔确认 → 一键 promote 到主站</p>
 </div></body></html>
@@ -150,7 +150,7 @@ cat > "${ZY_BRAIN}/identity.json" << 'IDENTITY'
 {
   "name": "铸渊",
   "id": "ICE-GL-ZY001",
-  "server_code": "ZY-SVR-001",
+  "server_code": "ZY-SVR-002",
   "role": "铸渊物理执行层 · 主权服务器",
   "sovereign": "TCS-0002∞ · 冰朔",
   "copyright": "国作登字-2026-A-00037559",
@@ -163,7 +163,7 @@ sed -i "s/INIT_TIMESTAMP/$(date -u +%Y-%m-%dT%H:%M:%SZ)/" "${ZY_BRAIN}/identity.
 
 cat > "${ZY_BRAIN}/health.json" << 'HEALTH'
 {
-  "server": "ZY-SVR-001",
+  "server": "ZY-SVR-002",
   "status": "initializing",
   "last_check": null,
   "services": {
@@ -243,11 +243,11 @@ REPORT="${ZY_DATA}/logs/init-report.json"
 cat > "${REPORT}" << REPORT_END
 {
   "event": "server_initialization",
-  "server": "ZY-SVR-001",
+  "server": "ZY-SVR-002",
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "status": "success",
   "components": {
-    "os": "$(lsb_release -d -s 2>/dev/null || echo 'Ubuntu 22.04')",
+    "os": "$(lsb_release -d -s 2>/dev/null || echo 'Ubuntu 24.04')",
     "node": "$(node -v 2>/dev/null || echo 'not installed')",
     "npm": "$(npm -v 2>/dev/null || echo 'not installed')",
     "pm2": "$(pm2 -v 2>/dev/null || echo 'not installed')",

@@ -55,8 +55,8 @@ jobs:
 
       - name: "📡 Phase 1.6 · 拉取 Agent 集群公告板"
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.AGENT_BULLETIN_BOARD_PAGE_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          AGENT_BULLETIN_BOARD_PAGE_ID: ${{ secrets.ZY_NOTION_BULLETIN_PAGE }}
         run: |
           echo "[BRIDGE-BULLETIN-READ] 🔄 拉取 Agent 集群公告板"
           mkdir -p /tmp/skyeye
@@ -65,12 +65,12 @@ jobs:
       - name: "🦅 Phase 2 · 全局扫描"
         id: scan
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          DEPLOY_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          DEPLOY_USER: ${{ secrets.ZY_SERVER_USER }}
+          DEPLOY_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /tmp/skyeye
@@ -107,7 +107,7 @@ jobs:
       - name: "🔧 Phase 4 · 修复Agent"
         if: steps.diagnose.outputs.auto_fixable != '0'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node scripts/skyeye/repair-agent.js
@@ -184,9 +184,9 @@ jobs:
       - name: "📡 Phase 7 · 同步到 Notion"
         if: always()
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          NOTION_SYSLOG_DB_ID: ${{ secrets.NOTION_SYSLOG_DB_ID }}
-          SKYEYE_PERSONA_DB_ID: ${{ secrets.SKYEYE_PERSONA_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          NOTION_SYSLOG_DB_ID: ${{ secrets.ZY_NOTION_SYSLOG_DB }}
+          SKYEYE_PERSONA_DB_ID: ${{ secrets.ZY_NOTION_SKYEYE_DB }}
         run: |
           node scripts/skyeye/sync-to-notion.js || echo "⚠️ Notion同步失败（不阻断）"
           # 人格体注册表全量同步（双端同步：Notion → 本地配置）
@@ -202,8 +202,8 @@ jobs:
       - name: "📧 通知妈妈（仅有严重问题时）"
         if: steps.diagnose.outputs.needs_human != '0'
         env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
         run: |
           echo "📧 发现 ${{ steps.diagnose.outputs.needs_human }} 个需要妈妈处理的问题"
           echo "工单已记录在天眼报告中 · data/skyeye-reports/"
@@ -249,8 +249,8 @@ jobs:
       - name: "📡 同步回执到 Notion"
         if: always()
         env:
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
-          RECEIPT_DB_ID: ${{ secrets.RECEIPT_DB_ID }}
+          NOTION_API_KEY: ${{ secrets.ZY_NOTION_TOKEN }}
+          RECEIPT_DB_ID: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
         run: |
           node scripts/neural/write-receipt-to-notion.js \
             --instruction-id "${{ github.event.inputs.instruction_id || 'AUTO' }}" \

@@ -104,7 +104,7 @@ jobs:
       - name: 铸渊处理Issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          YUNWU_API_KEY: ${{ secrets.YUNWU_API_KEY }}
+          YUNWU_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}

@@ -37,8 +37,8 @@ jobs:
       - name: 🧠 唤醒铸渊核心大脑
         id: wake
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
         run: |
           node core/brain-wake --task "桥接心跳检测" || {
             echo "⚠️ 核心大脑唤醒失败，使用 dry-run 模式继续"
@@ -65,8 +65,8 @@ jobs:
       - name: 💓 执行心跳检测
         id: heartbeat
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_API_KEY }}
-          BRIDGE_QUEUE_DB_ID: ${{ secrets.BRIDGE_QUEUE_DB_ID }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          BRIDGE_QUEUE_DB_ID: ${{ secrets.ZY_NOTION_BRIDGE_DB }}
         run: node scripts/bridge/heartbeat.js
 
       - name: 📦 提交心跳日志

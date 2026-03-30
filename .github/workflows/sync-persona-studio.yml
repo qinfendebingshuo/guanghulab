@@ -45,14 +45,14 @@ jobs:
 
       - name: 执行跨仓库同步
         env:
-          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+          CROSS_REPO_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
           SYNC_TARGET: ${{ github.event.inputs.sync_target || 'all' }}
         run: node scripts/cross-repo-sync.js
 
       - name: 通知 persona-studio 仓库
         if: env.CROSS_REPO_TOKEN != ''
         env:
-          CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+          CROSS_REPO_TOKEN: ${{ secrets.ZY_GITHUB_PAT }}
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github+json" \

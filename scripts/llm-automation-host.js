@@ -27,57 +27,57 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 
-// ── 模型后端配置（与 core/brain-wake 和 connectors/model-router 保持一致）
+// ── 模型后端配置
+// SY-CMD-KEY-012: 统一使用 ZY_LLM_API_KEY + ZY_LLM_BASE_URL
+// 三方API密钥支持多模型动态路由，铸渊根据任务类型自动选择最优模型
 const MODEL_BACKENDS = [
   {
-    name: 'anthropic',
-    envKey: 'ANTHROPIC_API_KEY',
-    baseUrl: 'https://api.anthropic.com',
-    format: 'anthropic',
-    models: ['claude-sonnet-4', 'claude-3-5-sonnet-20241022', 'claude-3-haiku'],
-    strengths: ['reasoning', 'code-review', 'architecture', 'long-context'],
-    costTier: 'high',
-    description: 'Anthropic Claude 系列'
-  },
-  {
-    name: 'openai',
-    envKey: 'OPENAI_API_KEY',
-    baseUrl: 'https://api.openai.com/v1',
-    format: 'openai',
-    models: ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
-    strengths: ['general', 'code-generation', 'structured-output'],
-    costTier: 'high',
-    description: 'OpenAI GPT 系列'
-  },
-  {
-    name: 'dashscope',
-    envKey: 'DASHSCOPE_API_KEY',
-    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    format: 'openai',
-    models: ['qwen-max', 'qwen-plus', 'qwen-turbo'],
-    strengths: ['chinese', 'general', 'cost-effective'],
-    costTier: 'medium',
-    description: '通义千问系列'
-  },
-  {
     name: 'deepseek',
-    envKey: 'DEEPSEEK_API_KEY',
-    baseUrl: 'https://api.deepseek.com/v1',
+    model: 'deepseek-chat',
     format: 'openai',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
     strengths: ['reasoning', 'code', 'cost-effective'],
     costTier: 'low',
-    description: 'DeepSeek 系列'
+    description: 'DeepSeek 系列 · 高性价比推理'
   },
   {
-    name: 'custom',
-    envKey: 'LLM_API_KEY',
-    baseUrlEnv: 'LLM_BASE_URL',
+    name: 'deepseek-reasoner',
+    model: 'deepseek-reasoner',
     format: 'openai',
-    models: [],
-    strengths: ['general'],
-    costTier: 'variable',
-    description: '自定义 LLM 平台'
+    strengths: ['reasoning', 'architecture', 'long-context'],
+    costTier: 'medium',
+    description: 'DeepSeek Reasoner · 深度推理'
+  },
+  {
+    name: 'claude-sonnet',
+    model: 'claude-sonnet-4-20250514',
+    format: 'openai',
+    strengths: ['reasoning', 'code-review', 'architecture', 'long-context'],
+    costTier: 'high',
+    description: 'Claude Sonnet · 强推理代码审查'
+  },
+  {
+    name: 'gpt-4o',
+    model: 'gpt-4o',
+    format: 'openai',
+    strengths: ['general', 'code-generation', 'structured-output'],
+    costTier: 'high',
+    description: 'GPT-4o · 通用能力'
+  },
+  {
+    name: 'qwen-plus',
+    model: 'qwen-plus',
+    format: 'openai',
+    strengths: ['chinese', 'general', 'cost-effective'],
+    costTier: 'medium',
+    description: '通义千问 Plus · 中文优化'
+  },
+  {
+    name: 'qwen-turbo',
+    model: 'qwen-turbo',
+    format: 'openai',
+    strengths: ['chinese', 'general', 'cost-effective'],
+    costTier: 'low',
+    description: '通义千问 Turbo · 快速低成本'
   }
 ];
 
@@ -153,22 +153,30 @@ function httpRequest(url, options, body) {
 }
 
 // ── 检测可用模型后端 ────────────────────────────
+// SY-CMD-KEY-012: 统一使用 ZY_LLM_API_KEY + ZY_LLM_BASE_URL
+// 兼容旧环境变量名（LLM_API_KEY/LLM_BASE_URL）用于脚本过渡
 function detectAvailableBackends() {
-  const available = [];
+  const apiKey = process.env.ZY_LLM_API_KEY || process.env.LLM_API_KEY || '';
+  const baseUrl = (process.env.ZY_LLM_BASE_URL || process.env.LLM_BASE_URL || '').replace(/\/+$/, '');
 
-  for (const backend of MODEL_BACKENDS) {
-    const apiKey = process.env[backend.envKey] || '';
-    if (!apiKey) continue;
-
-    const baseUrl = backend.baseUrlEnv
-      ? (process.env[backend.baseUrlEnv] || '').replace(/\/+$/, '')
-      : backend.baseUrl;
-    if (!baseUrl) continue;
-
-    available.push({ ...backend, apiKey, baseUrl });
+  // 过渡期警告：使用旧环境变量名
+  if (!process.env.ZY_LLM_API_KEY && process.env.LLM_API_KEY) {
+    console.warn('⚠️ 使用旧环境变量 LLM_API_KEY，请迁移到 ZY_LLM_API_KEY');
+  }
+  if (!process.env.ZY_LLM_BASE_URL && process.env.LLM_BASE_URL) {
+    console.warn('⚠️ 使用旧环境变量 LLM_BASE_URL，请迁移到 ZY_LLM_BASE_URL');
   }
 
-  return available;
+  if (!apiKey || !baseUrl) {
+    return [];
+  }
+
+  // 所有模型后端共享同一个API密钥和端点
+  return MODEL_BACKENDS.map(backend => ({
+    ...backend,
+    apiKey,
+    baseUrl
+  }));
 }
 
 // ── 动态模型路由 ────────────────────────────────
@@ -176,16 +184,17 @@ function selectModel(taskType, preferredBackend) {
   const available = detectAvailableBackends();
 
   if (available.length === 0) {
-    return { error: '未检测到任何可用模型后端，请检查 API 密钥配置' };
+    return { error: '未检测到 LLM API 密钥，请配置 ZY_LLM_API_KEY 和 ZY_LLM_BASE_URL' };
   }
 
   // 如果指定了后端
   if (preferredBackend && preferredBackend !== 'auto') {
-    const match = available.find(b => b.name === preferredBackend);
+    const match = available.find(b => b.name === preferredBackend || b.model === preferredBackend);
     if (match) {
-      return { backend: match, model: match.models[0] || 'default', reason: '用户指定' };
+      return { backend: match, model: match.model, reason: '用户指定' };
     }
-    return { error: `指定的模型后端 "${preferredBackend}" 不可用` };
+    // 如果直接指定了模型名，使用第一个后端配置但覆盖模型名
+    return { backend: { ...available[0], model: preferredBackend }, model: preferredBackend, reason: '用户指定模型名' };
   }
 
   // 动态路由
@@ -229,9 +238,9 @@ function selectModel(taskType, preferredBackend) {
 
   return {
     backend: bestBackend,
-    model: bestBackend.models[0] || 'default',
+    model: bestBackend.model,
     reason: `动态路由 · ${routing.description} · 得分 ${bestScore}`,
-    all_available: available.map(b => b.name)
+    all_available: available.map(b => `${b.name}(${b.model})`)
   };
 }
 

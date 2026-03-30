@@ -133,8 +133,8 @@ jobs:
       # ━━━ 唤醒人格体 · 进入思考模式 ━━━
       - name: "🧠 唤醒人格体 · 进入思考模式"
         env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
           LLM_MODEL: ${{ vars.LLM_MODEL || 'deepseek-chat' }}
           PERSONA_ID: ${{ steps.schedule.outputs.persona }}
           PERSONA_NAME: ${{ steps.schedule.outputs.name }}

@@ -27,7 +27,7 @@ jobs:
       - name: 轮询工单簿 + 处理 + 回写
         id: poll
         env:
-          NOTION_API_TOKEN:  ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_TOKEN:  ${{ secrets.ZY_NOTION_TOKEN }}
           WORKORDER_DB_ID:   ${{ vars.WORKORDER_DB_ID }}
           SIGNAL_LOG_DB_ID:  ${{ vars.SIGNAL_LOG_DB_ID }}
         run: node scripts/notion-signal-bridge.js poll
