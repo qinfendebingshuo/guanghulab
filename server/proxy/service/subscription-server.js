@@ -143,6 +143,9 @@ function generateVlessUri(keys, serverHost) {
 }
 
 // ── 生成Clash YAML配置 ───────────────────────
+// v3.0 · 完整Mihomo/Clash Meta兼容配置
+// 必须包含: DNS fake-ip + 全局设置 + sniffer + GeoData
+// 缺少DNS配置会导致Clash流量为0 (DNS查询绕过代理)
 function generateClashYaml(keys, serverHost) {
   const cnRelayHost = getCnRelayHost();
   const cnRelayPort = getCnRelayPort();
@@ -160,6 +163,7 @@ function generateClashYaml(keys, serverHost) {
     tls: true
     udp: true
     flow: xtls-rprx-vision
+    skip-cert-verify: false
     servername: www.microsoft.com
     reality-opts:
       public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
@@ -172,13 +176,6 @@ function generateClashYaml(keys, serverHost) {
     ? `      - "🏛️ 铸渊专线-SG直连"
       - "🇨🇳 铸渊专线-CN中转"`
     : '      - "🏛️ 铸渊专线-SG直连"';
-
-  const proxyListWithDirect = cnRelayHost
-    ? `      - "🏛️ 铸渊专线-SG直连"
-      - "🇨🇳 铸渊专线-CN中转"
-      - DIRECT`
-    : `      - "🏛️ 铸渊专线-SG直连"
-      - DIRECT`;
 
   // 自动选择组 (url-test: 自动测试延迟，选择最快可用节点)
   // CN中转如果不可用(connection refused)会自动被排除
@@ -205,14 +202,112 @@ function generateClashYaml(keys, serverHost) {
   return `# 铸渊专线 · ZY-Proxy Subscription
 # 自动生成 · ${new Date().toISOString()}
 # ⚠️ 请勿分享此配置
+# 配置版本: v3.0 (Mihomo/Clash Meta 完整兼容)
 ${cnRelayHost ? `# 🇨🇳 包含CN中转节点 (国内直连广州→转发新加坡)` : ''}
 
-port: 7890
-socks-port: 7891
+# ── 全局设置 ──────────────────────────────
+mixed-port: 7890
 allow-lan: false
 mode: rule
 log-level: info
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+find-process-mode: strict
+geodata-mode: true
+geodata-loader: standard
+global-client-fingerprint: chrome
+keep-alive-interval: 30
+external-controller: 127.0.0.1:9090
 
+# ── GeoData 数据源 ────────────────────────
+geox-url:
+  geoip: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
+  mmdb: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb"
+
+# ── DNS 设置 (fake-ip模式·必须) ───────────
+# 缺少此配置会导致DNS查询绕过代理，流量显示0
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "*.direct"
+    - "localhost.ptlogin2.qq.com"
+    - "dns.msftncsi.com"
+    - "*.msftconnecttest.com"
+    - "*.msftncsi.com"
+    - "+.stun.*.*"
+    - "+.stun.*.*.*"
+    - "+.stun.*.*.*.*"
+    - "+.stun.*.*.*.*.*"
+    - "lens.l.google.com"
+    - "stun.l.google.com"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu.cn"
+    - "time.*.apple.com"
+    - "time-ios.apple.com"
+    - "time-macos.apple.com"
+    - "time1.*.com"
+    - "ntp.*.com"
+    - "+.pool.ntp.org"
+    - "music.163.com"
+    - "*.music.163.com"
+    - "*.126.net"
+    - "*.ntp.org.cn"
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 1.0.0.1
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  fallback:
+    - https://1.0.0.1/dns-query
+    - https://dns.google/dns-query
+    - tls://8.8.4.4:853
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    geosite:
+      - gfw
+    ipcidr:
+      - 240.0.0.0/4
+    domain:
+      - "+.google.com"
+      - "+.google.com.hk"
+      - "+.facebook.com"
+      - "+.youtube.com"
+      - "+.github.com"
+      - "+.googleapis.com"
+      - "+.openai.com"
+      - "+.anthropic.com"
+
+# ── 域名嗅探 ──────────────────────────────
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
+# ── 代理节点 ──────────────────────────────
 proxies:
   - name: "🏛️ 铸渊专线-SG直连"
     type: vless
@@ -223,6 +318,7 @@ proxies:
     tls: true
     udp: true
     flow: xtls-rprx-vision
+    skip-cert-verify: false
     servername: www.microsoft.com
     reality-opts:
       public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
@@ -230,6 +326,7 @@ proxies:
     client-fingerprint: chrome
 ${cnProxyBlock}
 
+# ── 代理组 ────────────────────────────────
 proxy-groups:
   - name: "🌐 铸渊专线"
     type: select
@@ -246,34 +343,110 @@ ${proxyList}
     proxies:
 ${proxyList}
 
+# ── 路由规则 ──────────────────────────────
 rules:
   # AI服务
   - DOMAIN-SUFFIX,openai.com,🤖 AI服务
   - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
   - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
   - DOMAIN-SUFFIX,chatgpt.com,🤖 AI服务
+  - DOMAIN-SUFFIX,bard.google.com,🤖 AI服务
+  - DOMAIN-SUFFIX,gemini.google.com,🤖 AI服务
+  - DOMAIN-SUFFIX,ai.google.dev,🤖 AI服务
+  - DOMAIN-SUFFIX,perplexity.ai,🤖 AI服务
+  - DOMAIN-SUFFIX,poe.com,🤖 AI服务
 
   # 开发工具
   - DOMAIN-SUFFIX,github.com,💻 开发工具
   - DOMAIN-SUFFIX,githubusercontent.com,💻 开发工具
   - DOMAIN-SUFFIX,github.io,💻 开发工具
+  - DOMAIN-SUFFIX,githubassets.com,💻 开发工具
   - DOMAIN-SUFFIX,copilot.microsoft.com,💻 开发工具
   - DOMAIN-SUFFIX,npmjs.com,💻 开发工具
+  - DOMAIN-SUFFIX,npmjs.org,💻 开发工具
   - DOMAIN-SUFFIX,docker.com,💻 开发工具
   - DOMAIN-SUFFIX,docker.io,💻 开发工具
+  - DOMAIN-SUFFIX,stackoverflow.com,💻 开发工具
+  - DOMAIN-SUFFIX,stackexchange.com,💻 开发工具
+  - DOMAIN-SUFFIX,vercel.app,💻 开发工具
+  - DOMAIN-SUFFIX,netlify.app,💻 开发工具
+  - DOMAIN-SUFFIX,pypi.org,💻 开发工具
 
-  # 社交媒体
+  # 社交媒体 & 流媒体
   - DOMAIN-SUFFIX,tiktok.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,twitter.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,x.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,twimg.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,youtube.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,ytimg.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,yt.be,🌐 铸渊专线
+  - DOMAIN-SUFFIX,googlevideo.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,google.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,googleapis.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,gstatic.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,ggpht.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,telegram.org,🌐 铸渊专线
   - DOMAIN-SUFFIX,t.me,🌐 铸渊专线
+  - DOMAIN-SUFFIX,telesco.pe,🌐 铸渊专线
   - DOMAIN-SUFFIX,instagram.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,cdninstagram.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,facebook.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,fbcdn.net,🌐 铸渊专线
   - DOMAIN-SUFFIX,whatsapp.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,whatsapp.net,🌐 铸渊专线
+  - DOMAIN-SUFFIX,wikipedia.org,🌐 铸渊专线
+  - DOMAIN-SUFFIX,wikimedia.org,🌐 铸渊专线
+  - DOMAIN-SUFFIX,reddit.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,redd.it,🌐 铸渊专线
+  - DOMAIN-SUFFIX,redditstatic.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,netflix.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,nflxvideo.net,🌐 铸渊专线
+  - DOMAIN-SUFFIX,spotify.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,discord.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,discord.gg,🌐 铸渊专线
+  - DOMAIN-SUFFIX,discordapp.com,🌐 铸渊专线
+
+  # Apple 服务
+  - DOMAIN-SUFFIX,apple.com,DIRECT
+  - DOMAIN-SUFFIX,icloud.com,DIRECT
+  - DOMAIN-SUFFIX,mzstatic.com,DIRECT
+  - DOMAIN-KEYWORD,apple,DIRECT
+  - DOMAIN-KEYWORD,icloud,DIRECT
+
+  # 国内常用直连
+  - DOMAIN-SUFFIX,cn,DIRECT
+  - DOMAIN-SUFFIX,npmmirror.com,DIRECT
+  - DOMAIN-SUFFIX,taobao.com,DIRECT
+  - DOMAIN-SUFFIX,tmall.com,DIRECT
+  - DOMAIN-SUFFIX,alipay.com,DIRECT
+  - DOMAIN-SUFFIX,alibaba.com,DIRECT
+  - DOMAIN-SUFFIX,aliyun.com,DIRECT
+  - DOMAIN-SUFFIX,aliyuncs.com,DIRECT
+  - DOMAIN-SUFFIX,jd.com,DIRECT
+  - DOMAIN-SUFFIX,qq.com,DIRECT
+  - DOMAIN-SUFFIX,tencent.com,DIRECT
+  - DOMAIN-SUFFIX,weixin.qq.com,DIRECT
+  - DOMAIN-SUFFIX,bilibili.com,DIRECT
+  - DOMAIN-SUFFIX,163.com,DIRECT
+  - DOMAIN-SUFFIX,126.net,DIRECT
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,bdstatic.com,DIRECT
+  - DOMAIN-SUFFIX,zhihu.com,DIRECT
+  - DOMAIN-SUFFIX,douyin.com,DIRECT
+  - DOMAIN-SUFFIX,doubanio.com,DIRECT
+  - DOMAIN-SUFFIX,weibo.com,DIRECT
+  - DOMAIN-SUFFIX,xiaomi.com,DIRECT
+  - DOMAIN-SUFFIX,meituan.com,DIRECT
+  - DOMAIN-SUFFIX,dianping.com,DIRECT
+  - DOMAIN-KEYWORD,baidu,DIRECT
+  - DOMAIN-KEYWORD,alibaba,DIRECT
+
+  # 局域网直连
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT
 
   # GeoIP中国直连
   - GEOIP,CN,DIRECT
