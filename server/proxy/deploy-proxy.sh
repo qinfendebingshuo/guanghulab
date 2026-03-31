@@ -72,6 +72,18 @@ save_server_host() {
         echo "ZY_SERVER_HOST=${ZY_SERVER_HOST}" >> "$KEYS_FILE"
         chmod 600 "$KEYS_FILE"
     fi
+
+    # 保存CN中转地址 (如果有)
+    if [ -n "${ZY_CN_RELAY_HOST:-}" ] && [ -f "$KEYS_FILE" ]; then
+        if grep -q "^ZY_CN_RELAY_HOST=" "$KEYS_FILE" 2>/dev/null; then
+            sed -i "s|^ZY_CN_RELAY_HOST=.*|ZY_CN_RELAY_HOST=${ZY_CN_RELAY_HOST}|" "$KEYS_FILE"
+        else
+            echo "" >> "$KEYS_FILE"
+            echo "# CN中转服务器地址 (部署时自动写入)" >> "$KEYS_FILE"
+            echo "ZY_CN_RELAY_HOST=${ZY_CN_RELAY_HOST}" >> "$KEYS_FILE"
+        fi
+        echo "  ✅ ZY_CN_RELAY_HOST 已保存到 .env.keys"
+    fi
 }
 
 # ── install: 首次完整安装 ─────────────────────
@@ -246,21 +258,14 @@ health_check() {
         # 检查是谁占用443
         PORT443_PROC=$(ss -tlnp | grep ":443 " | head -1)
         if echo "$PORT443_PROC" | grep -q "xray"; then
-            echo "     → Xray占用443 (正确·VPN+HTTPS共存)"
+            echo "     → Xray占用443 (正确·VPN模式)"
+            echo "     → dest回落: www.microsoft.com:443 (Reality反探测)"
         elif echo "$PORT443_PROC" | grep -q "nginx"; then
             echo "     ⚠️ Nginx占用443 (应由Xray占用·VPN可能不工作)"
             echo "     → 请先停止Nginx的443监听，再启动Xray"
         fi
     else
         echo "  ❌ 端口443: 未监听"
-    fi
-
-    # 8443端口 (Nginx SSL，接收Xray回落流量)
-    if ss -tlnp | grep -q ":8443 "; then
-        echo "  ✅ 端口8443: Nginx SSL监听中 (接收Xray回落)"
-    else
-        echo "  ℹ️ 端口8443: 未监听 (SSL未配置或Nginx未启用8443)"
-        echo "     → VPN正常工作，但HTTPS网站需要运行setup-ssl配置"
     fi
 
     # 订阅服务
@@ -288,27 +293,21 @@ update() {
     ufw delete allow 3802/tcp 2>/dev/null || true
 
     # 检查并修复443端口冲突
-    # 如果Nginx占用了443端口(旧SSL配置)，需要修复
+    # 如果Nginx占用了443端口(旧SSL配置)，需要移除以让Xray接管
     if ss -tlnp | grep ":443 " | grep -q "nginx"; then
         echo "⚠️ 检测到Nginx占用443端口 (旧SSL配置冲突)"
-        echo "  检查并修复旧SSL配置..."
+        echo "  修复: 移除Nginx的443监听配置以让Xray接管..."
 
-        # 移除可能监听443的旧SSL配置
+        # 移除旧的SSL配置 (不再通过Xray回落提供HTTPS)
         for conf in /etc/nginx/sites-enabled/ssl-*.conf; do
-            if [ -f "$conf" ] && grep -q "listen 443" "$conf" 2>/dev/null; then
-                echo "  修复: $conf (将443改为127.0.0.1:8443)"
-                sed -i 's/listen 443 ssl/listen 127.0.0.1:8443 ssl/g' "$conf"
-                # 同时修复sites-available中的源文件
-                local conf_basename
-                conf_basename=$(basename "$conf")
-                if [ -f "/etc/nginx/sites-available/$conf_basename" ]; then
-                    sed -i 's/listen 443 ssl/listen 127.0.0.1:8443 ssl/g' "/etc/nginx/sites-available/$conf_basename"
-                fi
+            if [ -f "$conf" ] && grep -q "listen.*443\|listen.*8443" "$conf" 2>/dev/null; then
+                echo "  移除旧SSL配置: $conf"
+                rm -f "$conf"
             fi
         done
 
         nginx -t 2>/dev/null && nginx -s reload 2>/dev/null || true
-        echo "  ✅ Nginx SSL配置已修复为8443内部端口"
+        echo "  ✅ Nginx旧SSL配置已清理"
     fi
 
     systemctl restart xray

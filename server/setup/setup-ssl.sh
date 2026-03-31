@@ -187,12 +187,13 @@ obtain_certificate() {
 }
 
 # ── §4 配置Nginx SSL ─────────────────────────
-# ⚠️ 架构说明 (铸渊专线共存模式):
+# ⚠️ 架构说明 (Reality反探测优先):
 #   Xray 监听 443 (外部) · VLESS+Reality协议
-#   非VLESS流量回落到 127.0.0.1:8443 (Xray的dest参数)
-#   Nginx SSL 监听 127.0.0.1:8443 (内部) · 处理网站HTTPS请求
-#   浏览器 → 443(Xray) → 8443(Nginx SSL) → 网站内容
-#   VPN客户端 → 443(Xray) → Reality认证 → 代理上网
+#   dest回落到 www.microsoft.com:443 (反探测伪装·不可改为内部端口)
+#   Nginx SSL 监听 8443 (外部直接访问) · 独立HTTPS服务
+#
+#   如果Xray未安装 → Nginx直接监听443 (标准HTTPS)
+#   如果Xray已安装 → Nginx监听8443 (避免端口冲突)
 configure_nginx_ssl() {
     local domain="$1"
     local cert_path="/etc/letsencrypt/live/${domain}"
@@ -223,8 +224,22 @@ configure_nginx_ssl() {
         api_port="3800"
     fi
 
-    log_info "站点模式: $site_mode · API端口: $api_port"
-    log_info "架构: Xray(443外部) → 回落 → Nginx(8443内部SSL)"
+    # 确定SSL监听端口: Xray在443时用8443，否则用443
+    local ssl_listen_port="443"
+    local ssl_listen_addr=""
+    if command -v xray &>/dev/null; then
+        ssl_listen_port="8443"
+        ssl_listen_addr=""
+        log_info "检测到Xray已安装 · Nginx SSL使用端口8443 (避免与VPN冲突)"
+        log_info "网站HTTPS: https://${domain}:8443"
+        # 开放8443端口
+        ufw allow 8443/tcp comment "Nginx SSL (Xray共存)" 2>/dev/null || true
+    else
+        log_info "Xray未安装 · Nginx SSL使用标准端口443"
+        log_info "网站HTTPS: https://${domain}"
+    fi
+
+    log_info "站点模式: $site_mode · API端口: $api_port · SSL端口: $ssl_listen_port"
 
     # 生成SSL server block
     local ssl_conf="${NGINX_CONF_DIR}/ssl-${domain}.conf"
@@ -236,15 +251,13 @@ configure_nginx_ssl() {
 # 证书来源: Let's Encrypt (certbot)
 # 证书路径: ${cert_path}/
 #
-# ⚠️ 架构 (Xray+Nginx共存):
-#   外部443 → Xray (VPN+Reality) → 非VLESS流量回落 → 127.0.0.1:8443
-#   Nginx SSL 监听 127.0.0.1:8443 · 不直接暴露给外部
-#   浏览器访问 https://${domain} → 443(Xray回落) → 8443(这里)
+# SSL端口: ${ssl_listen_port}
+# $([ "$ssl_listen_port" = "8443" ] && echo "⚠️ Xray占用443(VPN) · Nginx SSL在8443(直接访问)" || echo "标准HTTPS · 端口443")
 # ═══════════════════════════════════════════════
 
-# ─── HTTPS 服务 (内部端口，接收Xray回落流量) ───
+# ─── HTTPS 服务 ───
 server {
-    listen 127.0.0.1:8443 ssl http2;
+    listen ${ssl_listen_port} ssl http2;
     server_name ${domain};
 
     # ─── SSL证书 (Let's Encrypt) ───
@@ -349,24 +362,32 @@ server {
     error_log /opt/zhuyuan/data/logs/nginx-${site_mode}-ssl-error.log;
 }
 
+$([ "$ssl_listen_port" = "443" ] && cat << REDIR
 # ─── HTTP → HTTPS 重定向 ───
-# 浏览器 http://${domain} → 301 → https://${domain} → 443(Xray) → 8443(Nginx)
 server {
     listen 80;
     server_name ${domain};
-    return 301 https://\$host\$request_uri;
+    return 301 https://\\\$host\\\$request_uri;
 }
+REDIR
+)
 SSLCONF
 
     log_info "SSL配置已生成: $ssl_conf"
 
-    # 安装到Nginx (使用00-前缀确保优先于主配置加载)
+    # 安装到Nginx
     cp "$ssl_conf" "${NGINX_SITES_AVAILABLE}/ssl-${domain}.conf"
     ln -sf "${NGINX_SITES_AVAILABLE}/ssl-${domain}.conf" "${NGINX_SITES_ENABLED}/ssl-${domain}.conf"
 
     log_info "SSL配置已安装到Nginx"
-    log_info "  HTTPS: 127.0.0.1:8443 (接收Xray回落流量)"
-    log_info "  HTTP重定向: 80 → https://${domain} → 443(Xray) → 8443(Nginx)"
+    if [ "$ssl_listen_port" = "8443" ]; then
+        log_info "  HTTPS: https://${domain}:8443 (直接访问)"
+        log_info "  HTTP: http://${domain} (端口80·正常访问)"
+        log_info "  VPN: Xray占用443 · dest→microsoft.com (反探测)"
+    else
+        log_info "  HTTPS: https://${domain} (标准端口443)"
+        log_info "  HTTP重定向: 80 → https://${domain}"
+    fi
 
     # 测试Nginx配置
     if nginx -t 2>&1; then
@@ -375,26 +396,10 @@ SSLCONF
         log_info "✅ Nginx已重新加载"
     else
         log_error "Nginx配置测试失败"
-        log_warn "检查是否有端口冲突 (Xray应占用443，Nginx SSL应在8443)"
         # 回滚
         rm -f "${NGINX_SITES_ENABLED}/ssl-${domain}.conf"
         systemctl reload nginx
         return 1
-    fi
-
-    # 确保Xray在443端口正常运行 (如果已安装)
-    if command -v xray &>/dev/null && systemctl is-active --quiet xray; then
-        log_info "✅ Xray服务运行中 (443端口，VPN+回落到8443)"
-    elif command -v xray &>/dev/null; then
-        log_warn "Xray已安装但未运行，尝试启动..."
-        systemctl restart xray 2>/dev/null || true
-        sleep 2
-        if systemctl is-active --quiet xray; then
-            log_info "✅ Xray已启动"
-        else
-            log_warn "Xray启动失败，铸渊专线(VPN)可能不可用"
-            log_warn "但HTTPS网站仍可正常工作"
-        fi
     fi
 
     return 0
@@ -434,69 +439,61 @@ HOOK
 # ── §6 验证HTTPS ─────────────────────────────
 verify_https() {
     local domain="$1"
-    log_step "§6 验证HTTPS: https://$domain"
+    log_step "§6 验证HTTPS: $domain"
 
     sleep 2  # 等待Nginx完全重载
 
-    # 检查Nginx是否在8443内部端口监听
-    if ss -tlnp | grep -q ":8443 "; then
-        log_info "✅ Nginx SSL端口 8443 监听中 (内部，接收Xray回落)"
-    else
-        log_warn "Nginx SSL端口 8443 未监听"
+    # 确定SSL端口
+    local ssl_port="443"
+    if command -v xray &>/dev/null; then
+        ssl_port="8443"
     fi
 
-    # 检查Xray是否在443端口监听
-    if ss -tlnp | grep -q ":443 "; then
-        log_info "✅ 外部端口 443 监听中"
-        # 检查是Xray还是Nginx占用443
-        local port_443_proc
-        port_443_proc=$(ss -tlnp | grep ":443 " | head -1)
-        if echo "$port_443_proc" | grep -q "xray"; then
-            log_info "  443端口由Xray占用 (正确 · VPN+HTTPS共存模式)"
-        elif echo "$port_443_proc" | grep -q "nginx"; then
-            log_warn "  443端口由Nginx占用 (需要启动Xray接管443端口)"
-            log_warn "  如果铸渊专线(VPN)不工作，请先运行代理服务部署"
-        fi
+    log_info "验证SSL端口: $ssl_port"
+
+    # 检查SSL端口是否监听
+    if ss -tlnp | grep -q ":${ssl_port} "; then
+        log_info "✅ SSL端口 ${ssl_port}: 监听中"
     else
-        log_warn "外部端口 443 未监听 (Xray可能未运行)"
+        log_warn "SSL端口 ${ssl_port} 未监听"
     fi
 
-    # 使用curl测试HTTPS (通过443端口 → Xray回落 → Nginx 8443)
+    # 使用curl测试HTTPS
+    local test_url="https://${domain}/"
+    if [ "$ssl_port" != "443" ]; then
+        test_url="https://${domain}:${ssl_port}/"
+    fi
+
     local response
-    response=$(curl -sf -o /dev/null -w "%{http_code}" "https://${domain}/" 2>/dev/null)
+    response=$(curl -sf -o /dev/null -w "%{http_code}" "$test_url" 2>/dev/null)
 
     if [ "$response" = "200" ] || [ "$response" = "301" ] || [ "$response" = "302" ]; then
         log_info "✅ HTTPS访问正常 · 状态码: $response"
+        log_info "  → 访问: $test_url"
     else
         log_warn "HTTPS访问状态码: ${response:-无响应}"
-        log_warn "这可能是因为:"
-        log_warn "  - Xray未运行 (443端口未被Xray监听)"
-        log_warn "  - Xray配置中的dest未指向127.0.0.1:8443"
-        log_warn "  - DNS传播需要时间"
-        log_warn "  - 请确保铸渊专线(Xray)服务已部署并运行"
-        log_warn ""
-        log_warn "直接测试8443端口 (跳过Xray):"
-        local direct_response
-        direct_response=$(curl -sf -o /dev/null -w "%{http_code}" --resolve "${domain}:8443:127.0.0.1" "https://${domain}:8443/" 2>/dev/null)
-        if [ "$direct_response" = "200" ] || [ "$direct_response" = "301" ] || [ "$direct_response" = "302" ]; then
-            log_info "✅ 直连8443端口正常 · 状态码: $direct_response"
-            log_info "  → Nginx SSL配置正确，等Xray运行后HTTPS即可正常"
-        else
-            log_warn "  直连8443也失败 · 状态码: ${direct_response:-无响应}"
-        fi
+        log_warn "  → 尝试访问: $test_url"
+        log_warn "  → 可能需要等待DNS传播"
     fi
 
     # 检查证书信息
-    echo | openssl s_client -servername "$domain" -connect "${domain}:443" 2>/dev/null | \
+    echo | openssl s_client -servername "$domain" -connect "${domain}:${ssl_port}" 2>/dev/null | \
         openssl x509 -noout -subject -issuer -dates 2>/dev/null || true
 
-    # 测试HTTP→HTTPS重定向
-    local redirect
-    redirect=$(curl -sf -o /dev/null -w "%{redirect_url}" "http://${domain}/" 2>/dev/null)
-    if echo "$redirect" | grep -q "https"; then
-        log_info "✅ HTTP→HTTPS重定向正常"
+    # 如果是标准443端口，测试HTTP→HTTPS重定向
+    if [ "$ssl_port" = "443" ]; then
+        local redirect
+        redirect=$(curl -sf -o /dev/null -w "%{redirect_url}" "http://${domain}/" 2>/dev/null)
+        if echo "$redirect" | grep -q "https"; then
+            log_info "✅ HTTP→HTTPS重定向正常"
+        else
+            log_warn "HTTP→HTTPS重定向未生效 (可能需要等待DNS)"
+        fi
     else
-        log_warn "HTTP→HTTPS重定向未生效 (可能需要等待DNS)"
+        log_info "ℹ️ Xray占用443端口，HTTP不会重定向到HTTPS"
+        log_info "  → 网站HTTP访问: http://${domain} (端口80)"
+        log_info "  → 网站HTTPS访问: https://${domain}:${ssl_port}"
+        log_info "  → VPN: 通过Xray端口443正常工作"
     fi
 }
 
