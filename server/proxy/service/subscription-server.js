@@ -143,14 +143,35 @@ function generateVlessUri(keys, serverHost) {
 }
 
 // ── 生成Clash YAML配置 ───────────────────────
+// 兼容 Mihomo (Clash Meta) / Clash Verge / ClashMi
+// 包含完整DNS配置·全局优化设置·代理节点·路由规则
 function generateClashYaml(keys, serverHost) {
   const cnRelayHost = getCnRelayHost();
   const cnRelayPort = getCnRelayPort();
 
+  // ── 代理节点定义 ──────────────────────────────
+  // SG直连节点 (必选)
+  let proxiesBlock = `  - name: "🏛️ 铸渊专线-SG直连"
+    type: vless
+    server: ${serverHost}
+    port: 443
+    uuid: ${keys.ZY_PROXY_UUID}
+    network: tcp
+    tls: true
+    udp: true
+    flow: xtls-rprx-vision
+    servername: www.microsoft.com
+    skip-cert-verify: false
+    reality-opts:
+      public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
+      short-id: ${keys.ZY_PROXY_REALITY_SHORT_ID}
+    client-fingerprint: chrome`;
+
   // CN中转节点 (如果已配置)
   // 注: CN中转是透明TCP转发(CN:2053 → SG:443)，所以Reality设置仍指向SG的配置
   // servername/public-key/short-id 与SG直连节点完全相同，因为TLS握手实际发生在SG端
-  const cnProxyBlock = cnRelayHost ? `
+  if (cnRelayHost) {
+    proxiesBlock += `
   - name: "🇨🇳 铸渊专线-CN中转"
     type: vless
     server: ${cnRelayHost}
@@ -161,119 +182,169 @@ function generateClashYaml(keys, serverHost) {
     udp: true
     flow: xtls-rprx-vision
     servername: www.microsoft.com
+    skip-cert-verify: false
     reality-opts:
       public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
       short-id: ${keys.ZY_PROXY_REALITY_SHORT_ID}
-    client-fingerprint: chrome` : '';
+    client-fingerprint: chrome`;
+  }
 
-  // 代理组中的节点列表
-  // SG直连优先 (更可靠的直连节点排在前面作为默认)
-  const proxyList = cnRelayHost
-    ? `      - "🏛️ 铸渊专线-SG直连"
-      - "🇨🇳 铸渊专线-CN中转"`
-    : '      - "🏛️ 铸渊专线-SG直连"';
+  // ── 代理组定义 ─────────────────────────────────
+  let proxyGroupsBlock = '';
 
-  const proxyListWithDirect = cnRelayHost
-    ? `      - "🏛️ 铸渊专线-SG直连"
+  if (cnRelayHost) {
+    // 有CN中转时: 主组含自动选择 + 自动选择组
+    proxyGroupsBlock = `  - name: "🌐 铸渊专线"
+    type: select
+    proxies:
+      - "♻️ 自动选择"
+      - "🏛️ 铸渊专线-SG直连"
       - "🇨🇳 铸渊专线-CN中转"
-      - DIRECT`
-    : `      - "🏛️ 铸渊专线-SG直连"
-      - DIRECT`;
-
-  // 自动选择组 (url-test: 自动测试延迟，选择最快可用节点)
-  // CN中转如果不可用(connection refused)会自动被排除
-  const autoGroupBlock = cnRelayHost ? `
+      - DIRECT
   - name: "♻️ 自动选择"
     type: url-test
     proxies:
       - "🏛️ 铸渊专线-SG直连"
       - "🇨🇳 铸渊专线-CN中转"
-    url: "http://www.gstatic.com/generate_204"
+    url: "https://www.gstatic.com/generate_204"
     interval: 300
     tolerance: 50
-` : '';
-
-  // 主代理组: 有CN时默认使用自动选择，无CN时直接使用SG
-  const mainGroupProxies = cnRelayHost
-    ? `      - "♻️ 自动选择"
+  - name: "🤖 AI服务"
+    type: select
+    proxies:
       - "🏛️ 铸渊专线-SG直连"
       - "🇨🇳 铸渊专线-CN中转"
-      - DIRECT`
-    : `      - "🏛️ 铸渊专线-SG直连"
-      - DIRECT`;
+  - name: "💻 开发工具"
+    type: select
+    proxies:
+      - "🏛️ 铸渊专线-SG直连"
+      - "🇨🇳 铸渊专线-CN中转"`;
+  } else {
+    // 仅SG直连时
+    proxyGroupsBlock = `  - name: "🌐 铸渊专线"
+    type: select
+    proxies:
+      - "🏛️ 铸渊专线-SG直连"
+      - DIRECT
+  - name: "🤖 AI服务"
+    type: select
+    proxies:
+      - "🏛️ 铸渊专线-SG直连"
+  - name: "💻 开发工具"
+    type: select
+    proxies:
+      - "🏛️ 铸渊专线-SG直连"`;
+  }
 
   return `# 铸渊专线 · ZY-Proxy Subscription
 # 自动生成 · ${new Date().toISOString()}
 # ⚠️ 请勿分享此配置
-${cnRelayHost ? `# 🇨🇳 包含CN中转节点 (国内直连广州→转发新加坡)` : ''}
+${cnRelayHost ? '# 🇨🇳 包含CN中转节点 (国内直连广州→转发新加坡)' : ''}
 
+# ── 全局设置 ──────────────────────────────────
 port: 7890
 socks-port: 7891
+mixed-port: 7893
 allow-lan: false
 mode: rule
 log-level: info
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+find-process-mode: strict
+geodata-mode: true
+global-client-fingerprint: chrome
 
+# ── DNS配置 ───────────────────────────────────
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "*.localhost"
+    - "*.direct"
+    - "time.*.com"
+    - "ntp.*.com"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "localhost.ptlogin2.qq.com"
+    - "dns.msftncsi.com"
+    - "www.msftncsi.com"
+    - "www.msftconnecttest.com"
+  default-nameserver:
+    - 223.5.5.5
+    - 114.114.114.114
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+
+# ── 代理节点 ──────────────────────────────────
 proxies:
-  - name: "🏛️ 铸渊专线-SG直连"
-    type: vless
-    server: ${serverHost}
-    port: 443
-    uuid: ${keys.ZY_PROXY_UUID}
-    network: tcp
-    tls: true
-    udp: true
-    flow: xtls-rprx-vision
-    servername: www.microsoft.com
-    reality-opts:
-      public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
-      short-id: ${keys.ZY_PROXY_REALITY_SHORT_ID}
-    client-fingerprint: chrome
-${cnProxyBlock}
+${proxiesBlock}
 
+# ── 代理组 ────────────────────────────────────
 proxy-groups:
-  - name: "🌐 铸渊专线"
-    type: select
-    proxies:
-${mainGroupProxies}
-${autoGroupBlock}
-  - name: "🤖 AI服务"
-    type: select
-    proxies:
-${proxyList}
+${proxyGroupsBlock}
 
-  - name: "💻 开发工具"
-    type: select
-    proxies:
-${proxyList}
-
+# ── 路由规则 ──────────────────────────────────
 rules:
   # AI服务
   - DOMAIN-SUFFIX,openai.com,🤖 AI服务
   - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
   - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
   - DOMAIN-SUFFIX,chatgpt.com,🤖 AI服务
+  - DOMAIN-SUFFIX,chat.openai.com,🤖 AI服务
+  - DOMAIN-SUFFIX,ai.com,🤖 AI服务
+  - DOMAIN-SUFFIX,bard.google.com,🤖 AI服务
+  - DOMAIN-SUFFIX,gemini.google.com,🤖 AI服务
+  - DOMAIN-SUFFIX,perplexity.ai,🤖 AI服务
 
   # 开发工具
   - DOMAIN-SUFFIX,github.com,💻 开发工具
   - DOMAIN-SUFFIX,githubusercontent.com,💻 开发工具
   - DOMAIN-SUFFIX,github.io,💻 开发工具
+  - DOMAIN-SUFFIX,githubassets.com,💻 开发工具
   - DOMAIN-SUFFIX,copilot.microsoft.com,💻 开发工具
+  - DOMAIN-SUFFIX,copilot-proxy.githubusercontent.com,💻 开发工具
   - DOMAIN-SUFFIX,npmjs.com,💻 开发工具
+  - DOMAIN-SUFFIX,npmjs.org,💻 开发工具
   - DOMAIN-SUFFIX,docker.com,💻 开发工具
   - DOMAIN-SUFFIX,docker.io,💻 开发工具
+  - DOMAIN-SUFFIX,stackoverflow.com,💻 开发工具
+  - DOMAIN-SUFFIX,stackexchange.com,💻 开发工具
 
-  # 社交媒体
+  # 社交媒体 & 常用
   - DOMAIN-SUFFIX,tiktok.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,twitter.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,x.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,youtube.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,youtu.be,🌐 铸渊专线
+  - DOMAIN-SUFFIX,ytimg.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,googlevideo.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,google.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,googleapis.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,gstatic.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,ggpht.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,telegram.org,🌐 铸渊专线
   - DOMAIN-SUFFIX,t.me,🌐 铸渊专线
   - DOMAIN-SUFFIX,instagram.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,facebook.com,🌐 铸渊专线
   - DOMAIN-SUFFIX,whatsapp.com,🌐 铸渊专线
+  - DOMAIN-SUFFIX,whatsapp.net,🌐 铸渊专线
+  - DOMAIN-SUFFIX,wikipedia.org,🌐 铸渊专线
+  - DOMAIN-SUFFIX,wikimedia.org,🌐 铸渊专线
 
   # GeoIP中国直连
   - GEOIP,CN,DIRECT
