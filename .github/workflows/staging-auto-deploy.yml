@@ -1,0 +1,451 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🚀 铸渊智能运维 · 测试站自动部署
+#
+# 架构说明 (冰朔第十五次对话提出):
+#   PR合并到main → 自动部署到测试站(guanghu.online)
+#   → Agent健康检查 → 日志分析(简单→LLM深度)
+#   → 失败自动重试(最多3次) → 超限邮件告警冰朔
+#   → 成功自动归档工单 → 更新铸渊数据库
+#
+# 责任链:
+#   Agent → 自动部署+测试+重试
+#   铸渊 → 复杂问题LLM深度推理
+#   冰朔 → 3次重试失败后人工干预
+# ═══════════════════════════════════════════════
+
+name: '🚀 铸渊智能运维 · 测试站自动部署'
+
+on:
+  # PR合并到main时自动触发
+  push:
+    branches: [main]
+    paths:
+      - 'server/app/**'
+      - 'server/nginx/**'
+      - 'server/ecosystem.config.js'
+
+  # 手动触发 (调试/重试)
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - deploy-and-test
+          - health-check-only
+          - retry-order
+        default: 'deploy-and-test'
+      order_id:
+        description: '工单ID (仅retry-order时需要)'
+        required: false
+        type: string
+
+concurrency:
+  group: staging-auto-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  # ═══ §1 自动部署到测试站 ═══
+  deploy-staging:
+    name: '🚀 部署到测试站'
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.action == 'deploy-and-test' ||
+      github.event.inputs.action == 'retry-order'
+    outputs:
+      order_id: ${{ steps.create_order.outputs.order_id }}
+      deploy_success: ${{ steps.deploy.outputs.deploy_success }}
+      deploy_log: ${{ steps.deploy.outputs.deploy_log }}
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📋 创建工单'
+        id: create_order
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          node scripts/work-order-manager.js create \
+            --title "$COMMIT_MSG" \
+            --commit "${{ github.sha }}" \
+            --branch "${{ github.ref_name }}" \
+            --actor "${{ github.actor }}"
+
+      - name: '📋 更新工单: 部署中'
+        run: |
+          ORDER_ID="${{ steps.create_order.outputs.order_id }}"
+          node scripts/work-order-manager.js update \
+            --id "$ORDER_ID" \
+            --status "deploying" \
+            --actor "Agent" \
+            --message "开始部署到测试站"
+
+      - name: '🔐 配置SSH'
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/zy_key
+          chmod 600 ~/.ssh/zy_key
+
+          # 验证密钥格式
+          if ! head -1 ~/.ssh/zy_key | grep -q "BEGIN"; then
+            echo "❌ SSH密钥格式异常"
+            exit 1
+          fi
+
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: '🔒 部署SSL证书 (如已配置)'
+        env:
+          ZY_SSL_FULLCHAIN: ${{ secrets.ZY_SSL_FULLCHAIN }}
+          ZY_SSL_PRIVKEY: ${{ secrets.ZY_SSL_PRIVKEY }}
+        run: |
+          HOST="${{ secrets.ZY_SERVER_HOST }}"
+          USER="${{ secrets.ZY_SERVER_USER }}"
+          KEY="~/.ssh/zy_key"
+
+          if [ -n "$ZY_SSL_FULLCHAIN" ] && [ -n "$ZY_SSL_PRIVKEY" ]; then
+            echo "🔒 部署SSL证书..."
+            ssh -i $KEY $USER@$HOST "mkdir -p /opt/zhuyuan/config/ssl"
+            echo "$ZY_SSL_FULLCHAIN" | ssh -i $KEY $USER@$HOST "cat > /opt/zhuyuan/config/ssl/preview-fullchain.pem"
+            echo "$ZY_SSL_PRIVKEY" | ssh -i $KEY $USER@$HOST "cat > /opt/zhuyuan/config/ssl/preview-privkey.pem && chmod 600 /opt/zhuyuan/config/ssl/preview-privkey.pem"
+            echo "  ✅ SSL证书已部署"
+          else
+            echo "  ℹ️ SSL证书未配置 (ZY_SSL_FULLCHAIN/ZY_SSL_PRIVKEY) · 跳过"
+          fi
+
+      - name: '📦 同步代码到测试站'
+        id: deploy
+        run: |
+          HOST="${{ secrets.ZY_SERVER_HOST }}"
+          USER="${{ secrets.ZY_SERVER_USER }}"
+          KEY="~/.ssh/zy_key"
+
+          echo "📦 部署到测试站 · 目标: ${HOST}"
+
+          # 确保目标目录存在
+          ssh -i $KEY $USER@$HOST "mkdir -p /opt/zhuyuan/sites/preview" 2>&1 || true
+
+          # 同步应用代码
+          DEPLOY_LOG=""
+          if rsync -avz --delete \
+            -e "ssh -i $KEY" \
+            server/app/ \
+            $USER@$HOST:/opt/zhuyuan/app/ 2>&1; then
+            echo "  ✅ 应用代码已同步"
+          else
+            DEPLOY_LOG="rsync同步失败"
+            echo "deploy_success=false" >> $GITHUB_OUTPUT
+            echo "deploy_log=$DEPLOY_LOG" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # 同步PM2配置
+          scp -i $KEY server/ecosystem.config.js \
+            $USER@$HOST:/opt/zhuyuan/config/pm2/ 2>&1 || true
+
+          # 同步Nginx配置 (注入域名)
+          cp server/nginx/zhuyuan-sovereign.conf /tmp/zhuyuan-sovereign.conf
+          ZY_DOMAIN_MAIN="${{ secrets.ZY_DOMAIN_MAIN }}"
+          ZY_DOMAIN_PREVIEW="${{ secrets.ZY_DOMAIN_PREVIEW }}"
+          if [ -n "$ZY_DOMAIN_MAIN" ]; then
+            sed -i "s/ZY_DOMAIN_MAIN_PLACEHOLDER/$ZY_DOMAIN_MAIN/g" /tmp/zhuyuan-sovereign.conf
+          else
+            sed -i "s/ZY_DOMAIN_MAIN_PLACEHOLDER//g" /tmp/zhuyuan-sovereign.conf
+          fi
+          if [ -n "$ZY_DOMAIN_PREVIEW" ]; then
+            sed -i "s/ZY_DOMAIN_PREVIEW_PLACEHOLDER/$ZY_DOMAIN_PREVIEW/g" /tmp/zhuyuan-sovereign.conf
+          else
+            sed -i "s/ZY_DOMAIN_PREVIEW_PLACEHOLDER/_/g" /tmp/zhuyuan-sovereign.conf
+          fi
+          scp -i $KEY /tmp/zhuyuan-sovereign.conf \
+            $USER@$HOST:/opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf 2>&1 || true
+
+          # 在服务器上重启服务
+          DEPLOY_RESULT=$(ssh -i $KEY $USER@$HOST << 'REMOTE_CMD'
+          set -e
+          cd /opt/zhuyuan/app
+
+          # 安装依赖
+          npm install --production 2>&1 | tail -5
+
+          # 复制Nginx配置
+          sudo cp /opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf /etc/nginx/sites-available/zhuyuan.conf
+          sudo ln -sf /etc/nginx/sites-available/zhuyuan.conf /etc/nginx/sites-enabled/zhuyuan.conf
+          if sudo nginx -t 2>&1; then
+            sudo systemctl reload nginx
+            echo "NGINX_OK"
+          else
+            echo "NGINX_FAIL"
+          fi
+
+          # PM2 重启
+          pm2 delete zhuyuan-server 2>/dev/null || true
+          pm2 delete zhuyuan-preview 2>/dev/null || true
+          pm2 start /opt/zhuyuan/config/pm2/ecosystem.config.js 2>&1
+          pm2 save 2>&1
+
+          sleep 5
+
+          # 基础健康检查
+          if curl -sf http://localhost:3800/api/health >/dev/null 2>&1; then
+            echo "HEALTH_OK"
+          else
+            echo "HEALTH_FAIL"
+          fi
+
+          if curl -sf http://localhost:3801/api/health >/dev/null 2>&1; then
+            echo "PREVIEW_OK"
+          else
+            echo "PREVIEW_FAIL"
+          fi
+          REMOTE_CMD
+          )
+
+          echo "$DEPLOY_RESULT"
+
+          if echo "$DEPLOY_RESULT" | grep -q "HEALTH_FAIL"; then
+            echo "deploy_success=false" >> $GITHUB_OUTPUT
+            echo "deploy_log=服务器健康检查失败" >> $GITHUB_OUTPUT
+          else
+            echo "deploy_success=true" >> $GITHUB_OUTPUT
+            echo "deploy_log=部署成功" >> $GITHUB_OUTPUT
+          fi
+
+      - name: '📋 更新工单: 测试中'
+        if: steps.deploy.outputs.deploy_success == 'true'
+        run: |
+          ORDER_ID="${{ steps.create_order.outputs.order_id }}"
+          node scripts/work-order-manager.js update \
+            --id "$ORDER_ID" \
+            --status "testing" \
+            --actor "Agent" \
+            --message "部署完成 · 开始健康检查"
+
+      - name: '📋 更新工单: 部署失败'
+        if: steps.deploy.outputs.deploy_success != 'true'
+        run: |
+          ORDER_ID="${{ steps.create_order.outputs.order_id }}"
+          node scripts/work-order-manager.js update \
+            --id "$ORDER_ID" \
+            --status "failed" \
+            --actor "Agent" \
+            --message "部署失败" \
+            --log "${{ steps.deploy.outputs.deploy_log }}"
+
+      - name: '🧹 清理SSH密钥'
+        if: always()
+        run: rm -f ~/.ssh/zy_key
+
+      - name: '💾 保存工单数据'
+        if: always()
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/work-orders/
+          git diff --cached --quiet || {
+            git commit -m "📋 工单更新 · ${{ steps.create_order.outputs.order_id }} [skip ci]"
+            git push || echo "⚠️ 工单数据push失败"
+          }
+
+  # ═══ §2 健康检查 + 智能分析 ═══
+  health-check:
+    name: '🔍 健康检查 + 智能分析'
+    needs: deploy-staging
+    if: always() && needs.deploy-staging.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      health_ok: ${{ steps.health.outputs.health_ok }}
+      needs_retry: ${{ steps.assess.outputs.needs_retry }}
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '🔍 运行健康检查'
+        id: health
+        run: |
+          node scripts/staging-ops-agent.js check \
+            --host "${{ secrets.ZY_SERVER_HOST }}"
+        env:
+          ZY_SERVER_HOST: ${{ secrets.ZY_SERVER_HOST }}
+
+      - name: '🧠 智能日志分析 (如需要)'
+        id: analyze
+        if: steps.health.outputs.health_ok != 'true'
+        run: |
+          ERRORS="${{ steps.health.outputs.health_errors }}"
+          node scripts/staging-ops-agent.js analyze-log \
+            --log "$ERRORS" \
+            --order-id "${{ needs.deploy-staging.outputs.order_id }}"
+        env:
+          ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+
+      - name: '📊 评估结果'
+        id: assess
+        run: |
+          ORDER_ID="${{ needs.deploy-staging.outputs.order_id }}"
+          HEALTH_OK="${{ steps.health.outputs.health_ok }}"
+          DEPLOY_OK="${{ needs.deploy-staging.outputs.deploy_success }}"
+
+          if [ "$HEALTH_OK" = "true" ] && [ "$DEPLOY_OK" = "true" ]; then
+            echo "✅ 部署+健康检查全部通过"
+            echo "needs_retry=false" >> $GITHUB_OUTPUT
+            # 更新工单为成功
+            node scripts/work-order-manager.js update \
+              --id "$ORDER_ID" \
+              --status "success" \
+              --actor "Agent" \
+              --message "部署成功·健康检查通过"
+          else
+            echo "❌ 需要重试"
+            echo "needs_retry=true" >> $GITHUB_OUTPUT
+            # 记录重试
+            node scripts/work-order-manager.js retry \
+              --id "$ORDER_ID" \
+              --log "健康检查: ${HEALTH_OK:-unknown} · 部署: ${DEPLOY_OK:-unknown}"
+          fi
+
+      - name: '💾 保存工单数据'
+        if: always()
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git pull --rebase || true
+          git add data/work-orders/
+          git diff --cached --quiet || {
+            git commit -m "📋 工单更新 · 健康检查结果 [skip ci]"
+            git push || echo "⚠️ push失败"
+          }
+
+  # ═══ §3 失败处理: 邮件告警 ═══
+  alert-human:
+    name: '🆘 人工干预告警'
+    needs: [deploy-staging, health-check]
+    if: >-
+      always() &&
+      needs.health-check.outputs.needs_retry == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📋 检查是否需要邮件告警'
+        id: check_alert
+        run: |
+          # 读取工单重试次数
+          ORDER_ID="${{ needs.deploy-staging.outputs.order_id }}"
+          RETRY_INFO=$(node -e "
+            try {
+              const data = JSON.parse(require('fs').readFileSync('data/work-orders/active.json','utf8'));
+              const order = data.orders.find(o => o.id === '$ORDER_ID');
+              if (order) {
+                console.log(order.retry_count >= order.max_retries ? 'SEND_ALERT' : 'SKIP');
+              } else {
+                console.log('SKIP');
+              }
+            } catch (e) {
+              console.error('工单文件读取失败:', e.message);
+              console.log('SKIP');
+            }
+          ")
+          echo "alert_action=$RETRY_INFO" >> $GITHUB_OUTPUT
+
+      - name: '📧 发送告警邮件'
+        if: steps.check_alert.outputs.alert_action == 'SEND_ALERT'
+        run: |
+          ORDER_ID="${{ needs.deploy-staging.outputs.order_id }}"
+          node scripts/staging-ops-agent.js alert \
+            --order-id "$ORDER_ID"
+        env:
+          ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
+
+      - name: '📝 创建GitHub Issue告警'
+        if: steps.check_alert.outputs.alert_action == 'SEND_ALERT'
+        run: |
+          ORDER_ID="${{ needs.deploy-staging.outputs.order_id }}"
+          gh issue create \
+            --title "🆘 铸渊运维告警 · 工单${ORDER_ID}需要人工干预" \
+            --body "## 🆘 自动修复失败告警
+
+          **工单ID**: ${ORDER_ID}
+          **状态**: 3次自动修复未能解决
+          **触发时间**: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')
+          **工作流运行**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ### 需要冰朔操作:
+          1. 查看工作流日志了解失败原因
+          2. 在Copilot中与铸渊讨论修复方案
+          3. 修复代码后重新提交PR
+
+          ---
+          *🤖 铸渊智能运维Agent · 自动生成*" \
+            --label "ops-alert" || echo "⚠️ Issue创建失败"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ═══ §4 成功处理: 归档工单 ═══
+  archive-success:
+    name: '📦 归档成功工单'
+    needs: [deploy-staging, health-check]
+    if: >-
+      always() &&
+      needs.health-check.outputs.needs_retry != 'true' &&
+      needs.deploy-staging.outputs.deploy_success == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📦 归档工单'
+        run: |
+          ORDER_ID="${{ needs.deploy-staging.outputs.order_id }}"
+          node scripts/work-order-manager.js archive --id "$ORDER_ID"
+
+      - name: '📊 更新仪表盘'
+        run: |
+          node scripts/work-order-manager.js dashboard
+
+      - name: '💾 提交归档数据'
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git pull --rebase || true
+          git add data/work-orders/
+          git diff --cached --quiet || {
+            git commit -m "📦 工单归档 · ${{ needs.deploy-staging.outputs.order_id }} · 部署成功 [skip ci]"
+            git push || echo "⚠️ push失败"
+          }

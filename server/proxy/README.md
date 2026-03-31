@@ -99,7 +99,7 @@ SG服务器总月流量: **2560 GB**
    → 通过邮件发送订阅URL到冰朔邮箱
 
 2. 冰朔在客户端添加订阅URL
-   → 客户端请求 https://server:3802/sub/{token}
+   → 客户端请求 http://server/api/proxy-sub/sub/{token}
    → 返回Clash YAML / Base64配置
    → 返回Header: subscription-userinfo (配额信息)
    → 客户端显示剩余流量

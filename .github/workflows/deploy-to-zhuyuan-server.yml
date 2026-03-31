@@ -24,6 +24,7 @@ on:
           - init
           - health-check
           - promote
+          - setup-ssl
       deploy_target:
         description: '部署目标站点'
         required: false
@@ -32,6 +33,10 @@ on:
         options:
           - preview
           - production
+      ssl_domain:
+        description: 'SSL域名 (仅setup-ssl时需要，如: guanghu.online)'
+        required: false
+        type: string
 
 concurrency:
   group: zhuyuan-server-deploy
@@ -335,3 +340,78 @@ jobs:
           curl -sf http://localhost:3800/api/sites | jq . 2>/dev/null || echo "API未响应"
 
           VERIFY_CMD
+
+  # ═══ §5 SSL证书配置 ═══
+  setup-ssl:
+    name: 🔒 SSL证书配置
+    if: github.event.inputs.action == 'setup-ssl'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔐 配置SSH
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/zy_key
+          chmod 600 ~/.ssh/zy_key
+          if head -1 ~/.ssh/zy_key | grep -q "BEGIN" && tail -1 ~/.ssh/zy_key | grep -q "END"; then
+            echo "✅ SSH私钥格式正确"
+          else
+            echo "❌ SSH私钥格式异常"
+            exit 1
+          fi
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 🔍 SSH连接测试
+        run: |
+          ssh -i ~/.ssh/zy_key -o BatchMode=yes -o ConnectTimeout=10 \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
+            'echo "✅ SSH连接成功 · $(hostname)"'
+
+      - name: 📦 上传SSL配置脚本
+        run: |
+          scp -i ~/.ssh/zy_key \
+            server/setup/setup-ssl.sh \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/tmp/setup-ssl.sh
+
+      - name: 🔒 执行SSL配置
+        run: |
+          SSL_DOMAIN="${{ github.event.inputs.ssl_domain }}"
+          ZY_DOMAIN_PREVIEW="${{ secrets.ZY_DOMAIN_PREVIEW }}"
+
+          # 如果未指定域名，使用预览域名
+          if [ -z "$SSL_DOMAIN" ]; then
+            SSL_DOMAIN="$ZY_DOMAIN_PREVIEW"
+          fi
+
+          if [ -z "$SSL_DOMAIN" ]; then
+            echo "❌ 未指定SSL域名"
+            echo ""
+            echo "请在触发工作流时填写 ssl_domain 参数"
+            echo "例如: guanghu.online"
+            exit 1
+          fi
+
+          echo "🔒 配置SSL: $SSL_DOMAIN"
+          echo ""
+
+          ssh -i ~/.ssh/zy_key \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
+            "chmod +x /tmp/setup-ssl.sh && sudo bash /tmp/setup-ssl.sh $SSL_DOMAIN"
+
+      - name: 💚 SSL验证
+        run: |
+          SSL_DOMAIN="${{ github.event.inputs.ssl_domain || secrets.ZY_DOMAIN_PREVIEW }}"
+          if [ -n "$SSL_DOMAIN" ]; then
+            echo "🔍 验证HTTPS: https://$SSL_DOMAIN"
+            sleep 3
+            HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" "https://${SSL_DOMAIN}/" 2>/dev/null || echo "000")
+            echo "HTTPS状态码: $HTTP_CODE"
+            if [ "$HTTP_CODE" != "000" ]; then
+              echo "✅ HTTPS可访问"
+            else
+              echo "⚠️ HTTPS暂时不可访问 (可能需要等待DNS传播)"
+            fi
+          fi

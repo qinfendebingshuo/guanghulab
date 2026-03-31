@@ -116,7 +116,7 @@ function detectSmtpHost(email) {
 
 // ── 生成订阅邮件HTML ─────────────────────────
 function generateSubscriptionEmail(config) {
-  const subUrl = `http://${config.server_host}:3802/sub/${config.sub_token}`;
+  const subUrl = `http://${config.server_host}/api/proxy-sub/sub/${config.sub_token}`;
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
 
   return `

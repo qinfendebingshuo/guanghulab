@@ -67,9 +67,14 @@ fi
 # ── 4. 防火墙配置 ────────────────────────────
 echo "[4/6] 配置防火墙..."
 ufw allow 443/tcp comment "Xray VLESS+Reality" || true
-ufw allow 3802/tcp comment "ZY-Proxy subscription service" || true
+# 端口3802不再需要外部直连 — 订阅服务通过Nginx反代(/api/proxy-sub/)访问
+if ufw delete allow 3802/tcp 2>/dev/null; then
+    echo "  ✅ 已移除3802端口外部访问规则"
+else
+    echo "  ℹ️ 3802端口规则不存在 (无需移除)"
+fi
 ufw reload || echo "⚠️ 防火墙重载失败，请手动检查"
-echo "  防火墙已配置: 443(Xray) + 3802(订阅服务)"
+echo "  防火墙已配置: 443(Xray) · 订阅服务走Nginx反代(端口80)"
 
 # ── 5. 生成密钥 ──────────────────────────────
 echo "[5/6] 生成密钥..."

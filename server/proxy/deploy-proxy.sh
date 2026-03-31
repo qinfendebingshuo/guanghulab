@@ -268,6 +268,9 @@ update() {
     ensure_xray_root_user
     ensure_log_permissions
 
+    # 关闭3802外部端口 (订阅服务改为通过Nginx反代访问)
+    ufw delete allow 3802/tcp 2>/dev/null || true
+
     systemctl restart xray
     pm2 restart zy-proxy-sub zy-proxy-monitor zy-proxy-guardian 2>/dev/null || true
     health_check

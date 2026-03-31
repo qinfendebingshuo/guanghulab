@@ -71,7 +71,7 @@ function readRemoteQuota() {
     return Promise.resolve(null);
   }
   return new Promise((resolve) => {
-    http.get(`http://${host}:3802/quota`, { timeout: 10000 }, (res) => {
+    http.get(`http://${host}/api/proxy-sub/quota`, { timeout: 10000 }, (res) => {
       let data = '';
       res.on('data', (d) => { data += d; });
       res.on('end', () => {
