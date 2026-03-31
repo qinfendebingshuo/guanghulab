@@ -305,7 +305,6 @@ rules:
   - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
   - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
   - DOMAIN-SUFFIX,chatgpt.com,🤖 AI服务
-  - DOMAIN-SUFFIX,chat.openai.com,🤖 AI服务
   - DOMAIN-SUFFIX,ai.com,🤖 AI服务
   - DOMAIN-SUFFIX,bard.google.com,🤖 AI服务
   - DOMAIN-SUFFIX,gemini.google.com,🤖 AI服务
