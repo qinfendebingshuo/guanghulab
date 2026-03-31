@@ -48,7 +48,13 @@ jobs:
       - name: 🔐 配置SSH
         env:
           SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          # 端口配置 (支持自定义SSH端口，腾讯云服务器常用非22端口)
+          SSH_PORT="${CN_SSH_PORT:-22}"
+          echo "SSH_PORT=${SSH_PORT}" >> $GITHUB_ENV
+          echo "🔧 CN服务器SSH端口: ${SSH_PORT}"
+
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/zy_cn_key
           chmod 600 ~/.ssh/zy_cn_key
@@ -58,29 +64,33 @@ jobs:
             echo "❌ SSH私钥格式异常 — 请检查 GitHub Secrets 中 ZY_CN_SERVER_KEY 的内容"
             exit 1
           fi
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p ${SSH_PORT} -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: 🔍 SSH连接测试
         run: |
-          echo "🔍 测试SSH连接到广州备用服务器..."
-          ssh -i ~/.ssh/zy_cn_key -o BatchMode=yes -o ConnectTimeout=10 \
+          echo "🔍 测试SSH连接到广州备用服务器 (端口 ${{ env.SSH_PORT }})..."
+          ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }} -o BatchMode=yes -o ConnectTimeout=10 \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
             'echo "✅ SSH连接成功 · $(hostname) · $(date)"' || {
             echo ""
             echo "❌ SSH连接失败"
-            echo "修复步骤: 登录腾讯云 → 广州服务器 → 远程登录 → 生成密钥 → 更新 ZY_CN_SERVER_KEY"
+            echo "修复步骤:"
+            echo "  1. 确认 ZY_CN_SSH_PORT Secret 已设置为CN服务器的SSH端口 (当前: ${{ env.SSH_PORT }})"
+            echo "  2. 登录腾讯云 → 安全组 → 确认入站规则允许端口 ${{ env.SSH_PORT }}"
+            echo "  3. 确认 ZY_CN_SERVER_HOST 地址正确"
+            echo "  4. 登录腾讯云 → 广州服务器 → 远程登录 → 生成密钥 → 更新 ZY_CN_SERVER_KEY"
             exit 1
           }
 
       - name: 📦 上传初始化脚本
         run: |
-          scp -i ~/.ssh/zy_cn_key \
+          scp -i ~/.ssh/zy_cn_key -P ${{ env.SSH_PORT }} \
             server/setup/cn-server-init.sh \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:/tmp/
 
       - name: 🚀 执行初始化
         run: |
-          ssh -i ~/.ssh/zy_cn_key \
+          ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }} \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
             'chmod +x /tmp/cn-server-init.sh && sudo /tmp/cn-server-init.sh'
 
@@ -95,11 +105,15 @@ jobs:
       - name: 🔐 配置SSH
         env:
           SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          SSH_PORT="${CN_SSH_PORT:-22}"
+          echo "SSH_PORT=${SSH_PORT}" >> $GITHUB_ENV
+
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/zy_cn_key
           chmod 600 ~/.ssh/zy_cn_key
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p ${SSH_PORT} -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: 📦 同步应用代码
         run: |
@@ -108,12 +122,12 @@ jobs:
           echo "📦 部署目标: ${CN_PATH}"
 
           # 确保目标目录存在
-          ssh -i ~/.ssh/zy_cn_key \
+          ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }} \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
             "mkdir -p ${CN_PATH}/app"
 
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/zy_cn_key" \
+            -e "ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }}" \
             server/app/ \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:${CN_PATH}/app/
 
@@ -124,7 +138,7 @@ jobs:
 
           # 同步大脑核心文件到备用服务器
           rsync -avz \
-            -e "ssh -i ~/.ssh/zy_cn_key" \
+            -e "ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }}" \
             brain/ \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:${CN_PATH}/brain-backup/
 
@@ -133,7 +147,7 @@ jobs:
           CN_PATH="${{ secrets.ZY_CN_SERVER_PATH }}"
           CN_PATH="${CN_PATH:-${{ env.CN_DEFAULT_PATH }}}"
           COMMIT_SHA="${{ github.sha }}"
-          ssh -i ~/.ssh/zy_cn_key \
+          ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }} \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} << DEPLOY_CMD
 
           set -e
@@ -170,15 +184,19 @@ jobs:
       - name: 🔐 配置SSH
         env:
           SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          SSH_PORT="${CN_SSH_PORT:-22}"
+          echo "SSH_PORT=${SSH_PORT}" >> $GITHUB_ENV
+
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/zy_cn_key
           chmod 600 ~/.ssh/zy_cn_key
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p ${SSH_PORT} -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: 💚 执行健康检查
         run: |
-          ssh -i ~/.ssh/zy_cn_key \
+          ssh -i ~/.ssh/zy_cn_key -p ${{ env.SSH_PORT }} \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} << 'HEALTH_CMD'
 
           echo "═══ 冰朔大陆备用服务器健康报告 ═══"

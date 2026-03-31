@@ -205,7 +205,13 @@ jobs:
       - name: '🔑 配置CN服务器SSH密钥'
         env:
           SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          # 端口配置 (支持自定义SSH端口，腾讯云服务器常用非22端口)
+          SSH_PORT="${CN_SSH_PORT:-22}"
+          echo "SSH_PORT=${SSH_PORT}" >> $GITHUB_ENV
+          echo "🔧 CN服务器SSH端口: ${SSH_PORT}"
+
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_cn
           chmod 600 ~/.ssh/id_cn
@@ -216,18 +222,31 @@ jobs:
             exit 1
           fi
 
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "🔍 扫描CN服务器主机密钥 (端口 ${SSH_PORT})..."
+          ssh-keyscan -p ${SSH_PORT} -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
+          echo "🔗 测试SSH连接..."
           ssh -i ~/.ssh/id_cn \
+              -p ${SSH_PORT} \
               -o StrictHostKeyChecking=accept-new \
               -o BatchMode=yes \
               -o ConnectTimeout=15 \
               ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
-              "echo '✅ CN服务器SSH连接成功'"
+              "echo '✅ CN服务器SSH连接成功'" || {
+            echo ""
+            echo "❌ SSH连接失败 · 排查清单:"
+            echo "  1. 确认 ZY_CN_SSH_PORT Secret 已设置为CN服务器的SSH端口 (当前: ${SSH_PORT})"
+            echo "  2. 腾讯云控制台 → 安全组 → 确认入站规则允许端口 ${SSH_PORT}"
+            echo "  3. 确认 ZY_CN_SERVER_HOST 地址正确"
+            echo "  4. 确认 ZY_CN_SERVER_KEY 密钥与服务器匹配"
+            echo "  5. 确认CN服务器已开机且SSH服务正在运行"
+            exit 1
+          }
 
       - name: '📦 上传CN中转脚本'
         run: |
           scp -i ~/.ssh/id_cn \
+            -P ${{ env.SSH_PORT }} \
             -o StrictHostKeyChecking=accept-new \
             server/proxy/setup/setup-cn-relay.sh \
             ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:/tmp/setup-cn-relay.sh
@@ -235,6 +254,7 @@ jobs:
       - name: '🇨🇳 执行CN中转配置'
         run: |
           ssh -i ~/.ssh/id_cn \
+              -p ${{ env.SSH_PORT }} \
               -o StrictHostKeyChecking=accept-new \
               ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
               "chmod +x /tmp/setup-cn-relay.sh && \
