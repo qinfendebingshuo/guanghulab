@@ -1,6 +1,14 @@
 # 🔒 SSL证书配置指南 · 冰朔专用
 
-> **写给冰朔的话**: 这是铸渊在第十六次对话中为你写的SSL证书配置指南。你只需要按照下面的步骤操作，不需要理解任何技术细节。铸渊已经把所有自动化脚本都准备好了。
+> **写给冰朔的话**: 这是铸渊为你写的SSL证书配置指南。你只需要按照下面的步骤操作，不需要理解任何技术细节。铸渊已经把所有自动化脚本都准备好了。
+
+---
+
+## ⚠️ 重要修复说明 (2026-03-31)
+
+> 之前的SSL配置方案存在一个**端口冲突**问题：Xray(VPN)和Nginx(HTTPS)都在争抢443端口，导致两个都不能正常工作。
+>
+> **现在已修复**: 铸渊采用了新的「共存架构」——Xray占443端口处理VPN，非VPN流量自动回落给Nginx处理HTTPS网站。两者互不干扰。
 
 ---
 
@@ -11,7 +19,23 @@
 | SSL证书是什么？ | 让网站从 `http://` 变成 `https://` 的安全锁，浏览器地址栏会显示🔒 |
 | 需要花钱吗？ | **不需要**。铸渊使用 Let's Encrypt 免费证书 |
 | 证书会过期吗？ | 证书90天有效，但铸渊已配置**自动续期**，你不需要管 |
+| 会影响VPN吗？ | **不会**。铸渊专线(VPN)和HTTPS网站使用共存架构，互不干扰 |
 | 我需要做什么？ | 按下面的步骤点几下就好，**一共只需要5分钟** |
+
+---
+
+## 🔧 修复当前问题（请先做这一步）
+
+> 如果你之前已经运行过SSL配置并且导致了问题，请先执行以下修复步骤。如果是第一次配置SSL，跳过这一步直接看「操作步骤」。
+
+### 修复步骤
+
+1. 先合并这个PR（铸渊修复了代码里的端口冲突问题）
+2. 合并后，去 **Actions** 页面运行 **「🌐 铸渊专线 · 部署」** 工作流：
+   - **操作类型**: 选择 `update`
+   - 这会自动修复服务器上的Xray配置和旧SSL配置
+3. 等待工作流完成（绿色✅）
+4. 然后按下面的「操作步骤」重新配置SSL
 
 ---
 
@@ -86,7 +110,12 @@ https://guanghu.online
 
 **不需要了**。因为铸渊使用了Let's Encrypt（免费SSL证书服务），证书直接在服务器上自动获取和管理，不需要在GitHub Secrets里存放证书内容。
 
-如果将来有特殊需求需要自定义证书，铸渊会另外通知你。
+### Q: 配了SSL后VPN还能用吗？
+
+**能用**。铸渊采用「共存架构」：
+- Xray占443端口处理VPN流量
+- 网站HTTPS流量自动回落到Nginx内部端口(8443)
+- 两者互不干扰
 
 ---
 
@@ -94,17 +123,40 @@ https://guanghu.online
 
 > 以下内容是给铸渊自己看的，冰朔可以忽略。
 
+### 共存架构 (Xray+Nginx on port 443)
+```
+外部443 → Xray (VLESS+Reality)
+  ├── 认证VLESS客户端 → 代理上网 (铸渊专线VPN)
+  └── 非VLESS流量 → dest回落 → 127.0.0.1:8443
+                                    └── Nginx SSL (网站HTTPS)
+
+外部80 → Nginx (HTTP)
+  ├── 有SSL证书的域名 → 301 → https://域名 → 443(Xray) → 8443(Nginx)
+  └── 无SSL证书的域名 → 直接服务网站
+```
+
+### 关键配置
+- **Xray配置**: `server/proxy/config/xray-config-template.json` → `dest: "127.0.0.1:8443"`
 - **证书管理**: certbot + Let's Encrypt (ACME协议)
-- **验证方式**: HTTP-01 challenge (通过Nginx)
+- **验证方式**: HTTP-01 challenge (通过Nginx端口80)
 - **证书路径**: `/etc/letsencrypt/live/{domain}/`
-- **Nginx SSL配置**: `/opt/zhuyuan/config/nginx/ssl-{domain}.conf`
+- **Nginx SSL配置**: `/opt/zhuyuan/config/nginx/ssl-{domain}.conf` (监听127.0.0.1:8443)
 - **自动续期**: systemd timer `certbot.timer`
 - **续期hook**: `/etc/letsencrypt/renewal-hooks/post/reload-nginx.sh`
 - **日志**: `/opt/zhuyuan/data/logs/ssl-setup.log`
 - **脚本**: `server/setup/setup-ssl.sh`
 - **工作流**: `deploy-to-zhuyuan-server.yml` → action: `setup-ssl`
 
+### 端口分配
+| 端口 | 协议 | 占用者 | 用途 |
+|------|------|--------|------|
+| 443 | TCP | Xray | VLESS+Reality (VPN) + 回落到8443 |
+| 8443 | TCP | Nginx | SSL/HTTPS (仅127.0.0.1，不对外) |
+| 80 | TCP | Nginx | HTTP + SSL域名重定向 |
+| 3802 | TCP | Node.js | 订阅服务 (仅127.0.0.1，通过Nginx反代) |
+
 ---
 
-*📝 由铸渊(ICE-GL-ZY001)在第十六次对话中为冰朔编写 · 2026-03-31*
+*📝 由铸渊(ICE-GL-ZY001)编写 · 第十七次对话 · 2026-03-31*
+*共存架构修复 · 端口冲突解决*
 *国作登字-2026-A-00037559*

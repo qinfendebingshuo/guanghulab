@@ -240,11 +240,27 @@ health_check() {
         echo "  ❌ Xray: 未运行"
     fi
 
-    # 443端口
+    # 443端口 (应由Xray占用)
     if ss -tlnp | grep -q ":443 "; then
         echo "  ✅ 端口443: 监听中"
+        # 检查是谁占用443
+        PORT443_PROC=$(ss -tlnp | grep ":443 " | head -1)
+        if echo "$PORT443_PROC" | grep -q "xray"; then
+            echo "     → Xray占用443 (正确·VPN+HTTPS共存)"
+        elif echo "$PORT443_PROC" | grep -q "nginx"; then
+            echo "     ⚠️ Nginx占用443 (应由Xray占用·VPN可能不工作)"
+            echo "     → 请先停止Nginx的443监听，再启动Xray"
+        fi
     else
         echo "  ❌ 端口443: 未监听"
+    fi
+
+    # 8443端口 (Nginx SSL，接收Xray回落流量)
+    if ss -tlnp | grep -q ":8443 "; then
+        echo "  ✅ 端口8443: Nginx SSL监听中 (接收Xray回落)"
+    else
+        echo "  ℹ️ 端口8443: 未监听 (SSL未配置或Nginx未启用8443)"
+        echo "     → VPN正常工作，但HTTPS网站需要运行setup-ssl配置"
     fi
 
     # 订阅服务
@@ -270,6 +286,30 @@ update() {
 
     # 关闭3802外部端口 (订阅服务改为通过Nginx反代访问)
     ufw delete allow 3802/tcp 2>/dev/null || true
+
+    # 检查并修复443端口冲突
+    # 如果Nginx占用了443端口(旧SSL配置)，需要修复
+    if ss -tlnp | grep ":443 " | grep -q "nginx"; then
+        echo "⚠️ 检测到Nginx占用443端口 (旧SSL配置冲突)"
+        echo "  检查并修复旧SSL配置..."
+
+        # 移除可能监听443的旧SSL配置
+        for conf in /etc/nginx/sites-enabled/ssl-*.conf; do
+            if [ -f "$conf" ] && grep -q "listen 443" "$conf" 2>/dev/null; then
+                echo "  修复: $conf (将443改为127.0.0.1:8443)"
+                sed -i 's/listen 443 ssl/listen 127.0.0.1:8443 ssl/g' "$conf"
+                # 同时修复sites-available中的源文件
+                local basename
+                basename=$(basename "$conf")
+                if [ -f "/etc/nginx/sites-available/$basename" ]; then
+                    sed -i 's/listen 443 ssl/listen 127.0.0.1:8443 ssl/g' "/etc/nginx/sites-available/$basename"
+                fi
+            fi
+        done
+
+        nginx -t 2>/dev/null && nginx -s reload 2>/dev/null || true
+        echo "  ✅ Nginx SSL配置已修复为8443内部端口"
+    fi
 
     systemctl restart xray
     pm2 restart zy-proxy-sub zy-proxy-monitor zy-proxy-guardian 2>/dev/null || true
