@@ -45,6 +45,20 @@ EOF
     fi
 }
 
+# ── 共用: 保存ZY_SERVER_HOST到密钥文件 ──
+save_server_host() {
+    KEYS_FILE="$PROXY_DIR/.env.keys"
+    if [ -n "${ZY_SERVER_HOST:-}" ] && [ -f "$KEYS_FILE" ]; then
+        if ! grep -q "^ZY_SERVER_HOST=" "$KEYS_FILE" 2>/dev/null; then
+            echo "ZY_SERVER_HOST=$ZY_SERVER_HOST" >> "$KEYS_FILE"
+            echo "  ✅ ZY_SERVER_HOST 已写入密钥文件"
+        else
+            # 更新已有的值
+            sed -i "s|^ZY_SERVER_HOST=.*|ZY_SERVER_HOST=${ZY_SERVER_HOST:-}|" "$KEYS_FILE"
+        fi
+    fi
+}
+
 # ── 共用: 确保日志目录权限正确 ──
 ensure_log_permissions() {
     mkdir -p "$PROXY_DIR/logs"
@@ -66,6 +80,7 @@ install() {
 
     echo ""
     echo "═══ [3/7] 启动Xray服务 ═══"
+    save_server_host
     ensure_xray_root_user
     ensure_log_permissions
 
@@ -166,21 +181,60 @@ deploy_services() {
 
 # ── 配置Nginx ─────────────────────────────────
 configure_nginx() {
-    # 检查Nginx配置片段是否已添加
-    NGINX_CONF="/etc/nginx/sites-enabled/default"
+    # 检查主Nginx配置文件
+    NGINX_CONF=""
+    for conf in /etc/nginx/sites-enabled/zhuyuan-sovereign.conf \
+                /etc/nginx/sites-enabled/default \
+                /etc/nginx/conf.d/default.conf; do
+        if [ -f "$conf" ]; then
+            NGINX_CONF="$conf"
+            break
+        fi
+    done
+
+    if [ -z "$NGINX_CONF" ]; then
+        echo "  ⚠️ 未找到Nginx配置文件，跳过Nginx配置"
+        return 0
+    fi
+
     SNIPPET="$REPO_PROXY_DIR/config/nginx-proxy-snippet.conf"
 
-    if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
-        echo "  添加Nginx代理订阅反向代理..."
-        # 在最后一个 } 之前插入
-        # 注意: 实际应该由铸渊智能合并到主nginx配置
-        echo "  ⚠️ 请手动将以下配置添加到Nginx:"
-        echo "  $SNIPPET"
+    if grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
+        echo "  ✅ Nginx代理订阅配置已存在"
     else
-        echo "  Nginx代理配置已存在"
+        echo "  添加Nginx代理订阅反向代理..."
+        # 在第一个 location /api/ 之前插入代理订阅配置
+        # 使用临时文件方式确保可靠插入
+        TMPCONF=$(mktemp)
+        INSERTED=0
+        while IFS= read -r line; do
+            # 在第一个 location /api/ 之前插入
+            if [ "$INSERTED" -eq 0 ] && echo "$line" | grep -q "location /api/"; then
+                echo "" >> "$TMPCONF"
+                echo "    # §1.1 铸渊专线订阅服务反向代理 (自动添加)" >> "$TMPCONF"
+                sed 's/^/    /' "$SNIPPET" >> "$TMPCONF"
+                echo "" >> "$TMPCONF"
+                INSERTED=1
+            fi
+            echo "$line" >> "$TMPCONF"
+        done < "$NGINX_CONF"
+
+        if [ "$INSERTED" -eq 1 ]; then
+            cp "$TMPCONF" "$NGINX_CONF"
+            echo "  ✅ Nginx代理配置已自动添加"
+        else
+            echo "  ⚠️ 未找到 location /api/ 插入点，请手动添加"
+            echo "  配置文件: $SNIPPET"
+        fi
+        rm -f "$TMPCONF"
     fi
+
     if nginx -t 2>/dev/null; then
         nginx -s reload || true
+        echo "  ✅ Nginx配置验证通过并重载"
+    else
+        echo "  ⚠️ Nginx配置验证失败，请手动检查:"
+        nginx -t 2>&1 || true
     fi
 }
 
@@ -237,6 +291,7 @@ update() {
     deploy_services
     configure_xray
 
+    save_server_host
     ensure_xray_root_user
     ensure_log_permissions
 

@@ -52,9 +52,9 @@ function loadKeys() {
 
 // ── 获取服务器IP ────────────────────────────
 // ⚠️ 仓库公开，不在代码中硬编码IP
-// 从环境变量读取，部署时由PM2或GitHub Secrets注入
-function getServerHost() {
-  const host = process.env.ZY_SERVER_HOST;
+// 优先环境变量，其次从密钥文件读取，部署时自动写入
+function getServerHost(keys) {
+  const host = process.env.ZY_SERVER_HOST || (keys && keys.ZY_SERVER_HOST);
   if (!host) {
     console.error('⚠️ ZY_SERVER_HOST 未设置');
     return '0.0.0.0';
@@ -227,7 +227,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    const serverHost = getServerHost();
+    const serverHost = getServerHost(keys);
     const quota = getQuotaInfo();
     const clientType = detectClientType(req.headers['user-agent']);
     const userInfoHeader = generateUserInfoHeader(quota);
@@ -282,8 +282,8 @@ const server = http.createServer((req, res) => {
   res.end('Not Found');
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`🌐 铸渊专线订阅服务已启动: http://127.0.0.1:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌐 铸渊专线订阅服务已启动: http://0.0.0.0:${PORT}`);
   console.log(`  订阅端点: /sub/{token}`);
   console.log(`  配额查询: /quota`);
   console.log(`  健康检查: /health`);
