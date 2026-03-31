@@ -68,7 +68,12 @@ if ! command -v nginx &>/dev/null; then
     apt-get install -y -qq nginx
 fi
 
-# 检查stream模块是否可用
+# Ubuntu/Debian: stream模块通常是独立的动态模块包 (libnginx-mod-stream)
+# 必须显式安装，即使nginx -V显示--with-stream也只表示编译支持，不代表模块已安装
+log_info "确保stream动态模块包已安装..."
+apt-get install -y -qq libnginx-mod-stream 2>/dev/null || true
+
+# 验证stream模块是否可用
 if nginx -V 2>&1 | grep -q "with-stream"; then
     log_info "✅ Nginx stream模块已可用"
 else
@@ -86,30 +91,67 @@ fi
 
 # 检查是否需要动态加载stream模块
 # Ubuntu/Debian的Nginx通常将stream编译为动态模块(.so)，需要用load_module显式加载
+# 有两种加载机制:
+#   1. modules-enabled目录: /etc/nginx/modules-enabled/ (Debian/Ubuntu自动加载)
+#   2. 手动load_module: 在nginx.conf顶部显式加载.so文件
 NGINX_MAIN="/etc/nginx/nginx.conf"
-STREAM_MODULE_PATH=""
-for mod_path in \
-    /usr/lib/nginx/modules/ngx_stream_module.so \
-    /usr/lib64/nginx/modules/ngx_stream_module.so \
-    /etc/nginx/modules/ngx_stream_module.so; do
-    if [ -f "$mod_path" ]; then
-        STREAM_MODULE_PATH="$mod_path"
-        break
-    fi
-done
 
-if [ -n "$STREAM_MODULE_PATH" ]; then
-    if ! grep -q "ngx_stream_module" "$NGINX_MAIN" 2>/dev/null; then
+# 检查modules-enabled是否已自动加载stream模块
+# (libnginx-mod-stream安装时通常会在modules-enabled/创建符号链接)
+STREAM_ALREADY_LOADED=false
+if [ -d /etc/nginx/modules-enabled ]; then
+    if grep -rq "ngx_stream_module" /etc/nginx/modules-enabled/ 2>/dev/null; then
+        log_info "✅ stream模块已通过modules-enabled自动加载"
+        STREAM_ALREADY_LOADED=true
+    fi
+fi
+
+# 如果modules-enabled没有自动加载，手动查找并加载.so文件
+if [ "$STREAM_ALREADY_LOADED" = false ]; then
+    # 检查nginx.conf是否已包含load_module指令
+    if grep -q "ngx_stream_module" "$NGINX_MAIN" 2>/dev/null; then
+        log_info "✅ stream动态模块已在nginx.conf中加载"
+        STREAM_ALREADY_LOADED=true
+    fi
+fi
+
+if [ "$STREAM_ALREADY_LOADED" = false ]; then
+    STREAM_MODULE_PATH=""
+    for mod_path in \
+        /usr/lib/nginx/modules/ngx_stream_module.so \
+        /usr/lib64/nginx/modules/ngx_stream_module.so \
+        /etc/nginx/modules/ngx_stream_module.so \
+        /usr/share/nginx/modules/ngx_stream_module.so; do
+        if [ -f "$mod_path" ]; then
+            STREAM_MODULE_PATH="$mod_path"
+            break
+        fi
+    done
+
+    # 使用find作为最后回退手段
+    if [ -z "$STREAM_MODULE_PATH" ]; then
+        STREAM_MODULE_PATH=$(find /usr/lib /usr/lib64 /usr/share /etc/nginx -name "ngx_stream_module.so" 2>/dev/null | head -1)
+    fi
+
+    if [ -n "$STREAM_MODULE_PATH" ]; then
         log_info "加载stream动态模块: $STREAM_MODULE_PATH"
         # load_module必须在nginx.conf最顶部(events块之前)
         sed -i "1i load_module $STREAM_MODULE_PATH;" "$NGINX_MAIN"
         log_info "✅ stream动态模块已加载"
     else
-        log_info "✅ stream动态模块已在配置中"
+        log_warn "未找到ngx_stream_module.so文件"
+        log_warn "尝试启用modules-available中的stream配置..."
+        # 某些系统在modules-available但未启用
+        if [ -f /usr/share/nginx/modules-available/mod-stream.conf ]; then
+            ln -sf /usr/share/nginx/modules-available/mod-stream.conf /etc/nginx/modules-enabled/
+            log_info "✅ 已从modules-available启用stream模块"
+        elif [ -f /etc/nginx/modules-available/mod-stream.conf ]; then
+            ln -sf /etc/nginx/modules-available/mod-stream.conf /etc/nginx/modules-enabled/
+            log_info "✅ 已从modules-available启用stream模块"
+        else
+            log_warn "stream模块可能为静态编译，继续配置..."
+        fi
     fi
-else
-    # 没有找到.so文件，可能是静态编译的，继续
-    log_info "stream模块为静态编译或路径非标准，跳过load_module"
 fi
 
 # ── §2 配置Nginx stream中转 ──────────────────
@@ -222,13 +264,60 @@ log_info "✅ 防火墙已开放: 80(HTTP) + ${RELAY_PORT}(VPN中转)"
 # ── §5 测试配置并重载 ────────────────────────
 log_step "§5 测试并应用配置"
 
-if nginx -t 2>&1; then
+NGINX_TEST_OUTPUT=$(nginx -t 2>&1)
+if echo "$NGINX_TEST_OUTPUT" | grep -q "test is successful"; then
     systemctl reload nginx
     log_info "✅ Nginx配置测试通过 · 已重载"
 else
-    log_error "Nginx配置测试失败"
-    nginx -t 2>&1
-    exit 1
+    log_warn "Nginx配置测试未通过，尝试自动修复..."
+    echo "$NGINX_TEST_OUTPUT"
+
+    # 修复: 如果stream指令未知，说明load_module缺失
+    if echo "$NGINX_TEST_OUTPUT" | grep -q 'unknown directive "stream"'; then
+        log_info "检测到stream指令未识别，尝试修复模块加载..."
+
+        # 强制安装stream模块包
+        apt-get update -qq
+        apt-get install -y -qq libnginx-mod-stream 2>/dev/null || true
+
+        # 再次搜索.so文件
+        RETRY_MODULE_PATH=$(find /usr/lib /usr/lib64 /usr/share /etc/nginx -name "ngx_stream_module.so" 2>/dev/null | head -1)
+
+        if [ -n "$RETRY_MODULE_PATH" ]; then
+            if ! grep -q "ngx_stream_module" "$NGINX_MAIN" 2>/dev/null; then
+                sed -i "1i load_module $RETRY_MODULE_PATH;" "$NGINX_MAIN"
+                log_info "已添加load_module: $RETRY_MODULE_PATH"
+            fi
+        fi
+
+        # 检查modules-enabled
+        if [ -d /etc/nginx/modules-enabled ]; then
+            for avail in /usr/share/nginx/modules-available/mod-stream.conf \
+                         /etc/nginx/modules-available/mod-stream.conf; do
+                if [ -f "$avail" ]; then
+                    ln -sf "$avail" /etc/nginx/modules-enabled/
+                    log_info "已启用: $avail"
+                    break
+                fi
+            done
+        fi
+    fi
+
+    # 重新测试
+    if nginx -t 2>&1; then
+        systemctl reload nginx
+        log_info "✅ 自动修复成功 · Nginx已重载"
+    else
+        log_error "Nginx配置测试失败 (自动修复未能解决)"
+        nginx -t 2>&1
+        echo ""
+        log_error "请检查以下可能原因:"
+        echo "  1. libnginx-mod-stream 包是否可用: dpkg -l | grep libnginx"
+        echo "  2. 模块文件是否存在: find / -name 'ngx_stream_module.so' 2>/dev/null"
+        echo "  3. nginx.conf内容: cat /etc/nginx/nginx.conf"
+        echo "  4. modules-enabled目录: ls -la /etc/nginx/modules-enabled/"
+        exit 1
+    fi
 fi
 
 # ── §6 保存中转状态 ──────────────────────────
