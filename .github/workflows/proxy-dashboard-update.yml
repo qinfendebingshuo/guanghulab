@@ -1,0 +1,69 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 📊 铸渊专线 · 每日仪表盘自动更新
+#
+# 每天UTC 0:00 (北京时间08:00) 自动更新README仪表盘
+# 从SG服务器获取最新流量数据
+# ═══════════════════════════════════════════════
+
+name: '📊 铸渊专线 · 仪表盘'
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天UTC 0:00 = 北京08:00
+  workflow_dispatch:      # 手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    name: '📊 更新流量仪表盘'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ZY_GITHUB_PAT }}
+
+      - name: '🔑 配置SSH'
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: '📊 获取流量数据'
+        run: |
+          ssh -i ~/.ssh/id_deploy \
+              -o StrictHostKeyChecking=accept-new \
+              -o ConnectTimeout=15 \
+              ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
+              "cat /opt/zhuyuan/proxy/data/quota-status.json 2>/dev/null || echo '{}'" \
+              > /tmp/quota-status.json 2>/dev/null || echo '{}' > /tmp/quota-status.json
+
+      - name: '📝 更新README'
+        run: |
+          node server/proxy/dashboard/update-dashboard.js --json /tmp/quota-status.json
+
+      - name: '📤 提交'
+        run: |
+          git config user.name "铸渊 · ZhuYuan"
+          git config user.email "zhuyuan-bot@guanghulab.com"
+
+          if git diff --quiet README.md 2>/dev/null; then
+            echo "仪表盘无变化"
+          else
+            git add README.md
+            git commit -m "📊 铸渊专线仪表盘 · $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - name: '🧹 清理'
+        if: always()
+        run: rm -f ~/.ssh/id_deploy /tmp/quota-status.json
