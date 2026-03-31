@@ -148,6 +148,8 @@ function generateClashYaml(keys, serverHost) {
   const cnRelayPort = getCnRelayPort();
 
   // CN中转节点 (如果已配置)
+  // 注: CN中转是透明TCP转发(CN:2053 → SG:443)，所以Reality设置仍指向SG的配置
+  // servername/public-key/short-id 与SG直连节点完全相同，因为TLS握手实际发生在SG端
   const cnProxyBlock = cnRelayHost ? `
   - name: "🇨🇳 铸渊专线-CN中转"
     type: vless

@@ -300,7 +300,8 @@ update() {
 
         # 移除旧的SSL配置 (不再通过Xray回落提供HTTPS)
         for conf in /etc/nginx/sites-enabled/ssl-*.conf; do
-            if [ -f "$conf" ] && grep -q "listen.*443\|listen.*8443" "$conf" 2>/dev/null; then
+            [ -e "$conf" ] || continue
+            if grep -q "listen.*443\|listen.*8443" "$conf" 2>/dev/null; then
                 echo "  移除旧SSL配置: $conf"
                 rm -f "$conf"
             fi
