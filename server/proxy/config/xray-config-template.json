@@ -1,11 +1,19 @@
 {
   "_comment": "铸渊专线 · Xray服务端配置模板",
   "_note": "⚠️ {{占位符}}在部署时由脚本替换为实际值",
+  "_architecture": "Xray监听443端口·非VLESS流量回落到www.microsoft.com:443(Reality反探测伪装)·VPN与网站HTTP(80端口)共存",
   "_copyright": "国作登字-2026-A-00037559",
   "log": {
     "loglevel": "warning",
     "access": "/opt/zhuyuan/proxy/logs/access.log",
     "error": "/opt/zhuyuan/proxy/logs/error.log"
+  },
+  "dns": {
+    "servers": [
+      "8.8.8.8",
+      "1.1.1.1",
+      "localhost"
+    ]
   },
   "stats": {},
   "api": {

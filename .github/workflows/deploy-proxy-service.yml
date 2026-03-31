@@ -24,6 +24,7 @@ on:
           - restart
           - send-subscription
           - update-dashboard
+          - setup-cn-relay
         default: 'status'
       email:
         description: '目标邮箱 (仅send-subscription时需要)'
@@ -89,6 +90,7 @@ jobs:
               ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
               "cd /opt/zhuyuan/proxy-deploy && \
                export ZY_SERVER_HOST='${{ secrets.ZY_SERVER_HOST }}' && \
+               export ZY_CN_RELAY_HOST='${{ secrets.ZY_CN_SERVER_HOST }}' && \
                bash deploy-proxy.sh ${{ github.event.inputs.action }}"
 
       - name: '🧹 清理SSH密钥'
@@ -189,3 +191,76 @@ jobs:
       - name: '🧹 清理'
         if: always()
         run: rm -f ~/.ssh/id_deploy /tmp/quota-status.json
+
+  # ═══ §4 CN中转配置 ═══
+  setup-cn-relay:
+    name: '🇨🇳 CN中转配置'
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'setup-cn-relay'
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置CN服务器SSH密钥'
+        env:
+          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_cn
+
+          if ! head -1 ~/.ssh/id_cn | grep -q "BEGIN"; then
+            echo "❌ CN服务器SSH密钥格式异常"
+            echo "  请检查 ZY_CN_SERVER_KEY Secret"
+            exit 1
+          fi
+
+          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          ssh -i ~/.ssh/id_cn \
+              -o StrictHostKeyChecking=accept-new \
+              -o BatchMode=yes \
+              -o ConnectTimeout=15 \
+              ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
+              "echo '✅ CN服务器SSH连接成功'"
+
+      - name: '📦 上传CN中转脚本'
+        run: |
+          scp -i ~/.ssh/id_cn \
+            -o StrictHostKeyChecking=accept-new \
+            server/proxy/setup/setup-cn-relay.sh \
+            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:/tmp/setup-cn-relay.sh
+
+      - name: '🇨🇳 执行CN中转配置'
+        run: |
+          ssh -i ~/.ssh/id_cn \
+              -o StrictHostKeyChecking=accept-new \
+              ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
+              "chmod +x /tmp/setup-cn-relay.sh && \
+               export ZY_SG_SERVER_HOST='${{ secrets.ZY_SERVER_HOST }}' && \
+               sudo -E bash /tmp/setup-cn-relay.sh"
+
+      - name: '💚 CN中转验证'
+        run: |
+          CN_HOST="${{ secrets.ZY_CN_SERVER_HOST }}"
+          echo "🔍 验证CN中转..."
+
+          # 检查中转端口
+          if nc -z -w5 "$CN_HOST" 2053 2>/dev/null; then
+            echo "✅ CN中转端口 2053: 可达"
+          else
+            echo "⚠️ CN中转端口 2053: 暂不可达 (可能需要等待防火墙生效)"
+          fi
+
+          # 检查HTTP健康
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" "http://${CN_HOST}/health" 2>/dev/null || echo "000")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ CN HTTP健康检查: 正常"
+          else
+            echo "⚠️ CN HTTP: 状态码 $HTTP_CODE (可能需要等待)"
+          fi
+
+      - name: '🧹 清理SSH密钥'
+        if: always()
+        run: rm -f ~/.ssh/id_cn

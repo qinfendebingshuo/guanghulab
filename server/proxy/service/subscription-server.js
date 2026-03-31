@@ -80,6 +80,34 @@ function getServerHost() {
   return '0.0.0.0';
 }
 
+// ── 获取CN中转服务器信息 ─────────────────────
+// 优先级: 环境变量 > .env.keys文件
+function getCnRelayHost() {
+  // 1. 从环境变量读取
+  if (process.env.ZY_CN_RELAY_HOST) {
+    return process.env.ZY_CN_RELAY_HOST;
+  }
+
+  // 2. 从.env.keys文件读取
+  try {
+    const content = fs.readFileSync(KEYS_FILE, 'utf8');
+    for (const line of content.split('\n')) {
+      if (line.startsWith('#') || !line.includes('=')) continue;
+      const [key, ...vals] = line.split('=');
+      if (key.trim() === 'ZY_CN_RELAY_HOST') {
+        const val = vals.join('=').trim();
+        if (val) return val;
+      }
+    }
+  } catch (err) { /* ignore */ }
+
+  return null; // CN中转未配置
+}
+
+function getCnRelayPort() {
+  return parseInt(process.env.ZY_CN_RELAY_PORT || '2053', 10);
+}
+
 // ── 读取流量配额信息 ────────────────────────
 function getQuotaInfo() {
   const quotaFile = path.join(DATA_DIR, 'quota-status.json');
@@ -116,9 +144,45 @@ function generateVlessUri(keys, serverHost) {
 
 // ── 生成Clash YAML配置 ───────────────────────
 function generateClashYaml(keys, serverHost) {
+  const cnRelayHost = getCnRelayHost();
+  const cnRelayPort = getCnRelayPort();
+
+  // CN中转节点 (如果已配置)
+  // 注: CN中转是透明TCP转发(CN:2053 → SG:443)，所以Reality设置仍指向SG的配置
+  // servername/public-key/short-id 与SG直连节点完全相同，因为TLS握手实际发生在SG端
+  const cnProxyBlock = cnRelayHost ? `
+  - name: "🇨🇳 铸渊专线-CN中转"
+    type: vless
+    server: ${cnRelayHost}
+    port: ${cnRelayPort}
+    uuid: ${keys.ZY_PROXY_UUID}
+    network: tcp
+    tls: true
+    udp: true
+    flow: xtls-rprx-vision
+    servername: www.microsoft.com
+    reality-opts:
+      public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
+      short-id: ${keys.ZY_PROXY_REALITY_SHORT_ID}
+    client-fingerprint: chrome` : '';
+
+  // 代理组中的节点列表
+  const proxyList = cnRelayHost
+    ? `      - "🇨🇳 铸渊专线-CN中转"
+      - "🏛️ 铸渊专线-SG直连"`
+    : '      - "🏛️ 铸渊专线-SG直连"';
+
+  const proxyListWithDirect = cnRelayHost
+    ? `      - "🇨🇳 铸渊专线-CN中转"
+      - "🏛️ 铸渊专线-SG直连"
+      - DIRECT`
+    : `      - "🏛️ 铸渊专线-SG直连"
+      - DIRECT`;
+
   return `# 铸渊专线 · ZY-Proxy Subscription
 # 自动生成 · ${new Date().toISOString()}
 # ⚠️ 请勿分享此配置
+${cnRelayHost ? `# 🇨🇳 包含CN中转节点 (国内直连广州→转发新加坡)` : ''}
 
 port: 7890
 socks-port: 7891
@@ -127,7 +191,7 @@ mode: rule
 log-level: info
 
 proxies:
-  - name: "🏛️ 铸渊专线-SG"
+  - name: "🏛️ 铸渊专线-SG直连"
     type: vless
     server: ${serverHost}
     port: 443
@@ -141,23 +205,23 @@ proxies:
       public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
       short-id: ${keys.ZY_PROXY_REALITY_SHORT_ID}
     client-fingerprint: chrome
+${cnProxyBlock}
 
 proxy-groups:
   - name: "🌐 铸渊专线"
     type: select
     proxies:
-      - "🏛️ 铸渊专线-SG"
-      - DIRECT
+${proxyListWithDirect}
 
   - name: "🤖 AI服务"
     type: select
     proxies:
-      - "🏛️ 铸渊专线-SG"
+${proxyList}
 
   - name: "💻 开发工具"
     type: select
     proxies:
-      - "🏛️ 铸渊专线-SG"
+${proxyList}
 
 rules:
   # AI服务
