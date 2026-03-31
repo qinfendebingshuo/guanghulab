@@ -143,16 +143,35 @@ jobs:
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/app/
 
       - name: 📦 同步配置文件
+        env:
+          ZY_DOMAIN_MAIN: ${{ secrets.ZY_DOMAIN_MAIN }}
+          ZY_DOMAIN_PREVIEW: ${{ secrets.ZY_DOMAIN_PREVIEW }}
         run: |
           # PM2 配置
           scp -i ~/.ssh/zy_key \
             server/ecosystem.config.js \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/config/pm2/
 
-          # Nginx 配置
+          # Nginx 配置 — 注入域名
+          cp server/nginx/zhuyuan-sovereign.conf /tmp/zhuyuan-sovereign.conf
+          if [ -n "$ZY_DOMAIN_MAIN" ]; then
+            sed -i "s/ZY_DOMAIN_MAIN_PLACEHOLDER/$ZY_DOMAIN_MAIN/g" /tmp/zhuyuan-sovereign.conf
+            echo "✅ 主域名已注入: $ZY_DOMAIN_MAIN"
+          else
+            echo "⚠️ ZY_DOMAIN_MAIN 未配置，使用IP访问"
+            sed -i "s/ZY_DOMAIN_MAIN_PLACEHOLDER//g" /tmp/zhuyuan-sovereign.conf
+          fi
+          if [ -n "$ZY_DOMAIN_PREVIEW" ]; then
+            sed -i "s/ZY_DOMAIN_PREVIEW_PLACEHOLDER/$ZY_DOMAIN_PREVIEW/g" /tmp/zhuyuan-sovereign.conf
+            echo "✅ 预览域名已注入: $ZY_DOMAIN_PREVIEW"
+          else
+            echo "⚠️ ZY_DOMAIN_PREVIEW 未配置，预览站使用默认server_name"
+            # Nginx中 _ 是标准的catch-all server_name，不匹配任何实际域名
+            sed -i "s/ZY_DOMAIN_PREVIEW_PLACEHOLDER/_/g" /tmp/zhuyuan-sovereign.conf
+          fi
           scp -i ~/.ssh/zy_key \
-            server/nginx/zhuyuan-sovereign.conf \
-            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/config/nginx/
+            /tmp/zhuyuan-sovereign.conf \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf
 
       - name: 📥 安装依赖 & 重启
         run: |
