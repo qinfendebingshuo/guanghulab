@@ -87,7 +87,9 @@ jobs:
           ssh -i ~/.ssh/id_deploy \
               -o StrictHostKeyChecking=accept-new \
               ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
-              "cd /opt/zhuyuan/proxy-deploy && bash deploy-proxy.sh ${{ github.event.inputs.action }}"
+              "cd /opt/zhuyuan/proxy-deploy && \
+               export ZY_SERVER_HOST='${{ secrets.ZY_SERVER_HOST }}' && \
+               bash deploy-proxy.sh ${{ github.event.inputs.action }}"
 
       - name: '🧹 清理SSH密钥'
         if: always()

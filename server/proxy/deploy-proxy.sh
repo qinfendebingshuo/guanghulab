@@ -51,6 +51,29 @@ ensure_log_permissions() {
     chmod 755 "$PROXY_DIR/logs"
 }
 
+# ── 共用: 保存ZY_SERVER_HOST到.env.keys ──
+save_server_host() {
+    KEYS_FILE="$PROXY_DIR/.env.keys"
+    if [ -n "${ZY_SERVER_HOST:-}" ] && [ -f "$KEYS_FILE" ]; then
+        # 检查是否已存在
+        if grep -q "^ZY_SERVER_HOST=" "$KEYS_FILE" 2>/dev/null; then
+            # 更新已有的值
+            sed -i "s|^ZY_SERVER_HOST=.*|ZY_SERVER_HOST=${ZY_SERVER_HOST}|" "$KEYS_FILE"
+        else
+            # 追加新行
+            echo "" >> "$KEYS_FILE"
+            echo "# 服务器地址 (部署时自动写入)" >> "$KEYS_FILE"
+            echo "ZY_SERVER_HOST=${ZY_SERVER_HOST}" >> "$KEYS_FILE"
+        fi
+        echo "  ✅ ZY_SERVER_HOST 已保存到 .env.keys"
+    elif [ -n "${ZY_SERVER_HOST:-}" ] && [ ! -f "$KEYS_FILE" ]; then
+        echo "  ⚠️ .env.keys 不存在，创建并写入 ZY_SERVER_HOST"
+        echo "# 服务器地址 (部署时自动写入)" > "$KEYS_FILE"
+        echo "ZY_SERVER_HOST=${ZY_SERVER_HOST}" >> "$KEYS_FILE"
+        chmod 600 "$KEYS_FILE"
+    fi
+}
+
 # ── install: 首次完整安装 ─────────────────────
 install() {
     echo ""
@@ -83,6 +106,7 @@ install() {
     echo ""
     echo "═══ [4/7] 部署代理服务代码 ═══"
     deploy_services
+    save_server_host
 
     echo ""
     echo "═══ [5/7] 配置Nginx ═══"
@@ -166,21 +190,24 @@ deploy_services() {
 
 # ── 配置Nginx ─────────────────────────────────
 configure_nginx() {
-    # 检查Nginx配置片段是否已添加
+    # 检查主Nginx配置是否已有proxy-sub
     NGINX_CONF="/etc/nginx/sites-enabled/default"
-    SNIPPET="$REPO_PROXY_DIR/config/nginx-proxy-snippet.conf"
 
-    if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
-        echo "  添加Nginx代理订阅反向代理..."
-        # 在最后一个 } 之前插入
-        # 注意: 实际应该由铸渊智能合并到主nginx配置
-        echo "  ⚠️ 请手动将以下配置添加到Nginx:"
-        echo "  $SNIPPET"
+    if [ -f "$NGINX_CONF" ] && ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
+        echo "  添加Nginx代理订阅反向代理配置..."
+        # 在第一个 location = /health 之前插入 proxy-sub location
+        sed -i '/# ─── 健康探针 ───/{
+            # 只在第一次匹配时插入
+            i\    # ─── 铸渊专线订阅服务 (端口 3802) ───\n    location /api/proxy-sub/ {\n        proxy_pass http://127.0.0.1:3802/;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        add_header X-Content-Type-Options nosniff always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n
+        }' "$NGINX_CONF" || true
+        echo "  ✅ Nginx proxy-sub配置已注入"
     else
-        echo "  Nginx代理配置已存在"
+        echo "  Nginx代理配置已存在 (或主配置不存在)"
     fi
+
     if nginx -t 2>/dev/null; then
         nginx -s reload || true
+        echo "  ✅ Nginx配置验证通过并已重载"
     fi
 }
 
@@ -235,6 +262,7 @@ health_check() {
 update() {
     echo "更新代理服务..."
     deploy_services
+    save_server_host
     configure_xray
 
     ensure_xray_root_user

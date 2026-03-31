@@ -386,13 +386,13 @@ async function executeTask(taskDescription, taskType, preferredBackend, contextF
     if (fallbacks.length > 0) {
       console.log(`🔄 尝试回退到: ${fallbacks[0].name}`);
       try {
-        const result = await callLLM(fallbacks[0], fallbacks[0].models[0] || 'default', systemPrompt, userMessage);
+        const result = await callLLM(fallbacks[0], fallbacks[0].model || 'default', systemPrompt, userMessage);
         console.log('');
         console.log('═'.repeat(60));
         console.log('📤 LLM 响应 (回退模型):');
         console.log('═'.repeat(60));
         console.log(result);
-        console.log(`✅ 回退成功 · 模型: ${fallbacks[0].name}/${fallbacks[0].models[0]}`);
+        console.log(`✅ 回退成功 · 模型: ${fallbacks[0].name}/${fallbacks[0].model}`);
         return result;
       } catch (fallbackErr) {
         console.error(`❌ 回退也失败: ${fallbackErr.message}`);
@@ -421,12 +421,12 @@ function showStatus() {
   for (const backend of MODEL_BACKENDS) {
     const isAvailable = available.find(a => a.name === backend.name);
     const icon = isAvailable ? '✅' : '⏭️ ';
-    console.log(`  ${icon} ${backend.name} (${backend.envKey})`);
+    console.log(`  ${icon} ${backend.name} (${backend.model})`);
     console.log(`     说明: ${backend.description || '(无)'}`);
     console.log(`     强项: ${backend.strengths.join(', ')}`);
     console.log(`     成本: ${backend.costTier}`);
-    if (isAvailable && backend.models.length > 0) {
-      console.log(`     模型: ${backend.models.join(', ')}`);
+    if (isAvailable && backend.model) {
+      console.log(`     模型: ${backend.model}`);
     }
   }
 

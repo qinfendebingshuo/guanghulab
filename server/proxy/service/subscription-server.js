@@ -11,7 +11,7 @@
 //   - Clash YAML (Clash Verge / ClashMi)
 //   - Base64 URI (Shadowrocket)
 //
-// 端口: 3802 (仅本地访问，通过Nginx反代)
+// 端口: 3802 (绑定0.0.0.0，支持外部直连 + Nginx反代)
 // 认证: URL中的token参数
 //
 // 环境变量 (从 /opt/zhuyuan/proxy/.env.keys 加载):
@@ -52,14 +52,32 @@ function loadKeys() {
 
 // ── 获取服务器IP ────────────────────────────
 // ⚠️ 仓库公开，不在代码中硬编码IP
-// 从环境变量读取，部署时由PM2或GitHub Secrets注入
+// 优先级: 环境变量 > .env.keys文件 > 回退
 function getServerHost() {
-  const host = process.env.ZY_SERVER_HOST;
-  if (!host) {
-    console.error('⚠️ ZY_SERVER_HOST 未设置');
-    return '0.0.0.0';
+  // 1. 优先从环境变量读取
+  if (process.env.ZY_SERVER_HOST) {
+    return process.env.ZY_SERVER_HOST;
   }
-  return host;
+
+  // 2. 从.env.keys文件读取
+  try {
+    const content = fs.readFileSync(KEYS_FILE, 'utf8');
+    for (const line of content.split('\n')) {
+      if (line.startsWith('#') || !line.includes('=')) continue;
+      const [key, ...vals] = line.split('=');
+      if (key.trim() === 'ZY_SERVER_HOST') {
+        const val = vals.join('=').trim();
+        if (val) return val;
+      }
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error(`⚠️ 读取 ${KEYS_FILE} 失败: ${err.code || err.message}`);
+    }
+  }
+
+  console.error('⚠️ ZY_SERVER_HOST 未设置 (环境变量和.env.keys均未找到)');
+  return '0.0.0.0';
 }
 
 // ── 读取流量配额信息 ────────────────────────
@@ -282,8 +300,8 @@ const server = http.createServer((req, res) => {
   res.end('Not Found');
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`🌐 铸渊专线订阅服务已启动: http://127.0.0.1:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌐 铸渊专线订阅服务已启动: http://0.0.0.0:${PORT}`);
   console.log(`  订阅端点: /sub/{token}`);
   console.log(`  配额查询: /quota`);
   console.log(`  健康检查: /health`);
