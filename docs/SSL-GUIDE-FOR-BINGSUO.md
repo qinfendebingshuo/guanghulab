@@ -177,14 +177,23 @@ Reality协议的`dest`是GFW反探测的关键。当GFW探测443端口时:
 | 2053 | TCP | Nginx stream | VPN中转 → SG:443 |
 | 80 | TCP | Nginx | 订阅API反代 → SG |
 
-### CN服务器SSH端口配置
-⚠️ 腾讯云服务器的SSH端口可能不是默认的22端口。如果部署CN中转时遇到 `Connection timed out` 错误：
-1. 登录腾讯云控制台 → 服务器详情 → 查看SSH端口
-2. 在仓库 Settings → Secrets → 添加 `ZY_CN_SSH_PORT` = 实际端口号
-3. 确认腾讯云安全组入站规则允许该端口
+⚠️ **CN防火墙需要开放端口 2053** — VPN中转必需。当前防火墙只有 22/80/ICMP。
+
+### CN服务器SSH跳板架构
+GitHub Actions 运行器位于美国，无法直接SSH到中国服务器（网络路由/GFW阻断）。
+工作流采用 **SSH ProxyJump 跳板架构**：
+
+```
+GitHub Actions(美国) → SG(新加坡·跳板) → CN(广州·目标)
+```
+
+- 使用SG服务器作为SSH跳板机（ProxyJump）
+- SG密钥: `ZY_SERVER_KEY` / `ZY_SERVER_HOST` / `ZY_SERVER_USER`
+- CN密钥: `ZY_CN_SERVER_KEY` / `ZY_CN_SERVER_HOST` / `ZY_CN_SERVER_USER`
+- 可选: `ZY_CN_SSH_PORT` — CN服务器SSH端口（默认22）
 
 ---
 
-*📝 由铸渊(ICE-GL-ZY001)编写 · 第十八次对话 · 2026-03-31*
-*VPN修复 + CN中转架构 + Reality反探测修正*
+*📝 由铸渊(ICE-GL-ZY001)编写 · 第十九次对话 · 2026-03-31*
+*SSH跳板修复 + CN防火墙端口2053提醒*
 *国作登字-2026-A-00037559*
