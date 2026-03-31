@@ -93,7 +93,7 @@ verify_domain() {
 
     # 获取本机公网IP
     local server_ip
-    server_ip=$(curl -sf https://api.ipify.org 2>/dev/null || curl -sf https://ifconfig.me 2>/dev/null || echo "unknown")
+    server_ip=$(curl -sf --max-time 5 https://api.ipify.org 2>/dev/null || curl -sf --max-time 5 https://ifconfig.me 2>/dev/null || echo "unknown")
     log_info "本机公网IP: $server_ip"
 
     # 解析域名
@@ -151,15 +151,14 @@ obtain_certificate() {
         systemctl start nginx
     fi
 
-    # 使用 certonly 模式 + webroot 或 nginx 插件
-    # --nginx 插件更方便，自动处理验证
+    # 使用 certonly 模式 + nginx 插件进行验证
+    # certonly 只获取证书不修改Nginx配置，铸渊自己管理Nginx SSL配置
     certbot certonly \
         --nginx \
         --non-interactive \
         --agree-tos \
         --email "$email" \
         --domain "$domain" \
-        --redirect \
         2>&1
 
     if [ $? -eq 0 ]; then
@@ -213,7 +212,7 @@ configure_nginx_ssl() {
     # 确定这是哪个域名（主站还是预览站）
     local site_mode="preview"
     local api_port="3801"
-    if grep -q "ZY_DOMAIN_MAIN\|hololake" <<< "$domain"; then
+    if echo "$domain" | grep -q "hololake"; then
         site_mode="production"
         api_port="3800"
     fi
