@@ -60,14 +60,14 @@
 2. 在弹出的下拉框中：
    - **Branch**: 保持 `main` 不变
    - **部署动作**: 选择 **`setup-ssl`**
-   - **SSL域名**: 输入 **`guanghu.online`**（这是测试站域名）
+   - **SSL域名**: 输入 **`guanghulab.online`**（这是测试站域名）
 3. 点击绿色的 **「Run workflow」** 按钮
 
 ### 第③步：等待完成
 
 1. 页面会出现一个新的工作流运行（黄色圆圈 = 运行中）
 2. 等待它变成 **绿色✅**（大约1-3分钟）
-3. 完成！你的测试站 `guanghu.online` 现在已经是 HTTPS 了
+3. 完成！你的测试站 `guanghulab.online` 现在已经是 HTTPS 了
 
 ---
 
@@ -75,7 +75,7 @@
 
 打开浏览器，访问：
 ```
-https://guanghu.online
+https://guanghulab.online
 ```
 
 如果地址栏显示 🔒 锁标志，说明SSL配置成功。
@@ -98,7 +98,7 @@ https://guanghu.online
 
 **检查方法**:
 1. 打开 https://www.whatsmydns.net/
-2. 输入你的域名（如 `guanghu.online`）
+2. 输入你的域名（如 `guanghulab.online`）
 3. 查看它指向的IP是否是 `43.134.16.246`（新加坡服务器）
 
 如果IP不对，需要去域名提供商的管理面板修改DNS解析。
@@ -149,7 +149,7 @@ CN中转 (广州→新加坡):
 ### ⚠️ dest为什么必须指向microsoft.com?
 Reality协议的`dest`是GFW反探测的关键。当GFW探测443端口时:
 - 正确: `dest: "www.microsoft.com:443"` → 返回Microsoft真实证书 → 通过
-- 错误: `dest: "127.0.0.1:8443"` → 返回guanghu.online证书 → 与SNI(microsoft.com)不匹配 → 被标记为可疑 → VPN被封
+- 错误: `dest: "127.0.0.1:8443"` → 返回guanghulab.online证书 → 与SNI(microsoft.com)不匹配 → 被标记为可疑 → VPN被封
 
 ### 关键配置
 - **Xray配置**: `server/proxy/config/xray-config-template.json` → `dest: "www.microsoft.com:443"`

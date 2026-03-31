@@ -84,6 +84,34 @@ else
     fi
 fi
 
+# 检查是否需要动态加载stream模块
+# Ubuntu/Debian的Nginx通常将stream编译为动态模块(.so)，需要用load_module显式加载
+NGINX_MAIN="/etc/nginx/nginx.conf"
+STREAM_MODULE_PATH=""
+for mod_path in \
+    /usr/lib/nginx/modules/ngx_stream_module.so \
+    /usr/lib64/nginx/modules/ngx_stream_module.so \
+    /etc/nginx/modules/ngx_stream_module.so; do
+    if [ -f "$mod_path" ]; then
+        STREAM_MODULE_PATH="$mod_path"
+        break
+    fi
+done
+
+if [ -n "$STREAM_MODULE_PATH" ]; then
+    if ! grep -q "ngx_stream_module" "$NGINX_MAIN" 2>/dev/null; then
+        log_info "加载stream动态模块: $STREAM_MODULE_PATH"
+        # load_module必须在nginx.conf最顶部(events块之前)
+        sed -i "1i load_module $STREAM_MODULE_PATH;" "$NGINX_MAIN"
+        log_info "✅ stream动态模块已加载"
+    else
+        log_info "✅ stream动态模块已在配置中"
+    fi
+else
+    # 没有找到.so文件，可能是静态编译的，继续
+    log_info "stream模块为静态编译或路径非标准，跳过load_module"
+fi
+
 # ── §2 配置Nginx stream中转 ──────────────────
 log_step "§2 配置TCP中转 (端口$RELAY_PORT → $SG_HOST:443)"
 
@@ -115,7 +143,6 @@ STREAMCONF
 log_info "✅ Stream中转配置已创建"
 
 # 确保主Nginx配置包含stream块
-NGINX_MAIN="/etc/nginx/nginx.conf"
 if ! grep -q "stream-conf.d" "$NGINX_MAIN" 2>/dev/null; then
     log_info "添加stream块到nginx.conf..."
 

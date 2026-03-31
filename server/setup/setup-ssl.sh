@@ -14,7 +14,7 @@
 #
 # 用法:
 #   sudo bash setup-ssl.sh <域名> [邮箱]
-#   sudo bash setup-ssl.sh guanghu.online admin@guanghu.online
+#   sudo bash setup-ssl.sh guanghulab.online admin@guanghulab.online
 #   sudo bash setup-ssl.sh --all   # 配置所有已知域名
 #
 # 前提条件:
@@ -525,7 +525,7 @@ main() {
 
         if [ ${#domains[@]} -eq 0 ]; then
             log_error "未找到已配置的域名"
-            log_warn "请指定域名: sudo bash $0 guanghu.online"
+            log_warn "请指定域名: sudo bash $0 guanghulab.online"
             exit 1
         fi
 
@@ -541,8 +541,8 @@ main() {
         echo "  sudo bash $0 <域名> [邮箱]"
         echo ""
         echo "示例:"
-        echo "  sudo bash $0 guanghu.online"
-        echo "  sudo bash $0 guanghu.online admin@guanghu.online"
+        echo "  sudo bash $0 guanghulab.online"
+        echo "  sudo bash $0 guanghulab.online admin@guanghulab.online"
         echo "  sudo bash $0 --all    # 配置所有已知域名"
         echo ""
         echo "说明:"

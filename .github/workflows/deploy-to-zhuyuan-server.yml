@@ -34,7 +34,7 @@ on:
           - preview
           - production
       ssl_domain:
-        description: 'SSL域名 (仅setup-ssl时需要，如: guanghu.online)'
+        description: 'SSL域名 (仅setup-ssl时需要，如: guanghulab.online)'
         required: false
         type: string
 
@@ -390,7 +390,7 @@ jobs:
             echo "❌ 未指定SSL域名"
             echo ""
             echo "请在触发工作流时填写 ssl_domain 参数"
-            echo "例如: guanghu.online"
+            echo "例如: guanghulab.online"
             exit 1
           fi
 

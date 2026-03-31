@@ -228,7 +228,7 @@
 **操作步骤（3步）:**
 1. 打开 Actions 页面: `https://github.com/qinfendebingshuo/guanghulab/actions`
 2. 点击左侧的 **🏛️ 铸渊主权服务器 · 部署**
-3. 点击 **Run workflow** → 选择 `setup-ssl` → 在SSL域名里输入 `guanghu.online` → 点击绿色按钮
+3. 点击 **Run workflow** → 选择 `setup-ssl` → 在SSL域名里输入 `guanghulab.online` → 点击绿色按钮
 
 等待1-3分钟变绿即可。你的测试站就有HTTPS了！
 
