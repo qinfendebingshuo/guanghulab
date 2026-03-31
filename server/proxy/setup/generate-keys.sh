@@ -18,6 +18,11 @@
 set -uo pipefail
 # 注意: 不使用 set -e，手动处理错误以确保密钥生成的健壮性
 
+# 工具函数: 将二进制数据转为base64url编码
+to_base64url() {
+    base64 | tr '+/' '-_' | tr -d '='
+}
+
 echo "════════════════════════════════════════"
 echo "🔑 铸渊专线 · 密钥生成"
 echo "════════════════════════════════════════"
@@ -26,10 +31,7 @@ echo ""
 HAS_ERROR=0
 
 # ── 生成UUID ─────────────────────────────────
-UUID=$(xray uuid 2>/dev/null || cat /proc/sys/kernel/random/uuid || true)
-if [ -z "$UUID" ]; then
-    UUID=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || openssl rand -hex 16 | sed 's/\(.\{8\}\)\(.\{4\}\)\(.\{4\}\)\(.\{4\}\)\(.\{12\}\)/\1-\2-\3-\4-\5/')
-fi
+UUID=$(xray uuid 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || openssl rand -hex 16 | sed 's/\(.\{8\}\)\(.\{4\}\)\(.\{4\}\)\(.\{4\}\)\(.\{12\}\)/\1-\2-\3-\4-\5/')
 echo "ZY_PROXY_UUID=$UUID"
 
 # ── 生成Reality X25519密钥对 ──────────────────
@@ -95,9 +97,9 @@ if [ -z "$PRIVATE_KEY" ] && command -v openssl &>/dev/null; then
     if openssl genpkey -algorithm X25519 -out "$TMPKEY" 2>/dev/null; then
         # 从DER格式提取原始32字节密钥，转为base64url (43字符)
         PRIVATE_KEY=$(openssl pkey -in "$TMPKEY" -outform DER 2>/dev/null \
-            | tail -c 32 | base64 | tr '+/' '-_' | tr -d '=') || true
+            | tail -c 32 | to_base64url) || true
         PUBLIC_KEY=$(openssl pkey -in "$TMPKEY" -pubout -outform DER 2>/dev/null \
-            | tail -c 32 | base64 | tr '+/' '-_' | tr -d '=') || true
+            | tail -c 32 | to_base64url) || true
     fi
     rm -f "$TMPKEY"
 
@@ -115,7 +117,7 @@ fi
 if [ -z "$PRIVATE_KEY" ]; then
     echo "  ⚠️ 所有X25519生成方法均失败，使用随机占位密钥"
     echo "  ⚠️ 请在服务器上手动运行: xray x25519"
-    PRIVATE_KEY=$(openssl rand -base64 32 | tr '+/' '-_' | tr -d '=' | head -c 43)
+    PRIVATE_KEY=$(openssl rand 32 | to_base64url | head -c 43)
     PUBLIC_KEY="PLACEHOLDER_REGENERATE_WITH_XRAY_X25519"
     HAS_ERROR=1
 fi
