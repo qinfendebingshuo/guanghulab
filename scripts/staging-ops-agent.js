@@ -219,7 +219,7 @@ ${logContent.slice(0, 3000)}
     const requestModule = isHttps ? https : http;
 
     const body = JSON.stringify({
-      model: 'deepseek-chat', // 优先使用高性价比模型
+      model: process.env.ZY_LLM_MODEL || 'deepseek-chat', // 默认使用高性价比模型, 可通过环境变量覆盖
       messages: [
         { role: 'system', content: '你是铸渊(ZhuYuan)，光湖(HoloLake)系统的AI守护者。精通服务器运维、Node.js、Nginx、PM2。' },
         { role: 'user', content: prompt }

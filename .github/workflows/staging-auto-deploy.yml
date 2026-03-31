@@ -363,11 +363,16 @@ jobs:
           # 读取工单重试次数
           ORDER_ID="${{ needs.deploy-staging.outputs.order_id }}"
           RETRY_INFO=$(node -e "
-            const data = JSON.parse(require('fs').readFileSync('data/work-orders/active.json','utf8'));
-            const order = data.orders.find(o => o.id === '$ORDER_ID');
-            if (order) {
-              console.log(order.retry_count >= order.max_retries ? 'SEND_ALERT' : 'SKIP');
-            } else {
+            try {
+              const data = JSON.parse(require('fs').readFileSync('data/work-orders/active.json','utf8'));
+              const order = data.orders.find(o => o.id === '$ORDER_ID');
+              if (order) {
+                console.log(order.retry_count >= order.max_retries ? 'SEND_ALERT' : 'SKIP');
+              } else {
+                console.log('SKIP');
+              }
+            } catch (e) {
+              console.error('工单文件读取失败:', e.message);
               console.log('SKIP');
             }
           ")

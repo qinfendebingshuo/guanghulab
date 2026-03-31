@@ -222,6 +222,9 @@ function archiveOrder(args) {
     message: '任务归档完成'
   });
 
+  // 确保归档目录存在
+  fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
+
   // 移到归档目录
   const month = new Date().toISOString().slice(0, 7);
   const archiveFile = path.join(ARCHIVE_DIR, `${month}.json`);
