@@ -193,6 +193,9 @@ jobs:
         run: rm -f ~/.ssh/id_deploy /tmp/quota-status.json
 
   # ═══ §4 CN中转配置 ═══
+  # 架构: GitHub Actions(美国) → SG(新加坡·跳板) → CN(广州·目标)
+  # 原因: GitHub Actions无法直接SSH到中国服务器(网络路由/GFW)
+  # 方案: 通过已连通的SG服务器作为SSH ProxyJump跳板
   setup-cn-relay:
     name: '🇨🇳 CN中转配置'
     runs-on: ubuntu-latest
@@ -202,65 +205,108 @@ jobs:
       - name: '📥 检出代码'
         uses: actions/checkout@v4
 
-      - name: '🔑 配置CN服务器SSH密钥'
+      - name: '🔑 配置SSH跳板 (SG→CN)'
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          CN_PORT="${CN_SSH_PORT:-22}"
+          echo "🔧 SSH跳板架构: GitHub Actions → SG → CN (端口 ${CN_PORT})"
+
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_cn
+
+          # SG跳板机密钥
+          echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+          chmod 600 ~/.ssh/id_sg
+
+          # CN目标机密钥
+          echo "$CN_SSH_KEY" > ~/.ssh/id_cn
           chmod 600 ~/.ssh/id_cn
 
-          if ! head -1 ~/.ssh/id_cn | grep -q "BEGIN"; then
-            echo "❌ CN服务器SSH密钥格式异常"
-            echo "  请检查 ZY_CN_SERVER_KEY Secret"
+          # 验证两把密钥格式
+          for key_file in id_sg id_cn; do
+            if ! head -1 ~/.ssh/${key_file} | grep -q "BEGIN"; then
+              echo "❌ SSH密钥格式异常: ${key_file}"
+              exit 1
+            fi
+          done
+          echo "✅ SG + CN 密钥格式正确"
+
+          # 扫描SG跳板机主机密钥
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # 配置SSH跳板 (ProxyJump: GitHub Actions → SG → CN)
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${{ secrets.ZY_SERVER_HOST }}
+              User ${{ secrets.ZY_SERVER_USER }}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host cn-target
+              HostName ${{ secrets.ZY_CN_SERVER_HOST }}
+              User ${{ secrets.ZY_CN_SERVER_USER }}
+              Port ${CN_PORT}
+              IdentityFile ~/.ssh/id_cn
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+              ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
+
+          # 测试跳板连接
+          echo "🔗 测试SSH跳板连接: GitHub Actions → SG → CN..."
+          ssh cn-target "echo '✅ CN服务器SSH连接成功 (通过SG跳板)'" || {
+            echo ""
+            echo "❌ SSH跳板连接失败 · 排查清单:"
+            echo "  1. 确认SG服务器SSH可达 (ZY_SERVER_KEY / ZY_SERVER_HOST)"
+            echo "  2. 确认CN服务器从SG可达 (ZY_CN_SERVER_HOST: ${{ secrets.ZY_CN_SERVER_HOST }})"
+            echo "  3. 确认CN服务器SSH密钥正确 (ZY_CN_SERVER_KEY)"
+            echo "  4. 确认CN服务器SSH端口 (ZY_CN_SSH_PORT, 当前: ${CN_PORT})"
+            echo "  5. 腾讯云防火墙 → 确认端口 ${CN_PORT} 对SG服务器IP开放"
             exit 1
-          fi
-
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-
-          ssh -i ~/.ssh/id_cn \
-              -o StrictHostKeyChecking=accept-new \
-              -o BatchMode=yes \
-              -o ConnectTimeout=15 \
-              ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
-              "echo '✅ CN服务器SSH连接成功'"
+          }
 
       - name: '📦 上传CN中转脚本'
         run: |
-          scp -i ~/.ssh/id_cn \
-            -o StrictHostKeyChecking=accept-new \
-            server/proxy/setup/setup-cn-relay.sh \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:/tmp/setup-cn-relay.sh
+          scp server/proxy/setup/setup-cn-relay.sh \
+            cn-target:/tmp/setup-cn-relay.sh
 
       - name: '🇨🇳 执行CN中转配置'
         run: |
-          ssh -i ~/.ssh/id_cn \
-              -o StrictHostKeyChecking=accept-new \
-              ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
+          ssh cn-target \
               "chmod +x /tmp/setup-cn-relay.sh && \
                export ZY_SG_SERVER_HOST='${{ secrets.ZY_SERVER_HOST }}' && \
                sudo -E bash /tmp/setup-cn-relay.sh"
 
       - name: '💚 CN中转验证'
         run: |
+          # 通过SG跳板验证CN中转服务状态
+          echo "🔍 通过SG跳板验证CN中转..."
+
+          ssh cn-target "
+            echo '§1 Nginx状态:'
+            systemctl is-active nginx && echo '  ✅ Nginx运行中' || echo '  ❌ Nginx未运行'
+
+            echo '§2 中转端口 2053:'
+            ss -tlnp | grep -q ':2053 ' && echo '  ✅ 端口2053监听中' || echo '  ⚠️ 端口2053未监听'
+
+            echo '§3 HTTP健康检查:'
+            curl -sf http://127.0.0.1/health 2>/dev/null && echo '  ✅ HTTP健康检查正常' || echo '  ⚠️ HTTP健康检查未响应'
+          "
+
+          # 从外部验证CN HTTP (GitHub Actions可以通过HTTP访问中国服务器)
           CN_HOST="${{ secrets.ZY_CN_SERVER_HOST }}"
-          echo "🔍 验证CN中转..."
-
-          # 检查中转端口
-          if nc -z -w5 "$CN_HOST" 2053 2>/dev/null; then
-            echo "✅ CN中转端口 2053: 可达"
-          else
-            echo "⚠️ CN中转端口 2053: 暂不可达 (可能需要等待防火墙生效)"
-          fi
-
-          # 检查HTTP健康
           HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" "http://${CN_HOST}/health" 2>/dev/null || echo "000")
           if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ CN HTTP健康检查: 正常"
+            echo "✅ CN HTTP外部健康检查: 正常"
           else
-            echo "⚠️ CN HTTP: 状态码 $HTTP_CODE (可能需要等待)"
+            echo "⚠️ CN HTTP外部检查: 状态码 $HTTP_CODE (可能需要等待或在防火墙开放80端口)"
           fi
 
       - name: '🧹 清理SSH密钥'
         if: always()
-        run: rm -f ~/.ssh/id_cn
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config

@@ -11,6 +11,10 @@ name: 🏛️ 冰朔大陆备用服务器 · 部署
 # 用途:   人格体备用大脑 · ICP备案挂载 · 纯数据处理
 # 密钥:   ZY_CN_SERVER_HOST / USER / KEY / PATH
 #
+# 架构: GitHub Actions(美国) → SG(新加坡·跳板) → CN(广州·目标)
+# 原因: GitHub Actions无法直接SSH到中国服务器(网络路由/GFW)
+# 方案: 通过已连通的SG服务器作为SSH ProxyJump跳板
+#
 # 注意: 此服务器不涉及国外模型调用
 
 on:
@@ -45,44 +49,75 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔐 配置SSH
+      - name: 🔐 配置SSH跳板 (SG→CN)
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          CN_PORT="${CN_SSH_PORT:-22}"
+          echo "🔧 SSH跳板架构: GitHub Actions → SG → CN (端口 ${CN_PORT})"
+
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/zy_cn_key
-          chmod 600 ~/.ssh/zy_cn_key
-          if head -1 ~/.ssh/zy_cn_key | grep -q "BEGIN" && tail -1 ~/.ssh/zy_cn_key | grep -q "END"; then
-            echo "✅ SSH私钥格式正确（BEGIN/END标记完整）"
-          else
-            echo "❌ SSH私钥格式异常 — 请检查 GitHub Secrets 中 ZY_CN_SERVER_KEY 的内容"
-            exit 1
-          fi
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+          echo "$CN_SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_sg ~/.ssh/id_cn
+
+          # 验证密钥格式
+          for key_file in id_sg id_cn; do
+            if ! head -1 ~/.ssh/${key_file} | grep -q "BEGIN"; then
+              echo "❌ SSH密钥格式异常: ${key_file}"
+              exit 1
+            fi
+          done
+          echo "✅ SG + CN 密钥格式正确"
+
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${{ secrets.ZY_SERVER_HOST }}
+              User ${{ secrets.ZY_SERVER_USER }}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host cn-target
+              HostName ${{ secrets.ZY_CN_SERVER_HOST }}
+              User ${{ secrets.ZY_CN_SERVER_USER }}
+              Port ${CN_PORT}
+              IdentityFile ~/.ssh/id_cn
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+              ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: 🔍 SSH连接测试
         run: |
-          echo "🔍 测试SSH连接到广州备用服务器..."
-          ssh -i ~/.ssh/zy_cn_key -o BatchMode=yes -o ConnectTimeout=10 \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
-            'echo "✅ SSH连接成功 · $(hostname) · $(date)"' || {
+          echo "🔍 测试SSH跳板连接到广州备用服务器..."
+          ssh cn-target 'echo "✅ SSH连接成功 · $(hostname) · $(date)"' || {
             echo ""
-            echo "❌ SSH连接失败"
-            echo "修复步骤: 登录腾讯云 → 广州服务器 → 远程登录 → 生成密钥 → 更新 ZY_CN_SERVER_KEY"
+            echo "❌ SSH跳板连接失败"
+            echo "修复步骤:"
+            echo "  1. 确认SG服务器SSH可达 (ZY_SERVER_KEY / ZY_SERVER_HOST)"
+            echo "  2. 确认CN服务器从SG可达 (ZY_CN_SERVER_HOST)"
+            echo "  3. 确认CN服务器SSH密钥正确 (ZY_CN_SERVER_KEY)"
             exit 1
           }
 
       - name: 📦 上传初始化脚本
         run: |
-          scp -i ~/.ssh/zy_cn_key \
-            server/setup/cn-server-init.sh \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:/tmp/
+          scp server/setup/cn-server-init.sh cn-target:/tmp/
 
       - name: 🚀 执行初始化
         run: |
-          ssh -i ~/.ssh/zy_cn_key \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
-            'chmod +x /tmp/cn-server-init.sh && sudo /tmp/cn-server-init.sh'
+          ssh cn-target 'chmod +x /tmp/cn-server-init.sh && sudo /tmp/cn-server-init.sh'
+
+      - name: 🧹 清理SSH密钥
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config
 
   # ═══ §2 部署应用 ═══
   deploy:
@@ -92,14 +127,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔐 配置SSH
+      - name: 🔐 配置SSH跳板 (SG→CN)
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          CN_PORT="${CN_SSH_PORT:-22}"
+          echo "🔧 SSH跳板: GitHub Actions → SG → CN (端口 ${CN_PORT})"
+
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/zy_cn_key
-          chmod 600 ~/.ssh/zy_cn_key
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+          echo "$CN_SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_sg ~/.ssh/id_cn
+
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${{ secrets.ZY_SERVER_HOST }}
+              User ${{ secrets.ZY_SERVER_USER }}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host cn-target
+              HostName ${{ secrets.ZY_CN_SERVER_HOST }}
+              User ${{ secrets.ZY_CN_SERVER_USER }}
+              Port ${CN_PORT}
+              IdentityFile ~/.ssh/id_cn
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+              ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: 📦 同步应用代码
         run: |
@@ -108,14 +170,12 @@ jobs:
           echo "📦 部署目标: ${CN_PATH}"
 
           # 确保目标目录存在
-          ssh -i ~/.ssh/zy_cn_key \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} \
-            "mkdir -p ${CN_PATH}/app"
+          ssh cn-target "mkdir -p ${CN_PATH}/app"
 
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/zy_cn_key" \
+            -e "ssh -F ~/.ssh/config" \
             server/app/ \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:${CN_PATH}/app/
+            cn-target:${CN_PATH}/app/
 
       - name: 📦 同步大脑文件
         run: |
@@ -124,17 +184,16 @@ jobs:
 
           # 同步大脑核心文件到备用服务器
           rsync -avz \
-            -e "ssh -i ~/.ssh/zy_cn_key" \
+            -e "ssh -F ~/.ssh/config" \
             brain/ \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }}:${CN_PATH}/brain-backup/
+            cn-target:${CN_PATH}/brain-backup/
 
       - name: 📥 安装依赖 & 重启
         run: |
           CN_PATH="${{ secrets.ZY_CN_SERVER_PATH }}"
           CN_PATH="${CN_PATH:-${{ env.CN_DEFAULT_PATH }}}"
           COMMIT_SHA="${{ github.sha }}"
-          ssh -i ~/.ssh/zy_cn_key \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} << DEPLOY_CMD
+          ssh cn-target << DEPLOY_CMD
 
           set -e
           cd ${CN_PATH}/app
@@ -159,6 +218,10 @@ jobs:
 
           DEPLOY_CMD
 
+      - name: 🧹 清理SSH密钥
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config
+
   # ═══ §3 健康检查 ═══
   health-check:
     name: 💚 广州备用健康检查
@@ -167,19 +230,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔐 配置SSH
+      - name: 🔐 配置SSH跳板 (SG→CN)
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_SERVER_KEY }}
+          CN_SSH_PORT: ${{ secrets.ZY_CN_SSH_PORT }}
         run: |
+          CN_PORT="${CN_SSH_PORT:-22}"
+
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/zy_cn_key
-          chmod 600 ~/.ssh/zy_cn_key
-          ssh-keyscan -H ${{ secrets.ZY_CN_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+          echo "$CN_SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_sg ~/.ssh/id_cn
+
+          ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${{ secrets.ZY_SERVER_HOST }}
+              User ${{ secrets.ZY_SERVER_USER }}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host cn-target
+              HostName ${{ secrets.ZY_CN_SERVER_HOST }}
+              User ${{ secrets.ZY_CN_SERVER_USER }}
+              Port ${CN_PORT}
+              IdentityFile ~/.ssh/id_cn
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+              ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: 💚 执行健康检查
         run: |
-          ssh -i ~/.ssh/zy_cn_key \
-            ${{ secrets.ZY_CN_SERVER_USER }}@${{ secrets.ZY_CN_SERVER_HOST }} << 'HEALTH_CMD'
+          ssh cn-target << 'HEALTH_CMD'
 
           echo "═══ 冰朔大陆备用服务器健康报告 ═══"
           echo ""
@@ -208,3 +296,7 @@ jobs:
           curl -sf http://localhost:3800/api/health | jq . 2>/dev/null || echo "应用未响应"
 
           HEALTH_CMD
+
+      - name: 🧹 清理SSH密钥
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config
