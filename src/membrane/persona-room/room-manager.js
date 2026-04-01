@@ -111,8 +111,8 @@ function queryExperience(personaId, category, limit) {
     try {
       const data = JSON.parse(fs.readFileSync(path.join(catDir, file), 'utf8'));
       results.push(data);
-    } catch (_) {
-      // skip corrupt files
+    } catch (err) {
+      process.stderr.write(`[ROOM] corrupt file skipped: ${file} (${err.message})\n`);
     }
   }
 

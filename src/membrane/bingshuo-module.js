@@ -100,6 +100,16 @@ function verify(params) {
     .update(payload)
     .digest('hex');
 
+  // 长度检查（防止 timingSafeEqual 抛异常）
+  if (signature.length !== expectedSig.length) {
+    recordImpersonation('invalid-signature-length');
+    return {
+      verified: false,
+      reason: 'signature-mismatch',
+      state: bingshuoModule.state,
+    };
+  }
+
   if (!crypto.timingSafeEqual(
     Buffer.from(signature, 'hex'),
     Buffer.from(expectedSig, 'hex')

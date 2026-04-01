@@ -98,8 +98,8 @@ function persist(entry) {
     const filePath = path.join(AUDIT_DIR, `${dateStr}.jsonl`);
     fs.appendFileSync(filePath, JSON.stringify(entry) + '\n', 'utf8');
   } catch (err) {
-    // 审计系统自身不能阻塞请求流，静默记录错误
-    console.error('[AUDIT] persist error:', err.message);
+    // 审计系统自身不能阻塞请求流，记录到 stderr
+    process.stderr.write(`[AUDIT] persist error: ${err.message}\n`);
   }
 }
 

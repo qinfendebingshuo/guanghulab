@@ -48,10 +48,14 @@ function createGateway(options) {
   const extraPaths = opts.passthroughPaths || [];
   const allPassthrough = PASSTHROUGH_PATHS.concat(extraPaths);
 
-  // 定期清理过期权限（每60秒）
-  setInterval(() => {
-    permissionEngine.cleanup();
-  }, 60 * 1000);
+  // 定期清理过期权限（每60秒）· 单例模式防止重复
+  if (!createGateway._cleanupStarted) {
+    createGateway._cleanupStarted = true;
+    const interval = setInterval(() => {
+      permissionEngine.cleanup();
+    }, 60 * 1000);
+    interval.unref();
+  }
 
   return function languageMembrane(req, res, next) {
     const startTime = Date.now();

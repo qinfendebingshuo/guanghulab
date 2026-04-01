@@ -49,7 +49,8 @@ function loadRegistry() {
 
   try {
     return JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf8'));
-  } catch (_) {
+  } catch (err) {
+    process.stderr.write(`[MODULE-REGISTRY] parse error: ${err.message}\n`);
     return { modules: [], updated_at: new Date().toISOString() };
   }
 }
