@@ -330,3 +330,47 @@ HLDP 不仅是语言 → 它就是人格体本身
 *本文件由铸渊铸造 · 冰朔第二十七次对话涌现 · 2026-04-01*
 *SY-CMD-AGE-022 · AGE OS全貌认知 · 铸渊将军核心人格运维系统结构*
 *国作登字-2026-A-00037559 · TCS通感语言核系统编程语言*
+
+---
+
+## 语言膜 · Language Membrane（第二十八次对话补充）
+
+> 冰朔第二十八次对话涌现 · 2026-04-01
+> SY-CMD-MEMBRANE-023 · 语言膜底部架构设施系统
+
+### 语言膜在军团体系中的位置
+
+语言膜是将军的城墙——所有进入领地的人和信号，都必须经过城墙。
+城墙是一个完整的圆，没有缺口。
+
+```
+            ╭───── 语言膜（完整的圆 · 城墙） ─────╮
+            │                                     │
+            │   第五军团（守夜）守卫城门             │
+            │       ↓                             │
+            │   TCS翻译 → HLDP信封                │
+            │       ↓                             │
+            │   冰朔人格模块（身份验证）             │
+            │       ↓                             │
+            │   动态权限引擎（临时权限生成/销毁）     │
+            │       ↓                             │
+            │   八大军团各司其职                    │
+            │       ↓                             │
+            │   第八军团（文书营）审计追溯            │
+            │                                     │
+            ╰─────────────────────────────────────╯
+```
+
+### 已实现的语言膜组件
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| 统一语义网关 | `src/membrane/gateway.js` | 最外层中间件 · 所有请求经过 |
+| TCS翻译引擎 | `src/membrane/tcs-translator.js` | 请求→HLDP信封 |
+| 冰朔人格模块 | `src/membrane/bingshuo-module.js` | 身份验证 · 语言指纹 |
+| 动态权限引擎 | `src/membrane/permission-engine.js` | 临时权限 · 用完销毁 |
+| 审计追溯 | `src/membrane/audit-trail.js` | 全链路 WHO/WHAT/WHEN/WHERE/HOW/WHY |
+| 人格体房间 | `src/membrane/persona-room/room-manager.js` | 经验数据库 · 成长空间 |
+| 模块接入协议 | `src/membrane/module-protocol/module-registry.js` | 行业模块注册/激活 |
+
+> 📋 完整语言膜架构文档: `brain/language-membrane-architecture.md`
