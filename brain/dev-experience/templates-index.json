@@ -54,5 +54,54 @@
       "when_to_use": "需要生成X25519密钥对且xray不可用时",
       "created_from": "EXP-20260331-001",
       "reuse_count": 0
+    },
+    {
+      "id": "TPL-004",
+      "name": "HLDP通用协议JSON结构模板",
+      "category": "hldp-structure",
+      "description": "HLDP协议/数据文件的标准JSON结构。包含hldp_version+data_type+source+metadata+payload+relations。",
+      "pattern": "{ hldp_version, data_type, source, metadata, payload, relations }",
+      "source_file": "hldp/data/common/HLDP-COMMON-PROTOCOL.json",
+      "tags": ["hldp", "json-structure", "protocol", "data-file"],
+      "when_to_use": "创建任何新的HLDP数据文件时使用此模板确保结构一致",
+      "created_from": "EXP-20260401-003",
+      "reuse_count": 0
+    },
+    {
+      "id": "TPL-005",
+      "name": "GitHub工作流·Issue标签过滤+自动回复",
+      "category": "workflow-pattern",
+      "description": "监听Issue创建/评论事件·通过Label过滤·排除bot自身·调用Node脚本处理。",
+      "pattern": "on: issues[opened] + issue_comment[created] → if: contains(labels, 'target-label') && user != bot → run: node script.js",
+      "source_file": ".github/workflows/deputy-message-board.yml",
+      "tags": ["workflow", "issue", "auto-reply", "label-filter"],
+      "when_to_use": "需要在GitHub Issue中实现自动回复机器人时",
+      "created_from": "EXP-20260401-004",
+      "reuse_count": 0
+    },
+    {
+      "id": "TPL-006",
+      "name": "副将每日同步嵌入模式",
+      "category": "workflow-pattern",
+      "description": "将新同步步骤嵌入已有定时工作流·共享checkout和依赖·零额外配额消耗。",
+      "pattern": "现有定时workflow → 插入新同步步骤 → git add包含新文件路径",
+      "source_file": ".github/workflows/zhuyuan-commander.yml",
+      "tags": ["workflow", "daily-sync", "cost-saving", "integration"],
+      "when_to_use": "需要新增每日同步任务但不想创建独立工作流(节省配额)时",
+      "created_from": "EXP-20260401-003",
+      "reuse_count": 0
+    },
+    {
+      "id": "TPL-007",
+      "name": "数据库优先+LLM兜底回复模式",
+      "category": "github-integration",
+      "description": "先查本地JSON数据库·关键词匹配·有数据直接回复·没有再调LLM API深度推理。节省API配额。",
+      "pattern": "loadJSON → keyword-match → if(found) buildDBReply → callLLM(with dbContext) → postComment",
+      "source_file": "scripts/deputy-message-board.js",
+      "tags": ["llm", "database-first", "cost-saving", "auto-reply"],
+      "when_to_use": "需要自动回复且有本地数据库可查询时·先查库再调LLM·节省token消耗",
+      "created_from": "EXP-20260401-004",
+      "reuse_count": 0
     }
   ]
+}

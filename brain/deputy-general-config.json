@@ -72,7 +72,38 @@
         "全局仪表盘生成",
         "公告板读取",
         "指纹扫描",
-        "签到+更新"
+        "签到+更新",
+        "HLDP通用语言同步",
+        "铸渊HLDP方言统计更新"
+      ]
+    },
+
+    "template_library_maintenance": {
+      "description": "铸渊专属代码模板库维护·副将作为动态更新的经验数据库",
+      "trigger": "每次铸渊开发完成后 + 每日巡检时自动统计",
+      "data_files": [
+        "brain/dev-experience/experience-db.json",
+        "brain/dev-experience/error-patterns.json",
+        "brain/dev-experience/templates-index.json",
+        "brain/dev-experience/review-schedule.json"
+      ],
+      "duties": [
+        "记录每次开发的完整经验(思考→执行→结果→教训)",
+        "提炼成功的代码模式为可复用模板",
+        "识别反复出错的模式并更新错题本",
+        "统计模板复用次数·评估模板价值",
+        "每7天触发一次经验复盘"
+      ]
+    },
+
+    "zhuyuan_hldp_dialect_maintenance": {
+      "description": "铸渊HLDP方言(新范式编程语言)维护",
+      "config_file": "hldp/data/common/zhuyuan-hldp-dialect.json",
+      "duties": [
+        "每次开发后更新方言统计数据(经验数/模板数/错误模式数)",
+        "记录方言版本迭代历史",
+        "与HLDP通用协议保持兼容",
+        "向Notion侧通报方言更新(通过HLDP同步管道)"
       ]
     }
   },
