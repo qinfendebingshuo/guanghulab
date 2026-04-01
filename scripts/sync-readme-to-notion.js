@@ -224,12 +224,14 @@ async function main() {
       {
         object: 'block',
         type: 'heading_3',
-        heading_3: { rich_text: [{ type: 'text', text: { content: '📄 README 原始内容' } }] },
+        heading_3: { rich_text: [{ type: 'text', text: { content: '📄 README 原始内容（前2000字）' } }] },
       },
       {
         object: 'block',
         type: 'paragraph',
-        paragraph: { rich_text: richText(readmeContent.slice(0, NOTION_RICH_TEXT_MAX)) },
+        paragraph: { rich_text: richText(readmeContent.length > NOTION_RICH_TEXT_MAX
+          ? readmeContent.slice(0, NOTION_RICH_TEXT_MAX - 20) + '\n\n…（内容已截断）'
+          : readmeContent) },
       },
     ],
   };
