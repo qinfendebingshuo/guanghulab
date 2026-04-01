@@ -12,13 +12,13 @@
   },
 
   "summary": {
-    "total_modules": 48,
-    "core_active": 32,
+    "total_modules": 52,
+    "core_active": 36,
     "auxiliary": 10,
     "experimental_archived": 6,
-    "workflows_active": 18,
-    "scripts_active": 32,
-    "total_code_lines_estimated": 12000
+    "workflows_active": 19,
+    "scripts_active": 34,
+    "total_code_lines_estimated": 13000
   },
 
   "garrison": {
@@ -232,6 +232,47 @@
           "status": "core_active",
           "function": "完整的圆·统一语义网关·动态权限·审计追溯·冰朔人格模块",
           "developed_in": "D28·v34.0"
+        }
+      ]
+    },
+
+    "第九军团_部署观测_观星台": {
+      "commander": "观星台",
+      "mission": "全链路部署观测 · 铸渊看见自己写的代码部署后的运行状态",
+      "modules": [
+        {
+          "id": "MOD-OBS-001",
+          "name": "全链路部署观测工作流",
+          "path": ".github/workflows/zhuyuan-deploy-observer.yml",
+          "status": "core_active",
+          "function": "部署工作流完成后自动触发·采集日志·分析·修复·告警·归档",
+          "developed_in": "D31·v37.0"
+        },
+        {
+          "id": "MOD-OBS-002",
+          "name": "部署日志采集器",
+          "path": "scripts/deploy-log-collector.js",
+          "lines": 430,
+          "status": "core_active",
+          "function": "GitHub API采集部署日志·结构化存储·模式匹配分析·仪表盘生成",
+          "developed_in": "D31·v37.0"
+        },
+        {
+          "id": "MOD-OBS-003",
+          "name": "副将自动修复引擎",
+          "path": "scripts/deputy-auto-repair.js",
+          "lines": 380,
+          "status": "core_active",
+          "function": "5种修复策略·SSH远程修复·LLM深度推理·最多3次·危险命令拦截",
+          "developed_in": "D31·v37.0"
+        },
+        {
+          "id": "MOD-OBS-004",
+          "name": "部署观测数据库",
+          "path": "data/deploy-logs/",
+          "status": "core_active",
+          "function": "日志索引·告警状态·修复历史·观测仪表盘·归档日志",
+          "developed_in": "D31·v37.0"
         }
       ]
     },
@@ -508,6 +549,7 @@
       "hldp/data/common/sync-progress.json 可解析",
       "18个工作流最近24h内是否有成功运行",
       "核心6个器官(听潮·锻心·织脉·映阁·守夜·试镜)状态",
+      "部署观测系统状态(observer-dashboard.json·告警·修复历史)",
       "HLDP同步进度更新",
       "铸渊HLDP方言统计更新(经验数/模板数/错误模式数)",
       "留言板是否有未回复的Issue",

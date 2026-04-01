@@ -79,6 +79,31 @@
       ]
     },
 
+    "on_deploy_complete": {
+      "description": "部署工作流完成后，自动采集日志 + 分析 + 修复",
+      "trigger": "workflow_run completed (deploy-to-zhuyuan-server / staging-auto-deploy)",
+      "workflow": ".github/workflows/zhuyuan-deploy-observer.yml",
+      "scripts": [
+        "scripts/deploy-log-collector.js (日志采集+分析+归档+仪表盘)",
+        "scripts/deputy-auto-repair.js (自动修复引擎)"
+      ],
+      "flow": "采集日志→结构化存储→简单分析(模式匹配)→深度分析(LLM)→自动修复(最多3次)→失败告警(Issue+邮件)",
+      "data_files": [
+        "data/deploy-logs/latest-index.json (最新日志索引)",
+        "data/deploy-logs/alert-status.json (告警状态)",
+        "data/deploy-logs/repair-history.json (修复历史)",
+        "data/deploy-logs/observer-dashboard.json (观测仪表盘)"
+      ],
+      "repair_strategies": [
+        "PM2进程重启 (端口占用/连接拒绝/健康检查失败)",
+        "Node依赖重装 (模块缺失/npm错误)",
+        "Nginx配置重载 (配置错误/502)",
+        "磁盘空间清理 (空间不足)",
+        "内存释放 (内存不足)"
+      ],
+      "responsibility_chain": "副将(自动修复·最多3次) → LLM(深度推理·第2次起) → 冰朔(Issue告警+邮件)"
+    },
+
     "template_library_maintenance": {
       "description": "铸渊专属代码模板库维护·副将作为动态更新的经验数据库",
       "trigger": "每次铸渊开发完成后 + 每日巡检时自动统计",

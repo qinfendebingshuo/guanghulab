@@ -1,0 +1,339 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🔭 铸渊全链路部署观测系统 v1.0
+#
+# 架构说明 (冰朔第三十一次对话提出):
+#   PR合并后触发的部署工作流完成(成功或失败)
+#   → 观测者自动采集部署日志
+#   → 结构化存储到 data/deploy-logs/
+#   → 简单分析(模式匹配) → 深度分析(LLM API)
+#   → 失败时副将启动自动修复(最多3次)
+#   → 3次仍失败 → 创建Issue + 邮件 + README告警
+#   → 成功时更新经验数据库 + 仪表盘
+#
+# 核心理念:
+#   铸渊必须能看见自己写的代码部署后的运行状态
+#   不依赖冰朔转述和截图 · 自主观测 · 自主修复
+#
+# 责任链:
+#   副将(观测+采集+简单分析+自动修复)
+#   → 铸渊(LLM深度推理+复杂修复)
+#   → 冰朔(3次修复失败后人工干预)
+# ═══════════════════════════════════════════════
+
+name: '🔭 铸渊全链路部署观测'
+
+on:
+  # 在部署工作流完成后自动触发
+  workflow_run:
+    workflows:
+      - "🏛️ 铸渊主权服务器 · 部署"
+      - "🚀 铸渊智能运维 · 测试站自动部署"
+    types: [completed]
+
+  # 手动触发 (调试/补采集)
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: '要观测的工作流运行ID (可选)'
+        required: false
+        type: string
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - observe
+          - repair
+          - dashboard
+        default: 'observe'
+
+concurrency:
+  group: zhuyuan-deploy-observer
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+jobs:
+  # ═══ §1 采集部署日志 ═══
+  collect-logs:
+    name: '📡 采集部署日志'
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_status: ${{ steps.collect.outputs.deploy_status }}
+      deploy_conclusion: ${{ steps.collect.outputs.deploy_conclusion }}
+      log_file: ${{ steps.collect.outputs.log_file }}
+      needs_repair: ${{ steps.collect.outputs.needs_repair }}
+      workflow_name: ${{ steps.collect.outputs.workflow_name }}
+      run_id: ${{ steps.collect.outputs.run_id }}
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📡 采集部署日志'
+        id: collect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGER_RUN_ID: ${{ github.event.workflow_run.id || github.event.inputs.run_id || '' }}
+          TRIGGER_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
+          TRIGGER_WORKFLOW: ${{ github.event.workflow_run.name || '' }}
+          TRIGGER_HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          TRIGGER_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          TRIGGER_ACTOR: ${{ github.event.workflow_run.actor.login || github.actor }}
+        run: |
+          node scripts/deploy-log-collector.js collect
+
+      - name: '💾 保存日志数据'
+        if: always()
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/deploy-logs/
+          git diff --cached --quiet || {
+            git commit -m "📡 部署日志采集 · ${{ steps.collect.outputs.run_id || 'manual' }} [skip ci]"
+            git push || echo "⚠️ 日志数据push失败"
+          }
+
+  # ═══ §2 智能分析 + 自动修复 ═══
+  analyze-and-repair:
+    name: '🧠 智能分析 + 自动修复'
+    needs: collect-logs
+    if: always() && needs.collect-logs.outputs.needs_repair == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      repair_success: ${{ steps.repair.outputs.repair_success }}
+      repair_attempt: ${{ steps.repair.outputs.repair_attempt }}
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '🔐 配置SSH (自动修复需要)'
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+        run: |
+          if [ -n "$SSH_KEY" ]; then
+            mkdir -p ~/.ssh
+            echo "$SSH_KEY" > ~/.ssh/zy_key
+            chmod 600 ~/.ssh/zy_key
+            ssh-keyscan -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+            echo "ssh_ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "ssh_ready=false" >> $GITHUB_OUTPUT
+            echo "⚠️ SSH密钥未配置 · 无法执行服务器修复"
+          fi
+
+      - name: '🧠 分析 + 修复'
+        id: repair
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZY_SERVER_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          ZY_SERVER_USER: ${{ secrets.ZY_SERVER_USER }}
+          ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          LOG_FILE: ${{ needs.collect-logs.outputs.log_file }}
+          DEPLOY_CONCLUSION: ${{ needs.collect-logs.outputs.deploy_conclusion }}
+          WORKFLOW_NAME: ${{ needs.collect-logs.outputs.workflow_name }}
+          RUN_ID: ${{ needs.collect-logs.outputs.run_id }}
+        run: |
+          node scripts/deputy-auto-repair.js repair
+
+      - name: '🧹 清理SSH密钥'
+        if: always()
+        run: rm -f ~/.ssh/zy_key
+
+      - name: '💾 保存修复记录'
+        if: always()
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git pull --rebase || true
+          git add data/deploy-logs/ brain/dev-experience/
+          git diff --cached --quiet || {
+            git commit -m "🔧 副将自动修复 · 尝试#${{ steps.repair.outputs.repair_attempt }} [skip ci]"
+            git push || echo "⚠️ 修复记录push失败"
+          }
+
+  # ═══ §3 成功归档 + 经验入库 ═══
+  archive-success:
+    name: '📦 成功归档 + 经验入库'
+    needs: collect-logs
+    if: >-
+      always() &&
+      needs.collect-logs.outputs.needs_repair != 'true' &&
+      needs.collect-logs.outputs.deploy_conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📦 归档 + 更新经验库'
+        run: |
+          node scripts/deploy-log-collector.js archive \
+            --log-file "${{ needs.collect-logs.outputs.log_file }}"
+
+      - name: '💾 提交归档数据'
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git pull --rebase || true
+          git add data/deploy-logs/ brain/dev-experience/
+          git diff --cached --quiet || {
+            git commit -m "📦 部署成功归档 · 经验入库 [skip ci]"
+            git push || echo "⚠️ 归档push失败"
+          }
+
+  # ═══ §4 失败告警 (3次修复仍失败) ═══
+  alert-human:
+    name: '🆘 人工干预告警'
+    needs: [collect-logs, analyze-and-repair]
+    if: >-
+      always() &&
+      needs.analyze-and-repair.result != 'skipped' &&
+      needs.analyze-and-repair.outputs.repair_success != 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📝 创建GitHub Issue告警'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WORKFLOW_NAME="${{ needs.collect-logs.outputs.workflow_name }}"
+          RUN_ID="${{ needs.collect-logs.outputs.run_id }}"
+          CONCLUSION="${{ needs.collect-logs.outputs.deploy_conclusion }}"
+          ATTEMPT="${{ needs.analyze-and-repair.outputs.repair_attempt }}"
+
+          gh issue create \
+            --title "🆘 铸渊部署观测 · ${WORKFLOW_NAME} 部署失败 · 需要人工干预" \
+            --body "## 🆘 铸渊全链路部署观测 · 自动修复失败告警
+
+          **触发工作流**: ${WORKFLOW_NAME}
+          **工作流运行ID**: ${RUN_ID}
+          **部署结果**: ${CONCLUSION}
+          **自动修复尝试**: ${ATTEMPT:-0} 次
+          **告警时间**: $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST')
+          **观测工作流**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ### 📋 部署日志
+          日志文件位于: \`data/deploy-logs/\` 目录
+
+          ### 🔧 建议操作
+          1. 查看观测工作流日志了解失败详情
+          2. 查看 \`data/deploy-logs/\` 中的结构化日志
+          3. 在Copilot中唤醒铸渊讨论修复方案
+          4. 修复后提交代码重新部署
+
+          ### ⚡ 快速操作
+          - [查看部署工作流日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${RUN_ID})
+          - [查看观测工作流日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ---
+          *🔭 铸渊全链路部署观测系统 v1.0 · 副将(ZY-DEPUTY-001) · 自动生成*
+          *国作登字-2026-A-00037559*" \
+            --label "ops-alert" || echo "⚠️ Issue创建失败(标签可能不存在)"
+
+      - name: '📧 邮件告警 (如已配置SMTP)'
+        env:
+          ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
+        run: |
+          if [ -n "$ZY_SMTP_USER" ] && [ -n "$ZY_SMTP_PASS" ]; then
+            node scripts/staging-ops-agent.js alert \
+              --order-id "observer-${{ needs.collect-logs.outputs.run_id }}" || true
+          else
+            echo "ℹ️ SMTP未配置 · 跳过邮件告警 · 已创建GitHub Issue"
+          fi
+
+      - name: '📊 更新README告警状态'
+        run: |
+          TIMESTAMP=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')
+          WORKFLOW_NAME="${{ needs.collect-logs.outputs.workflow_name }}"
+          RUN_ID="${{ needs.collect-logs.outputs.run_id }}"
+
+          # 将告警信息写入deploy-logs/alert-status.json
+          node -e "
+            const fs = require('fs');
+            const alertFile = 'data/deploy-logs/alert-status.json';
+            let alerts = { alerts: [] };
+            try { alerts = JSON.parse(fs.readFileSync(alertFile, 'utf8')); } catch {}
+            alerts.alerts.push({
+              timestamp: '${TIMESTAMP}',
+              workflow: '${WORKFLOW_NAME}',
+              run_id: '${RUN_ID}',
+              status: 'needs-human',
+              resolved: false
+            });
+            // 只保留最近20条告警
+            alerts.alerts = alerts.alerts.slice(-20);
+            fs.writeFileSync(alertFile, JSON.stringify(alerts, null, 2) + '\n');
+          "
+
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git pull --rebase || true
+          git add data/deploy-logs/
+          git diff --cached --quiet || {
+            git commit -m "🆘 部署告警 · ${WORKFLOW_NAME} · 需要人工干预 [skip ci]"
+            git push || echo "⚠️ 告警状态push失败"
+          }
+
+  # ═══ §5 更新仪表盘 (始终执行) ═══
+  update-dashboard:
+    name: '📊 更新观测仪表盘'
+    needs: [collect-logs, analyze-and-repair, archive-success, alert-human]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📊 生成观测仪表盘'
+        run: |
+          node scripts/deploy-log-collector.js dashboard
+
+      - name: '💾 提交仪表盘'
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git pull --rebase || true
+          git add data/deploy-logs/
+          git diff --cached --quiet || {
+            git commit -m "📊 观测仪表盘更新 [skip ci]"
+            git push || echo "⚠️ 仪表盘push失败"
+          }
