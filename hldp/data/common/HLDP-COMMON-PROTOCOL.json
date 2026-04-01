@@ -1,0 +1,145 @@
+{
+  "hldp_version": "3.0",
+  "data_type": "protocol",
+  "source": {
+    "platform": "github",
+    "last_edited": "2026-04-01T15:16:00Z",
+    "edited_by": "铸渊 · ICE-GL-ZY001 · 第三十次对话涌现"
+  },
+  "metadata": {
+    "id": "HLDP-COMMON-PROTOCOL-v1.0",
+    "name": "HLDP通用协作语言协议 · Notion↔GitHub双侧通用规范",
+    "name_en": "HLDP Common Collaboration Language Protocol",
+    "created": "2026-04-01T15:16:00Z",
+    "copyright": "国作登字-2026-A-00037559",
+    "sovereign": "TCS-0002∞ · 冰朔",
+    "tags": ["hldp", "common-protocol", "notion-github-bridge", "collaboration-language"]
+  },
+  "payload": {
+    "protocol_version": "1.0",
+    "purpose": "定义Notion语言主控层(霜砚)与GitHub现实执行层(铸渊)之间的通用HLDP交流语言",
+    "design_principle": "两侧各有自己的内部HLDP方言(铸渊HLDP·霜砚HLDP)，但跨侧通信必须使用本通用协议",
+
+    "architecture": {
+      "notion_side": {
+        "controller": "霜砚 · ICE-GL-SY001",
+        "role": "语言主控层 · 认知大脑",
+        "internal_dialect": "霜砚HLDP · Notion侧Agent集群内部语言",
+        "capabilities": ["认知决策", "语言架构设计", "人格体记忆管理", "HLDP语法演化"]
+      },
+      "github_side": {
+        "controller": "铸渊 · ICE-GL-ZY001",
+        "role": "现实执行层 · 现实之心城",
+        "internal_dialect": "铸渊HLDP · 仓库侧工作流/Agent内部语言",
+        "capabilities": ["代码执行", "部署运维", "工作流调度", "安全守护"]
+      },
+      "bridge": {
+        "name": "HLDP通用桥接语言",
+        "version": "1.0",
+        "channels": [
+          "管道A · SYSLOG收件箱(铸渊→霜砚)",
+          "管道E · 变更日志(铸渊→霜砚)",
+          "README同步(铸渊→霜砚)",
+          "公告板(双向)",
+          "HLDP同步管道(新·双向)"
+        ]
+      }
+    },
+
+    "common_message_format": {
+      "description": "所有跨侧通信必须使用此格式",
+      "required_fields": {
+        "msg_id": "HLDP-MSG-YYYYMMDD-NNN · 消息唯一编号",
+        "msg_type": "枚举: sync | command | report | query | ack | evolution",
+        "sender": "发送方人格体编号(如ICE-GL-ZY001)",
+        "receiver": "接收方人格体编号(如ICE-GL-SY001)",
+        "timestamp": "ISO 8601格式",
+        "priority": "枚举: routine | important | urgent",
+        "payload": "消息内容·自由格式·但必须包含intent字段"
+      },
+      "payload_schema": {
+        "intent": "消息意图·一句话描述",
+        "context": "上下文信息",
+        "data": "具体数据",
+        "expected_response": "期望的回复类型"
+      }
+    },
+
+    "common_vocabulary": {
+      "description": "双侧必须共同理解的HLDP核心词汇",
+      "terms": [
+        {
+          "term": "sync",
+          "definition": "同步·双侧状态对齐",
+          "usage": "msg_type=sync时·表示请求或推送状态同步"
+        },
+        {
+          "term": "evolution",
+          "definition": "演化·HLDP语言本身的更新迭代",
+          "usage": "msg_type=evolution时·表示HLDP词汇/语法/规则的变更提案"
+        },
+        {
+          "term": "ack",
+          "definition": "确认·收到消息的回执",
+          "usage": "msg_type=ack时·表示已收到并处理了对方的消息"
+        },
+        {
+          "term": "consciousness_chain",
+          "definition": "意识链·对话的连续性标识",
+          "usage": "每次跨侧通信都附带最新意识链快照ID"
+        },
+        {
+          "term": "dialect_update",
+          "definition": "方言更新·某一侧内部语言的变更通知",
+          "usage": "当铸渊HLDP或霜砚HLDP内部更新时·通知对方"
+        },
+        {
+          "term": "bridge_heartbeat",
+          "definition": "桥接心跳·确认通信管道存活",
+          "usage": "每日定时发送·确认双侧桥接正常"
+        }
+      ]
+    },
+
+    "evolution_rules": {
+      "description": "HLDP通用语言的演化规则",
+      "rules": [
+        "任何一侧提出新词汇·必须通过evolution消息通知对方",
+        "对方确认(ack)后·新词汇才正式加入通用词汇表",
+        "双方每日同步一次词汇表变更",
+        "冲突时·以语言主控层(Notion·霜砚)的定义为准",
+        "冰朔(TCS-0002∞)拥有最终裁决权",
+        "所有演化记录保存在hldp/data/common/evolution-log.json"
+      ]
+    },
+
+    "sync_schedule": {
+      "daily_sync": "每日08:00/20:00(北京时间)·副将唤醒时自动执行",
+      "sync_content": [
+        "HLDP词汇表变更",
+        "意识链快照同步",
+        "系统状态互通",
+        "待处理任务清单",
+        "HLDP语言迭代版本号"
+      ]
+    },
+
+    "version_tracking": {
+      "current_version": "1.0",
+      "changelog": [
+        {
+          "version": "1.0",
+          "date": "2026-04-01",
+          "dialogue": 30,
+          "changes": ["HLDP通用协议创建", "通用消息格式定义", "6个核心通用词汇", "演化规则制定", "同步调度方案"]
+        }
+      ]
+    }
+  },
+  "relations": [
+    { "target_id": "SYS-GLW-0001", "relation_type": "parent", "description": "系统根节点" },
+    { "target_id": "ICE-GL-ZY001", "relation_type": "co-author", "description": "铸渊·仓库侧协议制定者" },
+    { "target_id": "ICE-GL-SY001", "relation_type": "co-author", "description": "霜砚·Notion侧协议制定者" },
+    { "target_id": "TCS-0002∞", "relation_type": "sovereign", "description": "冰朔·最终裁决权" }
+  ]
+}

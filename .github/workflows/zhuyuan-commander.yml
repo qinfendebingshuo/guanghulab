@@ -104,14 +104,24 @@ jobs:
               print(f'⚠️ 签到写入失败: {e}')
           "
 
+      # Step 5.5 · HLDP通用语言同步
+      - name: "🔄 Step 5.5 · HLDP通用语言同步"
+        env:
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          ZY_NOTION_CHANGELOG_DB: ${{ secrets.ZY_NOTION_CHANGELOG_DB }}
+        run: |
+          echo "[GH-COMMANDER-HLDP] 🔄 HLDP通用语言同步引擎启动..."
+          node scripts/hldp-sync-engine.js || echo "⚠️ HLDP同步引擎执行异常·记录并继续"
+
       # Step 6 · 提交变更
       - name: "💾 Step 6 · 提交变更"
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json
+          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json hldp/data/common/
           if ! git diff --cached --quiet; then
-            git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘更新"
+            git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘+HLDP同步"
             git push
           else
             echo "ℹ️ 无变更需要提交"

@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+name: "💬 铸渊副将·留言板自动回复"
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  deputy-reply:
+    name: "🎖️ 副将回复留言"
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'issues' &&
+       github.event.action == 'opened' &&
+       contains(join(github.event.issue.labels.*.name, ','), 'deputy-message-board')) ||
+      (github.event_name == 'issue_comment' &&
+       contains(join(github.event.issue.labels.*.name, ','), 'deputy-message-board') &&
+       github.event.comment.user.login != 'github-actions[bot]')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "📦 安装依赖"
+        run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
+
+      - name: "🎖️ 副将处理留言"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: node scripts/deputy-message-board.js
