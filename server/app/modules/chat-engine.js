@@ -14,7 +14,12 @@
 'use strict';
 
 const https = require('https');
-const smartRouter = require('./smart-router');
+let smartRouter;
+try {
+  smartRouter = require('./smart-router');
+} catch (e) {
+  smartRouter = null;
+}
 
 // ─── 通感语言核心系统提示词 ───
 const TCS_SYSTEM_PROMPT = `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
@@ -167,10 +172,10 @@ function callLLM(model, messages, temperature, maxTokens) {
  */
 async function chat(userId, userMessage) {
   // 1. 智能路由选择模型
-  const route = smartRouter.routeModel(userMessage, {
+  const route = smartRouter ? smartRouter.routeModel(userMessage, {
     messageCount: getUserContext(userId).messageCount,
     userId
-  });
+  }) : { model: 'deepseek-chat', modelName: 'DeepSeek-V3', reason: '默认', tier: 'economy', temperature: 0.7, maxTokens: 2000 };
 
   // 2. 组装消息
   const messages = assembleMessages(userId, userMessage);
@@ -191,7 +196,9 @@ async function chat(userId, userMessage) {
     addMessage(userId, 'assistant', assistantMessage);
 
     // 6. 记录使用统计
-    smartRouter.recordUsage(route.model, usage.prompt_tokens, usage.completion_tokens);
+    if (smartRouter) {
+      smartRouter.recordUsage(route.model, usage.prompt_tokens, usage.completion_tokens);
+    }
 
     return {
       message: assistantMessage,
@@ -238,8 +245,8 @@ function generateOfflineReply(userMessage) {
 function getChatStats() {
   return {
     activeUsers: userContexts.size,
-    modelUsage: smartRouter.getUsageStats(),
-    pricing: smartRouter.getPricingTable()
+    modelUsage: smartRouter ? smartRouter.getUsageStats() : {},
+    pricing: smartRouter ? smartRouter.getPricingTable() : {}
   };
 }
 

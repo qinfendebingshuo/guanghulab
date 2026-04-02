@@ -153,6 +153,7 @@ function routeModel(userMessage, context = {}) {
 function recordUsage(model, inputTokens, outputTokens) {
   const pricing = MODEL_PRICING[model] || MODEL_PRICING['deepseek-chat'];
 
+  // 价格单位: 元/百万token → cost = tokens * (元/百万token) / 1000000
   const cost = (inputTokens * pricing.input + outputTokens * pricing.output) / 1000000;
 
   usageStats.totalCalls++;

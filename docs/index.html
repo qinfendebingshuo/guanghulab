@@ -476,6 +476,7 @@ function go(target){
   if(target==='chars')renderChars();
   if(target==='chapters')renderChapters();
   if(target==='editor')renderEditor();
+  if(target==='charEdit'&&editingCharId)renderCharEdit();
 }
 window.go=go;
 
@@ -776,7 +777,6 @@ document.getElementById('edSave').onclick=function(){
 /* ════════════════════════════════════════
    RENDER: CharEdit (on navigate)
    ════════════════════════════════════════ */
-var origCharEditRender=null;
 function renderCharEdit(){
   if(!editingCharId)return;
   var w=getWork(activeWorkId);
@@ -790,14 +790,6 @@ function renderCharEdit(){
   document.getElementById('ceTraits').value=c.traits||'';
   document.getElementById('ceBackground').value=c.background||'';
 }
-// Hook into go() for charEdit page
-var origGo=go;
-go=function(t){
-  origGo(t);
-  if(t==='charEdit'&&editingCharId)renderCharEdit();
-};
-window.go=go;
-
 /* ════════════════════════════════════════
    THEME
    ════════════════════════════════════════ */
@@ -968,16 +960,17 @@ chatIn.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();send()}};
    COS SYNC (团队内测用户 → COS)
    ════════════════════════════════════════ */
 var cosSyncTimer=null;
+var cosSyncing=false;
 function syncToCOS(works){
-  // 防抖：最多每10秒同步一次
   clearTimeout(cosSyncTimer);
   cosSyncTimer=setTimeout(function(){
-    if(!usr.id)return;
+    if(!usr.id||cosSyncing)return;
+    cosSyncing=true;
     fetch('/api/cos/sync-works',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({userId:usr.id,works:works})
-    }).catch(function(){/* 离线时静默失败，本地已保存 */});
+    }).then(function(){cosSyncing=false}).catch(function(){cosSyncing=false});
   },10000);
 }
 // 启动时尝试从COS恢复（团队用户）

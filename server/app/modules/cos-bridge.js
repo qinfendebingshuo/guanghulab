@@ -18,7 +18,6 @@
 
 const crypto = require('crypto');
 const https = require('https');
-const http = require('http');
 const path = require('path');
 const fs = require('fs');
 
@@ -79,9 +78,10 @@ function generateSignature(method, pathname, headers, secretId, secretKey) {
 
 /**
  * 获取桶的完整域名
+ * 注意: bucketName需包含appid后缀，如 zy-core-bucket-1234567890
+ * 冰朔在腾讯云创建桶时的完整名称需配置在COS_CONFIG中
  */
 function getBucketHost(bucketName, region) {
-  // 从bucket配置获取完整ID（包含appid）
   return `${bucketName}.cos.${region}.myqcloud.com`;
 }
 
