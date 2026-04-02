@@ -480,6 +480,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 /* Blinking cursor */
 .os-blink{animation:osBlink 1.2s step-end infinite;color:var(--ok)}
 @keyframes osBlink{0%,100%{opacity:1}50%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.os-blink{animation:none}.os-task-dot.active{animation:none}.os-layer-dot{animation:none}.os-wf-dot{animation:none}.os-progress-fill::after{animation:none}}
 
 /* OS Block sections */
 .os-block{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(110,168,254,.08)}
