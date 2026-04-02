@@ -100,14 +100,22 @@ async function runHealthCheck(host) {
   console.log(`🔍 健康检查 · 目标: ${host}`);
   console.log('─'.repeat(50));
 
+  // 如果host是IP地址，带host_prefix的检查无效（IP不支持子域名）→ 降级为non-critical
+  const isIpAddress = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(host);
+  if (isIpAddress) {
+    console.log('  ℹ️ 目标为IP地址 · 子域名检查降级为非关键');
+  }
+
   const results = [];
   let criticalFail = false;
 
   for (const endpoint of HEALTH_ENDPOINTS) {
     const checkHost = endpoint.host_prefix ? `${endpoint.host_prefix}.${host}` : host;
+    // IP地址不支持子域名前缀，降级为non-critical避免误报
+    const isCritical = endpoint.critical && !(isIpAddress && endpoint.host_prefix);
     const result = await httpCheck(checkHost, endpoint.path, endpoint.port);
 
-    const icon = result.ok ? '✅' : (endpoint.critical ? '❌' : '⚠️');
+    const icon = result.ok ? '✅' : (isCritical ? '❌' : '⚠️');
     console.log(`  ${icon} ${endpoint.name}: ${result.ok ? 'OK' : result.error || `HTTP ${result.status}`}`);
 
     results.push({
@@ -116,7 +124,7 @@ async function runHealthCheck(host) {
       checked_at: new Date().toISOString()
     });
 
-    if (!result.ok && endpoint.critical) {
+    if (!result.ok && isCritical) {
       criticalFail = true;
     }
   }
@@ -302,16 +310,17 @@ async function analyzeLog(logContent, orderId) {
   return deepResult;
 }
 
-// ── 邮件告警 (3次重试失败) ──────────────────
-async function sendAlert(orderId, email) {
+// ── 邮件告警 (最大重试失败) ──────────────────
+async function sendAlert(orderId, email, options = {}) {
   const smtpUser = process.env.ZY_SMTP_USER;
   const smtpPass = process.env.ZY_SMTP_PASS;
+  const attemptCount = options.attempt || process.env.REPAIR_ATTEMPT || '?';
 
   if (!smtpUser || !smtpPass) {
     console.error('❌ SMTP未配置 (需要ZY_SMTP_USER和ZY_SMTP_PASS)');
     console.log('📧 告警内容 (控制台输出):');
     console.log(`   工单: ${orderId}`);
-    console.log(`   状态: 3次自动修复未能解决，需要人工干预`);
+    console.log(`   状态: ${attemptCount}次自动修复未能解决，需要人工干预`);
     return false;
   }
 
@@ -345,7 +354,7 @@ async function sendAlert(orderId, email) {
     <p style="color: #666; margin-top: 0;">ZY-Staging-Ops-Agent · 自动告警</p>
 
     <div style="background: #fef5f5; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin: 20px 0;">
-      <strong style="color: #c0392b;">⚠️ 自动修复已达最大重试次数(3次)，需要冰朔人工干预</strong>
+      <strong style="color: #c0392b;">⚠️ 自动修复已达最大重试次数(${attemptCount}次)，需要冰朔人工干预</strong>
     </div>
 
     <table style="width: 100%; border-collapse: collapse;">
@@ -473,7 +482,7 @@ async function main() {
         console.error('❌ 需要 --order-id 参数');
         process.exit(1);
       }
-      await sendAlert(orderId, args.email);
+      await sendAlert(orderId, args.email, { attempt: args.attempt });
       break;
     }
 

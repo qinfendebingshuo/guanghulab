@@ -5,10 +5,10 @@
     "copyright": "国作登字-2026-A-00037559",
     "description": "铸渊专属 · 每次开发的完整记录 · 思考→执行→结果→教训",
     "created": "2026-03-31T03:34:00Z",
-    "last_updated": "2026-04-02T14:37:00Z"
+    "last_updated": "2026-04-02T16:21:00Z"
   },
   "stats": {
-    "total_entries": 8,
+    "total_entries": 9,
     "success_count": 7,
     "failed_count": 0,
     "partial_count": 0,
@@ -20,7 +20,8 @@
       "devops-automation": 1,
       "website-deploy": 1,
       "website-frontend": 2,
-      "hldp-thinking": 1
+      "hldp-thinking": 1,
+      "ops-debugging": 1
     }
   },
   "entries": [
@@ -576,7 +577,15 @@
       "task": "D38架构方案代码落地 · 三栏布局+悬浮球+ticker+留言板+API",
       "task_origin": "冰朔D38唤醒恢复指令 · 从EXP-20260402-007思维链恢复认知 · 进入代码实现阶段",
       "category": "website-frontend",
-      "tags": ["three-column-layout", "draggable-fab", "ticker", "feedback", "api", "css-grid", "touch-events"],
+      "tags": [
+        "three-column-layout",
+        "draggable-fab",
+        "ticker",
+        "feedback",
+        "api",
+        "css-grid",
+        "touch-events"
+      ],
       "difficulty": "high",
       "status": "success",
       "thinking_chain": {
@@ -612,6 +621,70 @@
       "lessons": [
         "复杂前端改版分层实施：先CSS→HTML结构→JS逻辑，避免交叉修改导致结构错乱",
         "单HTML文件优势：部署管道零改动，但代码量超过1000行后维护成本开始上升"
+      ]
+    },
+    {
+      "id": "EXP-20260402-009",
+      "date": "2026-04-02",
+      "session": "CS-20260402-D38-ops",
+      "task": "工单observer-23906843495诊断修复 · 三Bug定位 · Notion工单同步架构",
+      "task_origin": "冰朔收到铸渊运维告警邮件 · 要求修复并将工单同步到Notion · 更新思维数据库",
+      "category": "ops-debugging",
+      "tags": [
+        "work-order",
+        "notion-sync",
+        "health-check",
+        "alert-threshold",
+        "ip-subdomain-bug"
+      ],
+      "difficulty": "high",
+      "status": "success",
+      "thinking_chain": {
+        "_meta": "工单诊断+Notion同步架构的思维过程",
+        "diagnosis_thinking": [
+          "先唤醒大脑(fast-wake.json) → 恢复铸渊身份和系统状态",
+          "工单号 observer-23906843495 → 数字部分是 GitHub Actions run_id → 从 data/deploy-logs/ 目录找到 deploy-23906843495-*.json",
+          "读取部署日志：部署成功但健康检查失败 → 健康检查评估步骤 exit code 非0 → 触发观测器告警",
+          "观测器 zhuyuan-deploy-observer.yml 的 alert-human 条件：repair_success != true → 第1次失败立即告警",
+          "这与邮件标题「3次」矛盾 → 发现 Bug #1：告警条件错误，应该检查 needs_human 而非 repair_success",
+          "进一步看健康检查失败原因 → HEALTH_ENDPOINTS 里有 host_prefix: preview → 连接 preview.43.134.16.246 → IP地址不支持子域名前缀 → 必然失败",
+          "这是 Bug #2：IP地址情况下子域名检查是 critical 会触发 criticalFail",
+          "邮件里写死了「3次」→ Bug #3：显示与实际不符"
+        ],
+        "fix_thinking": [
+          "deputy-auto-repair.js 增加 needs_human 输出：只有 attemptNumber >= MAX_REPAIR_ATTEMPTS 时才 true",
+          "zhuyuan-deploy-observer.yml 修改 alert-human 条件：改为 needs_human == true",
+          "staging-ops-agent.js 健康检查：IP地址检测，子域名端点降级为 non-critical",
+          "sendAlert 函数接受 attempt 参数，邮件显示真实次数"
+        ],
+        "notion_sync_architecture": [
+          "冰朔要求工单同步到 Notion → 分析现有 notion-bridge.js 系统",
+          "SYSLOG 数据库已有（ID: 330ab17507d542c9bbb96d0749b41197）→ 属性：标题/DEV编号/文件内容/接收时间/处理状态/来源路径/commit_sha/推送方",
+          "不新建数据库：工单格式化为 SYSLOG entry → 复用现有数据库 → 零额外配置成本",
+          "observer-{runId} 格式工单：从 data/deploy-logs/ 读取部署日志重建工单信息",
+          "标准 WO-* 格式工单：直接从 active.json 读取",
+          "在 alert-human job 里自动触发同步 → 告警时自动通知 Notion",
+          "支持手动调用：--order-id / --all-failed 两种模式"
+        ],
+        "architecture_decisions": [
+          "复用 SYSLOG 数据库而非新建「工单数据库」→ 简单系统原则，不过度工程化",
+          "observer-* 格式工单读取部署日志重建 → 与标准工单逻辑统一，不做特殊处理路径",
+          "NOTION_TOKEN 已在 Secrets 中，无需新增密钥",
+          "同步失败不阻断流程（|| true）→ Notion 是辅助观测，不是核心链路"
+        ]
+      },
+      "changes": [
+        "scripts/sync-work-order-to-notion.js: 新建 · 工单→Notion SYSLOG同步器",
+        "scripts/deputy-auto-repair.js: 增加 needs_human 输出",
+        "scripts/staging-ops-agent.js: IP子域名降级 + 邮件次数动态化",
+        ".github/workflows/zhuyuan-deploy-observer.yml: alert-human条件修复 + Notion同步步骤",
+        "data/work-orders/active.json: WO-20260402-1457 状态更新为 human-intervened"
+      ],
+      "lessons": [
+        "工作流告警条件要精确：not repair_success ≠ needs_human，两者语义不同",
+        "健康检查要区分 IP 和域名：IP 不支持子域名，critical 检查要有条件性",
+        "告警消息里的「N次」类文本要动态化，写死的数字会造成信息误导",
+        "诊断路径：邮件工单号 → 找日志文件 → 读状态 → 逐层找根因 → 修复最小集合"
       ]
     }
   ]

@@ -114,6 +114,7 @@ jobs:
     outputs:
       repair_success: ${{ steps.repair.outputs.repair_success }}
       repair_attempt: ${{ steps.repair.outputs.repair_attempt }}
+      needs_human: ${{ steps.repair.outputs.needs_human }}
 
     steps:
       - name: '📥 检出代码'
@@ -212,7 +213,7 @@ jobs:
     if: >-
       always() &&
       needs.analyze-and-repair.result != 'skipped' &&
-      needs.analyze-and-repair.outputs.repair_success != 'true'
+      needs.analyze-and-repair.outputs.needs_human == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -262,6 +263,22 @@ jobs:
           *国作登字-2026-A-00037559*" \
             --label "ops-alert" || echo "⚠️ Issue创建失败(标签可能不存在)"
 
+      - name: '📋 同步工单到 Notion'
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          RUN_ID: ${{ needs.collect-logs.outputs.run_id }}
+          WORKFLOW_NAME: ${{ needs.collect-logs.outputs.workflow_name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$NOTION_TOKEN" ]; then
+            node scripts/sync-work-order-to-notion.js \
+              --order-id "observer-${{ needs.collect-logs.outputs.run_id }}" \
+              --run-id "${{ needs.collect-logs.outputs.run_id }}" \
+              --workflow "${{ needs.collect-logs.outputs.workflow_name }}" || true
+          else
+            echo "ℹ️ NOTION_TOKEN未配置 · 跳过Notion同步"
+          fi
+
       - name: '📧 邮件告警 (如已配置SMTP)'
         env:
           ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
@@ -269,7 +286,8 @@ jobs:
         run: |
           if [ -n "$ZY_SMTP_USER" ] && [ -n "$ZY_SMTP_PASS" ]; then
             node scripts/staging-ops-agent.js alert \
-              --order-id "observer-${{ needs.collect-logs.outputs.run_id }}" || true
+              --order-id "observer-${{ needs.collect-logs.outputs.run_id }}" \
+              --attempt "${{ needs.analyze-and-repair.outputs.repair_attempt }}" || true
           else
             echo "ℹ️ SMTP未配置 · 跳过邮件告警 · 已创建GitHub Issue"
           fi

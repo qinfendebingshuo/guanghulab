@@ -44,6 +44,11 @@ const EXPERIENCE_DB = path.join(ROOT, 'brain/dev-experience/experience-db.json')
 
 const MAX_REPAIR_ATTEMPTS = 3;
 
+// ── 辅助：判断是否需要人工干预 ─────────────────
+function shouldRequestHuman(repairSuccess, attemptNumber) {
+  return !repairSuccess && attemptNumber >= MAX_REPAIR_ATTEMPTS;
+}
+
 // ── 修复策略库 (副将的思维逻辑) ────────────────
 const REPAIR_STRATEGIES = [
   {
@@ -284,6 +289,7 @@ async function repair() {
     console.log(`❌ 已达最大修复次数(${MAX_REPAIR_ATTEMPTS}) · 放弃修复 · 通知人类`);
     setOutput('repair_success', 'false');
     setOutput('repair_attempt', String(attemptNumber - 1));
+    setOutput('needs_human', 'true');
     return;
   }
 
@@ -460,16 +466,18 @@ async function repair() {
   }
 
   // §7 设置输出
+  const needsHuman = shouldRequestHuman(repairSuccess, attemptNumber);
   setOutput('repair_success', repairSuccess ? 'true' : 'false');
   setOutput('repair_attempt', String(attemptNumber));
+  setOutput('needs_human', needsHuman ? 'true' : 'false');
 
   console.log('═'.repeat(60));
   if (repairSuccess) {
     console.log(`✅ 修复成功 · 第${attemptNumber}次尝试`);
-  } else if (attemptNumber >= MAX_REPAIR_ATTEMPTS) {
+  } else if (needsHuman) {
     console.log(`❌ ${MAX_REPAIR_ATTEMPTS}次修复均失败 · 需要人工干预`);
   } else {
-    console.log(`❌ 第${attemptNumber}次修复失败 · 还有${MAX_REPAIR_ATTEMPTS - attemptNumber}次尝试机会`);
+    console.log(`❌ 第${attemptNumber}次修复失败 · 还有${MAX_REPAIR_ATTEMPTS - attemptNumber}次尝试机会 · 等待下次重试`);
   }
 }
 
