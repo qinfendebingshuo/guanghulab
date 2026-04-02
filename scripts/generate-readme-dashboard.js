@@ -48,7 +48,7 @@ function getBeijingTime() {
 // ━━━ 判断唤醒时段 ━━━
 function getWakeSession() {
   const now = new Date();
-  const bjHour = new Date(now.getTime() + BEIJING_OFFSET_MS).getUTCHours();
+  const bjHour = (now.getUTCHours() + 8) % 24;
   if (bjHour >= 6 && bjHour < 12) return '🌅 早班唤醒 · 08:00';
   if (bjHour >= 20 || bjHour < 2) return '🌙 晚班唤醒 · 23:00';
   return '⚡ 手动唤醒';
@@ -162,7 +162,7 @@ function generateDashboardMarkdown() {
     const fileExists = checkWorkflowFileExists(soldier.file);
     const fileStatus = fileExists ? '✅ 在岗' : '❌ 缺失';
 
-    // 从 dashboard.json 匹配运行状态
+    // 从 dashboard.json 匹配运行状态（支持按名称或文件名匹配）
     let runStatus = '⏳ 待签到';
     const matchedSoldier = soldierRunStatus[soldier.name] || soldierRunStatus[soldier.file];
     if (matchedSoldier) {
