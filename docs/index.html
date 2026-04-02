@@ -2616,17 +2616,20 @@ var AgentBridge = (function(){
     }
   };
 
+  var MAX_LOGS = 200;
+  var FLUSH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
   // 系统日志结构
   function createLog(action, detail, level){
     return {
       id: 'SYSLOG-' + Date.now().toString(36),
       timestamp: new Date().toISOString(),
-      agent: AGENT_PERSONA.id,
+      agent_id: AGENT_PERSONA.id,
       action: action,
       detail: detail,
       level: level || 'info',
       channels: DA.info().channels || {},
-      session: sessionId()
+      session_id: sessionId()
     };
   }
 
@@ -2646,8 +2649,7 @@ var AgentBridge = (function(){
     try{
       var logs = JSON.parse(localStorage.getItem(SYSLOG_KEY) || '[]');
       logs.push(log);
-      // 保留最近200条
-      if(logs.length > 200) logs = logs.slice(-200);
+      if(logs.length > MAX_LOGS) logs = logs.slice(-MAX_LOGS);
       localStorage.setItem(SYSLOG_KEY, JSON.stringify(logs));
     }catch(e){}
     return log;
@@ -2693,7 +2695,7 @@ var AgentBridge = (function(){
       var r = await fetch('/api/agent-syslog', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({logs: unflushed, session: sessionId()}),
+        body: JSON.stringify({logs: unflushed, session_id: sessionId()}),
         signal: AbortSignal.timeout(5000)
       });
       if(r.ok){
@@ -2712,8 +2714,8 @@ var AgentBridge = (function(){
     writeLog('agent-init', 'Agent桥接系统启动 · 会话 ' + sessionId(), 'info');
     // 尝试获取远程配置
     fetchRemoteConfig();
-    // 每5分钟尝试回传日志
-    setInterval(flushLogsToBackend, 300000);
+    // 定期尝试回传日志
+    setInterval(flushLogsToBackend, FLUSH_INTERVAL_MS);
     // 首次尝试
     setTimeout(flushLogsToBackend, 10000);
   }
@@ -2940,9 +2942,12 @@ function updateDailyLog(){
   var total = 0;
   ws.forEach(function(w){total += totalWords(w)});
   var log = loadDailyLog();
-  log[todayStr] = total - (log._prevTotal || 0);
-  if(log[todayStr] < 0) log[todayStr] = 0;
-  // Store running total for delta calculation
+  var prevTotal = log._prevTotal || 0;
+  var delta = total - prevTotal;
+  // Only record positive deltas (actual writing), ignore decreases from deletions
+  if(delta > 0){
+    log[todayStr] = (log[todayStr] || 0) + delta;
+  }
   log._prevTotal = total;
   saveDailyLog(log);
 }
@@ -3061,11 +3066,9 @@ function renderAchievements(totalW, ws, dailyLog){
 
 /* ════════════════════════════════════════
    ENHANCED OFFLINE ROUTING (新页面指令扩展)
+   使用包装函数模式扩展offline，保持清晰的调用链
    ════════════════════════════════════════ */
-// Extend offline function with new module awareness
-var _origOffline = offline;
-// Patch offline to handle new commands
-var origOfflineRef = offline;
+var baseOffline = offline;
 offline = function(msg){
   var m = msg.toLowerCase();
   // 新模块相关智能回复
@@ -3078,10 +3081,11 @@ offline = function(msg){
     var log = loadDailyLog();
     var today = new Date().toISOString().slice(0,10);
     var todayW = log[today] || 0;
-    return '🎯 今日码字进度\n\n已完成：' + todayW + ' 字\n目标：' + settings.dailyGoal + ' 字\n进度：' + Math.min(100, Math.round(todayW/settings.dailyGoal*100)) + '%\n\n' + (todayW >= settings.dailyGoal ? '恭喜达标！🎉' : '继续加油！💪');
+    var goal = settings.dailyGoal || 3000;
+    return '🎯 今日码字进度\n\n已完成：' + todayW + ' 字\n目标：' + goal + ' 字\n进度：' + Math.min(100, Math.round(todayW/goal*100)) + '%\n\n' + (todayW >= goal ? '恭喜达标！🎉' : '继续加油！💪');
   }
-  // Fallback to original
-  return origOfflineRef(msg);
+  // Fallback to base implementation
+  return baseOffline(msg);
 };
 
 })();
