@@ -66,7 +66,7 @@
 
     "daily_patrol": {
       "description": "每日早晚巡检",
-      "trigger": "schedule 08:00/20:00 Beijing",
+      "trigger": "schedule 08:00/23:00 Beijing",
       "workflow": ".github/workflows/zhuyuan-commander.yml",
       "checks": [
         "brain完整性校验",
@@ -75,7 +75,8 @@
         "指纹扫描",
         "签到+更新",
         "HLDP通用语言同步",
-        "铸渊HLDP方言统计更新"
+        "铸渊HLDP方言统计更新",
+        "仓库首页签到仪表盘更新(README.md)"
       ]
     },
 
