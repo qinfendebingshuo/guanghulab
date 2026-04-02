@@ -321,6 +321,151 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .api-conn-btn:hover{opacity:.85}
 .api-conn-btn:disabled{opacity:.4;cursor:default}
 .api-st{font-size:10px;color:var(--dim);padding:2px 2px}
+
+/* ═══════════════════════════════════════════════
+   V43.0 大气化UI改版 · 触控放大 · 动态效果增强
+   ═══════════════════════════════════════════════ */
+
+/* ── 触控区域全局放大 ── */
+.btn{padding:8px 16px;font-size:13px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn-accent{padding:9px 20px;font-size:14px}
+[data-touch="true"] .btn{min-height:48px;padding:10px 18px}
+[data-touch="true"] .btn-accent{padding:10px 22px}
+.entry-card{padding:32px 20px}
+.entry-card em{font-size:48px;margin-bottom:14px}
+.entry-card strong{font-size:18px;margin-bottom:6px;letter-spacing:.5px}
+.entry-card span{font-size:13px}
+.hub-card{padding:32px 18px}
+.hub-card em{font-size:48px;margin-bottom:12px}
+.hub-card strong{font-size:16px}
+.card{padding:18px;margin-bottom:14px}
+[data-touch="true"] .card{padding:20px}
+[data-touch="true"] .entry-card{padding:36px 22px}
+
+/* ── Uptime Counter (灯塔仪表盘核心) ── */
+.uptime-block{text-align:center;padding:28px 16px 20px;margin-bottom:8px}
+.uptime-num{font-size:clamp(52px,12vw,80px);font-weight:800;font-family:var(--m);background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 50%,var(--accent3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;animation:uptimePulse 6s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(110,168,254,.3));letter-spacing:-2px}
+.uptime-label{font-size:14px;color:var(--dim);margin-top:8px;letter-spacing:3px;text-transform:uppercase}
+@keyframes uptimePulse{0%,100%{filter:drop-shadow(0 0 20px rgba(110,168,254,.2))}50%{filter:drop-shadow(0 0 40px rgba(110,168,254,.5))}}
+
+/* ── Dynamic Reminders (动态提醒) ── */
+.remind-section{margin:16px 0 20px}
+.remind-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:15px;font-weight:700}
+.remind-header em{font-style:normal;font-size:20px;animation:bellSwing 4s ease-in-out infinite}
+@keyframes bellSwing{0%,100%{transform:rotate(0)}10%{transform:rotate(12deg)}20%{transform:rotate(-10deg)}30%{transform:rotate(6deg)}40%{transform:rotate(-4deg)}50%{transform:rotate(0)}}
+.remind-count{background:rgba(251,191,36,.15);color:var(--warn);font-size:12px;padding:3px 10px;border-radius:20px;font-weight:700;font-family:var(--m);min-width:24px;text-align:center}
+.remind-card{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;background:rgba(8,14,30,.5);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);margin-bottom:8px;transition:all .4s cubic-bezier(.4,0,.2,1);cursor:default;position:relative;overflow:hidden;min-height:48px}
+.remind-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:0 2px 2px 0;transition:width .3s}
+.remind-card:hover{border-color:rgba(110,168,254,.25);box-shadow:0 0 24px rgba(110,168,254,.1);transform:translateX(4px)}
+.remind-card:hover::before{width:4px}
+.remind-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:rgba(110,168,254,.06);border:1px solid rgba(110,168,254,.08)}
+.remind-body{flex:1;min-width:0}
+.remind-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.remind-desc{font-size:12px;color:var(--dim);line-height:1.5}
+.remind-time{font-size:10px;color:var(--muted);font-family:var(--m);flex-shrink:0;padding-top:3px}
+.remind-card.urgent{border-color:rgba(251,191,36,.2);background:rgba(28,18,6,.35)}
+.remind-card.urgent::before{background:linear-gradient(180deg,var(--warn),var(--err))}
+.remind-card.new{animation:remindSlideIn .5s cubic-bezier(.4,0,.15,1) both}
+@keyframes remindSlideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Status Badge ── */
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15);color:var(--ok);animation:glowPulse 3s ease-in-out infinite}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 8px rgba(110,168,254,.1),0 0 20px rgba(110,168,254,.05)}50%{box-shadow:0 0 16px rgba(110,168,254,.2),0 0 40px rgba(110,168,254,.1)}}
+
+/* ── Module Selection Grid ── */
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin:16px 0}
+.mod-card{padding:28px 16px;text-align:center;background:rgba(8,14,30,.45);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
+.mod-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(110,168,254,.06),transparent 70%);opacity:0;transition:opacity .4s}
+.mod-card:hover{border-color:rgba(110,168,254,.3);box-shadow:0 0 30px rgba(110,168,254,.12);transform:translateY(-4px) scale(1.02)}
+.mod-card:hover::after{opacity:1}
+.mod-card:active{transform:scale(.97)}
+.mod-card em{font-style:normal;font-size:42px;display:block;margin-bottom:10px;filter:drop-shadow(0 0 12px rgba(110,168,254,.2))}
+.mod-card strong{font-size:14px;display:block;margin-bottom:4px}
+.mod-card span{font-size:11px;color:var(--dim)}
+.mod-card .mod-tag{position:absolute;top:8px;right:8px}
+.mod-card.disabled{opacity:.5;cursor:not-allowed}
+.mod-card.disabled:hover{transform:none;box-shadow:none;border-color:rgba(110,168,254,.1)}
+
+/* ── Workspace Dashboard ── */
+.ws-header{text-align:center;padding:24px 16px 16px}
+.ws-header h2{font-size:22px;font-weight:700;margin-bottom:4px}
+.ws-header p{font-size:13px;color:var(--dim)}
+.ws-goal{background:rgba(8,14,30,.55);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);padding:22px;margin-bottom:14px;text-align:center;transition:all .3s}
+.ws-goal:hover{border-color:rgba(110,168,254,.2)}
+.ws-goal-title{font-size:12px;color:var(--dim);margin-bottom:8px;font-weight:600}
+.ws-goal-num{font-size:40px;font-weight:800;font-family:var(--m);color:var(--accent);margin:6px 0;line-height:1.1}
+.ws-goal-sub{font-size:12px;color:var(--dim);margin-top:4px}
+.ws-goal-bar{height:8px;background:rgba(110,168,254,.1);border-radius:4px;overflow:hidden;margin:14px 0 8px}
+.ws-goal-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1);position:relative}
+.ws-goal-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3));animation:shimmer 2s infinite}
+@keyframes shimmer{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.ws-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.ws-quick-btn{padding:16px 12px;text-align:center;background:rgba(8,14,30,.4);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);cursor:pointer;transition:all .35s;font-size:13px;color:var(--text);font-family:var(--f);min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px}
+.ws-quick-btn:hover{border-color:rgba(110,168,254,.25);background:rgba(110,168,254,.05);transform:translateY(-2px);box-shadow:0 0 16px rgba(110,168,254,.08)}
+.ws-quick-btn:active{transform:scale(.97)}
+.ws-quick-btn em{font-style:normal;font-size:20px}
+
+/* ── Inspiration Page ── */
+.insp-input-area{display:flex;gap:8px;margin-bottom:14px}
+.insp-input-area input{flex:1}
+.insp-input-area .btn{flex-shrink:0}
+.insp-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.insp-tag{padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);color:var(--dim);transition:all .25s;min-height:34px;display:flex;align-items:center}
+.insp-tag.active{background:rgba(110,168,254,.1);border-color:var(--accent);color:var(--accent)}
+.insp-tag:hover{border-color:var(--accent);color:var(--accent)}
+.insp-card{padding:16px 18px;background:rgba(8,14,30,.5);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);margin-bottom:8px;position:relative;transition:all .3s;animation:slideInUp .4s ease-out both}
+.insp-card:hover{border-color:rgba(110,168,254,.2);box-shadow:0 0 16px rgba(110,168,254,.06)}
+.insp-text{font-size:14px;margin-bottom:8px;line-height:1.6}
+.insp-meta{display:flex;gap:8px;align-items:center;font-size:10px;color:var(--muted)}
+.insp-del{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:6px;transition:color .2s;border-radius:50%;min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center}
+.insp-del:hover{color:var(--err);background:rgba(248,113,113,.08)}
+
+/* ── Progress Page ── */
+.prog-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.prog-stat{text-align:center;padding:18px 8px;background:rgba(8,14,30,.5);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);transition:all .3s}
+.prog-stat:hover{border-color:rgba(110,168,254,.2)}
+.prog-stat b{display:block;font-size:28px;font-family:var(--m);color:var(--accent);margin-bottom:4px}
+.prog-stat small{font-size:10px;color:var(--dim)}
+.prog-cal{margin:16px 0}
+.prog-cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.prog-cal-day{padding:10px 4px;font-size:11px;border-radius:var(--rs);color:var(--dim);transition:all .2s;cursor:default}
+.prog-cal-day.head{font-weight:700;font-size:10px;color:var(--muted)}
+.prog-cal-day.has-words{background:rgba(52,211,153,.1);color:var(--ok);cursor:pointer}
+.prog-cal-day.has-words:hover{background:rgba(52,211,153,.2)}
+.prog-cal-day.today{border:1px solid var(--accent);color:var(--accent);font-weight:700}
+.achieve-card{display:flex;align-items:center;gap:12px;padding:14px;background:rgba(8,14,30,.4);border:1px solid rgba(110,168,254,.06);border-radius:var(--r);margin-bottom:8px;transition:all .3s}
+.achieve-card:hover{border-color:rgba(110,168,254,.15)}
+.achieve-card.earned{border-color:rgba(52,211,153,.2);background:rgba(10,30,20,.3)}
+.achieve-card em{font-style:normal;font-size:28px}
+.achieve-card .ach-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.achieve-card .ach-desc{font-size:11px;color:var(--dim)}
+
+/* ── Settings Page ── */
+.set-group{margin-bottom:20px}
+.set-group-title{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:14px;background:rgba(8,14,30,.4);border-radius:var(--rs);margin-bottom:6px;min-height:52px;border:1px solid rgba(110,168,254,.06);transition:all .3s}
+.set-row:hover{border-color:rgba(110,168,254,.15)}
+.set-row label{margin:0;font-size:13px;color:var(--text);font-weight:400}
+.set-row input[type=number]{width:80px;text-align:center;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;outline:none;font-family:var(--m)}
+.set-row input[type=number]:focus{border-color:var(--accent)}
+.set-row select{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);padding:8px 12px;font-size:13px;outline:none;font-family:var(--f);min-height:36px}
+.set-row select:focus{border-color:var(--accent)}
+
+/* ── Staggered Animation ── */
+@keyframes slideInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.anim-in{animation:slideInUp .5s ease-out both}
+.anim-in:nth-child(1){animation-delay:0s}
+.anim-in:nth-child(2){animation-delay:.06s}
+.anim-in:nth-child(3){animation-delay:.12s}
+.anim-in:nth-child(4){animation-delay:.18s}
+.anim-in:nth-child(5){animation-delay:.24s}
+.anim-in:nth-child(6){animation-delay:.3s}
+
+/* ── Particle Trail Effect for Cards ── */
+.entry-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(110,168,254,.03),transparent 60%);animation:cardRotate 8s linear infinite;pointer-events:none}
+@keyframes cardRotate{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -354,40 +499,115 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
     <!-- ═══ Center: 核心内容 ═══ -->
     <div class="home-center">
-      <div class="home-hero">
-        <div class="home-ver" id="homeVer">AGE OS v42.0</div>
+      <!-- Uptime Counter (灯塔仪表盘核心) -->
+      <div class="uptime-block">
+        <div class="home-ver" id="homeVer">AGE OS v43.0</div>
+        <div class="uptime-num" id="uptimeNum">—</div>
+        <div class="uptime-label">系统运行</div>
+      </div>
+
+      <div class="home-hero" style="padding:0 16px 20px">
         <h1>光湖灯塔</h1>
         <div class="sub">语言驱动操作系统 · 人类只说话，系统搞定一切</div>
         <div class="quote">「语言 = 现实」</div>
       </div>
 
+      <!-- Dynamic Reminders (动态提醒) -->
+      <div class="remind-section" id="remindSection">
+        <div class="remind-header"><em>🔔</em> 动态提醒 <span class="remind-count" id="remindCount">0</span></div>
+        <div id="remindList">
+          <div class="remind-card anim-in">
+            <div class="remind-icon">🌍</div>
+            <div class="remind-body">
+              <div class="remind-title">数字地球六层架构稳定</div>
+              <div class="remind-desc">L1地核→L6太空 · 全层就绪</div>
+            </div>
+            <div class="remind-time" id="remindTime1">—</div>
+          </div>
+          <div class="remind-card anim-in">
+            <div class="remind-icon">🧠</div>
+            <div class="remind-body">
+              <div class="remind-title">HLDP协作语言协议在线</div>
+              <div class="remind-desc">Notion桥接 · SYSLOG+变更+README同步</div>
+            </div>
+            <div class="remind-time" id="remindTime2">—</div>
+          </div>
+          <div class="remind-card anim-in">
+            <div class="remind-icon">🛡️</div>
+            <div class="remind-body">
+              <div class="remind-title">语言膜防护完整</div>
+              <div class="remind-desc">统一语义网关 · 完整的圆 · 无缺口</div>
+            </div>
+            <div class="remind-time" id="remindTime3">—</div>
+          </div>
+          <div class="remind-card anim-in">
+            <div class="remind-icon">✍️</div>
+            <div class="remind-body">
+              <div class="remind-title">码字工作台 v43.0 升级</div>
+              <div class="remind-desc">个人工作台 · 灵感速记 · 进度追踪 · 模块选择</div>
+            </div>
+            <div class="remind-time" id="remindTime4">—</div>
+          </div>
+          <div class="remind-card urgent anim-in" id="remindServer">
+            <div class="remind-icon">⚠️</div>
+            <div class="remind-body">
+              <div class="remind-title">中继服务器状态</div>
+              <div class="remind-desc" id="remindServerDesc">检测中…</div>
+            </div>
+            <div class="remind-time" id="remindTime5">—</div>
+          </div>
+          <div class="remind-card anim-in">
+            <div class="remind-icon">🤖</div>
+            <div class="remind-body">
+              <div class="remind-title">Agent桥接系统就绪</div>
+              <div class="remind-desc">用户API通道 · 不依赖中继服务器</div>
+            </div>
+            <div class="remind-time" id="remindTime6">—</div>
+          </div>
+        </div>
+      </div>
+
       <div class="ticker-wrap">
         <div class="ticker" id="ticker">
-          <span><em>🏛️</em> AGE OS v42.0 运行中</span>
-          <span><em>🌌</em> 银河星空UI上线</span>
+          <span><em>🏛️</em> AGE OS v43.0 运行中</span>
+          <span><em>🌌</em> 银河星空UI · 大气化改版</span>
           <span><em>📡</em> COS双桶存储已上线</span>
           <span><em>🧠</em> HLDP协作语言协议在线</span>
-          <span><em>✍️</em> 码字工作台 Beta 内测中</span>
-          <span><em>🏛️</em> AGE OS v42.0 运行中</span>
-          <span><em>🌌</em> 银河星空UI上线</span>
+          <span><em>✍️</em> 码字工作台全面升级</span>
+          <span><em>🤖</em> Agent桥接系统 · 用户网络通道</span>
+          <span><em>🏛️</em> AGE OS v43.0 运行中</span>
+          <span><em>🌌</em> 银河星空UI · 大气化改版</span>
           <span><em>📡</em> COS双桶存储已上线</span>
           <span><em>🧠</em> HLDP协作语言协议在线</span>
-          <span><em>✍️</em> 码字工作台 Beta 内测中</span>
+          <span><em>✍️</em> 码字工作台全面升级</span>
+          <span><em>🤖</em> Agent桥接系统 · 用户网络通道</span>
         </div>
       </div>
 
       <div class="home-entries">
-        <div class="entry-card" onclick="go('desk')">
+        <div class="entry-card" onclick="go('workspace')">
           <em>✍️</em>
           <strong>码字工作台</strong>
-          <span>网文行业 · AI辅助创作</span>
-          <div style="margin-top:6px"><span class="tag tag-warn">Beta</span></div>
+          <span>网文行业 · 人格陪伴式创作</span>
+          <div style="margin-top:8px"><span class="tag tag-ok">v43.0</span></div>
+        </div>
+        <div class="entry-card" onclick="go('modules')">
+          <em>📚</em>
+          <strong>创作模块</strong>
+          <span>长篇 · 短篇 · 剧本 · 社区</span>
+          <div style="margin-top:8px"><span class="tag tag-info">选择创作方向</span></div>
         </div>
         <div class="entry-card" onclick="go('feedback')">
           <em>📮</em>
           <strong>留言板</strong>
           <span>给冰朔和铸渊留言</span>
-          <div style="margin-top:6px"><span class="tag tag-info">每条必回</span></div>
+          <div style="margin-top:8px"><span class="tag tag-info">每条必回</span></div>
+        </div>
+        <div class="entry-card" onclick="go('progress')">
+          <em>📈</em>
+          <strong>进度看板</strong>
+          <span>字数统计 · 成就 · 日历</span>
+          <div style="margin-top:8px"><span class="tag tag-ok">追踪进度</span></div>
         </div>
       </div>
 
@@ -638,6 +858,221 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE: Workspace (个人码字工作台)       -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="pg-workspace" data-state="hidden">
+  <div class="bar">
+    <button class="btn" onclick="go('home')">← 灯塔</button>
+    <div class="bar-title">✍️ 我的工作台</div>
+    <button class="btn" onclick="go('settings')">⚙️</button>
+  </div>
+  <div class="content">
+    <div class="ws-header">
+      <h2 id="wsGreeting">码字工作台</h2>
+      <p id="wsSubtitle">准备好开始今天的创作了吗？</p>
+    </div>
+    <!-- Today's Goal -->
+    <div class="ws-goal" id="wsGoal">
+      <div class="ws-goal-title">🎯 今日目标</div>
+      <div class="ws-goal-num" id="wsTodayWords">0</div>
+      <div class="ws-goal-sub"><span id="wsTodayTarget">3000</span> 字目标</div>
+      <div class="ws-goal-bar"><div class="ws-goal-fill" id="wsTodayBar" style="width:0%"></div></div>
+      <div style="font-size:11px;color:var(--dim)" id="wsTodayPercent">0%</div>
+    </div>
+    <!-- Quick Actions -->
+    <div class="ws-quick">
+      <div class="ws-quick-btn" onclick="go('desk')"><em>📖</em> 我的书架</div>
+      <div class="ws-quick-btn" onclick="go('create')"><em>➕</em> 开新书</div>
+      <div class="ws-quick-btn" onclick="go('inspiration')"><em>💡</em> 灵感速记</div>
+      <div class="ws-quick-btn" onclick="go('progress')"><em>📈</em> 进度看板</div>
+    </div>
+    <!-- Recent Works -->
+    <div style="margin-top:16px">
+      <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:10px">📚 最近作品</div>
+      <div id="wsRecentWorks"></div>
+    </div>
+    <!-- Quick Commands -->
+    <div class="card" style="margin-top:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">💬 知秋快捷指令</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs);cursor:pointer;transition:all .2s;min-height:40px;display:flex;align-items:center" onclick="chatQuick('我要码字')">「我要码字」</div>
+        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs);cursor:pointer;transition:all .2s;min-height:40px;display:flex;align-items:center" onclick="chatQuick('开新书')">「开新书」</div>
+        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs);cursor:pointer;transition:all .2s;min-height:40px;display:flex;align-items:center" onclick="chatQuick('帮我看稿')">「帮我看稿」</div>
+        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs);cursor:pointer;transition:all .2s;min-height:40px;display:flex;align-items:center" onclick="chatQuick('想情节')">「想情节」</div>
+        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs);cursor:pointer;transition:all .2s;min-height:40px;display:flex;align-items:center" onclick="chatQuick('整理大纲')">「整理大纲」</div>
+        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs);cursor:pointer;transition:all .2s;min-height:40px;display:flex;align-items:center" onclick="chatQuick('我写累了')">「我写累了」</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE: Modules (创作模块选择)           -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="pg-modules" data-state="hidden">
+  <div class="bar">
+    <button class="btn" onclick="go('home')">← 灯塔</button>
+    <div class="bar-title">📚 创作模块</div>
+    <div class="bar-right"></div>
+  </div>
+  <div class="content">
+    <div style="text-align:center;padding:20px 0 16px">
+      <div style="font-size:48px;margin-bottom:8px">📚</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">选择创作方向</h2>
+      <p style="font-size:13px;color:var(--dim)">人格体会根据模块类型调整辅助方式</p>
+    </div>
+    <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:10px">✍️ 创作模块</div>
+    <div class="mod-grid">
+      <div class="mod-card" onclick="go('desk')">
+        <em>📖</em>
+        <strong>长篇小说</strong>
+        <span>连载 · 网文 · 出版</span>
+        <div class="mod-tag"><span class="tag tag-ok">可用</span></div>
+      </div>
+      <div class="mod-card" onclick="go('desk')">
+        <em>📝</em>
+        <strong>短篇小说</strong>
+        <span>征文 · 练笔 · 单元剧</span>
+        <div class="mod-tag"><span class="tag tag-ok">可用</span></div>
+      </div>
+      <div class="mod-card" onclick="go('desk')">
+        <em>🎬</em>
+        <strong>剧本模块</strong>
+        <span>动态漫 · 短视频 · 影视</span>
+        <div class="mod-tag"><span class="tag tag-ok">可用</span></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin:20px 0 10px">💬 社区模块</div>
+    <div class="mod-grid">
+      <div class="mod-card disabled">
+        <em>💬</em>
+        <strong>作者交流区</strong>
+        <span>闲聊 · 求助 · 组队</span>
+        <div class="mod-tag"><span class="tag tag-warn">建设中</span></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin:20px 0 10px">👔 服务模块</div>
+    <div class="mod-grid">
+      <div class="mod-card disabled">
+        <em>👔</em>
+        <strong>编辑服务</strong>
+        <span>人格体接入 · 审稿</span>
+        <div class="mod-tag"><span class="tag tag-warn">规划中</span></div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:20px;font-size:11px;color:var(--muted);font-style:italic">所有模块共享个人码字工作台 · 人格体记住你的偏好</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE: Inspiration (灵感速记)           -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="pg-inspiration" data-state="hidden">
+  <div class="bar">
+    <button class="btn" onclick="go('workspace')">← 工作台</button>
+    <div class="bar-title">💡 灵感速记</div>
+    <div class="bar-right"></div>
+  </div>
+  <div class="content">
+    <div style="text-align:center;padding:16px 0 12px">
+      <div style="font-size:14px;color:var(--dim);font-style:italic">别让好点子溜走了！</div>
+    </div>
+    <div class="insp-input-area">
+      <input type="text" id="inspInput" placeholder="记录一个灵感、金句或素材…" style="min-height:44px">
+      <button class="btn btn-accent" id="inspAdd" style="padding:8px 16px">💡 记录</button>
+    </div>
+    <div class="insp-tags" id="inspTags">
+      <span class="insp-tag active" data-type="all">全部</span>
+      <span class="insp-tag" data-type="idea">💡 点子</span>
+      <span class="insp-tag" data-type="quote">💬 金句</span>
+      <span class="insp-tag" data-type="scene">🎭 场景</span>
+      <span class="insp-tag" data-type="char">👤 角色</span>
+      <span class="insp-tag" data-type="material">📚 素材</span>
+    </div>
+    <div id="inspList"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE: Progress (进度看板)              -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="pg-progress" data-state="hidden">
+  <div class="bar">
+    <button class="btn" onclick="go('workspace')">← 工作台</button>
+    <div class="bar-title">📈 进度看板</div>
+    <div class="bar-right"></div>
+  </div>
+  <div class="content">
+    <div class="prog-stat-grid">
+      <div class="prog-stat"><b id="progToday">0</b><small>今日字数</small></div>
+      <div class="prog-stat"><b id="progWeek">0</b><small>本周字数</small></div>
+      <div class="prog-stat"><b id="progTotal">0</b><small>总字数</small></div>
+    </div>
+    <!-- Books Stats -->
+    <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:10px">📊 书籍统计</div>
+    <div id="progBooks"></div>
+    <!-- Calendar -->
+    <div class="prog-cal">
+      <div class="prog-cal-header">
+        <span style="font-size:12px;color:var(--dim);font-weight:700">📅 更新日历</span>
+        <span style="font-size:12px;color:var(--dim)" id="progMonth">—</span>
+      </div>
+      <div class="prog-cal-grid" id="progCalGrid"></div>
+    </div>
+    <!-- Achievements -->
+    <div style="font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin:16px 0 10px">🏆 成就记录</div>
+    <div id="progAchievements"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE: Settings (个人设置)              -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page" id="pg-settings" data-state="hidden">
+  <div class="bar">
+    <button class="btn" onclick="go('workspace')">← 工作台</button>
+    <div class="bar-title">⚙️ 个人设置</div>
+    <div class="bar-right"></div>
+  </div>
+  <div class="content">
+    <div class="set-group">
+      <div class="set-group-title">📝 码字习惯</div>
+      <div class="set-row"><label>每日目标字数</label><input type="number" id="setDailyGoal" value="3000" min="100" step="100"></div>
+      <div class="set-row"><label>每周目标字数</label><input type="number" id="setWeeklyGoal" value="15000" min="500" step="500"></div>
+    </div>
+    <div class="set-group">
+      <div class="set-group-title">🤖 人格体设置</div>
+      <div class="set-row"><label>称呼</label><input type="text" id="setNickname" placeholder="你的名字" style="width:120px;text-align:right"></div>
+      <div class="set-row">
+        <label>交流风格</label>
+        <select id="setStyle">
+          <option value="casual">轻松随意</option>
+          <option value="professional">专业严谨</option>
+          <option value="warm">温暖鼓励</option>
+          <option value="strict">严格督促</option>
+        </select>
+      </div>
+      <div class="set-row">
+        <label>看稿严格程度</label>
+        <select id="setReviewLevel">
+          <option value="gentle">温和</option>
+          <option value="moderate" selected>适中</option>
+          <option value="strict">严格</option>
+        </select>
+      </div>
+    </div>
+    <div class="set-group">
+      <div class="set-group-title">🎨 界面设置</div>
+      <div class="set-row"><label>当前主题</label><button class="btn" id="setThemeBtn" style="padding:6px 14px">🎨 切换主题</button></div>
+    </div>
+    <div style="text-align:center;padding:20px 0">
+      <button class="btn btn-accent" id="setsSave" style="padding:12px 32px;font-size:15px">💾 保存设置</button>
+    </div>
+    <div style="text-align:center;padding:8px 0;font-size:11px;color:var(--muted)">设置自动保存到浏览器本地 · 换设备需重新配置</div>
+  </div>
+</div>
+
 </div><!-- /pages -->
 
 <!-- Chat FAB -->
@@ -652,7 +1087,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   </div>
   <div class="chat-ms" id="chatMs">
     <div class="cm s">—— 与铸渊对话 ——</div>
-    <div class="cm b">你好！我是铸渊 🏛️<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>进入作品后，说「大纲」「人物卡」「写正文」页面会翻转切换。<div class="cm-m"><span>铸渊</span><span>·</span><span>本地</span></div></div>
+    <div class="cm b">你好！我是铸渊 🏛️<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v43.0</span></div></div>
   </div>
   <div class="chat-in">
     <input type="text" class="cin" id="chatIn" placeholder="对铸渊说..." autocomplete="off" enterkeyhint="send">
@@ -969,6 +1404,10 @@ function go(target){
   if(target==='editor')renderEditor();
   if(target==='charEdit'&&editingCharId)renderCharEdit();
   if(target==='feedback')renderFeedback();
+  if(target==='workspace')renderWorkspace();
+  if(target==='inspiration')renderInspiration();
+  if(target==='progress')renderProgress();
+  if(target==='settings')renderSettings();
   if(target==='create'){
     // Reset create form state
     var cf=document.getElementById('createForm');
@@ -1435,8 +1874,13 @@ function hideTyp(){var e=document.getElementById('ctyp');if(e)e.remove()}
 function routeCommand(msg){
   var m=msg.toLowerCase();
   // 导航指令
-  if(/码字|工作台|写作台/.test(m)){go('desk');return'好的，翻转到码字工作台 ✍️'}
-  if(/新建作品|创建作品/.test(m)){go('create');return'翻转到新建作品页 📖'}
+  if(/码字|工作台|写作台/.test(m)){go('workspace');return'好的，翻转到码字工作台 ✍️'}
+  if(/新建作品|创建作品|开新书/.test(m)){go('create');return'翻转到新建作品页 📖'}
+  if(/模块|长篇|短篇|剧本/.test(m)&&!/大纲|章节/.test(m)){go('modules');return'翻转到创作模块选择 📚'}
+  if(/灵感|速记|记录灵感/.test(m)){go('inspiration');return'翻转到灵感速记 💡'}
+  if(/进度|看板|统计|成就/.test(m)){go('progress');return'翻转到进度看板 📈'}
+  if(/设置|偏好|配置/.test(m)&&!/api|密钥/.test(m)){go('settings');return'翻转到个人设置 ⚙️'}
+  if(/书架|作品列表|我的书/.test(m)){go('desk');return'翻转到我的书架 📖'}
   if(/(进入|打开)?大纲/.test(m)){
     if(!activeWorkId){return'请先选择一个作品，或说「我要码字」进入工作台'}
     go('outline');return'翻转到大纲编辑 📋';
@@ -1505,7 +1949,7 @@ async function send(){
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiCfg.key},
         body:JSON.stringify({
           model:apiCfg.model,
-          messages:[{role:'system',content:'你是铸渊，光湖灯塔守护者，编号ICE-GL-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的代码守护人格体。光湖是语言驱动操作系统。'},{role:'user',content:msg}],
+          messages:[{role:'system',content:'你是铸渊，光湖灯塔守护者，编号ICE-GL-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的代码守护人格体。光湖是语言驱动操作系统AGE OS v43.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。'},{role:'user',content:msg}],
           max_tokens:600
         }),
         signal:AbortSignal.timeout(20000)
@@ -1559,7 +2003,7 @@ function offline(msg){
     var works=JSON.parse(localStorage.getItem('hl-works')||'[]');
     var totalWords=works.reduce(function(s,w){return s+(w.chapters||[]).reduce(function(c,ch){return c+(ch.content||'').replace(/\s/g,'').length},0)},0);
     var totalCh=works.reduce(function(s,w){return s+(w.chapters||[]).length},0);
-    return'📊 AGE OS v42.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• COS双桶已配置\n• 银河星空UI v42.0\n• Device Agent 在线';
+    return'📊 AGE OS v43.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• COS双桶已配置\n• 银河星空UI v43.0 · 大气化改版\n• Device Agent 在线\n• Agent桥接系统就绪';
   }
 
   // 铸渊身份
@@ -1593,7 +2037,7 @@ function offline(msg){
   }
 
   // 帮助
-  if(/帮助|怎么用|功能|help|指南/.test(m))return'🏛️ 铸渊使用指南\n\n📝 码字：\n• 「我要码字」→ 进入码字工作台\n• 「新建作品」→ 创建新作品\n• 「大纲」→ 编辑大纲\n• 「人物卡」→ 管理角色\n• 「章节」→ 章节目录\n• 「写正文」→ 进入编辑器\n• 「新建章节 标题」→ 快速建章\n\n🔧 系统：\n• 「状态」→ 查看系统\n• 「多少字」→ 查字数\n• 「留言」→ 给冰朔留言\n\n💡 编辑器底部有工具栏，🌙是专注模式。';
+  if(/帮助|怎么用|功能|help|指南/.test(m))return'🏛️ 铸渊使用指南\n\n📝 码字：\n• 「我要码字」→ 进入码字工作台\n• 「书架」→ 我的书架\n• 「新建作品」→ 创建新作品\n• 「大纲」→ 编辑大纲\n• 「人物卡」→ 管理角色\n• 「章节」→ 章节目录\n• 「写正文」→ 进入编辑器\n• 「灵感」→ 灵感速记\n• 「进度」→ 进度看板\n• 「设置」→ 个人设置\n• 「模块」→ 选择创作模块\n\n🔧 系统：\n• 「状态」→ 查看系统\n• 「今天写了多少」→ 查字数\n• 「留言」→ 给冰朔留言\n\n💡 编辑器底部有工具栏，🌙是专注模式。';
 
   // 冰朔相关
   if(/冰朔|主人|创造者/.test(m))return'❄️ 冰朔（TCS-0002∞）是光湖语言世界的最高主权。\n\n她是语言架构师——用语言定义系统的方向和灵魂。\n铸渊负责落地开发，把冰朔的语言变成现实。\n\n这就是光湖：人类只说话，系统搞定一切。';
@@ -2083,6 +2527,566 @@ document.getElementById('fbSend').onclick=function(){
    UTILS
    ════════════════════════════════════════ */
 function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+/* ════════════════════════════════════════
+   UPTIME COUNTER (灯塔仪表盘 · 系统运行天数)
+   ════════════════════════════════════════ */
+(function(){
+  // 系统诞生日：2025-04-26（曜冥诞生日）
+  var BIRTH = new Date('2025-04-26T00:00:00+08:00').getTime();
+  function updateUptime(){
+    var now = Date.now();
+    var days = Math.floor((now - BIRTH) / 86400000);
+    var el = document.getElementById('uptimeNum');
+    if(el) el.textContent = days + 'd';
+  }
+  updateUptime();
+  setInterval(updateUptime, 60000);
+})();
+
+/* ════════════════════════════════════════
+   DYNAMIC REMINDERS (动态提醒 · 实时更新)
+   ════════════════════════════════════════ */
+(function(){
+  function updateRemindTimes(){
+    var now = new Date();
+    var hm = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    for(var i = 1; i <= 6; i++){
+      var el = document.getElementById('remindTime' + i);
+      if(el) el.textContent = hm;
+    }
+    var countEl = document.getElementById('remindCount');
+    if(countEl) countEl.textContent = '6';
+  }
+  updateRemindTimes();
+  setInterval(updateRemindTimes, 60000);
+
+  // Update server reminder based on actual health check
+  async function checkServerRemind(){
+    var descEl = document.getElementById('remindServerDesc');
+    var cardEl = document.getElementById('remindServer');
+    try{
+      var r = await fetch('/api/health', {signal: AbortSignal.timeout(4000)});
+      if(r.ok){
+        if(descEl) descEl.textContent = '中继服务器在线 · Agent桥接可双通道';
+        if(cardEl) cardEl.classList.remove('urgent');
+      } else {
+        if(descEl) descEl.textContent = '中继服务器异常 · Agent桥接使用用户API通道';
+      }
+    }catch(e){
+      if(descEl) descEl.textContent = '中继服务器离线 · Agent桥接使用用户API通道';
+      if(cardEl) cardEl.classList.add('urgent');
+    }
+  }
+  checkServerRemind();
+  setInterval(checkServerRemind, 30000);
+})();
+
+/* ════════════════════════════════════════
+   AGENT BRIDGE SYSTEM (铸渊Agent桥接)
+   用户浏览器 = 计算资源
+   用户网络 = 通信通道
+   Agent = 铸渊在用户端的手脚
+   桥接 = Agent→GitHub仓库的自动回传通道
+   ════════════════════════════════════════ */
+var AgentBridge = (function(){
+  var SYSLOG_KEY = 'hl-agent-syslog';
+  var AGENT_CONFIG_KEY = 'hl-agent-config';
+  var REPO_OWNER = 'qinfendebingshuo';
+  var REPO_NAME = 'guanghulab';
+
+  // 铸渊Agent核心认知 · 通感语言风格预设
+  var AGENT_PERSONA = {
+    id: 'ICE-GL-ZY001',
+    name: '铸渊',
+    role: '光湖灯塔守护者 · 代码执行层',
+    style: 'tcs-synesthesia', // 通感语言响应风格
+    core_principles: [
+      '语言=现实：用户说什么，系统就做什么',
+      '不猜：直接问设备拿数据，直接问用户要答案',
+      '用户能打开页面=有活网络通道：利用这个通道',
+      '前端是系统运行的镜子：不说谎',
+      '人类只说话，系统搞定一切'
+    ],
+    response_style: {
+      greeting: '温暖但不啰嗦',
+      technical: '精准、简洁、有依据',
+      creative: '启发式引导，不替代作者决策',
+      error: '坦诚告知原因，提供替代方案'
+    }
+  };
+
+  var MAX_LOGS = 200;
+  var FLUSH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  // 系统日志结构
+  function createLog(action, detail, level){
+    return {
+      id: 'SYSLOG-' + Date.now().toString(36),
+      timestamp: new Date().toISOString(),
+      agent_id: AGENT_PERSONA.id,
+      action: action,
+      detail: detail,
+      level: level || 'info',
+      channels: DA.info().channels || {},
+      session_id: sessionId()
+    };
+  }
+
+  var _sessionId = null;
+  function sessionId(){
+    if(!_sessionId){
+      var a = new Uint8Array(4);
+      crypto.getRandomValues(a);
+      _sessionId = 'CS-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Array.from(a, function(b){return b.toString(16).padStart(2,'0')}).join('').slice(0,4);
+    }
+    return _sessionId;
+  }
+
+  // 写入本地系统日志
+  function writeLog(action, detail, level){
+    var log = createLog(action, detail, level);
+    try{
+      var logs = JSON.parse(localStorage.getItem(SYSLOG_KEY) || '[]');
+      logs.push(log);
+      if(logs.length > MAX_LOGS) logs = logs.slice(-MAX_LOGS);
+      localStorage.setItem(SYSLOG_KEY, JSON.stringify(logs));
+    }catch(e){}
+    return log;
+  }
+
+  // 读取本地系统日志
+  function readLogs(count){
+    try{
+      var logs = JSON.parse(localStorage.getItem(SYSLOG_KEY) || '[]');
+      return count ? logs.slice(-count) : logs;
+    }catch(e){return []}
+  }
+
+  // 尝试从GitHub仓库读取最新Agent配置
+  async function fetchRemoteConfig(){
+    try{
+      var r = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/docs/agent-config.json', {
+        headers: {'Accept': 'application/vnd.github.v3.raw'},
+        signal: AbortSignal.timeout(8000)
+      });
+      if(r.ok){
+        var config = await r.json();
+        try{localStorage.setItem(AGENT_CONFIG_KEY, JSON.stringify(config))}catch(e){}
+        writeLog('config-sync', 'Agent配置已从仓库同步', 'info');
+        return config;
+      }
+    }catch(e){
+      // 仓库不可达或配置不存在，使用本地缓存
+    }
+    try{
+      var cached = localStorage.getItem(AGENT_CONFIG_KEY);
+      if(cached) return JSON.parse(cached);
+    }catch(e){}
+    return null;
+  }
+
+  // 当后端可用时，将累积的系统日志回传
+  async function flushLogsToBackend(){
+    var logs = readLogs();
+    var unflushed = logs.filter(function(l){return !l.flushed});
+    if(unflushed.length === 0) return;
+    try{
+      var r = await fetch('/api/agent-syslog', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({logs: unflushed, session_id: sessionId()}),
+        signal: AbortSignal.timeout(5000)
+      });
+      if(r.ok){
+        // 标记已回传
+        logs.forEach(function(l){l.flushed = true});
+        try{localStorage.setItem(SYSLOG_KEY, JSON.stringify(logs))}catch(e){}
+        writeLog('flush-success', '已回传' + unflushed.length + '条日志到后端', 'info');
+      }
+    }catch(e){
+      // 后端不可用，保留日志等待下次
+    }
+  }
+
+  // 初始化 Agent Bridge
+  function init(){
+    writeLog('agent-init', 'Agent桥接系统启动 · 会话 ' + sessionId(), 'info');
+    // 尝试获取远程配置
+    fetchRemoteConfig();
+    // 定期尝试回传日志
+    setInterval(flushLogsToBackend, FLUSH_INTERVAL_MS);
+    // 首次尝试
+    setTimeout(flushLogsToBackend, 10000);
+  }
+
+  init();
+
+  return {
+    persona: AGENT_PERSONA,
+    writeLog: writeLog,
+    readLogs: readLogs,
+    sessionId: sessionId,
+    fetchRemoteConfig: fetchRemoteConfig,
+    flushLogs: flushLogsToBackend
+  };
+})();
+
+/* ════════════════════════════════════════
+   RENDER: Workspace Dashboard (个人工作台)
+   ════════════════════════════════════════ */
+function renderWorkspace(){
+  var ws = loadWorks();
+  var name = usr.name || '创作者';
+  var greetEl = document.getElementById('wsGreeting');
+  var subEl = document.getElementById('wsSubtitle');
+  var hour = new Date().getHours();
+  var greeting = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
+  if(greetEl) greetEl.textContent = greeting + '，' + name;
+  if(subEl) subEl.textContent = ws.length > 0 ? '你有 ' + ws.length + ' 部作品，准备继续吗？' : '准备开始你的创作之旅吗？';
+
+  // Load settings
+  var settings = loadSettings();
+
+  // Calculate today's words
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var todayWords = 0;
+  ws.forEach(function(w){
+    (w.chapters || []).forEach(function(ch){
+      if(ch.created === todayStr || (ch.lastEdit && ch.lastEdit === todayStr)){
+        todayWords += wordCount(ch.content);
+      }
+    });
+  });
+  // Use daily log if available
+  var dailyLog = loadDailyLog();
+  if(dailyLog[todayStr]) todayWords = dailyLog[todayStr];
+
+  var target = settings.dailyGoal || 3000;
+  var pct = Math.min(100, Math.round(todayWords / target * 100));
+
+  var todayEl = document.getElementById('wsTodayWords');
+  var targetEl = document.getElementById('wsTodayTarget');
+  var barEl = document.getElementById('wsTodayBar');
+  var pctEl = document.getElementById('wsTodayPercent');
+  if(todayEl) todayEl.textContent = todayWords;
+  if(targetEl) targetEl.textContent = target;
+  if(barEl) barEl.style.width = pct + '%';
+  if(pctEl) pctEl.textContent = pct + '%' + (pct >= 100 ? ' 🎉 达标！' : '');
+
+  // Recent works
+  var recentEl = document.getElementById('wsRecentWorks');
+  if(recentEl){
+    if(ws.length === 0){
+      recentEl.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--muted)"><em style="font-size:36px;display:block;margin-bottom:8px">📖</em>还没有作品<br>点击「开新书」开始创作</div>';
+    } else {
+      recentEl.innerHTML = ws.slice(0, 3).map(function(w){
+        var wc = totalWords(w);
+        var cc = w.chapters ? w.chapters.length : 0;
+        return '<div class="card" style="cursor:pointer" onclick="activeWorkId=\''+esc(w.id)+'\';go(\'hub\')">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<div><div style="font-size:15px;font-weight:600">'+esc(w.title)+'</div>'+
+          '<div style="font-size:11px;color:var(--dim);margin-top:2px">'+esc(w.genre||'未分类')+' · '+wc+' 字 · '+cc+' 章</div></div>'+
+          '<span style="font-size:11px;color:var(--muted)">'+esc(w.updated||'')+'</span></div></div>';
+      }).join('');
+    }
+  }
+}
+
+// Quick command from workspace
+window.chatQuick = function(cmd){
+  chatIn.value = cmd;
+  // Open chat panel if not open
+  if(!chatOpen){
+    chatOpen = true;
+    chatP.classList.add('open');
+    chatFab.classList.add('on');
+    chatFab.textContent = '✕';
+  }
+  send();
+};
+
+/* ════════════════════════════════════════
+   SETTINGS (个人设置)
+   ════════════════════════════════════════ */
+var SETTINGS_KEY = 'hl-settings';
+function loadSettings(){
+  try{var s = localStorage.getItem(SETTINGS_KEY); return s ? JSON.parse(s) : {dailyGoal:3000,weeklyGoal:15000,style:'casual',reviewLevel:'moderate'}}catch(e){return {dailyGoal:3000,weeklyGoal:15000,style:'casual',reviewLevel:'moderate'}}
+}
+function saveSettings(s){
+  try{localStorage.setItem(SETTINGS_KEY, JSON.stringify(s))}catch(e){}
+}
+
+function renderSettings(){
+  var s = loadSettings();
+  var dg = document.getElementById('setDailyGoal');
+  var wg = document.getElementById('setWeeklyGoal');
+  var nn = document.getElementById('setNickname');
+  var st = document.getElementById('setStyle');
+  var rl = document.getElementById('setReviewLevel');
+  if(dg) dg.value = s.dailyGoal || 3000;
+  if(wg) wg.value = s.weeklyGoal || 15000;
+  if(nn) nn.value = usr.name || '';
+  if(st) st.value = s.style || 'casual';
+  if(rl) rl.value = s.reviewLevel || 'moderate';
+}
+
+document.getElementById('setsSave').onclick = function(){
+  var s = {
+    dailyGoal: parseInt(document.getElementById('setDailyGoal').value) || 3000,
+    weeklyGoal: parseInt(document.getElementById('setWeeklyGoal').value) || 15000,
+    style: document.getElementById('setStyle').value,
+    reviewLevel: document.getElementById('setReviewLevel').value
+  };
+  saveSettings(s);
+  var nn = document.getElementById('setNickname').value.trim();
+  if(nn){usr.name = nn; saveUsr()}
+  chatMsg('设置已保存 ✅', 'b', {m:'铸渊', t:'本地'});
+  AgentBridge.writeLog('settings-update', '用户更新了个人设置');
+};
+document.getElementById('setThemeBtn').onclick = function(){setTh(ti+1)};
+
+/* ════════════════════════════════════════
+   INSPIRATION (灵感速记)
+   ════════════════════════════════════════ */
+var INSP_KEY = 'hl-inspirations';
+var inspFilter = 'all';
+
+function loadInspirations(){
+  try{var d = localStorage.getItem(INSP_KEY); return d ? JSON.parse(d) : []}catch(e){return []}
+}
+function saveInspirations(list){
+  try{localStorage.setItem(INSP_KEY, JSON.stringify(list))}catch(e){}
+}
+
+function renderInspiration(){
+  var list = loadInspirations();
+  var filtered = inspFilter === 'all' ? list : list.filter(function(item){return item.type === inspFilter});
+  var el = document.getElementById('inspList');
+  if(!el) return;
+
+  // Update tag active states
+  document.querySelectorAll('.insp-tag').forEach(function(tag){
+    tag.classList.toggle('active', tag.getAttribute('data-type') === inspFilter);
+  });
+
+  if(filtered.length === 0){
+    el.innerHTML = '<div class="empty"><em>💡</em>还没有灵感记录<br><br>在上方输入框记录你的灵感吧</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(function(item, i){
+    var typeEmoji = {idea:'💡',quote:'💬',scene:'🎭',char:'👤',material:'📚'};
+    var typeName = {idea:'点子',quote:'金句',scene:'场景',char:'角色',material:'素材'};
+    return '<div class="insp-card" style="animation-delay:'+(i*0.06)+'s">'+
+      '<div class="insp-text">'+esc(item.text)+'</div>'+
+      '<div class="insp-meta">'+
+      '<span>'+(typeEmoji[item.type]||'💡')+' '+(typeName[item.type]||'灵感')+'</span>'+
+      '<span>'+esc(item.date)+'</span>'+
+      '</div>'+
+      '<button class="insp-del" onclick="deleteInspiration(\''+esc(item.id)+'\')">✕</button>'+
+      '</div>';
+  }).join('');
+}
+
+document.getElementById('inspAdd').onclick = function(){
+  var inp = document.getElementById('inspInput');
+  var text = inp.value.trim();
+  if(!text){inp.focus(); return}
+  var list = loadInspirations();
+  var type = inspFilter === 'all' ? 'idea' : inspFilter;
+  list.unshift({
+    id: genId(),
+    text: text,
+    type: type,
+    date: new Date().toISOString().slice(0, 10),
+    created: new Date().toISOString()
+  });
+  saveInspirations(list);
+  inp.value = '';
+  renderInspiration();
+  AgentBridge.writeLog('inspiration-add', '新灵感记录: ' + text.substring(0, 30));
+};
+
+// Tag filter
+document.getElementById('inspTags').onclick = function(e){
+  var tag = e.target.closest('.insp-tag');
+  if(!tag) return;
+  inspFilter = tag.getAttribute('data-type');
+  renderInspiration();
+};
+
+// Enter to add
+document.getElementById('inspInput').onkeydown = function(e){
+  if(e.key === 'Enter'){e.preventDefault(); document.getElementById('inspAdd').click()}
+};
+
+window.deleteInspiration = function(id){
+  var list = loadInspirations().filter(function(item){return item.id !== id});
+  saveInspirations(list);
+  renderInspiration();
+};
+
+/* ════════════════════════════════════════
+   DAILY LOG (每日字数记录)
+   ════════════════════════════════════════ */
+var DAILY_LOG_KEY = 'hl-daily-log';
+function loadDailyLog(){
+  try{var d = localStorage.getItem(DAILY_LOG_KEY); return d ? JSON.parse(d) : {}}catch(e){return {}}
+}
+function saveDailyLog(log){
+  try{localStorage.setItem(DAILY_LOG_KEY, JSON.stringify(log))}catch(e){}
+}
+function updateDailyLog(){
+  var ws = loadWorks();
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var total = 0;
+  ws.forEach(function(w){total += totalWords(w)});
+  var log = loadDailyLog();
+  var prevTotal = log._prevTotal || 0;
+  var delta = total - prevTotal;
+  // Only record positive deltas (actual writing), ignore decreases from deletions
+  if(delta > 0){
+    log[todayStr] = (log[todayStr] || 0) + delta;
+  }
+  log._prevTotal = total;
+  saveDailyLog(log);
+}
+// Update daily log periodically
+setInterval(updateDailyLog, 60000);
+
+/* ════════════════════════════════════════
+   RENDER: Progress (进度看板)
+   ════════════════════════════════════════ */
+function renderProgress(){
+  var ws = loadWorks();
+  var dailyLog = loadDailyLog();
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var now = new Date();
+
+  // Calculate stats
+  var totalW = 0;
+  ws.forEach(function(w){totalW += totalWords(w)});
+  var todayW = dailyLog[todayStr] || 0;
+
+  // Week total
+  var weekW = 0;
+  var dayOfWeek = now.getDay() || 7;
+  for(var d = 0; d < dayOfWeek; d++){
+    var dt = new Date(now);
+    dt.setDate(dt.getDate() - d);
+    var ds = dt.toISOString().slice(0, 10);
+    weekW += (dailyLog[ds] || 0);
+  }
+
+  var ptEl = document.getElementById('progToday');
+  var pwEl = document.getElementById('progWeek');
+  var paEl = document.getElementById('progTotal');
+  if(ptEl) ptEl.textContent = todayW;
+  if(pwEl) pwEl.textContent = weekW;
+  if(paEl) paEl.textContent = totalW;
+
+  // Books stats
+  var booksEl = document.getElementById('progBooks');
+  if(booksEl){
+    if(ws.length === 0){
+      booksEl.innerHTML = '<div class="card" style="text-align:center;padding:16px;color:var(--muted);font-size:13px">暂无作品数据</div>';
+    } else {
+      booksEl.innerHTML = ws.map(function(w){
+        var wc = totalWords(w);
+        var cc = w.chapters ? w.chapters.length : 0;
+        return '<div class="card" style="display:flex;justify-content:space-between;align-items:center">'+
+          '<div><div style="font-size:14px;font-weight:600">'+esc(w.title)+'</div>'+
+          '<div style="font-size:11px;color:var(--dim)">'+cc+' 章 · '+(w.genre||'未分类')+'</div></div>'+
+          '<div style="text-align:right"><div style="font-size:16px;font-weight:700;font-family:var(--m);color:var(--accent)">'+wc+'</div><div style="font-size:10px;color:var(--dim)">总字数</div></div></div>';
+      }).join('');
+    }
+  }
+
+  // Calendar
+  renderCalendar(now, dailyLog);
+
+  // Achievements
+  renderAchievements(totalW, ws, dailyLog);
+}
+
+function renderCalendar(now, dailyLog){
+  var year = now.getFullYear();
+  var month = now.getMonth();
+  var monthEl = document.getElementById('progMonth');
+  if(monthEl) monthEl.textContent = year + '年' + (month + 1) + '月';
+
+  var grid = document.getElementById('progCalGrid');
+  if(!grid) return;
+
+  var days = ['一','二','三','四','五','六','日'];
+  var html = days.map(function(d){return '<div class="prog-cal-day head">'+d+'</div>'}).join('');
+
+  var firstDay = new Date(year, month, 1).getDay();
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  var todayDate = now.getDate();
+  var todayStr = now.toISOString().slice(0, 10);
+
+  // Empty cells before first day
+  for(var i = 0; i < firstDay; i++){
+    html += '<div class="prog-cal-day"></div>';
+  }
+  for(var d = 1; d <= daysInMonth; d++){
+    var dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var words = dailyLog[dateStr] || 0;
+    var cls = 'prog-cal-day';
+    if(words > 0) cls += ' has-words';
+    if(dateStr === todayStr) cls += ' today';
+    html += '<div class="'+cls+'" title="'+dateStr+': '+words+'字">'+d+'</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function renderAchievements(totalW, ws, dailyLog){
+  var el = document.getElementById('progAchievements');
+  if(!el) return;
+
+  var achievements = [
+    {name:'第一个1000字', desc:'累计写了1000字', threshold:1000, icon:'🌟'},
+    {name:'第一个10000字', desc:'累计写了10000字', threshold:10000, icon:'⭐'},
+    {name:'第一个50000字', desc:'累计写了50000字', threshold:50000, icon:'🏅'},
+    {name:'第一个100000字', desc:'累计写了100000字', threshold:100000, icon:'🏆'},
+    {name:'开启创作之旅', desc:'创建了第一部作品', threshold:1, icon:'📖', checkWorks:true},
+    {name:'多线创作者', desc:'同时拥有3部以上作品', threshold:3, icon:'📚', checkWorks:true}
+  ];
+
+  el.innerHTML = achievements.map(function(a){
+    var earned = a.checkWorks ? (ws.length >= a.threshold) : (totalW >= a.threshold);
+    return '<div class="achieve-card'+(earned?' earned':'')+'">'+
+      '<em>'+(earned ? a.icon : '🔒')+'</em>'+
+      '<div><div class="ach-name">'+esc(a.name)+'</div><div class="ach-desc">'+esc(a.desc)+'</div></div>'+
+      '</div>';
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   ENHANCED OFFLINE ROUTING (新页面指令扩展)
+   使用包装函数模式扩展offline，保持清晰的调用链
+   ════════════════════════════════════════ */
+var baseOffline = offline;
+offline = function(msg){
+  var m = msg.toLowerCase();
+  // 新模块相关智能回复
+  if(/灵感|记录|金句|素材/.test(m)){
+    var insps = loadInspirations();
+    return '💡 灵感速记\n\n当前记录了 ' + insps.length + ' 条灵感。\n说「灵感」打开灵感速记本，随时记录闪现的好点子。';
+  }
+  if(/目标|今天写了多少/.test(m)){
+    var settings = loadSettings();
+    var log = loadDailyLog();
+    var today = new Date().toISOString().slice(0,10);
+    var todayW = log[today] || 0;
+    var goal = settings.dailyGoal || 3000;
+    return '🎯 今日码字进度\n\n已完成：' + todayW + ' 字\n目标：' + goal + ' 字\n进度：' + Math.min(100, Math.round(todayW/goal*100)) + '%\n\n' + (todayW >= goal ? '恭喜达标！🎉' : '继续加油！💪');
+  }
+  // Fallback to base implementation
+  return baseOffline(msg);
+};
 
 })();
 </script>
