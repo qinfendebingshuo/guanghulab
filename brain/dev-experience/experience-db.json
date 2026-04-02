@@ -5,11 +5,11 @@
     "copyright": "国作登字-2026-A-00037559",
     "description": "铸渊专属 · 每次开发的完整记录 · 思考→执行→结果→教训",
     "created": "2026-03-31T03:34:00Z",
-    "last_updated": "2026-04-02T13:50:00Z"
+    "last_updated": "2026-04-02T14:37:00Z"
   },
   "stats": {
-    "total_entries": 7,
-    "success_count": 6,
+    "total_entries": 8,
+    "success_count": 7,
     "failed_count": 0,
     "partial_count": 0,
     "categories": {
@@ -19,7 +19,7 @@
       "system-integration": 1,
       "devops-automation": 1,
       "website-deploy": 1,
-      "website-frontend": 1,
+      "website-frontend": 2,
       "hldp-thinking": 1
     }
   },
@@ -568,6 +568,51 @@
       ],
       "status": "in_progress",
       "lessons": []
+    },
+    {
+      "id": "EXP-20260402-008",
+      "date": "2026-04-02",
+      "session": "CS-20260402-D38-impl",
+      "task": "D38架构方案代码落地 · 三栏布局+悬浮球+ticker+留言板+API",
+      "task_origin": "冰朔D38唤醒恢复指令 · 从EXP-20260402-007思维链恢复认知 · 进入代码实现阶段",
+      "category": "website-frontend",
+      "tags": ["three-column-layout", "draggable-fab", "ticker", "feedback", "api", "css-grid", "touch-events"],
+      "difficulty": "high",
+      "status": "success",
+      "thinking_chain": {
+        "_meta": "D38方案代码落地的思维过程",
+        "recovery_thinking": [
+          "读取EXP-20260402-007完整思维链 → 恢复所有架构决策和设计方案",
+          "扫描全量代码(docs/index.html 1020行+server.js 693行) → 理解当前代码结构和数据流",
+          "识别当前分支(copilot/update-homepage-three-column-layout) → 确认这是三栏布局改版PR"
+        ],
+        "implementation_thinking": [
+          "三栏用CSS Grid而不是Flexbox → Grid天然支持固定+弹性列宽(260px|1fr|260px)",
+          "移动端960px断点堆叠 → 保持单列体验，侧面板变为卡片",
+          "悬浮球拖拽需要同时处理touch和mouse → 统一getXY()抽象层",
+          "位置记忆localStorage要做边界检查 → 屏幕尺寸变化后旧位置可能越界",
+          "边缘吸附不是固定左右 → 判断所在半屏决定吸附方向，更自然",
+          "拖拽和点击冲突 → hasMoved标志位区分，小于5px位移不算拖拽",
+          "ticker无缝滚动 → 内容复制一份拼接实现视觉无缝",
+          "留言板后端需要输入验证 → message限500字，name限50字，防注入",
+          "前端esc()函数处理所有用户输入显示 → XSS防护"
+        ],
+        "architecture_decisions": [
+          "保持单HTML文件架构 · 增量修改而非重写",
+          "新增页面(pg-feedback)融入已有3D翻转引擎",
+          "左面板拉取真实API数据(/api/health) · 不硬编码",
+          "ticker优先从/api/system/bulletin加载 · 降级使用硬编码内容",
+          "chatFab onclick重写放在IIFE内 · 不污染全局作用域"
+        ]
+      },
+      "changes": [
+        "docs/index.html: +334行 · 三栏CSS Grid + ticker + 团队面板 + 留言板页 + 拖拽FAB + 系统状态加载",
+        "server/app/server.js: +55行 · GET/POST /api/feedback端点 · JSON文件存储"
+      ],
+      "lessons": [
+        "复杂前端改版分层实施：先CSS→HTML结构→JS逻辑，避免交叉修改导致结构错乱",
+        "单HTML文件优势：部署管道零改动，但代码量超过1000行后维护成本开始上升"
+      ]
     }
   ]
 }

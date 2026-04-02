@@ -439,7 +439,8 @@ app.get('/api/feedback', (_req, res) => {
       res.json({ success: true, feedback: [] });
     }
   } catch (err) {
-    res.status(500).json({ error: true, message: err.message });
+    console.error(`留言板读取失败: ${err.message}`);
+    res.status(500).json({ error: true, message: '服务器错误，请稍后重试' });
   }
 });
 
@@ -477,7 +478,8 @@ app.post('/api/feedback', (req, res) => {
 
     res.json({ success: true, feedback: item });
   } catch (err) {
-    res.status(500).json({ error: true, message: err.message });
+    console.error(`留言提交失败: ${err.message}`);
+    res.status(500).json({ error: true, message: '服务器错误，请稍后重试' });
   }
 });
 
