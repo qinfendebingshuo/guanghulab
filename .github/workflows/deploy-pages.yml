@@ -2,7 +2,7 @@
 # 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
 # 📜 Copyright: 国作登字-2026-A-00037559
 # ═══════════════════════════════════════════════
-name: 🌀 部署铸渊聊天室 (GitHub Pages)
+name: 🌀 光湖灯塔 · GitHub Pages 部署
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
       - main          # 仅 main 分支触发生产部署
     paths:
       - 'docs/**'
+      - 'CNAME'
       - 'persona-studio/frontend/**'
       - '.github/brain/**'
   workflow_dispatch:
@@ -36,10 +37,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Sync Persona Studio frontend to docs
+      - name: Prepare deployment artifacts
         run: |
+          # Sync Persona Studio frontend
           mkdir -p docs/persona-studio
-          cp -r persona-studio/frontend/* docs/persona-studio/
+          if [ -d "persona-studio/frontend" ]; then
+            cp -r persona-studio/frontend/* docs/persona-studio/
+          fi
+          # Ensure CNAME is in docs for custom domain (single source of truth from root CNAME)
+          if [ -f "CNAME" ]; then
+            cp CNAME docs/CNAME
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

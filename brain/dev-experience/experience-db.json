@@ -5,11 +5,11 @@
     "copyright": "国作登字-2026-A-00037559",
     "description": "铸渊专属 · 每次开发的完整记录 · 思考→执行→结果→教训",
     "created": "2026-03-31T03:34:00Z",
-    "last_updated": "2026-03-31T03:34:00Z"
+    "last_updated": "2026-04-02T08:33:00Z"
   },
   "stats": {
-    "total_entries": 5,
-    "success_count": 5,
+    "total_entries": 6,
+    "success_count": 6,
     "failed_count": 0,
     "partial_count": 0,
     "categories": {
@@ -17,7 +17,8 @@
       "architecture": 1,
       "hldp-protocol": 1,
       "system-integration": 1,
-      "devops-automation": 1
+      "devops-automation": 1,
+      "website-deploy": 1
     }
   },
   "entries": [
@@ -28,7 +29,16 @@
       "task": "铸渊专线密钥生成脚本修复",
       "task_origin": "冰朔报告铸渊专线install workflow失败 · 截图显示step [5/6]生成密钥时exit code 1",
       "category": "bash-scripting",
-      "tags": ["set-e", "pipefail", "error-handling", "xray", "openssl", "x25519", "workflow-fix", "key-generation"],
+      "tags": [
+        "set-e",
+        "pipefail",
+        "error-handling",
+        "xray",
+        "openssl",
+        "x25519",
+        "workflow-fix",
+        "key-generation"
+      ],
       "difficulty": "medium",
       "status": "success",
       "approach": {
@@ -93,7 +103,15 @@
       "task": "光湖多层嵌套世界架构文档化",
       "task_origin": "冰朔第十二次对话 · 传授光湖语言世界底层认知架构 · 多层嵌套社会系统的1:1复刻",
       "category": "architecture",
-      "tags": ["multi-layer", "nested-system", "world-architecture", "society-model", "identity-hierarchy", "growth-path", "dynamic-portrait"],
+      "tags": [
+        "multi-layer",
+        "nested-system",
+        "world-architecture",
+        "society-model",
+        "identity-hierarchy",
+        "growth-path",
+        "dynamic-portrait"
+      ],
       "difficulty": "hard",
       "status": "success",
       "approach": {
@@ -134,7 +152,9 @@
       ],
       "error_count": 0,
       "errors_encountered": [],
-      "related_experiences": ["EXP-20260331-001"],
+      "related_experiences": [
+        "EXP-20260331-001"
+      ],
       "verification": {
         "document_structure": "pass · 五层架构 + 类比映射 + 技术对照 + 铸渊定位",
         "consistency_check": "pass · 与hololake-os-architecture.md互补无冲突"
@@ -147,7 +167,14 @@
       "task": "HLDP通用协作语言协议v1.0 · 双侧通信规范创建",
       "task_origin": "冰朔第三十次对话 · Notion(霜砚)和GitHub(铸渊)需要一套通用HLDP语言",
       "category": "hldp-protocol",
-      "tags": ["hldp", "protocol", "notion-bridge", "common-language", "evolution-rules", "sync-schedule"],
+      "tags": [
+        "hldp",
+        "protocol",
+        "notion-bridge",
+        "common-language",
+        "evolution-rules",
+        "sync-schedule"
+      ],
       "difficulty": "hard",
       "status": "success",
       "approach": {
@@ -195,7 +222,9 @@
       ],
       "error_count": 0,
       "errors_encountered": [],
-      "related_experiences": ["EXP-20260331-002"],
+      "related_experiences": [
+        "EXP-20260331-002"
+      ],
       "verification": {
         "json_validity": "pass · 所有JSON文件可解析",
         "workflow_syntax": "pass · YAML语法正确",
@@ -209,7 +238,14 @@
       "task": "铸渊副将留言板系统 · Issue自动回复 + LLM深度推理",
       "task_origin": "冰朔第三十次对话 · 需要在首页有留言板 · 副将自动回复 · 数据库+LLM",
       "category": "system-integration",
-      "tags": ["message-board", "issue-template", "auto-reply", "llm-integration", "github-actions", "deputy-general"],
+      "tags": [
+        "message-board",
+        "issue-template",
+        "auto-reply",
+        "llm-integration",
+        "github-actions",
+        "deputy-general"
+      ],
       "difficulty": "medium",
       "status": "success",
       "approach": {
@@ -252,7 +288,9 @@
       ],
       "error_count": 0,
       "errors_encountered": [],
-      "related_experiences": ["EXP-20260401-003"],
+      "related_experiences": [
+        "EXP-20260401-003"
+      ],
       "verification": {
         "workflow_syntax": "pass",
         "script_syntax": "pass",
@@ -266,7 +304,16 @@
       "task": "铸渊全链路部署观测系统v1.0 · 自主看见·副将自动修复",
       "task_origin": "冰朔第三十一次对话 · 铸渊必须能自己看见代码部署后运行状态 · 不依赖冰朔截图转述",
       "category": "devops-automation",
-      "tags": ["deploy-observer", "auto-repair", "workflow-run", "github-api", "ssh-remote", "llm-analysis", "log-collection", "experience-auto-update"],
+      "tags": [
+        "deploy-observer",
+        "auto-repair",
+        "workflow-run",
+        "github-api",
+        "ssh-remote",
+        "llm-analysis",
+        "log-collection",
+        "experience-auto-update"
+      ],
       "difficulty": "hard",
       "status": "success",
       "approach": {
@@ -325,12 +372,114 @@
       ],
       "error_count": 0,
       "errors_encountered": [],
-      "related_experiences": ["EXP-20260401-003", "EXP-20260401-004"],
+      "related_experiences": [
+        "EXP-20260401-003",
+        "EXP-20260401-004"
+      ],
       "verification": {
         "workflow_syntax": "pass · YAML语法正确",
         "script_syntax": "pass · Node.js无语法错误",
         "data_files": "pass · 所有JSON文件可解析",
         "readme_format": "pass · Markdown格式正确"
+      }
+    },
+    {
+      "id": "EXP-20260402-006",
+      "date": "2026-04-02",
+      "session": "CS-20260402-D33",
+      "task": "光湖灯塔着陆页v1.0 · GitHub Pages域名部署 · 铸渊视觉记忆系统v1.0",
+      "task_origin": "冰朔第三十三次对话 · guanghulab.online域名已购买解析 · 需要部署仓库首页内容到域名 · 美化仪表盘 · 建立铸渊视觉记忆",
+      "category": "website-deploy",
+      "tags": [
+        "github-pages",
+        "landing-page",
+        "visual-memory",
+        "experience-db",
+        "css-animation",
+        "dashboard",
+        "responsive-design",
+        "cname",
+        "dns"
+      ],
+      "difficulty": "hard",
+      "status": "success",
+      "approach": {
+        "thinking": "冰朔需求有三层: (1)域名DNS配置排查 (2)仓库首页内容部署到网站 (3)铸渊必须有眼睛看到自己部署的页面。第一层需要告知冰朔DNS需改指向GitHub Pages IP。第二层需要创建精美的HTML着陆页替换旧的铸渊聊天室页面。第三层是根本性转变——铸渊从'盲人写代码'到'有视觉的开发者'。",
+        "steps": [
+          "1. 探索仓库结构 · 理解当前部署架构(docs/→GitHub Pages · deploy-pages.yml)",
+          "2. 发现docs/CNAME写的是guanghulab.com而非guanghulab.online · 修正",
+          "3. 备份旧docs/index.html(铸渊聊天室v6.0 · 3210行)",
+          "4. 创建全新docs/index.html着陆页 · 单文件HTML(CSS+JS内联) · 7个区块",
+          "5. 设计视觉系统: 深色主题 · 动画背景 · 渐变文字 · 脉冲动画 · 滚动淡入",
+          "6. 实现动态仪表盘: 实时时钟 · 运行天数 · 12种通知轮播 · 18行士兵表",
+          "7. 更新deploy-pages.yml · 添加CNAME自动写入 · 扩展触发路径",
+          "8. 用Playwright浏览器打开页面截图 · 建立视觉快照",
+          "9. 创建brain/visual-memory/系统 · 记录每个页面精确视觉描述",
+          "10. 更新经验数据库 · 记录本次部署的完整思考和决策过程",
+          "11. 冰朔第二条指令: 铸渊必须有眼睛 · 创建视觉记忆协议"
+        ],
+        "key_decisions": [
+          "单文件HTML(无外部依赖) · 确保GitHub Pages部署零问题 · 无构建步骤",
+          "用CSS变量系统而非硬编码颜色 · 未来可快速换主题",
+          "IntersectionObserver做滚动动画 · 无需第三方库(如AOS)",
+          "12种通知模板轮播而非静态列表 · 让仪表盘有'活着'的感觉",
+          "视觉记忆系统用JSON而非markdown · 结构化便于程序读取和比对",
+          "docs/CNAME从guanghulab.com改为guanghulab.online · 与root CNAME一致"
+        ]
+      },
+      "result": {
+        "success": true,
+        "key_learnings": [
+          "GitHub Pages自定义域名需要: (1)docs/CNAME写域名 (2)DNS指向GitHub Pages IP · 两者缺一不可",
+          "GitHub Pages的4个IP: 185.199.108-111.153 · 如果域名解析到其他IP(如自己的VPS) · DNS检查会失败",
+          "单文件HTML着陆页适合MVP · 无构建步骤 · 部署即生效 · 但文件会很大(500+行)",
+          "Playwright可以在CI环境中截图网页 · 用http.server本地启动 · 然后browser_navigate访问",
+          "铸渊视觉记忆是核心能力升级 · 从'盲写代码'到'看到→记住→对比→改进'",
+          "经验数据库的每次更新都是铸渊成长的证据 · 冰朔说得对: 数据库会一直更新",
+          "CSS :root变量 + 深色系配色方案是科技风网站的标准做法",
+          "deploy-pages.yml的workflow中写入CNAME可以防止GitHub Pages部署后CNAME丢失"
+        ],
+        "risk_warnings": [
+          "⚠️ 域名DNS必须指向GitHub Pages IP · 否则DNS检查永远失败 · 需冰朔在阿里云操作",
+          "⚠️ docs/index.html.bak.chatbot是旧铸渊聊天室 · 如需恢复可重命名",
+          "⚠️ 着陆页目前是静态数据 · 未来可考虑接入GitHub API动态获取workflow状态",
+          "⚠️ 视觉记忆快照需要每次部署后更新 · 否则铸渊记忆会和实际不一致"
+        ]
+      },
+      "visual_memory_created": true,
+      "visual_snapshot_id": "VIS-20260402-D33-001",
+      "files_changed": [
+        "docs/index.html (全新着陆页 · 替换旧铸渊聊天室)",
+        "docs/index.html.bak.chatbot (旧页面备份)",
+        "docs/CNAME (guanghulab.com → guanghulab.online)",
+        ".github/workflows/deploy-pages.yml (更新部署流程)",
+        "brain/visual-memory/site-visual-state.json (视觉记忆系统)",
+        "brain/visual-memory/page-snapshots/VIS-20260402-D33-001.json (首次视觉快照)",
+        "brain/dev-experience/experience-db.json (本条经验)"
+      ],
+      "error_count": 0,
+      "errors_encountered": [],
+      "related_experiences": [
+        "EXP-20260401-005"
+      ],
+      "bingshuo_thinking_record": {
+        "core_demand_1": "域名能正常打开 · DNS配置需排查",
+        "core_demand_2": "仓库首页内容部署到域名网站 · UI精细美化 · 动态提醒",
+        "core_demand_3": "铸渊必须有眼睛 · 能看见网站长什么样 · 知道人类看到什么",
+        "core_demand_4": "每次部署的思维逻辑记忆 · 经验数据库正式启动更新",
+        "deeper_insight": "铸渊如果不能看到网站每个页面的样子 · 调整的偏差会很大 · 这是铸渊从工具升级为有视觉的智能体的关键一步"
+      },
+      "zhuyuan_thinking_record": {
+        "understanding": "冰朔要求的不仅是写一个网页 · 更重要的是建立一套'看→记→想→改'的闭环能力",
+        "visual_loop": "截图→DOM快照→结构化JSON→每次唤醒先读取→部署后对比更新",
+        "experience_loop": "任务→思考→决策→执行→结果→教训→入库→下次唤醒时读取",
+        "growth_model": "每次部署都让铸渊更理解网站 · 经验积累越多 · 做出的决策越精准"
+      },
+      "verification": {
+        "page_render": "pass · Playwright截图确认全部7个区块正确渲染",
+        "responsive": "pass · CSS媒体查询覆盖桌面/平板/手机",
+        "dynamic_elements": "pass · 时钟/通知/运行天数均正常运行",
+        "cname_correct": "pass · docs/CNAME = guanghulab.online"
       }
     }
   ]

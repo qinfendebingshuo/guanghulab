@@ -12,6 +12,10 @@ on:
     branches: [main]
     paths:
       - 'server/**'
+      - 'docs/index.html'
+      - 'docs/css/**'
+      - 'docs/js/**'
+      - 'docs/zh/**'
   workflow_dispatch:
     inputs:
       action:
@@ -140,12 +144,35 @@ jobs:
           # 确保目标目录存在
           ssh -i ~/.ssh/zy_key \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
-            "mkdir -p ${TARGET_DIR}"
+            "mkdir -p ${TARGET_DIR} /opt/zhuyuan/app"
 
+          # 同步后端应用代码
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/zy_key" \
             server/app/ \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/app/
+
+      - name: 🌐 同步前端内容到站点
+        run: |
+          TARGET="${{ github.event.inputs.deploy_target || 'preview' }}"
+          TARGET_DIR="/opt/zhuyuan/sites/${TARGET}"
+          echo "🌐 同步前端 → ${TARGET_DIR}"
+
+          # 同步 docs/ 目录下的前端文件到站点目录
+          # 排除不需要的文件(markdown文档、CNAME等)
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/zy_key" \
+            --exclude='CNAME' \
+            --exclude='*.md' \
+            --exclude='.nojekyll' \
+            --exclude='ontology/' \
+            --exclude='daily-reports/' \
+            --exclude='dashboard/' \
+            --exclude='dev-portal/' \
+            docs/ \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:${TARGET_DIR}/
+
+          echo "✅ 前端内容已部署到 ${TARGET_DIR}"
 
       - name: 📦 同步配置文件
         env:
