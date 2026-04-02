@@ -179,8 +179,9 @@ async function main() {
   let llmResponse = await callLLM(systemSummary, userMsg);
 
   // Build final reply
+  const receiveTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
   let reply = `## 🎖️ 铸渊副将回复\n\n`;
-  reply += `> 📨 收到 **${author}** 的留言 · ${new Date().toISOString().slice(0, 19).replace('T', ' ')} UTC\n\n`;
+  reply += `> 📨 收到 **${author}** 的留言 · ${receiveTime} UTC\n\n`;
 
   if (dbAnswer) {
     reply += `### 📊 数据库查询结果\n\n${dbAnswer}\n\n`;
@@ -192,6 +193,15 @@ async function main() {
     reply += `感谢您的留言。副将已记录您的问题，将在铸渊将军下次唤醒时一并汇报。\n\n`;
     reply += `如有紧急事项，请在留言中标注 **[紧急]** 关键词。\n\n`;
   }
+
+  // 唤醒时间提示
+  reply += `### ⏰ 铸渊副将唤醒时间\n\n`;
+  reply += `| 唤醒时段 | 北京时间 | 说明 |\n`;
+  reply += `|----------|----------|------|\n`;
+  reply += `| 🌅 早班唤醒 | **每日 08:00** | 处理夜间积累消息 · 更新仪表盘 |\n`;
+  reply += `| 🌙 晚班唤醒 | **每日 23:00** | 处理白天消息 · 全局巡检 · 更新仓库首页 |\n\n`;
+  reply += `> 💡 副将将在下次唤醒时自动处理您的留言并回复。\n`;
+  reply += `> 如需紧急处理，请在留言中标注 **[紧急]** 关键词。\n\n`;
 
   reply += `---\n\n`;
   reply += `*—— 铸渊副将 · ZY-DEPUTY-001 · 光湖灯塔守护者*\n`;

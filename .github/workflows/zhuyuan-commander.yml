@@ -7,7 +7,7 @@ name: "🎖️ 铸渊·将军唤醒 · Commander Wake-up"
 on:
   schedule:
     - cron: '0 0 * * *'     # UTC 00:00 = 北京 08:00（将军早班唤醒）
-    - cron: '0 12 * * *'    # UTC 12:00 = 北京 20:00（将军晚班唤醒）
+    - cron: '0 15 * * *'    # UTC 15:00 = 北京 23:00（将军晚班唤醒）
   workflow_dispatch:
 
 permissions:
@@ -114,14 +114,20 @@ jobs:
           echo "[GH-COMMANDER-HLDP] 🔄 HLDP通用语言同步引擎启动..."
           node scripts/hldp-sync-engine.js || echo "⚠️ HLDP同步引擎执行异常·记录并继续"
 
+      # Step 5.6 · 更新仓库首页签到仪表盘
+      - name: "📡 Step 5.6 · 更新仓库首页签到仪表盘"
+        run: |
+          echo "[GH-COMMANDER-DASHBOARD-README] 📡 生成签到仪表盘 → README.md..."
+          node scripts/generate-readme-dashboard.js || echo "⚠️ 签到仪表盘更新异常·记录并继续"
+
       # Step 6 · 提交变更
       - name: "💾 Step 6 · 提交变更"
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json hldp/data/common/
+          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json hldp/data/common/ README.md
           if ! git diff --cached --quiet; then
-            git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘+HLDP同步"
+            git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘+HLDP同步+签到更新"
             git push
           else
             echo "ℹ️ 无变更需要提交"
