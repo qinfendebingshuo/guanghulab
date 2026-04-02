@@ -501,7 +501,7 @@ function updateWork(id,fn){
   ws[idx].updated=new Date().toISOString().slice(0,10);
   saveWorks(ws);
 }
-function genId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,4)}
+function genId(){var a=new Uint8Array(6);crypto.getRandomValues(a);return Date.now().toString(36)+Array.from(a,function(b){return b.toString(36)}).join('').substr(0,4)}
 function wordCount(s){return s?s.replace(/\s/g,'').length:0}
 function totalWords(w){
   var c=0;
@@ -523,7 +523,7 @@ function renderWorkList(){
     var wc=totalWords(w);
     var cc=w.chapters?w.chapters.length:0;
     var chc=w.characters?w.characters.length:0;
-    return '<div class="card work-item" onclick="activeWorkId=\''+w.id+'\';go(\'hub\')">'+
+    return '<div class="card work-item" data-wid="'+esc(w.id)+'">'+
       '<h3>'+esc(w.title)+'</h3>'+
       '<div class="meta">'+
       '<span>'+esc(w.genre||'未分类')+'</span>'+
@@ -532,6 +532,9 @@ function renderWorkList(){
       '<span>👥 '+chc+' 角色</span>'+
       '</div></div>';
   }).join('');
+  el.querySelectorAll('.work-item').forEach(function(item){
+    item.onclick=function(){activeWorkId=this.getAttribute('data-wid');go('hub')};
+  });
 }
 
 /* ════════════════════════════════════════
@@ -646,12 +649,15 @@ function renderChars(){
   }
   el.innerHTML=chars.map(function(c){
     var icon=c.role==='主角'?'⭐':c.role==='女主'?'💫':c.role==='反派'?'🔥':'👤';
-    return '<div class="card" style="cursor:pointer" onclick="editingCharId=\''+c.id+'\';go(\'charEdit\')">'+
+    return '<div class="card" style="cursor:pointer" data-cid="'+esc(c.id)+'">'+
       '<div class="char-card"><div class="char-avatar">'+icon+'</div><div class="char-info">'+
       '<h4>'+esc(c.name)+'</h4><div class="char-role">'+esc(c.role||'角色')+'</div>'+
       '<p>'+esc((c.traits||'').substring(0,60)+(c.traits&&c.traits.length>60?'...':''))+'</p>'+
       '</div></div></div>';
   }).join('');
+  el.querySelectorAll('[data-cid]').forEach(function(item){
+    item.onclick=function(){editingCharId=this.getAttribute('data-cid');go('charEdit')};
+  });
 }
 document.getElementById('addChar').onclick=function(){
   editingCharId=null;
@@ -700,12 +706,15 @@ function renderChapters(){
   }
   el.innerHTML=chs.map(function(ch,i){
     var wc=wordCount(ch.content);
-    return '<div class="card" style="cursor:pointer" onclick="activeChapterId=\''+ch.id+'\';go(\'editor\')">'+
+    return '<div class="card" style="cursor:pointer" data-chid="'+esc(ch.id)+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
       '<div><div style="font-size:14px;font-weight:600">第'+(i+1)+'章 '+esc(ch.title)+'</div>'+
       '<div style="font-size:11px;color:var(--dim);margin-top:2px">'+wc+' 字</div></div>'+
       '<span class="tag '+(wc>0?'tag-ok':'tag-info')+'">'+(wc>0?'已写':'空白')+'</span></div></div>';
   }).join('');
+  el.querySelectorAll('[data-chid]').forEach(function(item){
+    item.onclick=function(){activeChapterId=this.getAttribute('data-chid');go('editor')};
+  });
 }
 document.getElementById('addChapter').onclick=function(){
   var title=prompt('章节标题');
@@ -794,7 +803,7 @@ function renderCharEdit(){
    THEME
    ════════════════════════════════════════ */
 var TH=['','t-twi','t-sea','t-for','t-emb'];
-var ti=Math.floor(Math.random()*TH.length);
+var ti=new Uint8Array(1);crypto.getRandomValues(ti);ti=ti[0]%TH.length;
 try{var sv=localStorage.getItem('hl-t');if(sv!==null)ti=parseInt(sv)}catch(e){}
 function setTh(i){ti=i%TH.length;document.body.className=TH[ti];try{localStorage.setItem('hl-t',ti)}catch(e){}}
 setTh(ti);
@@ -806,7 +815,7 @@ document.getElementById('themeBtn').onclick=function(){setTh(ti+1)};
 var usr={id:null,name:null,code:null};
 try{var um=localStorage.getItem('hl-u');if(um)usr=JSON.parse(um)}catch(e){}
 function saveUsr(){try{localStorage.setItem('hl-u',JSON.stringify(usr))}catch(e){}}
-if(!usr.id){usr.id='u-'+Math.random().toString(36).substr(2,8);saveUsr()}
+if(!usr.id){var ra=new Uint8Array(6);crypto.getRandomValues(ra);usr.id='u-'+Array.from(ra,function(b){return b.toString(36)}).join('').substr(0,8);saveUsr()}
 
 function detectId(msg){
   var nm=msg.match(/我(?:是|叫)\s*([^\s,，。.!！?？]{1,20})/);
@@ -825,7 +834,7 @@ function idReply(){
 }
 function isReturn(msg){
   if(!usr.name&&!usr.code)return false;
-  if(usr.code&&new RegExp(usr.code.replace(/[-]/g,'\\-'),'i').test(msg))return true;
+  if(usr.code&&msg.indexOf(usr.code)!==-1)return true;
   if(usr.name&&msg.indexOf(usr.name)!==-1)return true;
   return false;
 }
@@ -858,8 +867,8 @@ chatFab.onclick=function(){
 function chatMsg(text,type,meta){
   var d=document.createElement('div');
   d.className='cm '+type;
-  var h=text.replace(/\n/g,'<br>');
-  if(type==='b'&&meta){h+='<div class="cm-m"><span>'+(meta.m||'铸渊')+'</span><span>·</span><span>'+(meta.t||'')+'</span></div>'}
+  var h=esc(text).replace(/\n/g,'<br>');
+  if(type==='b'&&meta){h+='<div class="cm-m"><span>'+esc(meta.m||'铸渊')+'</span><span>·</span><span>'+esc(meta.t||'')+'</span></div>'}
   d.innerHTML=h;
   chatMs.appendChild(d);
   chatMs.scrollTop=chatMs.scrollHeight;
