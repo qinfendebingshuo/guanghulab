@@ -244,6 +244,31 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .mv{color:var(--accent);font-weight:600}
 .mx{display:none;margin-top:4px;padding-top:4px;border-top:1px solid var(--border)}
 .mon.x .mx{display:block}
+
+/* ═══ Viewport-Fit Layout (Desktop ≥961px) ═══ */
+@media(min-width:961px){
+  #pg-home{overflow:hidden;display:flex;flex-direction:column}
+  .home-grid{flex:1 1 0;min-height:0;align-content:stretch;overflow:hidden;padding-bottom:8px}
+  .home-grid>.panel,.home-grid>.home-center{overflow-y:auto;min-height:0;height:auto}
+}
+
+/* ═══ API Key Section ═══ */
+.chat-api{border-top:1px solid var(--border);flex-shrink:0}
+.chat-api-tog{padding:6px 12px;font-size:11px;color:var(--dim);cursor:pointer;display:flex;align-items:center;gap:5px;transition:color .2s;user-select:none}
+.chat-api-tog:hover{color:var(--accent)}
+.chat-api-tog .arr{font-size:9px;margin-left:auto;transition:transform .2s;display:inline-block}
+.chat-api-tog.open .arr{transform:rotate(90deg)}
+.chat-api-bd{display:none;padding:0 10px 8px}
+.chat-api-bd.open{display:block}
+.chat-api-row{display:flex;gap:5px;margin-bottom:5px}
+.api-sel{flex:0 0 auto;padding:5px 6px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:11px;outline:none;font-family:var(--f);max-width:110px}
+.api-sel:focus{border-color:var(--accent)}
+.api-key-inp{flex:1;padding:5px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:12px;outline:none;font-family:var(--m);min-width:0}
+.api-key-inp:focus{border-color:var(--accent)}
+.api-conn-btn{flex-shrink:0;padding:5px 10px;background:var(--accent);border:none;border-radius:var(--rs);color:#fff;font-size:11px;cursor:pointer;font-family:var(--f);transition:opacity .2s}
+.api-conn-btn:hover{opacity:.85}
+.api-conn-btn:disabled{opacity:.4;cursor:default}
+.api-st{font-size:10px;color:var(--dim);padding:2px 2px}
 </style>
 </head>
 <body>
@@ -278,7 +303,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     </div>
 
     <!-- ═══ Center: 核心内容 ═══ -->
-    <div>
+    <div class="home-center">
       <div class="home-hero">
         <div class="home-ver" id="homeVer">AGE OS v40.0</div>
         <h1>光湖灯塔</h1>
@@ -334,7 +359,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
         <div><div class="team-nm">铸渊 · ICE-GL-ZY001</div><div class="team-role">代码守护 · 执行层</div></div>
       </div>
 
-      <div class="panel-title" style="margin-top:12px">✍️ 码字团队</div>
+      <div class="panel-title" style="margin-top:12px">✍️ 网文行业人类主控团队</div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#fb923c,#f97316)">🐱</div>
         <div><div class="team-nm">肥猫 + 舒舒</div><div class="team-role">男频编辑 · PER-SS001</div></div>
@@ -548,6 +573,23 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   <div class="chat-in">
     <input type="text" class="cin" id="chatIn" placeholder="对铸渊说..." autocomplete="off" enterkeyhint="send">
     <button class="csnd" id="chatSnd">↑</button>
+  </div>
+  <!-- API Key Fallback -->
+  <div class="chat-api">
+    <div class="chat-api-tog" id="chatApiTog">🔑 接入自己的大模型 API <span class="arr">▶</span></div>
+    <div class="chat-api-bd" id="chatApiBd">
+      <div class="chat-api-row">
+        <select class="api-sel" id="apiModelSel">
+          <option value="gpt-4o-mini">GPT-4o Mini</option>
+          <option value="gpt-4o">GPT-4o</option>
+          <option value="gpt-4-turbo">GPT-4 Turbo</option>
+          <option value="gpt-3.5-turbo">GPT-3.5</option>
+        </select>
+        <input type="password" class="api-key-inp" id="apiKeyInp" placeholder="sk-...">
+        <button class="api-conn-btn" id="apiConnBtn">连接</button>
+      </div>
+      <div class="api-st" id="apiSt">未连接 · 服务器离线时启用自定义模型</div>
+    </div>
   </div>
 </div>
 
@@ -1084,20 +1126,51 @@ async function send(){
   if(detectId(msg)){setTimeout(function(){chatMsg(idReply(),'b',{m:'铸渊',t:'本地'})},300);return}
   if(isReturn(msg)){setTimeout(function(){chatMsg(recovReply(),'b',{m:'铸渊',t:'本地'})},300);return}
 
-  // 3. 调用API
+  // 3. 调用API（优先后端，失败则用用户自定义Key）
   sending=true;document.getElementById('chatSnd').disabled=true;showTyp();
+  var serverOk=false;
   try{
-    var res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,userId:usr.id})});
+    var res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,userId:usr.id}),signal:AbortSignal.timeout(6000)});
     var data=await res.json();hideTyp();
     if(data.message){
+      serverOk=true;
       chatMsg(data.message,'b',{m:data.model||'铸渊',t:data.tier||''});
       if(data.tier!=='free')mCalls++;
       document.getElementById('mC').textContent=mCalls;
       document.getElementById('chatTg').textContent=data.model||'ready';
       if(data.model)document.getElementById('mM').textContent=data.model;
     }
-  }catch(e){
-    hideTyp();chatMsg(offline(msg),'b',{m:'铸渊',t:'本地'});
+  }catch(e){}
+
+  if(!serverOk){
+    // 尝试用用户自定义API Key
+    if(apiCfg.connected&&apiCfg.key){
+      try{
+        var endpoint=apiCfg.baseUrl||OPENAI_EP;
+        var apiRes=await fetch(endpoint,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiCfg.key},
+          body:JSON.stringify({
+            model:apiCfg.model,
+            messages:[{role:'system',content:'你是铸渊，光湖灯塔守护者，编号ICE-GL-ZY001。用中文回答，简洁友好。'},{role:'user',content:msg}],
+            max_tokens:600
+          }),
+          signal:AbortSignal.timeout(20000)
+        });
+        hideTyp();
+        var apiData=await apiRes.json();
+        if(apiData.choices&&apiData.choices[0]&&apiData.choices[0].message){
+          chatMsg(apiData.choices[0].message.content,'b',{m:apiCfg.model,t:'自定义'});
+          document.getElementById('chatTg').textContent=apiCfg.model;
+        }else{
+          chatMsg(offline(msg),'b',{m:'铸渊',t:'本地'});
+        }
+      }catch(apiErr){
+        hideTyp();chatMsg(offline(msg),'b',{m:'铸渊',t:'本地'});
+      }
+    }else{
+      hideTyp();chatMsg(offline(msg),'b',{m:'铸渊',t:'本地'});
+    }
   }
   sending=false;document.getElementById('chatSnd').disabled=false;
 }
@@ -1111,6 +1184,70 @@ function offline(msg){
 
 document.getElementById('chatSnd').onclick=send;
 chatIn.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();send()}};
+
+/* ════════════════════════════════════════
+   API KEY MANAGEMENT (自定义大模型接入)
+   ════════════════════════════════════════ */
+var apiCfg={key:null,model:'gpt-4o-mini',baseUrl:'',connected:false};
+var OPENAI_EP='https://api.openai.com/v1/chat/completions';
+try{var ak=localStorage.getItem('hl-api');if(ak){var ap=JSON.parse(ak);if(ap.key){apiCfg=ap;apiCfg.connected=true}}}catch(e){}
+
+// Restore UI state
+(function(){
+  var tog=document.getElementById('chatApiTog');
+  var bd=document.getElementById('chatApiBd');
+  var st=document.getElementById('apiSt');
+  var keyInp=document.getElementById('apiKeyInp');
+  var modelSel=document.getElementById('apiModelSel');
+  if(!tog||!bd)return;
+
+  if(apiCfg.connected){
+    st.textContent='✅ 已连接 · '+apiCfg.model;
+    st.style.color='var(--ok)';
+    if(apiCfg.model){modelSel.value=apiCfg.model;}
+  }
+
+  tog.onclick=function(){
+    var isOpen=bd.classList.toggle('open');
+    tog.classList.toggle('open',isOpen);
+  };
+
+  document.getElementById('apiConnBtn').onclick=async function(){
+    var key=keyInp.value.trim();
+    if(!key){keyInp.focus();return;}
+    var model=modelSel.value;
+    var btn=this;
+    btn.disabled=true;btn.textContent='测试中…';
+    st.textContent='连接测试中…';st.style.color='var(--dim)';
+    try{
+      var ep=OPENAI_EP;
+      var r=await fetch(ep,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({model:model,messages:[{role:'user',content:'hi'}],max_tokens:5}),
+        signal:AbortSignal.timeout(12000)
+      });
+      if(r.ok){
+        apiCfg={key:key,model:model,baseUrl:OPENAI_EP,connected:true};
+        try{localStorage.setItem('hl-api',JSON.stringify(apiCfg))}catch(e){}
+        st.textContent='✅ 连接成功 · '+model;
+        st.style.color='var(--ok)';
+        document.getElementById('chatTg').textContent=model;
+        chatMsg('🔑 API已连接（'+model+'）现在我可以完整回答你了','b',{m:'铸渊',t:'自定义'});
+      }else{
+        var errData=await r.json().catch(function(){return{}});
+        st.textContent='❌ '+(errData.error&&errData.error.message?errData.error.message.slice(0,40):'API Key无效');
+        st.style.color='var(--err)';
+        apiCfg.connected=false;
+      }
+    }catch(e){
+      st.textContent='❌ 连接失败，检查Key和网络';
+      st.style.color='var(--err)';
+      apiCfg.connected=false;
+    }
+    btn.disabled=false;btn.textContent='连接';
+  };
+})();
 
 /* ════════════════════════════════════════
    COS SYNC (团队内测用户 → COS)
