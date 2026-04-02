@@ -256,22 +256,26 @@ jobs:
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} << VERIFY_CMD
 
           # 检查前端文件是否存在且不是占位页面
+          DEPLOY_OK=true
           if [ -f ${TARGET_DIR}/index.html ]; then
             FILE_SIZE=\$(wc -c < ${TARGET_DIR}/index.html)
             echo "📄 index.html 大小: \${FILE_SIZE} 字节"
             if [ \$FILE_SIZE -lt 1000 ]; then
               echo "⚠️ 警告: index.html 可能是占位页面 (< 1KB)"
+              DEPLOY_OK=false
             else
               echo "✅ index.html 内容正常 (\${FILE_SIZE} 字节)"
             fi
             # 验证不是初始化占位页面
             if grep -q "铸渊预览站" ${TARGET_DIR}/index.html 2>/dev/null; then
-              echo "❌ 警告: 仍然是初始化占位页面!"
+              echo "❌ 错误: 仍然是初始化占位页面! 前端内容未正确部署"
+              DEPLOY_OK=false
             elif grep -q "光湖灯塔\|HoloLake" ${TARGET_DIR}/index.html 2>/dev/null; then
               echo "✅ 检测到光湖灯塔内容 · 部署成功"
             fi
           else
             echo "❌ index.html 不存在!"
+            DEPLOY_OK=false
           fi
 
           # 检查 CSS/JS 资源
@@ -285,9 +289,21 @@ jobs:
           ls -la /etc/nginx/sites-enabled/ 2>/dev/null
           echo ""
 
-          # 检查网站是否可从本机访问
-          HTTP_CODE=\$(curl -sf -o /dev/null -w "%{http_code}" http://localhost/ 2>/dev/null || echo "000")
-          echo "📡 本地HTTP访问状态: \${HTTP_CODE}"
+          # 使用 Host 头检查目标虚拟主机
+          ZY_PREVIEW_DOMAIN="${{ secrets.ZY_DOMAIN_PREVIEW }}"
+          if [ -n "\${ZY_PREVIEW_DOMAIN}" ] && [ "${TARGET}" = "preview" ]; then
+            HTTP_CODE=\$(curl -sf -o /dev/null -w "%{http_code}" -H "Host: \${ZY_PREVIEW_DOMAIN}" http://localhost/ 2>/dev/null || echo "000")
+            echo "📡 预览站HTTP访问状态 (Host: \${ZY_PREVIEW_DOMAIN}): \${HTTP_CODE}"
+          else
+            HTTP_CODE=\$(curl -sf -o /dev/null -w "%{http_code}" http://localhost/ 2>/dev/null || echo "000")
+            echo "📡 本地HTTP访问状态: \${HTTP_CODE}"
+          fi
+
+          if [ "\$DEPLOY_OK" = "false" ]; then
+            echo ""
+            echo "═══ ⚠️ 部署验证失败 · 请检查 rsync 步骤日志 ═══"
+            exit 1
+          fi
 
           VERIFY_CMD
 
