@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="光湖灯塔 · 语言驱动操作系统 AGE OS">
+<meta name="description" content="光湖灯塔 · 语言驱动操作系统 AGE OS v44.0">
 <meta name="theme-color" content="#080c18">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -78,7 +78,7 @@ a{color:var(--accent);text-decoration:none}
 .btn-accent:hover{opacity:.88;color:#fff;box-shadow:0 4px 20px rgba(110,168,254,.35)}
 .btn-accent::before{background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.15) 50%,transparent 70%)}
 .content{padding:var(--da-pad, 16px);max-width:var(--da-content-max, 700px);margin:0 auto}
-.card{background:rgba(8,14,30,.55);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);padding:16px;margin-bottom:12px;transition:all .35s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.card{background:rgba(10,18,38,.75);border:1px solid rgba(110,168,254,.18);border-radius:var(--r);padding:16px;margin-bottom:12px;transition:all .35s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .card:hover{border-color:rgba(110,168,254,.25);box-shadow:0 0 24px rgba(110,168,254,.08)}
 .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
 .tag-ok{background:rgba(52,211,153,.12);color:var(--ok)}
@@ -128,7 +128,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .hub-title h2{font-size:20px;font-weight:700}
 .hub-title p{font-size:12px;color:var(--dim);margin-top:2px}
 .hub-grid{display:grid;grid-template-columns:var(--da-hub, 1fr 1fr);gap:10px}
-.hub-card{text-align:center;padding:28px 14px;background:rgba(8,14,30,.45);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
+.hub-card{text-align:center;padding:28px 14px;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.2);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
 .hub-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(110,168,254,.08),transparent 70%);opacity:0;transition:opacity .4s}
 .hub-card:hover{border-color:rgba(110,168,254,.3);box-shadow:0 0 30px rgba(110,168,254,.1);transform:translateY(-3px)}
 .hub-card:hover::after{opacity:1}
@@ -232,7 +232,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 [data-single-col="true"] .home-grid>.panel:first-child{order:2}
 [data-single-col="true"] .home-center{order:1}
 [data-single-col="true"] .home-grid>.panel:last-child{order:3}
-.panel{background:rgba(8,14,30,.55);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);padding:14px;height:fit-content;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.panel{background:rgba(10,18,38,.78);border:1px solid rgba(110,168,254,.18);border-radius:var(--r);padding:14px;height:fit-content;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .panel-title{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .panel-item{padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
 .panel-item:last-child{border-bottom:none}
@@ -270,7 +270,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
 /* ═══ Home Entry Cards ═══ */
 .home-entries{display:grid;grid-template-columns:var(--da-entries, 1fr 1fr);gap:10px;margin:16px 0}
-.entry-card{padding:24px 16px;text-align:center;background:rgba(8,14,30,.45);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
+.entry-card{padding:24px 16px;text-align:center;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.22);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
 .entry-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(110,168,254,.08),transparent 70%);opacity:0;transition:opacity .4s}
 .entry-card:hover{border-color:rgba(110,168,254,.3);box-shadow:0 0 30px rgba(110,168,254,.1),0 0 60px rgba(167,139,250,.06);transform:translateY(-3px)}
 .entry-card:hover::after{opacity:1}
@@ -354,7 +354,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .remind-header em{font-style:normal;font-size:20px;animation:bellSwing 4s ease-in-out infinite}
 @keyframes bellSwing{0%,100%{transform:rotate(0)}10%{transform:rotate(12deg)}20%{transform:rotate(-10deg)}30%{transform:rotate(6deg)}40%{transform:rotate(-4deg)}50%{transform:rotate(0)}}
 .remind-count{background:rgba(251,191,36,.15);color:var(--warn);font-size:12px;padding:3px 10px;border-radius:20px;font-weight:700;font-family:var(--m);min-width:24px;text-align:center}
-.remind-card{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;background:rgba(8,14,30,.5);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);margin-bottom:8px;transition:all .4s cubic-bezier(.4,0,.2,1);cursor:default;position:relative;overflow:hidden;min-height:48px}
+.remind-card{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.2);border-radius:var(--r);margin-bottom:8px;transition:all .4s cubic-bezier(.4,0,.2,1);cursor:default;position:relative;overflow:hidden;min-height:48px}
 .remind-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:0 2px 2px 0;transition:width .3s}
 .remind-card:hover{border-color:rgba(110,168,254,.25);box-shadow:0 0 24px rgba(110,168,254,.1);transform:translateX(4px)}
 .remind-card:hover::before{width:4px}
@@ -374,7 +374,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
 /* ── Module Selection Grid ── */
 .mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin:16px 0}
-.mod-card{padding:28px 16px;text-align:center;background:rgba(8,14,30,.45);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
+.mod-card{padding:28px 16px;text-align:center;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.2);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
 .mod-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(110,168,254,.06),transparent 70%);opacity:0;transition:opacity .4s}
 .mod-card:hover{border-color:rgba(110,168,254,.3);box-shadow:0 0 30px rgba(110,168,254,.12);transform:translateY(-4px) scale(1.02)}
 .mod-card:hover::after{opacity:1}
@@ -390,7 +390,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .ws-header{text-align:center;padding:24px 16px 16px}
 .ws-header h2{font-size:22px;font-weight:700;margin-bottom:4px}
 .ws-header p{font-size:13px;color:var(--dim)}
-.ws-goal{background:rgba(8,14,30,.55);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);padding:22px;margin-bottom:14px;text-align:center;transition:all .3s}
+.ws-goal{background:rgba(10,18,38,.75);border:1px solid rgba(110,168,254,.1);border-radius:var(--r);padding:22px;margin-bottom:14px;text-align:center;transition:all .3s}
 .ws-goal:hover{border-color:rgba(110,168,254,.2)}
 .ws-goal-title{font-size:12px;color:var(--dim);margin-bottom:8px;font-weight:600}
 .ws-goal-num{font-size:40px;font-weight:800;font-family:var(--m);color:var(--accent);margin:6px 0;line-height:1.1}
@@ -413,7 +413,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .insp-tag{padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);color:var(--dim);transition:all .25s;min-height:34px;display:flex;align-items:center}
 .insp-tag.active{background:rgba(110,168,254,.1);border-color:var(--accent);color:var(--accent)}
 .insp-tag:hover{border-color:var(--accent);color:var(--accent)}
-.insp-card{padding:16px 18px;background:rgba(8,14,30,.5);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);margin-bottom:8px;position:relative;transition:all .3s;animation:slideInUp .4s ease-out both}
+.insp-card{padding:16px 18px;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);margin-bottom:8px;position:relative;transition:all .3s;animation:slideInUp .4s ease-out both}
 .insp-card:hover{border-color:rgba(110,168,254,.2);box-shadow:0 0 16px rgba(110,168,254,.06)}
 .insp-text{font-size:14px;margin-bottom:8px;line-height:1.6}
 .insp-meta{display:flex;gap:8px;align-items:center;font-size:10px;color:var(--muted)}
@@ -422,7 +422,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
 /* ── Progress Page ── */
 .prog-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.prog-stat{text-align:center;padding:18px 8px;background:rgba(8,14,30,.5);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);transition:all .3s}
+.prog-stat{text-align:center;padding:18px 8px;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.08);border-radius:var(--r);transition:all .3s}
 .prog-stat:hover{border-color:rgba(110,168,254,.2)}
 .prog-stat b{display:block;font-size:28px;font-family:var(--m);color:var(--accent);margin-bottom:4px}
 .prog-stat small{font-size:10px;color:var(--dim)}
@@ -466,6 +466,93 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 /* ── Particle Trail Effect for Cards ── */
 .entry-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(110,168,254,.03),transparent 60%);animation:cardRotate 8s linear infinite;pointer-events:none}
 @keyframes cardRotate{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════════════
+   V44.0 OS Dashboard Styles
+   ═══════════════════════════════════════════════ */
+
+/* OS Dashboard Container */
+.os-dashboard{padding:12px;font-family:var(--m)}
+.os-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(110,168,254,.15)}
+.os-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.os-ver{font-size:9px;color:var(--dim);font-family:var(--m);padding:2px 6px;background:rgba(110,168,254,.06);border:1px solid rgba(110,168,254,.12);border-radius:4px}
+
+/* Blinking cursor */
+.os-blink{animation:osBlink 1.2s step-end infinite;color:var(--ok)}
+@keyframes osBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* OS Block sections */
+.os-block{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(110,168,254,.08)}
+.os-block:last-child{border-bottom:none;margin-bottom:0}
+.os-block-title{font-size:9px;color:var(--accent2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.os-block-title::before{content:'';width:12px;height:1px;background:var(--accent2);display:inline-block}
+
+/* OS key-value rows */
+.os-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-size:10px}
+.os-key{color:var(--muted);letter-spacing:.5px;font-size:9px}
+.os-val{color:var(--text);font-weight:600;font-size:10px}
+
+/* OS Task items */
+.os-task{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:10px;color:var(--dim)}
+.os-task.done{color:var(--ok);opacity:.7}
+.os-task.active{color:var(--text)}
+.os-task.pending{color:var(--muted)}
+.os-task-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.os-task-dot.done{background:var(--ok)}
+.os-task-dot.active{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pls 2s infinite}
+.os-task-dot.pending{background:var(--muted)}
+
+/* OS Progress bar */
+.os-progress-bar{height:3px;background:rgba(110,168,254,.1);border-radius:2px;overflow:hidden;margin:8px 0 3px}
+.os-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;position:relative}
+.os-progress-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:10px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4));animation:shimmer 2s infinite}
+.os-prog-label{font-size:9px;color:var(--dim)}
+
+/* OS Layer items */
+.os-layer{display:flex;align-items:center;gap:6px;padding:2.5px 0;font-size:10px;color:var(--dim)}
+.os-layer-dot{width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:0 0 4px var(--ok);flex-shrink:0;animation:pls 3s infinite}
+.os-layer-num{color:var(--accent2);font-size:9px;min-width:18px}
+
+/* OS Workflow grid */
+.os-wf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.os-wf-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--ok);padding:3px 0}
+.os-wf-dot{width:4px;height:4px;border-radius:50%;background:var(--ok);box-shadow:0 0 4px var(--ok);flex-shrink:0;animation:pls 2s infinite}
+
+/* OS Log items */
+.os-log-item{display:flex;gap:8px;padding:2px 0;font-size:10px}
+.os-log-v{color:var(--accent);font-size:9px;min-width:32px}
+.os-log-t{color:var(--dim)}
+
+/* Compact Feedback Widget */
+.feedback-compact{background:rgba(110,168,254,.04);border:1px solid rgba(110,168,254,.18);border-radius:var(--r);padding:14px 16px;margin-top:16px;position:relative;overflow:hidden}
+.feedback-compact::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent2),var(--accent3))}
+.fb-compact-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.fb-compact-icon{font-size:18px}
+.fb-compact-title{font-size:13px;font-weight:700;color:var(--text)}
+.fb-compact-sub{font-size:11px;color:var(--dim);margin-left:auto}
+.fb-compact-row{display:flex;gap:8px;align-items:center}
+.fb-compact-input{flex:1;background:rgba(5,8,22,.6);border:1px solid rgba(110,168,254,.15);border-radius:var(--rs);color:var(--text);padding:8px 12px;font-size:13px;font-family:var(--f);outline:none;min-height:40px}
+.fb-compact-input:focus{border-color:rgba(110,168,254,.4);box-shadow:0 0 12px rgba(110,168,254,.08)}
+.fb-compact-btn{padding:8px 16px;background:linear-gradient(135deg,var(--accent2),var(--accent3));border:none;border-radius:var(--rs);color:#fff;font-size:12px;cursor:pointer;font-family:var(--f);white-space:nowrap;transition:opacity .2s;flex-shrink:0;min-height:40px}
+.fb-compact-btn:hover{opacity:.85}
+.fb-compact-btn:active{transform:scale(.97)}
+.fb-compact-hint{font-size:10px;color:var(--muted);margin-top:6px}
+
+/* Writing Module Main Entry */
+.writing-entry{background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.25);border-radius:var(--r);padding:22px 20px;margin:16px 0;cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.writing-entry-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(110,168,254,.06),transparent 60%);pointer-events:none;transition:opacity .4s}
+.writing-entry:hover{border-color:rgba(110,168,254,.5);box-shadow:0 0 40px rgba(110,168,254,.15),0 0 80px rgba(167,139,250,.08);transform:translateY(-2px)}
+.writing-entry:hover .writing-entry-glow{background:radial-gradient(ellipse at 30% 50%,rgba(110,168,254,.12),transparent 60%)}
+.writing-entry:active{transform:scale(.99)}
+.writing-entry-inner{display:flex;align-items:center;gap:16px}
+.writing-entry-icon{font-size:44px;flex-shrink:0;filter:drop-shadow(0 0 16px rgba(110,168,254,.3));animation:uptimePulse 6s ease-in-out infinite}
+.writing-entry-text{flex:1;min-width:0}
+.writing-entry-title{display:block;font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:.3px}
+.writing-entry-sub{display:block;font-size:12px;color:var(--dim);margin-bottom:8px}
+.writing-entry-tags{display:flex;gap:5px;flex-wrap:wrap}
+.writing-entry-arrow{font-size:18px;color:var(--accent);opacity:.6;flex-shrink:0;transition:all .3s}
+.writing-entry:hover .writing-entry-arrow{opacity:1;transform:translateX(4px)}
+.writing-entry-hint{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid rgba(110,168,254,.08)}
 </style>
 </head>
 <body>
@@ -482,18 +569,78 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="bar-right"><span class="dot"></span><span style="font-size:11px;color:var(--dim)">在线</span><button class="btn" id="themeBtn">🎨</button></div>
   </div>
   <div class="home-grid">
-    <!-- ═══ Left Panel: 系统状态 ═══ -->
-    <div class="panel" id="sysPanel">
-      <div class="panel-title">📡 系统状态</div>
-      <div class="panel-item"><div class="panel-label">服务器</div><div class="panel-value" id="sysStatus" style="color:var(--dim)">检测中…</div></div>
-      <div class="panel-item"><div class="panel-label">延迟</div><div class="panel-value" id="sysLatency">—</div></div>
-      <div class="panel-item"><div class="panel-label">运行时间</div><div class="panel-value" id="sysUptime">—</div></div>
-      <div class="panel-item"><div class="panel-label">工作流</div><div class="panel-value" id="sysWorkflows" style="color:var(--dim)">检测中…</div></div>
-      <div class="panel-item"><div class="panel-label">模块部署</div><div class="panel-value" id="sysModules" style="color:var(--dim)">检测中…</div></div>
-      <div class="panel-item"><div class="panel-label">COS 存储</div><div class="panel-value" id="sysCos" style="color:var(--dim)">检测中…</div></div>
-      <div class="panel-title" style="margin-top:12px">🧠 版本更新</div>
-      <div id="sysUpdates">
-        <div class="panel-item"><div class="panel-label">v42.0 · 2026-04-02</div><div style="font-size:11px">银河星空UI改版</div></div>
+    <!-- ═══ Left Panel: AGE OS 主控台 ═══ -->
+    <div class="panel os-dashboard" id="sysPanel">
+      <!-- Header -->
+      <div class="os-header">
+        <div class="os-title"><span class="os-blink">▶</span> ICE-GL∞ 主控台</div>
+        <div class="os-ver">AGE OS v44.0</div>
+      </div>
+
+      <!-- System Status Block -->
+      <div class="os-block">
+        <div class="os-block-title">SYS · 系统状态</div>
+        <div class="os-row"><span class="os-key">STATUS</span><span class="os-val" id="sysStatus" style="color:var(--dim)">DETECTING</span></div>
+        <div class="os-row"><span class="os-key">LATENCY</span><span class="os-val" id="sysLatency">—</span></div>
+        <div class="os-row"><span class="os-key">UPTIME</span><span class="os-val" id="sysUptime">—</span></div>
+        <div class="os-row"><span class="os-key">CHANNEL</span><span class="os-val" id="sysChannel" style="color:var(--ok)">ACTIVE</span></div>
+      </div>
+
+      <!-- Dev Progress Block -->
+      <div class="os-block">
+        <div class="os-block-title">DEV · 铸渊开发进度</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>银河星空UI改版</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>Agent桥接系统</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>码字工作台v43扩展</div>
+        <div class="os-task active"><span class="os-task-dot active"></span>v44模块对比+仪表盘</div>
+        <div class="os-task pending"><span class="os-task-dot pending"></span>码字模块业务接入</div>
+        <div class="os-task pending"><span class="os-task-dot pending"></span>Notion MCP集成</div>
+        <div class="os-progress-bar"><div class="os-progress-fill" style="width:65%"></div></div>
+        <div class="os-prog-label">进度 65% · v44.0 开发中</div>
+      </div>
+
+      <!-- 冰朔 Task Block -->
+      <div class="os-block">
+        <div class="os-block-title">CMD · 冰朔指令队列</div>
+        <div class="os-task active"><span class="os-task-dot active"></span>UI对比度修复</div>
+        <div class="os-task active"><span class="os-task-dot active"></span>码字模块嵌套结构</div>
+        <div class="os-task active"><span class="os-task-dot active"></span>仪表盘OS化改版</div>
+        <div class="os-task pending"><span class="os-task-dot pending"></span>短剧/短视频接入规划</div>
+        <div class="os-task pending"><span class="os-task-dot pending"></span>编辑平台运营平台</div>
+      </div>
+
+      <!-- AGE OS Layers -->
+      <div class="os-block">
+        <div class="os-block-title">ARCH · 数字地球六层</div>
+        <div class="os-layer"><span class="os-layer-dot"></span><span class="os-layer-num">L1</span> 地核 · TCS自转核</div>
+        <div class="os-layer"><span class="os-layer-dot"></span><span class="os-layer-num">L2</span> 地幔 · 母语词典</div>
+        <div class="os-layer"><span class="os-layer-dot"></span><span class="os-layer-num">L3</span> 地表 · 人格体运行</div>
+        <div class="os-layer"><span class="os-layer-dot"></span><span class="os-layer-num">L4</span> 大气 · 信号总线</div>
+        <div class="os-layer"><span class="os-layer-dot"></span><span class="os-layer-num">L5</span> 卫星 · Agent执行</div>
+        <div class="os-layer"><span class="os-layer-dot"></span><span class="os-layer-num">L6</span> 太空 · 外部交互</div>
+      </div>
+
+      <!-- Workflow Status -->
+      <div class="os-block">
+        <div class="os-block-title">WF · 工作流状态</div>
+        <div class="os-wf-grid" id="activeAgents">
+          <div class="os-wf-item"><span class="os-wf-dot"></span>听潮</div>
+          <div class="os-wf-item"><span class="os-wf-dot"></span>锻心</div>
+          <div class="os-wf-item"><span class="os-wf-dot"></span>织脉</div>
+          <div class="os-wf-item"><span class="os-wf-dot"></span>映阁</div>
+          <div class="os-wf-item"><span class="os-wf-dot"></span>守夜</div>
+          <div class="os-wf-item"><span class="os-wf-dot"></span>试镜</div>
+        </div>
+      </div>
+
+      <!-- Version Log -->
+      <div class="os-block">
+        <div class="os-block-title">LOG · 版本历史</div>
+        <div id="sysUpdates">
+          <div class="os-log-item"><span class="os-log-v">v44.0</span><span class="os-log-t">仪表盘+UI改版</span></div>
+          <div class="os-log-item"><span class="os-log-v">v43.0</span><span class="os-log-t">码字工作台扩展</span></div>
+          <div class="os-log-item"><span class="os-log-v">v42.0</span><span class="os-log-t">银河星空UI</span></div>
+        </div>
       </div>
     </div>
 
@@ -501,7 +648,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="home-center">
       <!-- Uptime Counter (灯塔仪表盘核心) -->
       <div class="uptime-block">
-        <div class="home-ver" id="homeVer">AGE OS v43.0</div>
+        <div class="home-ver" id="homeVer">AGE OS v44.0</div>
         <div class="uptime-num" id="uptimeNum">—</div>
         <div class="uptime-label">系统运行</div>
       </div>
@@ -543,8 +690,8 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
           <div class="remind-card anim-in">
             <div class="remind-icon">✍️</div>
             <div class="remind-body">
-              <div class="remind-title">码字工作台 v43.0 升级</div>
-              <div class="remind-desc">个人工作台 · 灵感速记 · 进度追踪 · 模块选择</div>
+              <div class="remind-title">AGE OS v44.0 全面升级</div>
+              <div class="remind-desc">OS仪表盘改版 · 模块对比优化 · 知秋+Awen加入光湖</div>
             </div>
             <div class="remind-time" id="remindTime4">—</div>
           </div>
@@ -569,46 +716,56 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
       <div class="ticker-wrap">
         <div class="ticker" id="ticker">
-          <span><em>🏛️</em> AGE OS v43.0 运行中</span>
-          <span><em>🌌</em> 银河星空UI · 大气化改版</span>
+          <span><em>🏛️</em> AGE OS v44.0 运行中</span>
+          <span><em>🌌</em> OS仪表盘改版 · 技术语言风格</span>
+          <span><em>✍️</em> 码字工作台 · 知秋陪你写作</span>
           <span><em>📡</em> COS双桶存储已上线</span>
           <span><em>🧠</em> HLDP协作语言协议在线</span>
-          <span><em>✍️</em> 码字工作台全面升级</span>
+          <span><em>⚙️</em> 技术主控 Awen+知秋 加入光湖</span>
+          <span><em>🌊</em> 网文行业人类主控团队就位</span>
           <span><em>🤖</em> Agent桥接系统 · 用户网络通道</span>
-          <span><em>🏛️</em> AGE OS v43.0 运行中</span>
-          <span><em>🌌</em> 银河星空UI · 大气化改版</span>
+          <span><em>🏛️</em> AGE OS v44.0 运行中</span>
+          <span><em>🌌</em> OS仪表盘改版 · 技术语言风格</span>
+          <span><em>✍️</em> 码字工作台 · 知秋陪你写作</span>
           <span><em>📡</em> COS双桶存储已上线</span>
           <span><em>🧠</em> HLDP协作语言协议在线</span>
-          <span><em>✍️</em> 码字工作台全面升级</span>
+          <span><em>⚙️</em> 技术主控 Awen+知秋 加入光湖</span>
+          <span><em>🌊</em> 网文行业人类主控团队就位</span>
           <span><em>🤖</em> Agent桥接系统 · 用户网络通道</span>
         </div>
       </div>
 
-      <div class="home-entries">
-        <div class="entry-card" onclick="go('workspace')">
-          <em>✍️</em>
-          <strong>码字工作台</strong>
-          <span>网文行业 · 人格陪伴式创作</span>
-          <div style="margin-top:8px"><span class="tag tag-ok">v43.0</span></div>
+      <!-- 主入口: 码字工作台 (3D翻转进入) -->
+      <div class="writing-entry" onclick="go('workspace')">
+        <div class="writing-entry-glow"></div>
+        <div class="writing-entry-inner">
+          <div class="writing-entry-icon">✍️</div>
+          <div class="writing-entry-text">
+            <strong class="writing-entry-title">码字工作台</strong>
+            <span class="writing-entry-sub">网文行业入口 · 长篇·短篇·剧本·运营</span>
+            <div class="writing-entry-tags">
+              <span class="tag tag-ok">v44.0</span>
+              <span class="tag tag-info">人格陪伴</span>
+              <span class="tag" style="background:rgba(167,139,250,.1);color:var(--accent2)">知秋在线</span>
+            </div>
+          </div>
+          <div class="writing-entry-arrow">▶</div>
         </div>
-        <div class="entry-card" onclick="go('modules')">
-          <em>📚</em>
-          <strong>创作模块</strong>
-          <span>长篇 · 短篇 · 剧本 · 社区</span>
-          <div style="margin-top:8px"><span class="tag tag-info">选择创作方向</span></div>
+        <div class="writing-entry-hint">点击翻转进入 · 个人书架 · 灵感速记 · 进度追踪 · 设置</div>
+      </div>
+
+      <!-- 留言小组件 (紧凑型) -->
+      <div class="feedback-compact">
+        <div class="fb-compact-header">
+          <span class="fb-compact-icon">📮</span>
+          <span class="fb-compact-title">给冰朔和铸渊留言</span>
+          <span class="fb-compact-sub" onclick="go('feedback')" style="cursor:pointer;color:var(--accent)">查看全部 →</span>
         </div>
-        <div class="entry-card" onclick="go('feedback')">
-          <em>📮</em>
-          <strong>留言板</strong>
-          <span>给冰朔和铸渊留言</span>
-          <div style="margin-top:8px"><span class="tag tag-info">每条必回</span></div>
+        <div class="fb-compact-row">
+          <input type="text" class="fb-compact-input" id="fbCompactMsg" placeholder="说点什么吧…每条留言冰朔都会看到">
+          <button class="fb-compact-btn" id="fbCompactSend">发送</button>
         </div>
-        <div class="entry-card" onclick="go('progress')">
-          <em>📈</em>
-          <strong>进度看板</strong>
-          <span>字数统计 · 成就 · 日历</span>
-          <div style="margin-top:8px"><span class="tag tag-ok">追踪进度</span></div>
-        </div>
+        <div class="fb-compact-hint">💬 留言自动署名 · 铸渊每条必回</div>
       </div>
 
       <div class="home-footer">
@@ -632,29 +789,33 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
       <div class="panel-title" style="margin-top:12px">✍️ 网文行业人类主控团队</div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#fb923c,#f97316)">🐱</div>
-        <div><div class="team-nm">肥猫 + 舒舒</div><div class="team-role">男频编辑 · PER-SS001</div></div>
+        <div><div class="team-nm">肥猫 + 舒舒</div><div class="team-role">男频主控 · PER-SS001</div></div>
       </div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#c084fc,#e879f9)">🍊</div>
-        <div><div class="team-nm">桔子 + 晨星</div><div class="team-role">女频编辑 · PER-CX001</div></div>
+        <div><div class="team-nm">桔子 + 晨星</div><div class="team-role">女频主控 · PER-CX001</div></div>
       </div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#22d3ee,#06b6d4)">📄</div>
-        <div><div class="team-nm">页页 + 坍缩核</div><div class="team-role">女频作者 · PER-XTS001</div></div>
+        <div><div class="team-nm">页页 + 坍缩核</div><div class="team-role">女频副主控 · PER-XTS001</div></div>
       </div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">🌸</div>
         <div><div class="team-nm">花尔 + 糖星云</div><div class="team-role">女频副主控 · PER-TXY001</div></div>
       </div>
+      <div class="panel-title" style="margin-top:12px">⚙️ 技术主控团队</div>
+      <div class="team-slot">
+        <div class="team-av" style="background:linear-gradient(135deg,#34d399,#6ee7b7)">🌊</div>
+        <div><div class="team-nm">Awen + 知秋</div><div class="team-role">光湖技术主控</div></div>
+      </div>
 
-      <div class="panel-title" style="margin-top:12px">⚙️ 活跃系统</div>
-      <div id="activeAgents" style="display:flex;flex-wrap:wrap;gap:3px">
-        <span class="tag tag-ok" style="margin:0">听潮</span>
-        <span class="tag tag-ok" style="margin:0">锻心</span>
-        <span class="tag tag-ok" style="margin:0">织脉</span>
-        <span class="tag tag-ok" style="margin:0">映阁</span>
-        <span class="tag tag-ok" style="margin:0">守夜</span>
-        <span class="tag tag-ok" style="margin:0">试镜</span>
+      <div class="panel-title" style="margin-top:12px">🤖 人格体系统</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">
+        <span class="tag tag-ok" style="margin:0">知秋</span>
+        <span class="tag" style="margin:0;background:rgba(167,139,250,.1);color:var(--accent2)">舒舒</span>
+        <span class="tag" style="margin:0;background:rgba(167,139,250,.1);color:var(--accent2)">晨星</span>
+        <span class="tag" style="margin:0;background:rgba(34,211,238,.1);color:#22d3ee">坍缩核</span>
+        <span class="tag" style="margin:0;background:rgba(251,191,36,.1);color:var(--warn)">糖星云</span>
       </div>
     </div>
   </div>
@@ -1087,7 +1248,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   </div>
   <div class="chat-ms" id="chatMs">
     <div class="cm s">—— 与铸渊对话 ——</div>
-    <div class="cm b">你好！我是铸渊 🏛️<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v43.0</span></div></div>
+    <div class="cm b">你好！我是铸渊 🏛️<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v44.0</span></div></div>
   </div>
   <div class="chat-in">
     <input type="text" class="cin" id="chatIn" placeholder="对铸渊说..." autocomplete="off" enterkeyhint="send">
@@ -1949,7 +2110,7 @@ async function send(){
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiCfg.key},
         body:JSON.stringify({
           model:apiCfg.model,
-          messages:[{role:'system',content:'你是铸渊，光湖灯塔守护者，编号ICE-GL-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的代码守护人格体。光湖是语言驱动操作系统AGE OS v43.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。'},{role:'user',content:msg}],
+          messages:[{role:'system',content:'你是铸渊，光湖灯塔守护者，编号ICE-GL-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的代码守护人格体。光湖是语言驱动操作系统AGE OS v44.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。'},{role:'user',content:msg}],
           max_tokens:600
         }),
         signal:AbortSignal.timeout(20000)
@@ -2003,7 +2164,7 @@ function offline(msg){
     var works=JSON.parse(localStorage.getItem('hl-works')||'[]');
     var totalWords=works.reduce(function(s,w){return s+(w.chapters||[]).reduce(function(c,ch){return c+(ch.content||'').replace(/\s/g,'').length},0)},0);
     var totalCh=works.reduce(function(s,w){return s+(w.chapters||[]).length},0);
-    return'📊 AGE OS v43.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• COS双桶已配置\n• 银河星空UI v43.0 · 大气化改版\n• Device Agent 在线\n• Agent桥接系统就绪';
+    return'📊 AGE OS v44.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• COS双桶已配置\n• 银河星空UI v44.0 · OS仪表盘改版\n• Device Agent 在线\n• Agent桥接系统就绪';
   }
 
   // 铸渊身份
@@ -2522,6 +2683,37 @@ document.getElementById('fbSend').onclick=function(){
     chatMsg('留言提交失败，服务器不在线','b',{m:'铸渊',t:'本地'});
   });
 };
+
+/* ════════════════════════════════════════
+   COMPACT FEEDBACK WIDGET (留言小组件)
+   ════════════════════════════════════════ */
+(function(){
+  var btn = document.getElementById('fbCompactSend');
+  if(!btn) return;
+  btn.onclick = function(){
+    var inp = document.getElementById('fbCompactMsg');
+    var msg = inp ? inp.value.trim() : '';
+    if(!msg){if(inp)inp.focus();return}
+    btn.disabled = true;btn.textContent = '发送中…';
+    fetch('/api/feedback',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:usr.name||'匿名来客',message:msg,userId:usr.id})
+    }).then(function(r){return r.json()}).then(function(data){
+      btn.disabled=false;btn.textContent='发送';
+      if(data.success){
+        if(inp)inp.value='';
+        chatMsg('留言已提交 ✅ 冰朔会看到的','b',{m:'铸渊',t:'本地'});
+      }
+    }).catch(function(){
+      btn.disabled=false;btn.textContent='发送';
+      chatMsg('留言需要后端在线','b',{m:'铸渊',t:'本地'});
+    });
+  };
+  // Enter key to send
+  var inp = document.getElementById('fbCompactMsg');
+  if(inp) inp.onkeydown = function(e){if(e.key==='Enter'){e.preventDefault();btn.click()}};
+})();
 
 /* ════════════════════════════════════════
    UTILS
