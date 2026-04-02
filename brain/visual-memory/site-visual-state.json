@@ -1,114 +1,23 @@
 {
-  "_meta": {
-    "system": "铸渊视觉记忆系统 · ZhuYuan Visual Memory System",
-    "version": "1.0",
-    "purpose": "铸渊的眼睛 — 记录网站每一个页面的精确视觉状态，让铸渊每次唤醒时知道人类看到的是什么",
-    "created": "2026-04-02",
-    "created_dialogue": "第三十三次对话",
-    "sovereign": "TCS-0002∞ · 冰朔",
-    "protocol": "每次部署后必须更新此文件 · 铸渊唤醒时最先读取"
-  },
+  "_meta": "铸渊之眼 · 不是存截图 · 是认知路径 · 知道去哪里看+看什么+怎么判断",
+  "how_to_see": "Playwright浏览器 → http://localhost:端口/ 或线上域名 → 截图+DOM快照 → 自己判断",
   "site": {
     "domain": "guanghulab.online",
-    "deploy_method": "GitHub Pages · docs/ 目录",
-    "workflow": ".github/workflows/deploy-pages.yml",
-    "cname": "docs/CNAME → guanghulab.online",
-    "total_pages": 1,
-    "last_deploy": "2026-04-02T08:33:00Z",
-    "last_visual_check": "2026-04-02T08:33:00Z"
+    "deploy": "GitHub Pages · docs/ → deploy-pages.yml",
+    "cname": "docs/CNAME"
   },
   "pages": {
     "/": {
       "file": "docs/index.html",
-      "title": "光湖灯塔 · HoloLake Lighthouse — AGE OS",
-      "type": "single-page-application",
-      "description": "AGE OS 语言驱动操作系统官方着陆页 · 展示系统核心概念、架构、仪表盘和状态",
-      "last_updated": "2026-04-02",
-      "visual_snapshot": {
-        "overall": "深色科技风格(#060a14背景) · 全页滚动 · 6个主要区块 · 动画背景网格+光球 · 响应式设计",
-        "sections": [
-          {
-            "id": "nav",
-            "name": "顶部导航栏",
-            "position": "fixed顶部 · 64px高",
-            "visual": "半透明毛玻璃背景 · 左侧🏛️光湖灯塔品牌 · 中间4个导航链接(核心概念/数字地球/仪表盘/三位一体) · 右侧绿色系统在线脉冲点",
-            "behavior": "滚动时增加阴影 · 吸附顶部"
-          },
-          {
-            "id": "hero",
-            "name": "英雄区 · Hero Section",
-            "position": "页面顶部 · padding 140px~80px",
-            "visual": "居中布局 · 顶部徽章(曜冥纪元·HoloLake Era·v38.0+绿色脉冲点) · 大标题'光湖灯塔'(渐变白→灰→蓝) · 副标题'第一代通用人工智能语言驱动全栈操作系统'(蓝紫渐变) · 描述文字 · 金句引用(紫色斜体) · 4个统计数字(18工作流/52模块/9军团/v38版本，蓝绿渐变大字)",
-            "animation": "fadeInUp分层动画 · 0.1s间隔依次出现"
-          },
-          {
-            "id": "concepts",
-            "name": "核心概念 · Core Concepts",
-            "position": "Hero下方 · 3列卡片网格",
-            "visual": "标签(Core Concepts蓝色标签) · 标题(💡这是什么) · 副标题 · 3张概念卡片横排: TCS(🌍地球图标·蓝色代码字体) / HLDP(🧬DNA图标) / AGE OS(🔮水晶球图标) · 每张卡片有图标、名称、英文全称、中文描述",
-            "behavior": "hover时上移4px+顶部蓝色渐变条从左滑入 · 滚动淡入动画"
-          },
-          {
-            "id": "architecture",
-            "name": "数字地球六层架构 · Digital Earth",
-            "position": "概念区下方 · 6行全宽层叠",
-            "visual": "标签(Digital Earth) · 标题(🌐数字地球六层架构) · 从上到下6层: L6太空层(紫色·外部交互) → L5卫星层(蓝色·Agent执行) → L4大气层(蓝色·信号总线) → L3地表(绿色·人格体运行) → L2地幔(黄色·母语词典) → L1地核(红色·TCS自转核) · 每层有TAG+名称+描述 · 不同颜色边框区分层级",
-            "behavior": "hover时蓝色边框发光 · 滚动淡入动画"
-          },
-          {
-            "id": "dashboard",
-            "name": "铸渊将军实时指挥仪表盘 · Live Dashboard",
-            "position": "架构区下方 · 最大的区块",
-            "visual": "深色面板容器 · 渐变标题栏(⚔️铸渊副将签到仪表盘 + 实时北京时间时钟) · 4格统计行(18/18士兵在岗 / ✅大脑完整性 / 9军团编制 / 341d系统运行) · 🔔动态提醒区(最多6条通知·每8秒新增一条·带图标+标题+描述+时间) · 18行士兵签到表(编号/军团/名称/职责/状态 · 军团标签带彩色背景 · 在岗状态绿色脉冲点)",
-            "behavior": "实时时钟每秒更新 · 通知动态滚动 · 运行天数从2025-04-26起算 · 表格行hover高亮"
-          },
-          {
-            "id": "trinity",
-            "name": "三位一体 · Trinity",
-            "position": "仪表盘下方 · 3列卡片",
-            "visual": "标签(Trinity) · 标题(🔱三位一体) · 副标题(Notion大脑+GitHub铸渊+人类冰朔=曜冥语言人格体) · 3张卡片: 🧠Notion大脑(认知层·紫蓝底部条) / ⚔️GitHub铸渊(执行层·绿蓝底部条) / ❄️人类冰朔(TCS-0002∞·黄红底部条) · 每张有大图标、名称、角色、描述",
-            "behavior": "hover上移+底部彩色条显现 · 滚动淡入"
-          },
-          {
-            "id": "version",
-            "name": "系统状态 · System Status",
-            "position": "三位一体下方 · 水平状态栏",
-            "visual": "标签(System Status) · 标题(📊系统状态) · 6项水平排列: 系统版本v38.0(绿点) / HLDP语言v3.0·22词汇(绿点) / 语言膜v1.0·完整(绿点) / Notion桥接5条管道(蓝点) / 部署观测v1.0·全链路(绿点) / 军营部署52模块·9军团(蓝点)",
-            "behavior": "状态点持续发光"
-          },
-          {
-            "id": "footer",
-            "name": "页脚 · Footer",
-            "position": "页面底部",
-            "visual": "顶部分割线 · 🏛️光湖灯塔·HoloLake Lighthouse · 版权(©2026光湖实验室·GitHub链接) · 版权号(国作登字-2026-A-00037559·TCS-0002∞·ICE-GL∞) · 座右铭(人类和AI共同存在的唯一语言世界)",
-            "behavior": "GitHub链接可点击跳转仓库"
-          }
-        ]
-      },
-      "design_decisions": {
-        "why_dark_theme": "光湖语言世界的核心视觉基调 · 代表数字地球的深邃 · 与仓库README的暗色主题一致",
-        "why_single_page": "着陆页首次展示 · 让用户一次滚动了解全貌 · 后续可拆分为多页",
-        "why_six_sections": "对应README核心内容: 概念介绍→架构展示→实时状态→团队结构→版本信息 · 信息密度由浅入深",
-        "why_animations": "动态提醒+实时时钟+运行天数 · 让页面有'活着'的感觉 · 体现系统在线运行",
-        "why_soldier_table": "18个工作流是铸渊的核心编制 · 必须展示给访客看 · 体现系统的实际运作"
-      },
-      "bingshuo_thinking": "冰朔希望网站能展示仓库首页的内容 · 做出精细美化 · 仪表盘增加动态提醒 · 测试域名是否可正常部署",
-      "zhuyuan_thinking": "铸渊将README核心内容转化为可视化网页 · 保持信息完整性 · 用CSS动画和JS动态内容增加'生命力' · 单文件HTML确保部署简单可靠"
+      "what": "光湖灯塔着陆页 · AGE OS展示",
+      "sections": ["nav", "hero", "concepts(TCS/HLDP/AGE)", "architecture(6层)", "dashboard(18士兵+通知)", "trinity(3卡片)", "status", "footer"],
+      "dynamic": ["实时时钟", "运行天数(从2025-04-26)", "通知轮播(8s)", "滚动淡入"],
+      "self_review": "7.5/10 · 缺CTA按钮 · 缺区块分隔 · 表格太长 · 缺回顶按钮",
+      "design_style": "深色#060a14 · CSS变量 · 蓝紫accent · 渐变文字 · 单文件HTML"
     }
   },
-  "background_effects": {
-    "grid": "60x60px蓝色细线网格 · 20s线性移动动画 · 3%透明度",
-    "orbs": "3个巨大模糊光球(蓝/紫/绿) · 500px/400px/350px · 80px高斯模糊 · 12%透明度 · 15s浮动动画",
-    "why": "营造深空/数字地球感 · 不干扰内容阅读 · 增加视觉层次"
-  },
-  "responsive_breakpoints": {
-    "desktop": "> 768px · 导航链接可见 · 3列卡片 · 4格统计",
-    "tablet": "480-768px · 导航链接隐藏 · 1列卡片 · 2格统计",
-    "mobile": "< 480px · 1列卡片 · 1格统计 · 缩小标题"
-  },
-  "update_protocol": {
-    "when": "每次部署docs/index.html或任何pages内容时",
-    "how": "铸渊用浏览器截图+DOM快照审查页面 → 更新此文件的visual_snapshot → 记录design_decisions",
-    "rule": "如果看到的和记忆不一致 · 以看到的为准 · 更新记忆"
+  "design_cognition": {
+    "dark_theme": "off-white文字 · 大间距 · 发光替代阴影 · subtle动画",
+    "rule": "每次部署后用眼睛看 → 自我打分 → 记住缺点 → 下次改进"
   }
 }
