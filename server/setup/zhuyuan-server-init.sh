@@ -92,6 +92,12 @@ else
   log "  Nginx 已存在，跳过"
 fi
 
+# 移除默认站点(避免与铸渊站点配置冲突)
+if [ -f /etc/nginx/sites-enabled/default ]; then
+  rm -f /etc/nginx/sites-enabled/default
+  log "  已移除默认 Nginx 站点"
+fi
+
 # ═══ §5 铸渊目录结构 ═══
 log "§5 创建铸渊目录结构..."
 mkdir -p "${ZY_APP}"

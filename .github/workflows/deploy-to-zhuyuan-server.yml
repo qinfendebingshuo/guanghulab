@@ -218,9 +218,10 @@ jobs:
           # 安装依赖
           npm install --production 2>&1
 
-          # 复制Nginx配置
+          # 复制Nginx配置 & 移除默认站点(避免冲突)
           sudo cp /opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf /etc/nginx/sites-available/zhuyuan.conf
           sudo ln -sf /etc/nginx/sites-available/zhuyuan.conf /etc/nginx/sites-enabled/zhuyuan.conf
+          sudo rm -f /etc/nginx/sites-enabled/default
           sudo nginx -t && sudo systemctl reload nginx
 
           # PM2 重启
@@ -244,6 +245,51 @@ jobs:
             }" || true
 
           DEPLOY_CMD
+
+      - name: 🔍 部署后验证
+        run: |
+          TARGET="${{ github.event.inputs.deploy_target || 'preview' }}"
+          TARGET_DIR="/opt/zhuyuan/sites/${TARGET}"
+          echo "🔍 验证部署内容: ${TARGET_DIR}"
+
+          ssh -i ~/.ssh/zy_key \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} << VERIFY_CMD
+
+          # 检查前端文件是否存在且不是占位页面
+          if [ -f ${TARGET_DIR}/index.html ]; then
+            FILE_SIZE=\$(wc -c < ${TARGET_DIR}/index.html)
+            echo "📄 index.html 大小: \${FILE_SIZE} 字节"
+            if [ \$FILE_SIZE -lt 1000 ]; then
+              echo "⚠️ 警告: index.html 可能是占位页面 (< 1KB)"
+            else
+              echo "✅ index.html 内容正常 (\${FILE_SIZE} 字节)"
+            fi
+            # 验证不是初始化占位页面
+            if grep -q "铸渊预览站" ${TARGET_DIR}/index.html 2>/dev/null; then
+              echo "❌ 警告: 仍然是初始化占位页面!"
+            elif grep -q "光湖灯塔\|HoloLake" ${TARGET_DIR}/index.html 2>/dev/null; then
+              echo "✅ 检测到光湖灯塔内容 · 部署成功"
+            fi
+          else
+            echo "❌ index.html 不存在!"
+          fi
+
+          # 检查 CSS/JS 资源
+          CSS_COUNT=\$(find ${TARGET_DIR}/css/ -name "*.css" 2>/dev/null | wc -l)
+          JS_COUNT=\$(find ${TARGET_DIR}/js/ -name "*.js" 2>/dev/null | wc -l)
+          echo "📁 CSS 文件: \${CSS_COUNT} 个, JS 文件: \${JS_COUNT} 个"
+
+          # 检查 Nginx 配置
+          echo ""
+          echo "═══ Nginx 站点配置 ═══"
+          ls -la /etc/nginx/sites-enabled/ 2>/dev/null
+          echo ""
+
+          # 检查网站是否可从本机访问
+          HTTP_CODE=\$(curl -sf -o /dev/null -w "%{http_code}" http://localhost/ 2>/dev/null || echo "000")
+          echo "📡 本地HTTP访问状态: \${HTTP_CODE}"
+
+          VERIFY_CMD
 
   # ═══ §3 健康检查 ═══
   health-check:

@@ -2,6 +2,9 @@
 # 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
 # 📜 Copyright: 国作登字-2026-A-00037559
 # ═══════════════════════════════════════════════
+# ⚠️ 注意: guanghulab.online 已由新加坡服务器直接服务
+#    前端部署主通道: deploy-to-zhuyuan-server.yml
+#    此工作流仅作为 GitHub Pages 备份 (qinfendebingshuo.github.io/guanghulab/)
 name: 🌀 光湖灯塔 · GitHub Pages 部署
 
 on:
@@ -44,10 +47,9 @@ jobs:
           if [ -d "persona-studio/frontend" ]; then
             cp -r persona-studio/frontend/* docs/persona-studio/
           fi
-          # Ensure CNAME is in docs for custom domain (single source of truth from root CNAME)
-          if [ -f "CNAME" ]; then
-            cp CNAME docs/CNAME
-          fi
+          # CNAME 已移除: guanghulab.online 由新加坡服务器直接服务
+          # GitHub Pages 仅作为备份部署到 github.io 默认域名
+          rm -f docs/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
