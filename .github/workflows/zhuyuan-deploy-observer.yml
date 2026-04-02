@@ -263,6 +263,22 @@ jobs:
           *国作登字-2026-A-00037559*" \
             --label "ops-alert" || echo "⚠️ Issue创建失败(标签可能不存在)"
 
+      - name: '📋 同步工单到 Notion'
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          RUN_ID: ${{ needs.collect-logs.outputs.run_id }}
+          WORKFLOW_NAME: ${{ needs.collect-logs.outputs.workflow_name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$NOTION_TOKEN" ]; then
+            node scripts/sync-work-order-to-notion.js \
+              --order-id "observer-${{ needs.collect-logs.outputs.run_id }}" \
+              --run-id "${{ needs.collect-logs.outputs.run_id }}" \
+              --workflow "${{ needs.collect-logs.outputs.workflow_name }}" || true
+          else
+            echo "ℹ️ NOTION_TOKEN未配置 · 跳过Notion同步"
+          fi
+
       - name: '📧 邮件告警 (如已配置SMTP)'
         env:
           ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}

@@ -44,6 +44,11 @@ const EXPERIENCE_DB = path.join(ROOT, 'brain/dev-experience/experience-db.json')
 
 const MAX_REPAIR_ATTEMPTS = 3;
 
+// ── 辅助：判断是否需要人工干预 ─────────────────
+function shouldRequestHuman(repairSuccess, attemptNumber) {
+  return !repairSuccess && attemptNumber >= MAX_REPAIR_ATTEMPTS;
+}
+
 // ── 修复策略库 (副将的思维逻辑) ────────────────
 const REPAIR_STRATEGIES = [
   {
@@ -461,7 +466,7 @@ async function repair() {
   }
 
   // §7 设置输出
-  const needsHuman = !repairSuccess && attemptNumber >= MAX_REPAIR_ATTEMPTS;
+  const needsHuman = shouldRequestHuman(repairSuccess, attemptNumber);
   setOutput('repair_success', repairSuccess ? 'true' : 'false');
   setOutput('repair_attempt', String(attemptNumber));
   setOutput('needs_human', needsHuman ? 'true' : 'false');
