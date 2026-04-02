@@ -65,6 +65,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// ─── 加载模块 ───
+let cosBridge, smartRouter, chatEngine;
+try {
+  cosBridge = require('./modules/cos-bridge');
+  smartRouter = require('./modules/smart-router');
+  chatEngine = require('./modules/chat-engine');
+} catch (err) {
+  console.error(`模块加载警告: ${err.message}`);
+}
+
 // ═══════════════════════════════════════════════════════════
 // API 路由
 // ═══════════════════════════════════════════════════════════
@@ -237,6 +247,155 @@ app.post('/api/operations', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: true, message: err.message });
   }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 人格体聊天 · Persona Chat API
+// ═══════════════════════════════════════════════════════════
+
+// ─── 人格体对话 ───
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, userId } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: true, message: '消息不能为空' });
+    }
+
+    const sessionId = userId || `guest-${req.ip.replace(/[.:]/g, '-')}`;
+
+    if (chatEngine) {
+      const result = await chatEngine.chat(sessionId, message);
+      res.json({
+        success: true,
+        ...result,
+        sessionId
+      });
+    } else {
+      res.json({
+        success: true,
+        message: '💫 铸渊正在唤醒中...聊天引擎尚未加载。',
+        model: 'offline',
+        tier: 'free',
+        sessionId
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 聊天统计 ───
+app.get('/api/chat/stats', (_req, res) => {
+  if (chatEngine) {
+    res.json(chatEngine.getChatStats());
+  } else {
+    res.json({ activeUsers: 0, modelUsage: {}, pricing: {} });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// COS 存储 · Cloud Object Storage API
+// ═══════════════════════════════════════════════════════════
+
+// ─── COS 状态 ───
+app.get('/api/cos/status', async (_req, res) => {
+  if (cosBridge) {
+    try {
+      const status = await cosBridge.checkConnection();
+      res.json({ server: 'ZY-SVR-002', cos: status });
+    } catch (err) {
+      res.json({
+        server: 'ZY-SVR-002',
+        cos: { connected: false, error: err.message, config: cosBridge.getConfig() }
+      });
+    }
+  } else {
+    res.json({ server: 'ZY-SVR-002', cos: { connected: false, reason: 'COS模块未加载' } });
+  }
+});
+
+// ─── COS 配置信息 ───
+app.get('/api/cos/config', (_req, res) => {
+  if (cosBridge) {
+    res.json(cosBridge.getConfig());
+  } else {
+    res.json({ configured: false });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 智能模型分流 · Smart Model Router API
+// ═══════════════════════════════════════════════════════════
+
+// ─── 模型使用统计 ───
+app.get('/api/model/stats', (_req, res) => {
+  if (smartRouter) {
+    res.json(smartRouter.getUsageStats());
+  } else {
+    res.json({ totalCalls: 0 });
+  }
+});
+
+// ─── 模型定价表 ───
+app.get('/api/model/pricing', (_req, res) => {
+  if (smartRouter) {
+    res.json(smartRouter.getPricingTable());
+  } else {
+    res.json({});
+  }
+});
+
+// ─── 模型路由预测（不实际调用） ───
+app.post('/api/model/predict', (req, res) => {
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: true, message: '消息不能为空' });
+  }
+  if (smartRouter) {
+    const prediction = smartRouter.routeModel(message);
+    res.json(prediction);
+  } else {
+    res.json({ model: 'unknown', reason: '路由模块未加载' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 系统信息 · System Info API (供前端公告区使用)
+// ═══════════════════════════════════════════════════════════
+
+app.get('/api/system/bulletin', (_req, res) => {
+  res.json({
+    system: {
+      name: '光湖灯塔 · AGE OS',
+      version: 'v40.0',
+      era: '曜冥纪元',
+      copyright: '国作登字-2026-A-00037559'
+    },
+    updates: [
+      { version: 'v40.0', date: '2026-04-02', title: 'COS双桶存储上线', desc: '核心人格体大脑数据库 + 语料库正式接入腾讯云COS' },
+      { version: 'v39.0', date: '2026-04-01', title: '全链路部署观测系统', desc: '部署日志采集 + 自动修复引擎 + 第九军团观星台' },
+      { version: 'v38.0', date: '2026-04-01', title: 'HLDP通用协作语言', desc: 'Notion↔GitHub双侧通信协议 + 铸渊方言编程语言' }
+    ],
+    agents: {
+      total_workflows: 18,
+      total_modules: 52,
+      armies: 9,
+      active: ['听潮', '锻心', '织脉', '映阁', '守夜', '试镜']
+    },
+    industries: {
+      writing: {
+        name: '网文行业 · 码字工作台',
+        status: 'beta',
+        team: '光湖人类主控团队',
+        modules: ['码字工作台', 'AI辅助创作', '大纲生成']
+      }
+    },
+    server: {
+      identity: 'ZY-SVR-002',
+      uptime: Math.floor(process.uptime()),
+      node: process.version
+    }
+  });
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -442,9 +601,22 @@ app.get('/', (_req, res) => {
       main: process.env.ZY_DOMAIN_MAIN || '待配置',
       preview: process.env.ZY_DOMAIN_PREVIEW || '待配置'
     },
+    cos: {
+      core_bucket: 'zy-core-bucket',
+      corpus_bucket: 'zy-corpus-bucket',
+      configured: !!(process.env.ZY_OSS_KEY && process.env.ZY_OSS_SECRET)
+    },
     api: {
       health: '/api/health',
       brain: '/api/brain',
+      chat: 'POST /api/chat',
+      chat_stats: '/api/chat/stats',
+      cos_status: '/api/cos/status',
+      cos_config: '/api/cos/config',
+      model_stats: '/api/model/stats',
+      model_pricing: '/api/model/pricing',
+      model_predict: 'POST /api/model/predict',
+      bulletin: '/api/system/bulletin',
       sites: '/api/sites',
       promote: 'POST /api/sites/promote',
       rollback: 'POST /api/sites/rollback',
