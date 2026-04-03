@@ -17,7 +17,12 @@ const pool = new Pool({
   host:     process.env.ZY_DB_HOST || '127.0.0.1',
   port:     parseInt(process.env.ZY_DB_PORT || '5432', 10),
   user:     process.env.ZY_DB_USER || 'zy_admin',
-  password: process.env.ZY_DB_PASS || '',
+  password: process.env.ZY_DB_PASS || (() => {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[DB] 严重: 生产环境未配置ZY_DB_PASS');
+    }
+    return '';
+  })(),
   database: process.env.ZY_DB_NAME || 'age_os',
   max:      10,
   idleTimeoutMillis: 30000,

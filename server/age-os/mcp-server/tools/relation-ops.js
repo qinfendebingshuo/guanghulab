@@ -50,22 +50,18 @@ async function getRelations(input) {
   const values = [];
   let paramIndex = 1;
 
-  if (dir === 'outgoing' || dir === 'both') {
+  if (dir === 'both') {
+    conditions.push(`(from_node_id = $${paramIndex} OR to_node_id = $${paramIndex})`);
+    values.push(node_id);
+    paramIndex++;
+  } else if (dir === 'outgoing') {
     conditions.push(`from_node_id = $${paramIndex}`);
     values.push(node_id);
     paramIndex++;
-  }
-  if (dir === 'incoming' || dir === 'both') {
-    if (dir === 'both') {
-      // 用 OR 合并
-      conditions[0] = `(from_node_id = $1 OR to_node_id = $${paramIndex})`;
-      values.push(node_id);
-      paramIndex++;
-    } else {
-      conditions.push(`to_node_id = $${paramIndex}`);
-      values.push(node_id);
-      paramIndex++;
-    }
+  } else {
+    conditions.push(`to_node_id = $${paramIndex}`);
+    values.push(node_id);
+    paramIndex++;
   }
 
   if (relation_type) {

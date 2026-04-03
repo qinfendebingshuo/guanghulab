@@ -201,12 +201,13 @@ async function queryNodes(input) {
   }
 
   const limit = Math.min(input.limit || 50, 200);
+  values.push(limit);
 
   const sql = `SELECT id, title, node_type, parent_id, path, tags, source, source_url, content_url, summary, status, owner, created_at, updated_at
     FROM brain_nodes
     WHERE ${conditions.join(' AND ')}
     ORDER BY updated_at DESC
-    LIMIT ${limit}`;
+    LIMIT $${paramIndex}`;
 
   const result = await db.query(sql, values);
 
