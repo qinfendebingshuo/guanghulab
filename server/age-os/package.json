@@ -1,0 +1,23 @@
+{
+  "name": "age-os-mcp",
+  "version": "1.0.0",
+  "description": "AGE OS MCP Server · 大脑工具链服务 · 铸渊主控",
+  "private": true,
+  "main": "mcp-server/server.js",
+  "scripts": {
+    "start": "node mcp-server/server.js",
+    "start:agents": "node agents/scheduler.js",
+    "test:db": "node mcp-server/test-db.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.13.0",
+    "node-cron": "^3.0.3",
+    "uuid": "^11.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "铸渊 · ICE-GL-ZY001",
+  "license": "SEE COPYRIGHT"
+}
