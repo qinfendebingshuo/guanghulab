@@ -88,9 +88,9 @@
 
 | 编号 | 任务名称 | 路径 | 状态 | 对话 |
 |------|---------|------|------|------|
-| ZY-SVR-001 | 新加坡服务器部署 | `server/zhuyuan-server-profile.json` | ✅ ZY-SVR-002 | D11 |
-| ZY-SVR-002 | 广州服务器配置 | `server/cn-server-profile.json` | ⏳ ZY-SVR-003 | — |
-| ZY-SVR-003 | 硅谷服务器占位 | `brain/age-os-landing/architecture-v1.md` | 📌 ZY-SVR-004 | D45 |
+| ZY-SVR-001 | 新加坡服务器部署 | `server/zhuyuan-server-profile.json` | ✅ 运行中 | D11 |
+| ZY-SVR-002 | 广州服务器配置 | `server/cn-server-profile.json` | ⏳ 待配置 | — |
+| ZY-SVR-003 | 硅谷服务器占位 | `brain/age-os-landing/architecture-v1.md` | 📌 占位 | D45 |
 | ZY-SVR-004 | SSL自动化 | `server/setup/setup-ssl.sh` | ✅ Let's Encrypt | D16 |
 | ZY-SVR-005 | DNS解析 | — | ✅ guanghulab.online | D34 |
 
