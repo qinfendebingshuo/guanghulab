@@ -10,6 +10,7 @@ module.exports = {
       version: '1.0.0',
       script: '/opt/zhuyuan/proxy/service/subscription-server.js',
       instances: 1,
+      exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         ZY_PROXY_SUB_PORT: 3802,
@@ -26,6 +27,7 @@ module.exports = {
       version: '1.0.0',
       script: '/opt/zhuyuan/proxy/service/traffic-monitor.js',
       instances: 1,
+      exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         ZY_PROXY_DATA_DIR: '/opt/zhuyuan/proxy/data',
@@ -41,6 +43,7 @@ module.exports = {
       version: '1.0.0',
       script: '/opt/zhuyuan/proxy/service/proxy-guardian.js',
       instances: 1,
+      exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         ZY_PROXY_DATA_DIR: '/opt/zhuyuan/proxy/data',

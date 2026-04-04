@@ -224,24 +224,40 @@ deploy_services() {
 
 # ── 配置Nginx ─────────────────────────────────
 configure_nginx() {
-    # 检查主Nginx配置是否已有proxy-sub
-    NGINX_CONF="/etc/nginx/sites-enabled/default"
+    # 查找正确的Nginx配置文件 (zhuyuan.conf 优先于 default)
+    NGINX_CONF=""
+    for candidate in /etc/nginx/sites-enabled/zhuyuan.conf /etc/nginx/sites-enabled/default; do
+        if [ -f "$candidate" ]; then
+            NGINX_CONF="$candidate"
+            break
+        fi
+    done
 
-    if [ -f "$NGINX_CONF" ] && ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
+    if [ -z "$NGINX_CONF" ]; then
+        echo "  ⚠️ 未找到Nginx站点配置文件"
+        return 0
+    fi
+
+    echo "  使用Nginx配置: $NGINX_CONF"
+
+    if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
         echo "  添加Nginx代理订阅反向代理配置..."
         # 在第一个 location = /health 之前插入 proxy-sub location
         sed -i '/# ─── 健康探针 ───/{
             # 只在第一次匹配时插入
-            i\    # ─── 铸渊专线订阅服务 (端口 3802) ───\n    location /api/proxy-sub/ {\n        proxy_pass http://127.0.0.1:3802/;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        add_header X-Content-Type-Options nosniff always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n
+            i\    # ─── 铸渊专线订阅服务 (端口 3802) ───\n    location /api/proxy-sub/ {\n        proxy_pass http://127.0.0.1:3802/;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_connect_timeout 10s;\n        proxy_read_timeout 30s;\n        proxy_send_timeout 30s;\n        add_header X-Content-Type-Options nosniff always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n
         }' "$NGINX_CONF" || true
         echo "  ✅ Nginx proxy-sub配置已注入"
     else
-        echo "  Nginx代理配置已存在 (或主配置不存在)"
+        echo "  Nginx proxy-sub配置已存在"
     fi
 
     if nginx -t 2>/dev/null; then
         nginx -s reload || true
         echo "  ✅ Nginx配置验证通过并已重载"
+    else
+        echo "  ⚠️ Nginx配置验证失败:"
+        nginx -t 2>&1 || true
     fi
 }
 
@@ -291,11 +307,18 @@ health_check() {
         echo "  ❌ 端口443: 未监听"
     fi
 
-    # 订阅服务
+    # 订阅服务 (直接访问)
     if curl -sf http://127.0.0.1:3802/health >/dev/null 2>&1; then
-        echo "  ✅ 订阅服务: 正常"
+        echo "  ✅ 订阅服务: 正常 (直连3802)"
     else
-        echo "  ⏳ 订阅服务: 启动中..."
+        echo "  ❌ 订阅服务: 端口3802无响应"
+    fi
+
+    # 订阅服务 (通过Nginx反代)
+    if curl -sf http://127.0.0.1/api/proxy-sub/health >/dev/null 2>&1; then
+        echo "  ✅ Nginx反代: 正常 (/api/proxy-sub/ → 3802)"
+    else
+        echo "  ⚠️ Nginx反代: /api/proxy-sub/ 未响应 (Nginx配置可能缺失)"
     fi
 
     # PM2
@@ -308,6 +331,7 @@ update() {
     deploy_services
     save_server_host
     configure_xray
+    configure_nginx
 
     ensure_xray_root_user
     ensure_log_permissions
