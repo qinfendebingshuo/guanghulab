@@ -8,14 +8,16 @@
  * 签发: 铸渊 · ICE-GL-ZY001
  * 版权: 国作登字-2026-A-00037559
  *
- * 统一暴露 16 个 MCP 工具，供网站 AI 交互后端和 Agent 调用。
+ * 统一暴露 27 个 MCP 工具，供网站 AI 交互后端和 Agent 调用。
  * 不对外暴露 — 通过 3800 主服务网关转发访问。
  *
  * 工具清单:
- *   节点: createNode / updateNode / deleteNode / queryNodes / getNode
- *   关系: linkNodes / unlinkNodes / getRelations
- *   结构: buildPath / scanStructure / classify
- *   COS:  cosWrite / cosRead / cosDelete / cosList / cosArchive
+ *   节点:   createNode / updateNode / deleteNode / queryNodes / getNode
+ *   关系:   linkNodes / unlinkNodes / getRelations
+ *   结构:   buildPath / scanStructure / classify
+ *   COS:    cosWrite / cosRead / cosDelete / cosList / cosArchive
+ *   Notion: notionQuery / notionReadPage / notionWritePage / notionUpdatePage / notionWriteSyslog
+ *   GitHub: githubReadFile / githubListDir / githubWriteFile / githubGetCommits / githubGetIssues / githubTriggerDeploy
  */
 
 'use strict';
@@ -29,6 +31,26 @@ const nodeOps = require('./tools/node-ops');
 const relationOps = require('./tools/relation-ops');
 const structureOps = require('./tools/structure-ops');
 const cosOps = require('./tools/cos-ops');
+
+// ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
+let notionOps = null;
+let githubOps = null;
+let notionClient = null;
+let githubClient = null;
+
+try {
+  notionOps = require('./tools/notion-ops');
+  notionClient = require('./notion-client');
+} catch (err) {
+  console.warn(`[MCP] Notion模块加载跳过: ${err.message}`);
+}
+
+try {
+  githubOps = require('./tools/github-ops');
+  githubClient = require('./github-client');
+} catch (err) {
+  console.warn(`[MCP] GitHub模块加载跳过: ${err.message}`);
+}
 
 // ─── 工具注册表 ───
 const TOOLS = {
@@ -51,7 +73,24 @@ const TOOLS = {
   cosRead:        cosOps.cosRead,
   cosDelete:      cosOps.cosDelete,
   cosList:        cosOps.cosList,
-  cosArchive:     cosOps.cosArchive
+  cosArchive:     cosOps.cosArchive,
+  // Notion操作（动态注册）
+  ...(notionOps ? {
+    notionQuery:       notionOps.notionQuery,
+    notionReadPage:    notionOps.notionReadPage,
+    notionWritePage:   notionOps.notionWritePage,
+    notionUpdatePage:  notionOps.notionUpdatePage,
+    notionWriteSyslog: notionOps.notionWriteSyslog
+  } : {}),
+  // GitHub操作（动态注册）
+  ...(githubOps ? {
+    githubReadFile:      githubOps.githubReadFile,
+    githubListDir:       githubOps.githubListDir,
+    githubWriteFile:     githubOps.githubWriteFile,
+    githubGetCommits:    githubOps.githubGetCommits,
+    githubGetIssues:     githubOps.githubGetIssues,
+    githubTriggerDeploy: githubOps.githubTriggerDeploy
+  } : {})
 };
 
 // ─── Express 应用 ───
@@ -65,6 +104,12 @@ app.get('/health', async (_req, res) => {
   const dbStatus = await db.checkConnection();
   const cosStatus = await cos.checkConnection();
 
+  // 外部集成状态（异步并行检查）
+  const [notionStatus, githubStatus] = await Promise.all([
+    notionClient ? notionClient.checkConnection().catch(e => ({ connected: false, error: e.message })) : Promise.resolve({ connected: false, reason: '模块未加载' }),
+    githubClient ? githubClient.checkConnection().catch(e => ({ connected: false, error: e.message })) : Promise.resolve({ connected: false, reason: '模块未加载' })
+  ]);
+
   res.json({
     server: 'ZY-MCP-001',
     identity: '铸渊 · AGE OS MCP Server',
@@ -74,7 +119,9 @@ app.get('/health', async (_req, res) => {
     tools: Object.keys(TOOLS),
     tools_count: Object.keys(TOOLS).length,
     database: dbStatus,
-    cos: cosStatus
+    cos: cosStatus,
+    notion: notionStatus,
+    github: githubStatus
   });
 });
 
@@ -185,6 +232,8 @@ function getCategoryForTool(name) {
   if (['linkNodes','unlinkNodes','getRelations'].includes(name)) return 'relation';
   if (['buildPath','scanStructure','classify'].includes(name)) return 'structure';
   if (name.startsWith('cos')) return 'cos';
+  if (name.startsWith('notion')) return 'notion';
+  if (name.startsWith('github')) return 'github';
   return 'other';
 }
 
