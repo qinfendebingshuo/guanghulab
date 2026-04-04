@@ -14,7 +14,7 @@
 # 铸渊唤醒时必读此文件 → 获取全局视角
 # ═══════════════════════════════════════════════
 
-## 最后更新: 2026-04-04 · D51 · 全局根因排查
+## 最后更新: 2026-04-05 · D52 · duplicate default_server 根因修复
 
 ---
 
@@ -91,7 +91,7 @@
 
 ---
 
-## Step 5: Nginx反向代理 [✅ 100%] ← D51修复
+## Step 5: Nginx反向代理 [✅ 100%] ← D51修复 + D52修复
 
 **验证项:**
 - [x] 配置模板包含 proxy-sub location 块
@@ -102,27 +102,31 @@
 - [x] 健康检查使用正确Host头 (D51修复 — ZY_SERVER_HOST)
 - [x] configure_nginx自动添加default_server (D51修复 — 现有服务器兼容)
 - [x] configure_nginx自动添加localhost (D51修复 — 现有服务器兼容)
+- [x] 移除 /etc/nginx/sites-enabled/default (D52修复 — 消除 duplicate default_server)
 
-**根因分析 (D51):**
+**根因分析 (D52 — 真正的根因):**
 ```
-之前10次修复一直在修复订阅服务本身（PM2、fork模式、密钥等），
-从未审视过"Nginx为什么不把请求路由到正确的server block"。
+D51修复了"zhuyuan.conf缺少default_server"的问题，
+但引入了新的冲突: zhuyuan.conf声明default_server的同时，
+/etc/nginx/sites-enabled/default也声明了default_server。
+两个文件同时声明listen 80 default_server → Nginx [emerg] 报错。
 
-根因: curl http://127.0.0.1/api/proxy-sub/health
-  → Host头: 127.0.0.1
-  → Nginx server_name: guanghulab.online 43.134.16.246
-  → 127.0.0.1 不匹配!
-  → 若存在 /etc/nginx/sites-enabled/default (listen 80 default_server)
-  → 请求被default截获 → 没有proxy-sub → 失败
+报错信息:
+  [emerg] a duplicate default server for 0.0.0.0:80 
+  in /etc/nginx/sites-enabled/zhuyuan.conf:23
+  nginx: configuration file /etc/nginx/nginx.conf test failed
 
-修复: 
-  1. 模板: listen 80 default_server; + server_name含localhost
-  2. 脚本: configure_nginx自动补齐default_server和localhost
-  3. 脚本: health_check使用ZY_SERVER_HOST作为Host头
+修复 (D52):
+  1. deploy-proxy.sh configure_nginx(): 
+     找到zhuyuan.conf后，自动删除/etc/nginx/sites-enabled/default
+  2. deploy-to-zhuyuan-server.yml:
+     部署zhuyuan.conf到sites-enabled后，删除default文件
+  
+  两个部署入口都覆盖，确保无论哪条路径触发都不会冲突。
 ```
 
-**历史修复:** PR#237 (初始), PR#238 (URL路径) — 但根因未触及直到D51
-**标签:** FIXED-D51
+**历史修复:** PR#237 (初始), PR#238 (URL路径), D51 (default_server+localhost), D52 (移除default冲突)
+**标签:** FIXED-D52
 
 ---
 
@@ -221,9 +225,12 @@
   PR#270: 502错误 → 修了PM2启动 → 没查Nginx  
   PR#272: PM2管理 → 修了startOrRestart → 没查Nginx
   PR#275: fork模式 → 修了exec_mode → 没查Nginx
+  D51: default_server缺失 → 加了default_server → 没删default文件
+  D52: duplicate default_server → 终于删除了/etc/nginx/sites-enabled/default
 
-每次都在修「订阅服务侧」，从未检查「Nginx路由侧」
-真正的问题一直在Nginx的server_name和default_server上
+每次都在修「单个配置项」，从未检查「Nginx全局配置冲突」
+真正的问题: 服务器上同时存在default和zhuyuan.conf两个文件
+两个文件都声明listen 80 default_server → Nginx拒绝加载
 ```
 
 ### 铸渊唤醒时的全局视角协议

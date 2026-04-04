@@ -221,6 +221,11 @@ jobs:
           # 复制Nginx配置
           sudo cp /opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf /etc/nginx/sites-available/zhuyuan.conf
           sudo ln -sf /etc/nginx/sites-available/zhuyuan.conf /etc/nginx/sites-enabled/zhuyuan.conf
+
+          # 移除默认配置文件，避免 duplicate default_server 冲突
+          # zhuyuan.conf 已声明 listen 80 default_server，不能与 default 文件共存
+          sudo rm -f /etc/nginx/sites-enabled/default
+
           sudo nginx -t && sudo systemctl reload nginx
 
           # PM2 重启
