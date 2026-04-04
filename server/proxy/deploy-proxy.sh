@@ -86,22 +86,24 @@ save_server_host() {
     fi
 
     # 保存SMTP凭据 (如果有) — 使守护Agent和流量监控可发送告警邮件
+    # 注: 使用删除+追加方式避免sed特殊字符问题 (密码常含|&/$等)
     if [ -n "${ZY_SMTP_USER:-}" ] && [ -f "$KEYS_FILE" ]; then
         if grep -q "^ZY_SMTP_USER=" "$KEYS_FILE" 2>/dev/null; then
-            sed -i "s|^ZY_SMTP_USER=.*|ZY_SMTP_USER=${ZY_SMTP_USER}|" "$KEYS_FILE"
+            grep -v "^ZY_SMTP_USER=" "$KEYS_FILE" > "${KEYS_FILE}.tmp" && mv "${KEYS_FILE}.tmp" "$KEYS_FILE"
         else
             echo "" >> "$KEYS_FILE"
             echo "# SMTP凭据 (部署时自动写入·守护Agent告警用)" >> "$KEYS_FILE"
-            echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> "$KEYS_FILE"
         fi
+        printf '%s\n' "ZY_SMTP_USER=${ZY_SMTP_USER}" >> "$KEYS_FILE"
+        chmod 600 "$KEYS_FILE"
         echo "  ✅ ZY_SMTP_USER 已保存到 .env.keys"
     fi
     if [ -n "${ZY_SMTP_PASS:-}" ] && [ -f "$KEYS_FILE" ]; then
         if grep -q "^ZY_SMTP_PASS=" "$KEYS_FILE" 2>/dev/null; then
-            sed -i "s|^ZY_SMTP_PASS=.*|ZY_SMTP_PASS=${ZY_SMTP_PASS}|" "$KEYS_FILE"
-        else
-            echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> "$KEYS_FILE"
+            grep -v "^ZY_SMTP_PASS=" "$KEYS_FILE" > "${KEYS_FILE}.tmp" && mv "${KEYS_FILE}.tmp" "$KEYS_FILE"
         fi
+        printf '%s\n' "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> "$KEYS_FILE"
+        chmod 600 "$KEYS_FILE"
         echo "  ✅ ZY_SMTP_PASS 已保存到 .env.keys"
     fi
 }
