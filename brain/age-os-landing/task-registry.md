@@ -98,6 +98,7 @@
 | ZY-SVR-003 | 硅谷服务器占位 | `brain/age-os-landing/architecture-v1.md` | 📌 占位 | D45 |
 | ZY-SVR-004 | SSL自动化 | `server/setup/setup-ssl.sh` | ✅ Let's Encrypt | D16 |
 | ZY-SVR-005 | DNS解析 | — | ✅ guanghulab.online | D34 |
+| ZY-SVR-006 | 铸渊专线VPN | `server/proxy/` + `brain/proxy-task/` | 🔧 修复中 | D49-D51 |
 
 ---
 
@@ -113,6 +114,7 @@
 - **查网站**: → `docs/index.html`
 - **查数据库**: → `server/age-os/schema/001-brain-tables.sql`
 - **查MCP**: → `server/age-os/mcp-server/server.js`
+- **查专线**: → `brain/proxy-task/verification-progress.md`
 - **查密钥**: → `brain/secrets-manifest.json`
 - **查健康**: → `brain/system-health.json`
 
