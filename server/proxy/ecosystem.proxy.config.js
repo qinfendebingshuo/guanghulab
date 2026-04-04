@@ -7,6 +7,7 @@ module.exports = {
   apps: [
     {
       name: 'zy-proxy-sub',
+      version: '1.0.0',
       script: '/opt/zhuyuan/proxy/service/subscription-server.js',
       instances: 1,
       env: {
@@ -22,6 +23,7 @@ module.exports = {
     },
     {
       name: 'zy-proxy-monitor',
+      version: '1.0.0',
       script: '/opt/zhuyuan/proxy/service/traffic-monitor.js',
       instances: 1,
       env: {
@@ -35,6 +37,7 @@ module.exports = {
     },
     {
       name: 'zy-proxy-guardian',
+      version: '1.0.0',
       script: '/opt/zhuyuan/proxy/service/proxy-guardian.js',
       instances: 1,
       env: {
