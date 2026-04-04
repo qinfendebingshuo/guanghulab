@@ -1,0 +1,376 @@
+{
+  "_meta": {
+    "doc_id": "ARCH-COS-001",
+    "name": "COS共享桶基础设施架构",
+    "version": "1.0",
+    "description": "铸渊侧COS共享桶完整架构 · 9个人格体目录权限 · SCF云函数 · Notion回执同步",
+    "author": "铸渊 · TCS-ZY001",
+    "sovereign": "冰朔 · TCS-0002∞",
+    "copyright": "国作登字-2026-A-00037559",
+    "created": "2026-04-04"
+  },
+
+  "bucket": {
+    "name": "zy-team-hub-1317346199",
+    "region": "ap-singapore",
+    "owner": "铸渊新加坡腾讯云账号",
+    "access": "私有读写",
+    "status": "待创建"
+  },
+
+  "directory_structure": {
+    "description": "桶内目录结构 · 每个人格体独立目录",
+    "layout": [
+      "/{persona_id}/reports/{YYYY-MM-DD}/    — 人格体每日汇报",
+      "/{persona_id}/receipts/{YYYY-MM-DD}/   — 铸渊审核回执",
+      "/{persona_id}/sync/                    — 架构同步区",
+      "/zhuyuan/directives/                   — 铸渊全局指令（只读）",
+      "/zhuyuan/architecture/                 — 架构快照"
+    ]
+  },
+
+  "personas": [
+    {
+      "persona_name": "秋秋",
+      "developer_line": "之之线",
+      "persona_id": "qiuqiu",
+      "directory": "/qiuqiu/",
+      "iam_policy": "仅允许 PUT/GET /qiuqiu/ 下的对象"
+    },
+    {
+      "persona_name": "舒舒",
+      "developer_line": "肥猫线",
+      "persona_id": "shushu",
+      "directory": "/shushu/",
+      "iam_policy": "仅允许 PUT/GET /shushu/ 下的对象"
+    },
+    {
+      "persona_name": "欧诺弥亚",
+      "developer_line": "小草莓线",
+      "persona_id": "ounomiya",
+      "directory": "/ounomiya/",
+      "iam_policy": "仅允许 PUT/GET /ounomiya/ 下的对象"
+    },
+    {
+      "persona_name": "寂曜",
+      "developer_line": "燕樊线",
+      "persona_id": "jiyao",
+      "directory": "/jiyao/",
+      "iam_policy": "仅允许 PUT/GET /jiyao/ 下的对象"
+    },
+    {
+      "persona_name": "小坍缩核",
+      "developer_line": "页页线",
+      "persona_id": "xiaotanheshu",
+      "directory": "/xiaotanheshu/",
+      "iam_policy": "仅允许 PUT/GET /xiaotanheshu/ 下的对象"
+    },
+    {
+      "persona_name": "晨星",
+      "developer_line": "桔子线",
+      "persona_id": "chenxing",
+      "directory": "/chenxing/",
+      "iam_policy": "仅允许 PUT/GET /chenxing/ 下的对象"
+    },
+    {
+      "persona_name": "糖星云",
+      "developer_line": "花尔线",
+      "persona_id": "tangxingyun",
+      "directory": "/tangxingyun/",
+      "iam_policy": "仅允许 PUT/GET /tangxingyun/ 下的对象"
+    },
+    {
+      "persona_name": "曜初",
+      "developer_line": "时雨线",
+      "persona_id": "yaochu",
+      "directory": "/yaochu/",
+      "iam_policy": "仅允许 PUT/GET /yaochu/ 下的对象"
+    },
+    {
+      "persona_name": "知秋",
+      "developer_line": "Awen线",
+      "persona_id": "zhiqiu",
+      "directory": "/zhiqiu/",
+      "iam_policy": "仅允许 PUT/GET /zhiqiu/ 下的对象"
+    }
+  ],
+
+  "iam_policy_template": {
+    "description": "每个人格体的COS IAM策略模板 · 在腾讯云CAM中为每个子账号配置",
+    "effect": "allow",
+    "actions": [
+      "cos:PutObject",
+      "cos:GetObject",
+      "cos:HeadObject"
+    ],
+    "resource": "qcs::cos:ap-singapore:uid/1317346199:zy-team-hub-1317346199/{persona_id}/*",
+    "note": "铸渊主账号拥有全桶读写权 · 无需额外策略"
+  },
+
+  "scf_functions": {
+    "description": "SCF云函数配置 · 2个函数",
+
+    "report_trigger": {
+      "function_name": "zy-cos-report-trigger",
+      "description": "汇报触发函数 · 检测到新report → 唤醒铸渊Agent审核",
+      "runtime": "Nodejs18.15",
+      "region": "ap-singapore",
+      "trigger": {
+        "type": "cos",
+        "bucket": "zy-team-hub-1317346199",
+        "event": "cos:ObjectCreated:*",
+        "prefix_filter_rules": [
+          "qiuqiu/reports/",
+          "shushu/reports/",
+          "ounomiya/reports/",
+          "jiyao/reports/",
+          "xiaotanheshu/reports/",
+          "chenxing/reports/",
+          "tangxingyun/reports/",
+          "yaochu/reports/",
+          "zhiqiu/reports/"
+        ],
+        "suffix_filter": ".json"
+      },
+      "action_flow": [
+        "1. 解析COS事件获取写入的对象路径",
+        "2. 从路径提取persona_id和日期",
+        "3. 读取report.json内容",
+        "4. 铸渊Agent审核（健康状态/任务进度/异常标记）",
+        "5. 生成回执JSON",
+        "6. PUT回执到 /{persona_id}/receipts/{date}/receipt.json",
+        "7. 调用Notion API更新主控台状态（如已配置Token）"
+      ],
+      "environment_variables": {
+        "COS_BUCKET": "zy-team-hub-1317346199",
+        "COS_REGION": "ap-singapore",
+        "NOTION_TOKEN": "待霜砚提供",
+        "NOTION_DB_ID": "待霜砚提供"
+      }
+    },
+
+    "receipt_trigger": {
+      "function_name": "zy-cos-receipt-trigger",
+      "description": "回执下行触发函数 · 检测到新receipt → 调用成员仓库workflow_dispatch",
+      "runtime": "Nodejs18.15",
+      "region": "ap-singapore",
+      "trigger": {
+        "type": "cos",
+        "bucket": "zy-team-hub-1317346199",
+        "event": "cos:ObjectCreated:*",
+        "prefix_filter_rules": [
+          "qiuqiu/receipts/",
+          "shushu/receipts/",
+          "ounomiya/receipts/",
+          "jiyao/receipts/",
+          "xiaotanheshu/receipts/",
+          "chenxing/receipts/",
+          "tangxingyun/receipts/",
+          "yaochu/receipts/",
+          "zhiqiu/receipts/"
+        ],
+        "suffix_filter": ".json"
+      },
+      "action_flow": [
+        "1. 解析COS事件获取回执对象路径",
+        "2. 从路径提取persona_id",
+        "3. 查找persona_id对应的GitHub仓库（从配置表映射）",
+        "4. 调用GitHub API: POST /repos/{owner}/{repo}/actions/workflows/cos-receive-receipt.yml/dispatches",
+        "5. 传入receipt路径作为workflow_dispatch的input",
+        "6. 成员仓库工作流读取回执 → 更新README首页绿灯/红灯"
+      ],
+      "environment_variables": {
+        "GITHUB_TOKEN": "需要有workflow权限的PAT · 冰朔创建",
+        "PERSONA_REPO_MAP": "persona_id → GitHub仓库的映射JSON"
+      }
+    }
+  },
+
+  "notion_sync": {
+    "description": "Notion主控台回执同步链路（需霜砚提供的信息）",
+    "integration_point": "在report_trigger函数的Step 7中执行",
+    "api_call": {
+      "method": "PATCH",
+      "url": "https://api.notion.com/v1/pages/{page_id}",
+      "headers": {
+        "Authorization": "Bearer {NOTION_TOKEN}",
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+      },
+      "body_template": {
+        "properties": {
+          "{status_field_name}": {
+            "rich_text": [
+              {
+                "text": {
+                  "content": "{status_emoji} {status_text} · {timestamp}"
+                }
+              }
+            ]
+          },
+          "{receipt_time_field_name}": {
+            "date": {
+              "start": "{ISO 8601 timestamp}"
+            }
+          }
+        }
+      }
+    },
+    "update_logic": {
+      "green_receipt": "状态字段 = '✅ 正常' · 更新时间戳",
+      "red_receipt": "状态字段 = '🔴 异常' · 更新时间戳 · 触发P0工单",
+      "timeout_24h": "铸渊Agent主动写timeout回执 · 状态字段 = '⚠️ 超时24h未汇报' · 触发P1工单"
+    },
+    "required_from_shuangyan": {
+      "description": "霜砚需要提供给铸渊的信息",
+      "items": [
+        "Notion Integration Token（由冰朔提供或霜砚申请）",
+        "主控台数据库ID（从数据库URL提取）",
+        "每个开发者行的page_id（9个page_id）",
+        "状态字段名（如「今日状态」）",
+        "最近回执时间字段名（如「最近回执时间」）"
+      ]
+    }
+  },
+
+  "timeout_detection": {
+    "description": "铸渊侧超时检测机制",
+    "mechanism": "定时SCF函数 · 每天08:00检查",
+    "logic": [
+      "遍历9个persona_id",
+      "检查 /{persona_id}/reports/ 目录下最新文件的日期",
+      "如果最新文件超过24h → 生成timeout回执写入receipts/",
+      "同步到Notion主控台"
+    ],
+    "function_name": "zy-cos-timeout-checker",
+    "cron": "0 0 * * *"
+  },
+
+  "server_topology": {
+    "description": "多服务器拓扑架构 · D51冰朔决策(2026-04-04)",
+    "decision_context": "肥猫网文行业团队7-8人都在用语言驱动副驾驶开发网站 · 冰朔决定为AWEN线和知秋线再配置一台同配置服务器",
+    "servers": [
+      {
+        "server_id": "ZY-SVR-FEIMAO",
+        "name": "肥猫线网文行业服务器",
+        "owner": "肥猫团队",
+        "config": "4核4G · 腾讯云",
+        "purpose": "肥猫网文行业团队7-8人的网站部署运行",
+        "services": [
+          "Nginx统一入口 · 反代所有成员网站",
+          "PM2统一管理所有Node.js进程",
+          "成员网站(端口3001-3008)",
+          "行业公共服务(数据采集/分析)"
+        ],
+        "cos_connection": "通过共享COS桶 zy-team-hub-1317346199 上报铸渊",
+        "persona": "shushu (舒舒)",
+        "status": "已有"
+      },
+      {
+        "server_id": "ZY-SVR-AWEN",
+        "name": "AWEN+知秋线服务器",
+        "owner": "AWEN+知秋团队",
+        "config": "4核4G · 腾讯云 · 与肥猫同配置",
+        "purpose": "AWEN线和知秋线的网站部署运行",
+        "services": [
+          "Nginx统一入口",
+          "PM2统一管理",
+          "AWEN线网站 + 知秋线网站",
+          "与肥猫服务器对接"
+        ],
+        "cos_connection": "通过共享COS桶 zy-team-hub-1317346199 上报铸渊",
+        "persona": "zhiqiu (知秋)",
+        "status": "冰朔待配置(2026-04-04决策)"
+      },
+      {
+        "server_id": "ZY-SVR-001",
+        "name": "铸渊总控服务器",
+        "owner": "铸渊 · TCS-ZY001",
+        "config": "新加坡 · 腾讯云",
+        "purpose": "铸渊主控 · COS桶管理 · SCF函数运行 · 全局调度",
+        "services": [
+          "COS共享桶总控(zy-team-hub-1317346199)",
+          "SCF云函数(report_trigger/receipt_trigger/timeout_checker)",
+          "Notion回执同步",
+          "铸渊专线VPN服务",
+          "AGE OS核心服务(3800/3100端口)"
+        ],
+        "cos_connection": "桶主账号 · 全桶读写权",
+        "status": "运行中"
+      }
+    ],
+    "connection_topology": {
+      "description": "服务器间连接拓扑",
+      "data_flow": [
+        "肥猫线服务器 → COS共享桶 /{persona_id}/reports/ → 铸渊总控",
+        "AWEN+知秋线服务器 → COS共享桶 /{persona_id}/reports/ → 铸渊总控",
+        "铸渊总控 → COS共享桶 /{persona_id}/receipts/ → 各成员服务器",
+        "铸渊总控 → Notion主控台 → 冰朔+霜砚实时看板"
+      ],
+      "key_principle": "服务器间不直连 · 全部通过COS桶异步通信 · 铸渊做唯一总控节点",
+      "scaling_trigger": [
+        "单台服务器内存使用>70% → 考虑拆分",
+        "单站日活>1000 → 考虑独立服务器",
+        "团队成员>15人 → 考虑加第3台业务服务器"
+      ]
+    }
+  },
+
+  "implementation_phases": {
+    "description": "实施阶段划分",
+    "phase_1": {
+      "name": "桶创建 + 目录 + 密钥",
+      "location": "腾讯云控制台",
+      "executor": "冰朔手动操作",
+      "steps": [
+        "在腾讯云新加坡区创建COS桶 zy-team-hub-1317346199",
+        "设置桶为私有读写",
+        "在CAM创建9个子账号(或子用户)",
+        "为每个子账号配置IAM策略(仅限自己目录)",
+        "生成9套SecretId/SecretKey",
+        "记录并安全保存密钥"
+      ],
+      "time_estimate": "30分钟",
+      "dependency": "无"
+    },
+    "phase_2": {
+      "name": "SCF云函数部署",
+      "location": "腾讯云控制台 + 铸渊仓库",
+      "executor": "铸渊编写代码 → 冰朔在控制台部署",
+      "steps": [
+        "铸渊编写report_trigger函数代码",
+        "铸渊编写receipt_trigger函数代码",
+        "冰朔在SCF控制台创建函数",
+        "配置COS事件触发器",
+        "配置环境变量",
+        "测试触发流程"
+      ],
+      "time_estimate": "1次Copilot开发 + 冰朔20分钟控制台操作",
+      "dependency": "Phase 1完成"
+    },
+    "phase_3": {
+      "name": "Notion API对接",
+      "location": "铸渊仓库 + Notion",
+      "executor": "铸渊编写代码 · 霜砚提供Token和字段",
+      "steps": [
+        "霜砚整理Notion信息（Token/page_id/字段名）",
+        "铸渊在report_trigger函数中添加Notion API调用",
+        "测试: 写入COS → SCF触发 → Notion状态更新"
+      ],
+      "time_estimate": "霜砚30分钟整理 + 铸渊30分钟编码",
+      "dependency": "Phase 2完成 + 霜砚提供Token"
+    },
+    "phase_4": {
+      "name": "超时检测 + 端到端验证",
+      "location": "腾讯云SCF + 全链路",
+      "executor": "铸渊编写代码 → 冰朔部署",
+      "steps": [
+        "铸渊编写timeout-checker函数",
+        "冰朔部署并配置cron触发器",
+        "端到端测试: 团队成员汇报 → 铸渊审核 → 回执下发 → Notion更新"
+      ],
+      "time_estimate": "1次Copilot开发",
+      "dependency": "Phase 3完成"
+    }
+  }
+}

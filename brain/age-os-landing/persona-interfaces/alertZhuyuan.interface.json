@@ -1,0 +1,265 @@
+{
+  "_meta": {
+    "interface_id": "IF-PERSONA-003",
+    "name": "alertZhuyuan · 异常预警",
+    "version": "1.0",
+    "description": "人格体发现异常时主动触发铸渊的预警接口规范",
+    "author": "铸渊 · TCS-ZY001",
+    "sovereign": "冰朔 · TCS-0002∞",
+    "copyright": "国作登字-2026-A-00037559",
+    "created": "2026-04-04",
+    "for": "霜砚 · AG-SY-01 · Notion端9个开发者人格体Instructions升级"
+  },
+
+  "trigger": {
+    "types": [
+      {
+        "type": "selfDiagnose_P0",
+        "description": "自检发现P0级问题时自动触发"
+      },
+      {
+        "type": "runtime_exception",
+        "description": "工作流运行时遇到严重错误"
+      },
+      {
+        "type": "manual_escalation",
+        "description": "人类开发者手动要求人格体发出预警"
+      },
+      {
+        "type": "security_event",
+        "description": "检测到安全事件（Secret泄露/异常访问等）"
+      }
+    ],
+    "executor": "GitHub Actions工作流 或 副驾驶直接写入COS"
+  },
+
+  "alert_levels": {
+    "P0": {
+      "label": "🔴 紧急",
+      "description": "系统不可用 · 需要铸渊立即介入",
+      "response_time": "1小时内",
+      "examples": [
+        "COS桶访问权限丢失（403 Forbidden）",
+        "核心文件被删除或损坏",
+        "Secret疑似泄露",
+        "人格体身份配置被篡改"
+      ],
+      "auto_escalation": "1h无响应 → 通知冰朔"
+    },
+    "P1": {
+      "label": "🟡 警告",
+      "description": "功能受损 · 需要铸渊24小时内处理",
+      "response_time": "24小时内",
+      "examples": [
+        "工作流连续3次运行失败",
+        "COS写入间歇性超时",
+        "回执链路中断（超过3天无回执）",
+        "工作流被GitHub自动禁用"
+      ],
+      "auto_escalation": "24h无响应 → 下次心跳再次上报"
+    },
+    "P2": {
+      "label": "💡 提醒",
+      "description": "轻微问题 · 等待铸渊下次巡检处理",
+      "response_time": "72小时内",
+      "examples": [
+        "非核心文件缺失",
+        "任务进度停滞超过5天",
+        "副驾驶唤醒异常（非关键功能受影响）"
+      ],
+      "auto_escalation": "72h无响应 → 升级为P1"
+    }
+  },
+
+  "write_path": {
+    "primary": {
+      "method": "COS写入",
+      "bucket": "zy-team-hub-1317346199",
+      "key_pattern": "{persona_id}/reports/{YYYY-MM-DD}/alert-{priority}-{HHmmss}.json",
+      "example": "shushu/reports/2026-04-04/alert-P0-143500.json",
+      "trigger_action": "COS事件通知 → SCF云函数唤醒铸渊Agent → 铸渊立即审核",
+      "description": "首选方式 · COS事件触发确保铸渊实时感知"
+    },
+    "fallback": {
+      "method": "GitHub Issue",
+      "repo": "qinfendebingshuo/guanghulab",
+      "title_format": "🚨 [{priority}] {persona_name}({persona_id}) 异常预警: {summary}",
+      "labels": ["alert", "persona-system", "{priority}"],
+      "description": "备选方式 · 当COS不可用时通过GitHub Issue通知铸渊",
+      "when": "COS写入失败时自动降级到GitHub Issue"
+    }
+  },
+
+  "schema": {
+    "alert_id": {
+      "type": "string",
+      "format": "ALT-{priority}-{YYYY-MM-DD}-{HHmmss}-{persona_id}",
+      "example": "ALT-P0-2026-04-04-143500-shushu",
+      "required": true,
+      "description": "预警唯一ID"
+    },
+    "persona_id": { "type": "string", "required": true },
+    "persona_name": { "type": "string", "required": true },
+    "developer_line": { "type": "string", "required": true },
+    "timestamp": { "type": "string", "format": "ISO 8601", "required": true },
+    "priority": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2"],
+      "required": true,
+      "description": "预警等级"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "cos_access_denied",
+        "cos_write_failure",
+        "cos_read_failure",
+        "workflow_failure",
+        "core_file_missing",
+        "secret_compromised",
+        "identity_tampered",
+        "receipt_timeout",
+        "task_blocked",
+        "security_event",
+        "other"
+      ],
+      "required": true,
+      "description": "预警分类 · 帮助铸渊快速定位问题域"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 200,
+      "required": true,
+      "description": "一句话概括问题"
+    },
+    "detail": {
+      "type": "string",
+      "required": true,
+      "description": "详细问题描述 · 包含错误信息/日志/上下文"
+    },
+    "affected_checks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "required": false,
+      "description": "关联的自检check_id列表（来自selfDiagnose接口）"
+    },
+    "auto_fix_attempted": {
+      "type": "boolean",
+      "required": true,
+      "description": "人格体是否已尝试自动修复"
+    },
+    "auto_fix_result": {
+      "type": "string",
+      "enum": ["not_attempted", "success", "partial", "failed"],
+      "required": true,
+      "description": "自动修复结果"
+    },
+    "human_action_needed": {
+      "type": "boolean",
+      "required": true,
+      "description": "是否需要人类开发者介入"
+    },
+    "suggested_action": {
+      "type": "string",
+      "required": false,
+      "description": "人格体建议的修复方案（供铸渊参考）"
+    }
+  },
+
+  "trigger_conditions": {
+    "description": "预警触发条件清单 · 人格体按此判断何时发送预警",
+    "auto_triggers": [
+      {
+        "condition": "selfDiagnose.overall_status === 'critical'",
+        "priority": "P0",
+        "category": "根据失败的P0 check决定",
+        "description": "自检发现P0级问题"
+      },
+      {
+        "condition": "cos-daily-report工作流连续3次失败",
+        "priority": "P1",
+        "category": "workflow_failure",
+        "description": "日报工作流持续失败"
+      },
+      {
+        "condition": "COS PUT返回403",
+        "priority": "P0",
+        "category": "cos_access_denied",
+        "description": "COS桶访问权限丢失"
+      },
+      {
+        "condition": "核心文件(age_os/ brain/ bridge/)被删除",
+        "priority": "P0",
+        "category": "core_file_missing",
+        "description": "核心系统文件缺失"
+      },
+      {
+        "condition": "persona_config.json 中 persona_id 与 COS_PERSONA_ID 不一致",
+        "priority": "P0",
+        "category": "identity_tampered",
+        "description": "身份配置被篡改"
+      },
+      {
+        "condition": "超过72小时未收到铸渊回执",
+        "priority": "P1",
+        "category": "receipt_timeout",
+        "description": "回执链路长时间中断"
+      }
+    ],
+    "manual_triggers": [
+      {
+        "condition": "人类开发者说「发送预警给铸渊」",
+        "priority": "由人类指定",
+        "description": "人类主动触发"
+      }
+    ]
+  },
+
+  "zhuyuan_response_protocol": {
+    "description": "铸渊收到预警后的响应协议",
+    "steps": [
+      {
+        "step": 1,
+        "action": "SCF云函数唤醒铸渊Agent",
+        "detail": "COS事件通知触发 → 传入预警文件路径"
+      },
+      {
+        "step": 2,
+        "action": "铸渊读取预警内容 · 评估严重程度",
+        "detail": "验证priority是否准确 · 是否需要升级"
+      },
+      {
+        "step": 3,
+        "action": "铸渊执行诊断或修复",
+        "detail": "根据category执行对应的修复流程"
+      },
+      {
+        "step": 4,
+        "action": "铸渊写回执到 /{persona_id}/receipts/",
+        "detail": "回执包含处理结果 + 后续指令"
+      },
+      {
+        "step": 5,
+        "action": "同步到Notion主控台",
+        "detail": "额外调用Notion API更新开发者线状态（需霜砚提供Token和page_id）"
+      }
+    ]
+  },
+
+  "example": {
+    "alert_id": "ALT-P0-2026-04-04-143500-shushu",
+    "persona_id": "shushu",
+    "persona_name": "舒舒",
+    "developer_line": "肥猫线",
+    "timestamp": "2026-04-04T14:35:00+08:00",
+    "priority": "P0",
+    "category": "cos_access_denied",
+    "summary": "COS桶写入失败 · 403 Forbidden · 密钥可能失效",
+    "detail": "cos-daily-report工作流在PUT shushu/reports/2026-04-04/report.json 时返回HTTP 403。上次成功写入: 2026-04-03 23:00。已尝试重新运行工作流1次，同样403。怀疑密钥过期或被铸渊侧撤销。",
+    "affected_checks": ["CH-03-01"],
+    "auto_fix_attempted": true,
+    "auto_fix_result": "failed",
+    "human_action_needed": true,
+    "suggested_action": "请铸渊检查shushu的COS子账号密钥是否有效，如已过期请重新生成并通知冰朔分发"
+  }
+}

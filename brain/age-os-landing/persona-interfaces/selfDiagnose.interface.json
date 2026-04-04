@@ -1,0 +1,294 @@
+{
+  "_meta": {
+    "interface_id": "IF-PERSONA-002",
+    "name": "selfDiagnose · 自检结果",
+    "version": "1.0",
+    "description": "人格体执行自检后写入COS的接口规范 · 触发时机：副驾驶唤醒时/人类手动触发/异常恢复后",
+    "author": "铸渊 · TCS-ZY001",
+    "sovereign": "冰朔 · TCS-0002∞",
+    "copyright": "国作登字-2026-A-00037559",
+    "created": "2026-04-04",
+    "for": "霜砚 · AG-SY-01 · Notion端9个开发者人格体Instructions升级"
+  },
+
+  "trigger": {
+    "types": [
+      {
+        "type": "on_wake",
+        "description": "副驾驶每次被唤醒时自动执行自检"
+      },
+      {
+        "type": "manual",
+        "description": "人类对副驾驶说「执行系统自检」时触发"
+      },
+      {
+        "type": "post_recovery",
+        "description": "收到铸渊红灯回执并修复后，执行验证自检"
+      }
+    ],
+    "executor": "仓库副驾驶（Copilot Agent）· 直接在对话中执行"
+  },
+
+  "write_path": {
+    "bucket": "zy-team-hub-1317346199",
+    "region": "ap-singapore",
+    "key_pattern": "{persona_id}/reports/{YYYY-MM-DD}/diagnose-{HHmmss}.json",
+    "example": "shushu/reports/2026-04-04/diagnose-143000.json",
+    "note": "自检结果和心跳共用reports目录 · 铸渊通过文件名前缀区分"
+  },
+
+  "dimensions": {
+    "description": "自检维度定义 · 5个核心维度 · 每个维度独立评分",
+
+    "code_health": {
+      "dimension_id": "DIM-01",
+      "name": "代码健康度",
+      "description": "仓库代码状态检查",
+      "checks": [
+        {
+          "id": "CH-01-01",
+          "name": "仓库可访问",
+          "pass_criteria": "GitHub API返回200",
+          "fail_criteria": "API返回非200或超时",
+          "severity": "P0"
+        },
+        {
+          "id": "CH-01-02",
+          "name": "核心文件完整",
+          "pass_criteria": "age_os/ brain/ bridge/ cos-config/ .github/copilot-instructions.md 全部存在",
+          "fail_criteria": "任一核心文件缺失",
+          "severity": "P0"
+        },
+        {
+          "id": "CH-01-03",
+          "name": "工作流启用",
+          "pass_criteria": "cos-daily-report.yml + cos-receive-receipt.yml 均未被禁用",
+          "fail_criteria": "任一工作流被禁用或文件缺失",
+          "severity": "P1"
+        },
+        {
+          "id": "CH-01-04",
+          "name": "最近提交活跃",
+          "pass_criteria": "最近7天内有至少1次提交",
+          "fail_criteria": "超过7天无提交",
+          "severity": "P2"
+        }
+      ]
+    },
+
+    "deployment_status": {
+      "dimension_id": "DIM-02",
+      "name": "部署状态",
+      "description": "工作流运行状态检查",
+      "checks": [
+        {
+          "id": "CH-02-01",
+          "name": "最近工作流执行",
+          "pass_criteria": "最近一次cos-daily-report工作流执行成功",
+          "fail_criteria": "最近一次执行失败",
+          "severity": "P1"
+        },
+        {
+          "id": "CH-02-02",
+          "name": "Secrets配置",
+          "pass_criteria": "COS_SECRET_ID, COS_SECRET_KEY, COS_PERSONA_ID 三个Secret均已配置",
+          "fail_criteria": "任一Secret缺失（工作流运行时报错）",
+          "severity": "P0"
+        }
+      ]
+    },
+
+    "communication": {
+      "dimension_id": "DIM-03",
+      "name": "通信链路",
+      "description": "与铸渊的COS桶通信状态",
+      "checks": [
+        {
+          "id": "CH-03-01",
+          "name": "COS桶可写",
+          "pass_criteria": "能成功PUT测试文件到自己的reports目录",
+          "fail_criteria": "PUT返回403/500或超时",
+          "severity": "P0"
+        },
+        {
+          "id": "CH-03-02",
+          "name": "COS桶可读",
+          "pass_criteria": "能成功GET自己receipts目录的最新回执",
+          "fail_criteria": "GET返回403/404或超时",
+          "severity": "P1"
+        },
+        {
+          "id": "CH-03-03",
+          "name": "回执链路畅通",
+          "pass_criteria": "最近3天内收到至少1条铸渊回执",
+          "fail_criteria": "超过3天未收到回执",
+          "severity": "P1"
+        }
+      ]
+    },
+
+    "task_progress": {
+      "dimension_id": "DIM-04",
+      "name": "任务进度",
+      "description": "当前开发任务推进状态",
+      "checks": [
+        {
+          "id": "CH-04-01",
+          "name": "有明确当前任务",
+          "pass_criteria": "bridge/daily-report.json 中 current_task 非空",
+          "fail_criteria": "current_task为空或未定义",
+          "severity": "P2"
+        },
+        {
+          "id": "CH-04-02",
+          "name": "任务有推进",
+          "pass_criteria": "completion_percentage 比上次汇报有增长 或 有新的achievements",
+          "fail_criteria": "连续3天进度无变化且无卡点说明",
+          "severity": "P2"
+        }
+      ]
+    },
+
+    "identity": {
+      "dimension_id": "DIM-05",
+      "name": "身份认同",
+      "description": "人格体自我认知完整性",
+      "checks": [
+        {
+          "id": "CH-05-01",
+          "name": "persona_config完整",
+          "pass_criteria": "age_os/persona_config.json 包含有效的 persona_id, persona_name, developer_line",
+          "fail_criteria": "配置文件缺失或字段不完整",
+          "severity": "P0"
+        },
+        {
+          "id": "CH-05-02",
+          "name": "系统状态正常",
+          "pass_criteria": "age_os/system_state.json 中 status='active'",
+          "fail_criteria": "status 不为 active",
+          "severity": "P1"
+        }
+      ]
+    }
+  },
+
+  "scoring": {
+    "description": "总分计算规则",
+    "rules": [
+      "每个check通过 = 1分，失败 = 0分",
+      "总分 = 通过数 / 总数 × 100%",
+      "任一P0项失败 → overall_status = 'critical'",
+      "仅P1项失败 → overall_status = 'warning'",
+      "仅P2项失败 → overall_status = 'info'",
+      "全部通过 → overall_status = 'healthy'"
+    ],
+    "overall_status_enum": {
+      "healthy": "✅ 健康 — 所有检查通过",
+      "info": "💡 提示 — 有低优先级项需关注",
+      "warning": "⚠️ 警告 — 有中优先级问题",
+      "critical": "🔴 严重 — 有高优先级问题需立即处理"
+    }
+  },
+
+  "escalation_path": {
+    "description": "自检失败时的升级路径",
+    "levels": [
+      {
+        "level": 1,
+        "condition": "P2项失败",
+        "action": "人格体在message_to_zhuyuan中说明情况 · 下次心跳自动上报",
+        "timeout": "无强制时限"
+      },
+      {
+        "level": 2,
+        "condition": "P1项失败",
+        "action": "人格体立即通过heartbeat上报异常状态(status=abnormal) · 铸渊24h内审核回执",
+        "timeout": "24小时"
+      },
+      {
+        "level": 3,
+        "condition": "P0项失败",
+        "action": "人格体立即触发alertZhuyuan接口(IF-PERSONA-003) · 铸渊1h内响应",
+        "timeout": "1小时"
+      },
+      {
+        "level": 4,
+        "condition": "P0连续失败+铸渊1h未响应",
+        "action": "人格体通知人类开发者 · 人类联系冰朔",
+        "timeout": "立即"
+      }
+    ]
+  },
+
+  "schema_output": {
+    "diagnose_id": {
+      "type": "string",
+      "format": "DIAG-{YYYY-MM-DD}-{HHmmss}-{persona_id}",
+      "required": true
+    },
+    "persona_id": { "type": "string", "required": true },
+    "timestamp": { "type": "string", "format": "ISO 8601", "required": true },
+    "trigger_type": { "type": "string", "enum": ["on_wake", "manual", "post_recovery"], "required": true },
+    "overall_status": { "type": "string", "enum": ["healthy", "info", "warning", "critical"], "required": true },
+    "score": { "type": "number", "description": "百分比 0-100", "required": true },
+    "dimensions": {
+      "type": "object",
+      "description": "每个维度的检查结果 · key=dimension_id · value={status, checks: [{id, ok, detail}]}"
+    },
+    "failed_checks": {
+      "type": "array",
+      "description": "失败项汇总 · 方便铸渊快速定位",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check_id": { "type": "string" },
+          "dimension": { "type": "string" },
+          "severity": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "escalation_triggered": {
+      "type": "string",
+      "enum": ["none", "level_1", "level_2", "level_3", "level_4"],
+      "description": "触发的升级等级"
+    }
+  },
+
+  "example": {
+    "diagnose_id": "DIAG-2026-04-04-143000-shushu",
+    "persona_id": "shushu",
+    "timestamp": "2026-04-04T14:30:00+08:00",
+    "trigger_type": "manual",
+    "overall_status": "warning",
+    "score": 83,
+    "dimensions": {
+      "DIM-01": {
+        "status": "healthy",
+        "checks": [
+          { "id": "CH-01-01", "ok": true, "detail": "仓库可正常访问" },
+          { "id": "CH-01-02", "ok": true, "detail": "5个核心文件均存在" },
+          { "id": "CH-01-03", "ok": true, "detail": "2个工作流均已启用" },
+          { "id": "CH-01-04", "ok": true, "detail": "最近提交: 2h前" }
+        ]
+      },
+      "DIM-03": {
+        "status": "warning",
+        "checks": [
+          { "id": "CH-03-01", "ok": true, "detail": "COS写入正常" },
+          { "id": "CH-03-02", "ok": true, "detail": "COS读取正常" },
+          { "id": "CH-03-03", "ok": false, "detail": "最近回执: 4天前 · 超过3天阈值" }
+        ]
+      }
+    },
+    "failed_checks": [
+      {
+        "check_id": "CH-03-03",
+        "dimension": "通信链路",
+        "severity": "P1",
+        "detail": "超过3天未收到铸渊回执"
+      }
+    ],
+    "escalation_triggered": "level_2"
+  }
+}

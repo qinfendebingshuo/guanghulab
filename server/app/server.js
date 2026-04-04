@@ -350,6 +350,113 @@ app.get('/api/cos/load-works', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
+// MCP 网关 · 3800 → 3100 转发 (S7)
+// ═══════════════════════════════════════════════════════════
+
+const http = require('http');
+const MCP_HOST = process.env.MCP_HOST || '127.0.0.1';
+const MCP_PORT_GATEWAY = process.env.MCP_PORT || '3100';
+
+/**
+ * MCP 内部代理请求
+ */
+function mcpProxy(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const bodyStr = body ? JSON.stringify(body) : null;
+    const headers = { 'Content-Type': 'application/json' };
+    if (bodyStr) headers['Content-Length'] = Buffer.byteLength(bodyStr);
+
+    const req = http.request({
+      hostname: MCP_HOST,
+      port: parseInt(MCP_PORT_GATEWAY, 10),
+      path,
+      method,
+      headers,
+      timeout: 60000
+    }, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        const raw = Buffer.concat(chunks).toString();
+        try {
+          resolve({ statusCode: res.statusCode, data: JSON.parse(raw) });
+        } catch {
+          resolve({ statusCode: res.statusCode, data: raw });
+        }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('MCP proxy timeout')); });
+    if (bodyStr) req.write(bodyStr);
+    req.end();
+  });
+}
+
+// ─── MCP 工具列表 ───
+app.get('/api/mcp/tools', async (_req, res) => {
+  try {
+    const result = await mcpProxy('GET', '/tools');
+    res.json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: true, message: `MCP Server 不可达: ${err.message}` });
+  }
+});
+
+// ─── MCP 健康检查（含 Notion/GitHub 连接状态） ───
+app.get('/api/mcp/health', async (_req, res) => {
+  try {
+    const result = await mcpProxy('GET', '/health');
+    res.json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: true, message: `MCP Server 不可达: ${err.message}` });
+  }
+});
+
+// ─── MCP 统一工具调用（网关入口） ───
+// 安全: 写操作工具需要 caller 身份标识
+const MCP_WRITE_TOOLS = new Set([
+  'createNode', 'updateNode', 'deleteNode',
+  'linkNodes', 'unlinkNodes',
+  'cosWrite', 'cosDelete', 'cosArchive',
+  'notionWritePage', 'notionUpdatePage', 'notionWriteSyslog',
+  'githubWriteFile', 'githubTriggerDeploy'
+]);
+
+app.post('/api/mcp/call', async (req, res) => {
+  const { tool, input, caller } = req.body;
+
+  if (!tool) {
+    return res.status(400).json({ error: true, code: 'MISSING_TOOL', message: '缺少 tool 参数' });
+  }
+
+  // 写操作工具需要 caller 身份标识
+  if (MCP_WRITE_TOOLS.has(tool) && !caller) {
+    return res.status(403).json({
+      error: true,
+      code: 'WRITE_REQUIRES_CALLER',
+      message: '写操作工具需要提供 caller 身份标识'
+    });
+  }
+
+  try {
+    const result = await mcpProxy('POST', '/call', { tool, input, caller: caller || 'web-gateway' });
+    res.status(result.statusCode).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: true, message: `MCP Server 不可达: ${err.message}` });
+  }
+});
+
+// ─── MCP Agent 查询 ───
+app.get('/api/mcp/agents', async (_req, res) => {
+  try {
+    const result = await mcpProxy('GET', '/agents');
+    res.json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: true, message: `MCP Server 不可达: ${err.message}` });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
 // 智能模型分流 · Smart Model Router API
 // ═══════════════════════════════════════════════════════════
 
@@ -698,6 +805,10 @@ app.get('/', (_req, res) => {
       chat_stats: '/api/chat/stats',
       cos_status: '/api/cos/status',
       cos_config: '/api/cos/config',
+      mcp_tools: '/api/mcp/tools',
+      mcp_health: '/api/mcp/health',
+      mcp_call: 'POST /api/mcp/call',
+      mcp_agents: '/api/mcp/agents',
       model_stats: '/api/model/stats',
       model_pricing: '/api/model/pricing',
       model_predict: 'POST /api/model/predict',

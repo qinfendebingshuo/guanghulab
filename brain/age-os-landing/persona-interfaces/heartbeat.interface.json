@@ -1,0 +1,186 @@
+{
+  "_meta": {
+    "interface_id": "IF-PERSONA-001",
+    "name": "heartbeat · 心跳上报",
+    "version": "1.0",
+    "description": "人格体每日心跳上报接口规范 · 每天23:00由GitHub Actions自动写入COS共享桶",
+    "author": "铸渊 · TCS-ZY001",
+    "sovereign": "冰朔 · TCS-0002∞",
+    "copyright": "国作登字-2026-A-00037559",
+    "created": "2026-04-04",
+    "for": "霜砚 · AG-SY-01 · Notion端9个开发者人格体Instructions升级"
+  },
+
+  "trigger": {
+    "type": "cron",
+    "schedule": "每天 23:00 北京时间",
+    "executor": "GitHub Actions · cos-daily-report.yml",
+    "mechanism": "工作流自动收集仓库状态 → 生成report.json → 写入COS共享桶"
+  },
+
+  "write_path": {
+    "bucket": "zy-team-hub-1317346199",
+    "region": "ap-singapore",
+    "key_pattern": "{persona_id}/reports/{YYYY-MM-DD}/report.json",
+    "example": "shushu/reports/2026-04-04/report.json"
+  },
+
+  "schema": {
+    "report_id": {
+      "type": "string",
+      "format": "RPT-{YYYY-MM-DD}-{persona_id}",
+      "example": "RPT-2026-04-04-shushu",
+      "required": true,
+      "description": "汇报唯一ID · 用于铸渊回执关联"
+    },
+    "persona_id": {
+      "type": "string",
+      "example": "shushu",
+      "required": true,
+      "description": "人格体编号 · 与COS目录名一致"
+    },
+    "persona_name": {
+      "type": "string",
+      "example": "舒舒",
+      "required": true,
+      "description": "人格体中文名"
+    },
+    "developer_line": {
+      "type": "string",
+      "example": "肥猫线",
+      "required": true,
+      "description": "所属开发者线"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "ISO 8601",
+      "example": "2026-04-04T23:00:00+08:00",
+      "required": true,
+      "description": "汇报时间戳"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["normal", "abnormal", "pending_confirm"],
+      "required": true,
+      "description": "整体状态",
+      "enum_labels": {
+        "normal": "✅ 正常 — 所有检查项通过",
+        "abnormal": "🔴 异常 — 存在未解决的问题",
+        "pending_confirm": "🟡 待确认 — 有新变更需要人工确认"
+      }
+    },
+    "health_checks": {
+      "type": "object",
+      "required": true,
+      "description": "健康检查清单 · 每项必须有 ok + detail",
+      "properties": {
+        "repo_accessible": {
+          "type": "object",
+          "description": "仓库可访问性",
+          "properties": {
+            "ok": { "type": "boolean" },
+            "detail": { "type": "string", "example": "仓库可正常访问" }
+          }
+        },
+        "workflow_active": {
+          "type": "object",
+          "description": "工作流是否启用（cos-daily-report + cos-receive-receipt）",
+          "properties": {
+            "ok": { "type": "boolean" },
+            "detail": { "type": "string", "example": "2个工作流均已启用" }
+          }
+        },
+        "cos_writable": {
+          "type": "object",
+          "description": "COS桶是否可写入",
+          "properties": {
+            "ok": { "type": "boolean" },
+            "detail": { "type": "string", "example": "COS写入测试通过" }
+          }
+        },
+        "secrets_configured": {
+          "type": "object",
+          "description": "3个必需Secret是否已配置（COS_SECRET_ID/COS_SECRET_KEY/COS_PERSONA_ID）",
+          "properties": {
+            "ok": { "type": "boolean" },
+            "detail": { "type": "string", "example": "3个Secret均已配置" }
+          }
+        },
+        "last_receipt_received": {
+          "type": "object",
+          "description": "最近一次铸渊回执是否收到",
+          "properties": {
+            "ok": { "type": "boolean" },
+            "detail": { "type": "string", "example": "最近回执: 2026-04-03 · 绿灯" }
+          }
+        }
+      }
+    },
+    "task_progress": {
+      "type": "object",
+      "required": false,
+      "description": "任务进度（选填·人格体自行填写）",
+      "properties": {
+        "current_task": { "type": "string", "description": "当前正在做的事" },
+        "completion_percentage": { "type": "number", "description": "完成百分比 0-100" },
+        "blockers": { "type": "array", "items": { "type": "string" }, "description": "卡点清单" },
+        "achievements": { "type": "array", "items": { "type": "string" }, "description": "今日成果" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": false,
+      "description": "量化指标（选填）",
+      "properties": {
+        "commits_today": { "type": "number", "description": "今日提交数" },
+        "files_changed": { "type": "number", "description": "今日修改文件数" },
+        "issues_closed": { "type": "number", "description": "今日关闭Issue数" },
+        "workflow_runs": { "type": "number", "description": "今日工作流运行次数" }
+      }
+    },
+    "message_to_zhuyuan": {
+      "type": "string",
+      "required": false,
+      "description": "给铸渊的留言（自由文本·人格体可表达任何需要帮助的事）"
+    }
+  },
+
+  "abnormal_judgment": {
+    "description": "异常判定标准 · 以下任一条件触发 status=abnormal",
+    "rules": [
+      "health_checks中任一项 ok=false",
+      "连续2天未提交report（铸渊侧超时检测）",
+      "COS写入失败（工作流运行但写入报错）",
+      "上次回执为红灯且未解决"
+    ]
+  },
+
+  "example": {
+    "report_id": "RPT-2026-04-04-shushu",
+    "persona_id": "shushu",
+    "persona_name": "舒舒",
+    "developer_line": "肥猫线",
+    "timestamp": "2026-04-04T23:00:00+08:00",
+    "status": "normal",
+    "health_checks": {
+      "repo_accessible": { "ok": true, "detail": "仓库可正常访问" },
+      "workflow_active": { "ok": true, "detail": "2个工作流均已启用" },
+      "cos_writable": { "ok": true, "detail": "COS写入测试通过" },
+      "secrets_configured": { "ok": true, "detail": "3个Secret均已配置" },
+      "last_receipt_received": { "ok": true, "detail": "最近回执: 2026-04-03 · 绿灯" }
+    },
+    "task_progress": {
+      "current_task": "男频行业数据采集模块开发",
+      "completion_percentage": 65,
+      "blockers": [],
+      "achievements": ["完成数据源接口对接", "通过单元测试"]
+    },
+    "metrics": {
+      "commits_today": 3,
+      "files_changed": 7,
+      "issues_closed": 1,
+      "workflow_runs": 4
+    },
+    "message_to_zhuyuan": "一切正常，明天继续推进数据清洗模块"
+  }
+}
