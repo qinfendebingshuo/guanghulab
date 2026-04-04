@@ -73,6 +73,10 @@
 | ZY-WEB-008 | 首页重构v48.0 | `docs/index.html` pg-home | ✅ v48.0 | D48 |
 | ZY-WEB-009 | 团队区更新 | `docs/index.html` team | ✅ v48.0 | D48 |
 | ZY-WEB-010 | 编辑器背景+工作台UI修复 | `docs/index.html` editor/workspace | ✅ v50.0 | D50 |
+| ZY-WEB-011 | 码字工作台动态书本图标 | `docs/index.html` hero-card SVG | ✅ v50.0 | D50 |
+| ZY-WEB-012 | 系统面板全面重构 | `docs/index.html` pg-system | ✅ v50.0 | D50 |
+| ZY-WEB-013 | HoloLake Days运行天数 | `docs/index.html` uptimeNum | ✅ v50.0 | D50 |
+| ZY-WEB-014 | UI大气化v50.0 | `docs/index.html` CSS全局 | ✅ v50.0 | D50 |
 
 ## 四、文档记录类 (ZY-DOC)
 
