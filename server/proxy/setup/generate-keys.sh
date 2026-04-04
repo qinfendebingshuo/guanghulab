@@ -18,6 +18,11 @@
 set -uo pipefail
 # 注意: 不使用 set -e，手动处理错误以确保密钥生成的健壮性
 
+# 清理临时文件
+_TMPFILES=()
+cleanup_tmp() { for f in "${_TMPFILES[@]}"; do rm -f "$f" 2>/dev/null; done; }
+trap cleanup_tmp EXIT
+
 # 工具函数: 将二进制数据转为base64url编码
 to_base64url() {
     base64 | tr '+/' '-_' | tr -d '='
@@ -46,6 +51,7 @@ if command -v xray &>/dev/null; then
 
     # 捕获stdout和stderr分别处理
     KEYS_STDERR_FILE=$(mktemp)
+    _TMPFILES+=("$KEYS_STDERR_FILE")
     KEYS_OUTPUT=$(xray x25519 2>"$KEYS_STDERR_FILE") || true
     KEYS_STDERR=$(cat "$KEYS_STDERR_FILE" 2>/dev/null) || true
     rm -f "$KEYS_STDERR_FILE"
@@ -117,13 +123,24 @@ fi
 if [ -z "$PRIVATE_KEY" ]; then
     echo "  ⚠️ 所有X25519生成方法均失败，使用随机占位密钥"
     echo "  ⚠️ 请在服务器上手动运行: xray x25519"
+    echo "  ⚠️ Reality公钥为占位符，VPN不可用直到手动替换"
     PRIVATE_KEY=$(openssl rand 32 | to_base64url | head -c 43)
     PUBLIC_KEY="PLACEHOLDER_REGENERATE_WITH_XRAY_X25519"
     HAS_ERROR=1
 fi
 
+echo ""
 echo "ZY_PROXY_REALITY_PRIVATE_KEY=$PRIVATE_KEY"
-echo "ZY_PROXY_REALITY_PUBLIC_KEY=$PUBLIC_KEY"
+if [ "$PUBLIC_KEY" = "PLACEHOLDER_REGENERATE_WITH_XRAY_X25519" ]; then
+    echo "ZY_PROXY_REALITY_PUBLIC_KEY=$PUBLIC_KEY"
+    echo ""
+    echo "❌ 公钥生成失败！请在服务器上手动执行以下步骤："
+    echo "   1. SSH到服务器: ssh root@your-server"
+    echo "   2. 运行: xray x25519"
+    echo "   3. 将输出的Public key添加到GitHub Secrets: ZY_PROXY_REALITY_PUBLIC_KEY"
+else
+    echo "ZY_PROXY_REALITY_PUBLIC_KEY=$PUBLIC_KEY"
+fi
 
 # ── 生成ShortId ──────────────────────────────
 SHORT_ID=$(openssl rand -hex 8 || head -c 8 /dev/urandom | xxd -p)
