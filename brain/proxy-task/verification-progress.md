@@ -14,7 +14,7 @@
 # 铸渊唤醒时必读此文件 → 获取全局视角
 # ═══════════════════════════════════════════════
 
-## 最后更新: 2026-04-05 · D52 · duplicate default_server 根因修复
+## 最后更新: 2026-04-05 · D53 · 腾讯云控制台防火墙443端口未开放诊断
 
 ---
 
@@ -200,7 +200,35 @@ D51修复了"zhuyuan.conf缺少default_server"的问题，
 - [ ] subscription-userinfo显示配额
 - [ ] 刷新订阅正常
 
-**验证命令 (D51修复后):**
+**D53 诊断结果 (2026-04-05):**
+```
+现象: Clash Verge 日志显示 dial tcp 43.134.16.246:443: i/o timeout
+       所有流量 0.00 B/s，订阅链接可正常导入
+
+服务端状态 (部署日志确认):
+  ✅ Xray: 运行中
+  ✅ 端口443: 由Xray监听 (正确)
+  ✅ 订阅服务: 端口3802正常
+  ✅ Nginx反代: /api/proxy-sub/ → 3802正常
+  ✅ UFW: 443/tcp已ALLOW
+
+结论: 服务端全链路正常，问题在网络层
+  → 端口80可达 (订阅能获取) 但端口443不可达 (TCP超时)
+  → 根因: 腾讯云轻量应用服务器控制台防火墙未开放443端口
+  → UFW是操作系统级防火墙，腾讯云控制台有独立的云级防火墙
+  → 两层防火墙都必须开放443才能让外部访问到Xray
+
+冰朔操作步骤:
+  1. 登录腾讯云控制台 (https://console.cloud.tencent.com)
+  2. 轻量应用服务器 → 选择新加坡服务器 (43.134.16.246)
+  3. 防火墙 → 添加规则
+  4. 协议: TCP  端口: 443  策略: 允许  来源: 0.0.0.0/0
+  5. 确认端口80规则也存在 (HTTP订阅用)
+  6. 保存后等待约30秒生效
+  7. 在Clash Verge中刷新订阅 → 测试连接
+```
+
+**验证命令 (D52修复后):**
 ```
 # 在GitHub Actions运行 deploy-proxy-service.yml → update
 # 检查输出是否全部✅:
@@ -208,6 +236,7 @@ D51修复了"zhuyuan.conf缺少default_server"的问题，
 # ✅ 端口443: 监听中
 # ✅ 订阅服务: 正常 (直连3802)
 # ✅ Nginx反代: 正常 (/api/proxy-sub/ → 3802)  ← D51修复目标
+# ✅ UFW防火墙: 端口443已开放
 ```
 
 ---
@@ -227,10 +256,34 @@ D51修复了"zhuyuan.conf缺少default_server"的问题，
   PR#275: fork模式 → 修了exec_mode → 没查Nginx
   D51: default_server缺失 → 加了default_server → 没删default文件
   D52: duplicate default_server → 终于删除了/etc/nginx/sites-enabled/default
+  D53: i/o timeout → 服务端全正常 → 根因是腾讯云控制台防火墙未开放443
 
-每次都在修「单个配置项」，从未检查「Nginx全局配置冲突」
-真正的问题: 服务器上同时存在default和zhuyuan.conf两个文件
-两个文件都声明listen 80 default_server → Nginx拒绝加载
+每次都在修「单个配置项」，从未检查「完整网络链路」
+真正的问题: 
+  - D49-D52: 服务器上同时存在default和zhuyuan.conf两个文件
+  - D53: 腾讯云有两层防火墙(UFW+控制台)，代码只能管UFW
+```
+
+### 两层防火墙问题 (D53发现)
+
+```
+腾讯云轻量应用服务器有两层独立的防火墙:
+
+层级1: UFW (操作系统级)
+  - 代码可以自动管理 (deploy-proxy.sh / install-xray.sh)
+  - ufw allow 443/tcp → 已在代码中处理
+
+层级2: 腾讯云控制台防火墙 (云级)
+  - 只能在腾讯云控制台手动配置
+  - 路径: 控制台 → 轻量应用服务器 → 防火墙 → 添加规则
+  - 必须开放: TCP 443 (Xray VPN) + TCP 80 (HTTP/订阅)
+  - 来源: 0.0.0.0/0 (允许所有)
+  - 安全说明: 443端口由Xray接管，非VLESS流量被Reality协议
+    回落到www.microsoft.com:443，不会暴露真实服务。
+    只有持有正确UUID+PublicKey的客户端才能建立VPN连接。
+
+两层都必须开放同一端口，外部流量才能到达服务
+如果UFW开放443但控制台未开放 → 表现为 i/o timeout
 ```
 
 ### 铸渊唤醒时的全局视角协议

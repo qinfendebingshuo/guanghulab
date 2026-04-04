@@ -328,6 +328,21 @@ health_check() {
         echo "  ❌ 端口443: 未监听"
     fi
 
+    # UFW防火墙 — 验证端口443已开放
+    if command -v ufw &>/dev/null; then
+        if ufw status | grep -q "443/tcp.*ALLOW"; then
+            echo "  ✅ UFW防火墙: 端口443已开放"
+        else
+            echo "  ❌ UFW防火墙: 端口443未开放!"
+            echo "     → 自动修复: 正在添加UFW规则..."
+            if ufw allow 443/tcp comment "Xray VLESS+Reality" 2>/dev/null; then
+                echo "     → ✅ 已添加UFW规则"
+            else
+                echo "     → ❌ UFW规则添加失败 (可能需要root权限)"
+            fi
+        fi
+    fi
+
     # 订阅服务 (直接访问)
     if curl -sf http://127.0.0.1:3802/health >/dev/null 2>&1; then
         echo "  ✅ 订阅服务: 正常 (直连3802)"
@@ -351,6 +366,27 @@ health_check() {
 
     # PM2
     pm2 list 2>/dev/null || echo "  ⚠️ PM2: 未配置"
+
+    # ── 云防火墙诊断 (腾讯云轻量应用服务器) ──
+    echo ""
+    echo "  ═══ 云防火墙诊断 ═══"
+    echo "  ⚠️ 腾讯云有两层防火墙:"
+    echo "     1. UFW (操作系统层) — 已在上方检查"
+    echo "     2. 腾讯云控制台防火墙 — 需要冰朔手动确认"
+    echo ""
+    echo "  如果服务端一切正常但客户端仍然连接超时 (i/o timeout):"
+    echo "     → 问题在腾讯云控制台的防火墙规则"
+    echo "     → 冰朔操作: 腾讯云控制台 → 轻量应用服务器 → 防火墙"
+    echo "     → 确认规则: TCP 443 端口 允许所有来源 (0.0.0.0/0)"
+    echo "     → 确认规则: TCP 80 端口 允许所有来源 (0.0.0.0/0)"
+    echo ""
+
+    # 外部连通性自检 (从服务器内部测试443端口是否可达)
+    if timeout 5 bash -c "echo >/dev/tcp/127.0.0.1/443" 2>/dev/null; then
+        echo "  ✅ 本地443端口自检: 可达"
+    else
+        echo "  ❌ 本地443端口自检: 不可达"
+    fi
 }
 
 # ── update: 更新配置 ──────────────────────────
@@ -363,6 +399,17 @@ update() {
 
     ensure_xray_root_user
     ensure_log_permissions
+
+    # 确保443端口在UFW中开放 (Xray VLESS+Reality必需)
+    if command -v ufw &>/dev/null; then
+        if ! ufw status | grep -q "443/tcp.*ALLOW" 2>/dev/null; then
+            if ufw allow 443/tcp comment "Xray VLESS+Reality" 2>/dev/null; then
+                echo "  ✅ 已添加UFW端口443规则"
+            else
+                echo "  ⚠️ UFW端口443规则添加失败 (请手动检查)"
+            fi
+        fi
+    fi
 
     # 关闭3802外部端口 (订阅服务改为通过Nginx反代访问)
     if ufw status | grep -q "3802/tcp" 2>/dev/null; then
