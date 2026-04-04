@@ -254,12 +254,14 @@ configure_nginx() {
 
     # 确保主服务器块是default_server (修复localhost/127.0.0.1健康检查匹配问题)
     if ! grep -q "default_server" "$NGINX_CONF" 2>/dev/null; then
-        sed -i '0,/listen 80;/{s/listen 80;/listen 80 default_server;/}' "$NGINX_CONF" || true
+        # 匹配 "listen 80;" 并添加 default_server（兼容不同空白格式）
+        sed -i '0,/listen[[:space:]]\+80[[:space:]]*;/{s/listen[[:space:]]\+80[[:space:]]*;/listen 80 default_server;/}' "$NGINX_CONF" || true
         echo "  ✅ 已设置为默认服务器 (default_server)"
     fi
 
     # 确保server_name包含localhost (使内部健康检查可匹配)
-    if ! grep -q "localhost" "$NGINX_CONF" 2>/dev/null; then
+    # 先检查server_name行中是否已有localhost，避免重复添加
+    if ! grep "server_name" "$NGINX_CONF" | head -1 | grep -q "localhost" 2>/dev/null; then
         sed -i '0,/server_name /{s/server_name /server_name localhost 127.0.0.1 /}' "$NGINX_CONF" || true
         echo "  ✅ 已添加localhost到server_name"
     fi
@@ -330,7 +332,7 @@ health_check() {
     # 使用ZY_SERVER_HOST作为Host头，确保Nginx server_name匹配
     HEALTH_HOST="${ZY_SERVER_HOST:-}"
     if [ -z "$HEALTH_HOST" ] && [ -f "$PROXY_DIR/.env.keys" ]; then
-        HEALTH_HOST=$(grep "^ZY_SERVER_HOST=" "$PROXY_DIR/.env.keys" 2>/dev/null | cut -d= -f2-)
+        HEALTH_HOST=$(grep "^ZY_SERVER_HOST=" "$PROXY_DIR/.env.keys" 2>/dev/null | sed 's/^ZY_SERVER_HOST=//;s/#.*//;s/^[[:space:]]*//;s/[[:space:]]*$//')
     fi
     if curl -sf -H "Host: ${HEALTH_HOST:-localhost}" http://127.0.0.1/api/proxy-sub/health >/dev/null 2>&1; then
         echo "  ✅ Nginx反代: 正常 (/api/proxy-sub/ → 3802)"
