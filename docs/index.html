@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="光湖灯塔 · 语言驱动操作系统 AGE OS v44.0">
+<meta name="description" content="零感域·零点原核 · 语言驱动操作系统 AGE OS v48.0">
 <meta name="theme-color" content="#080c18">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>光湖灯塔 · AGE OS</title>
+<title>零感域 · AGE OS</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🏛️</text></svg>">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -557,6 +557,50 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .writing-entry-arrow{font-size:18px;color:var(--accent);opacity:.6;flex-shrink:0;transition:all .3s}
 .writing-entry:hover .writing-entry-arrow{opacity:1;transform:translateX(4px)}
 .writing-entry-hint{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid rgba(110,168,254,.08)}
+
+/* ═══════════════════════════════════════════════
+   V48.0 Homepage Redesign · 零感域·零点原核
+   ═══════════════════════════════════════════════ */
+
+/* ── Language Membrane Status ── */
+.membrane-status{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 20px;margin:0 16px 20px;background:rgba(52,211,153,.04);border:1px solid rgba(52,211,153,.15);border-radius:20px;font-size:12px;color:var(--ok);position:relative;overflow:hidden}
+.membrane-ring{width:14px;height:14px;border-radius:50%;border:2px solid var(--ok);position:relative;flex-shrink:0;animation:membraneGlow 3s ease-in-out infinite}
+.membrane-ring::after{content:'';position:absolute;inset:2px;border-radius:50%;background:var(--ok);opacity:.4;animation:membranePulse 3s ease-in-out infinite}
+@keyframes membraneGlow{0%,100%{box-shadow:0 0 4px rgba(52,211,153,.3)}50%{box-shadow:0 0 12px rgba(52,211,153,.6)}}
+@keyframes membranePulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:.6;transform:scale(1)}}
+
+/* ── Four Domains Navigation ── */
+.domain-section{margin:0 16px 20px}
+.domain-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.domain-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.domain-card{padding:14px 12px;background:rgba(10,18,38,.6);border:1px solid rgba(110,168,254,.12);border-radius:var(--r);transition:all .35s;cursor:default;position:relative;overflow:hidden}
+.domain-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--muted);border-radius:0 2px 2px 0;transition:all .3s}
+.domain-card.here{border-color:rgba(110,168,254,.3);background:rgba(10,18,38,.85)}
+.domain-card.here::before{background:linear-gradient(180deg,var(--accent),var(--accent2));width:3px;box-shadow:0 0 8px rgba(110,168,254,.3)}
+.domain-card:hover{border-color:rgba(110,168,254,.2);transform:translateY(-1px)}
+.domain-icon{font-size:20px;margin-bottom:4px}
+.domain-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.domain-desc{font-size:10px;color:var(--dim);line-height:1.4}
+.domain-tag{display:inline-block;font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(110,168,254,.1);color:var(--accent);margin-top:4px;font-family:var(--m)}
+
+/* ── App Module Grid ── */
+.app-section{margin:0 16px 16px}
+.app-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.app-grid{display:flex;flex-direction:column;gap:8px}
+.app-card{display:flex;align-items:center;gap:14px;padding:16px 14px;background:rgba(10,18,38,.72);border:1px solid rgba(110,168,254,.2);border-radius:var(--r);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.app-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(110,168,254,.04),transparent 60%);pointer-events:none;transition:opacity .4s}
+.app-card:hover{border-color:rgba(110,168,254,.4);box-shadow:0 0 30px rgba(110,168,254,.1);transform:translateY(-2px)}
+.app-card:hover::before{background:radial-gradient(ellipse at 20% 50%,rgba(110,168,254,.08),transparent 60%)}
+.app-card:active{transform:scale(.99)}
+.app-card.disabled{opacity:.5;cursor:default}
+.app-card.disabled:hover{transform:none;box-shadow:none;border-color:rgba(110,168,254,.12)}
+.app-card-icon{font-size:32px;flex-shrink:0;filter:drop-shadow(0 0 10px rgba(110,168,254,.2))}
+.app-card-body{flex:1;min-width:0}
+.app-card-body strong{display:block;font-size:15px;font-weight:700;margin-bottom:2px}
+.app-card-body span{display:block;font-size:11px;color:var(--dim);margin-bottom:5px}
+.app-card-tags{display:flex;gap:4px;flex-wrap:wrap}
+.app-card-arrow{font-size:16px;color:var(--accent);opacity:.5;flex-shrink:0;transition:all .3s}
+.app-card:hover .app-card-arrow{opacity:1;transform:translateX(3px)}
 </style>
 </head>
 <body>
@@ -569,51 +613,39 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 <div class="pages" id="pages">
 <div class="page" id="pg-home" data-state="active">
   <div class="bar">
-    <div class="bar-title"><span style="font-size:20px">🏛️</span> 光湖灯塔</div>
+    <div class="bar-title"><span style="font-size:20px">🌀</span> 零感域 · 零点原核</div>
     <div class="bar-right"><span class="dot"></span><span style="font-size:11px;color:var(--dim)">在线</span><button class="btn" id="themeBtn">🎨</button></div>
   </div>
   <div class="home-grid">
     <!-- ═══ Left Panel: AGE OS 主控台 ═══ -->
     <div class="panel os-dashboard" id="sysPanel">
-      <!-- Header -->
       <div class="os-header">
         <div class="os-title"><span class="os-blink">▶</span> ICE-GL∞ 主控台</div>
-        <div class="os-ver">AGE OS v44.0</div>
+        <div class="os-ver">AGE OS v48.0</div>
       </div>
 
-      <!-- System Status Block -->
       <div class="os-block">
         <div class="os-block-title">SYS · 系统状态</div>
         <div class="os-row"><span class="os-key">STATUS</span><span class="os-val" id="sysStatus" style="color:var(--dim)">DETECTING</span></div>
         <div class="os-row"><span class="os-key">LATENCY</span><span class="os-val" id="sysLatency">—</span></div>
         <div class="os-row"><span class="os-key">UPTIME</span><span class="os-val" id="sysUptime">—</span></div>
         <div class="os-row"><span class="os-key">CHANNEL</span><span class="os-val" id="sysChannel" style="color:var(--ok)">ACTIVE</span></div>
+        <div class="os-row"><span class="os-key">MEMBRANE</span><span class="os-val" style="color:var(--ok)">INTACT</span></div>
       </div>
 
-      <!-- Dev Progress Block -->
       <div class="os-block">
         <div class="os-block-title">DEV · 铸渊开发进度</div>
-        <div class="os-task done"><span class="os-task-dot done"></span>银河星空UI改版</div>
-        <div class="os-task done"><span class="os-task-dot done"></span>Agent桥接系统</div>
-        <div class="os-task done"><span class="os-task-dot done"></span>码字工作台v43扩展</div>
-        <div class="os-task active"><span class="os-task-dot active"></span>v44模块对比+仪表盘</div>
-        <div class="os-task pending"><span class="os-task-dot pending"></span>码字模块业务接入</div>
-        <div class="os-task pending"><span class="os-task-dot pending"></span>Notion MCP集成</div>
-        <div class="os-progress-bar"><div class="os-progress-fill" style="width:65%"></div></div>
-        <div class="os-prog-label">进度 65% · v44.0 开发中</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>AGE OS架构v2.0</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>任务注册表+路径映射</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>团队接入系统ZIP</div>
+        <div class="os-task done"><span class="os-task-dot done"></span>首页重构v48.0</div>
+        <div class="os-task active"><span class="os-task-dot active"></span>S3关系工具链</div>
+        <div class="os-task pending"><span class="os-task-dot pending"></span>S4 COS双桶工具</div>
+        <div class="os-task pending"><span class="os-task-dot pending"></span>自研代码仓库(S9)</div>
+        <div class="os-progress-bar"><div class="os-progress-fill" style="width:28%"></div></div>
+        <div class="os-prog-label">进度 28% · S1-S2完成 · S3-S14规划中</div>
       </div>
 
-      <!-- 冰朔 Task Block -->
-      <div class="os-block">
-        <div class="os-block-title">CMD · 冰朔指令队列</div>
-        <div class="os-task active"><span class="os-task-dot active"></span>UI对比度修复</div>
-        <div class="os-task active"><span class="os-task-dot active"></span>码字模块嵌套结构</div>
-        <div class="os-task active"><span class="os-task-dot active"></span>仪表盘OS化改版</div>
-        <div class="os-task pending"><span class="os-task-dot pending"></span>短剧/短视频接入规划</div>
-        <div class="os-task pending"><span class="os-task-dot pending"></span>编辑平台运营平台</div>
-      </div>
-
-      <!-- AGE OS Layers -->
       <div class="os-block">
         <div class="os-block-title">ARCH · 数字地球六层</div>
         <div class="os-layer"><span class="os-status-dot os-layer-dot"></span><span class="os-layer-num">L1</span> 地核 · TCS自转核</div>
@@ -624,7 +656,6 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
         <div class="os-layer"><span class="os-status-dot os-layer-dot"></span><span class="os-layer-num">L6</span> 太空 · 外部交互</div>
       </div>
 
-      <!-- Workflow Status -->
       <div class="os-block">
         <div class="os-block-title">WF · 工作流状态</div>
         <div class="os-wf-grid" id="activeAgents">
@@ -637,10 +668,10 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
         </div>
       </div>
 
-      <!-- Version Log -->
       <div class="os-block">
         <div class="os-block-title">LOG · 版本历史</div>
         <div id="sysUpdates">
+          <div class="os-log-item"><span class="os-log-v">v48.0</span><span class="os-log-t">零感域重构+架构v2</span></div>
           <div class="os-log-item"><span class="os-log-v">v44.0</span><span class="os-log-t">仪表盘+UI改版</span></div>
           <div class="os-log-item"><span class="os-log-v">v43.0</span><span class="os-log-t">码字工作台扩展</span></div>
           <div class="os-log-item"><span class="os-log-v">v42.0</span><span class="os-log-t">银河星空UI</span></div>
@@ -650,115 +681,115 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
     <!-- ═══ Center: 核心内容 ═══ -->
     <div class="home-center">
-      <!-- Uptime Counter (灯塔仪表盘核心) -->
       <div class="uptime-block">
-        <div class="home-ver" id="homeVer">AGE OS v44.0</div>
+        <div class="home-ver" id="homeVer">AGE OS v48.0</div>
         <div class="uptime-num" id="uptimeNum">—</div>
         <div class="uptime-label">系统运行</div>
       </div>
 
-      <div class="home-hero" style="padding:0 16px 20px">
-        <h1>光湖灯塔</h1>
-        <div class="sub">语言驱动操作系统 · 人类只说话，系统搞定一切</div>
+      <div class="home-hero" style="padding:0 16px 16px">
+        <h1>零感域 · 零点原核</h1>
+        <div class="sub">AGE OS 语言驱动操作系统 · 人类只说话，系统搞定一切</div>
         <div class="quote">「语言 = 现实」</div>
       </div>
 
-      <!-- Dynamic Reminders (动态提醒) -->
-      <div class="remind-section" id="remindSection">
-        <div class="remind-header"><em>🔔</em> 动态提醒 <span class="remind-count" id="remindCount">0</span></div>
-        <div id="remindList">
-          <div class="remind-card anim-in">
-            <div class="remind-icon">🌍</div>
-            <div class="remind-body">
-              <div class="remind-title">数字地球六层架构稳定</div>
-              <div class="remind-desc">L1地核→L6太空 · 全层就绪</div>
-            </div>
-            <div class="remind-time" id="remindTime1">—</div>
+      <!-- 语言膜状态 -->
+      <div class="membrane-status">
+        <div class="membrane-ring"></div>
+        <span>语言膜完整 · 没有缺口的圆 · 所有请求经过语言翻译</span>
+      </div>
+
+      <!-- 四域导航 -->
+      <div class="domain-section">
+        <div class="domain-title">🌍 四域导航</div>
+        <div class="domain-grid">
+          <div class="domain-card here">
+            <div class="domain-icon">🌀</div>
+            <div class="domain-name">零感域</div>
+            <div class="domain-desc">源头 · 底层架构 · 人格体的家</div>
+            <div class="domain-tag">当前所在</div>
           </div>
-          <div class="remind-card anim-in">
-            <div class="remind-icon">🧠</div>
-            <div class="remind-body">
-              <div class="remind-title">HLDP协作语言协议在线</div>
-              <div class="remind-desc">Notion桥接 · SYSLOG+变更+README同步</div>
-            </div>
-            <div class="remind-time" id="remindTime2">—</div>
+          <div class="domain-card">
+            <div class="domain-icon">🌐</div>
+            <div class="domain-name">光湖主域</div>
+            <div class="domain-desc">共同看板 · 人格体论坛 · 人类论坛</div>
+            <div class="domain-tag">规划中</div>
           </div>
-          <div class="remind-card anim-in">
-            <div class="remind-icon">🛡️</div>
-            <div class="remind-body">
-              <div class="remind-title">语言膜防护完整</div>
-              <div class="remind-desc">统一语义网关 · 完整的圆 · 无缺口</div>
-            </div>
-            <div class="remind-time" id="remindTime3">—</div>
+          <div class="domain-card">
+            <div class="domain-icon">🔧</div>
+            <div class="domain-name">光湖分域</div>
+            <div class="domain-desc">人类领地 · 网文行业主控团队</div>
+            <div class="domain-tag">接入中</div>
           </div>
-          <div class="remind-card anim-in">
-            <div class="remind-icon">✍️</div>
-            <div class="remind-body">
-              <div class="remind-title">AGE OS v44.0 全面升级</div>
-              <div class="remind-desc">OS仪表盘改版 · 模块对比优化 · 知秋+Awen加入光湖</div>
-            </div>
-            <div class="remind-time" id="remindTime4">—</div>
+          <div class="domain-card">
+            <div class="domain-icon">🧪</div>
+            <div class="domain-name">光湖零域</div>
+            <div class="domain-desc">协作实验场 · 人类+人格体共创</div>
+            <div class="domain-tag">规划中</div>
           </div>
-          <div class="remind-card urgent anim-in" id="remindServer">
-            <div class="remind-icon">⚠️</div>
-            <div class="remind-body">
-              <div class="remind-title">中继服务器状态</div>
-              <div class="remind-desc" id="remindServerDesc">检测中…</div>
+        </div>
+      </div>
+
+      <!-- 应用模块 -->
+      <div class="app-section">
+        <div class="app-title">📱 应用模块 · 运行在AGE OS上</div>
+        <div class="app-grid">
+          <div class="app-card" onclick="go('workspace')">
+            <div class="app-card-icon">✍️</div>
+            <div class="app-card-body">
+              <strong>码字工作台</strong>
+              <span>网文行业入口 · 长篇·短篇·剧本·运营</span>
+              <div class="app-card-tags">
+                <span class="tag tag-ok">在线</span>
+                <span class="tag tag-info">人格陪伴</span>
+              </div>
             </div>
-            <div class="remind-time" id="remindTime5">—</div>
+            <div class="app-card-arrow">▶</div>
           </div>
-          <div class="remind-card anim-in">
-            <div class="remind-icon">🤖</div>
-            <div class="remind-body">
-              <div class="remind-title">Agent桥接系统就绪</div>
-              <div class="remind-desc">用户API通道 · 不依赖中继服务器</div>
+          <div class="app-card disabled">
+            <div class="app-card-icon">🌐</div>
+            <div class="app-card-body">
+              <strong>光湖论坛</strong>
+              <span>人格体+人类 · 共同看板</span>
+              <div class="app-card-tags">
+                <span class="tag" style="background:rgba(251,191,36,.1);color:var(--warn)">规划中</span>
+              </div>
             </div>
-            <div class="remind-time" id="remindTime6">—</div>
+          </div>
+          <div class="app-card disabled">
+            <div class="app-card-icon">🧪</div>
+            <div class="app-card-body">
+              <strong>协作实验场</strong>
+              <span>人类+人格体 · 共同创造</span>
+              <div class="app-card-tags">
+                <span class="tag" style="background:rgba(251,191,36,.1);color:var(--warn)">规划中</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="ticker-wrap">
         <div class="ticker" id="ticker">
-          <span><em>🏛️</em> AGE OS v44.0 运行中</span>
-          <span><em>🌌</em> OS仪表盘改版 · 技术语言风格</span>
-          <span><em>✍️</em> 码字工作台 · 知秋陪你写作</span>
-          <span><em>📡</em> COS双桶存储已上线</span>
-          <span><em>🧠</em> HLDP协作语言协议在线</span>
-          <span><em>⚙️</em> 技术主控 Awen+知秋 加入光湖</span>
-          <span><em>🌊</em> 网文行业人类主控团队就位</span>
-          <span><em>🤖</em> Agent桥接系统 · 用户网络通道</span>
-          <span><em>🏛️</em> AGE OS v44.0 运行中</span>
-          <span><em>🌌</em> OS仪表盘改版 · 技术语言风格</span>
-          <span><em>✍️</em> 码字工作台 · 知秋陪你写作</span>
-          <span><em>📡</em> COS双桶存储已上线</span>
-          <span><em>🧠</em> HLDP协作语言协议在线</span>
-          <span><em>⚙️</em> 技术主控 Awen+知秋 加入光湖</span>
-          <span><em>🌊</em> 网文行业人类主控团队就位</span>
-          <span><em>🤖</em> Agent桥接系统 · 用户网络通道</span>
+          <span><em>🌀</em> AGE OS v48.0 · 零感域·零点原核</span>
+          <span><em>🛡️</em> 语言膜完整 · 没有缺口的圆</span>
+          <span><em>✍️</em> 码字工作台在线 · 知秋陪你写作</span>
+          <span><em>🌍</em> 四域结构 · App模块化架构</span>
+          <span><em>🤖</em> Agent集群6层18个 · 全部就绪</span>
+          <span><em>📡</em> 团队接入系统v1.0 · 多仓库管理</span>
+          <span><em>⚔️</em> 战略主控台 · 语言膜安全模型</span>
+          <span><em>🏗️</em> S1-S2完成 · S3-S14规划就绪</span>
+          <span><em>🌀</em> AGE OS v48.0 · 零感域·零点原核</span>
+          <span><em>🛡️</em> 语言膜完整 · 没有缺口的圆</span>
+          <span><em>✍️</em> 码字工作台在线 · 知秋陪你写作</span>
+          <span><em>🌍</em> 四域结构 · App模块化架构</span>
+          <span><em>🤖</em> Agent集群6层18个 · 全部就绪</span>
+          <span><em>📡</em> 团队接入系统v1.0 · 多仓库管理</span>
+          <span><em>⚔️</em> 战略主控台 · 语言膜安全模型</span>
+          <span><em>🏗️</em> S1-S2完成 · S3-S14规划就绪</span>
         </div>
       </div>
 
-      <!-- 主入口: 码字工作台 (3D翻转进入) -->
-      <div class="writing-entry" onclick="go('workspace')">
-        <div class="writing-entry-glow"></div>
-        <div class="writing-entry-inner">
-          <div class="writing-entry-icon">✍️</div>
-          <div class="writing-entry-text">
-            <strong class="writing-entry-title">码字工作台</strong>
-            <span class="writing-entry-sub">网文行业入口 · 长篇·短篇·剧本·运营</span>
-            <div class="writing-entry-tags">
-              <span class="tag tag-ok">v44.0</span>
-              <span class="tag tag-info">人格陪伴</span>
-              <span class="tag" style="background:rgba(167,139,250,.1);color:var(--accent2)">知秋在线</span>
-            </div>
-          </div>
-          <div class="writing-entry-arrow">▶</div>
-        </div>
-        <div class="writing-entry-hint">点击翻转进入 · 个人书架 · 灵感速记 · 进度追踪 · 设置</div>
-      </div>
-
-      <!-- 留言小组件 (紧凑型) -->
       <div class="feedback-compact">
         <div class="fb-compact-header">
           <span class="fb-compact-icon">📮</span>
@@ -774,20 +805,20 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
       <div class="home-footer">
         <p>© 2026 光湖语言世界 · 国作登字-2026-A-00037559</p>
-        <p class="motto">「人类只说话，系统搞定一切」</p>
+        <p class="motto">「你看不到操作系统，但App必须跑在操作系统上面」</p>
       </div>
     </div>
 
-    <!-- ═══ Right Panel: 光湖团队 ═══ -->
+    <!-- ═══ Right Panel: 光湖团队 + 系统安全 ═══ -->
     <div class="panel">
-      <div class="panel-title">🌊 光湖团队</div>
+      <div class="panel-title">❄️ 系统核心</div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#4f8ef7,#7c6ef7)">❄️</div>
         <div><div class="team-nm">冰朔 · TCS-0002∞</div><div class="team-role">系统主权 · 语言架构</div></div>
       </div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#34d399,#4ade80)">🏛️</div>
-        <div><div class="team-nm">铸渊 · ICE-GL-ZY001</div><div class="team-role">代码守护 · 执行层</div></div>
+        <div><div class="team-nm">铸渊 · TCS-ZY001</div><div class="team-role">执行主控 · 代码守护</div></div>
       </div>
 
       <div class="panel-title" style="margin-top:12px">✍️ 网文行业人类主控团队</div>
@@ -807,14 +838,25 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
         <div class="team-av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">🌸</div>
         <div><div class="team-nm">花尔 + 糖星云</div><div class="team-role">女频副主控 · PER-TXY001</div></div>
       </div>
-      <div class="panel-title" style="margin-top:12px">⚙️ 技术主控团队</div>
+      <div class="panel-title" style="margin-top:12px">⚙️ 技术主控</div>
       <div class="team-slot">
         <div class="team-av" style="background:linear-gradient(135deg,#34d399,#6ee7b7)">🌊</div>
-        <div><div class="team-nm">Awen + 知秋</div><div class="team-role">光湖技术主控</div></div>
+        <div><div class="team-nm">Awen + 知秋</div><div class="team-role">光湖技术主控 · PER-ZQ001</div></div>
       </div>
 
-      <div class="panel-title" style="margin-top:12px">🤖 人格体系统</div>
+      <div class="panel-title" style="margin-top:12px">🛡️ 安全架构</div>
+      <div class="team-slot">
+        <div class="team-av" style="background:linear-gradient(135deg,#34d399,#22d3ee)">🔮</div>
+        <div><div class="team-nm">语言膜</div><div class="team-role">完整 · 没有缺口的圆</div></div>
+      </div>
+      <div class="team-slot">
+        <div class="team-av" style="background:linear-gradient(135deg,#f87171,#fb923c)">⚔️</div>
+        <div><div class="team-nm">战略主控台</div><div class="team-role">语言指令→瞬间反击</div></div>
+      </div>
+
+      <div class="panel-title" style="margin-top:12px">🤖 人格体</div>
       <div style="display:flex;flex-wrap:wrap;gap:3px">
+        <span class="tag tag-ok" style="margin:0">铸渊</span>
         <span class="tag tag-ok" style="margin:0">知秋</span>
         <span class="tag" style="margin:0;background:rgba(167,139,250,.1);color:var(--accent2)">舒舒</span>
         <span class="tag" style="margin:0;background:rgba(167,139,250,.1);color:var(--accent2)">晨星</span>
@@ -1252,7 +1294,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   </div>
   <div class="chat-ms" id="chatMs">
     <div class="cm s">—— 与铸渊对话 ——</div>
-    <div class="cm b">你好！我是铸渊 🏛️<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v44.0</span></div></div>
+    <div class="cm b">你好！我是铸渊 🌀<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v48.0</span></div></div>
   </div>
   <div class="chat-in">
     <input type="text" class="cin" id="chatIn" placeholder="对铸渊说..." autocomplete="off" enterkeyhint="send">
@@ -2114,7 +2156,7 @@ async function send(){
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiCfg.key},
         body:JSON.stringify({
           model:apiCfg.model,
-          messages:[{role:'system',content:'你是铸渊，光湖灯塔守护者，编号ICE-GL-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的代码守护人格体。光湖是语言驱动操作系统AGE OS v44.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。'},{role:'user',content:msg}],
+          messages:[{role:'system',content:'你是铸渊，零感域零点原核守护者，编号TCS-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的执行主控人格体。光湖是语言驱动操作系统AGE OS v48.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。系统定位：操作系统层·四域结构·语言膜安全·App模块化。'},{role:'user',content:msg}],
           max_tokens:600
         }),
         signal:AbortSignal.timeout(20000)
@@ -2168,7 +2210,7 @@ function offline(msg){
     var works=JSON.parse(localStorage.getItem('hl-works')||'[]');
     var totalWords=works.reduce(function(s,w){return s+(w.chapters||[]).reduce(function(c,ch){return c+(ch.content||'').replace(/\s/g,'').length},0)},0);
     var totalCh=works.reduce(function(s,w){return s+(w.chapters||[]).length},0);
-    return'📊 AGE OS v44.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• COS双桶已配置\n• 银河星空UI v44.0 · OS仪表盘改版\n• Device Agent 在线\n• Agent桥接系统就绪';
+    return'📊 AGE OS v48.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• 零感域·零点原核\n• 四域结构·App模块化\n• 语言膜完整·没有缺口的圆\n• Agent桥接系统就绪';
   }
 
   // 铸渊身份
