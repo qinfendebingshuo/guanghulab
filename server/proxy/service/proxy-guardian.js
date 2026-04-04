@@ -24,7 +24,7 @@
 
 'use strict';
 
-const { execSync, exec } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -275,10 +275,11 @@ async function consultLLM(issue) {
 function sendAlertEmail(subject, body) {
   try {
     const sendScript = path.join(__dirname, 'send-subscription.js');
-    execSync(
-      `node "${sendScript}" alert "${subject}\n\n${body}"`,
-      { encoding: 'utf8', timeout: 30000 }
-    );
+    // 使用execFileSync避免Shell命令注入 (不经过shell解释器)
+    execFileSync('node', [sendScript, 'alert', `${subject}\n\n${body}`], {
+      encoding: 'utf8',
+      timeout: 30000
+    });
     console.log('[守护Agent] 告警邮件已发送');
   } catch (err) {
     console.error('[守护Agent] 邮件发送失败:', err.message);

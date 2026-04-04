@@ -91,6 +91,8 @@ jobs:
               "cd /opt/zhuyuan/proxy-deploy && \
                export ZY_SERVER_HOST='${{ secrets.ZY_SERVER_HOST }}' && \
                export ZY_CN_RELAY_HOST='${{ secrets.ZY_CN_SERVER_HOST }}' && \
+               export ZY_SMTP_USER='${{ secrets.ZY_SMTP_USER }}' && \
+               export ZY_SMTP_PASS='${{ secrets.ZY_SMTP_PASS }}' && \
                bash deploy-proxy.sh ${{ github.event.inputs.action }}"
 
       - name: '🧹 清理SSH密钥'

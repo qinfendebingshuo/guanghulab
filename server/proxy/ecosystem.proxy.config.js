@@ -28,7 +28,8 @@ module.exports = {
       instances: 1,
       env: {
         NODE_ENV: 'production',
-        ZY_PROXY_DATA_DIR: '/opt/zhuyuan/proxy/data'
+        ZY_PROXY_DATA_DIR: '/opt/zhuyuan/proxy/data',
+        ZY_PROXY_KEYS_FILE: '/opt/zhuyuan/proxy/.env.keys'
       },
       max_memory_restart: '64M',
       log_file: '/opt/zhuyuan/proxy/logs/monitor.log',
@@ -43,7 +44,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         ZY_PROXY_DATA_DIR: '/opt/zhuyuan/proxy/data',
-        ZY_PROXY_LOG_DIR: '/opt/zhuyuan/proxy/logs'
+        ZY_PROXY_LOG_DIR: '/opt/zhuyuan/proxy/logs',
+        ZY_PROXY_KEYS_FILE: '/opt/zhuyuan/proxy/.env.keys'
       },
       max_memory_restart: '128M',
       log_file: '/opt/zhuyuan/proxy/logs/guardian.log',

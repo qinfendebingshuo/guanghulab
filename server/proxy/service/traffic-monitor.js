@@ -15,7 +15,7 @@
 
 'use strict';
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -177,10 +177,11 @@ async function sendAlert(alert, quota) {
     const usedGB = ((quota.upload_bytes + quota.download_bytes) / (1024 ** 3)).toFixed(2);
     const totalGB = (quota.total_bytes / (1024 ** 3)).toFixed(0);
 
-    execSync(
-      `node "${sendScript}" alert "${alert.message} 已用 ${usedGB}GB / ${totalGB}GB"`,
-      { encoding: 'utf8', timeout: 30000 }
-    );
+    // 使用execFileSync避免Shell命令注入 (不经过shell解释器)
+    execFileSync('node', [sendScript, 'alert', `${alert.message} 已用 ${usedGB}GB / ${totalGB}GB`], {
+      encoding: 'utf8',
+      timeout: 30000
+    });
     console.log(`[流量监控] 告警邮件已发送: ${alert.level}`);
   } catch (err) {
     console.error('[流量监控] 告警邮件发送失败:', err.message);

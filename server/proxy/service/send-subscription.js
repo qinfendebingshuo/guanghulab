@@ -29,6 +29,8 @@ const path = require('path');
 const KEYS_FILE = process.env.ZY_PROXY_KEYS_FILE || '/opt/zhuyuan/proxy/.env.keys';
 
 // ── 加载配置 ─────────────────────────────────
+// 优先级: 环境变量 > .env.keys文件
+// 通用读取所有键值对，确保guardian/monitor等服务也能获取完整配置
 function loadConfig() {
   const config = {
     smtp_user: process.env.ZY_SMTP_USER || '',
@@ -37,13 +39,21 @@ function loadConfig() {
     sub_token: process.env.ZY_PROXY_SUB_TOKEN || ''
   };
 
-  // 尝试从本地密钥文件读取Token
+  // 从.env.keys文件读取所有键值对（环境变量未设置时回退）
   try {
     const content = fs.readFileSync(KEYS_FILE, 'utf8');
     for (const line of content.split('\n')) {
-      if (line.startsWith('ZY_PROXY_SUB_TOKEN=')) {
-        config.sub_token = line.split('=')[1].trim();
-      }
+      if (line.startsWith('#') || !line.includes('=')) continue;
+      const [key, ...vals] = line.split('=');
+      const k = key.trim();
+      const v = vals.join('=').trim();
+      if (!v) continue;
+
+      // 仅在环境变量未设置时使用文件中的值
+      if (k === 'ZY_PROXY_SUB_TOKEN' && !config.sub_token) config.sub_token = v;
+      if (k === 'ZY_SERVER_HOST' && !config.server_host) config.server_host = v;
+      if (k === 'ZY_SMTP_USER' && !config.smtp_user) config.smtp_user = v;
+      if (k === 'ZY_SMTP_PASS' && !config.smtp_pass) config.smtp_pass = v;
     }
   } catch { /* ignore */ }
 
