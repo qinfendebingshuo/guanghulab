@@ -25,6 +25,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const os = require('os');
 
 const PORT = process.env.ZY_PROXY_SUB_PORT || 3802;
 const DATA_DIR = process.env.ZY_PROXY_DATA_DIR || '/opt/zhuyuan/proxy/data';
@@ -467,6 +468,319 @@ function generateUserInfoHeader(quota) {
   return `upload=${quota.upload_bytes}; download=${quota.download_bytes}; total=${quota.total_bytes}; expire=${Math.floor(nextMonth.getTime() / 1000)}`;
 }
 
+// ── 生成sing-box客户端配置 (JSON) ────────────
+// 铸渊专线客户端专用格式，供Flutter/sing-box引擎使用
+function generateSingboxConfig(keys, serverHost) {
+  const cnRelayHost = getCnRelayHost();
+  const cnRelayPort = getCnRelayPort();
+
+  // 出站节点列表
+  const outbounds = [
+    {
+      tag: 'zy-sg-direct',
+      type: 'vless',
+      server: serverHost,
+      server_port: 443,
+      uuid: keys.ZY_PROXY_UUID,
+      flow: 'xtls-rprx-vision',
+      tls: {
+        enabled: true,
+        server_name: 'www.microsoft.com',
+        utls: { enabled: true, fingerprint: 'chrome' },
+        reality: {
+          enabled: true,
+          public_key: keys.ZY_PROXY_REALITY_PUBLIC_KEY,
+          short_id: keys.ZY_PROXY_REALITY_SHORT_ID
+        }
+      },
+      packet_encoding: 'xudp'
+    }
+  ];
+
+  // CN中转节点 (如果已配置)
+  if (cnRelayHost) {
+    outbounds.push({
+      tag: 'zy-cn-relay',
+      type: 'vless',
+      server: cnRelayHost,
+      server_port: cnRelayPort,
+      uuid: keys.ZY_PROXY_UUID,
+      flow: 'xtls-rprx-vision',
+      tls: {
+        enabled: true,
+        server_name: 'www.microsoft.com',
+        utls: { enabled: true, fingerprint: 'chrome' },
+        reality: {
+          enabled: true,
+          public_key: keys.ZY_PROXY_REALITY_PUBLIC_KEY,
+          short_id: keys.ZY_PROXY_REALITY_SHORT_ID
+        }
+      },
+      packet_encoding: 'xudp'
+    });
+  }
+
+  // 自动选择出站
+  const autoOutboundTags = ['zy-sg-direct'];
+  if (cnRelayHost) autoOutboundTags.push('zy-cn-relay');
+
+  outbounds.push(
+    {
+      tag: 'auto',
+      type: 'urltest',
+      outbounds: [...autoOutboundTags],
+      url: 'http://www.gstatic.com/generate_204',
+      interval: '5m',
+      tolerance: 50
+    },
+    {
+      tag: 'proxy',
+      type: 'selector',
+      outbounds: ['auto', ...autoOutboundTags, 'direct'],
+      default: 'auto'
+    },
+    {
+      tag: 'ai-services',
+      type: 'selector',
+      outbounds: [...autoOutboundTags],
+      default: autoOutboundTags[0]
+    },
+    {
+      tag: 'dev-tools',
+      type: 'selector',
+      outbounds: [...autoOutboundTags],
+      default: autoOutboundTags[0]
+    },
+    { tag: 'direct', type: 'direct' },
+    { tag: 'block', type: 'block' },
+    { tag: 'dns-out', type: 'dns' }
+  );
+
+  // DNS配置 (fake-ip模式)
+  const dns = {
+    servers: [
+      {
+        tag: 'remote-dns',
+        address: 'https://dns.google/dns-query',
+        address_resolver: 'local-dns',
+        detour: 'proxy'
+      },
+      {
+        tag: 'local-dns',
+        address: 'https://dns.alidns.com/dns-query',
+        detour: 'direct'
+      },
+      {
+        tag: 'fakeip-dns',
+        address: 'fakeip'
+      },
+      {
+        tag: 'block-dns',
+        address: 'rcode://success'
+      }
+    ],
+    rules: [
+      { outbound: 'any', server: 'local-dns' },
+      {
+        rule_set: 'geosite-cn',
+        server: 'local-dns'
+      },
+      {
+        query_type: ['A', 'AAAA'],
+        server: 'fakeip-dns'
+      }
+    ],
+    fakeip: {
+      enabled: true,
+      inet4_range: '198.18.0.0/15',
+      inet6_range: 'fc00::/18'
+    },
+    independent_cache: true
+  };
+
+  // 路由规则
+  const route = {
+    rule_set: [
+      {
+        tag: 'geosite-cn',
+        type: 'remote',
+        format: 'binary',
+        url: 'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs',
+        download_detour: 'proxy'
+      },
+      {
+        tag: 'geoip-cn',
+        type: 'remote',
+        format: 'binary',
+        url: 'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs',
+        download_detour: 'proxy'
+      }
+    ],
+    rules: [
+      { protocol: 'dns', outbound: 'dns-out' },
+      // AI服务走专用出站
+      {
+        domain_suffix: [
+          'openai.com', 'anthropic.com', 'claude.ai', 'chatgpt.com',
+          'bard.google.com', 'gemini.google.com', 'ai.google.dev',
+          'perplexity.ai', 'poe.com'
+        ],
+        outbound: 'ai-services'
+      },
+      // 开发工具走专用出站
+      {
+        domain_suffix: [
+          'github.com', 'githubusercontent.com', 'github.io', 'githubassets.com',
+          'copilot.microsoft.com', 'npmjs.com', 'npmjs.org',
+          'docker.com', 'docker.io', 'stackoverflow.com', 'stackexchange.com',
+          'vercel.app', 'netlify.app', 'pypi.org'
+        ],
+        outbound: 'dev-tools'
+      },
+      // 国内直连
+      { rule_set: 'geosite-cn', outbound: 'direct' },
+      { rule_set: 'geoip-cn', outbound: 'direct' },
+      { ip_is_private: true, outbound: 'direct' }
+    ],
+    auto_detect_interface: true,
+    final: 'proxy'
+  };
+
+  // 入站配置
+  const inbounds = [
+    {
+      tag: 'tun-in',
+      type: 'tun',
+      inet4_address: '172.19.0.1/30',
+      inet6_address: 'fdfe:dcba:9876::1/126',
+      auto_route: true,
+      strict_route: true,
+      stack: 'system',
+      sniff: true,
+      sniff_override_destination: true
+    },
+    {
+      tag: 'mixed-in',
+      type: 'mixed',
+      listen: '127.0.0.1',
+      listen_port: 7890,
+      sniff: true,
+      sniff_override_destination: true
+    }
+  ];
+
+  return {
+    log: { level: 'info', timestamp: true },
+    dns,
+    inbounds,
+    outbounds,
+    route,
+    experimental: {
+      cache_file: { enabled: true },
+      clash_api: {
+        external_controller: '127.0.0.1:9090',
+        secret: ''
+      }
+    },
+    _metadata: {
+      generator: 'zy-proxy-subscription',
+      version: '1.0.0',
+      generated_at: new Date().toISOString(),
+      copyright: '国作登字-2026-A-00037559'
+    }
+  };
+}
+
+// ── 构建节点信息列表 ─────────────────────────
+function buildNodeList(keys, serverHost) {
+  const cnRelayHost = getCnRelayHost();
+  const cnRelayPort = getCnRelayPort();
+
+  const nodes = [
+    {
+      id: 'zy-sg-direct',
+      name: '🏛️ 铸渊专线-SG直连',
+      region: 'sg',
+      region_name: 'Singapore',
+      server: serverHost,
+      port: 443,
+      protocol: 'vless',
+      security: 'reality',
+      flow: 'xtls-rprx-vision',
+      sni: 'www.microsoft.com',
+      fingerprint: 'chrome',
+      available: true,
+      priority: 1
+    }
+  ];
+
+  if (cnRelayHost) {
+    nodes.push({
+      id: 'zy-cn-relay',
+      name: '🇨🇳 铸渊专线-CN中转',
+      region: 'cn',
+      region_name: 'China (Relay)',
+      server: cnRelayHost,
+      port: cnRelayPort,
+      protocol: 'vless',
+      security: 'reality',
+      flow: 'xtls-rprx-vision',
+      sni: 'www.microsoft.com',
+      fingerprint: 'chrome',
+      available: true,
+      priority: 2
+    });
+  }
+
+  return nodes;
+}
+
+// ── 读取守护状态 ─────────────────────────────
+function readGuardianStatus() {
+  const guardianFile = path.join(DATA_DIR, 'guardian-status.json');
+  try {
+    return JSON.parse(fs.readFileSync(guardianFile, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+// ── 常见错误码中文翻译表 ─────────────────────
+const ERROR_TRANSLATIONS = {
+  'i/o timeout': {
+    zh: '服务器暂时无法连接',
+    suggestion: '请切换到CN中转节点，或检查本地网络'
+  },
+  'connection refused': {
+    zh: '服务器拒绝连接',
+    suggestion: '请检查服务器是否在运行，或稍后重试'
+  },
+  'TLS handshake': {
+    zh: '加密握手失败',
+    suggestion: '网络环境可能受限，请切换节点或尝试CN中转'
+  },
+  'context deadline exceeded': {
+    zh: '连接超时',
+    suggestion: '网络延迟过高，建议切换节点或检查本地网络'
+  },
+  'no route to host': {
+    zh: '无法到达服务器',
+    suggestion: '可能是网络中断或IP被封锁，请切换节点'
+  },
+  'connection reset': {
+    zh: '连接被重置',
+    suggestion: '可能被防火墙干扰，建议切换到CN中转节点'
+  },
+  'EOF': {
+    zh: '连接意外断开',
+    suggestion: '请检查网络稳定性或切换节点重试'
+  },
+  'certificate': {
+    zh: 'TLS证书验证失败',
+    suggestion: '请检查系统时间是否正确，或更新客户端'
+  }
+};
+
 // ── 检测客户端类型 ───────────────────────────
 function detectClientType(userAgent) {
   const ua = (userAgent || '').toLowerCase();
@@ -556,6 +870,250 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // ── 铸渊客户端API端点 ─────────────────────
+    // 以下端点需要token认证，供铸渊专线专属客户端使用
+
+    // 客户端配置端点: /client-config/{token}
+    // 返回sing-box JSON格式配置
+    const clientConfigMatch = pathname.match(/^\/client-config\/([a-f0-9]+)$/);
+    if (clientConfigMatch) {
+      const token = clientConfigMatch[1];
+      const keys = loadKeys();
+
+      if (token !== keys.ZY_PROXY_SUB_TOKEN) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: true, code: 'FORBIDDEN', message: '认证失败' }));
+        return;
+      }
+
+      const serverHost = getServerHost();
+      const config = generateSingboxConfig(keys, serverHost);
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(config, null, 2));
+      return;
+    }
+
+    // 节点列表端点: /nodes/{token}
+    // 返回所有可用节点的结构化信息
+    const nodesMatch = pathname.match(/^\/nodes\/([a-f0-9]+)$/);
+    if (nodesMatch) {
+      const token = nodesMatch[1];
+      const keys = loadKeys();
+
+      if (token !== keys.ZY_PROXY_SUB_TOKEN) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: true, code: 'FORBIDDEN', message: '认证失败' }));
+        return;
+      }
+
+      const serverHost = getServerHost();
+      const nodes = buildNodeList(keys, serverHost);
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        nodes,
+        total: nodes.length,
+        updated_at: new Date().toISOString()
+      }));
+      return;
+    }
+
+    // 服务状态端点: /status/{token}
+    // 返回服务器健康状态、节点列表、配额、守护状态
+    const statusMatch = pathname.match(/^\/status\/([a-f0-9]+)$/);
+    if (statusMatch) {
+      const token = statusMatch[1];
+      const keys = loadKeys();
+
+      if (token !== keys.ZY_PROXY_SUB_TOKEN) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: true, code: 'FORBIDDEN', message: '认证失败' }));
+        return;
+      }
+
+      const serverHost = getServerHost();
+      const quota = getQuotaInfo();
+      const guardian = readGuardianStatus();
+      const nodes = buildNodeList(keys, serverHost);
+
+      const totalGB = quota.total_bytes / (1024 ** 3);
+      const usedGB = (quota.upload_bytes + quota.download_bytes) / (1024 ** 3);
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        server: {
+          status: 'online',
+          version: '1.0.0',
+          uptime_seconds: Math.floor(process.uptime()),
+          region: 'sg',
+          region_name: 'Singapore'
+        },
+        nodes,
+        quota: {
+          total_gb: parseFloat(totalGB.toFixed(1)),
+          used_gb: parseFloat(usedGB.toFixed(1)),
+          remaining_gb: parseFloat((totalGB - usedGB).toFixed(1)),
+          percentage_used: parseFloat(((usedGB / totalGB) * 100).toFixed(1)),
+          period: quota.period,
+          reset_day: quota.reset_day,
+          upload_bytes: quota.upload_bytes,
+          download_bytes: quota.download_bytes
+        },
+        guardian: guardian ? {
+          status: guardian.status || 'unknown',
+          last_check: guardian.last_check,
+          consecutive_failures: guardian.consecutive_failures || 0,
+          auto_fixes: guardian.auto_fixes || 0,
+          last_issue: guardian.last_issue
+        } : { status: 'not_available' },
+        updated_at: new Date().toISOString()
+      }));
+      return;
+    }
+
+    // 测速端点信息: /speedtest/{token}
+    // 返回测速配置和端点
+    const speedtestMatch = pathname.match(/^\/speedtest\/([a-f0-9]+)$/);
+    if (speedtestMatch) {
+      const token = speedtestMatch[1];
+      const keys = loadKeys();
+
+      if (token !== keys.ZY_PROXY_SUB_TOKEN) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: true, code: 'FORBIDDEN', message: '认证失败' }));
+        return;
+      }
+
+      const serverHost = getServerHost();
+      const cnRelayHost = getCnRelayHost();
+      const cnRelayPort = getCnRelayPort();
+
+      const endpoints = [
+        {
+          id: 'zy-sg-direct',
+          name: '🏛️ SG直连',
+          test_url: `http://${serverHost}/api/proxy-sub/health`,
+          ping_host: serverHost,
+          ping_port: 443
+        }
+      ];
+
+      if (cnRelayHost) {
+        endpoints.push({
+          id: 'zy-cn-relay',
+          name: '🇨🇳 CN中转',
+          test_url: `http://${cnRelayHost}:${cnRelayPort}`,
+          ping_host: cnRelayHost,
+          ping_port: cnRelayPort
+        });
+      }
+
+      // 第三方测速URL (用于测试代理后的下载速度)
+      const download_test_urls = [
+        { url: 'http://www.gstatic.com/generate_204', purpose: 'latency', size: 'tiny' },
+        { url: 'https://speed.cloudflare.com/__down?bytes=1000000', purpose: 'download', size: '1MB' },
+        { url: 'https://speed.cloudflare.com/__down?bytes=10000000', purpose: 'download', size: '10MB' }
+      ];
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        endpoints,
+        download_test_urls,
+        recommended_interval_seconds: 300,
+        updated_at: new Date().toISOString()
+      }));
+      return;
+    }
+
+    // 诊断端点: /diagnostics/{token}
+    // 返回诊断辅助信息、错误翻译表、检查项
+    const diagMatch = pathname.match(/^\/diagnostics\/([a-f0-9]+)$/);
+    if (diagMatch) {
+      const token = diagMatch[1];
+      const keys = loadKeys();
+
+      if (token !== keys.ZY_PROXY_SUB_TOKEN) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: true, code: 'FORBIDDEN', message: '认证失败' }));
+        return;
+      }
+
+      const serverHost = getServerHost();
+      const guardian = readGuardianStatus();
+
+      // 客户端应执行的诊断检查列表
+      const client_checks = [
+        {
+          id: 'dns_resolution',
+          name: 'DNS解析检查',
+          description: '检查是否能解析服务器域名',
+          test_type: 'dns',
+          target: serverHost
+        },
+        {
+          id: 'tcp_connectivity',
+          name: 'TCP连接检查',
+          description: '检查443端口是否可达',
+          test_type: 'tcp',
+          target: serverHost,
+          port: 443,
+          timeout_ms: 5000
+        },
+        {
+          id: 'tls_handshake',
+          name: 'TLS握手检查',
+          description: '检查Reality TLS握手是否成功',
+          test_type: 'tls',
+          target: serverHost,
+          port: 443,
+          sni: 'www.microsoft.com',
+          timeout_ms: 10000
+        },
+        {
+          id: 'subscription_api',
+          name: '订阅服务检查',
+          description: '检查订阅API是否正常响应',
+          test_type: 'http',
+          url: `http://${serverHost}/api/proxy-sub/health`,
+          timeout_ms: 10000,
+          expected_status: 200
+        },
+        {
+          id: 'proxy_throughput',
+          name: '代理吞吐量检查',
+          description: '通过代理下载测试文件检测速度',
+          test_type: 'download',
+          url: 'https://speed.cloudflare.com/__down?bytes=1000000',
+          via_proxy: true,
+          timeout_ms: 30000
+        }
+      ];
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        error_translations: ERROR_TRANSLATIONS,
+        client_checks,
+        server_guardian: guardian ? {
+          status: guardian.status || 'unknown',
+          last_check: guardian.last_check,
+          last_issue: guardian.last_issue
+        } : { status: 'not_available' },
+        support: {
+          report_method: 'email',
+          admin_contact: 'zy-admin',
+          log_retention_hours: 24
+        },
+        client_version: {
+          minimum: '1.0.0',
+          recommended: '1.0.0',
+          config_format: 'sing-box-1.8+'
+        },
+        updated_at: new Date().toISOString()
+      }));
+      return;
+    }
+
     // 404
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
@@ -593,6 +1151,12 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`  订阅端点: /sub/{token}`);
   console.log(`  配额查询: /quota`);
   console.log(`  健康检查: /health`);
+  console.log(`  ── 铸渊客户端API ──`);
+  console.log(`  客户端配置: /client-config/{token} (sing-box JSON)`);
+  console.log(`  节点列表:   /nodes/{token}`);
+  console.log(`  服务状态:   /status/{token}`);
+  console.log(`  测速信息:   /speedtest/{token}`);
+  console.log(`  诊断信息:   /diagnostics/{token}`);
 });
 
 // Graceful shutdown
