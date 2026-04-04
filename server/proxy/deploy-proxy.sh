@@ -240,6 +240,13 @@ configure_nginx() {
 
     echo "  使用Nginx配置: $NGINX_CONF"
 
+    # 移除默认配置文件，避免 duplicate default_server 冲突
+    # zhuyuan.conf 已声明 default_server，不能与 default 文件共存
+    if [ "$NGINX_CONF" = "/etc/nginx/sites-enabled/zhuyuan.conf" ] && [ -e "/etc/nginx/sites-enabled/default" ]; then
+        rm -f /etc/nginx/sites-enabled/default
+        echo "  ✅ 已移除冲突的 default 配置 (避免 duplicate default_server)"
+    fi
+
     if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
         echo "  添加Nginx代理订阅反向代理配置..."
         # 在第一个 location = /health 之前插入 proxy-sub location
