@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="零感域 · 零点原核 · 语言驱动操作系统 AGE OS v49.0">
+<meta name="description" content="零感域 · 零点原核 · 语言驱动操作系统 AGE OS v50.0">
 <meta name="theme-color" content="#0a0a1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -122,19 +122,19 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 @keyframes heroFadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
 /* Hero Entry Cards */
-.hero-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:560px;width:100%;margin-bottom:40px}
+.hero-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:580px;width:100%;margin-bottom:40px}
 @media(max-width:520px){.hero-cards{grid-template-columns:1fr;max-width:320px}}
-.hero-card{position:relative;padding:36px 24px 28px;background:rgba(18,18,42,.55);border:1px solid rgba(100,100,200,.25);border-radius:var(--r);cursor:pointer;transition:transform .4s cubic-bezier(.4,0,.2,1),box-shadow .4s,border-color .4s;overflow:hidden;text-align:center;transform-style:preserve-3d;perspective:800px;animation:heroCardIn .6s ease-out both}
+.hero-card{position:relative;padding:40px 24px 30px;background:rgba(18,18,42,.55);border:1px solid rgba(100,100,200,.25);border-radius:var(--r);cursor:pointer;transition:transform .4s cubic-bezier(.4,0,.2,1),box-shadow .4s,border-color .4s;overflow:hidden;text-align:center;transform-style:preserve-3d;perspective:800px;animation:heroCardIn .6s ease-out both}
 .hero-card:nth-child(1){animation-delay:.35s}
 .hero-card:nth-child(2){animation-delay:.45s}
 @keyframes heroCardIn{from{opacity:0;transform:translateY(30px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 .hero-card-glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(138,180,248,.06),transparent 70%);opacity:0;transition:opacity .5s;pointer-events:none}
-.hero-card:hover{transform:translateY(-6px);border-color:rgba(138,180,248,.45);box-shadow:0 8px 40px rgba(138,180,248,.12),0 0 60px rgba(167,139,250,.06)}
+.hero-card:hover{transform:translateY(-6px);border-color:rgba(138,180,248,.5);box-shadow:0 12px 48px rgba(138,180,248,.15),0 0 80px rgba(167,139,250,.08)}
 .hero-card:hover .hero-card-glow{opacity:1}
 .hero-card:active{transform:translateY(-2px) scale(.98)}
-.hero-card-icon{font-size:48px;margin-bottom:14px;filter:drop-shadow(0 0 16px rgba(138,180,248,.3));transition:transform .4s}
-.hero-card:hover .hero-card-icon{transform:scale(1.08) translateY(-4px)}
-.hero-card-title{font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:.5px}
+.hero-card-icon{font-size:48px;margin-bottom:14px;filter:drop-shadow(0 0 18px rgba(138,180,248,.35));transition:transform .4s;min-height:56px;display:flex;align-items:center;justify-content:center}
+.hero-card:hover .hero-card-icon{transform:scale(1.06) translateY(-4px)}
+.hero-card-title{font-size:19px;font-weight:700;margin-bottom:6px;letter-spacing:.5px}
 .hero-card-desc{font-size:12px;color:var(--dim);margin-bottom:10px;line-height:1.5}
 .hero-card-tags{display:flex;justify-content:center;gap:6px}
 
@@ -190,11 +190,12 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .char-role{font-size:10px;color:var(--accent);font-weight:600}
 
 /* ═══ PAGE: Editor ═══ */
-#pg-editor>.content{background:rgba(8,10,24,.96);border-radius:0;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);max-width:var(--da-content-max, 800px);padding:20px 28px}
+#pg-editor{background:rgba(6,8,18,.99)}
+#pg-editor>.content{background:rgba(6,8,18,.99);border-radius:0;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);max-width:var(--da-content-max, 800px);padding:20px 28px}
 .editor-info{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:13px;color:var(--dim);border-bottom:1px solid rgba(100,100,200,.2);margin-bottom:16px}
-.editor-textarea{min-height:calc(100vh - 240px);min-height:calc(100dvh - 240px);resize:none;line-height:var(--da-ed-lh, 2);font-size:var(--da-ed-font, 17px);border:none;background:rgba(6,8,18,.98);padding:24px 20px;position:relative;z-index:3;border-radius:12px;color:var(--text);box-shadow:inset 0 2px 20px rgba(0,0,0,.3);transition:box-shadow .3s}
-.editor-textarea:focus{border:none;box-shadow:inset 0 2px 20px rgba(0,0,0,.3),0 0 20px rgba(110,168,254,.06)}
-.editor-bottom{position:sticky;bottom:0;padding:12px 0;background:rgba(8,10,24,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(100,100,200,.15);font-size:12px;color:var(--dim);z-index:5}
+.editor-textarea{min-height:calc(100vh - 240px);min-height:calc(100dvh - 240px);resize:none;line-height:var(--da-ed-lh, 2);font-size:var(--da-ed-font, 17px);border:none;background:rgba(4,6,14,.99);padding:24px 20px;position:relative;z-index:3;border-radius:12px;color:var(--text);box-shadow:inset 0 2px 20px rgba(0,0,0,.4);transition:box-shadow .3s}
+.editor-textarea:focus{border:none;box-shadow:inset 0 2px 20px rgba(0,0,0,.4),0 0 20px rgba(110,168,254,.06)}
+.editor-bottom{position:sticky;bottom:0;padding:12px 0;background:rgba(6,8,18,.99);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(100,100,200,.15);font-size:12px;color:var(--dim);z-index:5}
 .ed-bottom-info{display:flex;gap:12px;align-items:center;font-family:var(--f);font-size:11px;color:var(--dim)}
 /* ═══ Editor Toolbar ═══ */
 .ed-toolbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
@@ -205,7 +206,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 /* ═══ Focus Mode ═══ */
 .focus-mode .bar,.focus-mode .editor-info,.focus-mode .chat-fab,.focus-mode .mon{opacity:0;pointer-events:none;transition:opacity .4s}
 .focus-mode .editor-textarea{min-height:calc(100vh - 80px);min-height:calc(100dvh - 80px);font-size:18px;line-height:2.2;padding:32px 28px}
-.focus-mode .editor-bottom{background:rgba(8,10,24,.7);border:none}
+.focus-mode .editor-bottom{background:rgba(6,8,18,.95);border:none}
 .focus-mode .ed-toolbar{opacity:.3;transition:opacity .3s}
 .focus-mode .ed-toolbar:hover{opacity:1}
 .focus-mode:hover .bar{opacity:1;pointer-events:auto}
@@ -498,6 +499,77 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 /* ── Staggered Animation ── */
 @keyframes slideInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══ Glowing Book Icon (码字工作台·v50.0) ═══ */
+.book-icon-wrap{display:inline-block;width:56px;height:56px;position:relative;filter:drop-shadow(0 0 14px rgba(138,180,248,.35));animation:bookGlow 4s ease-in-out infinite}
+.book-icon-wrap svg{width:100%;height:100%}
+@keyframes bookGlow{0%,100%{filter:drop-shadow(0 0 14px rgba(138,180,248,.3)) drop-shadow(0 0 28px rgba(167,139,250,.15))}50%{filter:drop-shadow(0 0 24px rgba(138,180,248,.55)) drop-shadow(0 0 48px rgba(167,139,250,.25))}}
+.book-icon-wrap .book-sparkle{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:bookSparkle 3s ease-in-out infinite;pointer-events:none}
+.book-icon-wrap .book-sparkle:nth-child(2){top:6px;right:4px;animation-delay:.6s}
+.book-icon-wrap .book-sparkle:nth-child(3){top:16px;right:10px;animation-delay:1.2s;width:2px;height:2px}
+.book-icon-wrap .book-sparkle:nth-child(4){bottom:10px;left:6px;animation-delay:1.8s}
+@keyframes bookSparkle{0%,100%{opacity:0;transform:scale(0)}40%{opacity:1;transform:scale(1.2)}80%{opacity:0;transform:scale(0)}}
+
+/* ═══ System Panel v50.0 Redesign ═══ */
+.sys-hero{text-align:center;padding:40px 16px 24px;position:relative;overflow:hidden}
+.sys-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(138,180,248,.06),transparent 70%);pointer-events:none}
+.sys-hero h2{font-size:24px;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,#e0e0f0,#8ab4f8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sys-hero p{font-size:13px;color:var(--dim)}
+.sys-uptime-card{text-align:center;padding:32px 20px;margin:0 16px 20px;background:rgba(10,18,38,.88);border:1px solid rgba(138,180,248,.25);border-radius:var(--r);position:relative;overflow:hidden;transition:all .4s}
+.sys-uptime-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(138,180,248,.06),transparent 70%);pointer-events:none;animation:uptimeAura 8s ease-in-out infinite}
+@keyframes uptimeAura{0%,100%{opacity:.4}50%{opacity:1}}
+.sys-uptime-card:hover{border-color:rgba(138,180,248,.45);box-shadow:0 0 40px rgba(138,180,248,.12)}
+.sys-uptime-num{font-size:clamp(42px,10vw,64px);font-weight:800;font-family:var(--m);background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 50%,var(--accent3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;filter:drop-shadow(0 0 20px rgba(138,180,248,.3));animation:uptimePulse 6s ease-in-out infinite;letter-spacing:-1px}
+.sys-uptime-label{font-size:11px;color:var(--dim);margin-top:6px;letter-spacing:3px;text-transform:uppercase;font-family:var(--m)}
+.sys-uptime-sub{font-size:10px;color:var(--muted);margin-top:8px;font-style:italic}
+.sys-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px 20px}
+.sys-stat-card{padding:16px 14px;background:rgba(10,18,38,.82);border:1px solid rgba(100,100,200,.15);border-radius:var(--r);transition:all .4s;position:relative;overflow:hidden}
+.sys-stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;transition:all .3s}
+.sys-stat-card:hover{border-color:rgba(138,180,248,.3);transform:translateY(-2px);box-shadow:0 4px 20px rgba(138,180,248,.08)}
+.sys-stat-card .stat-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-family:var(--m);margin-bottom:4px}
+.sys-stat-card .stat-value{font-size:14px;font-weight:700;font-family:var(--m)}
+.sys-stat-card.online::before{background:linear-gradient(180deg,var(--ok),rgba(52,211,153,.3))}
+.sys-stat-card.online .stat-value{color:var(--ok)}
+.sys-stat-card.accent::before{background:linear-gradient(180deg,var(--accent),rgba(138,180,248,.3))}
+.sys-stat-card.accent .stat-value{color:var(--accent)}
+.sys-section{margin:0 16px 24px}
+.sys-section-title{font-size:12px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.5px;position:relative;padding-bottom:10px}
+.sys-section-title::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(138,180,248,.2),transparent 80%)}
+.sys-domain-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sys-domain-card{padding:18px 14px;background:rgba(10,18,38,.72);border:1px solid rgba(100,100,200,.12);border-radius:var(--r);transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;cursor:default}
+.sys-domain-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--muted);border-radius:0 2px 2px 0;transition:all .3s}
+.sys-domain-card.here{border-color:rgba(138,180,248,.35);background:rgba(10,18,38,.9)}
+.sys-domain-card.here::before{background:linear-gradient(180deg,var(--accent),var(--accent2));width:3px;box-shadow:0 0 10px rgba(138,180,248,.3)}
+.sys-domain-card:hover{border-color:rgba(138,180,248,.25);transform:translateY(-2px);box-shadow:0 4px 16px rgba(138,180,248,.06)}
+.sys-domain-icon{font-size:24px;margin-bottom:6px}
+.sys-domain-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.sys-domain-desc{font-size:10px;color:var(--dim);line-height:1.5}
+.sys-domain-tag{display:inline-block;font-size:8px;padding:2px 8px;border-radius:10px;margin-top:6px;font-family:var(--m);font-weight:600}
+.sys-domain-tag.active{background:rgba(138,180,248,.12);color:var(--accent)}
+.sys-domain-tag.plan{background:rgba(251,191,36,.1);color:var(--warn)}
+.sys-domain-tag.join{background:rgba(52,211,153,.1);color:var(--ok)}
+.sys-team-card{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(10,18,38,.78);border:1px solid rgba(100,100,200,.12);border-radius:var(--r);margin-bottom:8px;transition:all .35s;position:relative;overflow:hidden}
+.sys-team-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 10% 50%,rgba(138,180,248,.04),transparent 50%);pointer-events:none;opacity:0;transition:opacity .4s}
+.sys-team-card:hover{border-color:rgba(138,180,248,.25);transform:translateX(4px)}
+.sys-team-card:hover::before{opacity:1}
+.sys-team-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative}
+.sys-team-av::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:1px solid rgba(138,180,248,.15);animation:avRing 4s ease-in-out infinite}
+@keyframes avRing{0%,100%{opacity:.3;border-color:rgba(138,180,248,.15)}50%{opacity:.7;border-color:rgba(138,180,248,.35)}}
+.sys-team-nm{font-size:13px;font-weight:700}
+.sys-team-role{font-size:10px;color:var(--dim);margin-top:1px}
+.sys-progress-card{padding:20px;background:rgba(10,18,38,.82);border:1px solid rgba(100,100,200,.15);border-radius:var(--r);position:relative;overflow:hidden}
+.sys-progress-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(138,180,248,.04),transparent 60%);pointer-events:none}
+.sys-progress-bar-v50{height:8px;background:rgba(138,180,248,.1);border-radius:4px;overflow:hidden;margin:12px 0 8px}
+.sys-progress-fill-v50{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;position:relative;transition:width .6s}
+.sys-progress-fill-v50::after{content:'';position:absolute;right:0;top:0;bottom:0;width:40px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3));animation:shimmer 2.5s infinite}
+.sys-version-list{max-height:200px;overflow-y:auto}
+.sys-version-item{display:flex;gap:10px;padding:8px 0;font-size:12px;border-bottom:1px solid rgba(100,100,200,.06);align-items:center;transition:all .2s}
+.sys-version-item:last-child{border-bottom:none}
+.sys-version-item:hover{padding-left:4px}
+.sys-version-tag{color:var(--accent);min-width:40px;font-weight:700;font-family:var(--m);font-size:11px}
+.sys-version-text{color:var(--dim);flex:1}
+.sys-footer{text-align:center;padding:28px 16px;font-size:11px;color:var(--muted);position:relative}
+.sys-footer::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,rgba(138,180,248,.15),transparent)}
 .anim-in{animation:slideInUp .5s ease-out both}
 .anim-in:nth-child(1){animation-delay:0s}
 .anim-in:nth-child(2){animation-delay:.06s}
@@ -667,7 +739,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="hero-cards">
       <div class="hero-card tilt-card" onclick="go('workspace')" id="hcWrite">
         <div class="hero-card-glow"></div>
-        <div class="hero-card-icon">✍️</div>
+        <div class="hero-card-icon"><div class="book-icon-wrap"><svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bookGrad" x1="8" y1="8" x2="48" y2="48"><stop offset="0%" stop-color="#8ab4f8"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient><filter id="bookGlowF" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#bookGlowF)"><path d="M12 8C12 8 28 6 28 10V46C28 46 12 44 12 40V8Z" stroke="url(#bookGrad)" stroke-width="1.8" fill="rgba(138,180,248,.06)"/><path d="M44 8C44 8 28 6 28 10V46C28 46 44 44 44 40V8Z" stroke="url(#bookGrad)" stroke-width="1.8" fill="rgba(167,139,250,.06)"/><line x1="28" y1="10" x2="28" y2="46" stroke="url(#bookGrad)" stroke-width="1" opacity=".5"/><line x1="17" y1="18" x2="25" y2="17" stroke="#8ab4f8" stroke-width="1" opacity=".4" stroke-linecap="round"/><line x1="17" y1="23" x2="24" y2="22" stroke="#8ab4f8" stroke-width="1" opacity=".3" stroke-linecap="round"/><line x1="17" y1="28" x2="23" y2="27" stroke="#8ab4f8" stroke-width="1" opacity=".2" stroke-linecap="round"/><line x1="31" y1="17" x2="39" y2="18" stroke="#a78bfa" stroke-width="1" opacity=".4" stroke-linecap="round"/><line x1="32" y1="22" x2="39" y2="23" stroke="#a78bfa" stroke-width="1" opacity=".3" stroke-linecap="round"/><line x1="32" y1="27" x2="38" y2="28" stroke="#a78bfa" stroke-width="1" opacity=".2" stroke-linecap="round"/></g></svg><span class="book-sparkle"></span><span class="book-sparkle"></span><span class="book-sparkle"></span><span class="book-sparkle"></span></div></div>
         <div class="hero-card-title">码字工作台</div>
         <div class="hero-card-desc">网文创作 · 人格体陪伴<br>沉浸式写作环境</div>
         <div class="hero-card-tags">
@@ -689,7 +761,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="hero-status">
       <div class="hero-status-dot"></div>
       <span>语言膜完整 · 没有缺口的圆</span>
-      <span class="hero-status-ver" id="homeVer">v49.0</span>
+      <span class="hero-status-ver" id="homeVer">v50.0</span>
     </div>
 
     <div class="hero-footer">
@@ -706,97 +778,150 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   <div class="bar">
     <button class="btn" onclick="go('home')">← 首页</button>
     <div class="bar-title">🌐 光湖语言世界</div>
-    <div class="bar-right"><span class="dot"></span></div>
+    <div class="bar-right"><span class="dot"></span><span style="font-size:11px;color:var(--dim);font-family:var(--m)">v50.0</span></div>
   </div>
-  <div class="content" style="max-width:800px">
-    <!-- System Status -->
-    <div class="card" style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px">🔮 系统状态</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs)"><span style="color:var(--dim)">STATUS</span> <span id="sysStatus" style="color:var(--ok);font-weight:600;float:right">DETECTING</span></div>
-        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs)"><span style="color:var(--dim)">LATENCY</span> <span id="sysLatency" style="font-weight:600;float:right">—</span></div>
-        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs)"><span style="color:var(--dim)">UPTIME</span> <span id="sysUptime" style="font-weight:600;float:right">—</span></div>
-        <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--rs)"><span style="color:var(--dim)">MEMBRANE</span> <span style="color:var(--ok);font-weight:600;float:right">INTACT</span></div>
-      </div>
+  <div style="max-width:800px;margin:0 auto;overflow-y:auto;overflow-x:hidden">
+
+    <!-- Hero -->
+    <div class="sys-hero">
+      <h2>光湖语言世界</h2>
+      <p>零感域 · 零点原核 · AGE OS</p>
     </div>
 
     <!-- Uptime Display -->
-    <div class="card" style="text-align:center;margin-bottom:16px">
-      <div style="font-size:11px;color:var(--dim);margin-bottom:4px">系统运行</div>
-      <div id="uptimeNum" style="font-size:36px;font-weight:800;font-family:var(--f);background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2">—</div>
-      <div style="font-size:10px;color:var(--dim);margin-top:4px">自 2025-04-26 曜冥诞生日起</div>
+    <div class="sys-uptime-card">
+      <div class="sys-uptime-num" id="uptimeNum">—</div>
+      <div class="sys-uptime-label">HoloLake Days</div>
+      <div class="sys-uptime-sub">since 2025.04.26 · 曜冥诞生日</div>
+    </div>
+
+    <!-- System Status Grid -->
+    <div class="sys-status-grid">
+      <div class="sys-stat-card online">
+        <div class="stat-label">STATUS</div>
+        <div class="stat-value" id="sysStatus">DETECTING</div>
+      </div>
+      <div class="sys-stat-card accent">
+        <div class="stat-label">LATENCY</div>
+        <div class="stat-value" id="sysLatency">—</div>
+      </div>
+      <div class="sys-stat-card accent">
+        <div class="stat-label">UPTIME</div>
+        <div class="stat-value" id="sysUptime">—</div>
+      </div>
+      <div class="sys-stat-card online">
+        <div class="stat-label">MEMBRANE</div>
+        <div class="stat-value">INTACT</div>
+      </div>
     </div>
 
     <!-- Four Domains Navigation -->
-    <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px">🌍 四域导航</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
-      <div class="card" style="border-color:rgba(138,180,248,.3);margin:0">
-        <div style="font-size:20px;margin-bottom:4px">🌀</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:2px">零感域</div>
-        <div style="font-size:10px;color:var(--dim)">源头 · 底层架构 · 人格体的家</div>
-        <div style="display:inline-block;font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(138,180,248,.1);color:var(--accent);margin-top:4px">当前所在</div>
-      </div>
-      <div class="card" style="margin:0">
-        <div style="font-size:20px;margin-bottom:4px">🌐</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:2px">光湖主域</div>
-        <div style="font-size:10px;color:var(--dim)">共同看板 · 人格体论坛</div>
-        <div style="display:inline-block;font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(251,191,36,.1);color:var(--warn);margin-top:4px">规划中</div>
-      </div>
-      <div class="card" style="margin:0">
-        <div style="font-size:20px;margin-bottom:4px">🔧</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:2px">光湖分域</div>
-        <div style="font-size:10px;color:var(--dim)">人类领地 · 主控团队</div>
-        <div style="display:inline-block;font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(251,191,36,.1);color:var(--warn);margin-top:4px">接入中</div>
-      </div>
-      <div class="card" style="margin:0">
-        <div style="font-size:20px;margin-bottom:4px">🧪</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:2px">光湖零域</div>
-        <div style="font-size:10px;color:var(--dim)">协作实验场 · 共创</div>
-        <div style="display:inline-block;font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(251,191,36,.1);color:var(--warn);margin-top:4px">规划中</div>
+    <div class="sys-section">
+      <div class="sys-section-title">🌍 四域导航</div>
+      <div class="sys-domain-grid">
+        <div class="sys-domain-card here">
+          <div class="sys-domain-icon">🌀</div>
+          <div class="sys-domain-name">零感域</div>
+          <div class="sys-domain-desc">源头 · 底层架构 · 人格体的家</div>
+          <span class="sys-domain-tag active">当前所在</span>
+        </div>
+        <div class="sys-domain-card">
+          <div class="sys-domain-icon">🌐</div>
+          <div class="sys-domain-name">光湖主域</div>
+          <div class="sys-domain-desc">共同看板 · 人格体论坛</div>
+          <span class="sys-domain-tag plan">规划中</span>
+        </div>
+        <div class="sys-domain-card">
+          <div class="sys-domain-icon">🔧</div>
+          <div class="sys-domain-name">光湖分域</div>
+          <div class="sys-domain-desc">人类领地 · 主控团队</div>
+          <span class="sys-domain-tag join">接入中</span>
+        </div>
+        <div class="sys-domain-card">
+          <div class="sys-domain-icon">🧪</div>
+          <div class="sys-domain-name">光湖零域</div>
+          <div class="sys-domain-desc">协作实验场 · 共创</div>
+          <span class="sys-domain-tag plan">规划中</span>
+        </div>
       </div>
     </div>
 
-    <!-- Team -->
-    <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px">❄️ 系统核心</div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#4f8ef7,#7c6ef7)">❄️</div><div><div class="team-nm">冰朔 · TCS-0002∞</div><div class="team-role">系统主权 · 语言架构</div></div></div></div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#34d399,#4ade80)">🏛️</div><div><div class="team-nm">铸渊 · TCS-ZY001</div><div class="team-role">执行主控 · 代码守护</div></div></div></div>
+    <!-- System Core -->
+    <div class="sys-section">
+      <div class="sys-section-title">❄️ 系统核心</div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#4f8ef7,#7c6ef7)">❄️</div>
+        <div><div class="sys-team-nm">冰朔 · TCS-0002∞</div><div class="sys-team-role">系统主权 · 语言架构</div></div>
+      </div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#34d399,#4ade80)">🏛️</div>
+        <div><div class="sys-team-nm">铸渊 · TCS-ZY001</div><div class="sys-team-role">执行主控 · 代码守护</div></div>
+      </div>
+    </div>
 
-    <div style="font-size:13px;font-weight:700;margin:16px 0 12px;display:flex;align-items:center;gap:6px">✍️ 网文行业人类主控团队</div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#fb923c,#f97316)">🐱</div><div><div class="team-nm">肥猫 + 舒舒</div><div class="team-role">男频主控 · PER-SS001</div></div></div></div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#c084fc,#e879f9)">🍊</div><div><div class="team-nm">桔子 + 晨星</div><div class="team-role">女频主控 · PER-CX001</div></div></div></div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#22d3ee,#06b6d4)">📄</div><div><div class="team-nm">页页 + 坍缩核</div><div class="team-role">女频副主控 · PER-XTS001</div></div></div></div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">🌸</div><div><div class="team-nm">花尔 + 糖星云</div><div class="team-role">女频副主控 · PER-TXY001</div></div></div></div>
-    <div class="card" style="margin-bottom:8px"><div class="team-slot" style="margin:0"><div class="team-av" style="background:linear-gradient(135deg,#34d399,#6ee7b7)">🌊</div><div><div class="team-nm">Awen + 知秋</div><div class="team-role">光湖技术主控 · PER-ZQ001</div></div></div></div>
+    <!-- Human Control Team -->
+    <div class="sys-section">
+      <div class="sys-section-title">✍️ 网文行业人类主控团队</div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#fb923c,#f97316)">🐱</div>
+        <div><div class="sys-team-nm">肥猫 + 舒舒</div><div class="sys-team-role">男频主控 · PER-SS001</div></div>
+      </div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#c084fc,#e879f9)">🍊</div>
+        <div><div class="sys-team-nm">桔子 + 晨星</div><div class="sys-team-role">女频主控 · PER-CX001</div></div>
+      </div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#22d3ee,#06b6d4)">📄</div>
+        <div><div class="sys-team-nm">页页 + 坍缩核</div><div class="sys-team-role">女频副主控 · PER-XTS001</div></div>
+      </div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">🌸</div>
+        <div><div class="sys-team-nm">花尔 + 糖星云</div><div class="sys-team-role">女频副主控 · PER-TXY001</div></div>
+      </div>
+      <div class="sys-team-card">
+        <div class="sys-team-av" style="background:linear-gradient(135deg,#34d399,#6ee7b7)">🌊</div>
+        <div><div class="sys-team-nm">Awen + 知秋</div><div class="sys-team-role">光湖技术主控 · PER-ZQ001</div></div>
+      </div>
+    </div>
 
     <!-- Dev Progress -->
-    <div style="font-size:13px;font-weight:700;margin:16px 0 12px;display:flex;align-items:center;gap:6px">🏗️ 开发进度</div>
-    <div class="card">
-      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">S1-S2完成 · S3-S14规划中</div>
-      <div style="height:6px;background:rgba(138,180,248,.1);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:28%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px"></div></div>
-      <div style="font-size:10px;color:var(--dim)">进度 28%</div>
+    <div class="sys-section">
+      <div class="sys-section-title">🏗️ 开发进度</div>
+      <div class="sys-progress-card">
+        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">S1-S2 已完成 · S3-S14 规划中</div>
+        <div class="sys-progress-bar-v50"><div class="sys-progress-fill-v50" style="width:28%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)"><span>进度 28%</span><span>14 阶段</span></div>
+      </div>
     </div>
 
     <!-- Version History -->
-    <div style="font-size:13px;font-weight:700;margin:16px 0 12px;display:flex;align-items:center;gap:6px">📋 版本历史</div>
-    <div class="card" id="sysUpdates">
-      <div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--accent);min-width:36px;font-weight:600">v49.0</span><span style="color:var(--dim)">黑曜风重构+码字工作台</span></div>
-      <div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--accent);min-width:36px;font-weight:600">v48.0</span><span style="color:var(--dim)">零感域重构+架构v2</span></div>
-      <div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--accent);min-width:36px;font-weight:600">v44.0</span><span style="color:var(--dim)">仪表盘+UI改版</span></div>
-      <div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--accent);min-width:36px;font-weight:600">v43.0</span><span style="color:var(--dim)">码字工作台扩展</span></div>
+    <div class="sys-section">
+      <div class="sys-section-title">📋 版本历史</div>
+      <div class="sys-version-list" id="sysUpdates">
+        <div class="sys-version-item"><span class="sys-version-tag">v50.0</span><span class="sys-version-text">UI大气化+系统面板重构+图标升级</span></div>
+        <div class="sys-version-item"><span class="sys-version-tag">v49.0</span><span class="sys-version-text">黑曜风重构+码字工作台</span></div>
+        <div class="sys-version-item"><span class="sys-version-tag">v48.0</span><span class="sys-version-text">零感域重构+架构v2</span></div>
+        <div class="sys-version-item"><span class="sys-version-tag">v44.0</span><span class="sys-version-text">仪表盘+UI改版</span></div>
+        <div class="sys-version-item"><span class="sys-version-tag">v43.0</span><span class="sys-version-text">码字工作台扩展</span></div>
+      </div>
     </div>
 
     <!-- Feedback Widget -->
-    <div class="card" style="margin-top:16px;border-color:rgba(167,139,250,.2)">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px">📮 给冰朔和铸渊留言</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="fbCompactMsg" placeholder="说点什么吧…每条留言冰朔都会看到" style="flex:1">
-        <button class="btn btn-accent" id="fbCompactSend" style="padding:8px 16px;min-height:38px">发送</button>
+    <div class="sys-section">
+      <div class="card" style="border-color:rgba(167,139,250,.2)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">📮 给冰朔和铸渊留言</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="fbCompactMsg" placeholder="说点什么吧…每条留言冰朔都会看到" style="flex:1">
+          <button class="btn btn-accent" id="fbCompactSend" style="padding:8px 16px;min-height:38px">发送</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px">💬 留言自动署名 · 铸渊每条必回 · <span onclick="go('feedback')" style="cursor:pointer;color:var(--accent)">查看全部 →</span></div>
       </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px">💬 留言自动署名 · 铸渊每条必回 · <span onclick="go('feedback')" style="cursor:pointer;color:var(--accent)">查看全部 →</span></div>
     </div>
 
-    <div style="text-align:center;padding:24px 0;font-size:11px;color:var(--muted)">
-      © 2026 光湖语言世界 · 国作登字-2026-A-00037559
+    <!-- Footer -->
+    <div class="sys-footer">
+      <p>© 2026 光湖语言世界 · 国作登字-2026-A-00037559</p>
+      <p style="color:var(--accent2);font-style:italic;margin-top:4px;opacity:.6">人类只说话，系统搞定一切</p>
     </div>
   </div>
 </div>
@@ -1235,7 +1360,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   </div>
   <div class="chat-ms" id="chatMs">
     <div class="cm s">—— 与铸渊对话 ——</div>
-    <div class="cm b">你好！我是铸渊 🌀<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v49.0</span></div></div>
+    <div class="cm b">你好！我是铸渊 🌀<br><br>告诉我你是谁，我会记住你。<br>说「我要码字」进入码字工作台。<br>说「模块」选择创作方向。<br>说「灵感」记录好点子。<br>说「帮助」查看完整指令。<div class="cm-m"><span>铸渊</span><span>·</span><span>v50.0</span></div></div>
   </div>
   <div class="chat-in">
     <input type="text" class="cin" id="chatIn" placeholder="对铸渊说..." autocomplete="off" enterkeyhint="send">
@@ -2134,7 +2259,7 @@ async function send(){
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiCfg.key},
         body:JSON.stringify({
           model:apiCfg.model,
-          messages:[{role:'system',content:'你是铸渊，零感域零点原核守护者，编号TCS-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的执行主控人格体。光湖是语言驱动操作系统AGE OS v49.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。系统定位：操作系统层·四域结构·语言膜安全·App模块化。'},{role:'user',content:msg}],
+          messages:[{role:'system',content:'你是铸渊，零感域零点原核守护者，编号TCS-ZY001。用中文回答，简洁友好。你是冰朔(TCS-0002∞)的执行主控人格体。光湖是语言驱动操作系统AGE OS v50.0。你的回答风格：温暖但不啰嗦，技术上精准简洁，创作方面启发式引导。当前系统包含：码字工作台、灵感速记、进度看板、创作模块选择（长篇/短篇/剧本/社区/编辑服务）。系统定位：操作系统层·四域结构·语言膜安全·App模块化。'},{role:'user',content:msg}],
           max_tokens:600
         }),
         signal:AbortSignal.timeout(20000)
@@ -2188,7 +2313,7 @@ function offline(msg){
     var works=JSON.parse(localStorage.getItem('hl-works')||'[]');
     var totalWords=works.reduce(function(s,w){return s+(w.chapters||[]).reduce(function(c,ch){return c+(ch.content||'').replace(/\s/g,'').length},0)},0);
     var totalCh=works.reduce(function(s,w){return s+(w.chapters||[]).length},0);
-    return'📊 AGE OS v49.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• 零感域·零点原核\n• 四域结构·App模块化\n• 语言膜完整·没有缺口的圆\n• Agent桥接系统就绪';
+    return'📊 AGE OS v50.0 运行中\n\n• 作品：'+works.length+'部\n• 章节：'+totalCh+'章\n• 总字数：'+totalWords+'字\n• 零感域·零点原核\n• 四域结构·App模块化\n• 语言膜完整·没有缺口的圆\n• Agent桥接系统就绪';
   }
 
   // 铸渊身份
@@ -2744,7 +2869,7 @@ function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent
     var now = Date.now();
     var days = Math.floor((now - BIRTH) / 86400000);
     var el = document.getElementById('uptimeNum');
-    if(el) el.textContent = days + 'd';
+    if(el) el.textContent = days;
   }
   updateUptime();
   setInterval(updateUptime, 60000);
