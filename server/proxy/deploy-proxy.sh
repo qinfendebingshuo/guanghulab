@@ -245,7 +245,7 @@ configure_nginx() {
         # 在第一个 location = /health 之前插入 proxy-sub location
         sed -i '/# ─── 健康探针 ───/{
             # 只在第一次匹配时插入
-            i\    # ─── 铸渊专线订阅服务 (端口 3802) ───\n    location /api/proxy-sub/ {\n        proxy_pass http://127.0.0.1:3802/;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_connect_timeout 10s;\n        proxy_read_timeout 30s;\n        add_header X-Content-Type-Options nosniff always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n
+            i\    # ─── 铸渊专线订阅服务 (端口 3802) ───\n    location /api/proxy-sub/ {\n        proxy_pass http://127.0.0.1:3802/;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_connect_timeout 10s;\n        proxy_read_timeout 30s;\n        proxy_send_timeout 30s;\n        add_header X-Content-Type-Options nosniff always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n
         }' "$NGINX_CONF" || true
         echo "  ✅ Nginx proxy-sub配置已注入"
     else

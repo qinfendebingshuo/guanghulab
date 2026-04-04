@@ -560,7 +560,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
   } catch (err) {
-    console.error(`❌ 请求处理错误 [${req.method} ${req.url}]:`, err.message || err);
+    console.error('❌ 请求处理错误 [%s %s]:', req.method, req.url, err.message || err);
     try {
       if (!res.headersSent) {
         res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -576,15 +576,13 @@ const server = http.createServer((req, res) => {
 server.on('error', (err) => {
   console.error('❌ 服务器错误:', err.message);
   if (err.code === 'EADDRINUSE') {
-    console.error(`  端口 ${PORT} 已被占用，10秒后重试...`);
-    setTimeout(() => {
-      server.close();
-      server.listen(PORT, '127.0.0.1');
-    }, 10000);
+    console.error('  端口 %d 已被占用，进程退出等待PM2重启...', PORT);
+    process.exit(1);
   }
 });
 
 server.on('clientError', (err, socket) => {
+  console.error('⚠️ 客户端连接错误:', err.code || err.message);
   if (socket.writable) {
     socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
   }
@@ -610,11 +608,11 @@ function gracefulShutdown(signal) {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// 进程级错误保护 (防止未捕获的异常导致静默崩溃)
+// 进程级错误保护 (记录后优雅退出，由PM2负责重启)
 process.on('uncaughtException', (err) => {
   console.error('❌ 未捕获的异常:', err.message);
   console.error(err.stack);
-  // 记录但不退出 — PM2会重启，但频繁重启意味着间歇性不可用
+  gracefulShutdown('uncaughtException');
 });
 process.on('unhandledRejection', (reason) => {
   console.error('❌ 未处理的Promise拒绝:', reason);
