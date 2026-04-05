@@ -152,16 +152,28 @@ function buildStaticNodes() {
 
 // ── 生成subscription-userinfo头 ──────────────
 // 共享流量池模型: total=池配额(2000GB)，upload+download=池总用量
+// 使用缓存的池状态文件(traffic-monitor-v2每5分钟更新)以减少计算开销
 function generateUserInfoHeader(user) {
   const nextMonth = new Date();
   nextMonth.setMonth(nextMonth.getMonth() + 1);
   nextMonth.setDate(1);
   nextMonth.setHours(0, 0, 0, 0);
 
-  // 获取流量池总用量 (所有用户汇总)
-  const poolStatus = userManager.getPoolStatus();
+  // 优先从缓存文件读取池状态 (traffic-monitor-v2每5分钟写入)
+  let poolUpload = 0;
+  let poolDownload = 0;
+  try {
+    const cached = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'pool-quota-status.json'), 'utf8'));
+    poolUpload = cached.pool_upload_bytes || 0;
+    poolDownload = cached.pool_download_bytes || 0;
+  } catch {
+    // 缓存不可用时实时计算
+    const poolStatus = userManager.getPoolStatus();
+    poolUpload = poolStatus.pool_upload_bytes;
+    poolDownload = poolStatus.pool_download_bytes;
+  }
 
-  return `upload=${poolStatus.pool_upload_bytes}; download=${poolStatus.pool_download_bytes}; total=${userManager.POOL_QUOTA_BYTES}; expire=${Math.floor(nextMonth.getTime() / 1000)}`;
+  return `upload=${poolUpload}; download=${poolDownload}; total=${userManager.POOL_QUOTA_BYTES}; expire=${Math.floor(nextMonth.getTime() / 1000)}`;
 }
 
 // ── 生成VLESS URI (Shadowrocket · 多节点) ─────

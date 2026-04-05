@@ -137,7 +137,7 @@ function addUser(email, options = {}) {
     uuid: generateUUID(),
     token: generateToken(),
     label: options.label || email.split('@')[0],
-    quota_bytes: POOL_QUOTA_BYTES, // 共享流量池配额(展示用·实际按池总量控制)
+    quota_bytes: POOL_QUOTA_BYTES, // 存储池配额引用·实际配额由池级别统一控制(getPoolStatus)·非独立限额
     enabled: true,
     created_at: now.toISOString(),
     traffic: {

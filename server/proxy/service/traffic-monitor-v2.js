@@ -101,7 +101,7 @@ function checkPoolAlerts(poolStatus) {
     alertState.alerts_sent = { p80: false, p90: false, p100: false };
   }
 
-  const pct = poolStatus.pool_percentage;
+  const pct = Math.min(poolStatus.pool_percentage, 100);
 
   if (pct >= 100 && !alertState.alerts_sent.p100) {
     console.log(`[V2流量监控] ⚠️ 流量池已用完! ${poolStatus.pool_used_gb.toFixed(2)}GB / ${poolStatus.pool_total_gb}GB`);
