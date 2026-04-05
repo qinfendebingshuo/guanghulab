@@ -218,11 +218,11 @@ function generateV3SubscriptionEmail(subUrl, dashboardUrl) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
   <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
     <h1 style="color: #1a1a2e; margin-bottom: 5px;">🌐 光湖语言世界</h1>
-    <p style="color: #666; margin-top: 0;">铸渊专线 V3 测试版 · 私有订阅链接</p>
+    <p style="color: #666; margin-top: 0;">光湖语言世界 V3 · 私有订阅链接</p>
 
-    <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 12px; margin: 15px 0;">
-      <strong style="color: #2e7d32;">🧪 V3 测试版</strong>
-      <span style="color: #555;"> — 请测试后反馈体验，V2 继续可用</span>
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 12px; margin: 15px 0;">
+      <strong style="color: #155724;">✅ V3 正式版</strong>
+      <span style="color: #555;"> — 稳定版本，全面优化升级</span>
     </div>
 
     <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
@@ -292,7 +292,7 @@ function generateV3SubscriptionEmail(subUrl, dashboardUrl) {
     <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
 
     <p style="color: #aaa; font-size: 11px; text-align: center;">
-      光湖语言世界 · 铸渊专线 V3 测试版 · ${now}<br>
+      光湖语言世界 · V3 正式版 · ${now}<br>
       国作登字-2026-A-00037559
     </p>
   </div>
@@ -374,7 +374,7 @@ async function main() {
     const html = generateV3SubscriptionEmail(urlOverride, dashboard);
 
     try {
-      await sendEmail(email, '🌐 光湖语言世界 · V3测试订阅链接', html);
+      await sendEmail(email, '🌐 光湖语言世界 · V3订阅链接', html);
       console.log('✅ V3订阅链接已发送');
     } catch (err) {
       console.error('❌ 发送失败:', err.message);

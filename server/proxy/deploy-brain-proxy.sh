@@ -17,7 +17,7 @@
 #   bash deploy-brain-proxy.sh add-user <email> [quota_gb]  — 添加用户
 #   bash deploy-brain-proxy.sh remove-user <email>          — 移除用户
 #   bash deploy-brain-proxy.sh list-users                   — 列出用户
-#   bash deploy-brain-proxy.sh deploy-v3   — 部署V3测试环境
+#   bash deploy-brain-proxy.sh deploy-v3   — 部署V3生产环境
 #   bash deploy-brain-proxy.sh switch-v3   — 切换V2→V3 (用户刷新即升级)
 # ═══════════════════════════════════════════════
 
@@ -487,10 +487,10 @@ list_users() {
     node "$PROXY_DIR/service/user-manager.js" list
 }
 
-# ── deploy-v3: 部署V3测试环境 ──────────────────
-# V2继续运行·V3独立启动·通过/api/proxy-v3/测试
+# ── deploy-v3: 部署V3生产环境 ──────────────────
+# V2继续运行·V3独立启动·/api/proxy-v3/
 deploy_v3() {
-    echo "部署V3测试环境 (V2继续运行)..."
+    echo "部署V3生产环境 (V2继续可用)..."
     deploy_services
 
     # 加载密钥作为环境变量
@@ -506,7 +506,7 @@ deploy_v3() {
     pm2 startOrRestart ecosystem.brain-proxy-v3.config.js --update-env
     pm2 save
 
-    # 添加V3 Nginx测试路径
+    # 添加V3 Nginx路径
     NGINX_CONF=""
     for candidate in /etc/nginx/sites-enabled/zhuyuan-brain.conf /etc/nginx/sites-enabled/default; do
         if [ -f "$candidate" ]; then
@@ -516,9 +516,9 @@ deploy_v3() {
     done
 
     if [ -n "$NGINX_CONF" ] && ! grep -q "proxy-v3" "$NGINX_CONF" 2>/dev/null; then
-        echo "  添加V3测试路径..."
+        echo "  添加V3路径..."
         sed -i '/^}/i\
-    # ─── 光湖语言世界V3测试 (端口 3805) ───\
+    # ─── 光湖语言世界V3 (端口 3805) ───\
     location /api/proxy-v3/ {\
         proxy_pass http://127.0.0.1:3805/;\
         proxy_http_version 1.1;\
@@ -533,7 +533,7 @@ deploy_v3() {
         add_header X-Frame-Options DENY always;\
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;\
     }' "$NGINX_CONF" || true
-        echo "  ✅ V3测试路径已添加"
+        echo "  ✅ V3路径已添加"
     else
         echo "  proxy-v3配置已存在或Nginx配置未找到"
     fi
@@ -545,17 +545,17 @@ deploy_v3() {
 
     echo ""
     echo "════════════════════════════════════════"
-    echo "✅ V3测试环境已就绪"
+    echo "✅ V3生产环境已就绪"
     echo ""
-    echo "测试方法:"
+    echo "访问方法:"
     echo "  V3订阅: https://域名/api/proxy-v3/sub/{token}"
     echo "  V3仪表盘: https://域名/api/proxy-v3/dashboard/{token}"
     echo "  V3健康: https://域名/api/proxy-v3/health"
     echo ""
     echo "V2继续运行在 /api/proxy-v2/ (端口3803)"
-    echo "V3测试运行在 /api/proxy-v3/ (端口3805)"
+    echo "V3运行在 /api/proxy-v3/ (端口3805)"
     echo ""
-    echo "测试通过后执行: bash deploy-brain-proxy.sh switch-v3"
+    echo "切换V2用户到V3: bash deploy-brain-proxy.sh switch-v3"
     echo "════════════════════════════════════════"
 
     # V3健康检查

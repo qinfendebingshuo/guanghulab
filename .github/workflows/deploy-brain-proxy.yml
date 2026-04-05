@@ -317,9 +317,9 @@ jobs:
           echo ""
           echo "✅ 完成！${LABEL} (${EMAIL}) 的独立专线已就绪"
 
-  # ═══ §4 发送V3测试订阅 ═══
+  # ═══ §4 发送V3订阅 ═══
   send-subscription-v3:
-    name: '📧 发送V3测试订阅'
+    name: '📧 发送V3订阅'
     runs-on: ubuntu-latest
     if: github.event.inputs.action == 'send-subscription-v3'
 
@@ -384,4 +384,4 @@ jobs:
           }
 
           echo ""
-          echo "✅ 完成！${LABEL} (${EMAIL}) 的V3光湖语言世界测试订阅已发送"
+          echo "✅ 完成！${LABEL} (${EMAIL}) 的V3光湖语言世界订阅已发送"
