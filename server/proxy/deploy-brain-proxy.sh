@@ -147,6 +147,27 @@ EOF
         echo "ZY_SERVER_HOST=${ZY_SERVER_HOST}" >> "$KEYS_FILE"
     fi
 
+    # 保存面孔服务器节点信息 (多节点智能选路)
+    if [ -n "${ZY_FACE_HOST:-}" ]; then
+        echo "" >> "$KEYS_FILE"
+        echo "# 面孔服务器节点 (ZY-SVR-002 · SG2 · 多节点智能选路)" >> "$KEYS_FILE"
+        echo "ZY_FACE_HOST=${ZY_FACE_HOST}" >> "$KEYS_FILE"
+    fi
+    if [ -n "${ZY_FACE_REALITY_PUBLIC_KEY:-}" ]; then
+        echo "ZY_FACE_REALITY_PUBLIC_KEY=${ZY_FACE_REALITY_PUBLIC_KEY}" >> "$KEYS_FILE"
+    fi
+    if [ -n "${ZY_FACE_REALITY_SHORT_ID:-}" ]; then
+        echo "ZY_FACE_REALITY_SHORT_ID=${ZY_FACE_REALITY_SHORT_ID}" >> "$KEYS_FILE"
+    fi
+
+    # 保存CN中转节点信息
+    if [ -n "${ZY_CN_RELAY_HOST:-}" ]; then
+        echo "" >> "$KEYS_FILE"
+        echo "# CN中转节点 (国内→SG · 低延迟)" >> "$KEYS_FILE"
+        echo "ZY_CN_RELAY_HOST=${ZY_CN_RELAY_HOST}" >> "$KEYS_FILE"
+        echo "ZY_CN_RELAY_PORT=${ZY_CN_RELAY_PORT:-2053}" >> "$KEYS_FILE"
+    fi
+
     chmod 600 "$KEYS_FILE"
 
     echo ""

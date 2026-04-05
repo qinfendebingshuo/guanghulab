@@ -48,25 +48,87 @@ function loadKeys() {
   return keys;
 }
 
-// ── 获取服务器IP ────────────────────────────
-function getServerHost() {
-  if (process.env.ZY_BRAIN_HOST) return process.env.ZY_BRAIN_HOST;
-  if (process.env.ZY_SERVER_HOST) return process.env.ZY_SERVER_HOST;
+// ── 从环境变量或密钥文件读取值 ──────────────
+function getEnvOrKey(envName) {
+  if (process.env[envName]) return process.env[envName];
 
   try {
     const content = fs.readFileSync(KEYS_FILE, 'utf8');
     for (const line of content.split('\n')) {
       if (line.startsWith('#') || !line.includes('=')) continue;
       const [key, ...vals] = line.split('=');
-      const k = key.trim();
-      if (k === 'ZY_BRAIN_HOST' || k === 'ZY_SERVER_HOST') {
+      if (key.trim() === envName) {
         const val = vals.join('=').trim();
         if (val) return val;
       }
     }
   } catch { /* ignore */ }
 
-  return '0.0.0.0';
+  return '';
+}
+
+// ── 获取服务器IP ────────────────────────────
+function getServerHost() {
+  return getEnvOrKey('ZY_BRAIN_HOST') || getEnvOrKey('ZY_SERVER_HOST') || '0.0.0.0';
+}
+
+// ── 构建所有可用VPN节点 ──────────────────────
+// 三台服务器智能选路：大脑SG1 + 面孔SG2 + CN中转
+function buildVpnNodes() {
+  const nodes = [];
+
+  // 节点1: 大脑服务器 (ZY-SVR-005 · 新加坡一区 · 4核8G · 主力)
+  const brainHost = getEnvOrKey('ZY_BRAIN_HOST');
+  const brainPbk = getEnvOrKey('ZY_PROXY_REALITY_PUBLIC_KEY');
+  const brainSid = getEnvOrKey('ZY_PROXY_REALITY_SHORT_ID');
+  if (brainHost && brainPbk && brainSid) {
+    nodes.push({
+      id: 'zy-brain-sg1',
+      name: '🧠 铸渊专线V2-SG1(大脑)',
+      host: brainHost,
+      port: 443,
+      pbk: brainPbk,
+      sid: brainSid,
+      region: 'sg-zone1',
+      priority: 1
+    });
+  }
+
+  // 节点2: 面孔服务器 (ZY-SVR-002 · 新加坡二区 · 2核8G · 备用)
+  const faceHost = getEnvOrKey('ZY_FACE_HOST');
+  const facePbk = getEnvOrKey('ZY_FACE_REALITY_PUBLIC_KEY');
+  const faceSid = getEnvOrKey('ZY_FACE_REALITY_SHORT_ID');
+  if (faceHost && facePbk && faceSid) {
+    nodes.push({
+      id: 'zy-face-sg2',
+      name: '🏛️ 铸渊专线V2-SG2(面孔)',
+      host: faceHost,
+      port: 443,
+      pbk: facePbk,
+      sid: faceSid,
+      region: 'sg-zone2',
+      priority: 2
+    });
+  }
+
+  // 节点3: CN中转 (国内→SG · 对国内用户低延迟)
+  const cnHost = getEnvOrKey('ZY_CN_RELAY_HOST');
+  const cnPort = parseInt(getEnvOrKey('ZY_CN_RELAY_PORT') || '2053', 10);
+  // CN中转是TCP透传，Reality密钥用主力节点的（大脑）
+  if (cnHost && brainPbk && brainSid) {
+    nodes.push({
+      id: 'zy-cn-relay',
+      name: '🇨🇳 铸渊专线V2-CN中转',
+      host: cnHost,
+      port: cnPort,
+      pbk: brainPbk,
+      sid: brainSid,
+      region: 'cn-relay',
+      priority: 3
+    });
+  }
+
+  return nodes;
 }
 
 // ── 生成subscription-userinfo头 ──────────────
@@ -79,30 +141,72 @@ function generateUserInfoHeader(user) {
   return `upload=${user.traffic.upload_bytes}; download=${user.traffic.download_bytes}; total=${user.quota_bytes}; expire=${Math.floor(nextMonth.getTime() / 1000)}`;
 }
 
-// ── 生成VLESS URI (Shadowrocket) ─────────────
-function generateVlessUri(user, keys, serverHost) {
-  const params = new URLSearchParams({
-    encryption: 'none',
-    flow: 'xtls-rprx-vision',
-    security: 'reality',
-    sni: 'www.microsoft.com',
-    fp: 'chrome',
-    pbk: keys.ZY_PROXY_REALITY_PUBLIC_KEY,
-    sid: keys.ZY_PROXY_REALITY_SHORT_ID,
-    type: 'tcp',
-    headerType: 'none'
-  });
-
-  const label = encodeURIComponent(`ZY-V2-${user.label}`);
-  return `vless://${user.uuid}@${serverHost}:443?${params.toString()}#${label}`;
+// ── 生成VLESS URI (Shadowrocket · 多节点) ─────
+function generateVlessUris(user, nodes) {
+  return nodes.map(node => {
+    const params = new URLSearchParams({
+      encryption: 'none',
+      flow: 'xtls-rprx-vision',
+      security: 'reality',
+      sni: 'www.microsoft.com',
+      fp: 'chrome',
+      pbk: node.pbk,
+      sid: node.sid,
+      type: 'tcp',
+      headerType: 'none'
+    });
+    const label = encodeURIComponent(node.name);
+    return `vless://${user.uuid}@${node.host}:${node.port}?${params.toString()}#${label}`;
+  }).join('\n');
 }
 
-// ── 生成Clash YAML配置 (用户专属) ────────────
-function generateClashYaml(user, keys, serverHost) {
+// ── 生成Clash YAML配置 (多节点智能选路) ──────
+function generateClashYaml(user, nodes) {
+  // 构建proxies块 — 每个节点一条
+  const proxyBlocks = nodes.map(node => `  - name: "${node.name}"
+    type: vless
+    server: ${node.host}
+    port: ${node.port}
+    uuid: ${user.uuid}
+    network: tcp
+    tls: true
+    udp: true
+    flow: xtls-rprx-vision
+    skip-cert-verify: false
+    servername: www.microsoft.com
+    reality-opts:
+      public-key: ${node.pbk}
+      short-id: ${node.sid}
+    client-fingerprint: chrome`).join('\n');
+
+  // 节点名列表
+  const nodeNames = nodes.map(n => `      - "${n.name}"`).join('\n');
+
+  // url-test自动选择组 (延迟最低的自动生效)
+  const autoSelectBlock = nodes.length > 1 ? `
+  - name: "♻️ 自动选择"
+    type: url-test
+    proxies:
+${nodeNames}
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+` : '';
+
+  // 主代理组
+  const mainProxies = nodes.length > 1
+    ? `      - "♻️ 自动选择"\n${nodeNames}\n      - DIRECT`
+    : `${nodeNames}\n      - DIRECT`;
+
+  // AI/开发工具代理组的节点列表
+  const toolProxies = nodes.length > 1
+    ? `      - "♻️ 自动选择"\n${nodeNames}`
+    : nodeNames;
+
   return `# 铸渊专线V2 · ${user.label} 的独立专线
 # 自动生成 · ${new Date().toISOString()}
 # ⚠️ 此配置为 ${user.email} 专属，请勿分享
-# 每人一条独立线路，流量独立计算
+# 每人一条独立线路 · ${nodes.length}个节点智能选路
 
 # ── 全局设置 ──────────────────────────────
 mixed-port: 7890
@@ -200,41 +304,26 @@ sniffer:
     - "Mijia Cloud"
     - "+.push.apple.com"
 
-# ── 代理节点 (${user.label} 专属) ─────────
+# ── 代理节点 (${nodes.length}个 · 智能选路) ──
 proxies:
-  - name: "🏛️ 铸渊专线V2-${user.label}"
-    type: vless
-    server: ${serverHost}
-    port: 443
-    uuid: ${user.uuid}
-    network: tcp
-    tls: true
-    udp: true
-    flow: xtls-rprx-vision
-    skip-cert-verify: false
-    servername: www.microsoft.com
-    reality-opts:
-      public-key: ${keys.ZY_PROXY_REALITY_PUBLIC_KEY}
-      short-id: ${keys.ZY_PROXY_REALITY_SHORT_ID}
-    client-fingerprint: chrome
+${proxyBlocks}
 
 # ── 代理组 ────────────────────────────────
 proxy-groups:
   - name: "🌐 铸渊专线"
     type: select
     proxies:
-      - "🏛️ 铸渊专线V2-${user.label}"
-      - DIRECT
-
+${mainProxies}
+${autoSelectBlock}
   - name: "🤖 AI服务"
     type: select
     proxies:
-      - "🏛️ 铸渊专线V2-${user.label}"
+${toolProxies}
 
   - name: "💻 开发工具"
     type: select
     proxies:
-      - "🏛️ 铸渊专线V2-${user.label}"
+${toolProxies}
 
 # ── 路由规则 ──────────────────────────────
 rules:
@@ -328,12 +417,15 @@ const server = http.createServer((req, res) => {
     // 健康检查
     if (pathname === '/health') {
       const users = userManager.getEnabledUsers();
+      const nodes = buildVpnNodes();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         status: 'ok',
         service: 'zy-proxy-v2-subscription',
         version: '2.0.0',
         users_count: users.length,
+        nodes_count: nodes.length,
+        smart_routing: nodes.length > 1 ? 'url-test' : 'single',
         server: 'ZY-SVR-005 · Brain'
       }));
       return;
@@ -352,13 +444,18 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const keys = loadKeys();
-      const serverHost = getServerHost();
+      const nodes = buildVpnNodes();
+      if (nodes.length === 0) {
+        res.writeHead(503, { 'Content-Type': 'text/plain' });
+        res.end('No VPN nodes configured');
+        return;
+      }
+
       const clientType = detectClientType(req.headers['user-agent']);
       const userInfoHeader = generateUserInfoHeader(user);
 
       if (clientType === 'clash') {
-        const yaml = generateClashYaml(user, keys, serverHost);
+        const yaml = generateClashYaml(user, nodes);
         res.writeHead(200, {
           'Content-Type': 'text/yaml; charset=utf-8',
           'Content-Disposition': `attachment; filename="zy-proxy-v2-${user.label}.yaml"`,
@@ -368,8 +465,8 @@ const server = http.createServer((req, res) => {
         });
         res.end(yaml);
       } else {
-        const vlessUri = generateVlessUri(user, keys, serverHost);
-        const encoded = Buffer.from(vlessUri).toString('base64');
+        const vlessUris = generateVlessUris(user, nodes);
+        const encoded = Buffer.from(vlessUris).toString('base64');
         res.writeHead(200, {
           'Content-Type': 'text/plain; charset=utf-8',
           'subscription-userinfo': userInfoHeader,
@@ -423,7 +520,7 @@ const server = http.createServer((req, res) => {
 
       const totalGB = user.quota_bytes / (1024 ** 3);
       const usedGB = (user.traffic.upload_bytes + user.traffic.download_bytes) / (1024 ** 3);
-      const serverHost = getServerHost();
+      const nodes = buildVpnNodes();
 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({
@@ -437,17 +534,16 @@ const server = http.createServer((req, res) => {
           version: '2.0.0',
           uptime_seconds: Math.floor(process.uptime()),
           region: 'sg',
-          region_name: 'Singapore Zone 1',
+          region_name: 'Singapore',
           server_code: 'ZY-SVR-005'
         },
-        node: {
-          id: 'zy-brain-direct',
-          name: `🏛️ 铸渊专线V2-${user.label}`,
-          server: serverHost,
-          port: 443,
-          protocol: 'vless',
-          security: 'reality'
-        },
+        nodes: nodes.map(n => ({
+          id: n.id,
+          name: n.name,
+          region: n.region,
+          port: n.port
+        })),
+        smart_routing: nodes.length > 1 ? 'url-test (自动选最快)' : 'single-node',
         quota: {
           total_gb: parseFloat(totalGB.toFixed(1)),
           used_gb: parseFloat(usedGB.toFixed(2)),

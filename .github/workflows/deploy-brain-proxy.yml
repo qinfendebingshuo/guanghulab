@@ -174,6 +174,75 @@ jobs:
               ;;
           esac
 
+      # 同步UUID到面孔服务器 (add/remove后自动同步)
+      - name: '🔄 同步UUID到面孔服务器'
+        if: >-
+          (github.event.inputs.action == 'add-user' ||
+           github.event.inputs.action == 'remove-user') &&
+          success()
+        env:
+          ZY_FACE_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          ZY_FACE_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          ZY_FACE_USER: ${{ secrets.ZY_SERVER_USER }}
+        run: |
+          # 只在面孔服务器密钥可用时同步
+          if [ -z "$ZY_FACE_KEY" ] || [ -z "$ZY_FACE_HOST" ]; then
+            echo "⚠️ 面孔服务器密钥未配置，跳过UUID同步"
+            echo "   用户仍可使用大脑服务器节点"
+            exit 0
+          fi
+
+          echo "$ZY_FACE_KEY" > ~/.ssh/id_face
+          chmod 600 ~/.ssh/id_face
+          ssh-keyscan -H $ZY_FACE_HOST >> ~/.ssh/known_hosts 2>/dev/null
+
+          echo "🔄 从大脑服务器获取V2用户列表..."
+          V2_USERS=$(ssh -i ~/.ssh/id_brain \
+            ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }} \
+            "cd /opt/zhuyuan-brain/proxy && \
+             node -e \"
+               const um = require('./service/user-manager');
+               const users = um.getEnabledUsers();
+               const clients = users.map(u => ({id: u.uuid, flow: 'xtls-rprx-vision', email: u.email}));
+               console.log(JSON.stringify(clients));
+             \"")
+
+          echo "  V2用户数: $(echo "$V2_USERS" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.length)")"
+
+          echo "🔄 同步到面孔服务器Xray配置..."
+          ssh -i ~/.ssh/id_face \
+            ${ZY_FACE_USER}@${ZY_FACE_HOST} \
+            "XRAY_CONF='/usr/local/etc/xray/config.json'
+             if [ ! -f \"\$XRAY_CONF\" ]; then
+               echo '⚠️ 面孔服务器Xray配置不存在，跳过'
+               exit 0
+             fi
+
+             # 保存V2用户列表
+             echo '${V2_USERS}' > /opt/zhuyuan/proxy/data/v2-clients.json 2>/dev/null || true
+
+             # 将V2用户追加到Xray配置的clients数组
+             # 先移除旧的V2用户(email包含@)，再添加新的，保留V1原始用户
+             if command -v jq &>/dev/null; then
+               V2_CLIENTS=\$(cat /opt/zhuyuan/proxy/data/v2-clients.json)
+               jq --argjson v2 \"\$V2_CLIENTS\" '
+                 .inbounds[0].settings.clients = (
+                   [.inbounds[0].settings.clients[] | select(.email == \"bingshuo@zy-proxy\")] + \$v2
+                 )
+               ' \"\$XRAY_CONF\" > /tmp/xray-config-merged.json
+
+               if xray run -test -c /tmp/xray-config-merged.json 2>/dev/null; then
+                 mv /tmp/xray-config-merged.json \"\$XRAY_CONF\"
+                 systemctl restart xray
+                 echo '✅ 面孔服务器Xray已同步V2用户并重启'
+               else
+                 echo '❌ 合并后配置验证失败，保持原配置'
+                 rm -f /tmp/xray-config-merged.json
+               fi
+             else
+               echo '⚠️ jq未安装，请在面孔服务器安装: apt install jq'
+             fi"
+
   # ═══ §3 发送订阅 ═══
   send-subscription:
     name: '📧 发送V2订阅'
