@@ -303,7 +303,7 @@ jobs:
             ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }} \
             "export ZY_SMTP_USER='${ZY_SMTP_USER}' ZY_SMTP_PASS='${ZY_SMTP_PASS}' && \
              cd /opt/zhuyuan-brain/proxy && \
-             node service/send-subscription.js '$EMAIL' '$SUB_URL'" || {
+             node service/send-subscription.js send '$EMAIL' '$SUB_URL'" || {
             echo ""
             echo "⚠️ 邮件发送失败，请手动将以下订阅链接发送给用户:"
             echo "   $SUB_URL"

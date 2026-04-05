@@ -256,7 +256,7 @@ server {
     server_name localhost 127.0.0.1;
 
     # ─── 铸渊专线V2订阅服务 (端口 3803) ───
-    location /api/proxy-sub/ {
+    location /api/proxy-v2/ {
         proxy_pass http://127.0.0.1:3803/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -293,8 +293,14 @@ NGINXEOF
             echo "  ✅ 已修复端口: 3802 → 3803"
         fi
 
-        # 如果没有proxy-sub配置，注入V2配置
-        if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
+        # 修复旧路径: 如果存在proxy-sub配置，替换为proxy-v2
+        if grep -q "location /api/proxy-sub/" "$NGINX_CONF" 2>/dev/null; then
+            sed -i 's|location /api/proxy-sub/|location /api/proxy-v2/|g' "$NGINX_CONF"
+            echo "  ✅ 已修复路径: /api/proxy-sub/ → /api/proxy-v2/"
+        fi
+
+        # 如果没有proxy-v2配置，注入V2配置
+        if ! grep -q "proxy-v2" "$NGINX_CONF" 2>/dev/null; then
             echo "  添加V2订阅服务反向代理配置..."
             # 在server块内的最后一个location之后、server块结束}之前插入
             # 使用更安全的锚点: 匹配server块内的 } (缩进的)
@@ -304,12 +310,12 @@ NGINXEOF
 
             # 使用perl进行更安全的插入（在server块的最后一个}之前）
             if command -v perl &>/dev/null; then
-                perl -i -0pe 's/(server\s*\{(?:(?!server\s*\{).)*?)(^\})/\1    # ─── 铸渊专线V2订阅服务 (端口 3803) ───\n    location \/api\/proxy-sub\/ {\n        proxy_pass http:\/\/127.0.0.1:3803\/;\n        proxy_http_version 1.1;\n        proxy_set_header Host \$host;\n        proxy_set_header X-Real-IP \$remote_addr;\n        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \$scheme;\n        proxy_connect_timeout 10s;\n        proxy_read_timeout 30s;\n        proxy_send_timeout 30s;\n        add_header X-Content-Type-Options nosniff always;\n        add_header X-Frame-Options DENY always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n\n\2/ms' "$NGINX_CONF" 2>/dev/null
+                perl -i -0pe 's/(server\s*\{(?:(?!server\s*\{).)*?)(^\})/\1    # ─── 铸渊专线V2订阅服务 (端口 3803) ───\n    location \/api\/proxy-v2\/ {\n        proxy_pass http:\/\/127.0.0.1:3803\/;\n        proxy_http_version 1.1;\n        proxy_set_header Host \$host;\n        proxy_set_header X-Real-IP \$remote_addr;\n        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \$scheme;\n        proxy_connect_timeout 10s;\n        proxy_read_timeout 30s;\n        proxy_send_timeout 30s;\n        add_header X-Content-Type-Options nosniff always;\n        add_header X-Frame-Options DENY always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n\n\2/ms' "$NGINX_CONF" 2>/dev/null
             else
                 # 回退: 在第一个顶层 } 之前插入
                 sed -i '/^}/i\
     # ─── 铸渊专线V2订阅服务 (端口 3803) ───\
-    location /api/proxy-sub/ {\
+    location /api/proxy-v2/ {\
         proxy_pass http://127.0.0.1:3803/;\
         proxy_http_version 1.1;\
         proxy_set_header Host $host;\
@@ -324,9 +330,9 @@ NGINXEOF
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;\
     }' "$NGINX_CONF" || true
             fi
-            echo "  ✅ V2 proxy-sub配置已注入"
+            echo "  ✅ V2 proxy-v2配置已注入"
         else
-            echo "  proxy-sub配置已存在"
+            echo "  proxy-v2配置已存在"
         fi
     fi
 
@@ -373,10 +379,10 @@ health_check() {
 
     # Nginx反向代理
     if systemctl is-active --quiet nginx 2>/dev/null; then
-        if curl -sf http://127.0.0.1:80/api/proxy-sub/health >/dev/null 2>&1; then
-            echo "  ✅ Nginx反代: 正常 (/api/proxy-sub/ → 3803)"
+        if curl -sf http://127.0.0.1:80/api/proxy-v2/health >/dev/null 2>&1; then
+            echo "  ✅ Nginx反代: 正常 (/api/proxy-v2/ → 3803)"
         else
-            echo "  ⚠️ Nginx反代: /api/proxy-sub/ 无法访问 (检查proxy_pass端口)"
+            echo "  ⚠️ Nginx反代: /api/proxy-v2/ 无法访问 (检查proxy_pass端口)"
         fi
     else
         echo "  ⚠️ Nginx: 未运行"

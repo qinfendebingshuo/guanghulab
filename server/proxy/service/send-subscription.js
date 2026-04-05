@@ -10,8 +10,8 @@
 // 确保敏感信息不经过公开仓库
 //
 // 用法:
-//   node send-subscription.js send <email>  — 发送订阅链接
-//   node send-subscription.js alert <msg>   — 发送告警邮件
+//   node send-subscription.js send <email> [url]  — 发送订阅链接 (url可选，V2传入)
+//   node send-subscription.js alert <msg>          — 发送告警邮件
 //
 // 环境变量:
 //   ZY_SMTP_USER, ZY_SMTP_PASS — SMTP认证
@@ -125,8 +125,8 @@ function detectSmtpHost(email) {
 }
 
 // ── 生成订阅邮件HTML ─────────────────────────
-function generateSubscriptionEmail(config) {
-  const subUrl = `http://${config.server_host}/api/proxy-sub/sub/${config.sub_token}`;
+function generateSubscriptionEmail(config, urlOverride) {
+  const subUrl = urlOverride || `http://${config.server_host}/api/proxy-sub/sub/${config.sub_token}`;
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
 
   return `
@@ -226,12 +226,12 @@ function generateAlertEmail(message) {
 
 // ── 主入口 ───────────────────────────────────
 async function main() {
-  const [,, action, target] = process.argv;
+  const [,, action, target, urlOverride] = process.argv;
 
   if (!action) {
     console.log('用法:');
-    console.log('  node send-subscription.js send <email>  — 发送订阅链接');
-    console.log('  node send-subscription.js alert <msg>   — 发送告警邮件');
+    console.log('  node send-subscription.js send <email> [url]  — 发送订阅链接');
+    console.log('  node send-subscription.js alert <msg>         — 发送告警邮件');
     process.exit(0);
   }
 
@@ -245,7 +245,7 @@ async function main() {
     }
 
     console.log(`📧 发送订阅链接到: ${email}`);
-    const html = generateSubscriptionEmail(config);
+    const html = generateSubscriptionEmail(config, urlOverride);
 
     try {
       await sendEmail(email, '🏛️ 铸渊专线 · 订阅链接', html);
