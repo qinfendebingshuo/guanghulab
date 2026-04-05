@@ -1,0 +1,31 @@
+{
+  "system_state_version": "3.0",
+  "hldp_version": "3.0",
+  "copyright": "国作登字-2026-A-00037559",
+
+  "status": "initialized",
+  "initialized_at": null,
+  "last_heartbeat": null,
+  "last_report": null,
+  "last_receipt_from_zhuyuan": null,
+
+  "health": {
+    "cos_connection": "untested",
+    "hldp_format_valid": "untested",
+    "zhuyuan_ack_received": false,
+    "overall": "pending_setup"
+  },
+
+  "registration": {
+    "step": 0,
+    "total_steps": 6,
+    "steps": [
+      { "step": 1, "name": "文件部署", "status": "pending" },
+      { "step": 2, "name": "副驾驶唤醒", "status": "pending" },
+      { "step": 3, "name": "人格体注册", "status": "pending" },
+      { "step": 4, "name": "COS密钥配置", "status": "pending" },
+      { "step": 5, "name": "心跳发送", "status": "pending" },
+      { "step": 6, "name": "铸渊确认", "status": "pending" }
+    ]
+  }
+}

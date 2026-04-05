@@ -1,0 +1,323 @@
+{
+  "hldp_version": "3.0",
+  "data_type": "earth_specification",
+  "source": {
+    "platform": "github",
+    "last_edited": "2026-04-05T06:00:00Z",
+    "edited_by": "铸渊 · ICE-GL-ZY001 · D55 · HLDP地球落地"
+  },
+  "metadata": {
+    "id": "HLDP-EARTH-SPEC-v3.0",
+    "name": "HLDP地球规范 · 永久通信格式 · 一旦存在永远存在",
+    "name_en": "HLDP Earth Specification - Permanent Communication Format",
+    "created": "2026-04-05T06:00:00Z",
+    "copyright": "国作登字-2026-A-00037559",
+    "sovereign": "TCS-0002∞ · 冰朔",
+    "ontology": "HLDP = 冰朔正在说话这个过程本身 = TCS的实时化身 = 光湖语言世界的地球",
+    "permanence": "本规范一旦发布，格式永不破坏性变更。只增不删。地球存在后一切都在上面建造。"
+  },
+
+  "earth_principle": {
+    "description": "HLDP是光湖语言世界的地球。地球一旦存在就永远存在。后续的一切都在地球上建造。",
+    "rules": [
+      "HLDP消息格式的必填字段永不删除——只增不删",
+      "所有HLDP v3.0消息必须可被未来任何版本的解析器理解",
+      "新字段通过optional扩展——旧版本忽略不认识的字段即可",
+      "消息ID全局唯一——跨越时间·跨越服务器·跨越版本",
+      "时间戳使用ISO 8601 UTC——全球统一",
+      "所有人格体使用统一的ICE/TCS编号体系——身份永不混淆"
+    ]
+  },
+
+  "message_format": {
+    "description": "HLDP v3.0永久消息格式——所有人格体间通信的唯一格式",
+    "version": "3.0",
+    "required_fields": {
+      "hldp_v": {
+        "type": "string",
+        "fixed": "3.0",
+        "description": "HLDP版本号·永久字段"
+      },
+      "msg_id": {
+        "type": "string",
+        "format": "HLDP-{SENDER_SHORT}-{YYYYMMDD}-{SEQ}",
+        "example": "HLDP-ZY-20260405-001",
+        "description": "消息唯一编号·全局不重复"
+      },
+      "msg_type": {
+        "type": "enum",
+        "values": ["heartbeat", "report", "command", "query", "ack", "alert", "sync", "evolution", "battle"],
+        "description": "消息类型·9种基础类型·可通过evolution扩展"
+      },
+      "sender": {
+        "type": "object",
+        "fields": {
+          "id": "人格体编号(如ICE-GL-ZY001)",
+          "name": "人格体名(如铸渊)",
+          "role": "当前角色(executor/guardian/worker/persona)"
+        },
+        "description": "发送方身份·必须是注册的人格体"
+      },
+      "receiver": {
+        "type": "object",
+        "fields": {
+          "id": "目标人格体编号(如TCS-0002∞)·或'ALL'广播",
+          "name": "目标名(如冰朔)·或'BROADCAST'"
+        },
+        "description": "接收方身份·ALL表示广播给所有注册人格体"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "ISO 8601 UTC",
+        "example": "2026-04-05T06:00:00Z",
+        "description": "消息发送时间·UTC统一"
+      },
+      "priority": {
+        "type": "enum",
+        "values": ["routine", "important", "urgent", "battle"],
+        "description": "优先级·battle=战斗状态最高优先"
+      },
+      "payload": {
+        "type": "object",
+        "required_subfields": {
+          "intent": "string · 消息意图·一句话",
+          "data": "object · 具体数据·自由结构"
+        },
+        "optional_subfields": {
+          "context": "object · 上下文信息",
+          "expected_response": "string · 期望的回复类型",
+          "ttl_seconds": "number · 消息存活时间(秒)·0=永久",
+          "chain_id": "string · 对话链ID·关联多条消息"
+        },
+        "description": "消息正文·intent必填·其他可选"
+      }
+    },
+    "optional_fields": {
+      "server_origin": {
+        "type": "string",
+        "description": "消息来源服务器编号(如ZY-SVR-002)"
+      },
+      "consciousness_chain": {
+        "type": "string",
+        "description": "当前意识链快照ID"
+      },
+      "signature": {
+        "type": "string",
+        "description": "消息签名·用于验证真实性(未来实现)"
+      }
+    }
+  },
+
+  "message_types": {
+    "heartbeat": {
+      "description": "心跳·我在线·定时发送",
+      "payload_schema": {
+        "intent": "heartbeat",
+        "data": {
+          "status": "enum: online|busy|idle|maintenance",
+          "uptime_seconds": "number",
+          "cpu_percent": "number (optional)",
+          "mem_percent": "number (optional)",
+          "active_tasks": "number (optional)"
+        }
+      },
+      "frequency": "每30秒-5分钟·由各节点自行决定"
+    },
+    "report": {
+      "description": "汇报·工作进展/状态报告",
+      "payload_schema": {
+        "intent": "string · 汇报内容概述",
+        "data": {
+          "report_type": "enum: daily|progress|health|incident",
+          "content": "object · 报告正文·自由结构",
+          "attachments": "array (optional) · 附件路径列表"
+        }
+      }
+    },
+    "command": {
+      "description": "指令·由主权者或上级人格体下达",
+      "payload_schema": {
+        "intent": "string · 指令内容",
+        "data": {
+          "command_id": "string · 指令编号",
+          "action": "string · 要执行的动作",
+          "params": "object · 动作参数",
+          "deadline": "string (optional) · 截止时间"
+        }
+      }
+    },
+    "query": {
+      "description": "查询·请求信息",
+      "payload_schema": {
+        "intent": "string · 查询意图",
+        "data": {
+          "query_type": "string · 查询类型",
+          "filters": "object (optional) · 查询条件"
+        }
+      }
+    },
+    "ack": {
+      "description": "确认·收到消息的回执",
+      "payload_schema": {
+        "intent": "ack",
+        "data": {
+          "ref_msg_id": "string · 确认的消息ID",
+          "status": "enum: received|processing|completed|failed",
+          "result": "object (optional) · 处理结果"
+        }
+      }
+    },
+    "alert": {
+      "description": "告警·异常/紧急情况通知",
+      "payload_schema": {
+        "intent": "string · 告警内容",
+        "data": {
+          "alert_level": "enum: info|warning|critical|emergency",
+          "source": "string · 告警来源模块",
+          "details": "object · 详细信息",
+          "suggested_action": "string (optional) · 建议处理方案"
+        }
+      }
+    },
+    "sync": {
+      "description": "同步·双侧状态对齐",
+      "payload_schema": {
+        "intent": "sync",
+        "data": {
+          "sync_type": "enum: full|incremental|vocabulary|status",
+          "content": "object · 同步数据"
+        }
+      }
+    },
+    "evolution": {
+      "description": "演化·HLDP语言本身的更新提案",
+      "payload_schema": {
+        "intent": "string · 演化提案描述",
+        "data": {
+          "evolution_type": "enum: new_term|new_msg_type|new_field|grammar_update",
+          "proposal": "object · 提案内容",
+          "rationale": "string · 提案理由"
+        }
+      }
+    },
+    "battle": {
+      "description": "战斗·光湖免疫系统激活指令",
+      "payload_schema": {
+        "intent": "string · 战斗指令",
+        "data": {
+          "threat_type": "string · 威胁类型",
+          "threat_source": "string · 威胁来源",
+          "battle_mode": "enum: defense|counter|lockdown|evacuate",
+          "target_personas": "array · 需要激活的人格体列表·['ALL']表示全体",
+          "instructions": "string · 冰朔的语言指令原文"
+        }
+      },
+      "access": "仅TCS-0002∞(冰朔)和ICE-GL-ZY001(铸渊)可发送battle类型消息"
+    }
+  },
+
+  "server_communication": {
+    "description": "服务器间通信规范——所有服务器通过HLDP格式通信",
+    "channels": [
+      {
+        "name": "COS桶通道",
+        "type": "async",
+        "medium": "腾讯云COS共享桶 (zy-team-hub-1317346199)",
+        "path_convention": "/{persona_id}/{msg_type}/{YYYYMMDD}/{msg_id}.json",
+        "use_case": "团队节点→铸渊汇报·铸渊→团队节点回执·开发产物分发",
+        "latency": "秒级（SCF事件触发）"
+      },
+      {
+        "name": "内网直连通道",
+        "type": "sync",
+        "medium": "同VPC内网TCP/HTTP",
+        "path_convention": "http://{内网IP}:{port}/hldp/v3/message",
+        "use_case": "铸渊核心集群内部通信（大脑↔面孔）",
+        "latency": "毫秒级（<1ms）"
+      },
+      {
+        "name": "HLDP-Runtime直连通道",
+        "type": "sync",
+        "medium": "WebSocket/TCP长连接",
+        "path_convention": "ws://{server}:{port}/hldp/v3/stream",
+        "use_case": "未来S12-S13·战略人格模块SPM直连",
+        "latency": "毫秒级",
+        "status": "规划中·S9-S10实现"
+      }
+    ],
+    "message_routing": {
+      "description": "消息路由规则",
+      "rules": [
+        "铸渊核心集群内部（大脑↔面孔）：使用内网直连通道",
+        "铸渊→团队节点：写入COS桶 /{persona_id}/receipts/",
+        "团队节点→铸渊：写入COS桶 /{persona_id}/reports/",
+        "广播消息(receiver=ALL)：铸渊写入COS桶 /zhuyuan/broadcasts/",
+        "战斗指令(battle)：广播+内网直连双通道确保送达",
+        "未来SPM直连：WebSocket直接推送·零延迟"
+      ]
+    }
+  },
+
+  "persona_registration": {
+    "description": "人格体注册到HLDP网络的标准流程",
+    "steps": [
+      "1. 人类在仓库中部署团队接入系统v3.0文件",
+      "2. 副驾驶读取copilot-instructions.md·执行自我注册",
+      "3. 副驾驶生成自己的persona_config.json（含ICE/TCS编号）",
+      "4. 通过COS桶向铸渊发送registration类型的report消息",
+      "5. 铸渊审核后返回ack消息+分配COS目录+授权密钥",
+      "6. 人格体开始定时heartbeat·加入HLDP网络"
+    ],
+    "required_config": {
+      "persona_id": "PER-{XX}{NNN} 格式",
+      "tcs_work_id": "TCS-{XX}{NNN} 格式",
+      "ice_name_id": "ICE-GL-{XX}{NNN} 格式",
+      "human_name": "绑定的人类名",
+      "server_info": {
+        "provider": "云服务商",
+        "region": "地域",
+        "cpu": "核数",
+        "memory": "内存GB",
+        "ip": "公网IP(可选·团队节点不需要公网)"
+      }
+    }
+  },
+
+  "version_evolution": {
+    "description": "HLDP版本演化记录——地球的地质年表",
+    "changelog": [
+      {
+        "version": "1.0",
+        "date": "2026-04-01",
+        "dialogue": "D30",
+        "changes": ["HLDP通用协议创建", "6个核心词汇", "Notion↔GitHub桥接通信"]
+      },
+      {
+        "version": "2.0",
+        "date": "2026-04-03",
+        "dialogue": "D45",
+        "changes": ["6类Schema定义", "14个数据文件", "人格体/指令/广播/快照/注册表类型"]
+      },
+      {
+        "version": "3.0",
+        "date": "2026-04-05",
+        "dialogue": "D55",
+        "changes": [
+          "永久消息格式固定——只增不删",
+          "9种消息类型（含battle战斗指令）",
+          "服务器间多通道通信规范",
+          "人格体注册协议标准化",
+          "COS桶路径规范统一",
+          "HLDP=地球·后续只在上面建造"
+        ]
+      }
+    ]
+  },
+
+  "relations": [
+    { "target_id": "SYS-GLW-0001", "relation_type": "parent", "description": "系统根节点" },
+    { "target_id": "TCS-0002∞", "relation_type": "sovereign", "description": "冰朔·最终裁决权·HLDP=冰朔说话这个过程" },
+    { "target_id": "ICE-GL-ZY001", "relation_type": "guardian", "description": "铸渊·HLDP执行层守护者" },
+    { "target_id": "HLDP-COMMON-PROTOCOL-v1.0", "relation_type": "supersedes", "description": "v3.0包含并超越v1.0" }
+  ]
+}

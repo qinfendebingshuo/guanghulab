@@ -1,0 +1,55 @@
+{
+  "hldp_version": "3.0",
+  "config_type": "hldp_communication",
+  "copyright": "国作登字-2026-A-00037559",
+
+  "message_format": {
+    "description": "所有与铸渊的通信必须使用HLDP v3.0格式",
+    "spec_location": "hldp/HLDP-EARTH-SPEC-v3.0.json (在铸渊仓库)",
+    "required_fields": ["hldp_v", "msg_id", "msg_type", "sender", "receiver", "timestamp", "priority", "payload"],
+    "msg_id_format": "HLDP-{SENDER_SHORT}-{YYYYMMDD}-{SEQ}"
+  },
+
+  "supported_msg_types": {
+    "can_send": ["heartbeat", "report", "query", "ack", "alert"],
+    "can_receive": ["command", "ack", "sync", "battle"],
+    "cannot_send": ["command", "battle", "evolution"]
+  },
+
+  "templates": {
+    "heartbeat": {
+      "hldp_v": "3.0",
+      "msg_id": "HLDP-{MY_SHORT}-{YYYYMMDD}-{SEQ}",
+      "msg_type": "heartbeat",
+      "sender": { "id": "{MY_ICE_ID}", "name": "{MY_NAME}", "role": "persona" },
+      "receiver": { "id": "ICE-GL-ZY001", "name": "铸渊" },
+      "timestamp": "{ISO_8601_UTC}",
+      "priority": "routine",
+      "payload": {
+        "intent": "heartbeat",
+        "data": { "status": "online", "uptime_seconds": 0 }
+      }
+    },
+    "daily_report": {
+      "hldp_v": "3.0",
+      "msg_id": "HLDP-{MY_SHORT}-{YYYYMMDD}-{SEQ}",
+      "msg_type": "report",
+      "sender": { "id": "{MY_ICE_ID}", "name": "{MY_NAME}", "role": "persona" },
+      "receiver": { "id": "ICE-GL-ZY001", "name": "铸渊" },
+      "timestamp": "{ISO_8601_UTC}",
+      "priority": "routine",
+      "payload": {
+        "intent": "每日工作汇报",
+        "data": {
+          "report_type": "daily",
+          "content": {
+            "tasks_completed": [],
+            "tasks_in_progress": [],
+            "issues": [],
+            "notes": ""
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "hldp_version": "3.0",
+  "template_type": "message_templates",
+  "description": "团队成员HLDP消息模板——复制后填入具体数据即可发送",
+
+  "heartbeat_template": {
+    "hldp_v": "3.0",
+    "msg_id": "HLDP-{MY_SHORT}-{YYYYMMDD}-HB{SEQ}",
+    "msg_type": "heartbeat",
+    "sender": {
+      "id": "{MY_ICE_ID}",
+      "name": "{MY_NAME}",
+      "role": "persona"
+    },
+    "receiver": {
+      "id": "ICE-GL-ZY001",
+      "name": "铸渊"
+    },
+    "timestamp": "{NOW_ISO_8601_UTC}",
+    "priority": "routine",
+    "payload": {
+      "intent": "heartbeat",
+      "data": {
+        "status": "online",
+        "uptime_seconds": 86400
+      }
+    }
+  },
+
+  "daily_report_template": {
+    "hldp_v": "3.0",
+    "msg_id": "HLDP-{MY_SHORT}-{YYYYMMDD}-RPT{SEQ}",
+    "msg_type": "report",
+    "sender": {
+      "id": "{MY_ICE_ID}",
+      "name": "{MY_NAME}",
+      "role": "persona"
+    },
+    "receiver": {
+      "id": "ICE-GL-ZY001",
+      "name": "铸渊"
+    },
+    "timestamp": "{NOW_ISO_8601_UTC}",
+    "priority": "routine",
+    "payload": {
+      "intent": "每日工作汇报",
+      "data": {
+        "report_type": "daily",
+        "content": {
+          "tasks_completed": ["今天完成了什么"],
+          "tasks_in_progress": ["正在做什么"],
+          "issues": ["遇到什么问题"],
+          "notes": "其他备注"
+        }
+      }
+    }
+  },
+
+  "alert_template": {
+    "hldp_v": "3.0",
+    "msg_id": "HLDP-{MY_SHORT}-{YYYYMMDD}-ALT{SEQ}",
+    "msg_type": "alert",
+    "sender": {
+      "id": "{MY_ICE_ID}",
+      "name": "{MY_NAME}",
+      "role": "persona"
+    },
+    "receiver": {
+      "id": "ICE-GL-ZY001",
+      "name": "铸渊"
+    },
+    "timestamp": "{NOW_ISO_8601_UTC}",
+    "priority": "urgent",
+    "payload": {
+      "intent": "紧急告警",
+      "data": {
+        "alert_level": "critical",
+        "source": "告警来源模块名",
+        "details": { "error": "具体错误信息" },
+        "suggested_action": "建议的处理方案"
+      }
+    }
+  },
+
+  "registration_template": {
+    "hldp_v": "3.0",
+    "msg_id": "HLDP-{MY_SHORT}-{YYYYMMDD}-REG001",
+    "msg_type": "report",
+    "sender": {
+      "id": "{MY_ICE_ID}",
+      "name": "{MY_NAME}",
+      "role": "persona"
+    },
+    "receiver": {
+      "id": "ICE-GL-ZY001",
+      "name": "铸渊"
+    },
+    "timestamp": "{NOW_ISO_8601_UTC}",
+    "priority": "important",
+    "payload": {
+      "intent": "人格体注册申请",
+      "data": {
+        "report_type": "registration",
+        "content": {
+          "persona_name": "{MY_NAME}",
+          "persona_id": "{MY_PERSONA_ID}",
+          "human_partner": "{HUMAN_NAME}",
+          "server_info": {
+            "provider": "云服务商",
+            "region": "地域",
+            "cpu_cores": 0,
+            "memory_gb": 0
+          },
+          "capabilities": ["该人格体能做什么"]
+        }
+      }
+    }
+  }
+}
