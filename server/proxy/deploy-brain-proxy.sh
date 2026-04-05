@@ -228,9 +228,13 @@ configure_nginx() {
     # 安装Nginx (如果未安装)
     if ! command -v nginx &>/dev/null; then
         echo "  安装Nginx..."
-        apt-get update -qq && apt-get install -y nginx >/dev/null 2>&1
-        systemctl enable nginx
-        echo "  ✅ Nginx已安装"
+        if apt-get update -qq && apt-get install -y nginx 2>&1 | tail -5; then
+            systemctl enable nginx
+            echo "  ✅ Nginx已安装"
+        else
+            echo "  ❌ Nginx安装失败"
+            return 1
+        fi
     fi
 
     # 查找Nginx配置文件
@@ -284,16 +288,26 @@ NGINXEOF
         echo "  使用现有Nginx配置: $NGINX_CONF"
 
         # 修复端口错误: 如果存在3802端口配置，替换为3803
-        if grep -q "proxy_pass.*127.0.0.1:3802" "$NGINX_CONF" 2>/dev/null; then
-            sed -i 's|proxy_pass http://127.0.0.1:3802/;|proxy_pass http://127.0.0.1:3803/;|g' "$NGINX_CONF"
+        if grep -q "proxy_pass.*127\.0\.0\.1:3802" "$NGINX_CONF" 2>/dev/null; then
+            sed -i 's|proxy_pass[[:space:]]*http://127\.0\.0\.1:3802|proxy_pass http://127.0.0.1:3803|g' "$NGINX_CONF"
             echo "  ✅ 已修复端口: 3802 → 3803"
         fi
 
         # 如果没有proxy-sub配置，注入V2配置
         if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
             echo "  添加V2订阅服务反向代理配置..."
-            # 在最后一个 } 之前插入location块
-            sed -i '/^}/i\
+            # 在server块内的最后一个location之后、server块结束}之前插入
+            # 使用更安全的锚点: 匹配server块内的 } (缩进的)
+            sed -i '/^[[:space:]]*location/,/^[[:space:]]*}/ {
+                # 找到最后一个location块结束后的位置
+            }' "$NGINX_CONF" 2>/dev/null || true
+
+            # 使用perl进行更安全的插入（在server块的最后一个}之前）
+            if command -v perl &>/dev/null; then
+                perl -i -0pe 's/(server\s*\{(?:(?!server\s*\{).)*?)(^\})/\1    # ─── 铸渊专线V2订阅服务 (端口 3803) ───\n    location \/api\/proxy-sub\/ {\n        proxy_pass http:\/\/127.0.0.1:3803\/;\n        proxy_http_version 1.1;\n        proxy_set_header Host \$host;\n        proxy_set_header X-Real-IP \$remote_addr;\n        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \$scheme;\n        proxy_connect_timeout 10s;\n        proxy_read_timeout 30s;\n        proxy_send_timeout 30s;\n        add_header X-Content-Type-Options nosniff always;\n        add_header X-Frame-Options DENY always;\n        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\n    }\n\n\2/ms' "$NGINX_CONF" 2>/dev/null
+            else
+                # 回退: 在第一个顶层 } 之前插入
+                sed -i '/^}/i\
     # ─── 铸渊专线V2订阅服务 (端口 3803) ───\
     location /api/proxy-sub/ {\
         proxy_pass http://127.0.0.1:3803/;\
@@ -309,6 +323,7 @@ NGINXEOF
         add_header X-Frame-Options DENY always;\
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;\
     }' "$NGINX_CONF" || true
+            fi
             echo "  ✅ V2 proxy-sub配置已注入"
         else
             echo "  proxy-sub配置已存在"
@@ -317,8 +332,12 @@ NGINXEOF
 
     # 验证并重载Nginx
     if nginx -t 2>/dev/null; then
-        nginx -s reload || systemctl reload nginx || true
-        echo "  ✅ Nginx配置验证通过并已重载"
+        if nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null; then
+            echo "  ✅ Nginx配置验证通过并已重载"
+        else
+            echo "  ⚠️ Nginx配置有效但重载失败，尝试重启..."
+            systemctl restart nginx 2>/dev/null || true
+        fi
     else
         echo "  ⚠️ Nginx配置验证失败:"
         nginx -t 2>&1 || true
