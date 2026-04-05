@@ -374,12 +374,9 @@ jobs:
           echo "📎 V3订阅链接: ${SUB_URL}"
           echo "📊 V3仪表盘:   ${DASHBOARD_URL}"
 
-          # 通过大脑服务器发送V3邮件
-          ssh -i ~/.ssh/id_brain \
-            ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }} \
-            "export ZY_SMTP_USER='${ZY_SMTP_USER}' ZY_SMTP_PASS='${ZY_SMTP_PASS}' && \
-             cd /opt/zhuyuan-brain/proxy && \
-             node service/send-subscription.js send-v3 '$EMAIL' '$SUB_URL' '$DASHBOARD_URL'" || {
+          # 本地发送V3邮件（使用仓库最新代码，避免服务器脚本版本滞后）
+          cd ${{ github.workspace }}/server/proxy
+          node service/send-subscription.js send-v3 "$EMAIL" "$SUB_URL" "$DASHBOARD_URL" || {
             echo ""
             echo "⚠️ 邮件发送失败，请手动访问以下链接:"
             echo "   订阅: $SUB_URL"
