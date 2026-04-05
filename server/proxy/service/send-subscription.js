@@ -125,8 +125,8 @@ function detectSmtpHost(email) {
 }
 
 // ── 生成订阅邮件HTML ─────────────────────────
-function generateSubscriptionEmail(config) {
-  const subUrl = `http://${config.server_host}/api/proxy-sub/sub/${config.sub_token}`;
+function generateSubscriptionEmail(config, urlOverride) {
+  const subUrl = urlOverride || `http://${config.server_host}/api/proxy-sub/sub/${config.sub_token}`;
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
 
   return `
@@ -226,7 +226,7 @@ function generateAlertEmail(message) {
 
 // ── 主入口 ───────────────────────────────────
 async function main() {
-  const [,, action, target] = process.argv;
+  const [,, action, target, urlOverride] = process.argv;
 
   if (!action) {
     console.log('用法:');
@@ -245,7 +245,7 @@ async function main() {
     }
 
     console.log(`📧 发送订阅链接到: ${email}`);
-    const html = generateSubscriptionEmail(config);
+    const html = generateSubscriptionEmail(config, urlOverride);
 
     try {
       await sendEmail(email, '🏛️ 铸渊专线 · 订阅链接', html);
