@@ -177,7 +177,40 @@ function monitor() {
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(summaryFile, JSON.stringify(summary, null, 2));
+
+  // V3: 每日流量快照 (供仪表盘使用)
+  saveDailySnapshot(perUserTraffic);
+
   console.log('[V2流量监控] 检查完成');
+}
+
+// ── V3: 每日流量快照 ─────────────────────────
+// 记录每天各用户的流量，供/dashboard/{token}使用
+function saveDailySnapshot(perUserTraffic) {
+  const snapshotFile = path.join(DATA_DIR, 'daily-traffic-snapshot.json');
+  const today = new Date().toISOString().slice(0, 10);
+
+  let snapshot;
+  try {
+    snapshot = JSON.parse(fs.readFileSync(snapshotFile, 'utf8'));
+    // 如果日期变了，重置快照
+    if (snapshot.date !== today) {
+      snapshot = { date: today, per_user: {}, updated_at: new Date().toISOString() };
+    }
+  } catch {
+    snapshot = { date: today, per_user: {}, updated_at: new Date().toISOString() };
+  }
+
+  for (const [email, traffic] of Object.entries(perUserTraffic)) {
+    snapshot.per_user[email] = {
+      upload_gb: parseFloat((traffic.upload / (1024 ** 3)).toFixed(2)),
+      download_gb: parseFloat((traffic.download / (1024 ** 3)).toFixed(2)),
+      total_gb: parseFloat(((traffic.upload + traffic.download) / (1024 ** 3)).toFixed(2))
+    };
+  }
+
+  snapshot.updated_at = new Date().toISOString();
+  fs.writeFileSync(snapshotFile, JSON.stringify(snapshot, null, 2));
 }
 
 // ── 启动监控循环 ─────────────────────────────

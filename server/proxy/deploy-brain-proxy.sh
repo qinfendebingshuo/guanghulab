@@ -4,7 +4,7 @@
 # 📜 Copyright: 国作登字-2026-A-00037559
 # ═══════════════════════════════════════════════
 # server/proxy/deploy-brain-proxy.sh
-# 🚀 铸渊专线V2 · 大脑服务器部署脚本
+# 🚀 铸渊专线V2 + 光湖语言世界V3 · 大脑服务器部署脚本
 #
 # 在大脑服务器(ZY-SVR-005)上执行
 # 部署多用户VPN系统 (独立于面孔服务器的V1)
@@ -17,6 +17,8 @@
 #   bash deploy-brain-proxy.sh add-user <email> [quota_gb]  — 添加用户
 #   bash deploy-brain-proxy.sh remove-user <email>          — 移除用户
 #   bash deploy-brain-proxy.sh list-users                   — 列出用户
+#   bash deploy-brain-proxy.sh deploy-v3   — 部署V3测试环境
+#   bash deploy-brain-proxy.sh switch-v3   — 切换V2→V3 (用户刷新即升级)
 # ═══════════════════════════════════════════════
 
 set -uo pipefail
@@ -196,8 +198,16 @@ deploy_services() {
     cp "$REPO_PROXY_DIR"/service/vpn-worker.js "$PROXY_DIR/service/"
     cp "$REPO_PROXY_DIR"/ecosystem.brain-proxy.config.js "$PROXY_DIR/"
 
+    # 复制V3服务文件 (独立运行·不影响V2)
+    cp "$REPO_PROXY_DIR"/service/subscription-server-v3.js "$PROXY_DIR/service/"
+    cp "$REPO_PROXY_DIR"/service/llm-router.js "$PROXY_DIR/service/"
+    cp "$REPO_PROXY_DIR"/service/reverse-boost-agent.js "$PROXY_DIR/service/"
+    cp "$REPO_PROXY_DIR"/service/proxy-guardian.js "$PROXY_DIR/service/"
+    cp "$REPO_PROXY_DIR"/ecosystem.brain-proxy-v3.config.js "$PROXY_DIR/"
+
     # 复制V2 Nginx配置参考
     cp "$REPO_PROXY_DIR"/config/nginx-brain-proxy-snippet.conf "$PROXY_DIR/config/" 2>/dev/null || true
+    cp "$REPO_PROXY_DIR"/config/nginx-brain-proxy-v3-snippet.conf "$PROXY_DIR/config/" 2>/dev/null || true
 
     # 复制共用文件(发邮件等)
     cp "$REPO_PROXY_DIR"/service/send-subscription.js "$PROXY_DIR/service/" 2>/dev/null || true
@@ -377,6 +387,15 @@ health_check() {
         echo "  ❌ V2订阅服务: 端口3803无响应"
     fi
 
+    # V3订阅服务 (如果已部署)
+    if curl -sf http://127.0.0.1:3805/health >/dev/null 2>&1; then
+        HEALTH3=$(curl -sf http://127.0.0.1:3805/health)
+        USERS3=$(echo "$HEALTH3" | grep -o '"users_count":[0-9]*' | cut -d: -f2)
+        echo "  ✅ V3订阅服务: 正常 (${USERS3:-0}个用户) · 光湖语言世界"
+    else
+        echo "  ⚠️ V3订阅服务: 端口3805无响应 (未部署或未启动)"
+    fi
+
     # Nginx反向代理
     if systemctl is-active --quiet nginx 2>/dev/null; then
         if curl -sf http://127.0.0.1:80/api/proxy-v2/health >/dev/null 2>&1; then
@@ -468,6 +487,149 @@ list_users() {
     node "$PROXY_DIR/service/user-manager.js" list
 }
 
+# ── deploy-v3: 部署V3测试环境 ──────────────────
+# V2继续运行·V3独立启动·通过/api/proxy-v3/测试
+deploy_v3() {
+    echo "部署V3测试环境 (V2继续运行)..."
+    deploy_services
+
+    # 加载密钥作为环境变量
+    if [ -f "$PROXY_DIR/.env.keys" ]; then
+        set -a
+        # shellcheck source=/dev/null
+        source "$PROXY_DIR/.env.keys"
+        set +a
+    fi
+
+    # 启动V3 PM2进程
+    cd "$PROXY_DIR" || { echo "❌ 无法进入 $PROXY_DIR"; return 1; }
+    pm2 startOrRestart ecosystem.brain-proxy-v3.config.js --update-env
+    pm2 save
+
+    # 添加V3 Nginx测试路径
+    NGINX_CONF=""
+    for candidate in /etc/nginx/sites-enabled/zhuyuan-brain.conf /etc/nginx/sites-enabled/default; do
+        if [ -f "$candidate" ]; then
+            NGINX_CONF="$candidate"
+            break
+        fi
+    done
+
+    if [ -n "$NGINX_CONF" ] && ! grep -q "proxy-v3" "$NGINX_CONF" 2>/dev/null; then
+        echo "  添加V3测试路径..."
+        sed -i '/^}/i\
+    # ─── 光湖语言世界V3测试 (端口 3805) ───\
+    location /api/proxy-v3/ {\
+        proxy_pass http://127.0.0.1:3805/;\
+        proxy_http_version 1.1;\
+        proxy_set_header Host $host;\
+        proxy_set_header X-Real-IP $remote_addr;\
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\
+        proxy_set_header X-Forwarded-Proto $scheme;\
+        proxy_connect_timeout 10s;\
+        proxy_read_timeout 30s;\
+        proxy_send_timeout 30s;\
+        add_header X-Content-Type-Options nosniff always;\
+        add_header X-Frame-Options DENY always;\
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\
+    }' "$NGINX_CONF" || true
+        echo "  ✅ V3测试路径已添加"
+    else
+        echo "  proxy-v3配置已存在或Nginx配置未找到"
+    fi
+
+    if nginx -t 2>/dev/null; then
+        nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+        echo "  ✅ Nginx已重载"
+    fi
+
+    echo ""
+    echo "════════════════════════════════════════"
+    echo "✅ V3测试环境已就绪"
+    echo ""
+    echo "测试方法:"
+    echo "  V3订阅: https://域名/api/proxy-v3/sub/{token}"
+    echo "  V3仪表盘: https://域名/api/proxy-v3/dashboard/{token}"
+    echo "  V3健康: https://域名/api/proxy-v3/health"
+    echo ""
+    echo "V2继续运行在 /api/proxy-v2/ (端口3803)"
+    echo "V3测试运行在 /api/proxy-v3/ (端口3805)"
+    echo ""
+    echo "测试通过后执行: bash deploy-brain-proxy.sh switch-v3"
+    echo "════════════════════════════════════════"
+
+    # V3健康检查
+    sleep 2
+    if curl -sf http://127.0.0.1:3805/health >/dev/null 2>&1; then
+        HEALTH=$(curl -sf http://127.0.0.1:3805/health)
+        echo "  ✅ V3订阅服务: 正常"
+        echo "  $HEALTH"
+    else
+        echo "  ⚠️ V3订阅服务(3805)尚未就绪，请稍等几秒后检查"
+    fi
+}
+
+# ── switch-v3: 切换V2→V3 ──────────────────────
+# 用户刷新订阅即获取V3配置
+switch_v3() {
+    echo "切换 /api/proxy-v2/ → V3 (端口3805)..."
+
+    NGINX_CONF=""
+    for candidate in /etc/nginx/sites-enabled/zhuyuan-brain.conf /etc/nginx/sites-enabled/default; do
+        if [ -f "$candidate" ]; then
+            NGINX_CONF="$candidate"
+            break
+        fi
+    done
+
+    if [ -z "$NGINX_CONF" ]; then
+        echo "❌ 未找到Nginx配置文件"
+        exit 1
+    fi
+
+    # 验证V3服务是否运行
+    if ! curl -sf http://127.0.0.1:3805/health >/dev/null 2>&1; then
+        echo "❌ V3服务(3805)未运行！请先执行 deploy-v3"
+        exit 1
+    fi
+
+    # 备份当前Nginx配置
+    cp "$NGINX_CONF" "${NGINX_CONF}.v2-backup"
+    echo "  ✅ 已备份Nginx配置到 ${NGINX_CONF}.v2-backup"
+
+    # 将 /api/proxy-v2/ 的 proxy_pass 从 3803 改为 3805
+    if grep -q "127\.0\.0\.1:3803" "$NGINX_CONF" 2>/dev/null; then
+        sed -i 's|127\.0\.0\.1:3803|127.0.0.1:3805|g' "$NGINX_CONF"
+        echo "  ✅ /api/proxy-v2/ 已切换到V3 (3803→3805)"
+    else
+        echo "  ⚠️ 未找到3803端口配置，可能已切换"
+    fi
+
+    # 重载Nginx
+    if nginx -t 2>/dev/null; then
+        nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+        echo "  ✅ Nginx已重载"
+    else
+        echo "  ❌ Nginx配置验证失败，回滚..."
+        cp "${NGINX_CONF}.v2-backup" "$NGINX_CONF"
+        nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+        echo "  ✅ 已回滚到V2配置"
+        exit 1
+    fi
+
+    echo ""
+    echo "════════════════════════════════════════"
+    echo "✅ V2→V3 切换完成!"
+    echo ""
+    echo "现在 /api/proxy-v2/sub/{token} 指向V3 (端口3805)"
+    echo "用户刷新订阅即可获取「光湖语言世界」配置"
+    echo ""
+    echo "回滚方法 (如有问题):"
+    echo "  cp ${NGINX_CONF}.v2-backup $NGINX_CONF"
+    echo "  nginx -s reload"
+    echo "════════════════════════════════════════"
+}
+
 # ── 执行 ──────────────────────────────────────
 case "$ACTION" in
     install)      install ;;
@@ -477,8 +639,10 @@ case "$ACTION" in
     add-user)     add_user "$@" ;;
     remove-user)  remove_user "$@" ;;
     list-users)   list_users ;;
+    deploy-v3)    deploy_v3 ;;
+    switch-v3)    switch_v3 ;;
     *)
-        echo "用法: bash deploy-brain-proxy.sh {install|update|status|restart|add-user|remove-user|list-users}"
+        echo "用法: bash deploy-brain-proxy.sh {install|update|status|restart|add-user|remove-user|list-users|deploy-v3|switch-v3}"
         exit 1
         ;;
 esac

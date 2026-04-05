@@ -30,10 +30,8 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 
-const DATA_DIR = process.env.ZY_PROXY_DATA_DIR || '/opt/zhuyuan/proxy/data';
-const LOG_DIR = process.env.ZY_PROXY_LOG_DIR || '/opt/zhuyuan/proxy/logs';
-const LLM_API_KEY = process.env.ZY_LLM_API_KEY || '';
-const LLM_BASE_URL = process.env.ZY_LLM_BASE_URL || '';
+const DATA_DIR = process.env.ZY_PROXY_DATA_DIR || '/opt/zhuyuan-brain/proxy/data';
+const LOG_DIR = process.env.ZY_PROXY_LOG_DIR || '/opt/zhuyuan-brain/proxy/logs';
 const GUARDIAN_FILE = path.join(DATA_DIR, 'guardian-status.json');
 const CHECK_INTERVAL = 10 * 60 * 1000; // 10分钟
 
@@ -101,7 +99,7 @@ function checkPort443() {
 // ── 检查订阅服务 ─────────────────────────────
 function checkSubscriptionService() {
   return new Promise((resolve) => {
-    const req = http.get('http://127.0.0.1:3802/health', { timeout: 5000 }, (res) => {
+    const req = http.get('http://127.0.0.1:3803/health', { timeout: 5000 }, (res) => {
       let data = '';
       res.on('data', (d) => { data += d; });
       res.on('end', () => {
@@ -201,7 +199,7 @@ function autoFix(checkName) {
 
     case 'subscription_service':
       // 通过PM2重启订阅服务
-      const pmResult = runCmd('pm2 restart zy-proxy-sub', 15000);
+      const pmResult = runCmd('pm2 restart zy-proxy-v2-sub', 15000);
       if (pmResult.ok) {
         console.log('[守护Agent] 订阅服务已重启');
         return true;
@@ -213,14 +211,17 @@ function autoFix(checkName) {
   }
 }
 
-// ── 调用LLM推理 ─────────────────────────────
+// ── 调用LLM推理 (V3: 使用llm-router动态路由) ──
 async function consultLLM(issue) {
-  if (!LLM_API_KEY || !LLM_BASE_URL) {
-    console.log('[守护Agent] LLM API未配置，跳过推理');
+  let llmRouter;
+  try {
+    llmRouter = require('./llm-router');
+  } catch {
+    console.log('[守护Agent] LLM路由器未加载，跳过推理');
     return null;
   }
 
-  const prompt = `你是铸渊专线的代理守护Agent。以下是当前检测到的问题:
+  const prompt = `你是光湖语言世界VPN的守护Agent。以下是当前检测到的问题:
 
 问题描述: ${issue.detail}
 检查项: ${issue.checkName}
@@ -229,46 +230,13 @@ async function consultLLM(issue) {
 
 请分析可能的原因并给出解决建议。回答要简洁明确。`;
 
-  return new Promise((resolve) => {
-    const urlObj = new URL(LLM_BASE_URL);
-    const postData = JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500
-    });
-
-    const options = {
-      hostname: urlObj.hostname,
-      port: urlObj.port || 443,
-      path: '/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LLM_API_KEY}`,
-        'Content-Length': Buffer.byteLength(postData)
-      },
-      timeout: 30000
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', (d) => { data += d; });
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          const answer = json.choices?.[0]?.message?.content || '无响应';
-          resolve(answer);
-        } catch {
-          resolve(null);
-        }
-      });
-    });
-
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.write(postData);
-    req.end();
+  const result = await llmRouter.callLLM(prompt, {
+    systemPrompt: '你是光湖语言世界VPN系统的守护Agent AI。负责诊断代理服务异常并给出修复建议。',
+    maxTokens: 500,
+    timeout: 30000
   });
+
+  return result ? result.content : null;
 }
 
 // ── 发送告警邮件 ─────────────────────────────
@@ -383,9 +351,9 @@ async function patrol() {
 }
 
 // ── 启动守护循环 ─────────────────────────────
-console.log('🛡️ 铸渊专线守护Agent启动');
+console.log('🛡️ 光湖语言世界 · 守护Agent启动');
 console.log(`  巡检间隔: ${CHECK_INTERVAL / 1000}秒`);
-console.log(`  LLM API: ${LLM_API_KEY ? '已配置' : '未配置'}`);
+console.log(`  LLM路由器: 动态多模型 (通过llm-router.js)`);
 
 // 立即执行一次
 patrol().catch(console.error);

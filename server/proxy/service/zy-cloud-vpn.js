@@ -13,8 +13,8 @@
 //   - 服务器越多 → 节点越多 → 系统越强 → 不输商业VPN
 //   - 所有服务器VPN能力汇聚到一个活的人格模块上
 //   - 动态感知空闲、动态选路、自我修复、自我学习
-//   - 活模块5接口: heartbeat / selfDiagnose / selfHeal /
-//                   alertZhuyuan / learnFromRun
+//   - 活模块6接口: heartbeat / selfDiagnose / selfHeal /
+//                   alertZhuyuan / learnFromRun / consultAI
 //
 // 运行在大脑服务器 (ZY-SVR-005)
 // 管理所有VPN节点的生命周期
@@ -124,6 +124,7 @@ class LivingModule {
   async selfHeal(problem) { throw new Error('selfHeal() 未实现'); }
   async alertZhuyuan(alert) { throw new Error('alertZhuyuan() 未实现'); }
   async learnFromRun() { throw new Error('learnFromRun() 未实现'); }
+  async consultAI(context) { throw new Error('consultAI() 未实现'); }
 }
 
 // ═══════════════════════════════════════════════
@@ -582,13 +583,37 @@ class ZyCloudVpn extends LivingModule {
         console.log(`  🚨 所有节点不可用！尝试修复本机节点...`);
         const localNode = this._nodes.find(n => n.type === 'local');
         if (localNode) {
-          return this.selfHeal({ type: 'node_dead', node: localNode });
+          const healed = await this.selfHeal({ type: 'node_dead', node: localNode });
+          if (healed) return true;
         }
-        // 修复失败 → 升级到alertZhuyuan
+
+        // 自动修复失败 → 第2次重试: 调用AI推理
+        console.log('  🤖 自动修复失败，启动AI推理...');
+        const aiResult = await this.consultAI({
+          type: 'all_nodes_dead',
+          nodes: this._nodes.map(n => ({
+            id: n.id, status: n.status, host: n.host, port: n.port,
+            consecutive_failures: n.consecutive_failures
+          })),
+          attempted_fix: 'xray_restart_failed'
+        });
+
+        if (aiResult) {
+          // AI给出了建议，记录并尝试第3次修复
+          console.log(`  🤖 AI建议已记录，再次尝试修复...`);
+          if (localNode) {
+            const retryHeal = await this.selfHeal({ type: 'node_dead', node: localNode });
+            if (retryHeal) return true;
+          }
+        }
+
+        // 第3次: 通知冰朔
         await this.alertZhuyuan({
           level: 'critical',
-          message: '所有VPN节点不可用！需要人工干预',
-          nodes: this._nodes.map(n => ({ id: n.id, status: n.status }))
+          message: '所有VPN节点不可用！自动修复+AI推理均失败，需要人工干预',
+          nodes: this._nodes.map(n => ({ id: n.id, status: n.status })),
+          ai_advice: aiResult ? aiResult.content.slice(0, 500) : '(AI推理未返回结果)',
+          attempted_fixes: ['xray_restart', 'ai_diagnosis']
         });
         return false;
       }
@@ -701,6 +726,69 @@ class ZyCloudVpn extends LivingModule {
     if (currentBest) {
       console.log(`  当前时段(${timeSlot})最优: ${currentBest.best} (${currentBest.avg_latency_ms}ms)`);
     }
+  }
+
+  // ═══ 接口6: consultAI() — "我请教AI" (V3新增) ═══
+  // 遇到复杂问题时调用LLM路由器进行深度推理
+  // 三次重试机制:
+  //   第1次: selfHeal 自动修复
+  //   第2次: consultAI 调用LLM
+  //   第3次: alertZhuyuan 邮件通知冰朔
+  async consultAI(context) {
+    let llmRouter;
+    try {
+      llmRouter = require('./llm-router');
+    } catch {
+      console.log('[ZY-CLOUD VPN] ⚠️ LLM路由器未加载，跳过AI推理');
+      return null;
+    }
+
+    const prompt = `你是光湖语言世界VPN系统的AI诊断助手。
+当前系统状态:
+- 模块: ${this._moduleName}
+- 状态: ${this._state}
+- 总节点: ${this._nodes.length}
+- 存活节点: ${this._liveNodes.length}
+- 连续错误: ${this._consecutiveErrors}
+
+问题上下文:
+${JSON.stringify(context, null, 2).slice(0, 2000)}
+
+请分析问题原因并给出具体的修复建议。要求:
+1. 判断是网络层面还是服务层面的问题
+2. 给出可执行的修复步骤
+3. 评估问题严重程度(low/medium/high/critical)
+回答要简洁明确。`;
+
+    console.log('[ZY-CLOUD VPN] 🤖 调用AI推理...');
+    const result = await llmRouter.callLLM(prompt, {
+      systemPrompt: '你是光湖语言世界VPN系统的AI诊断引擎。你负责分析网络和代理服务的异常，给出精准的修复建议。',
+      maxTokens: 800,
+      timeout: 45000
+    });
+
+    if (result) {
+      console.log(`[ZY-CLOUD VPN] 🤖 AI推理完成 (模型: ${result.model})`);
+      console.log(`  建议: ${result.content.slice(0, 200)}...`);
+
+      // 记录AI咨询历史
+      this._history.push({
+        type: 'consultAI',
+        model: result.model,
+        context_summary: context.type || 'unknown',
+        response_preview: result.content.slice(0, 100),
+        timestamp: new Date().toISOString()
+      });
+
+      // 只保留最近20条历史
+      if (this._history.length > 20) {
+        this._history = this._history.slice(-20);
+      }
+    } else {
+      console.log('[ZY-CLOUD VPN] ⚠️ AI推理未返回结果');
+    }
+
+    return result;
   }
 
   // ── 应用学习数据优化节点排序 ────────────────
@@ -917,6 +1005,8 @@ const mgmtServer = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         module: vpnModule._moduleId,
+        brand: '光湖语言世界 — 冰朔开发维护',
+        version: '3.0.0',
         state: vpnModule._state,
         started_at: vpnModule._startedAt,
         uptime_seconds: Math.floor((Date.now() - new Date(vpnModule._startedAt).getTime()) / 1000),
