@@ -37,10 +37,12 @@ const REGISTRY_FILE = path.join(DATA_DIR, 'nodes-registry.json');
 const HEARTBEAT_FILE = path.join(DATA_DIR, 'zy-cloud-vpn-heartbeat.json');
 const KEYS_FILE = path.join(PROXY_DIR, '.env.keys');
 
-// ── 时间间隔 ────────────────────────────────
-const HEARTBEAT_INTERVAL = 30 * 1000;      // 30秒心跳
-const DIAGNOSE_INTERVAL = 5 * 60 * 1000;   // 5分钟诊断
-const LEARN_INTERVAL = 30 * 60 * 1000;     // 30分钟学习周期
+// ── 时间间隔（可通过环境变量调整）────────────
+const HEARTBEAT_INTERVAL = parseInt(process.env.ZY_CLOUD_HEARTBEAT_INTERVAL || '30000', 10);
+const DIAGNOSE_INTERVAL = parseInt(process.env.ZY_CLOUD_DIAGNOSE_INTERVAL || '300000', 10);
+const LEARN_INTERVAL = parseInt(process.env.ZY_CLOUD_LEARN_INTERVAL || '1800000', 10);
+const HEARTBEAT_EXPIRY_MS = parseInt(process.env.ZY_CLOUD_HB_EXPIRY_MS || '600000', 10);      // 10分钟
+const NODE_UNREGISTER_MS = parseInt(process.env.ZY_CLOUD_UNREGISTER_MS || '86400000', 10);     // 24小时
 
 // ═══════════════════════════════════════════════
 //  LivingModule 基类
@@ -273,7 +275,8 @@ class ZyCloudVpn extends LivingModule {
     const brainPbk = this._readEnvOrKey('ZY_PROXY_REALITY_PUBLIC_KEY');
     const brainSid = this._readEnvOrKey('ZY_PROXY_REALITY_SHORT_ID');
     if (brainHost && brainPbk) {
-      nodes.push(this._makeNode('zy-brain-sg1', '🧠 铸渊专线V2-SG1(大脑)', brainHost, 443, brainPbk, brainSid, 'sg-zone1', 'ZY-SVR-005', 'local', '4核8G'));
+      const localSpecs = `${require('os').cpus().length}核${Math.round(require('os').totalmem() / (1024 ** 3))}G`;
+      nodes.push(this._makeNode('zy-brain-sg1', '🧠 铸渊专线V2-SG1(大脑)', brainHost, 443, brainPbk, brainSid, 'sg-zone1', 'ZY-SVR-005', 'local', localSpecs));
       seenIds.add('zy-brain-sg1');
     }
 
@@ -299,14 +302,14 @@ class ZyCloudVpn extends LivingModule {
     for (const regNode of Object.values(this._registry.nodes)) {
       if (seenIds.has(regNode.id)) continue;  // 避免重复
 
-      // 检查心跳是否过期（超过10分钟无心跳 → 自动注销）
+      // 检查心跳是否过期
       const lastHb = new Date(regNode.last_heartbeat).getTime();
       const age = Date.now() - lastHb;
-      if (age > 10 * 60 * 1000) {
+      if (age > HEARTBEAT_EXPIRY_MS) {
         console.log(`[ZY-CLOUD VPN] ⏰ 节点 ${regNode.name} 心跳过期(${Math.floor(age/60000)}分钟)，标记为离线`);
         // 不删除注册，只是标记离线（可能临时断网）
         // 超过24小时无心跳才自动清理
-        if (age > 24 * 60 * 60 * 1000) {
+        if (age > NODE_UNREGISTER_MS) {
           console.log(`[ZY-CLOUD VPN] 🗑️ 节点 ${regNode.name} 超24小时无心跳，自动注销`);
           delete this._registry.nodes[regNode.id];
           this._saveRegistry();

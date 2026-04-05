@@ -171,13 +171,13 @@ EOF
     chmod 600 "$KEYS_FILE"
 
     echo ""
-    echo "  ══════════ V2密钥 (请添加到GitHub Secrets) ══════════"
-    echo "  ZY_BRAIN_PROXY_REALITY_PUBLIC_KEY=$PUBLIC_KEY"
-    echo "  ZY_BRAIN_PROXY_REALITY_SHORT_ID=$SHORT_ID"
-    echo "  ═══════════════════════════════════════════════════════"
-    echo ""
-    echo "  ⚠️ 密钥已保存到: $KEYS_FILE"
-    echo "  ⚠️ Private Key不需要添加到GitHub Secrets (已保存在服务器)"
+    echo "  ══════════ V2密钥已生成 ══════════"
+    echo "  ⚠️ 密钥已保存到: $KEYS_FILE (权限600·仅root可读)"
+    echo "  ⚠️ 如需查看密钥，请SSH到服务器执行: cat $KEYS_FILE"
+    echo "  ⚠️ 部署完成后，将公钥和ShortID添加到GitHub Secrets:"
+    echo "     ZY_BRAIN_PROXY_REALITY_PUBLIC_KEY"
+    echo "     ZY_BRAIN_PROXY_REALITY_SHORT_ID"
+    echo "  ═══════════════════════════════════"
 }
 
 # ── 部署V2服务代码 ────────────────────────────

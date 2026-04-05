@@ -27,6 +27,7 @@ const PORT = process.env.ZY_PROXY_V2_PORT || 3803;
 const PROXY_DIR = process.env.ZY_BRAIN_PROXY_DIR || '/opt/zhuyuan-brain/proxy';
 const DATA_DIR = path.join(PROXY_DIR, 'data');
 const KEYS_FILE = path.join(PROXY_DIR, '.env.keys');
+const LIVE_NODES_FRESHNESS_MS = parseInt(process.env.ZY_CLOUD_HB_EXPIRY_MS || '600000', 10);
 
 // 引入用户管理器
 const userManager = require('./user-manager');
@@ -80,9 +81,9 @@ function buildVpnNodes() {
   const liveNodesFile = path.join(DATA_DIR, 'nodes-live.json');
   try {
     const liveData = JSON.parse(fs.readFileSync(liveNodesFile, 'utf8'));
-    // 检查数据是否新鲜（5分钟内）
+    // 检查数据是否新鲜（使用与ZY-CLOUD相同的心跳过期阈值）
     const age = Date.now() - new Date(liveData.updated_at).getTime();
-    if (age < 10 * 60 * 1000 && liveData.nodes && liveData.nodes.length > 0) {
+    if (age < LIVE_NODES_FRESHNESS_MS * 2 && liveData.nodes && liveData.nodes.length > 0) {
       return liveData.nodes;
     }
   } catch { /* ZY-CLOUD未运行，回退到静态配置 */ }

@@ -120,6 +120,7 @@ function addUser(email, options = {}) {
     throw new Error(`用户已存在: ${email} (UUID: ${existing.uuid.substring(0, 8)}...)`);
   }
 
+  const now = new Date();
   const user = {
     email,
     uuid: generateUUID(),
@@ -127,11 +128,11 @@ function addUser(email, options = {}) {
     label: options.label || email.split('@')[0],
     quota_bytes: (options.quota_gb || 500) * 1024 * 1024 * 1024,
     enabled: true,
-    created_at: new Date().toISOString(),
+    created_at: now.toISOString(),
     traffic: {
       upload_bytes: 0,
       download_bytes: 0,
-      period: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`,
+      period: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
       alerts_sent: { p80: false, p90: false, p100: false }
     }
   };

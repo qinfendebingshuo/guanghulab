@@ -66,19 +66,16 @@ function parseConfig() {
   };
 }
 
-// ── 自动检测本机公网IP ──────────────────────
+// ── 自动检测本机IP ──────────────────────────
 function getPublicIp() {
-  try {
-    return execSync("hostname -I | awk '{print $1}'", { encoding: 'utf8', timeout: 3000 }).trim();
-  } catch {
-    const nets = os.networkInterfaces();
-    for (const ifaces of Object.values(nets)) {
-      for (const iface of ifaces) {
-        if (!iface.internal && iface.family === 'IPv4') return iface.address;
-      }
+  // 优先使用Node.js原生API（安全）
+  const nets = os.networkInterfaces();
+  for (const ifaces of Object.values(nets)) {
+    for (const iface of ifaces) {
+      if (!iface.internal && iface.family === 'IPv4') return iface.address;
     }
-    return '0.0.0.0';
   }
+  return '0.0.0.0';
 }
 
 // ── 自动检测本机配置 ────────────────────────
