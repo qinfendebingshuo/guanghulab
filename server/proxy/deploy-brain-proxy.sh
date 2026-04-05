@@ -45,23 +45,23 @@ EOF
 # ── install: 首次完整安装 ─────────────────────
 install() {
     echo ""
-    echo "═══ [1/7] 安装Xray-core + BBR ═══"
+    echo "═══ [1/8] 安装Xray-core + BBR ═══"
     bash "$REPO_PROXY_DIR/setup/install-xray.sh"
 
     echo ""
-    echo "═══ [2/7] 创建V2目录结构 ═══"
+    echo "═══ [2/8] 创建V2目录结构 ═══"
     mkdir -p "$PROXY_DIR"/{config,data,logs,service}
 
     echo ""
-    echo "═══ [3/7] 生成V2密钥 ═══"
+    echo "═══ [3/8] 生成V2密钥 ═══"
     generate_v2_keys
 
     echo ""
-    echo "═══ [4/7] 部署V2服务代码 ═══"
+    echo "═══ [4/8] 部署V2服务代码 ═══"
     deploy_services
 
     echo ""
-    echo "═══ [5/7] 配置Xray ═══"
+    echo "═══ [5/8] 配置Xray ═══"
     ensure_xray_root_user
     mkdir -p "$PROXY_DIR/logs"
     chmod 755 "$PROXY_DIR/logs"
@@ -75,11 +75,15 @@ install() {
     sleep 2
 
     echo ""
-    echo "═══ [6/7] 启动PM2服务 ═══"
+    echo "═══ [6/8] 配置Nginx反向代理 ═══"
+    configure_nginx
+
+    echo ""
+    echo "═══ [7/8] 启动PM2服务 ═══"
     start_pm2_services
 
     echo ""
-    echo "═══ [7/7] 健康检查 ═══"
+    echo "═══ [8/8] 健康检查 ═══"
     health_check
 
     echo ""
@@ -192,6 +196,9 @@ deploy_services() {
     cp "$REPO_PROXY_DIR"/service/vpn-worker.js "$PROXY_DIR/service/"
     cp "$REPO_PROXY_DIR"/ecosystem.brain-proxy.config.js "$PROXY_DIR/"
 
+    # 复制V2 Nginx配置参考
+    cp "$REPO_PROXY_DIR"/config/nginx-brain-proxy-snippet.conf "$PROXY_DIR/config/" 2>/dev/null || true
+
     # 复制共用文件(发邮件等)
     cp "$REPO_PROXY_DIR"/service/send-subscription.js "$PROXY_DIR/service/" 2>/dev/null || true
 
@@ -214,6 +221,108 @@ start_pm2_services() {
     pm2 save
     echo "✅ V2 PM2服务已就绪"
     pm2 list
+}
+
+# ── 配置Nginx反向代理 (V2·端口3803) ──────────
+configure_nginx() {
+    # 安装Nginx (如果未安装)
+    if ! command -v nginx &>/dev/null; then
+        echo "  安装Nginx..."
+        apt-get update -qq && apt-get install -y nginx >/dev/null 2>&1
+        systemctl enable nginx
+        echo "  ✅ Nginx已安装"
+    fi
+
+    # 查找Nginx配置文件
+    NGINX_CONF=""
+    for candidate in /etc/nginx/sites-enabled/zhuyuan-brain.conf /etc/nginx/sites-enabled/default; do
+        if [ -f "$candidate" ]; then
+            NGINX_CONF="$candidate"
+            break
+        fi
+    done
+
+    # 如果没有配置文件，创建大脑服务器专用配置
+    if [ -z "$NGINX_CONF" ]; then
+        NGINX_CONF="/etc/nginx/sites-enabled/zhuyuan-brain.conf"
+        echo "  创建大脑服务器Nginx配置..."
+        cat > "$NGINX_CONF" <<'NGINXEOF'
+server {
+    listen 80 default_server;
+    server_name localhost 127.0.0.1;
+
+    # ─── 铸渊专线V2订阅服务 (端口 3803) ───
+    location /api/proxy-sub/ {
+        proxy_pass http://127.0.0.1:3803/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 30s;
+        proxy_send_timeout 30s;
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options DENY always;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+
+    # ─── 健康探针 ───
+    location = /health {
+        return 200 '{"status":"ok","server":"ZY-SVR-005-brain"}';
+        add_header Content-Type application/json;
+    }
+}
+NGINXEOF
+        # 移除默认配置避免冲突
+        if [ -f /etc/nginx/sites-enabled/default ] && [ "$NGINX_CONF" != "/etc/nginx/sites-enabled/default" ]; then
+            rm -f /etc/nginx/sites-enabled/default
+            echo "  ✅ 已移除冲突的default配置"
+        fi
+        echo "  ✅ 已创建大脑服务器Nginx配置"
+    else
+        echo "  使用现有Nginx配置: $NGINX_CONF"
+
+        # 修复端口错误: 如果存在3802端口配置，替换为3803
+        if grep -q "proxy_pass.*127.0.0.1:3802" "$NGINX_CONF" 2>/dev/null; then
+            sed -i 's|proxy_pass http://127.0.0.1:3802/;|proxy_pass http://127.0.0.1:3803/;|g' "$NGINX_CONF"
+            echo "  ✅ 已修复端口: 3802 → 3803"
+        fi
+
+        # 如果没有proxy-sub配置，注入V2配置
+        if ! grep -q "proxy-sub" "$NGINX_CONF" 2>/dev/null; then
+            echo "  添加V2订阅服务反向代理配置..."
+            # 在最后一个 } 之前插入location块
+            sed -i '/^}/i\
+    # ─── 铸渊专线V2订阅服务 (端口 3803) ───\
+    location /api/proxy-sub/ {\
+        proxy_pass http://127.0.0.1:3803/;\
+        proxy_http_version 1.1;\
+        proxy_set_header Host $host;\
+        proxy_set_header X-Real-IP $remote_addr;\
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\
+        proxy_set_header X-Forwarded-Proto $scheme;\
+        proxy_connect_timeout 10s;\
+        proxy_read_timeout 30s;\
+        proxy_send_timeout 30s;\
+        add_header X-Content-Type-Options nosniff always;\
+        add_header X-Frame-Options DENY always;\
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\
+    }' "$NGINX_CONF" || true
+            echo "  ✅ V2 proxy-sub配置已注入"
+        else
+            echo "  proxy-sub配置已存在"
+        fi
+    fi
+
+    # 验证并重载Nginx
+    if nginx -t 2>/dev/null; then
+        nginx -s reload || systemctl reload nginx || true
+        echo "  ✅ Nginx配置验证通过并已重载"
+    else
+        echo "  ⚠️ Nginx配置验证失败:"
+        nginx -t 2>&1 || true
+    fi
 }
 
 # ── 健康检查 ──────────────────────────────────
@@ -241,6 +350,17 @@ health_check() {
         echo "  ✅ V2订阅服务: 正常 (${USERS:-0}个用户)"
     else
         echo "  ❌ V2订阅服务: 端口3803无响应"
+    fi
+
+    # Nginx反向代理
+    if systemctl is-active --quiet nginx 2>/dev/null; then
+        if curl -sf http://127.0.0.1:80/api/proxy-sub/health >/dev/null 2>&1; then
+            echo "  ✅ Nginx反代: 正常 (/api/proxy-sub/ → 3803)"
+        else
+            echo "  ⚠️ Nginx反代: /api/proxy-sub/ 无法访问 (检查proxy_pass端口)"
+        fi
+    else
+        echo "  ⚠️ Nginx: 未运行"
     fi
 
     # PM2
@@ -275,6 +395,9 @@ update() {
     if command -v ufw &>/dev/null; then
         ufw allow 443/tcp comment "Xray VLESS+Reality V2" 2>/dev/null || true
     fi
+
+    # 修复/更新Nginx反向代理配置
+    configure_nginx
 
     start_pm2_services
     health_check
