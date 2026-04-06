@@ -243,7 +243,7 @@ function wrapEmailTemplate(title, content, config) {
   <title>光湖语言世界</title>
   <!--[if mso]>
   <style type="text/css">
-    body, table, td { font-family: 'Microsoft YaHei', SimSun, sans-serif !important; }
+    body, table, td { font-family: Microsoft YaHei, SimSun, sans-serif !important; }
   </style>
   <![endif]-->
   <style type="text/css">
@@ -457,7 +457,7 @@ function generateTrafficWarnEmail(percentage, poolStatus, config) {
 
     <!-- 进度条 -->
     <div style="background: #e9ecef; border-radius: 10px; height: 24px; margin: 20px 0; overflow: hidden;">
-      <div style="background: ${barColor}; height: 100%; width: ${Math.min(percentage, 100)}%; border-radius: 10px; transition: width 0.3s;"></div>
+      <div style="background: ${barColor}; height: 100%; width: ${Math.min(percentage, 100)}%; border-radius: 10px;"></div>
     </div>
 
     <p style="color: #8c8c8c; font-size: 13px; margin: 0; line-height: 1.6;">
@@ -545,7 +545,7 @@ function generateBandwidthAuthEmail(code, authPageUrl, config) {
     <!-- 验证码展示区 -->
     <div class="info-card" style="background: #f0f7ff; border: 2px dashed #667eea; border-radius: 14px; padding: 28px 20px; margin: 0 0 24px; text-align: center;">
       <p style="color: #8c8c8c; font-size: 13px; margin: 0 0 12px;">您的验证码 (15分钟内有效)</p>
-      <p class="code-display" style="font-size: 40px; font-weight: 700; color: #1a1a2e; letter-spacing: 10px; margin: 0; font-family: 'SF Mono', 'Fira Code', Consolas, monospace;">${code}</p>
+      <p class="code-display" style="font-size: 40px; font-weight: 700; color: #1a1a2e; letter-spacing: 10px; margin: 0; font-family: Consolas, Monaco, 'Courier New', monospace;">${code}</p>
     </div>
 
     ${authPageUrl ? `
