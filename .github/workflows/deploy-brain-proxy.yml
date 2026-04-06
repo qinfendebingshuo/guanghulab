@@ -31,6 +31,7 @@ on:
           - send-subscription-v3
           - deploy-v3
           - switch-v3
+          - deploy-infinity
         default: 'status'
       email:
         description: '用户邮箱 (add-user/remove-user/send-subscription/send-subscription-v3时需要)'
@@ -60,7 +61,8 @@ jobs:
       github.event.inputs.action == 'status' ||
       github.event.inputs.action == 'restart' ||
       github.event.inputs.action == 'deploy-v3' ||
-      github.event.inputs.action == 'switch-v3'
+      github.event.inputs.action == 'switch-v3' ||
+      github.event.inputs.action == 'deploy-infinity'
 
     steps:
       - name: '📥 检出代码'

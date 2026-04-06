@@ -645,6 +645,7 @@ deploy_v3() {
     echo "V3运行在 /api/proxy-v3/ (端口3805)"
     echo ""
     echo "切换V2用户到V3: bash deploy-brain-proxy.sh switch-v3"
+    echo "升级到∞版本: bash deploy-brain-proxy.sh deploy-infinity"
     echo "════════════════════════════════════════"
 
     # V3健康检查
@@ -753,6 +754,78 @@ switch_v3() {
     echo "════════════════════════════════════════"
 }
 
+# ── deploy-infinity: 部署∞版本 ─────────────────
+# 在V3基础上启动自主进化引擎和协议镜像引擎
+deploy_infinity() {
+    echo "部署 ∞ 版本 (在V3基础上添加自主进化能力)..."
+    deploy_services
+
+    # 确保V3进程已在运行
+    if ! pm2 list 2>/dev/null | grep -q "zy-proxy-v3-sub"; then
+        echo "  ⚠️ V3进程未运行，先部署V3..."
+        deploy_v3
+    fi
+
+    # 加载密钥作为环境变量
+    if [ -f "$PROXY_DIR/.env.keys" ]; then
+        set -a
+        # shellcheck source=/dev/null
+        source "$PROXY_DIR/.env.keys"
+        set +a
+    fi
+
+    # 复制 ∞ 版本新增文件
+    echo "  复制∞版本模块..."
+    for f in auto-evolution.js email-hub.js protocol-mirror.js; do
+        if [ -f "$REPO_PROXY_DIR/service/$f" ]; then
+            cp "$REPO_PROXY_DIR/service/$f" "$PROXY_DIR/service/$f"
+            echo "    ✅ $f"
+        else
+            echo "    ⚠️ $f 不存在于仓库"
+        fi
+    done
+
+    # 复制更新后的PM2配置
+    cp "$REPO_PROXY_DIR/ecosystem.brain-proxy-v3.config.js" "$PROXY_DIR/ecosystem.brain-proxy-v3.config.js"
+
+    # 创建进化报告目录
+    mkdir -p "$PROXY_DIR/data/evolution-reports"
+
+    # 重启所有V3+∞进程 (PM2会根据新配置启动新增进程)
+    cd "$PROXY_DIR" || { echo "❌ 无法进入 $PROXY_DIR"; return 1; }
+    pm2 startOrRestart ecosystem.brain-proxy-v3.config.js --update-env
+    pm2 save
+
+    echo ""
+    echo "════════════════════════════════════════"
+    echo "♾️ ∞ 版本部署完成!"
+    echo ""
+    echo "新增进程:"
+    echo "  zy-auto-evolution   — 自主进化引擎 (调度中枢)"
+    echo "  zy-protocol-mirror  — 协议镜像引擎 (Xray自动更新)"
+    echo ""
+    echo "定时任务:"
+    echo "  每30分钟  — 协议版本检查"
+    echo "  每月1号   — 月度进化 + 流量重置邮件"
+    echo "  流量70%   — 全用户预警邮件"
+    echo ""
+    echo "PM2进程列表:"
+    pm2 list 2>/dev/null || true
+    echo "════════════════════════════════════════"
+
+    # 健康检查
+    sleep 2
+    echo ""
+    echo "∞ 版本健康检查:"
+    for proc in zy-proxy-v3-sub zy-proxy-guardian zy-reverse-boost zy-auto-evolution zy-protocol-mirror; do
+        if pm2 show "$proc" 2>/dev/null | grep -q "online"; then
+            echo "  ✅ $proc: 在线"
+        else
+            echo "  ⚠️ $proc: 未就绪 (等待启动)"
+        fi
+    done
+}
+
 # ── 执行 ──────────────────────────────────────
 case "$ACTION" in
     install)      install ;;
@@ -764,8 +837,9 @@ case "$ACTION" in
     list-users)   list_users ;;
     deploy-v3)    deploy_v3 ;;
     switch-v3)    switch_v3 ;;
+    deploy-infinity) deploy_infinity ;;
     *)
-        echo "用法: bash deploy-brain-proxy.sh {install|update|status|restart|add-user|remove-user|list-users|deploy-v3|switch-v3}"
+        echo "用法: bash deploy-brain-proxy.sh {install|update|status|restart|add-user|remove-user|list-users|deploy-v3|switch-v3|deploy-infinity}"
         exit 1
         ;;
 esac

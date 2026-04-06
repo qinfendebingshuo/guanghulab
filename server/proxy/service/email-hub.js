@@ -1,0 +1,590 @@
+#!/usr/bin/env node
+// ═══════════════════════════════════════════════
+// 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+// 📜 Copyright: 国作登字-2026-A-00037559
+// ═══════════════════════════════════════════════
+// server/proxy/service/email-hub.js
+// 📧 光湖语言世界 · 邮件通信中枢
+//
+// ∞版本邮件中枢 — 统一管理所有用户邮件推送
+//
+// 邮件类型:
+//   1. 月初重置通知 — 每月1号通知流量池已重置
+//   2. 更新升级通知 — 系统更新后告知用户
+//   3. 流量预警通知 — 70%/80%/90%/100% 阶梯告警
+//   4. 安全风险提醒 — 单用户异常行为告知
+//   5. 反馈确认回复 — 收到用户反馈后的自动确认
+//
+// 所有邮件底部附「意见反馈」链接
+//
+// 用法:
+//   node email-hub.js monthly-reset         — 发送月初重置邮件给所有用户
+//   node email-hub.js update-notify <desc>  — 发送更新通知给所有用户
+//   node email-hub.js traffic-warn <pct>    — 发送流量预警给所有用户
+//   node email-hub.js security-warn <email> <msg>  — 发送安全提醒给单用户
+//   node email-hub.js feedback-ack <email>  — 发送反馈确认给单用户
+//
+// 运行方式: CLI调用 (由auto-evolution.js调度)
+// ═══════════════════════════════════════════════
+
+'use strict';
+
+const tls = require('tls');
+const fs = require('fs');
+const path = require('path');
+
+const PROXY_DIR = process.env.ZY_BRAIN_PROXY_DIR || '/opt/zhuyuan-brain/proxy';
+const DATA_DIR = path.join(PROXY_DIR, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const KEYS_FILE = process.env.ZY_PROXY_KEYS_FILE || path.join(PROXY_DIR, '.env.keys');
+const POOL_STATUS_FILE = path.join(DATA_DIR, 'pool-quota-status.json');
+const EMAIL_LOG_FILE = path.join(DATA_DIR, 'email-hub-log.json');
+
+// ── 加载配置 ─────────────────────────────────
+function loadConfig() {
+  const config = {
+    smtp_user: process.env.ZY_SMTP_USER || '',
+    smtp_pass: process.env.ZY_SMTP_PASS || '',
+    server_host: process.env.ZY_SERVER_HOST || ''
+  };
+
+  try {
+    const content = fs.readFileSync(KEYS_FILE, 'utf8');
+    for (const line of content.split('\n')) {
+      if (line.startsWith('#') || !line.includes('=')) continue;
+      const [key, ...vals] = line.split('=');
+      const k = key.trim();
+      const v = vals.join('=').trim();
+      if (!v) continue;
+      if (k === 'ZY_SERVER_HOST' && !config.server_host) config.server_host = v;
+      if (k === 'ZY_SMTP_USER' && !config.smtp_user) config.smtp_user = v;
+      if (k === 'ZY_SMTP_PASS' && !config.smtp_pass) config.smtp_pass = v;
+    }
+  } catch { /* ignore */ }
+
+  return config;
+}
+
+// ── SMTP发送邮件 ─────────────────────────────
+function detectSmtpHost(email) {
+  if (email.includes('@qq.com')) return 'smtp.qq.com';
+  if (email.includes('@163.com')) return 'smtp.163.com';
+  if (email.includes('@126.com')) return 'smtp.126.com';
+  if (email.includes('@gmail.com')) return 'smtp.gmail.com';
+  if (email.includes('@outlook.com') || email.includes('@hotmail.com')) return 'smtp.office365.com';
+  if (email.includes('@yeah.net')) return 'smtp.yeah.net';
+  return 'smtp.qq.com';
+}
+
+async function sendEmail(to, subject, htmlBody) {
+  const config = loadConfig();
+  if (!config.smtp_user || !config.smtp_pass) {
+    throw new Error('SMTP未配置 (需要ZY_SMTP_USER和ZY_SMTP_PASS)');
+  }
+
+  const smtpHost = detectSmtpHost(config.smtp_user);
+  const smtpPort = 465;
+
+  return new Promise((resolve, reject) => {
+    const socket = tls.connect(smtpPort, smtpHost, {}, () => {
+      let step = 0;
+      const from = config.smtp_user;
+
+      const commands = [
+        `EHLO zy-proxy\r\n`,
+        `AUTH LOGIN\r\n`,
+        `${Buffer.from(from).toString('base64')}\r\n`,
+        `${Buffer.from(config.smtp_pass).toString('base64')}\r\n`,
+        `MAIL FROM:<${from}>\r\n`,
+        `RCPT TO:<${to}>\r\n`,
+        `DATA\r\n`,
+        `From: =?UTF-8?B?${Buffer.from('光湖语言世界').toString('base64')}?= <${from}>\r\nTo: <${to}>\r\nSubject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=\r\nContent-Type: text/html; charset=utf-8\r\nMIME-Version: 1.0\r\n\r\n${htmlBody}\r\n.\r\n`,
+        `QUIT\r\n`
+      ];
+
+      socket.on('data', () => {
+        if (step < commands.length) {
+          socket.write(commands[step]);
+          step++;
+        }
+        if (step >= commands.length) {
+          resolve(true);
+        }
+      });
+
+      socket.on('error', (err) => { reject(err); });
+    });
+
+    socket.on('error', (err) => { reject(err); });
+
+    setTimeout(() => {
+      try { socket.destroy(); } catch { /* ignore */ }
+      reject(new Error('SMTP超时(30s)'));
+    }, 30000);
+  });
+}
+
+// ── 加载所有启用用户 ─────────────────────────
+function getEnabledUsers() {
+  try {
+    const data = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    return (data.users || []).filter(u => u.enabled !== false);
+  } catch {
+    return [];
+  }
+}
+
+// ── 加载流量池状态 ────────────────────────────
+function getPoolStatus() {
+  try {
+    return JSON.parse(fs.readFileSync(POOL_STATUS_FILE, 'utf8'));
+  } catch {
+    return { pool_total_gb: 2000, pool_used_gb: 0, pool_percentage: 0, period: '' };
+  }
+}
+
+// ── 记录邮件发送日志 ─────────────────────────
+function logEmail(type, recipients, success, error) {
+  let log;
+  try {
+    log = JSON.parse(fs.readFileSync(EMAIL_LOG_FILE, 'utf8'));
+  } catch {
+    log = { entries: [] };
+  }
+
+  log.entries.push({
+    type,
+    recipients: Array.isArray(recipients) ? recipients.length : 1,
+    success,
+    error: error || null,
+    time: new Date().toISOString()
+  });
+
+  // 只保留最近100条
+  if (log.entries.length > 100) {
+    log.entries = log.entries.slice(-100);
+  }
+
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(EMAIL_LOG_FILE, JSON.stringify(log, null, 2));
+}
+
+// ── 反馈链接 (所有邮件底部附带) ───────────────
+function getFeedbackFooter(config) {
+  const host = config.server_host || 'guanghulab.com';
+  return `
+    <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0 15px;">
+    <div style="text-align: center; padding: 10px;">
+      <p style="color: #888; font-size: 12px; margin: 0 0 8px;">
+        有建议或问题？欢迎反馈 👇
+      </p>
+      <a href="https://${host}/api/proxy-v3/feedback"
+         style="display: inline-block; background: #4a90d9; color: white; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 13px;">
+        📝 提交意见反馈
+      </a>
+      <p style="color: #aaa; font-size: 11px; margin: 10px 0 0;">
+        每周五 20:00 铸渊集中处理 · 每周一推送处理结果
+      </p>
+    </div>`;
+}
+
+// ── 通用邮件模板包装 ─────────────────────────
+function wrapEmailTemplate(title, content, config) {
+  const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const feedbackFooter = getFeedbackFooter(config);
+
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
+  <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <h1 style="color: #1a1a2e; margin-bottom: 5px;">🌐 光湖语言世界</h1>
+    <p style="color: #666; margin-top: 0; font-size: 13px;">${title}</p>
+
+    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+
+    ${content}
+
+    ${feedbackFooter}
+
+    <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;">
+    <p style="color: #aaa; font-size: 11px; text-align: center;">
+      光湖语言世界 · ∞版本 · ${now}<br>
+      国作登字-2026-A-00037559
+    </p>
+  </div>
+</body>
+</html>`;
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 1: 月初重置通知
+// ═══════════════════════════════════════════════
+function generateMonthlyResetEmail(config) {
+  const now = new Date();
+  const month = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+
+  const content = `
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #155724;">✅ ${month} 流量节点已重置</strong>
+    </div>
+
+    <h3 style="color: #333;">📊 本月配额</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 8px; color: #666;">流量池</td><td style="padding: 8px; font-weight: bold;">2000 GB</td></tr>
+      <tr><td style="padding: 8px; color: #666;">已使用</td><td style="padding: 8px; color: #28a745; font-weight: bold;">0 GB (已重置)</td></tr>
+      <tr><td style="padding: 8px; color: #666;">重置日期</td><td style="padding: 8px;">每月1日</td></tr>
+      <tr><td style="padding: 8px; color: #666;">协议</td><td style="padding: 8px;">VLESS + Reality</td></tr>
+    </table>
+
+    <p style="color: #666; font-size: 13px; margin-top: 15px;">
+      💡 您无需任何操作，刷新订阅即可继续使用。<br>
+      流量池为所有用户共享，请合理使用。
+    </p>`;
+
+  return wrapEmailTemplate(`${month} · 流量重置通知`, content, config);
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 2: 更新升级通知
+// ═══════════════════════════════════════════════
+function generateUpdateNotifyEmail(description, config) {
+  const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+
+  const content = `
+    <div style="background: #cce5ff; border: 1px solid #b8daff; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #004085;">🔄 系统已完成升级</strong>
+    </div>
+
+    <h3 style="color: #333;">📋 本次更新内容</h3>
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; color: #333; line-height: 1.8;">
+      ${escapeHtml(description).replace(/\n/g, '<br>')}
+    </div>
+
+    <p style="color: #666; font-size: 13px; margin-top: 15px;">
+      ⏰ 更新时间: ${now}<br>
+      💡 大部分更新只需刷新订阅即可生效。如需重新下载订阅链接，会另行通知。
+    </p>`;
+
+  return wrapEmailTemplate('系统升级通知', content, config);
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 3: 流量预警通知
+// ═══════════════════════════════════════════════
+function generateTrafficWarnEmail(percentage, poolStatus, config) {
+  const usedGB = poolStatus.pool_used_gb ? poolStatus.pool_used_gb.toFixed(1) : '?';
+  const totalGB = poolStatus.pool_total_gb || 2000;
+  const remainGB = (totalGB - parseFloat(usedGB)).toFixed(1);
+
+  let urgencyColor, urgencyBg, urgencyBorder, urgencyText;
+  if (percentage >= 100) {
+    urgencyColor = '#721c24'; urgencyBg = '#f8d7da'; urgencyBorder = '#f5c6cb';
+    urgencyText = '⛔ 流量池已耗尽！所有连接已暂停。';
+  } else if (percentage >= 90) {
+    urgencyColor = '#856404'; urgencyBg = '#fff3cd'; urgencyBorder = '#ffeaa7';
+    urgencyText = `⚠️ 流量池仅剩 ${remainGB}GB，请节约使用！`;
+  } else {
+    urgencyColor = '#0c5460'; urgencyBg = '#d1ecf1'; urgencyBorder = '#bee5eb';
+    urgencyText = `📊 流量池已使用 ${percentage}%，剩余 ${remainGB}GB`;
+  }
+
+  const content = `
+    <div style="background: ${urgencyBg}; border: 1px solid ${urgencyBorder}; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: ${urgencyColor};">${urgencyText}</strong>
+    </div>
+
+    <h3 style="color: #333;">📊 流量池状态</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 8px; color: #666;">已使用</td><td style="padding: 8px; font-weight: bold;">${usedGB} GB</td></tr>
+      <tr><td style="padding: 8px; color: #666;">总配额</td><td style="padding: 8px;">${totalGB} GB</td></tr>
+      <tr><td style="padding: 8px; color: #666;">使用率</td><td style="padding: 8px; font-weight: bold; color: ${urgencyColor};">${percentage}%</td></tr>
+      <tr><td style="padding: 8px; color: #666;">剩余</td><td style="padding: 8px;">${remainGB} GB</td></tr>
+    </table>
+
+    <div style="background: #f0f0f0; border-radius: 8px; height: 20px; margin: 15px 0; overflow: hidden;">
+      <div style="background: ${percentage >= 90 ? '#dc3545' : percentage >= 70 ? '#ffc107' : '#28a745'}; height: 100%; width: ${Math.min(percentage, 100)}%; border-radius: 8px;"></div>
+    </div>
+
+    <p style="color: #888; font-size: 12px;">
+      流量池每月1日重置。所有用户共享 ${totalGB}GB 月配额。
+    </p>`;
+
+  return wrapEmailTemplate('流量预警通知', content, config);
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 4: 安全风险提醒 (单用户)
+// ═══════════════════════════════════════════════
+function generateSecurityWarnEmail(message, config) {
+  const content = `
+    <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #856404;">🛡️ 安全提醒</strong>
+    </div>
+
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; color: #333; line-height: 1.8;">
+      ${escapeHtml(message).replace(/\n/g, '<br>')}
+    </div>
+
+    <h3 style="color: #333;">💡 安全建议</h3>
+    <ul style="color: #666; line-height: 2;">
+      <li>避免同时使用多个VPN客户端</li>
+      <li>关闭不使用的VPN连接</li>
+      <li>确保订阅链接仅个人使用</li>
+      <li>如有异常，请及时反馈</li>
+    </ul>`;
+
+  return wrapEmailTemplate('安全使用提醒', content, config);
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 5: 反馈确认回复
+// ═══════════════════════════════════════════════
+function generateFeedbackAckEmail(config) {
+  const content = `
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #155724;">✅ 您的反馈已收到</strong>
+    </div>
+
+    <p style="color: #666; line-height: 1.8;">
+      感谢您的宝贵意见！铸渊将在以下时间处理：
+    </p>
+
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 8px; color: #666;">📥 收集截止</td><td style="padding: 8px;">每周五 20:00</td></tr>
+      <tr><td style="padding: 8px; color: #666;">🔍 深度分析</td><td style="padding: 8px;">周五晚间 (AI辅助评估)</td></tr>
+      <tr><td style="padding: 8px; color: #666;">📤 结果推送</td><td style="padding: 8px;">每周一 09:00</td></tr>
+    </table>
+
+    <p style="color: #888; font-size: 12px; margin-top: 15px;">
+      注: 并非所有需求都会被采纳。铸渊会基于系统安全性、架构完整性和整体规划进行评估。
+    </p>`;
+
+  return wrapEmailTemplate('反馈已收到', content, config);
+}
+
+// ── HTML转义 ─────────────────────────────────
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ═══════════════════════════════════════════════
+// 📧 批量发送函数
+// ═══════════════════════════════════════════════
+
+/**
+ * 给所有启用用户发送邮件
+ * @param {string} subject 邮件主题
+ * @param {Function} htmlGenerator 生成HTML的函数(接收config参数)
+ * @returns {Promise<{sent: number, failed: number, errors: string[]}>}
+ */
+async function sendToAllUsers(subject, htmlGenerator) {
+  const users = getEnabledUsers();
+  const config = loadConfig();
+
+  if (users.length === 0) {
+    console.log('[邮件中枢] 无启用用户，跳过发送');
+    return { sent: 0, failed: 0, errors: [] };
+  }
+
+  const html = htmlGenerator(config);
+  let sent = 0;
+  let failed = 0;
+  const errors = [];
+
+  console.log(`[邮件中枢] 开始批量发送 (${users.length}位用户): ${subject}`);
+
+  for (const user of users) {
+    try {
+      await sendEmail(user.email, subject, html);
+      sent++;
+      console.log(`  ✅ ${user.email}`);
+      // 间隔500ms避免SMTP限流
+      await new Promise(r => setTimeout(r, 500));
+    } catch (err) {
+      failed++;
+      errors.push(`${user.email}: ${err.message}`);
+      console.error(`  ❌ ${user.email}: ${err.message}`);
+    }
+  }
+
+  console.log(`[邮件中枢] 发送完成: ${sent}成功 / ${failed}失败`);
+  return { sent, failed, errors };
+}
+
+// ═══════════════════════════════════════════════
+// 📧 公开API (供auto-evolution.js调用)
+// ═══════════════════════════════════════════════
+
+/**
+ * 发送月初重置通知给所有用户
+ */
+async function sendMonthlyResetEmail() {
+  const result = await sendToAllUsers(
+    '🌐 光湖语言世界 · 本月流量已重置',
+    (config) => generateMonthlyResetEmail(config)
+  );
+  logEmail('monthly-reset', result.sent + result.failed, result.sent, result.errors.join('; '));
+  return result;
+}
+
+/**
+ * 发送更新通知给所有用户
+ * @param {string} description 更新说明
+ */
+async function sendUpdateNotifyEmail(description) {
+  const result = await sendToAllUsers(
+    '🌐 光湖语言世界 · 系统已升级',
+    (config) => generateUpdateNotifyEmail(description, config)
+  );
+  logEmail('update-notify', result.sent + result.failed, result.sent, result.errors.join('; '));
+  return result;
+}
+
+/**
+ * 发送流量预警给所有用户
+ * @param {number} percentage 流量使用百分比
+ */
+async function sendTrafficWarnEmail(percentage) {
+  const poolStatus = getPoolStatus();
+  const result = await sendToAllUsers(
+    `🌐 光湖语言世界 · 流量预警 (${percentage}%)`,
+    (config) => generateTrafficWarnEmail(percentage, poolStatus, config)
+  );
+  logEmail('traffic-warn', result.sent + result.failed, result.sent, result.errors.join('; '));
+  return result;
+}
+
+/**
+ * 发送安全提醒给单个用户
+ * @param {string} email 目标邮箱
+ * @param {string} message 安全提醒内容
+ */
+async function sendSecurityWarnEmail(email, message) {
+  const config = loadConfig();
+  const html = generateSecurityWarnEmail(message, config);
+
+  try {
+    await sendEmail(email, '🛡️ 光湖语言世界 · 安全提醒', html);
+    console.log(`[邮件中枢] ✅ 安全提醒已发送: ${email}`);
+    logEmail('security-warn', email, true, null);
+    return { sent: 1, failed: 0 };
+  } catch (err) {
+    console.error(`[邮件中枢] ❌ 安全提醒发送失败: ${err.message}`);
+    logEmail('security-warn', email, false, err.message);
+    return { sent: 0, failed: 1 };
+  }
+}
+
+/**
+ * 发送反馈确认给单个用户
+ * @param {string} email 目标邮箱
+ */
+async function sendFeedbackAckEmail(email) {
+  const config = loadConfig();
+  const html = generateFeedbackAckEmail(config);
+
+  try {
+    await sendEmail(email, '🌐 光湖语言世界 · 反馈已收到', html);
+    console.log(`[邮件中枢] ✅ 反馈确认已发送: ${email}`);
+    logEmail('feedback-ack', email, true, null);
+    return { sent: 1, failed: 0 };
+  } catch (err) {
+    console.error(`[邮件中枢] ❌ 反馈确认发送失败: ${err.message}`);
+    logEmail('feedback-ack', email, false, err.message);
+    return { sent: 0, failed: 1 };
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CLI 主入口
+// ═══════════════════════════════════════════════
+async function main() {
+  const [,, action, arg1, arg2] = process.argv;
+
+  if (!action) {
+    console.log('📧 光湖语言世界 · 邮件通信中枢');
+    console.log('用法:');
+    console.log('  node email-hub.js monthly-reset                — 月初重置通知');
+    console.log('  node email-hub.js update-notify <描述>          — 更新升级通知');
+    console.log('  node email-hub.js traffic-warn <百分比>         — 流量预警通知');
+    console.log('  node email-hub.js security-warn <邮箱> <消息>   — 安全风险提醒');
+    console.log('  node email-hub.js feedback-ack <邮箱>           — 反馈确认回复');
+    process.exit(0);
+  }
+
+  switch (action) {
+    case 'monthly-reset': {
+      const result = await sendMonthlyResetEmail();
+      console.log(`📧 月初重置通知: ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
+    case 'update-notify': {
+      if (!arg1) {
+        console.error('❌ 请提供更新描述');
+        process.exit(1);
+      }
+      const result = await sendUpdateNotifyEmail(arg1);
+      console.log(`📧 更新通知: ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
+    case 'traffic-warn': {
+      const pct = parseInt(arg1, 10);
+      if (isNaN(pct)) {
+        console.error('❌ 请提供流量使用百分比 (数字)');
+        process.exit(1);
+      }
+      const result = await sendTrafficWarnEmail(pct);
+      console.log(`📧 流量预警: ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
+    case 'security-warn': {
+      if (!arg1 || !arg2) {
+        console.error('❌ 请提供邮箱和消息');
+        process.exit(1);
+      }
+      await sendSecurityWarnEmail(arg1, arg2);
+      break;
+    }
+
+    case 'feedback-ack': {
+      if (!arg1) {
+        console.error('❌ 请提供邮箱');
+        process.exit(1);
+      }
+      await sendFeedbackAckEmail(arg1);
+      break;
+    }
+
+    default:
+      console.error(`❌ 未知操作: ${action}`);
+      process.exit(1);
+  }
+}
+
+// 导出API (供其他模块调用)
+module.exports = {
+  sendMonthlyResetEmail,
+  sendUpdateNotifyEmail,
+  sendTrafficWarnEmail,
+  sendSecurityWarnEmail,
+  sendFeedbackAckEmail,
+  getEnabledUsers,
+  sendEmail
+};
+
+// CLI直接运行
+if (require.main === module) {
+  main().catch(err => {
+    console.error('❌ 邮件中枢异常:', err.message);
+    process.exit(1);
+  });
+}

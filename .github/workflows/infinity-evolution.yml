@@ -1,0 +1,166 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# ♾️ 光湖语言世界 · 自主进化定时工作流
+#
+# 定时触发∞版本的关键任务:
+#   - 每月1号: 月度进化 (LLM分析 + 流量重置邮件)
+#   - 每周五: 用户反馈处理 (Phase 2)
+#   - 手动触发: 任意∞版本操作
+#
+# 注: 大部分定时任务由服务器上的PM2进程 (auto-evolution.js)
+#     自动执行。此工作流作为补充/备份触发机制。
+# ═══════════════════════════════════════════════
+
+name: '♾️ 光湖∞ · 自主进化'
+
+on:
+  schedule:
+    # 每月1号 UTC 16:00 = CST 00:00 (月度进化)
+    - cron: '0 16 1 * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - monthly-evolution
+          - deploy-infinity
+          - status
+          - send-monthly-reset
+          - send-update-notify
+          - send-traffic-warn
+        default: 'status'
+      message:
+        description: '附加消息 (update-notify描述 / traffic-warn百分比)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infinity-evolution
+  cancel-in-progress: false
+
+jobs:
+  # ═══ §1 ∞版本部署/管理 ═══
+  infinity-action:
+    name: '♾️ ${{ github.event.inputs.action || ''monthly-evolution'' }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_BRAIN_KEY }}" > ~/.ssh/brain_key
+          chmod 600 ~/.ssh/brain_key
+          ssh-keyscan -H ${{ secrets.ZY_BRAIN_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: '♾️ 执行∞操作'
+        env:
+          ACTION: ${{ github.event.inputs.action || 'monthly-evolution' }}
+          MESSAGE: ${{ github.event.inputs.message || '' }}
+          ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
+        run: |
+          SSH_CMD="ssh -i ~/.ssh/brain_key -o StrictHostKeyChecking=no ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }}"
+          PROXY_DIR="/opt/zhuyuan-brain/proxy"
+
+          echo "════════════════════════════════════════"
+          echo "♾️ 光湖∞ · 自主进化 · action=$ACTION"
+          echo "════════════════════════════════════════"
+
+          case "$ACTION" in
+            deploy-infinity)
+              echo "部署∞版本..."
+              # 先同步最新代码到服务器
+              scp -i ~/.ssh/brain_key -o StrictHostKeyChecking=no \
+                server/proxy/service/auto-evolution.js \
+                server/proxy/service/email-hub.js \
+                server/proxy/service/protocol-mirror.js \
+                server/proxy/ecosystem.brain-proxy-v3.config.js \
+                ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }}:/tmp/
+
+              $SSH_CMD "
+                cp /tmp/auto-evolution.js $PROXY_DIR/service/
+                cp /tmp/email-hub.js $PROXY_DIR/service/
+                cp /tmp/protocol-mirror.js $PROXY_DIR/service/
+                cp /tmp/ecosystem.brain-proxy-v3.config.js $PROXY_DIR/
+                mkdir -p $PROXY_DIR/data/evolution-reports
+                cd $PROXY_DIR && pm2 startOrRestart ecosystem.brain-proxy-v3.config.js --update-env && pm2 save
+                echo '✅ ∞版本已部署'
+                pm2 list
+              "
+              ;;
+
+            monthly-evolution)
+              echo "触发月度进化..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js monthly-reset 2>&1 || echo '⚠️ 月度邮件发送遇到问题'
+                echo '✅ 月度进化已触发'
+              "
+              ;;
+
+            status)
+              echo "查询∞版本状态..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                echo '── PM2进程 ──'
+                pm2 list 2>/dev/null || echo '⚠️ PM2不可用'
+                echo ''
+                echo '── 进化状态 ──'
+                cat data/auto-evolution-status.json 2>/dev/null || echo '(未初始化)'
+                echo ''
+                echo '── 镜像状态 ──'
+                cat data/protocol-mirror-status.json 2>/dev/null || echo '(未初始化)'
+                echo ''
+                echo '── 流量池 ──'
+                cat data/pool-quota-status.json 2>/dev/null || echo '(未初始化)'
+              "
+              ;;
+
+            send-monthly-reset)
+              echo "发送月初重置邮件..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js monthly-reset
+              "
+              ;;
+
+            send-update-notify)
+              echo "发送更新通知..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js update-notify '${MESSAGE:-系统已更新}'
+              "
+              ;;
+
+            send-traffic-warn)
+              echo "发送流量预警..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js traffic-warn '${MESSAGE:-70}'
+              "
+              ;;
+
+            *)
+              echo "❌ 未知操作: $ACTION"
+              exit 1
+              ;;
+          esac

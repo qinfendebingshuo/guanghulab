@@ -424,26 +424,36 @@ rules:
   # Apple (直连)
   - DOMAIN-SUFFIX,apple.com,DIRECT
   - DOMAIN-SUFFIX,icloud.com,DIRECT
+  - DOMAIN-SUFFIX,mzstatic.com,DIRECT
+  - DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT
 
   # CDN静态资源 (直连 · 节省池带宽)
   - DOMAIN-SUFFIX,cdn.jsdelivr.net,DIRECT
   - DOMAIN-SUFFIX,cdnjs.cloudflare.com,DIRECT
   - DOMAIN-SUFFIX,unpkg.com,DIRECT
   - DOMAIN-SUFFIX,bootcdn.net,DIRECT
+  - DOMAIN-SUFFIX,staticfile.org,DIRECT
 
-  # 国内直连
+  # 国内直连 (∞ 智能分流 · 用户切回国内网时VPN休眠)
   - DOMAIN-SUFFIX,cn,DIRECT
   - DOMAIN-SUFFIX,taobao.com,DIRECT
   - DOMAIN-SUFFIX,tmall.com,DIRECT
   - DOMAIN-SUFFIX,alipay.com,DIRECT
   - DOMAIN-SUFFIX,aliyun.com,DIRECT
+  - DOMAIN-SUFFIX,aliyuncs.com,DIRECT
   - DOMAIN-SUFFIX,jd.com,DIRECT
   - DOMAIN-SUFFIX,qq.com,DIRECT
   - DOMAIN-SUFFIX,tencent.com,DIRECT
+  - DOMAIN-SUFFIX,weixin.qq.com,DIRECT
+  - DOMAIN-SUFFIX,wechat.com,DIRECT
   - DOMAIN-SUFFIX,bilibili.com,DIRECT
+  - DOMAIN-SUFFIX,bilivideo.com,DIRECT
   - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,bdstatic.com,DIRECT
   - DOMAIN-SUFFIX,zhihu.com,DIRECT
   - DOMAIN-SUFFIX,douyin.com,DIRECT
+  - DOMAIN-SUFFIX,bytedance.com,DIRECT
+  - DOMAIN-SUFFIX,toutiao.com,DIRECT
   - DOMAIN-SUFFIX,weibo.com,DIRECT
   - DOMAIN-SUFFIX,163.com,DIRECT
   - DOMAIN-SUFFIX,126.com,DIRECT
@@ -454,6 +464,20 @@ rules:
   - DOMAIN-SUFFIX,meituan.com,DIRECT
   - DOMAIN-SUFFIX,dianping.com,DIRECT
   - DOMAIN-SUFFIX,pinduoduo.com,DIRECT
+  - DOMAIN-SUFFIX,suning.com,DIRECT
+  - DOMAIN-SUFFIX,csdn.net,DIRECT
+  - DOMAIN-SUFFIX,cnblogs.com,DIRECT
+  - DOMAIN-SUFFIX,gitee.com,DIRECT
+  - DOMAIN-SUFFIX,jianshu.com,DIRECT
+  - DOMAIN-SUFFIX,douban.com,DIRECT
+  - DOMAIN-SUFFIX,kuaishou.com,DIRECT
+  - DOMAIN-SUFFIX,ctrip.com,DIRECT
+  - DOMAIN-SUFFIX,ele.me,DIRECT
+  - DOMAIN-SUFFIX,netease.com,DIRECT
+  - DOMAIN-SUFFIX,iqiyi.com,DIRECT
+  - DOMAIN-SUFFIX,youku.com,DIRECT
+  - DOMAIN-SUFFIX,dingtalk.com,DIRECT
+  - DOMAIN-SUFFIX,feishu.cn,DIRECT
 
   # 局域网直连
   - IP-CIDR,192.168.0.0/16,DIRECT
