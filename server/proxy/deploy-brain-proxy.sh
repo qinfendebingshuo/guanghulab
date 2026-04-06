@@ -487,6 +487,78 @@ list_users() {
     node "$PROXY_DIR/service/user-manager.js" list
 }
 
+# ── V3 Nginx配置辅助函数 ──────────────────────
+
+# 安全注入V3 location块到nginx配置
+# 仅在最后一个顶层 } 之前插入（主server块的结束位置）
+# 避免旧 sed '/^}/i\' 模式在多server块配置中重复注入的问题
+inject_v3_nginx_block() {
+    local conf="$1"
+    if grep -q "proxy-v3" "$conf" 2>/dev/null; then
+        return 0  # 已存在
+    fi
+
+    local last_brace
+    last_brace=$(grep -n '^}' "$conf" | tail -1 | cut -d: -f1)
+    if [ -z "$last_brace" ] || [ "$last_brace" -le 1 ]; then
+        echo "  ❌ 未找到有效的server块结束位置"
+        return 1
+    fi
+
+    {
+        head -n $((last_brace - 1)) "$conf"
+        cat <<'V3BLOCK'
+
+    # ─── 光湖语言世界V3 (端口 3805) ───
+    location /api/proxy-v3/ {
+        proxy_pass http://127.0.0.1:3805/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 30s;
+        proxy_send_timeout 30s;
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options DENY always;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    }
+V3BLOCK
+        tail -n +${last_brace} "$conf"
+    } > "${conf}.v3-tmp"
+
+    if [ -s "${conf}.v3-tmp" ]; then
+        mv "${conf}.v3-tmp" "$conf"
+        return 0
+    else
+        rm -f "${conf}.v3-tmp"
+        echo "  ❌ V3注入生成文件为空"
+        return 1
+    fi
+}
+
+# 移除所有V3 location块（用于修复错误注入）
+remove_v3_nginx_blocks() {
+    local conf="$1"
+    # 删除从V3注释行到该location块闭合}的所有内容
+    sed -i '/# ─── 光湖语言世界V3/,/^[[:space:]]*}/d' "$conf"
+    # 清理连续空行（保留最多一个空行）
+    sed -i '/^$/N;/^\n$/D' "$conf"
+}
+
+# 验证nginx配置并返回错误信息
+validate_nginx() {
+    local result
+    result=$(nginx -t 2>&1)
+    if echo "$result" | grep -q "successful"; then
+        return 0
+    else
+        echo "$result" | grep -E 'emerg|error' | head -5
+        return 1
+    fi
+}
+
 # ── deploy-v3: 部署V3生产环境 ──────────────────
 # V2继续运行·V3独立启动·/api/proxy-v3/
 deploy_v3() {
@@ -515,32 +587,27 @@ deploy_v3() {
         fi
     done
 
-    if [ -n "$NGINX_CONF" ] && ! grep -q "proxy-v3" "$NGINX_CONF" 2>/dev/null; then
-        echo "  添加V3路径..."
-        sed -i '/^}/i\
-    # ─── 光湖语言世界V3 (端口 3805) ───\
-    location /api/proxy-v3/ {\
-        proxy_pass http://127.0.0.1:3805/;\
-        proxy_http_version 1.1;\
-        proxy_set_header Host $host;\
-        proxy_set_header X-Real-IP $remote_addr;\
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\
-        proxy_set_header X-Forwarded-Proto $scheme;\
-        proxy_connect_timeout 10s;\
-        proxy_read_timeout 30s;\
-        proxy_send_timeout 30s;\
-        add_header X-Content-Type-Options nosniff always;\
-        add_header X-Frame-Options DENY always;\
-        add_header Cache-Control "no-store, no-cache, must-revalidate" always;\
-    }' "$NGINX_CONF" || true
-        echo "  ✅ V3路径已添加"
-    else
-        echo "  proxy-v3配置已存在或Nginx配置未找到"
-    fi
+    if [ -n "$NGINX_CONF" ]; then
+        if ! grep -q "proxy-v3" "$NGINX_CONF" 2>/dev/null; then
+            echo "  添加V3路径..."
+            if inject_v3_nginx_block "$NGINX_CONF"; then
+                echo "  ✅ V3路径已添加"
+            else
+                echo "  ❌ V3路径注入失败"
+            fi
+        else
+            echo "  proxy-v3配置已存在"
+        fi
 
-    if nginx -t 2>/dev/null; then
-        nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
-        echo "  ✅ Nginx已重载"
+        if validate_nginx; then
+            nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+            echo "  ✅ Nginx已重载"
+        else
+            echo "  ❌ Nginx配置验证失败，V3 PM2进程已启动但Nginx未更新"
+            echo "  请手动检查: nginx -t"
+        fi
+    else
+        echo "  ⚠️ 未找到Nginx配置文件，跳过V3路径注入"
     fi
 
     echo ""
@@ -593,7 +660,32 @@ switch_v3() {
         exit 1
     fi
 
-    # 备份当前Nginx配置
+    # 预检查: 验证当前Nginx配置是否有效
+    if ! validate_nginx; then
+        echo "  ⚠️ 当前Nginx配置存在问题，尝试自动修复..."
+
+        # 如果V3注入导致的问题（旧sed '/^}/i'在多server块配置中重复注入）
+        if grep -q "光湖语言世界V3" "$NGINX_CONF" 2>/dev/null; then
+            echo "  🔧 修复V3 location块注入错误..."
+            cp "$NGINX_CONF" "${NGINX_CONF}.pre-repair"
+            remove_v3_nginx_blocks "$NGINX_CONF"
+            inject_v3_nginx_block "$NGINX_CONF"
+
+            if validate_nginx; then
+                echo "  ✅ V3注入已修复"
+                nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+            else
+                echo "  ❌ 自动修复失败，恢复原配置"
+                cp "${NGINX_CONF}.pre-repair" "$NGINX_CONF"
+                exit 1
+            fi
+        else
+            echo "  ❌ Nginx配置错误非V3相关，请手动检查: nginx -t"
+            exit 1
+        fi
+    fi
+
+    # 备份当前（已验证有效的）Nginx配置
     cp "$NGINX_CONF" "${NGINX_CONF}.v2-backup"
     echo "  ✅ 已备份Nginx配置到 ${NGINX_CONF}.v2-backup"
 
@@ -606,7 +698,7 @@ switch_v3() {
     fi
 
     # 重载Nginx
-    if nginx -t 2>/dev/null; then
+    if validate_nginx; then
         nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
         echo "  ✅ Nginx已重载"
     else
