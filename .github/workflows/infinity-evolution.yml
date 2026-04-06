@@ -31,10 +31,16 @@ on:
           - status
           - send-monthly-reset
           - send-update-notify
+          - send-update-notify-single
           - send-traffic-warn
+          - list-user-emails
         default: 'status'
       message:
-        description: '附加消息 (update-notify描述 / traffic-warn百分比)'
+        description: '附加消息 (update-notify描述 / traffic-warn百分比) · 描述支持分号分隔多条内容'
+        required: false
+        type: string
+      email:
+        description: '目标邮箱 (send-update-notify-single时需要 · 可先用list-user-emails查看)'
         required: false
         type: string
 
@@ -67,6 +73,7 @@ jobs:
         env:
           ACTION: ${{ github.event.inputs.action || 'monthly-evolution' }}
           MESSAGE: ${{ github.event.inputs.message || '' }}
+          EMAIL: ${{ github.event.inputs.email || '' }}
           ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
           ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
         run: |
@@ -143,12 +150,27 @@ jobs:
               ;;
 
             send-update-notify)
-              echo "发送更新通知..."
+              echo "一键发送更新通知 (全部用户)..."
               $SSH_CMD "
                 cd $PROXY_DIR
                 export ZY_SMTP_USER='$ZY_SMTP_USER'
                 export ZY_SMTP_PASS='$ZY_SMTP_PASS'
                 node service/email-hub.js update-notify '${MESSAGE:-系统已更新}'
+              "
+              ;;
+
+            send-update-notify-single)
+              if [ -z "$EMAIL" ]; then
+                echo "❌ 请提供目标邮箱 (email字段)"
+                echo "💡 可先使用 list-user-emails 查看所有用户邮箱"
+                exit 1
+              fi
+              echo "单独发送更新通知给: $EMAIL ..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js update-notify-single '$EMAIL' '${MESSAGE:-系统已更新}'
               "
               ;;
 
@@ -159,6 +181,14 @@ jobs:
                 export ZY_SMTP_USER='$ZY_SMTP_USER'
                 export ZY_SMTP_PASS='$ZY_SMTP_PASS'
                 node service/email-hub.js traffic-warn '${MESSAGE:-70}'
+              "
+              ;;
+
+            list-user-emails)
+              echo "查询所有用户邮箱..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                node service/email-hub.js list-emails
               "
               ;;
 

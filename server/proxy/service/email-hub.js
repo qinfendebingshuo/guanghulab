@@ -19,10 +19,12 @@
 //
 // 用法:
 //   node email-hub.js monthly-reset         — 发送月初重置邮件给所有用户
-//   node email-hub.js update-notify <desc>  — 发送更新通知给所有用户
+//   node email-hub.js update-notify <desc>  — 一键发送更新通知给所有用户
+//   node email-hub.js update-notify-single <email> <desc> — 发送更新通知给单个用户
 //   node email-hub.js traffic-warn <pct>    — 发送流量预警给所有用户
 //   node email-hub.js security-warn <email> <msg>  — 发送安全提醒给单用户
 //   node email-hub.js feedback-ack <email>  — 发送反馈确认给单用户
+//   node email-hub.js list-emails           — 列出所有启用用户的邮箱
 //
 // 运行方式: CLI调用 (由auto-evolution.js调度)
 // ═══════════════════════════════════════════════
@@ -270,14 +272,26 @@ function generateMonthlyResetEmail(config) {
 function generateUpdateNotifyEmail(description, config) {
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
 
+  // 支持用分号或换行符分隔的多条更新内容，自动渲染为功能清单
+  const items = description.split(/[;\n]/).map(s => s.trim()).filter(Boolean);
+  let detailHtml;
+  if (items.length > 1) {
+    detailHtml = `
+    <ul style="margin: 0; padding-left: 20px; color: #333; line-height: 2;">
+      ${items.map(item => `<li>${escapeHtml(item)}</li>`).join('\n      ')}
+    </ul>`;
+  } else {
+    detailHtml = `<p style="margin: 0; color: #333; line-height: 1.8;">${escapeHtml(description).replace(/\n/g, '<br>')}</p>`;
+  }
+
   const content = `
     <div style="background: #cce5ff; border: 1px solid #b8daff; border-radius: 8px; padding: 15px; margin: 15px 0;">
       <strong style="color: #004085;">🔄 系统已完成升级</strong>
     </div>
 
     <h3 style="color: #333;">📋 本次更新内容</h3>
-    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; color: #333; line-height: 1.8;">
-      ${escapeHtml(description).replace(/\n/g, '<br>')}
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; line-height: 1.8;">
+      ${detailHtml}
     </div>
 
     <p style="color: #666; font-size: 13px; margin-top: 15px;">
@@ -519,6 +533,36 @@ async function sendFeedbackAckEmail(email) {
   }
 }
 
+/**
+ * 发送更新通知给单个用户 (分别发送模式)
+ * @param {string} email 目标邮箱
+ * @param {string} description 更新说明
+ */
+async function sendUpdateNotifySingleEmail(email, description) {
+  const config = loadConfig();
+  const html = generateUpdateNotifyEmail(description, config);
+
+  try {
+    await sendEmail(email, '🌐 光湖语言世界 · 系统已升级', html);
+    console.log(`[邮件中枢] ✅ 更新通知已发送: ${email}`);
+    logEmail('update-notify-single', email, true, null);
+    return { sent: 1, failed: 0 };
+  } catch (err) {
+    console.error(`[邮件中枢] ❌ 更新通知发送失败: ${err.message}`);
+    logEmail('update-notify-single', email, false, err.message);
+    return { sent: 0, failed: 1 };
+  }
+}
+
+/**
+ * 列出所有启用用户的邮箱 (供下拉选择)
+ * @returns {string[]} 邮箱列表
+ */
+function listUserEmails() {
+  const users = getEnabledUsers();
+  return users.map(u => u.email);
+}
+
 // ═══════════════════════════════════════════════
 // CLI 主入口
 // ═══════════════════════════════════════════════
@@ -528,11 +572,16 @@ async function main() {
   if (!action) {
     console.log('📧 光湖语言世界 · 邮件通信中枢');
     console.log('用法:');
-    console.log('  node email-hub.js monthly-reset                — 月初重置通知');
-    console.log('  node email-hub.js update-notify <描述>          — 更新升级通知');
-    console.log('  node email-hub.js traffic-warn <百分比>         — 流量预警通知');
-    console.log('  node email-hub.js security-warn <邮箱> <消息>   — 安全风险提醒');
-    console.log('  node email-hub.js feedback-ack <邮箱>           — 反馈确认回复');
+    console.log('  node email-hub.js monthly-reset                — 月初重置通知 (全部用户)');
+    console.log('  node email-hub.js update-notify <描述>          — 一键发送更新通知 (全部用户)');
+    console.log('  node email-hub.js update-notify-single <邮箱> <描述> — 单独发送更新通知');
+    console.log('  node email-hub.js traffic-warn <百分比>         — 流量预警通知 (全部用户)');
+    console.log('  node email-hub.js security-warn <邮箱> <消息>   — 安全风险提醒 (单用户)');
+    console.log('  node email-hub.js feedback-ack <邮箱>           — 反馈确认回复 (单用户)');
+    console.log('  node email-hub.js list-emails                  — 列出所有用户邮箱');
+    console.log('');
+    console.log('💡 描述支持分号分隔多条内容，自动渲染为功能清单:');
+    console.log('   node email-hub.js update-notify "新增智能选路;优化连接速度;修复断连问题"');
     process.exit(0);
   }
 
@@ -549,7 +598,18 @@ async function main() {
         process.exit(1);
       }
       const result = await sendUpdateNotifyEmail(arg1);
-      console.log(`📧 更新通知: ${result.sent}成功 / ${result.failed}失败`);
+      console.log(`📧 更新通知 (一键发送): ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
+    case 'update-notify-single': {
+      if (!arg1 || !arg2) {
+        console.error('❌ 请提供邮箱和更新描述');
+        console.error('用法: node email-hub.js update-notify-single <邮箱> <描述>');
+        process.exit(1);
+      }
+      const result = await sendUpdateNotifySingleEmail(arg1, arg2);
+      console.log(`📧 更新通知 (单独发送): ${result.sent}成功 / ${result.failed}失败`);
       break;
     }
 
@@ -582,6 +642,19 @@ async function main() {
       break;
     }
 
+    case 'list-emails': {
+      const emails = listUserEmails();
+      if (emails.length === 0) {
+        console.log('[邮件中枢] 暂无启用用户');
+      } else {
+        console.log(`📧 当前启用用户邮箱 (${emails.length}位):`);
+        emails.forEach((email, i) => {
+          console.log(`  ${i + 1}. ${email}`);
+        });
+      }
+      break;
+    }
+
     default:
       console.error(`❌ 未知操作: ${action}`);
       process.exit(1);
@@ -592,10 +665,12 @@ async function main() {
 module.exports = {
   sendMonthlyResetEmail,
   sendUpdateNotifyEmail,
+  sendUpdateNotifySingleEmail,
   sendTrafficWarnEmail,
   sendSecurityWarnEmail,
   sendFeedbackAckEmail,
   getEnabledUsers,
+  listUserEmails,
   sendEmail
 };
 
