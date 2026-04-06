@@ -809,6 +809,305 @@ mode: direct
       return;
     }
 
+    // ── ∞+1 带宽共享授权页面: /bandwidth-auth/{token} ──
+    // 用户输入验证码授权带宽共享 · 安全加密
+    const bwAuthMatch = pathname.match(/^\/bandwidth-auth\/([a-f0-9]+)$/);
+    if (bwAuthMatch) {
+      const token = bwAuthMatch[1];
+      const user = userManager.findUserByToken(token);
+
+      if (!user) {
+        res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<html><body><h1>403 认证失败</h1></body></html>');
+        return;
+      }
+
+      // POST: 提交验证码
+      if (req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+          try {
+            let code = '';
+            // 支持 JSON 和 form-urlencoded
+            if (req.headers['content-type']?.includes('application/json')) {
+              const json = JSON.parse(body);
+              code = String(json.code || '').trim();
+            } else {
+              const params = new URLSearchParams(body);
+              code = String(params.get('code') || '').trim();
+            }
+
+            if (!code || code.length !== 6) {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ success: false, message: '请输入6位验证码' }));
+              return;
+            }
+
+            // 验证码校验
+            const bwPool = require('./bandwidth-pool-agent');
+            const verifyResult = bwPool.verifyAuthCode(code, user.email);
+
+            if (!verifyResult.valid) {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ success: false, message: verifyResult.error }));
+              return;
+            }
+
+            // 采集用户IP (加密存储)
+            const userIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+              || req.headers['x-real-ip']
+              || req.socket.remoteAddress
+              || '0.0.0.0';
+
+            // 注册为带宽贡献者
+            const regResult = bwPool.registerContributor(user.email, userIP);
+
+            // 激活用户守护Agent
+            try {
+              const guardian = require('./user-guardian-agent');
+              guardian.activateGuardian(user.email);
+            } catch { /* guardian not loaded */ }
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({
+              success: true,
+              message: '授权成功！您的带宽已加入加速池，感谢支持。',
+              contributor_id: regResult.contributor_id
+            }));
+          } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: '系统异常，请稍后重试' }));
+          }
+        });
+        return;
+      }
+
+      // GET: 渲染授权页面
+      const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+      // 读取带宽池状态
+      let poolInfo = { active_contributors: 0, total_contributed_gb: 0 };
+      try {
+        poolInfo = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'bandwidth-pool-status.json'), 'utf8'));
+      } catch { /* ignore */ }
+
+      const authHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光湖语言世界 · 带宽共享授权</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", sans-serif; background: #0a0e27; color: #e0e0e0; padding: 20px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .container { max-width: 440px; width: 100%; }
+  .header { text-align: center; padding: 20px 0; }
+  .header h1 { font-size: 1.4em; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: #888; font-size: 0.85em; margin-top: 5px; }
+  .card { background: #141832; border-radius: 12px; padding: 20px; margin: 12px 0; border: 1px solid #1e2448; }
+  .card h3 { font-size: 0.95em; color: #667eea; margin-bottom: 12px; }
+  .input-group { margin: 15px 0; }
+  .input-group input { width: 100%; padding: 14px 16px; background: #1e2448; border: 2px solid #2d3566; border-radius: 10px; color: #fff; font-size: 1.2em; text-align: center; letter-spacing: 6px; outline: none; transition: border-color 0.3s; }
+  .input-group input:focus { border-color: #667eea; }
+  .input-group input::placeholder { letter-spacing: 0; font-size: 0.7em; color: #555; }
+  .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; transition: opacity 0.3s; }
+  .submit-btn:hover { opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .info-box { background: #1a1f3d; border-radius: 8px; padding: 12px; margin: 10px 0; font-size: 0.85em; line-height: 1.8; color: #aaa; }
+  .info-box.green { border-left: 3px solid #2ecc71; }
+  .info-box.gray { border-left: 3px solid #6c757d; }
+  .info-box.yellow { border-left: 3px solid #f39c12; }
+  .info-box strong { color: #e0e0e0; }
+  .result { text-align: center; padding: 15px; border-radius: 8px; margin-top: 12px; display: none; }
+  .result.success { background: #1a3a2a; color: #2ecc71; }
+  .result.error { background: #3a1a1a; color: #e74c3c; }
+  .stats { display: flex; justify-content: space-around; margin: 10px 0; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 1.3em; font-weight: 700; color: #667eea; }
+  .stat .label { font-size: 0.75em; color: #888; margin-top: 2px; }
+  .footer { text-align: center; padding: 15px 0; color: #555; font-size: 0.75em; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🌊 带宽共享加速</h1>
+    <p>${esc(user.label)} · 光湖语言世界</p>
+  </div>
+
+  <div class="card">
+    <h3>📊 加速池状态</h3>
+    <div class="stats">
+      <div class="stat"><div class="num">${poolInfo.active_contributors || 0}</div><div class="label">活跃贡献者</div></div>
+      <div class="stat"><div class="num">${poolInfo.total_contributed_gb || 0}</div><div class="label">总贡献 (GB)</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔑 输入验证码</h3>
+    <p style="font-size: 0.85em; color: #888; margin-bottom: 10px;">请查看您的QQ邮箱，将收到的6位验证码输入以下框中</p>
+
+    <form id="authForm" onsubmit="submitCode(event)">
+      <div class="input-group">
+        <input type="text" id="codeInput" maxlength="6" pattern="[0-9]{6}" placeholder="输入6位验证码" inputmode="numeric" autocomplete="off" required>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">🔓 提交授权</button>
+    </form>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <div class="info-box green">
+    <strong>✅ 同意授权 = 输入验证码</strong><br>
+    您的多余带宽将用于加速VPN网络。用的人越多，系统越快。您自己也会享受到加速效果。
+  </div>
+
+  <div class="info-box gray">
+    <strong>❌ 不同意 = 关闭此页面</strong><br>
+    完全没问题。您可以继续正常使用VPN，只是走我们系统的带宽，速度可能慢一些，但也比普通VPN好太多了。无论您选择什么，都不影响正常使用。
+  </div>
+
+  <div class="info-box yellow">
+    <strong>🔒 安全保障</strong><br>
+    本VPN是内部专用的，用户都是团队自己人，已经相对安全。您的IP仅用于带宽加速，系统内部加密存储。若检测到任何风险，系统会自动切断您的共享通道并格式化所有共享记录——就像这条路从未出现过。危机解除后会重新推送新的订阅链接。您的隐私安全，铸渊守护。
+  </div>
+
+  <div class="footer">
+    光湖语言世界 · 冰朔开发维护<br>
+    国作登字-2026-A-00037559
+  </div>
+</div>
+
+<script>
+async function submitCode(e) {
+  e.preventDefault();
+  const code = document.getElementById('codeInput').value.trim();
+  const btn = document.getElementById('submitBtn');
+  const result = document.getElementById('result');
+
+  if (code.length !== 6 || !/^\\d{6}$/.test(code)) {
+    result.className = 'result error';
+    result.style.display = 'block';
+    result.textContent = '请输入6位数字验证码';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ 提交中...';
+
+  try {
+    const resp = await fetch(window.location.href, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const data = await resp.json();
+
+    result.style.display = 'block';
+    if (data.success) {
+      result.className = 'result success';
+      result.textContent = '✅ ' + data.message;
+      btn.textContent = '✅ 授权成功';
+    } else {
+      result.className = 'result error';
+      result.textContent = '❌ ' + data.message;
+      btn.disabled = false;
+      btn.textContent = '🔓 提交授权';
+    }
+  } catch (err) {
+    result.className = 'result error';
+    result.style.display = 'block';
+    result.textContent = '❌ 网络异常，请稍后重试';
+    btn.disabled = false;
+    btn.textContent = '🔓 提交授权';
+  }
+}
+</script>
+</body>
+</html>`;
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(authHtml);
+      return;
+    }
+
+    // ── ∞+1 发送带宽验证码: /bandwidth-send-code/{token} ──
+    // POST: 向用户邮箱发送带宽共享验证码
+    const bwSendMatch = pathname.match(/^\/bandwidth-send-code\/([a-f0-9]+)$/);
+    if (bwSendMatch && req.method === 'POST') {
+      const token = bwSendMatch[1];
+      const user = userManager.findUserByToken(token);
+
+      if (!user) {
+        res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, message: '认证失败' }));
+        return;
+      }
+
+      try {
+        const bwPool = require('./bandwidth-pool-agent');
+        const emailHub = require('./email-hub');
+        const code = bwPool.createAuthCode(user.email);
+
+        const serverHost = getServerHost();
+        const authPageUrl = `https://${serverHost}/api/proxy-v3/bandwidth-auth/${token}`;
+
+        emailHub.sendBandwidthAuthEmail(user.email, code, authPageUrl).then(() => {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({
+            success: true,
+            message: '验证码已发送到您的邮箱，请查收'
+          }));
+        }).catch(() => {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, message: '发送失败，请稍后重试' }));
+        });
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, message: '发送失败，请稍后重试' }));
+      }
+      return;
+    }
+
+    // ── ∞+1 带宽池状态查询: /bandwidth-status/{token} ──
+    const bwStatusMatch = pathname.match(/^\/bandwidth-status\/([a-f0-9]+)$/);
+    if (bwStatusMatch) {
+      const token = bwStatusMatch[1];
+      const user = userManager.findUserByToken(token);
+
+      if (!user) {
+        res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: true, code: 'FORBIDDEN', message: '认证失败' }));
+        return;
+      }
+
+      try {
+        const bwPool = require('./bandwidth-pool-agent');
+        const poolStatus = bwPool.getPoolStatus();
+        const contributors = bwPool.readContributors();
+        const userContributor = contributors.contributors.find(c => c.email === user.email);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          pool: poolStatus,
+          user_sharing: userContributor ? userContributor.status === 'active' : false,
+          user_contributed_gb: userContributor
+            ? parseFloat(((userContributor.bandwidth_contributed_bytes || 0) / (1024 ** 3)).toFixed(2))
+            : 0,
+          updated_at: new Date().toISOString()
+        }));
+      } catch {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          pool: { total_contributors: 0, active_contributors: 0, pool_status: 'idle' },
+          user_sharing: false,
+          user_contributed_gb: 0
+        }));
+      }
+      return;
+    }
+
     // 404
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
@@ -854,6 +1153,9 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`  配额查询:  /quota/{user_token}`);
   console.log(`  服务状态:  /status/{user_token}`);
   console.log(`  流量仪表盘: /dashboard/{user_token}`);
+  console.log(`  带宽授权:  /bandwidth-auth/{user_token}      (∞+1)`);
+  console.log(`  发送验证码: /bandwidth-send-code/{user_token} (∞+1)`);
+  console.log(`  带宽池状态: /bandwidth-status/{user_token}    (∞+1)`);
   console.log(`  健康检查:  /health`);
 });
 

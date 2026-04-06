@@ -14,6 +14,9 @@
 //   3. 流量预警通知 — 70%/80%/90%/100% 阶梯告警
 //   4. 安全风险提醒 — 单用户异常行为告知
 //   5. 反馈确认回复 — 收到用户反馈后的自动确认
+//   6. 带宽共享验证码 — 发送6位验证码 (∞+1)
+//   7. 风险提示通知 — 全体用户风险提醒 (∞+1)
+//   8. 安全恢复通知 — 危机解除后全体通知 (∞+1)
 //
 // 所有邮件底部附「意见反馈」链接
 //
@@ -24,6 +27,9 @@
 //   node email-hub.js traffic-warn <pct>    — 发送流量预警给所有用户
 //   node email-hub.js security-warn <email> <msg>  — 发送安全提醒给单用户
 //   node email-hub.js feedback-ack <email>  — 发送反馈确认给单用户
+//   node email-hub.js bandwidth-auth <email> — 发送带宽共享验证码 (∞+1)
+//   node email-hub.js threat-alert <msg>    — 全体用户风险提示 (∞+1)
+//   node email-hub.js threat-cleared        — 全体用户安全恢复通知 (∞+1)
 //   node email-hub.js list-emails           — 列出所有启用用户的邮箱
 //
 // 运行方式: CLI调用 (由auto-evolution.js调度)
@@ -410,6 +416,124 @@ function generateFeedbackAckEmail(config) {
   return wrapEmailTemplate('反馈已收到', content, config);
 }
 
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 6: 带宽共享验证码 (∞+1)
+// ═══════════════════════════════════════════════
+function generateBandwidthAuthEmail(code, authPageUrl, config) {
+  const content = `
+    <div style="background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #004085;">🌊 带宽共享加速 · 授权验证</strong>
+    </div>
+
+    <p style="color: #333; line-height: 1.8;">
+      您正在参与<strong>光湖语言世界</strong>的带宽共享加速计划。<br>
+      如果您<strong>同意授权</strong>，请复制以下验证码并提交：
+    </p>
+
+    <div style="background: #f0f7ff; border: 2px dashed #4a90d9; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+      <p style="color: #666; font-size: 12px; margin: 0 0 8px;">您的验证码 (15分钟内有效)</p>
+      <p style="font-size: 36px; font-weight: bold; color: #1a1a2e; letter-spacing: 8px; margin: 0;">${code}</p>
+    </div>
+
+    ${authPageUrl ? `
+    <div style="text-align: center; margin: 15px 0;">
+      <a href="${authPageUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+        🔗 前往授权页面输入验证码
+      </a>
+    </div>` : ''}
+
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0; border-left: 4px solid #28a745;">
+      <h4 style="color: #155724; margin: 0 0 8px;">✅ 同意授权 = 输入验证码</h4>
+      <p style="color: #666; font-size: 13px; margin: 0; line-height: 1.8;">
+        您的多余带宽将用于加速VPN网络。<br>
+        用的人越多，系统越快。您自己也会享受到加速效果。
+      </p>
+    </div>
+
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #6c757d;">
+      <h4 style="color: #495057; margin: 0 0 8px;">❌ 不同意 = 忽略此邮件</h4>
+      <p style="color: #666; font-size: 13px; margin: 0; line-height: 1.8;">
+        完全没问题。您可以继续正常使用VPN，只是走我们系统的带宽，<br>
+        速度可能慢一些，但也比普通VPN好太多了。
+      </p>
+    </div>
+
+    <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin: 15px 0;">
+      <p style="color: #856404; font-size: 12px; margin: 0; line-height: 1.6;">
+        🔒 <strong>安全说明</strong>：本VPN是内部专用的，用户都是团队自己人。
+        您的IP仅用于带宽加速，系统内部加密存储，外部无法看到。
+        若检测到任何风险，系统会<strong>自动切断您的共享通道</strong>，
+        并格式化所有共享记录——就像这条路从未出现过一样。
+        危机解除后，我们会重新为您推送新的订阅链接。您的隐私安全，铸渊守护。
+      </p>
+    </div>`;
+
+  return wrapEmailTemplate('带宽共享授权验证', content, config);
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 7: 风险提示通知 (∞+1 · 全体用户)
+// ═══════════════════════════════════════════════
+function generateThreatAlertEmail(message, config) {
+  const content = `
+    <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #721c24;">⚠️ 安全风险提示</strong>
+    </div>
+
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; color: #333; line-height: 1.8;">
+      ${escapeHtml(message).replace(/\n/g, '<br>')}
+    </div>
+
+    <h3 style="color: #333;">🛡️ 系统已自动执行以下保护措施</h3>
+    <ul style="color: #666; line-height: 2;">
+      <li>所有带宽共享通道已安全切断</li>
+      <li>用户IP和共享记录已加密隔离</li>
+      <li>VPN基础服务不受影响，可继续正常使用</li>
+      <li>系统正在自动处理风险，无需您手动操作</li>
+    </ul>
+
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 12px; margin: 15px 0;">
+      <p style="color: #155724; font-size: 13px; margin: 0;">
+        💡 您只需等待系统处理完毕。危机解除后，我们会发送安全恢复通知。<br>
+        若需要重新建立连接，只需刷新订阅即可。
+      </p>
+    </div>`;
+
+  return wrapEmailTemplate('安全风险提示', content, config);
+}
+
+// ═══════════════════════════════════════════════
+// 📧 邮件类型 8: 安全恢复通知 (∞+1 · 全体用户)
+// ═══════════════════════════════════════════════
+function generateThreatClearedEmail(config) {
+  const content = `
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; margin: 15px 0;">
+      <strong style="color: #155724;">✅ 安全风险已解除</strong>
+    </div>
+
+    <p style="color: #333; line-height: 1.8;">
+      光湖语言世界的安全系统已完成风险处理。<br>
+      所有服务已恢复正常运行。
+    </p>
+
+    <h3 style="color: #333;">📋 您需要做的</h3>
+    <div style="background: #f0f7ff; border-radius: 8px; padding: 15px; line-height: 1.8;">
+      <p style="color: #333; margin: 0;">
+        <strong>只需一步</strong>：打开您的VPN客户端，刷新一下订阅即可。<br>
+        您的订阅地址不变，内部节点已自动更新。
+      </p>
+    </div>
+
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 12px; margin: 15px 0;">
+      <p style="color: #666; font-size: 13px; margin: 0; line-height: 1.6;">
+        💡 如果之前您参与了带宽共享加速计划，共享通道已被安全重置。<br>
+        如需重新参与，您可以在仪表盘页面重新授权。感谢您的理解与支持！
+      </p>
+    </div>`;
+
+  return wrapEmailTemplate('安全恢复通知', content, config);
+}
+
 // ── HTML转义 ─────────────────────────────────
 function escapeHtml(str) {
   return String(str)
@@ -577,6 +701,54 @@ function listUserEmails() {
   return users.map(u => u.email);
 }
 
+/**
+ * 发送带宽共享验证码给单个用户 (∞+1)
+ * @param {string} email 目标邮箱
+ * @param {string} code 6位验证码
+ * @param {string} [authPageUrl] 授权页面URL
+ */
+async function sendBandwidthAuthEmail(email, code, authPageUrl) {
+  const config = loadConfig();
+  const html = generateBandwidthAuthEmail(code, authPageUrl, config);
+
+  try {
+    await sendEmail(email, '🌊 光湖语言世界 · 带宽共享授权验证码', html);
+    console.log(`[邮件中枢] ✅ 带宽验证码已发送: ${email}`);
+    logEmail('bandwidth-auth', email, true, null);
+    return { sent: 1, failed: 0 };
+  } catch (err) {
+    console.error(`[邮件中枢] ❌ 带宽验证码发送失败: ${err.message}`);
+    logEmail('bandwidth-auth', email, false, err.message);
+    return { sent: 0, failed: 1 };
+  }
+}
+
+/**
+ * 发送风险提示给所有用户 (∞+1)
+ * @param {string} message 风险描述
+ */
+async function sendThreatAlertEmail(message) {
+  const result = await sendToAllUsers(
+    '⚠️ 光湖语言世界 · 安全风险提示',
+    (config) => generateThreatAlertEmail(message, config)
+  );
+  logEmail('threat-alert', result.sent + result.failed, result.sent, result.errors.join('; '));
+  return result;
+}
+
+/**
+ * 发送安全恢复通知给所有用户 (∞+1)
+ */
+async function sendThreatClearedEmail() {
+  const result = await sendToAllUsers(
+    '✅ 光湖语言世界 · 安全风险已解除',
+    (config) => generateThreatClearedEmail(config)
+  );
+  logEmail('threat-cleared', result.sent + result.failed, result.sent, result.errors.join('; '));
+  return result;
+}
+
+
 // ═══════════════════════════════════════════════
 // CLI 主入口
 // ═══════════════════════════════════════════════
@@ -592,6 +764,9 @@ async function main() {
     console.log('  node email-hub.js traffic-warn <百分比>         — 流量预警通知 (全部用户)');
     console.log('  node email-hub.js security-warn <邮箱> <消息>   — 安全风险提醒 (单用户)');
     console.log('  node email-hub.js feedback-ack <邮箱>           — 反馈确认回复 (单用户)');
+    console.log('  node email-hub.js bandwidth-auth <邮箱>         — 发送带宽共享验证码 (∞+1)');
+    console.log('  node email-hub.js threat-alert <消息>           — 全体用户风险提示 (∞+1)');
+    console.log('  node email-hub.js threat-cleared                — 全体用户安全恢复通知 (∞+1)');
     console.log('  node email-hub.js list-emails                  — 列出所有用户邮箱');
     console.log('');
     console.log('💡 描述支持分号分隔多条内容，自动渲染为功能清单:');
@@ -676,6 +851,37 @@ async function main() {
       break;
     }
 
+    case 'bandwidth-auth': {
+      if (!arg1) {
+        console.error('❌ 请提供邮箱');
+        console.error('用法: node email-hub.js bandwidth-auth <邮箱>');
+        process.exit(1);
+      }
+      // 生成验证码
+      const bwPool = require('./bandwidth-pool-agent');
+      const authCode = bwPool.createAuthCode(arg1);
+      const result = await sendBandwidthAuthEmail(arg1, authCode);
+      console.log(`📧 带宽验证码: ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
+    case 'threat-alert': {
+      if (!arg1) {
+        console.error('❌ 请提供风险消息');
+        console.error('用法: node email-hub.js threat-alert <消息>');
+        process.exit(1);
+      }
+      const result = await sendThreatAlertEmail(arg1);
+      console.log(`📧 风险提示: ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
+    case 'threat-cleared': {
+      const result = await sendThreatClearedEmail();
+      console.log(`📧 安全恢复通知: ${result.sent}成功 / ${result.failed}失败`);
+      break;
+    }
+
     default:
       console.error(`❌ 未知操作: ${action}`);
       process.exit(1);
@@ -690,6 +896,9 @@ module.exports = {
   sendTrafficWarnEmail,
   sendSecurityWarnEmail,
   sendFeedbackAckEmail,
+  sendBandwidthAuthEmail,
+  sendThreatAlertEmail,
+  sendThreatClearedEmail,
   getEnabledUsers,
   listUserEmails,
   loadReleaseNotes,

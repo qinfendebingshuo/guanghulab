@@ -22,6 +22,9 @@ on:
       - 'server/proxy/service/auto-evolution.js'
       - 'server/proxy/service/email-hub.js'
       - 'server/proxy/service/protocol-mirror.js'
+      - 'server/proxy/service/bandwidth-pool-agent.js'
+      - 'server/proxy/service/swarm-defense-agent.js'
+      - 'server/proxy/service/user-guardian-agent.js'
       - 'server/proxy/config/release-notes.json'
       - 'server/proxy/ecosystem.brain-proxy-v3.config.js'
   schedule:
@@ -41,10 +44,12 @@ on:
           - send-update-notify
           - send-update-notify-single
           - send-traffic-warn
+          - send-threat-alert
+          - send-threat-cleared
           - list-user-emails
         default: 'status'
       message:
-        description: '附加消息 (update-notify描述 / traffic-warn百分比) · 描述支持分号分隔多条内容'
+        description: '附加消息 (update-notify描述 / traffic-warn百分比 / threat-alert消息) · 描述支持分号分隔多条内容'
         required: false
         type: string
       email:
@@ -97,10 +102,12 @@ jobs:
             $SSH_CMD "mkdir -p $PROXY_DIR/.deploy-tmp $PROXY_DIR/config"
             $SCP_CMD \
               server/proxy/service/email-hub.js \
+              server/proxy/service/bandwidth-pool-agent.js \
               server/proxy/config/release-notes.json \
               ${REMOTE_HOST}:$PROXY_DIR/.deploy-tmp/
             $SSH_CMD "
               cp $PROXY_DIR/.deploy-tmp/email-hub.js $PROXY_DIR/service/
+              cp $PROXY_DIR/.deploy-tmp/bandwidth-pool-agent.js $PROXY_DIR/service/
               cp $PROXY_DIR/.deploy-tmp/release-notes.json $PROXY_DIR/config/
               rm -rf $PROXY_DIR/.deploy-tmp
             "
@@ -121,6 +128,9 @@ jobs:
                 server/proxy/service/auto-evolution.js \
                 server/proxy/service/email-hub.js \
                 server/proxy/service/protocol-mirror.js \
+                server/proxy/service/bandwidth-pool-agent.js \
+                server/proxy/service/swarm-defense-agent.js \
+                server/proxy/service/user-guardian-agent.js \
                 server/proxy/config/release-notes.json \
                 server/proxy/ecosystem.brain-proxy-v3.config.js \
                 ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }}:$PROXY_DIR/.deploy-tmp/
@@ -129,6 +139,9 @@ jobs:
                 cp $PROXY_DIR/.deploy-tmp/auto-evolution.js $PROXY_DIR/service/
                 cp $PROXY_DIR/.deploy-tmp/email-hub.js $PROXY_DIR/service/
                 cp $PROXY_DIR/.deploy-tmp/protocol-mirror.js $PROXY_DIR/service/
+                cp $PROXY_DIR/.deploy-tmp/bandwidth-pool-agent.js $PROXY_DIR/service/
+                cp $PROXY_DIR/.deploy-tmp/swarm-defense-agent.js $PROXY_DIR/service/
+                cp $PROXY_DIR/.deploy-tmp/user-guardian-agent.js $PROXY_DIR/service/
                 mkdir -p $PROXY_DIR/config
                 cp $PROXY_DIR/.deploy-tmp/release-notes.json $PROXY_DIR/config/
                 cp $PROXY_DIR/.deploy-tmp/ecosystem.brain-proxy-v3.config.js $PROXY_DIR/
@@ -231,6 +244,32 @@ jobs:
               $SSH_CMD "
                 cd $PROXY_DIR
                 node service/email-hub.js list-emails
+              "
+              ;;
+
+            send-threat-alert)
+              sync_email_files
+              echo "发送全体用户风险提示..."
+              if [ -z "$MESSAGE" ]; then
+                echo "❌ 请在message中输入风险描述"
+                exit 1
+              fi
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js threat-alert '$MESSAGE'
+              "
+              ;;
+
+            send-threat-cleared)
+              sync_email_files
+              echo "发送全体用户安全恢复通知..."
+              $SSH_CMD "
+                cd $PROXY_DIR
+                export ZY_SMTP_USER='$ZY_SMTP_USER'
+                export ZY_SMTP_PASS='$ZY_SMTP_PASS'
+                node service/email-hub.js threat-cleared
               "
               ;;
 
