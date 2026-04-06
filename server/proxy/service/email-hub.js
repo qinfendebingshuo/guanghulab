@@ -10,11 +10,11 @@
 //
 // 邮件类型:
 //   1. 月初重置通知 — 每月1号通知流量池已重置
-//   2. 更新升级通知 — 系统更新后告知用户
+//   2. 更新升级通知 — 系统更新后告知用户 (含VPN系统介绍)
 //   3. 流量预警通知 — 70%/80%/90%/100% 阶梯告警
 //   4. 安全风险提醒 — 单用户异常行为告知
 //   5. 反馈确认回复 — 收到用户反馈后的自动确认
-//   6. 带宽共享验证码 — 发送6位验证码 (∞+1)
+//   6. 带宽共享验证码 — 发送6位验证码 (∞+1·含VPN系统介绍)
 //   7. 风险提示通知 — 全体用户风险提醒 (∞+1)
 //   8. 安全恢复通知 — 危机解除后全体通知 (∞+1)
 //
@@ -27,7 +27,8 @@
 //   node email-hub.js traffic-warn <pct>    — 发送流量预警给所有用户
 //   node email-hub.js security-warn <email> <msg>  — 发送安全提醒给单用户
 //   node email-hub.js feedback-ack <email>  — 发送反馈确认给单用户
-//   node email-hub.js bandwidth-auth <email> — 发送带宽共享验证码 (∞+1)
+//   node email-hub.js bandwidth-auth <email> — 发送带宽共享验证码 (单用户·∞+1)
+//   node email-hub.js bandwidth-auth-all    — 一键发送带宽验证码 (全部用户·∞+1)
 //   node email-hub.js threat-alert <msg>    — 全体用户风险提示 (∞+1)
 //   node email-hub.js threat-cleared        — 全体用户安全恢复通知 (∞+1)
 //   node email-hub.js list-emails           — 列出所有启用用户的邮箱
@@ -60,6 +61,64 @@ function loadReleaseNotes() {
     // release-notes.json 不存在或格式错误，忽略
   }
   return '';
+}
+
+// ── 加载完整版本信息对象 ───────────────────────────
+function loadReleaseNotesObj() {
+  try {
+    return JSON.parse(fs.readFileSync(RELEASE_NOTES_FILE, 'utf-8'));
+  } catch {
+    return { version: '∞+1', updated_at: '', features: [] };
+  }
+}
+
+// ── VPN系统介绍HTML (通用模块) ─────────────────────
+function getVpnSystemIntroHtml(releaseNotes) {
+  const version = (releaseNotes && releaseNotes.version) || '∞+1';
+  const updatedAt = (releaseNotes && releaseNotes.updated_at) || '';
+
+  return `
+    <!-- VPN系统介绍 -->
+    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%); border-radius: 12px; padding: 20px; margin: 0 0 24px; border: 1px solid #d6dce5;">
+      <h3 style="color: #1a1a2e; font-size: 15px; margin: 0 0 12px; font-weight: 700;">🔰 关于光湖语言世界 · VPN专线</h3>
+      <p style="color: #555; font-size: 13px; margin: 0 0 16px; line-height: 1.8;">
+        本VPN节点由<strong style="color: #333;">光湖语言系统</strong>完全自主研发，<strong style="color: #e74c3c;">仅供团队内部自用</strong>。<br>
+        非商业服务，不面向公众开放。所有用户均为受邀团队成员。
+      </p>
+
+      <h4 style="color: #1a1a2e; font-size: 14px; margin: 0 0 10px; font-weight: 600;">🏗️ 核心技术架构</h4>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse; margin: 0 0 16px;">
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+          <td style="padding: 8px 12px; color: #667eea; font-size: 13px; font-weight: 600; width: 30%; white-space: nowrap;">传输协议</td>
+          <td style="padding: 8px 12px; color: #444; font-size: 13px;">VLESS + Reality — 业界顶级隐蔽传输协议，流量特征完全伪装</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+          <td style="padding: 8px 12px; color: #667eea; font-size: 13px; font-weight: 600;">防御体系</td>
+          <td style="padding: 8px 12px; color: #444; font-size: 13px;">蜂群防御 · Moving Target Defense — 多服务器动态融合/分裂，真节点永远隐匿</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+          <td style="padding: 8px 12px; color: #667eea; font-size: 13px; font-weight: 600;">隐私保护</td>
+          <td style="padding: 8px 12px; color: #444; font-size: 13px;">用户守护Agent — 每条专线专属守护人格体，自毁式隐私保护</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+          <td style="padding: 8px 12px; color: #667eea; font-size: 13px; font-weight: 600;">智能选路</td>
+          <td style="padding: 8px 12px; color: #444; font-size: 13px;">协议镜像加速 — AI自动探测最优路径，连接速度与稳定性大幅提升</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+          <td style="padding: 8px 12px; color: #667eea; font-size: 13px; font-weight: 600;">自主进化</td>
+          <td style="padding: 8px 12px; color: #444; font-size: 13px;">AI驱动进化引擎 — 系统自动检测并升级核心协议，无需手动操作</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; color: #667eea; font-size: 13px; font-weight: 600;">安全层级</td>
+          <td style="padding: 8px 12px; color: #444; font-size: 13px;">7层安全体系 — 语言膜·蜂群分裂·真节点隐匿·守护Agent·威胁切断·日志格式化·自毁消失</td>
+        </tr>
+      </table>
+
+      <div style="background: rgba(102,126,234,0.1); border-radius: 8px; padding: 10px 14px;">
+        <span style="color: #667eea; font-size: 13px; font-weight: 700;">📌 当前系统版本: ${escapeHtml(version)}</span>
+        ${updatedAt ? `<span style="color: #999; font-size: 12px; margin-left: 12px;">更新于 ${escapeHtml(updatedAt)}</span>` : ''}
+      </div>
+    </div>`;
 }
 
 // ── 加载配置 ─────────────────────────────────
@@ -375,6 +434,8 @@ function generateMonthlyResetEmail(config) {
 // ═══════════════════════════════════════════════
 function generateUpdateNotifyEmail(description, config) {
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const releaseNotes = loadReleaseNotesObj();
+  const vpnIntro = getVpnSystemIntroHtml(releaseNotes);
 
   // 支持用分号或换行符分隔的多条更新内容，自动渲染为功能清单
   const items = description.split(/[;\n]/).map(s => s.trim()).filter(Boolean);
@@ -393,7 +454,9 @@ function generateUpdateNotifyEmail(description, config) {
       <strong style="color: #004085; font-size: 15px;">🔄 系统已完成升级</strong>
     </div>
 
-    <h3 class="section-heading" style="color: #1a1a2e; font-size: 16px; margin: 0 0 16px; font-weight: 600;">📋 本次更新内容</h3>
+    ${vpnIntro}
+
+    <h3 class="section-heading" style="color: #1a1a2e; font-size: 16px; margin: 0 0 16px; font-weight: 600;">📋 本次更新内容 · 版本 ${escapeHtml(releaseNotes.version || '∞+1')}</h3>
     <div class="info-card" style="background: #fafbfc; border-radius: 10px; padding: 20px; line-height: 1.8; border: 1px solid #e8eaed;">
       ${detailHtml}
     </div>
@@ -532,13 +595,20 @@ function generateFeedbackAckEmail(config) {
 // 📧 邮件类型 6: 带宽共享验证码 (∞+1)
 // ═══════════════════════════════════════════════
 function generateBandwidthAuthEmail(code, authPageUrl, config) {
+  const releaseNotes = loadReleaseNotesObj();
+  const vpnIntro = getVpnSystemIntroHtml(releaseNotes);
+
   const content = `
     <div class="alert-box" style="background: #e8f4fd; border: 1px solid #b8daff; border-radius: 10px; padding: 16px 20px; margin: 0 0 24px;">
       <strong style="color: #004085; font-size: 15px;">🌊 带宽共享加速 · 授权验证</strong>
     </div>
 
+    ${vpnIntro}
+
+    <h3 class="section-heading" style="color: #1a1a2e; font-size: 16px; margin: 0 0 12px; font-weight: 600;">🔑 带宽共享加速 · 验证码授权</h3>
     <p style="color: #444; line-height: 1.9; font-size: 14px; margin: 0 0 24px;">
       您正在参与<strong>光湖语言世界</strong>的带宽共享加速计划。<br>
+      这是一项<strong>完全自愿</strong>的功能，参与后可让VPN网络整体更快。<br>
       如果您<strong>同意授权</strong>，请复制以下验证码并提交：
     </p>
 
@@ -567,10 +637,11 @@ function generateBandwidthAuthEmail(code, authPageUrl, config) {
 
     <!-- 不同意说明 -->
     <div class="info-card" style="background: #f8f9fa; border-radius: 10px; padding: 18px 20px; margin: 0 0 12px; border-left: 4px solid #6c757d;">
-      <h4 style="color: #495057; margin: 0 0 8px; font-size: 14px; font-weight: 600;">❌ 不同意 = 忽略此邮件</h4>
+      <h4 style="color: #495057; margin: 0 0 8px; font-size: 14px; font-weight: 600;">❌ 不同意 = 忽略此邮件即可</h4>
       <p style="color: #555; font-size: 13px; margin: 0; line-height: 1.9;">
-        完全没问题。您可以继续正常使用VPN，只是走我们系统的带宽，<br>
-        速度可能慢一些，但也比普通VPN好太多了。
+        完全没问题，这是您的自由选择。您可以继续正常使用VPN，<br>
+        只是走系统自身带宽，速度可能慢一些，但也比普通VPN好太多了。<br>
+        如果以后改变主意，随时可以联系我们重新发送验证码。
       </p>
     </div>
 
@@ -578,7 +649,7 @@ function generateBandwidthAuthEmail(code, authPageUrl, config) {
     <div class="info-card" style="background: #fffbeb; border: 1px solid #ffc107; border-radius: 10px; padding: 16px 20px; margin: 16px 0 0;">
       <p style="color: #856404; font-size: 13px; margin: 0; line-height: 1.8;">
         🔒 <strong>安全说明</strong>：本VPN是内部专用的，用户都是团队自己人。
-        您的IP仅用于带宽加速，系统内部加密存储，外部无法看到。
+        您的IP仅用于带宽加速，系统内部加密存储（SHA256 + 盐值），外部无法看到。
         若检测到任何风险，系统会<strong>自动切断您的共享通道</strong>，
         并格式化所有共享记录——就像这条路从未出现过一样。
         危机解除后，我们会重新为您推送新的订阅链接。您的隐私安全，铸渊守护。
@@ -865,6 +936,63 @@ async function sendThreatClearedEmail() {
   return result;
 }
 
+/**
+ * 一键发送带宽共享验证码给所有用户 (∞+1)
+ * 自动提取所有启用用户邮箱，为每位用户生成独立验证码并加密发送
+ */
+async function sendBandwidthAuthAllEmail() {
+  const users = getEnabledUsers();
+  const config = loadConfig();
+
+  if (users.length === 0) {
+    console.log('[邮件中枢] 无启用用户，跳过发送');
+    return { sent: 0, failed: 0, errors: [] };
+  }
+
+  let bwPool;
+  try {
+    bwPool = require('./bandwidth-pool-agent');
+  } catch (err) {
+    console.error('[邮件中枢] ❌ 无法加载带宽池模块:', err.message);
+    return { sent: 0, failed: 0, errors: ['无法加载bandwidth-pool-agent模块'] };
+  }
+
+  let sent = 0;
+  let failed = 0;
+  const errors = [];
+
+  console.log(`[邮件中枢] 开始一键批量发送带宽验证码 (${users.length}位用户)`);
+
+  for (const user of users) {
+    try {
+      // 为每位用户生成独立验证码
+      const authCode = bwPool.createAuthCode(user.email);
+
+      // 构建用户专属授权页面URL
+      let authPageUrl;
+      if (user.token) {
+        const host = config.server_host || 'guanghulab.com';
+        authPageUrl = `https://${host}/api/proxy-v3/bandwidth-auth/${user.token}`;
+      }
+
+      const html = generateBandwidthAuthEmail(authCode, authPageUrl, config);
+      await sendEmail(user.email, '🌊 光湖语言世界 · 带宽共享授权验证码', html);
+      sent++;
+      console.log(`  ✅ ${user.email}`);
+      // 间隔500ms避免SMTP限流
+      await new Promise(r => setTimeout(r, 500));
+    } catch (err) {
+      failed++;
+      errors.push(`${user.email}: ${err.message}`);
+      console.error(`  ❌ ${user.email}: ${err.message}`);
+    }
+  }
+
+  console.log(`[邮件中枢] 带宽验证码批量发送完成: ${sent}成功 / ${failed}失败`);
+  logEmail('bandwidth-auth-all', sent + failed, sent, errors.join('; '));
+  return { sent, failed, errors };
+}
+
 
 // ═══════════════════════════════════════════════
 // CLI 主入口
@@ -881,7 +1009,8 @@ async function main() {
     console.log('  node email-hub.js traffic-warn <百分比>         — 流量预警通知 (全部用户)');
     console.log('  node email-hub.js security-warn <邮箱> <消息>   — 安全风险提醒 (单用户)');
     console.log('  node email-hub.js feedback-ack <邮箱>           — 反馈确认回复 (单用户)');
-    console.log('  node email-hub.js bandwidth-auth <邮箱>         — 发送带宽共享验证码 (∞+1)');
+    console.log('  node email-hub.js bandwidth-auth <邮箱>         — 发送带宽共享验证码 (单用户·∞+1)');
+    console.log('  node email-hub.js bandwidth-auth-all            — 一键发送带宽验证码 (全部用户·∞+1)');
     console.log('  node email-hub.js threat-alert <消息>           — 全体用户风险提示 (∞+1)');
     console.log('  node email-hub.js threat-cleared                — 全体用户安全恢复通知 (∞+1)');
     console.log('  node email-hub.js list-emails                  — 列出所有用户邮箱');
@@ -889,6 +1018,7 @@ async function main() {
     console.log('💡 描述支持分号分隔多条内容，自动渲染为功能清单:');
     console.log('   node email-hub.js update-notify "新增智能选路;优化连接速度;修复断连问题"');
     console.log('💡 省略描述时自动读取 config/release-notes.json 中的版本特性');
+    console.log('💡 bandwidth-auth-all 会自动提取所有用户邮箱，为每人生成独立验证码加密发送');
     process.exit(0);
   }
 
@@ -993,6 +1123,12 @@ async function main() {
       break;
     }
 
+    case 'bandwidth-auth-all': {
+      const resultAll = await sendBandwidthAuthAllEmail();
+      console.log(`📧 带宽验证码 (一键全发): ${resultAll.sent}成功 / ${resultAll.failed}失败`);
+      break;
+    }
+
     case 'threat-alert': {
       if (!arg1) {
         console.error('❌ 请提供风险消息');
@@ -1025,11 +1161,13 @@ module.exports = {
   sendSecurityWarnEmail,
   sendFeedbackAckEmail,
   sendBandwidthAuthEmail,
+  sendBandwidthAuthAllEmail,
   sendThreatAlertEmail,
   sendThreatClearedEmail,
   getEnabledUsers,
   listUserEmails,
   loadReleaseNotes,
+  loadReleaseNotesObj,
   sendEmail
 };
 
