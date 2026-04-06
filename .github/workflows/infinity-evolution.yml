@@ -4,9 +4,9 @@
 # ═══════════════════════════════════════════════
 # ♾️ 光湖语言世界 · 自主进化定时工作流
 #
-# 定时触发∞版本的关键任务:
+# 触发条件:
+#   - push到main: ∞版本文件变更时自动部署 (deploy-infinity)
 #   - 每月1号: 月度进化 (LLM分析 + 流量重置邮件)
-#   - 每周五: 用户反馈处理 (Phase 2)
 #   - 手动触发: 任意∞版本操作
 #
 # 注: 大部分定时任务由服务器上的PM2进程 (auto-evolution.js)
@@ -16,6 +16,14 @@
 name: '♾️ 光湖∞ · 自主进化'
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/proxy/service/auto-evolution.js'
+      - 'server/proxy/service/email-hub.js'
+      - 'server/proxy/service/protocol-mirror.js'
+      - 'server/proxy/config/release-notes.json'
+      - 'server/proxy/ecosystem.brain-proxy-v3.config.js'
   schedule:
     # 每月1号 UTC 16:00 = CST 00:00 (月度进化)
     - cron: '0 16 1 * *'
@@ -54,7 +62,7 @@ concurrency:
 jobs:
   # ═══ §1 ∞版本部署/管理 ═══
   infinity-action:
-    name: '♾️ ${{ github.event.inputs.action || ''monthly-evolution'' }}'
+    name: '♾️ ${{ github.event_name == ''push'' && ''deploy-infinity (auto)'' || github.event.inputs.action || ''monthly-evolution'' }}'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -71,7 +79,7 @@ jobs:
 
       - name: '♾️ 执行∞操作'
         env:
-          ACTION: ${{ github.event.inputs.action || 'monthly-evolution' }}
+          ACTION: ${{ github.event_name == 'push' && 'deploy-infinity' || github.event.inputs.action || 'monthly-evolution' }}
           MESSAGE: ${{ github.event.inputs.message || '' }}
           EMAIL: ${{ github.event.inputs.email || '' }}
           ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
@@ -79,6 +87,25 @@ jobs:
         run: |
           SSH_CMD="ssh -i ~/.ssh/brain_key -o StrictHostKeyChecking=no ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }}"
           PROXY_DIR="/opt/zhuyuan-brain/proxy"
+          SCP_CMD="scp -i ~/.ssh/brain_key -o StrictHostKeyChecking=no"
+          REMOTE_HOST="${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }}"
+
+          # ── 同步邮件模块到服务器 ──
+          # 确保服务器上的email-hub.js和release-notes.json是最新版本
+          sync_email_files() {
+            echo "📦 同步邮件模块到服务器..."
+            $SSH_CMD "mkdir -p $PROXY_DIR/.deploy-tmp $PROXY_DIR/config"
+            $SCP_CMD \
+              server/proxy/service/email-hub.js \
+              server/proxy/config/release-notes.json \
+              ${REMOTE_HOST}:$PROXY_DIR/.deploy-tmp/
+            $SSH_CMD "
+              cp $PROXY_DIR/.deploy-tmp/email-hub.js $PROXY_DIR/service/
+              cp $PROXY_DIR/.deploy-tmp/release-notes.json $PROXY_DIR/config/
+              rm -rf $PROXY_DIR/.deploy-tmp
+            "
+            echo "✅ 邮件模块已同步"
+          }
 
           echo "════════════════════════════════════════"
           echo "♾️ 光湖∞ · 自主进化 · action=$ACTION"
@@ -114,6 +141,7 @@ jobs:
               ;;
 
             monthly-evolution)
+              sync_email_files
               echo "触发月度进化..."
               $SSH_CMD "
                 cd $PROXY_DIR
@@ -143,6 +171,7 @@ jobs:
               ;;
 
             send-monthly-reset)
+              sync_email_files
               echo "发送月初重置邮件..."
               $SSH_CMD "
                 cd $PROXY_DIR
@@ -153,6 +182,7 @@ jobs:
               ;;
 
             send-update-notify)
+              sync_email_files
               echo "一键发送更新通知 (全部用户)..."
               $SSH_CMD "
                 cd $PROXY_DIR
@@ -173,6 +203,7 @@ jobs:
                 echo "❌ 邮箱格式不正确: $EMAIL"
                 exit 1
               fi
+              sync_email_files
               echo "单独发送更新通知给: $EMAIL ..."
               $SSH_CMD "
                 cd $PROXY_DIR
@@ -184,6 +215,7 @@ jobs:
               ;;
 
             send-traffic-warn)
+              sync_email_files
               echo "发送流量预警..."
               $SSH_CMD "
                 cd $PROXY_DIR
@@ -194,6 +226,7 @@ jobs:
               ;;
 
             list-user-emails)
+              sync_email_files
               echo "查询所有用户邮箱..."
               $SSH_CMD "
                 cd $PROXY_DIR
