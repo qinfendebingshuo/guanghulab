@@ -24,6 +24,7 @@
 set -uo pipefail
 
 PROXY_DIR="/opt/zhuyuan-brain/proxy"
+NGINX_BACKUP_DIR="/opt/zhuyuan-brain/nginx-backups"
 REPO_PROXY_DIR="$(dirname "$0")"
 ACTION="${1:-status}"
 
@@ -547,6 +548,24 @@ remove_v3_nginx_blocks() {
     sed -i '/^$/N;/^\n$/D' "$conf"
 }
 
+# 清理 sites-enabled/ 中残留的备份文件
+# nginx 会加载 sites-enabled/ 中的所有文件，备份文件中的 default_server 会导致冲突
+clean_stale_nginx_backups() {
+    local stale_count=0
+    for stale in /etc/nginx/sites-enabled/*.v2-backup \
+                 /etc/nginx/sites-enabled/*.pre-repair \
+                 /etc/nginx/sites-enabled/*.v3-tmp; do
+        if [ -f "$stale" ]; then
+            echo "  🧹 清理残留备份: $stale"
+            rm -f "$stale"
+            stale_count=$((stale_count + 1))
+        fi
+    done
+    if [ "$stale_count" -gt 0 ]; then
+        echo "  ✅ 已清理 $stale_count 个残留备份文件"
+    fi
+}
+
 # 验证nginx配置并返回错误信息
 validate_nginx() {
     local result
@@ -564,6 +583,9 @@ validate_nginx() {
 deploy_v3() {
     echo "部署V3生产环境 (V2继续可用)..."
     deploy_services
+
+    # 清理 sites-enabled/ 中残留的备份文件（防止 duplicate default_server）
+    clean_stale_nginx_backups
 
     # 加载密钥作为环境变量
     if [ -f "$PROXY_DIR/.env.keys" ]; then
@@ -654,6 +676,15 @@ switch_v3() {
         exit 1
     fi
 
+    # 清理 sites-enabled/ 中残留的备份文件（nginx会加载该目录所有文件，导致duplicate default_server）
+    clean_stale_nginx_backups
+
+    # 确保备份目录存在（备份存放在 sites-enabled 外部）
+    mkdir -p "$NGINX_BACKUP_DIR" || { echo "❌ 无法创建备份目录: $NGINX_BACKUP_DIR"; exit 1; }
+
+    local CONF_BASENAME
+    CONF_BASENAME="$(basename "$NGINX_CONF")"
+
     # 验证V3服务是否运行
     if ! curl -sf http://127.0.0.1:3805/health >/dev/null 2>&1; then
         echo "❌ V3服务(3805)未运行！请先执行 deploy-v3"
@@ -667,7 +698,7 @@ switch_v3() {
         # 如果V3注入导致的问题（旧sed '/^}/i'在多server块配置中重复注入）
         if grep -q "光湖语言世界V3" "$NGINX_CONF" 2>/dev/null; then
             echo "  🔧 修复V3 location块注入错误..."
-            cp "$NGINX_CONF" "${NGINX_CONF}.pre-repair"
+            cp "$NGINX_CONF" "${NGINX_BACKUP_DIR}/${CONF_BASENAME}.pre-repair"
             remove_v3_nginx_blocks "$NGINX_CONF"
             inject_v3_nginx_block "$NGINX_CONF"
 
@@ -676,7 +707,7 @@ switch_v3() {
                 nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
             else
                 echo "  ❌ 自动修复失败，恢复原配置"
-                cp "${NGINX_CONF}.pre-repair" "$NGINX_CONF"
+                cp "${NGINX_BACKUP_DIR}/${CONF_BASENAME}.pre-repair" "$NGINX_CONF"
                 exit 1
             fi
         else
@@ -685,9 +716,9 @@ switch_v3() {
         fi
     fi
 
-    # 备份当前（已验证有效的）Nginx配置
-    cp "$NGINX_CONF" "${NGINX_CONF}.v2-backup"
-    echo "  ✅ 已备份Nginx配置到 ${NGINX_CONF}.v2-backup"
+    # 备份当前（已验证有效的）Nginx配置（存到 sites-enabled 外部）
+    cp "$NGINX_CONF" "${NGINX_BACKUP_DIR}/${CONF_BASENAME}.v2-backup"
+    echo "  ✅ 已备份Nginx配置到 ${NGINX_BACKUP_DIR}/${CONF_BASENAME}.v2-backup"
 
     # 将 /api/proxy-v2/ 的 proxy_pass 从 3803 改为 3805
     if grep -q "127\.0\.0\.1:3803" "$NGINX_CONF" 2>/dev/null; then
@@ -703,7 +734,7 @@ switch_v3() {
         echo "  ✅ Nginx已重载"
     else
         echo "  ❌ Nginx配置验证失败，回滚..."
-        cp "${NGINX_CONF}.v2-backup" "$NGINX_CONF"
+        cp "${NGINX_BACKUP_DIR}/${CONF_BASENAME}.v2-backup" "$NGINX_CONF"
         nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || true
         echo "  ✅ 已回滚到V2配置"
         exit 1
@@ -717,7 +748,7 @@ switch_v3() {
     echo "用户刷新订阅即可获取「光湖语言世界」配置"
     echo ""
     echo "回滚方法 (如有问题):"
-    echo "  cp ${NGINX_CONF}.v2-backup $NGINX_CONF"
+    echo "  cp ${NGINX_BACKUP_DIR}/${CONF_BASENAME}.v2-backup $NGINX_CONF"
     echo "  nginx -s reload"
     echo "════════════════════════════════════════"
 }
