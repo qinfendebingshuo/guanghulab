@@ -94,6 +94,7 @@ jobs:
                 server/proxy/service/auto-evolution.js \
                 server/proxy/service/email-hub.js \
                 server/proxy/service/protocol-mirror.js \
+                server/proxy/config/release-notes.json \
                 server/proxy/ecosystem.brain-proxy-v3.config.js \
                 ${{ secrets.ZY_BRAIN_USER }}@${{ secrets.ZY_BRAIN_HOST }}:$PROXY_DIR/.deploy-tmp/
 
@@ -101,6 +102,8 @@ jobs:
                 cp $PROXY_DIR/.deploy-tmp/auto-evolution.js $PROXY_DIR/service/
                 cp $PROXY_DIR/.deploy-tmp/email-hub.js $PROXY_DIR/service/
                 cp $PROXY_DIR/.deploy-tmp/protocol-mirror.js $PROXY_DIR/service/
+                mkdir -p $PROXY_DIR/config
+                cp $PROXY_DIR/.deploy-tmp/release-notes.json $PROXY_DIR/config/
                 cp $PROXY_DIR/.deploy-tmp/ecosystem.brain-proxy-v3.config.js $PROXY_DIR/
                 rm -rf $PROXY_DIR/.deploy-tmp
                 mkdir -p $PROXY_DIR/data/evolution-reports
@@ -155,7 +158,8 @@ jobs:
                 cd $PROXY_DIR
                 export ZY_SMTP_USER='$ZY_SMTP_USER'
                 export ZY_SMTP_PASS='$ZY_SMTP_PASS'
-                node service/email-hub.js update-notify '${MESSAGE:-系统已更新}'
+                # 有MESSAGE时传入描述，否则省略让email-hub自动读取release-notes.json
+                node service/email-hub.js update-notify ${MESSAGE:+'$MESSAGE'}
               "
               ;;
 
@@ -174,7 +178,8 @@ jobs:
                 cd $PROXY_DIR
                 export ZY_SMTP_USER='$ZY_SMTP_USER'
                 export ZY_SMTP_PASS='$ZY_SMTP_PASS'
-                node service/email-hub.js update-notify-single '$EMAIL' '${MESSAGE:-系统已更新}'
+                # 有MESSAGE时传入描述，否则省略让email-hub自动读取release-notes.json
+                node service/email-hub.js update-notify-single '$EMAIL' ${MESSAGE:+'$MESSAGE'}
               "
               ;;
 

@@ -19,8 +19,8 @@
 //
 // 用法:
 //   node email-hub.js monthly-reset         — 发送月初重置邮件给所有用户
-//   node email-hub.js update-notify <desc>  — 一键发送更新通知给所有用户
-//   node email-hub.js update-notify-single <email> <desc> — 发送更新通知给单个用户
+//   node email-hub.js update-notify [desc] — 一键发送更新通知给所有用户 (省略desc则读取release-notes.json)
+//   node email-hub.js update-notify-single <email> [desc] — 发送更新通知给单个用户
 //   node email-hub.js traffic-warn <pct>    — 发送流量预警给所有用户
 //   node email-hub.js security-warn <email> <msg>  — 发送安全提醒给单用户
 //   node email-hub.js feedback-ack <email>  — 发送反馈确认给单用户
@@ -41,6 +41,20 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const KEYS_FILE = process.env.ZY_PROXY_KEYS_FILE || path.join(PROXY_DIR, '.env.keys');
 const POOL_STATUS_FILE = path.join(DATA_DIR, 'pool-quota-status.json');
 const EMAIL_LOG_FILE = path.join(DATA_DIR, 'email-hub-log.json');
+const RELEASE_NOTES_FILE = path.join(__dirname, '../config/release-notes.json');
+
+// ── 加载版本更新说明 ────────────────────────────
+function loadReleaseNotes() {
+  try {
+    const notes = JSON.parse(fs.readFileSync(RELEASE_NOTES_FILE, 'utf-8'));
+    if (notes.features && Array.isArray(notes.features) && notes.features.length > 0) {
+      return notes.features.join(';');
+    }
+  } catch {
+    // release-notes.json 不存在或格式错误，忽略
+  }
+  return '';
+}
 
 // ── 加载配置 ─────────────────────────────────
 function loadConfig() {
@@ -573,8 +587,8 @@ async function main() {
     console.log('📧 光湖语言世界 · 邮件通信中枢');
     console.log('用法:');
     console.log('  node email-hub.js monthly-reset                — 月初重置通知 (全部用户)');
-    console.log('  node email-hub.js update-notify <描述>          — 一键发送更新通知 (全部用户)');
-    console.log('  node email-hub.js update-notify-single <邮箱> <描述> — 单独发送更新通知');
+    console.log('  node email-hub.js update-notify [描述]          — 一键发送更新通知 (全部用户)');
+    console.log('  node email-hub.js update-notify-single <邮箱> [描述] — 单独发送更新通知');
     console.log('  node email-hub.js traffic-warn <百分比>         — 流量预警通知 (全部用户)');
     console.log('  node email-hub.js security-warn <邮箱> <消息>   — 安全风险提醒 (单用户)');
     console.log('  node email-hub.js feedback-ack <邮箱>           — 反馈确认回复 (单用户)');
@@ -582,6 +596,7 @@ async function main() {
     console.log('');
     console.log('💡 描述支持分号分隔多条内容，自动渲染为功能清单:');
     console.log('   node email-hub.js update-notify "新增智能选路;优化连接速度;修复断连问题"');
+    console.log('💡 省略描述时自动读取 config/release-notes.json 中的版本特性');
     process.exit(0);
   }
 
@@ -593,22 +608,28 @@ async function main() {
     }
 
     case 'update-notify': {
-      if (!arg1) {
-        console.error('❌ 请提供更新描述');
+      const desc = arg1 || loadReleaseNotes();
+      if (!desc) {
+        console.error('❌ 请提供更新描述，或在 config/release-notes.json 中配置版本特性');
         process.exit(1);
       }
-      const result = await sendUpdateNotifyEmail(arg1);
+      const result = await sendUpdateNotifyEmail(desc);
       console.log(`📧 更新通知 (一键发送): ${result.sent}成功 / ${result.failed}失败`);
       break;
     }
 
     case 'update-notify-single': {
-      if (!arg1 || !arg2) {
-        console.error('❌ 请提供邮箱和更新描述');
-        console.error('用法: node email-hub.js update-notify-single <邮箱> <描述>');
+      if (!arg1) {
+        console.error('❌ 请提供邮箱');
+        console.error('用法: node email-hub.js update-notify-single <邮箱> [描述]');
         process.exit(1);
       }
-      const result = await sendUpdateNotifySingleEmail(arg1, arg2);
+      const singleDesc = arg2 || loadReleaseNotes();
+      if (!singleDesc) {
+        console.error('❌ 请提供更新描述，或在 config/release-notes.json 中配置版本特性');
+        process.exit(1);
+      }
+      const result = await sendUpdateNotifySingleEmail(arg1, singleDesc);
       console.log(`📧 更新通知 (单独发送): ${result.sent}成功 / ${result.failed}失败`);
       break;
     }
@@ -671,6 +692,7 @@ module.exports = {
   sendFeedbackAckEmail,
   getEnabledUsers,
   listUserEmails,
+  loadReleaseNotes,
   sendEmail
 };
 
