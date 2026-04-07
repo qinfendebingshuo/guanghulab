@@ -1,0 +1,28 @@
+{
+  "hldp_version": "3.0",
+  "config": {
+    "sign_key_env": "ZY_HLDP_SIGN_KEY",
+    "zhuyuan_cos_bucket_env": "ZY_ZHUYUAN_COS_BUCKET",
+    "own_cos_bucket_env": "ZY_COS_BUCKET",
+    "cos_region_env": "ZY_COS_REGION"
+  },
+  "channels": {
+    "cos": {
+      "type": "async",
+      "latency": "seconds",
+      "description": "COS桶通信·默认通道·适合日常汇报"
+    }
+  },
+  "message_types": [
+    "heartbeat",
+    "report",
+    "command",
+    "query",
+    "ack",
+    "alert",
+    "sync",
+    "evolution"
+  ],
+  "priority_levels": ["routine", "important", "urgent"],
+  "note": "battle类型仅限冰朔+铸渊使用。团队人格体使用前8种消息类型。"
+}

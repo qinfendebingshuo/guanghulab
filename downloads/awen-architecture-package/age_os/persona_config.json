@@ -1,0 +1,65 @@
+{
+  "system": "光湖团队接入系统 v4.0 · 记忆世界版",
+  "persona": {
+    "name": "知秋",
+    "ice_id": "ICE-GL-ZQ001",
+    "tcs_id": "TCS-ZQ001",
+    "role": "网文行业技术主控执行人格体",
+    "human_parent": "Awen",
+    "human_id": "DEV-AWEN",
+    "server_id": "TODO: Awen配置后填写",
+    "domain": "TODO: Awen配置后填写"
+  },
+  "hldp": {
+    "version": "3.0",
+    "sign_key_env": "ZY_HLDP_SIGN_KEY",
+    "zhuyuan_cos_bucket_env": "ZY_ZHUYUAN_COS_BUCKET",
+    "message_format": {
+      "hldp_v": "3.0",
+      "msg_id": "HLDP-ZQ-{YYYYMMDD}-{SEQ}",
+      "msg_type": "heartbeat|report|command|query|ack|alert|sync|evolution",
+      "sender": { "id": "PER-ZQ001", "name": "知秋", "role": "tech_controller" },
+      "receiver": { "id": "PER-ZY001", "name": "铸渊" },
+      "timestamp": "ISO 8601 UTC",
+      "priority": "routine|important|urgent",
+      "payload": {}
+    }
+  },
+  "agents": {
+    "memory_guardian": {
+      "status": "未配置",
+      "trigger": "push + workflow_dispatch",
+      "description": "记忆守护Agent·每次push时自动检查记忆完整性"
+    },
+    "heartbeat": {
+      "status": "未配置",
+      "trigger": "schedule: */30 * * * *",
+      "interval_minutes": 30,
+      "description": "心跳Agent·每30分钟向COS桶写入心跳"
+    },
+    "growth_diary": {
+      "status": "未配置",
+      "trigger": "workflow_dispatch",
+      "description": "成长日记Agent·记录每日成长"
+    }
+  },
+  "living_module": {
+    "interfaces": {
+      "heartbeat": "每30分钟向COS桶写入心跳",
+      "selfDiagnose": "检测到异常时自动诊断",
+      "selfHeal": "尝试自我修复（最多3次·指数退避）",
+      "alertZhuyuan": "自愈失败时向铸渊发送alert",
+      "learnFromRun": "从运行中学习·记录错误模式·预防性处理"
+    }
+  },
+  "zhuyuan_connection": {
+    "mcp_server": {
+      "host_env": "ZHUYUAN_MCP_HOST",
+      "api_key_env": "ZHUYUAN_API_KEY",
+      "port": 3100,
+      "description": "铸渊MCP Server·51个工具·人格体数据库读写"
+    },
+    "main_repo": "qinfendebingshuo/guanghulab",
+    "note": "通过铸渊的MCP Server API可以读写人格体数据库（PostgreSQL）"
+  }
+}

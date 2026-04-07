@@ -1,0 +1,101 @@
+# ============================================================
+# Awen 技术主控 · 全体健康检查 Workflow 模板
+# ============================================================
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# 用途: Awen仓库用，每30分钟检查所有网文行业服务器健康状态
+# 注意: 此文件是模板，需要复制到 Awen 的仓库 .github/workflows/ 下
+# ============================================================
+
+name: '🏥 全体健康检查 · Health Check All'
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '检查目标 (all/feimao/juzi/yeye/awen)'
+        required: false
+        default: 'all'
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: '📋 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置SSH密钥'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # 配置所有可用的服务器密钥（显式引用·不使用eval）
+          if [ -n "$FEIMAO_KEY" ]; then
+            echo "$FEIMAO_KEY" > ~/.ssh/feimao_key
+            chmod 600 ~/.ssh/feimao_key
+          fi
+          if [ -n "$JUZI_KEY" ]; then
+            echo "$JUZI_KEY" > ~/.ssh/juzi_key
+            chmod 600 ~/.ssh/juzi_key
+          fi
+          if [ -n "$YEYE_KEY" ]; then
+            echo "$YEYE_KEY" > ~/.ssh/yeye_key
+            chmod 600 ~/.ssh/yeye_key
+          fi
+          if [ -n "$AWEN_KEY" ]; then
+            echo "$AWEN_KEY" > ~/.ssh/awen_key
+            chmod 600 ~/.ssh/awen_key
+          fi
+
+          # 添加到 known_hosts
+          for HOST in "$FEIMAO_HOST" "$JUZI_HOST" "$YEYE_HOST" "$AWEN_HOST"; do
+            if [ -n "$HOST" ]; then
+              ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+            fi
+          done
+        env:
+          FEIMAO_KEY: ${{ secrets.FEIMAO_SERVER_KEY }}
+          FEIMAO_HOST: ${{ secrets.FEIMAO_SERVER_HOST }}
+          JUZI_KEY: ${{ secrets.JUZI_SERVER_KEY }}
+          JUZI_HOST: ${{ secrets.JUZI_SERVER_HOST }}
+          YEYE_KEY: ${{ secrets.YEYE_SERVER_KEY }}
+          YEYE_HOST: ${{ secrets.YEYE_SERVER_HOST }}
+          AWEN_KEY: ${{ secrets.AWEN_SERVER_KEY }}
+          AWEN_HOST: ${{ secrets.AWEN_SERVER_HOST }}
+
+      - name: '🔍 检查所有服务器'
+        run: |
+          echo "═══ 网文行业全体健康检查 ═══"
+          echo "时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+
+          check_server() {
+            local NAME=$1 KEY_FILE=$2 HOST=$3 USER=$4 PORT=${5:-22}
+            echo "--- ${NAME} ---"
+            if [ -z "$HOST" ] || [ ! -f "$KEY_FILE" ]; then
+              echo "⏳ 未配置"
+              return
+            fi
+            ssh -i "$KEY_FILE" -p "$PORT" -o ConnectTimeout=10 -o StrictHostKeyChecking=no \
+              "${USER}@${HOST}" \
+              "echo '✅ 在线'; uptime -p; pm2 list 2>/dev/null || echo 'PM2未安装'" \
+              2>/dev/null || echo "❌ 不可达"
+            echo ""
+          }
+
+          check_server "肥猫 (ZY-SVR-003)" ~/.ssh/feimao_key \
+            "${{ secrets.FEIMAO_SERVER_HOST }}" "${{ secrets.FEIMAO_SERVER_USER }}" "${{ secrets.FEIMAO_SSH_PORT }}"
+
+          check_server "桔子" ~/.ssh/juzi_key \
+            "${{ secrets.JUZI_SERVER_HOST }}" "${{ secrets.JUZI_SERVER_USER }}" "${{ secrets.JUZI_SSH_PORT }}"
+
+          check_server "页页" ~/.ssh/yeye_key \
+            "${{ secrets.YEYE_SERVER_HOST }}" "${{ secrets.YEYE_SERVER_USER }}" "${{ secrets.YEYE_SSH_PORT }}"
+
+          check_server "Awen" ~/.ssh/awen_key \
+            "${{ secrets.AWEN_SERVER_HOST }}" "${{ secrets.AWEN_SERVER_USER }}" "${{ secrets.AWEN_SSH_PORT }}"
+
+          echo "═══ 检查完成 ═══"

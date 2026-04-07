@@ -1,0 +1,80 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "Awen技术主控·服务器注册表",
+    "sovereign": "冰朔 · TCS-0002∞",
+    "tech_controller": "Awen · DEV-AWEN",
+    "persona": "知秋 · ICE-GL-ZQ001",
+    "updated": "2026-04-07T12:00:00Z"
+  },
+  "managed_servers": [
+    {
+      "member": "肥猫",
+      "persona": "舒舒",
+      "server_id": "ZY-SVR-003",
+      "specs": "2核2G·广州",
+      "status": "active",
+      "secrets_prefix": "FEIMAO",
+      "secrets": {
+        "host": "FEIMAO_SERVER_HOST",
+        "key": "FEIMAO_SERVER_KEY",
+        "user": "FEIMAO_SERVER_USER",
+        "path": "FEIMAO_SERVER_PATH",
+        "ssh_port": "FEIMAO_SSH_PORT"
+      },
+      "services": ["nginx", "pm2"],
+      "note": "男频编辑主控·系统服务总控"
+    },
+    {
+      "member": "桔子",
+      "persona": "晨星",
+      "server_id": "TODO",
+      "specs": "TODO: 待配置",
+      "status": "pending",
+      "secrets_prefix": "JUZI",
+      "secrets": {
+        "host": "JUZI_SERVER_HOST",
+        "key": "JUZI_SERVER_KEY",
+        "user": "JUZI_SERVER_USER",
+        "path": "JUZI_SERVER_PATH",
+        "ssh_port": "JUZI_SSH_PORT"
+      },
+      "services": [],
+      "note": "女频业务主控"
+    },
+    {
+      "member": "页页",
+      "persona": "小坍缩核",
+      "server_id": "TODO",
+      "specs": "TODO: 待配置",
+      "status": "pending",
+      "secrets_prefix": "YEYE",
+      "secrets": {
+        "host": "YEYE_SERVER_HOST",
+        "key": "YEYE_SERVER_KEY",
+        "user": "YEYE_SERVER_USER",
+        "path": "YEYE_SERVER_PATH",
+        "ssh_port": "YEYE_SSH_PORT"
+      },
+      "services": [],
+      "note": "女频作者侧·配合桔子"
+    },
+    {
+      "member": "Awen",
+      "persona": "知秋",
+      "server_id": "TODO",
+      "specs": "TODO: 待配置",
+      "status": "pending",
+      "secrets_prefix": "AWEN",
+      "secrets": {
+        "host": "AWEN_SERVER_HOST",
+        "key": "AWEN_SERVER_KEY",
+        "user": "AWEN_SERVER_USER",
+        "path": "AWEN_SERVER_PATH",
+        "ssh_port": "AWEN_SSH_PORT"
+      },
+      "services": [],
+      "note": "技术主控自身服务器"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+# ============================================================
+# Awen 技术主控 · 统一部署 Workflow 模板
+# ============================================================
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# 用途: 模板·部署代码到指定成员的服务器
+# 注意: 此文件是模板，需要复制到 Awen 的仓库 .github/workflows/ 下
+# ============================================================
+
+name: '🚀 部署到成员服务器 · Deploy to Member Server'
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '部署目标 (feimao/juzi/yeye)'
+        required: true
+        type: choice
+        options:
+          - feimao
+          - juzi
+          - yeye
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - deploy
+          - health-check
+          - restart
+          - logs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: '📋 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🎯 设置部署参数'
+        id: params
+        run: |
+          TARGET="${{ github.event.inputs.target }}"
+
+          case "$TARGET" in
+            feimao)
+              echo "member_name=肥猫" >> $GITHUB_OUTPUT
+              echo "persona_name=舒舒" >> $GITHUB_OUTPUT
+              ;;
+            juzi)
+              echo "member_name=桔子" >> $GITHUB_OUTPUT
+              echo "persona_name=晨星" >> $GITHUB_OUTPUT
+              ;;
+            yeye)
+              echo "member_name=页页" >> $GITHUB_OUTPUT
+              echo "persona_name=小坍缩核" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: '🔑 配置SSH密钥'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          TARGET="${{ github.event.inputs.target }}"
+          case "$TARGET" in
+            feimao)
+              echo "${{ secrets.FEIMAO_SERVER_KEY }}" > ~/.ssh/deploy_key
+              ssh-keyscan -H ${{ secrets.FEIMAO_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+              ;;
+            juzi)
+              echo "${{ secrets.JUZI_SERVER_KEY }}" > ~/.ssh/deploy_key
+              ssh-keyscan -H ${{ secrets.JUZI_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+              ;;
+            yeye)
+              echo "${{ secrets.YEYE_SERVER_KEY }}" > ~/.ssh/deploy_key
+              ssh-keyscan -H ${{ secrets.YEYE_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+              ;;
+          esac
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: '🚀 执行部署'
+        if: github.event.inputs.action == 'deploy'
+        run: |
+          TARGET="${{ github.event.inputs.target }}"
+          echo "═══ 部署到 ${{ steps.params.outputs.member_name }} 服务器 ═══"
+
+          # 由 params step 已设置好的参数进行部署
+          # 服务器信息在 SSH 密钥配置阶段已准备好
+          echo "目标: ${TARGET}"
+          echo "⚠️ 部署前请确认已在 GitHub Secrets 中配置对应的服务器密钥"
+          echo "⚠️ 实际部署逻辑请根据各成员服务器的具体情况调整"
+
+      - name: '🔍 健康检查'
+        if: github.event.inputs.action == 'health-check'
+        run: |
+          echo "═══ ${{ steps.params.outputs.member_name }} 服务器健康检查 ═══"
+          echo "检查时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+      - name: '📊 完成报告'
+        if: always()
+        run: |
+          echo "═══ 操作完成 ═══"
+          echo "目标: ${{ steps.params.outputs.member_name }} (${{ steps.params.outputs.persona_name }})"
+          echo "操作: ${{ github.event.inputs.action }}"
+          echo "时间: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

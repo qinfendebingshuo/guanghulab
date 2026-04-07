@@ -1,0 +1,29 @@
+{
+  "system": "光湖团队接入系统 v4.0",
+  "cos_config": {
+    "own_bucket": {
+      "name": "TODO: Awen的COS桶名称",
+      "region": "ap-singapore",
+      "secret_id_env": "ZY_COS_SECRET_ID",
+      "secret_key_env": "ZY_COS_SECRET_KEY"
+    },
+    "zhuyuan_bucket": {
+      "name_env": "ZY_ZHUYUAN_COS_BUCKET",
+      "purpose": "向铸渊发送汇报/接收指令",
+      "write_path": "team-reports/zhiqiu/",
+      "read_path": "team-commands/zhiqiu/"
+    },
+    "industry_bucket": {
+      "name": "TODO: 网文行业总桶名称",
+      "purpose": "管理所有网文行业成员的通信",
+      "read_path": "commands/{persona_id}/",
+      "write_path": "reports/{persona_id}/"
+    }
+  },
+  "paths": {
+    "heartbeat": "heartbeat/zhiqiu/latest.json",
+    "daily_report": "reports/zhiqiu/{date}.json",
+    "growth_snapshot": "growth/zhiqiu/{date}.json",
+    "alert": "alerts/zhiqiu/{timestamp}.json"
+  }
+}
