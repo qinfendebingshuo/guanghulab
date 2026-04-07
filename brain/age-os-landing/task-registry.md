@@ -142,6 +142,17 @@
 | ZY-DOC-009 | 笔记本系统模板 | `team-integration-v4/brain/notebook.json` | ✅ 完成 | D59 |
 | ZY-DOC-010 | D59思维链 | `brain/age-os-landing/thinking-chain.md` | ✅ 完成 | D59 |
 
+## 八、D60新增 (ZY-TASK / ZY-DOC)
+
+| 编号 | 任务名称 | 路径 | 状态 | 对话 |
+|------|---------|------|------|------|
+| ZY-TASK-011 | 记忆世界地图v5.0 | `brain/repo-map.json` | ✅ 完成 | D60 |
+| ZY-TASK-012 | COS自动接入Agent | `scripts/cos-auto-join-agent.js` | ✅ 完成 | D60 |
+| ZY-TASK-013 | COS接入工作流 | `.github/workflows/cos-auto-join.yml` | ✅ 完成 | D60 |
+| ZY-TASK-014 | COS接入注册表 | `data/cos-join-registry.json` | ✅ 完成 | D60 |
+| ZY-DOC-011 | README首页全量更新D60 | `README.md` | ✅ 完成 | D60 |
+| ZY-DOC-012 | D60思维链 | `brain/age-os-landing/thinking-chain.md` | ✅ 完成 | D60 |
+
 ---
 
 *铸渊每次唤醒，先查本文件，就知道所有任务在哪里。*
