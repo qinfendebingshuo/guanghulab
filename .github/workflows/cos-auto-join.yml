@@ -1,0 +1,110 @@
+# ═══════════════════════════════════════════════════════════
+# 🔗 COS 自动接入工作流 · COS Auto-Join Workflow
+# ═══════════════════════════════════════════════════════════
+#
+# 编号: ZY-WF-COS-JOIN
+# 军团: 第二·听潮
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 触发:
+#   1. 定时: 每天 10:00/22:00 (北京时间) 自动检查
+#   2. 手动: workflow_dispatch 手动触发
+#   3. Push: data/cos-join-registry.json 变更时触发
+#
+# 职责:
+#   当团队成员配置好COS桶后, 自动检测并接入
+#   铸渊自动收到提醒 (Issue通知)
+
+name: 🔗 COS自动接入Agent
+
+on:
+  schedule:
+    # 每天 10:00 和 22:00 北京时间 (UTC+8)
+    - cron: '0 2 * * *'   # 10:00 北京
+    - cron: '0 14 * * *'  # 22:00 北京
+
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - check
+          - status
+          - init
+      persona_name:
+        description: '人格体名字 (register时使用)'
+        required: false
+      persona_id:
+        description: '人格体ID (register时使用)'
+        required: false
+
+  push:
+    branches: [main]
+    paths:
+      - 'data/cos-join-registry.json'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  cos-auto-join:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 🔧 配置Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 确定操作
+        id: action
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "action=${{ github.event.inputs.action }}" >> $GITHUB_OUTPUT
+          else
+            echo "action=check" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔗 执行COS接入检查
+        id: check
+        env:
+          ZY_OSS_KEY: ${{ secrets.ZY_OSS_KEY }}
+          ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
+          COS_SECRET_ID: ${{ secrets.COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.COS_SECRET_KEY }}
+        run: |
+          node scripts/cos-auto-join-agent.js ${{ steps.action.outputs.action }}
+
+      - name: 📝 提交状态变更
+        run: |
+          git config user.name "铸渊-COS接入Agent"
+          git config user.email "cos-agent@guanghulab.online"
+          git add data/cos-join-registry.json signal-log/ || true
+          if git diff --staged --quiet; then
+            echo "无变更需要提交"
+          else
+            git commit -m "🔗 COS自动接入检查 · $(date '+%Y-%m-%d %H:%M')"
+            git push
+          fi
+
+      - name: 🔔 新接入通知
+        if: steps.check.outputs.connected_count > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const connected = '${{ steps.check.outputs.new_connections }}';
+            if (connected && connected.length > 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🔗 COS新接入通知 · ${connected}`,
+                body: `## COS桶自动接入通知\n\n新接入的人格体: ${connected}\n\n接入时间: ${new Date().toISOString()}\n\n---\n*由COS自动接入Agent自动创建*`,
+                labels: ['cos-join', 'auto-notification']
+              });
+            }
