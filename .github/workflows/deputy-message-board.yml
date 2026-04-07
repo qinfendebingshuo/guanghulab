@@ -2,19 +2,25 @@
 # 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
 # 📜 Copyright: 国作登字-2026-A-00037559
 # ═══════════════════════════════════════════════
-name: "💬 铸渊副将·留言板自动回复"
+name: "💬 铸渊副将·留言板活体Agent v2.0"
 
 on:
+  # 事件触发: Issue/Comment → 即时回复
   issues:
     types: [opened]
   issue_comment:
     types: [created]
+  # 定时巡查: 08:00/23:00 CST → 扫描所有未回复Issue
+  schedule:
+    - cron: '0 0 * * *'   # UTC 00:00 = CST 08:00 早班巡查
+    - cron: '0 15 * * *'  # UTC 15:00 = CST 23:00 晚班巡查
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
+  # ── 事件模式: Issue/Comment触发即时回复 ──
   deputy-reply:
     name: "🎖️ 副将回复留言"
     runs-on: ubuntu-latest
@@ -36,12 +42,12 @@ jobs:
         run: |
           npm install --omit=dev --ignore-scripts || echo "⚠️ 依赖安装异常·部分功能可能受限"
 
-      - name: "🎖️ 副将处理留言"
+      - name: "🎖️ 副将处理留言 (事件模式)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
           ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
-          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          DEPUTY_MODE: event
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -50,3 +56,49 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
         run: node scripts/deputy-message-board.js
+
+      - name: "📊 提交副将状态"
+        if: always()
+        run: |
+          if [ -f data/deputy-status.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/deputy-status.json
+            git diff --cached --quiet || git commit -m "🎖️ 副将状态更新 · 事件模式 · $(date -u +%Y-%m-%dT%H:%M:%S)Z"
+            git push || echo "⚠️ push失败·下次巡查时同步"
+          fi
+
+  # ── 巡查模式: 定时扫描所有未回复Issue ──
+  deputy-patrol:
+    name: "🔍 副将巡查未回复留言"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "📦 安装依赖"
+        run: |
+          npm install --omit=dev --ignore-scripts || echo "⚠️ 依赖安装异常·部分功能可能受限"
+
+      - name: "🔍 副将巡查 (巡查模式)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+          DEPUTY_MODE: patrol
+        run: node scripts/deputy-message-board.js
+
+      - name: "📊 提交副将状态"
+        if: always()
+        run: |
+          if [ -f data/deputy-status.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/deputy-status.json
+            git diff --cached --quiet || git commit -m "🔍 副将巡查状态更新 · $(date -u +%Y-%m-%dT%H:%M:%S)Z"
+            git push || echo "⚠️ push失败·下次巡查时同步"
+          fi

@@ -31,6 +31,24 @@ const MODEL_PRIORITY = [
   'gpt-4o-mini'
 ];
 
+// ── Claude模型识别 (需走硅谷中继) ──────────────
+const CLAUDE_MODELS = [
+  'claude-3-haiku-20240307',
+  'claude-3-sonnet-20240229',
+  'claude-3-opus-20240229',
+  'claude-3-5-sonnet-20241022'
+];
+
+// 硅谷SSH隧道本地端口 (Claude API中继)
+// 新加坡服务器通过SSH隧道将Claude请求从硅谷IP出口
+// 配置: server/proxy/config/claude-relay-config.json
+const CLAUDE_RELAY_PORT = parseInt(process.env.ZY_CLAUDE_RELAY_PORT || '18443', 10);
+const CLAUDE_RELAY_ENABLED = process.env.ZY_CLAUDE_RELAY_ENABLED === 'true';
+
+function isClaudeModel(model) {
+  return CLAUDE_MODELS.some(cm => model.includes('claude'));
+}
+
 // ── 路由器状态 ──────────────────────────────
 const routerState = {
   total_calls: 0,
@@ -111,6 +129,7 @@ async function callLLM(prompt, options = {}) {
 
 /**
  * 调用单个模型
+ * Claude模型自动走硅谷中继 (当 ZY_CLAUDE_RELAY_ENABLED=true)
  */
 function _callSingleModel(baseUrl, apiKey, model, prompt, systemPrompt, maxTokens, timeout) {
   return new Promise((resolve, reject) => {
@@ -120,6 +139,12 @@ function _callSingleModel(baseUrl, apiKey, model, prompt, systemPrompt, maxToken
     } catch {
       // 如果baseUrl不含协议，加上https
       urlObj = new URL(`https://${baseUrl}`);
+    }
+
+    // Claude模型走硅谷中继 (SSH隧道 localhost:18443 → 硅谷 → api.anthropic.com)
+    if (CLAUDE_RELAY_ENABLED && isClaudeModel(model)) {
+      console.log(`[LLM路由器] Claude模型 ${model} → 硅谷中继 (localhost:${CLAUDE_RELAY_PORT})`);
+      urlObj = new URL(`https://localhost:${CLAUDE_RELAY_PORT}`);
     }
 
     const postData = JSON.stringify({
@@ -204,4 +229,4 @@ function getRouterStatus() {
   };
 }
 
-module.exports = { callLLM, getRouterStatus, MODEL_PRIORITY };
+module.exports = { callLLM, getRouterStatus, MODEL_PRIORITY, CLAUDE_MODELS, isClaudeModel };

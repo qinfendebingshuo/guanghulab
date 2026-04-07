@@ -1,0 +1,75 @@
+{
+  "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
+  "_copyright": "国作登字-2026-A-00037559",
+  "_description": "硅谷Claude专线中继配置 · IP走硅谷·带宽走新加坡",
+  "version": "1.0",
+  "relay_architecture": {
+    "description": "双层中继: 用户请求 → 新加坡(带宽源) → 硅谷(IP壳) → Claude API",
+    "singapore_servers": {
+      "ZY-SVR-002": {
+        "role": "面孔·前端+专线主入口",
+        "location": "Singapore",
+        "spec": "2核8G"
+      },
+      "ZY-SVR-005": {
+        "role": "大脑·DB+MCP+Agent+订阅",
+        "location": "Singapore",
+        "spec": "4核8G"
+      }
+    },
+    "silicon_valley_server": {
+      "ZY-SVR-SV": {
+        "role": "Claude API中继·IP壳",
+        "location": "Silicon Valley (US)",
+        "purpose": "Claude API请求出口 · 绕过新加坡IP屏蔽",
+        "github_secrets": {
+          "host": "ZY_SVR_SV_HOST",
+          "ssh_key": "ZY_SVR_SV_KEY",
+          "user": "ZY_SVR_SV_USER"
+        }
+      }
+    }
+  },
+  "claude_routing": {
+    "trigger_models": [
+      "claude-3-haiku-20240307",
+      "claude-3-sonnet-20240229",
+      "claude-3-opus-20240229",
+      "claude-3-5-sonnet-20241022"
+    ],
+    "relay_method": "ssh_tunnel",
+    "tunnel_config": {
+      "description": "新加坡服务器通过SSH隧道将Claude请求从硅谷出口",
+      "local_port": 18443,
+      "remote_host": "api.anthropic.com",
+      "remote_port": 443,
+      "ssh_command_template": "ssh -f -N -L 18443:api.anthropic.com:443 ${ZY_SVR_SV_USER}@${ZY_SVR_SV_HOST}"
+    },
+    "fallback": "direct",
+    "fallback_note": "如硅谷隧道不可用，降级为直连(可能被屏蔽)"
+  },
+  "bandwidth_optimization": {
+    "strategy": "新加坡带宽中继",
+    "description": "请求体通常很小(几KB)，经SSH隧道延迟可忽略。响应体通过隧道返回，硅谷服务器不缓存任何数据。",
+    "sg_bandwidth": "高带宽·低延迟·主数据通道",
+    "sv_bandwidth": "低配·仅做TCP握手+TLS出口"
+  },
+  "setup_requirements": {
+    "silicon_valley_server": [
+      "安装SSH Server (已有)",
+      "配置SSH公钥 (新加坡服务器 → 硅谷服务器)",
+      "防火墙放行SSH端口",
+      "无需安装Nginx (纯SSH隧道模式)"
+    ],
+    "singapore_server": [
+      "配置SSH私钥 (连接硅谷服务器)",
+      "设置SSH隧道自动重连 (autossh or systemd)",
+      "llm-router.js 检测Claude模型时走 localhost:18443"
+    ],
+    "github_secrets": [
+      "ZY_SVR_SV_HOST — 硅谷服务器IP",
+      "ZY_SVR_SV_KEY — SSH私钥",
+      "ZY_SVR_SV_USER — SSH用户名"
+    ]
+  }
+}
