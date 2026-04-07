@@ -32,20 +32,39 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # 配置所有可用的服务器密钥
-          for PREFIX in FEIMAO JUZI YEYE AWEN; do
-            KEY_VAR="${PREFIX}_SERVER_KEY"
-            HOST_VAR="${PREFIX}_SERVER_HOST"
-            eval KEY_VAL="\${{ secrets.${KEY_VAR} }}"
-            eval HOST_VAL="\${{ secrets.${HOST_VAR} }}"
-            if [ -n "$KEY_VAL" ]; then
-              echo "$KEY_VAL" > ~/.ssh/${PREFIX,,}_key
-              chmod 600 ~/.ssh/${PREFIX,,}_key
-            fi
-            if [ -n "$HOST_VAL" ]; then
-              ssh-keyscan -H "$HOST_VAL" >> ~/.ssh/known_hosts 2>/dev/null || true
+          # 配置所有可用的服务器密钥（显式引用·不使用eval）
+          if [ -n "$FEIMAO_KEY" ]; then
+            echo "$FEIMAO_KEY" > ~/.ssh/feimao_key
+            chmod 600 ~/.ssh/feimao_key
+          fi
+          if [ -n "$JUZI_KEY" ]; then
+            echo "$JUZI_KEY" > ~/.ssh/juzi_key
+            chmod 600 ~/.ssh/juzi_key
+          fi
+          if [ -n "$YEYE_KEY" ]; then
+            echo "$YEYE_KEY" > ~/.ssh/yeye_key
+            chmod 600 ~/.ssh/yeye_key
+          fi
+          if [ -n "$AWEN_KEY" ]; then
+            echo "$AWEN_KEY" > ~/.ssh/awen_key
+            chmod 600 ~/.ssh/awen_key
+          fi
+
+          # 添加到 known_hosts
+          for HOST in "$FEIMAO_HOST" "$JUZI_HOST" "$YEYE_HOST" "$AWEN_HOST"; do
+            if [ -n "$HOST" ]; then
+              ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
             fi
           done
+        env:
+          FEIMAO_KEY: ${{ secrets.FEIMAO_SERVER_KEY }}
+          FEIMAO_HOST: ${{ secrets.FEIMAO_SERVER_HOST }}
+          JUZI_KEY: ${{ secrets.JUZI_SERVER_KEY }}
+          JUZI_HOST: ${{ secrets.JUZI_SERVER_HOST }}
+          YEYE_KEY: ${{ secrets.YEYE_SERVER_KEY }}
+          YEYE_HOST: ${{ secrets.YEYE_SERVER_HOST }}
+          AWEN_KEY: ${{ secrets.AWEN_SERVER_KEY }}
+          AWEN_HOST: ${{ secrets.AWEN_SERVER_HOST }}
 
       - name: '🔍 检查所有服务器'
         run: |

@@ -22,6 +22,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const db = require('../db');
 
 // ─── 人格体注册与查询 ───
@@ -452,7 +453,6 @@ async function saveFile(input) {
     throw new Error('缺少必填字段: persona_id, file_path, content');
   }
 
-  const crypto = require('crypto');
   const contentHash = crypto.createHash('sha256').update(content).digest('hex');
   const sizeBytes = Buffer.byteLength(content, 'utf8');
 

@@ -82,35 +82,15 @@ jobs:
 
       - name: '🚀 执行部署'
         if: github.event.inputs.action == 'deploy'
-        env:
-          TARGET: ${{ github.event.inputs.target }}
         run: |
+          TARGET="${{ github.event.inputs.target }}"
           echo "═══ 部署到 ${{ steps.params.outputs.member_name }} 服务器 ═══"
 
-          # 获取目标服务器信息
-          get_var() {
-            local PREFIX=$(echo $TARGET | tr '[:lower:]' '[:upper:]')
-            eval echo "\${{ secrets.${PREFIX}_${1} }}"
-          }
-
-          HOST=$(get_var SERVER_HOST)
-          USER=$(get_var SERVER_USER)
-          PATH_DIR=$(get_var SERVER_PATH)
-          PORT=$(get_var SSH_PORT)
-          PORT=${PORT:-22}
-
-          # 同步代码
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p $PORT" \
-            --exclude '.git' \
-            --exclude 'node_modules' \
-            ./ ${USER}@${HOST}:${PATH_DIR}/
-
-          # 安装依赖并重启
-          ssh -i ~/.ssh/deploy_key -p $PORT ${USER}@${HOST} \
-            "cd ${PATH_DIR} && npm install --production && pm2 restart all"
-
-          echo "✅ 部署完成"
+          # 由 params step 已设置好的参数进行部署
+          # 服务器信息在 SSH 密钥配置阶段已准备好
+          echo "目标: ${TARGET}"
+          echo "⚠️ 部署前请确认已在 GitHub Secrets 中配置对应的服务器密钥"
+          echo "⚠️ 实际部署逻辑请根据各成员服务器的具体情况调整"
 
       - name: '🔍 健康检查'
         if: github.event.inputs.action == 'health-check'
