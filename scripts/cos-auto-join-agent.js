@@ -139,6 +139,7 @@ function writeLog(entry) {
 // ─── 检查单个成员的COS桶 ───
 async function checkMemberBucket(member) {
   const { persona_id, bucket, region } = member;
+  // 支持两套密钥命名（ZY_OSS_* 用于铸渊核心桶 · COS_SECRET_* 用于团队共享桶）
   const secretId = process.env.ZY_OSS_KEY || process.env.COS_SECRET_ID || '';
   const secretKey = process.env.ZY_OSS_SECRET || process.env.COS_SECRET_KEY || '';
 

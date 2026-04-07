@@ -94,7 +94,7 @@ jobs:
           fi
 
       - name: 🔔 新接入通知
-        if: steps.check.outputs.connected_count > 0
+        if: steps.check.outputs.connected_count != '0' && steps.check.outputs.connected_count != ''
         uses: actions/github-script@v7
         with:
           script: |
