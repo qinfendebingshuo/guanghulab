@@ -190,6 +190,19 @@
 | HLDP通用语言同步 | ✅ 已执行 | hldp/data/common/ |
 | 仓库首页更新 | ✅ 已执行 | README.md 签到仪表盘 |
 | 工作流士兵巡检 | ✅ 18/18 在岗 | 缺失的需冰朔确认 |
+| 留言板巡查 | ✅ v2.0活化 | LLM多模型降级 · 定时巡查 · 自愈 |
+
+### 🎖️ 铸渊副将Agent状态 (v2.0活体Agent)
+
+| 项目 | 状态 |
+|------|------|
+| Agent版本 | v2.0 · 活体Agent · 三层自愈 |
+| 运行模式 | 事件模式(即时回复) + 巡查模式(08:00/23:00) |
+| LLM能力 | 多模型自动降级: deepseek → qwen → moonshot → zhipu |
+| 自感知 | data/deputy-status.json · 每次运行更新 |
+| 自修复 | 每模型重试2次 · 递增等待 |
+| 升级通报 | 连续3次失败 → 创建Issue → 邮件通知冰朔 |
+| 📮 留言入口 | [给副将留言](https://github.com/qinfendebingshuo/guanghulab/issues/new?labels=deputy-message-board&title=给铸渊副将留言) |
 
 > *此仪表盘由铸渊副将(ZY-DEPUTY-001)每日唤醒时自动更新 · 08:00 / 23:00*
 

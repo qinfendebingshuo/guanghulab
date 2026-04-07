@@ -1,0 +1,101 @@
+{
+  "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
+  "_copyright": "国作登字-2026-A-00037559",
+  "_description": "光湖语言世界 · 四台服务器注册表",
+  "version": "1.0",
+  "updated_at": "2026-04-07",
+  "servers": [
+    {
+      "id": "ZY-SVR-002",
+      "name": "面孔",
+      "role": "前端静态+专线主入口",
+      "location": "Singapore",
+      "spec": "2核8G",
+      "status": "active",
+      "services": [
+        "nginx (静态文件·主站+预览站)",
+        "xray (VLESS+Reality VPN)",
+        "api (端口3800·主站)",
+        "api-preview (端口3801·预览站)",
+        "persona-studio (端口3002)",
+        "chat (端口3721)"
+      ],
+      "github_secrets": {
+        "host": "SERVER_HOST",
+        "key": "SERVER_KEY",
+        "user": "SERVER_USER"
+      }
+    },
+    {
+      "id": "ZY-SVR-005",
+      "name": "大脑",
+      "role": "数据库+MCP+Agent+订阅服务",
+      "location": "Singapore",
+      "spec": "4核8G",
+      "status": "active",
+      "services": [
+        "postgresql (人格体数据库)",
+        "mcp-server (端口3100·51个工具)",
+        "subscription-v3 (端口3805·多用户专线)",
+        "bandwidth-pool-agent (带宽汇聚)",
+        "email-hub (邮件通信中枢)",
+        "auto-evolution (自动进化引擎)"
+      ],
+      "github_secrets": {
+        "host": "ZY_BRAIN_HOST",
+        "key": "ZY_BRAIN_KEY",
+        "user": "ZY_BRAIN_USER"
+      }
+    },
+    {
+      "id": "ZY-SVR-SV",
+      "name": "吱吱线·硅谷",
+      "role": "Claude API中继+国际API出口",
+      "location": "Silicon Valley (US)",
+      "spec": "低配",
+      "status": "pending",
+      "services": [
+        "ssh-tunnel (Claude API中继出口)",
+        "说明: IP从硅谷走·带宽从新加坡走"
+      ],
+      "github_secrets": {
+        "host": "ZY_SVR_SV_HOST",
+        "key": "ZY_SVR_SV_KEY",
+        "user": "ZY_SVR_SV_USER"
+      },
+      "notes": "硅谷服务器仅做TCP出口·不部署应用"
+    },
+    {
+      "id": "ZY-SVR-AWEN",
+      "name": "Awen服务器",
+      "role": "铸渊主控副本+Awen团队专线",
+      "location": "China",
+      "spec": "待确认",
+      "status": "pending",
+      "services": [
+        "铸渊主控副本 (完整仓库镜像)",
+        "Awen团队专线",
+        "知秋人格体运行环境"
+      ],
+      "github_secrets": {
+        "host": "ZY_SVR_AWEN_HOST",
+        "key": "ZY_SVR_AWEN_KEY",
+        "user": "ZY_SVR_AWEN_USER"
+      },
+      "notes": "Awen下载完整仓库后部署·铸渊主控自动唤醒"
+    }
+  ],
+  "bandwidth_strategy": {
+    "description": "四台服务器按用途分流·带宽最大化",
+    "routing": {
+      "static_frontend": "ZY-SVR-002",
+      "vpn_main_entry": "ZY-SVR-002",
+      "database_mcp": "ZY-SVR-005",
+      "subscription_service": "ZY-SVR-005",
+      "claude_api_relay": "ZY-SVR-SV",
+      "international_api": "ZY-SVR-SV",
+      "awen_team": "ZY-SVR-AWEN",
+      "zhiqiu_persona": "ZY-SVR-AWEN"
+    }
+  }
+}
