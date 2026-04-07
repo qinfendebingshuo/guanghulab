@@ -1705,6 +1705,213 @@ async function submitCode(e) {
       return;
     }
 
+    // ═══════════════════════════════════════════════
+    // ∞+1 公开API: /bandwidth-send-code (无需token·邮箱验证码发送)
+    // 用户在GitHub Pages首页输入邮箱 → 调用此API发送验证码
+    // 安全: 每个IP每小时最多3次
+    // ═══════════════════════════════════════════════
+    if (pathname === '/bandwidth-send-code' && req.method === 'POST') {
+      // CORS headers for GitHub Pages cross-origin
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 1024) req.destroy(); });
+      req.on('end', () => {
+        try {
+          let email = '';
+          if (req.headers['content-type']?.includes('application/json')) {
+            const json = JSON.parse(body);
+            email = String(json.email || '').trim().toLowerCase();
+          } else {
+            const params = new URLSearchParams(body);
+            email = String(params.get('email') || '').trim().toLowerCase();
+          }
+
+          if (!email || !email.includes('@')) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: '请输入有效的邮箱地址' }));
+            return;
+          }
+
+          // Rate limiting: max 3 per IP per hour
+          const userIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+            || req.headers['x-real-ip']
+            || req.socket.remoteAddress
+            || '0.0.0.0';
+
+          if (!global._bwSendCodeRateLimit) global._bwSendCodeRateLimit = {};
+          const rl = global._bwSendCodeRateLimit;
+          const hourKey = `${userIP}:${Math.floor(Date.now() / 3600000)}`;
+          rl[hourKey] = (rl[hourKey] || 0) + 1;
+          // Clean old entries
+          const currentHourPrefix = Math.floor(Date.now() / 3600000);
+          for (const k of Object.keys(rl)) {
+            const hourPart = parseInt(k.split(':').pop(), 10);
+            if (hourPart < currentHourPrefix - 1) delete rl[k];
+          }
+          if (rl[hourKey] > 3) {
+            res.writeHead(429, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: '发送频率过高，请1小时后重试' }));
+            return;
+          }
+
+          const bwPool = require('./bandwidth-pool-agent');
+          const code = bwPool.createAuthCode(email);
+
+          // Try to send email
+          try {
+            const emailHub = require('./email-hub');
+            emailHub.sendBandwidthAuthEmail(email, code).then(() => {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ success: true, message: '验证码已发送到您的邮箱，请查收（15分钟内有效）' }));
+            }).catch(() => {
+              // Email failed but code was created - still return success with code hint
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ success: true, message: '验证码已生成，邮件发送中...' }));
+            });
+          } catch {
+            // Email module not available - code was still created
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: true, message: '验证码已生成，请联系管理员获取' }));
+          }
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, message: '系统异常，请稍后重试' }));
+        }
+      });
+      return;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ∞+1 公开API: /bandwidth-verify-code (无需token·验证码校验+注册)
+    // 用户在GitHub Pages首页输入邮箱+验证码 → 调用此API完成授权
+    // ═══════════════════════════════════════════════
+    if (pathname === '/bandwidth-verify-code' && req.method === 'POST') {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 1024) req.destroy(); });
+      req.on('end', () => {
+        try {
+          let code = '';
+          let email = '';
+          if (req.headers['content-type']?.includes('application/json')) {
+            const json = JSON.parse(body);
+            code = String(json.code || '').trim();
+            email = String(json.email || '').trim().toLowerCase();
+          } else {
+            const params = new URLSearchParams(body);
+            code = String(params.get('code') || '').trim();
+            email = String(params.get('email') || '').trim().toLowerCase();
+          }
+
+          if (!email || !email.includes('@')) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: '请输入有效的邮箱地址' }));
+            return;
+          }
+          if (!code || code.length !== 6) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: '请输入6位验证码' }));
+            return;
+          }
+
+          const userIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+            || req.headers['x-real-ip']
+            || req.socket.remoteAddress
+            || '0.0.0.0';
+
+          const bwPool = require('./bandwidth-pool-agent');
+          const verifyResult = bwPool.verifyAuthCode(code, email);
+
+          if (!verifyResult.valid) {
+            saveAuthSnapshot({
+              email, action: 'bandwidth-verify-code', result: 'failed',
+              error: verifyResult.error, ip: userIP,
+              user_agent: req.headers['user-agent'] || 'unknown',
+              auth_type: 'github-pages-public'
+            });
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: verifyResult.error }));
+            return;
+          }
+
+          const regResult = bwPool.registerContributor(email, userIP);
+
+          saveAuthSnapshot({
+            email, action: 'bandwidth-verify-code', result: 'authorized',
+            ip: userIP, user_agent: req.headers['user-agent'] || 'unknown',
+            auth_type: 'github-pages-public',
+            contributor_id: regResult.contributor_id
+          });
+
+          try {
+            const guardian = require('./user-guardian-agent');
+            guardian.activateGuardian(email);
+          } catch { /* guardian not loaded */ }
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({
+            success: true,
+            message: '✅ 授权成功！您的带宽已加入加速池，感谢支持。',
+            contributor_id: regResult.contributor_id
+          }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, message: '系统异常，请稍后重试' }));
+        }
+      });
+      return;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ∞+1 公开API: /bandwidth-pool-status (无需token·带宽池状态)
+    // GitHub Pages首页实时显示带宽池状态
+    // ═══════════════════════════════════════════════
+    if (pathname === '/bandwidth-pool-status' && req.method === 'GET') {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+      try {
+        const bwPool = require('./bandwidth-pool-agent');
+        const poolStatus = bwPool.getPoolStatus();
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: true, ...poolStatus }));
+      } catch {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          success: true,
+          total_contributors: 0,
+          active_contributors: 0,
+          total_contributed_gb: 0,
+          pool_status: 'idle',
+          updated_at: new Date().toISOString()
+        }));
+      }
+      return;
+    }
+
+    // ═══ CORS预检 (OPTIONS) 支持 ═══
+    if (req.method === 'OPTIONS' && (
+      pathname === '/bandwidth-send-code' ||
+      pathname === '/bandwidth-verify-code' ||
+      pathname === '/bandwidth-pool-status'
+    )) {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400'
+      });
+      res.end();
+      return;
+    }
+
     // 404
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
