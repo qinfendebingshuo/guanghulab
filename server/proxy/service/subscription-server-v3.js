@@ -192,6 +192,26 @@ function buildStaticNodes() {
     });
   }
 
+  // 节点4: 硅谷服务器 (ZY-SVR-SV · Claude专线 · 美国IP出口)
+  // 冰朔D61: 硅谷服务器已配置，新增Claude单独访问VPN节点
+  // 用户访问claude.ai等AI服务时优先走此节点（美国IP）
+  const svHost = getEnvOrKey('ZY_SVR_SV_HOST');
+  const svPbk = getEnvOrKey('ZY_SVR_SV_REALITY_PUBLIC_KEY');
+  const svSid = getEnvOrKey('ZY_SVR_SV_REALITY_SHORT_ID');
+  const svPort = parseInt(getEnvOrKey('ZY_SVR_SV_PORT') || '443', 10);
+  if (svHost && svPbk) {
+    nodes.push({
+      id: 'zy-sv-claude',
+      name: '🇺🇸 光湖-SV(Claude专线)',
+      host: svHost,
+      port: svPort,
+      pbk: svPbk,
+      sid: svSid || '',
+      region: 'us-sv',
+      priority: 4
+    });
+  }
+
   return nodes;
 }
 
@@ -279,8 +299,12 @@ ${nodeNames}
     : `${nodeNames}\n      - DIRECT`;
 
   // AI/开发工具代理组的节点列表
+  // Claude专线优先: 如果有硅谷节点，AI服务组把它放最前面
+  const svNode = nodes.find(n => n.region === 'us-sv');
   const toolProxies = nodes.length > 1
-    ? `      - "♻️ 自动选择"\n${nodeNames}`
+    ? (svNode
+        ? `      - "${svNode.name}"\n      - "♻️ 自动选择"\n${nodeNames}`
+        : `      - "♻️ 自动选择"\n${nodeNames}`)
     : nodeNames;
 
   return `# 光湖语言世界 · ${user.label} 的独立专线 — 冰朔开发维护

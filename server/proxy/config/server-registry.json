@@ -50,20 +50,23 @@
     {
       "id": "ZY-SVR-SV",
       "name": "吱吱线·硅谷",
-      "role": "Claude API中继+国际API出口",
+      "role": "Claude API中继+VPN美国出口+国际API出口",
       "location": "Silicon Valley (US)",
       "spec": "低配",
-      "status": "pending",
+      "status": "active",
       "services": [
+        "xray (VLESS+Reality VPN · Claude专线节点)",
         "ssh-tunnel (Claude API中继出口)",
-        "说明: IP从硅谷走·带宽从新加坡走"
+        "说明: 用户VPN可直接走硅谷IP访问Claude/AI服务"
       ],
       "github_secrets": {
         "host": "ZY_SVR_SV_HOST",
         "key": "ZY_SVR_SV_KEY",
-        "user": "ZY_SVR_SV_USER"
+        "user": "ZY_SVR_SV_USER",
+        "reality_public_key": "ZY_SVR_SV_REALITY_PUBLIC_KEY",
+        "reality_short_id": "ZY_SVR_SV_REALITY_SHORT_ID"
       },
-      "notes": "硅谷服务器仅做TCP出口·不部署应用"
+      "notes": "硅谷服务器已配置·D61冰朔确认·VPN节点+API中继双用途"
     },
     {
       "id": "ZY-SVR-AWEN",

@@ -1,0 +1,103 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 📡 PR合并自动触发 README 仓库首页更新
+#
+# 触发条件:
+#   - PR合并到main: 自动更新README签到仪表盘+状态信息
+#   - push到main: 关键文件变更时自动更新
+#   - 手动触发: 随时可手动执行
+#
+# 说明: 冰朔指令 D61 - 每次任务合并后自动更新仓库首页
+# ═══════════════════════════════════════════════
+
+name: "📡 README · 合并自动更新"
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'brain/**'
+      - 'server/proxy/config/**'
+      - 'data/bulletin-board/**'
+      - 'data/cos-join-registry.json'
+      - 'scripts/generate-readme-dashboard.js'
+      - '.github/persona-brain/memory.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    # 只在PR被合并时运行（不是关闭未合并），或push/手动触发
+    if: >
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "📦 安装依赖"
+        run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
+
+      - name: "📡 更新README签到仪表盘"
+        run: |
+          echo "[README-AUTO-UPDATE] 📡 PR合并自动触发README更新..."
+          echo "触发事件: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR标题: ${{ github.event.pull_request.title }}"
+            echo "PR编号: #${{ github.event.pull_request.number }}"
+          fi
+
+          # 运行签到仪表盘生成器
+          node scripts/generate-readme-dashboard.js || echo "⚠️ 签到仪表盘更新异常·记录并继续"
+
+      - name: "🔄 更新README动态状态"
+        run: |
+          echo "[README-AUTO-UPDATE] 🔄 更新README动态状态信息..."
+
+          TIMESTAMP=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+
+          # 更新仪表盘更新时间戳（如果存在）
+          if grep -q "仪表盘更新时间" README.md; then
+            sed -i "s/仪表盘更新时间.*$/仪表盘更新时间**: ${TIMESTAMP} (北京时间)/" README.md
+          fi
+
+          echo "✅ README状态更新完成 · ${TIMESTAMP}"
+
+      - name: "💾 提交变更"
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add README.md data/bulletin-board/ .github/persona-brain/memory.json 2>/dev/null || true
+
+          if ! git diff --cached --quiet; then
+            TRIGGER="${{ github.event_name }}"
+            if [ "$TRIGGER" = "pull_request" ]; then
+              MSG="📡 README自动更新 · PR #${{ github.event.pull_request.number }} 合并触发"
+            elif [ "$TRIGGER" = "push" ]; then
+              MSG="📡 README自动更新 · push触发 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
+            else
+              MSG="📡 README自动更新 · 手动触发 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
+            fi
+            git commit -m "$MSG [skip ci]"
+            git push
+            echo "✅ README变更已提交并推送"
+          else
+            echo "ℹ️ 无变更需要提交"
+          fi
