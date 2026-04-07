@@ -46,7 +46,7 @@ const CLAUDE_RELAY_PORT = parseInt(process.env.ZY_CLAUDE_RELAY_PORT || '18443', 
 const CLAUDE_RELAY_ENABLED = process.env.ZY_CLAUDE_RELAY_ENABLED === 'true';
 
 function isClaudeModel(model) {
-  return CLAUDE_MODELS.some(cm => model.includes('claude'));
+  return CLAUDE_MODELS.some(cm => model.includes(cm)) || model.includes('claude');
 }
 
 // ── 路由器状态 ──────────────────────────────

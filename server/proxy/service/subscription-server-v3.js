@@ -39,6 +39,7 @@ const userManager = require('./user-manager');
 // ── 操作快照文件 ──────────────────────────────
 const AUTH_SNAPSHOT_FILE = path.join(DATA_DIR, 'bandwidth-auth-snapshots.json');
 const MAX_SNAPSHOTS = 500; // 最多保留500条快照记录
+const MAX_SEND_CODE_PER_HOUR = 3; // 每个IP每小时最多发送验证码次数
 
 /**
  * 保存用户操作快照
@@ -1751,7 +1752,7 @@ async function submitCode(e) {
             const hourPart = parseInt(k.split(':').pop(), 10);
             if (hourPart < currentHourPrefix - 1) delete rl[k];
           }
-          if (rl[hourKey] > 3) {
+          if (rl[hourKey] > MAX_SEND_CODE_PER_HOUR) {
             res.writeHead(429, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify({ success: false, message: '发送频率过高，请1小时后重试' }));
             return;

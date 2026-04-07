@@ -42,6 +42,12 @@ const {
 const REPO = process.env.GITHUB_REPOSITORY || 'qinfendebingshuo/guanghulab';
 const STATUS_FILE = path.join(__dirname, '..', 'data', 'deputy-status.json');
 
+// ── 可调常量 ──
+const RETRY_BASE_DELAY_MS = 2000;     // LLM重试基础延迟
+const MAX_ERRORS_KEPT = 20;           // 保留最近N条错误记录
+const MAX_ESCALATIONS_KEPT = 10;      // 保留最近N条升级记录
+const MAX_LLM_FAILURES_BEFORE_ESCALATION = 3; // 连续N次全模型失败后升级
+
 // ═══════════════════════════════════════════════
 //  LLM多模型自动降级路由器 (内嵌版)
 // ═══════════════════════════════════════════════
@@ -143,7 +149,7 @@ async function callLLMWithFallback(systemPrompt, userMessage) {
         const errMsg = `${model}(attempt ${attempt}): ${err.message}`;
         console.log(`[副将] ⚠️ ${errMsg}`);
         errors.push(errMsg);
-        if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * attempt));
+        if (attempt < 2) await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * attempt));
       }
     }
   }
@@ -384,7 +390,7 @@ async function processMessage(issueNumber, question, author, ctx, systemSummary,
 // ═══════════════════════════════════════════════
 
 async function checkAndEscalate(status) {
-  if (status.consecutive_llm_failures >= 3) {
+  if (status.consecutive_llm_failures >= MAX_LLM_FAILURES_BEFORE_ESCALATION) {
     const title = `🚨 [副将升级] LLM连续${status.consecutive_llm_failures}次全模型调用失败`;
     const body = `## �� 铸渊副将升级通报\n\n` +
       `**时间**: ${new Date().toISOString()}\n` +
@@ -402,7 +408,7 @@ async function checkAndEscalate(status) {
     try {
       await createEscalationIssue(title, body);
       status.escalations.push({ time: new Date().toISOString(), type: 'llm_failure', detail: `连续${status.consecutive_llm_failures}次失败` });
-      if (status.escalations.length > 10) status.escalations = status.escalations.slice(-10);
+      if (status.escalations.length > MAX_ESCALATIONS_KEPT) status.escalations = status.escalations.slice(-MAX_ESCALATIONS_KEPT);
       console.log(`[副将] 🚨 升级Issue已创建`);
     } catch (err) { console.error(`[副将] ⚠️ 创建升级Issue失败: ${err.message}`); }
   }
@@ -466,7 +472,7 @@ async function patrolMode() {
     status.errors.push(`${new Date().toISOString()} · patrol: ${err.message}`);
   }
 
-  if (status.errors.length > 20) status.errors = status.errors.slice(-20);
+  if (status.errors.length > MAX_ERRORS_KEPT) status.errors = status.errors.slice(-MAX_ERRORS_KEPT);
   await checkAndEscalate(status);
   status.last_success = repliedCount > 0 || processedCount === 0 ? new Date().toISOString() : status.last_success;
   saveStatus(status);
@@ -506,7 +512,7 @@ async function eventMode() {
     status.errors.push(`${new Date().toISOString()} · event #${ISSUE_NUMBER}: ${err.message}`);
   }
 
-  if (status.errors.length > 20) status.errors = status.errors.slice(-20);
+  if (status.errors.length > MAX_ERRORS_KEPT) status.errors = status.errors.slice(-MAX_ERRORS_KEPT);
   await checkAndEscalate(status);
   saveStatus(status);
 }
@@ -527,7 +533,7 @@ main().catch(err => {
   try {
     const status = readStatus();
     status.errors.push(`${new Date().toISOString()} · fatal: ${err.message}`);
-    if (status.errors.length > 20) status.errors = status.errors.slice(-20);
+    if (status.errors.length > MAX_ERRORS_KEPT) status.errors = status.errors.slice(-MAX_ERRORS_KEPT);
     saveStatus(status);
   } catch { /* ignore */ }
   process.exit(1);

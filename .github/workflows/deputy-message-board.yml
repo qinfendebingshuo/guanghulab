@@ -25,12 +25,13 @@ jobs:
     name: "🎖️ 副将回复留言"
     runs-on: ubuntu-latest
     if: >
-      (github.event_name == 'issues' &&
+      github.event_name != 'schedule' &&
+      ((github.event_name == 'issues' &&
        github.event.action == 'opened' &&
        contains(join(github.event.issue.labels.*.name, ','), 'deputy-message-board')) ||
       (github.event_name == 'issue_comment' &&
        contains(join(github.event.issue.labels.*.name, ','), 'deputy-message-board') &&
-       github.event.comment.user.login != 'github-actions[bot]')
+       github.event.comment.user.login != 'github-actions[bot]'))
     steps:
       - uses: actions/checkout@v4
 
