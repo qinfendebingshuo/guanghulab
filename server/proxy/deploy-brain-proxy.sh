@@ -175,6 +175,23 @@ EOF
         echo "ZY_CN_RELAY_PORT=${ZY_CN_RELAY_PORT:-2053}" >> "$KEYS_FILE"
     fi
 
+    # 保存硅谷服务器节点信息 (Claude专线 · 美国IP出口)
+    # D61: 冰朔已配置硅谷服务器，新增Claude单独访问VPN节点
+    if [ -n "${ZY_SVR_SV_HOST:-}" ]; then
+        echo "" >> "$KEYS_FILE"
+        echo "# 硅谷服务器节点 (ZY-SVR-SV · Claude专线 · 美国IP出口)" >> "$KEYS_FILE"
+        echo "ZY_SVR_SV_HOST=${ZY_SVR_SV_HOST}" >> "$KEYS_FILE"
+    fi
+    if [ -n "${ZY_SVR_SV_REALITY_PUBLIC_KEY:-}" ]; then
+        echo "ZY_SVR_SV_REALITY_PUBLIC_KEY=${ZY_SVR_SV_REALITY_PUBLIC_KEY}" >> "$KEYS_FILE"
+    fi
+    if [ -n "${ZY_SVR_SV_REALITY_SHORT_ID:-}" ]; then
+        echo "ZY_SVR_SV_REALITY_SHORT_ID=${ZY_SVR_SV_REALITY_SHORT_ID}" >> "$KEYS_FILE"
+    fi
+    if [ -n "${ZY_SVR_SV_PORT:-}" ]; then
+        echo "ZY_SVR_SV_PORT=${ZY_SVR_SV_PORT}" >> "$KEYS_FILE"
+    fi
+
     chmod 600 "$KEYS_FILE"
 
     echo ""

@@ -2,7 +2,7 @@
   "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
   "_copyright": "国作登字-2026-A-00037559",
   "_description": "硅谷Claude专线中继配置 · IP走硅谷·带宽走新加坡",
-  "version": "1.0",
+  "version": "2.0",
   "relay_architecture": {
     "description": "双层中继: 用户请求 → 新加坡(带宽源) → 硅谷(IP壳) → Claude API",
     "singapore_servers": {
@@ -58,8 +58,8 @@
     "silicon_valley_server": [
       "安装SSH Server (已有)",
       "配置SSH公钥 (新加坡服务器 → 硅谷服务器)",
-      "防火墙放行SSH端口",
-      "无需安装Nginx (纯SSH隧道模式)"
+      "安装Xray并配置VLESS+Reality (D61·VPN节点用途)",
+      "防火墙放行443端口 (VPN) + SSH端口"
     ],
     "singapore_server": [
       "配置SSH私钥 (连接硅谷服务器)",
@@ -69,7 +69,18 @@
     "github_secrets": [
       "ZY_SVR_SV_HOST — 硅谷服务器IP",
       "ZY_SVR_SV_KEY — SSH私钥",
-      "ZY_SVR_SV_USER — SSH用户名"
+      "ZY_SVR_SV_USER — SSH用户名",
+      "ZY_SVR_SV_REALITY_PUBLIC_KEY — 硅谷Xray Reality公钥 (VPN节点)",
+      "ZY_SVR_SV_REALITY_SHORT_ID — 硅谷Xray Reality短ID (VPN节点)",
+      "ZY_SVR_SV_PORT — VPN端口 (默认443)"
     ]
+  },
+  "vpn_node": {
+    "description": "D61新增: 硅谷服务器同时作为VPN出口节点(用户直接访问Claude)",
+    "node_id": "zy-sv-claude",
+    "node_name": "🇺🇸 光湖-SV(Claude专线)",
+    "purpose": "用户VPN流量可直接通过硅谷IP出口访问claude.ai等AI服务",
+    "clash_routing": "AI服务proxy-group优先选择此节点",
+    "status": "active"
   }
 }

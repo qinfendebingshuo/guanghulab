@@ -298,6 +298,17 @@ class ZyCloudVpn extends LivingModule {
       seenIds.add('zy-cn-relay');
     }
 
+    // 节点4: 硅谷服务器 (ZY-SVR-SV · Claude专线 · 美国IP出口)
+    // 冰朔D61: 硅谷服务器已配置，新增Claude单独访问VPN节点
+    const svHost = this._readEnvOrKey('ZY_SVR_SV_HOST');
+    const svPbk = this._readEnvOrKey('ZY_SVR_SV_REALITY_PUBLIC_KEY');
+    const svSid = this._readEnvOrKey('ZY_SVR_SV_REALITY_SHORT_ID');
+    const svPort = parseInt(this._readEnvOrKey('ZY_SVR_SV_PORT') || '443', 10);
+    if (svHost && svPbk) {
+      nodes.push(this._makeNode('zy-sv-claude', '🇺🇸 铸渊专线V2-SV(Claude)', svHost, svPort, svPbk, svSid || '', 'us-sv', 'ZY-SVR-SV', 'remote', '硅谷'));
+      seenIds.add('zy-sv-claude');
+    }
+
     // ── 源2: 动态注册表（通过HLDP/API注册的节点）──
     // 这些是"像路由器一样插入"的节点
     for (const regNode of Object.values(this._registry.nodes)) {

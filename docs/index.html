@@ -808,7 +808,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
   <div class="bar">
     <button class="btn" onclick="go('home')">← 首页</button>
     <div class="bar-title">🌐 光湖语言世界</div>
-    <div class="bar-right"><span class="dot"></span><span style="font-size:11px;color:var(--dim);font-family:var(--m)">v50.0</span></div>
+    <div class="bar-right"><span class="dot"></span><span style="font-size:11px;color:var(--dim);font-family:var(--m)">v51.0</span></div>
   </div>
   <div style="max-width:800px;margin:0 auto;overflow-y:auto;overflow-x:hidden">
 
@@ -918,9 +918,32 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="sys-section">
       <div class="sys-section-title">🏗️ 开发进度</div>
       <div class="sys-progress-card">
-        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">S1-S2 已完成 · S3-S14 规划中</div>
+        <div style="font-size:12px;color:var(--dim);margin-bottom:4px">S1-S2 已完成 · S3-S20 规划中 · D61</div>
         <div class="sys-progress-bar-v50"><div class="sys-progress-fill-v50" style="width:28%"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)"><span>进度 28%</span><span>14 阶段</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)"><span>进度 28%</span><span>20 阶段</span></div>
+      </div>
+      <!-- API & COS Status -->
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="padding:10px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--ok);font-weight:600;margin-bottom:4px">🤖 大模型API</div>
+          <div style="font-size:11px;color:var(--dim)">4个已配置</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:2px">DeepSeek · 智谱 · 千问 · Kimi</div>
+        </div>
+        <div style="padding:10px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--ok);font-weight:600;margin-bottom:4px">🗄️ COS存储桶</div>
+          <div style="font-size:11px;color:var(--dim)">2+1 已配置</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:2px">核心桶 · 语料桶 · 团队桶</div>
+        </div>
+        <div style="padding:10px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--ok);font-weight:600;margin-bottom:4px">🇺🇸 硅谷节点</div>
+          <div style="font-size:11px;color:var(--dim)">Claude专线</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:2px">美国IP出口 · AI服务优先</div>
+        </div>
+        <div style="padding:10px 12px;background:rgba(138,180,248,.08);border:1px solid rgba(138,180,248,.2);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px">🌊 铸渊专线</div>
+          <div style="font-size:11px;color:var(--dim)">V2 ∞+1</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:2px">共享池2000GB/月 · 4节点</div>
+        </div>
       </div>
     </div>
 
@@ -945,11 +968,11 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="sys-section">
       <div class="sys-section-title">📋 版本历史</div>
       <div class="sys-version-list" id="sysUpdates">
+        <div class="sys-version-item"><span class="sys-version-tag">v51.0</span><span class="sys-version-text">D61整改·4API+2COS确认·硅谷Claude节点·自动更新</span></div>
         <div class="sys-version-item"><span class="sys-version-tag">v50.0</span><span class="sys-version-text">UI大气化+系统面板重构+图标升级</span></div>
         <div class="sys-version-item"><span class="sys-version-tag">v49.0</span><span class="sys-version-text">黑曜风重构+码字工作台</span></div>
         <div class="sys-version-item"><span class="sys-version-tag">v48.0</span><span class="sys-version-text">零感域重构+架构v2</span></div>
         <div class="sys-version-item"><span class="sys-version-tag">v44.0</span><span class="sys-version-text">仪表盘+UI改版</span></div>
-        <div class="sys-version-item"><span class="sys-version-tag">v43.0</span><span class="sys-version-text">码字工作台扩展</span></div>
       </div>
     </div>
 
