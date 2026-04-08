@@ -307,19 +307,20 @@ ${nodeNames}
         : `      - "♻️ 自动选择"\n${nodeNames}`)
     : nodeNames;
 
-  // Claude专线独立代理组: 只包含SV节点 + 备选
-  // 用户可以在VPN软件中手动下拉选择，精准定位Claude专线
+  // Claude专线独立代理组: 始终显示为下拉菜单 (select类型)
+  // 无论是否有硅谷节点，都创建Claude专线组，让用户手动选择
+  // 有SV节点时优先SV，无SV节点时使用现有节点
   const claudeProxies = svNode
     ? `      - "${svNode.name}"\n${nodes.length > 1 ? '      - "♻️ 自动选择"\n' : ''}${nodeNames}`
-    : toolProxies;
+    : (nodes.length > 1 ? `      - "♻️ 自动选择"\n${nodeNames}` : nodeNames);
 
-  // Claude专线代理组YAML块
-  const claudeGroupBlock = svNode ? `
+  // Claude专线代理组YAML块 — 始终生成 (下拉选择·select类型)
+  const claudeGroupBlock = `
   - name: "🇺🇸 Claude专线"
     type: select
     proxies:
 ${claudeProxies}
-` : '';
+`;
 
   return `# 光湖语言世界 · ${user.label} 的独立专线 — 冰朔开发维护
 # 自动生成 · ${new Date().toISOString()}
@@ -451,9 +452,9 @@ ${toolProxies}
 
 # ── 路由规则 ──────────────────────────────
 rules:
-  # Claude专线 (独立代理组·手动选择·精准定位)
-  - DOMAIN-SUFFIX,claude.ai,${svNode ? '🇺🇸 Claude专线' : '🤖 AI服务'}
-  - DOMAIN-SUFFIX,anthropic.com,${svNode ? '🇺🇸 Claude专线' : '🤖 AI服务'}
+  # Claude专线 (独立代理组·下拉选择·始终可选)
+  - DOMAIN-SUFFIX,claude.ai,🇺🇸 Claude专线
+  - DOMAIN-SUFFIX,anthropic.com,🇺🇸 Claude专线
 
   # AI服务 (其他AI)
   - DOMAIN-SUFFIX,openai.com,🤖 AI服务
@@ -803,16 +804,26 @@ mode: direct
         boostStatus = bs.current?.bbr?.is_bbr ? '✅ BBR加速中' : '⚠️ 未加速';
       } catch { /* ignore */ }
 
-      // 读取用户带宽共享状态
+      // 读取用户带宽共享状态 (系统内部状态)
       let bwContribStatus = '未加入';
       let bwContribActive = false;
+      let bwContribAuthTime = '';
+      let bwIpAuthorized = false;
       try {
         const bwPool = require('./bandwidth-pool-agent');
         const contribInfo = bwPool.isContributor(user.email);
         if (contribInfo.is_contributor) {
           bwContribActive = contribInfo.status === 'active';
+          bwIpAuthorized = true;
           bwContribStatus = bwContribActive ? '🚀 加速已生效' : '⚠️ 已暂停';
+          bwContribAuthTime = contribInfo.authorized_at || '';
         }
+      } catch { /* ignore */ }
+
+      // 读取带宽池状态 (加速池整体数据)
+      let bwPoolInfo = { total_contributors: 0, active_contributors: 0, total_contributed_gb: 0, pool_status: 'idle' };
+      try {
+        bwPoolInfo = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'bandwidth-pool-status.json'), 'utf8'));
       } catch { /* ignore */ }
 
       // 读取今日流量快照
@@ -824,6 +835,9 @@ mode: direct
           todayGB = snap.per_user[user.email].total_gb.toFixed(2);
         }
       } catch { /* ignore */ }
+
+      // Claude专线节点检测
+      const svNode = nodes.find(n => n.region === 'us-sv');
 
       const poolBarColor = poolPct > 90 ? '#e74c3c' : poolPct > 70 ? '#f39c12' : '#2ecc71';
 
@@ -853,12 +867,32 @@ mode: direct
   .node:last-child { border-bottom: none; }
   .online { color: #2ecc71; }
   .footer { text-align: center; padding: 20px 0; color: #555; font-size: 0.75em; }
+  .accel-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 600; }
+  .accel-on { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
+  .accel-off { background: rgba(241,196,15,0.1); color: #f1c40f; border: 1px solid rgba(241,196,15,0.2); }
+  .refresh-btn { display: inline-block; padding: 8px 16px; background: linear-gradient(135deg,#667eea,#764ba2); color: #fff; border: none; border-radius: 8px; font-size: 0.85em; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .refresh-btn:active { opacity: 0.8; }
+  .sub-btn { display: block; width: 100%; padding: 12px; background: linear-gradient(135deg,#f093fb,#f5576c); color: #fff; border: none; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer; margin-top: 8px; text-decoration: none; text-align: center; }
 </style>
 </head>
 <body>
 <div class="header">
   <h1>🌐 光湖语言世界</h1>
   <p>${esc(user.label)} 的专属仪表盘 — 冰朔开发维护</p>
+</div>
+
+<!-- ═══ 加速状态面板 (系统内部状态 → 用户可见) ═══ -->
+<div class="card" style="border: 1px solid ${bwContribActive ? 'rgba(46,204,113,0.3)' : '#1e2448'};">
+  <h3>🔥 加速状态 <span class="accel-badge ${bwContribActive ? 'accel-on' : 'accel-off'}" id="accelBadge">${bwContribActive ? '加速中' : '未加速'}</span></h3>
+  <div class="stat-row"><span class="stat-label">IP授权</span><span class="stat-value" id="ipAuthStatus">${bwIpAuthorized ? '✅ 已授权' : '❌ 未授权'}</span></div>
+  <div class="stat-row"><span class="stat-label">带宽加速</span><span class="stat-value" id="bwAccelStatus">${bwContribStatus}</span></div>
+  <div class="stat-row"><span class="stat-label">网速增强</span><span class="stat-value" id="speedBoostStatus">${bwContribActive ? '✅ 已开启' : '⚠️ 未开启'}</span></div>
+  <div class="stat-row"><span class="stat-label">反向加速</span><span class="stat-value">${boostStatus}</span></div>
+  <div class="stat-row"><span class="stat-label">加速池人数</span><span class="stat-value" id="poolContributors">${bwPoolInfo.active_contributors}人在线 / ${bwPoolInfo.total_contributors}人</span></div>
+  ${bwContribAuthTime ? '<div class="stat-row"><span class="stat-label">授权时间</span><span class="stat-value" style="font-size:0.8em;color:#aaa;">' + new Date(bwContribAuthTime).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + '</span></div>' : ''}
+  <div style="margin-top: 10px; text-align: center;">
+    <button class="refresh-btn" onclick="refreshAccelStatus()">🔄 刷新加速状态</button>
+  </div>
 </div>
 
 <div class="card">
@@ -875,15 +909,28 @@ mode: direct
 <div class="card">
   <h3>🔌 节点状态 (${nodes.length}个)</h3>
   ${nodes.map(n => `<div class="node"><span>${esc(n.name)}</span><span class="online">${n.latency_ms ? n.latency_ms + 'ms' : '在线'}</span></div>`).join('\n  ')}
+  ${svNode ? '<div style="margin-top:8px;padding:8px 12px;background:#1a1f3d;border-radius:8px;font-size:0.82em;color:#22d3ee;">🇺🇸 Claude专线可用 · 在VPN软件中选择「Claude专线」分组即可精准切换</div>' : ''}
 </div>
 
 <div class="card">
   <h3>⚡ 系统状态</h3>
   <div class="stat-row"><span class="stat-label">服务版本</span><span class="stat-value">V3.0</span></div>
-  <div class="stat-row"><span class="stat-label">反向加速</span><span class="stat-value">${boostStatus}</span></div>
-  <div class="stat-row"><span class="stat-label">带宽共享</span><span class="stat-value" id="bwAccelStatus">${bwContribStatus}</span></div>
   <div class="stat-row"><span class="stat-label">在线用户</span><span class="stat-value">${poolStatus.users_count}</span></div>
   <div class="stat-row"><span class="stat-label">智能选路</span><span class="stat-value">${nodes.length > 1 ? '✅ url-test' : '单节点'}</span></div>
+  <div class="stat-row"><span class="stat-label">Claude专线</span><span class="stat-value">${svNode ? '✅ 硅谷节点在线' : '⚠️ 暂不可用'}</span></div>
+</div>
+
+<!-- ═══ VPN订阅更新入口 ═══ -->
+<div class="card">
+  <h3>🔄 更新VPN配置</h3>
+  <p style="font-size:0.82em;color:#888;line-height:1.7;margin-bottom:10px;">
+    合并代码后，VPN配置自动更新。您只需在VPN软件中<strong style="color:#22d3ee;">刷新订阅</strong>即可获取最新配置。
+  </p>
+  <div style="background:#1a1f3d;border-radius:8px;padding:12px;font-size:0.82em;color:#aaa;line-height:1.8;">
+    <strong style="color:#667eea;">📱 Shadowrocket:</strong> 首页 → 长按订阅链接 → 更新<br>
+    <strong style="color:#667eea;">💻 Clash Verge:</strong> 订阅页 → 点击刷新图标<br>
+    <strong style="color:#667eea;">📱 ClashMi:</strong> 配置 → 点击更新按钮
+  </div>
 </div>
 
 <div class="card">
@@ -921,6 +968,24 @@ mode: direct
 // 直接访问时在 /dashboard/{token}，需要提取 /dashboard/ 之前的前缀作为API路径基座
 var dashIdx = window.location.pathname.indexOf('/dashboard/');
 var bwBasePath = dashIdx >= 0 ? window.location.pathname.substring(0, dashIdx) : '';
+
+// 刷新加速状态 (从带宽池API获取最新数据)
+function refreshAccelStatus() {
+  var btn = event.target;
+  btn.textContent = '⏳ 刷新中...';
+  btn.disabled = true;
+
+  fetch(bwBasePath + '/bandwidth-pool-status').then(function(r) { return r.json(); }).then(function(data) {
+    if (data.success) {
+      document.getElementById('poolContributors').textContent = (data.active_contributors || 0) + '人在线 / ' + (data.total_contributors || 0) + '人';
+    }
+    // 刷新整个页面以获取最新的用户授权状态
+    window.location.reload();
+  }).catch(function() {
+    btn.textContent = '🔄 刷新加速状态';
+    btn.disabled = false;
+  });
+}
 
 function bwSendCode() {
   var email = document.getElementById('bwEmail').value.trim().toLowerCase();
@@ -1020,16 +1085,22 @@ function bwVerifyCode() {
       result.style.background = '#1a3a2a';
       result.style.color = '#2ecc71';
       btn.textContent = '✅ 授权成功';
-      // 更新系统状态中的加速状态
-      var accelEl = document.getElementById('bwAccelStatus');
-      if (accelEl) accelEl.textContent = '🚀 加速已生效';
+      // 授权成功 → 自动更新加速状态面板
+      document.getElementById('bwAccelStatus').textContent = '🚀 加速已生效';
+      document.getElementById('ipAuthStatus').textContent = '✅ 已授权';
+      document.getElementById('speedBoostStatus').textContent = '✅ 已开启';
+      var badge = document.getElementById('accelBadge');
+      if (badge) { badge.textContent = '加速中'; badge.className = 'accel-badge accel-on'; }
+      result.textContent = (data.message || '授权成功！') + ' 刷新页面查看完整状态';
+      // 3秒后自动刷新页面，加载最新服务器状态
+      setTimeout(function() { window.location.reload(); }, 3000);
     } else {
       result.style.background = '#3a1a1a';
       result.style.color = '#e74c3c';
       btn.disabled = false;
       btn.textContent = '🔑 提交验证码';
+      result.textContent = data.message || '验证失败';
     }
-    result.textContent = data.message || (data.success ? '授权成功！' : '验证失败');
   }).catch(function() {
     btn.disabled = false;
     btn.textContent = '🔑 提交验证码';
@@ -2107,11 +2178,73 @@ async function submitCode(e) {
       return;
     }
 
+    // ═══════════════════════════════════════════════
+    // ∞+1 公开API: /bandwidth-user-status (无需token·用户加速状态)
+    // 系统内部状态关联 → 用户刷新后自动展示授权/加速/网速状态
+    // ═══════════════════════════════════════════════
+    if (pathname === '/bandwidth-user-status' && req.method === 'POST') {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 1024) req.destroy(); });
+      req.on('end', () => {
+        try {
+          let email = '';
+          if (req.headers['content-type']?.includes('application/json')) {
+            const json = JSON.parse(body);
+            email = String(json.email || '').trim().toLowerCase();
+          } else {
+            const params = new URLSearchParams(body);
+            email = String(params.get('email') || '').trim().toLowerCase();
+          }
+
+          if (!email || !email.includes('@')) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: false, message: '请输入有效的邮箱地址' }));
+            return;
+          }
+
+          const bwPool = require('./bandwidth-pool-agent');
+          const contribInfo = bwPool.isContributor(email);
+          const poolStatus = bwPool.getPoolStatus();
+
+          // 读取反向加速状态
+          let bbrActive = false;
+          try {
+            const bs = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'reverse-boost-status.json'), 'utf8'));
+            bbrActive = !!(bs.current?.bbr?.is_bbr);
+          } catch { /* ignore */ }
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({
+            success: true,
+            ip_authorized: contribInfo.is_contributor,
+            bandwidth_accelerated: contribInfo.is_contributor && contribInfo.status === 'active',
+            speed_boosted: contribInfo.is_contributor && contribInfo.status === 'active',
+            bbr_active: bbrActive,
+            contributor_status: contribInfo.status,
+            authorized_at: contribInfo.authorized_at,
+            pool_active_contributors: poolStatus.active_contributors,
+            pool_total_contributors: poolStatus.total_contributors,
+            pool_contributed_gb: poolStatus.total_contributed_gb,
+            pool_status: poolStatus.pool_status
+          }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, message: '系统异常' }));
+        }
+      });
+      return;
+    }
+
     // ═══ CORS预检 (OPTIONS) 支持 ═══
     if (req.method === 'OPTIONS' && (
       pathname === '/bandwidth-send-code' ||
       pathname === '/bandwidth-verify-code' ||
-      pathname === '/bandwidth-pool-status'
+      pathname === '/bandwidth-pool-status' ||
+      pathname === '/bandwidth-user-status'
     )) {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
