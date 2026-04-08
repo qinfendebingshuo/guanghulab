@@ -92,8 +92,15 @@ function isCorpusDirectory(key) {
  * 从已处理列表中判断某文件是否已处理
  */
 function isProcessed(rawKey, processedFiles) {
-  // 从rawKey提取基础文件名
-  const baseName = rawKey.replace(/\.[^/.]+$/, '').split('/').pop();
+  // 从rawKey提取基础文件名（处理多重扩展名如.tar.gz）
+  let baseName = rawKey.split('/').pop();
+  // 移除所有已知的语料文件扩展名
+  for (const ext of ['.tar.gz', '.json.gz', '.tgz', '.zip', '.gz', '.jsonl', '.json', '.md', '.txt', '.csv']) {
+    if (baseName.toLowerCase().endsWith(ext)) {
+      baseName = baseName.slice(0, -ext.length);
+      break;
+    }
+  }
   return processedFiles.some(f => f.key.includes(baseName));
 }
 
@@ -172,8 +179,8 @@ async function cmdScan(bucket) {
             }
           }
         }
-      } catch {
-        console.log(`     └── ${dir.key} 扫描失败`);
+      } catch (err) {
+        console.log(`     └── ${dir.key} 扫描失败: ${err.message}`);
       }
     }
   }
@@ -276,7 +283,9 @@ async function cmdTrain(bucket, personaId) {
   try {
     const existing = await cos.list(bucketName, `training-results/${persona}/`, 100);
     existingResults = existing.files.filter(f => f.key.endsWith('.json'));
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.log(`⚠️ 无法读取已有训练结果: ${err.message}`);
+  }
 
   // 启动训练会话
   console.log(`\n🧠 启动训练会话 · 人格体: ${persona}`);
