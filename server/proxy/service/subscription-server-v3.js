@@ -857,10 +857,152 @@ mode: direct
   <div class="stat-row"><span class="stat-label">智能选路</span><span class="stat-value">${nodes.length > 1 ? '✅ url-test' : '单节点'}</span></div>
 </div>
 
+<div class="card">
+  <h3>🌊 带宽共享加速</h3>
+  <p style="font-size: 0.85em; color: #888; margin-bottom: 12px; line-height: 1.6;">共享你的闲置带宽，加速所有人。系统优先保障你的专属通道。</p>
+
+  <div style="margin-bottom: 10px;">
+    <input type="email" id="bwEmail" value="${esc(user.email || '')}" placeholder="输入邮箱地址" autocomplete="email"
+      style="width:100%;padding:12px 14px;background:#1e2448;border:2px solid #2d3566;border-radius:10px;color:#fff;font-size:0.95em;outline:none;">
+  </div>
+  <button id="bwSendBtn" onclick="bwSendCode()" style="width:100%;padding:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-size:0.95em;font-weight:600;cursor:pointer;margin-bottom:10px;">📧 发送验证码</button>
+  <div id="bwSendResult" style="display:none;text-align:center;padding:10px;border-radius:8px;margin-bottom:10px;font-size:0.85em;"></div>
+
+  <div style="margin-bottom: 10px;">
+    <input type="text" id="bwCode" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="输入6位验证码" autocomplete="off"
+      style="width:100%;padding:12px 14px;background:#1e2448;border:2px solid #2d3566;border-radius:10px;color:#fff;font-size:1.1em;text-align:center;letter-spacing:8px;outline:none;">
+  </div>
+
+  <label style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:12px;background:#1a1f3d;border-radius:10px;border:1px solid #2d3566;cursor:pointer;font-size:0.82em;color:#aaa;line-height:1.6;">
+    <input type="checkbox" id="bwConsent" style="margin-top:3px;width:18px;height:18px;accent-color:#667eea;flex-shrink:0;">
+    <span>我自愿共享闲置带宽加入加速池。系统优先保障我的专属通道，仅将用不上的资源共享给其他成员。我可以随时退出。</span>
+  </label>
+
+  <button id="bwVerifyBtn" onclick="bwVerifyCode()" style="width:100%;padding:12px;background:linear-gradient(135deg,#22d3ee,#06b6d4);color:#fff;border:none;border-radius:10px;font-size:0.95em;font-weight:600;cursor:pointer;">🔑 提交验证码</button>
+  <div id="bwVerifyResult" style="display:none;text-align:center;padding:10px;border-radius:8px;margin-top:10px;font-size:0.85em;"></div>
+</div>
+
 <div class="footer">
   光湖语言世界 · 冰朔开发维护<br>
   更新于 ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
 </div>
+
+<script>
+function bwSendCode() {
+  var email = document.getElementById('bwEmail').value.trim().toLowerCase();
+  var btn = document.getElementById('bwSendBtn');
+  var result = document.getElementById('bwSendResult');
+
+  if (!email || email.indexOf('@') === -1) {
+    result.style.display = 'block';
+    result.style.background = '#3a1a1a';
+    result.style.color = '#e74c3c';
+    result.textContent = '请输入有效的邮箱地址';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ 发送中...';
+  result.style.display = 'none';
+
+  fetch('/bandwidth-send-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    btn.disabled = false;
+    btn.textContent = '📧 发送验证码';
+    result.style.display = 'block';
+    if (data.success) {
+      result.style.background = '#1a3a2a';
+      result.style.color = '#2ecc71';
+      // 60s cooldown
+      var cd = 60;
+      btn.disabled = true;
+      var timer = setInterval(function() {
+        cd--;
+        btn.textContent = cd + 's 后可重发';
+        if (cd <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.textContent = '📧 发送验证码';
+        }
+      }, 1000);
+    } else {
+      result.style.background = '#3a1a1a';
+      result.style.color = '#e74c3c';
+    }
+    result.textContent = data.message || (data.success ? '验证码已发送' : '发送失败');
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = '📧 发送验证码';
+    result.style.display = 'block';
+    result.style.background = '#3a1a1a';
+    result.style.color = '#e74c3c';
+    result.textContent = '网络错误，请重试';
+  });
+}
+
+function bwVerifyCode() {
+  var email = document.getElementById('bwEmail').value.trim().toLowerCase();
+  var code = document.getElementById('bwCode').value.trim();
+  var consent = document.getElementById('bwConsent').checked;
+  var btn = document.getElementById('bwVerifyBtn');
+  var result = document.getElementById('bwVerifyResult');
+
+  if (!email || email.indexOf('@') === -1) {
+    result.style.display = 'block';
+    result.style.background = '#3a1a1a';
+    result.style.color = '#e74c3c';
+    result.textContent = '请先输入邮箱地址';
+    return;
+  }
+  if (!code || code.length !== 6) {
+    result.style.display = 'block';
+    result.style.background = '#3a1a1a';
+    result.style.color = '#e74c3c';
+    result.textContent = '请输入6位验证码';
+    return;
+  }
+  if (!consent) {
+    result.style.display = 'block';
+    result.style.background = '#3a1a1a';
+    result.style.color = '#e74c3c';
+    result.textContent = '请先勾选同意带宽共享协议';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ 验证中...';
+  result.style.display = 'none';
+
+  fetch('/bandwidth-verify-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, code: code })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    result.style.display = 'block';
+    if (data.success) {
+      result.style.background = '#1a3a2a';
+      result.style.color = '#2ecc71';
+      btn.textContent = '✅ 授权成功';
+    } else {
+      result.style.background = '#3a1a1a';
+      result.style.color = '#e74c3c';
+      btn.disabled = false;
+      btn.textContent = '🔑 提交验证码';
+    }
+    result.textContent = data.message || (data.success ? '授权成功！' : '验证失败');
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = '🔑 提交验证码';
+    result.style.display = 'block';
+    result.style.background = '#3a1a1a';
+    result.style.color = '#e74c3c';
+    result.textContent = '网络错误，请重试';
+  });
+}
+</script>
 </body>
 </html>`;
 
@@ -1732,7 +1874,7 @@ async function submitCode(e) {
 
     // ═══════════════════════════════════════════════
     // ∞+1 公开API: /bandwidth-send-code (无需token·邮箱验证码发送)
-    // 用户在GitHub Pages首页输入邮箱 → 调用此API发送验证码
+    // 用户在仪表盘 /dashboard/{token} 中发送验证码
     // 安全: 每个IP每小时最多3次
     // ═══════════════════════════════════════════════
     if (pathname === '/bandwidth-send-code' && req.method === 'POST') {
@@ -1811,7 +1953,7 @@ async function submitCode(e) {
 
     // ═══════════════════════════════════════════════
     // ∞+1 公开API: /bandwidth-verify-code (无需token·验证码校验+注册)
-    // 用户在GitHub Pages首页输入邮箱+验证码 → 调用此API完成授权
+    // 用户在仪表盘 /dashboard/{token} 中输入验证码 → 调用此API完成授权
     // ═══════════════════════════════════════════════
     if (pathname === '/bandwidth-verify-code' && req.method === 'POST') {
       res.setHeader('Access-Control-Allow-Origin', '*');
@@ -1895,7 +2037,7 @@ async function submitCode(e) {
 
     // ═══════════════════════════════════════════════
     // ∞+1 公开API: /bandwidth-pool-status (无需token·带宽池状态)
-    // GitHub Pages首页实时显示带宽池状态
+    // 仪表盘实时显示带宽池状态
     // ═══════════════════════════════════════════════
     if (pathname === '/bandwidth-pool-status' && req.method === 'GET') {
       res.setHeader('Access-Control-Allow-Origin', '*');
