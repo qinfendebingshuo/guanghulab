@@ -30,6 +30,7 @@ const HEALTH_THRESHOLD_DEGRADED = 70;
 const HEALTH_THRESHOLD_CRITICAL = 30;
 const MAX_HEAL_ATTEMPTS = 3;
 const HEAL_COOLDOWN_MS = 60000; // 1分钟冷却
+const MEMORY_THRESHOLD_BYTES = 200 * 1024 * 1024; // 200MB
 
 class LivingModule {
   /**
@@ -222,7 +223,7 @@ class LivingModule {
 
     // 内存检查
     const mem = process.memoryUsage();
-    if (mem.heapUsed > 200 * 1024 * 1024) { // > 200MB
+    if (mem.heapUsed > MEMORY_THRESHOLD_BYTES) {
       issues.push({
         code: 'HIGH_MEMORY',
         severity: 'warning',

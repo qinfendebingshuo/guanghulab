@@ -315,7 +315,9 @@ const scheduler = new SchedulerModule();
 scheduler.startEngine().catch(err => {
   console.error('[Scheduler] 启动失败:', err.message);
   console.log('[Scheduler] 等待60秒后重试...');
-  setTimeout(() => scheduler.startEngine().catch(() => {}), 60000);
+  setTimeout(() => scheduler.startEngine().catch(err => {
+    console.error('[Scheduler] 重试失败:', err.message);
+  }), 60000);
 });
 
 // 优雅关闭

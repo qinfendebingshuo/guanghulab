@@ -250,7 +250,7 @@ class ModuleRegistry {
   _emit(event, data) {
     const listeners = this._listeners.get(event) || [];
     for (const fn of listeners) {
-      try { fn(data); } catch (err) { /* 忽略 */ }
+      try { fn(data); } catch (err) { console.warn(`[Registry] 事件处理器异常 [${event}]: ${err.message}`); }
     }
   }
 

@@ -248,7 +248,7 @@ class HLDPBus {
         ]
       );
     } catch (err) {
-      // 非关键·忽略
+      console.warn(`[HLDP] 消息持久化失败: ${err.message}`);
     }
   }
 
