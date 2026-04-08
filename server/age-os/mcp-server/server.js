@@ -42,6 +42,9 @@
  *             cosListTaskReports / cosApproveTask / cosSendNotification / cosGetCommLink
  *   权限修复: notionCheckPermissions / notionRepairPermissions / notionListSharedPages
  *             notionGenerateRepairGuide / notionPermissionReport
+ *   微调引擎: finetuneExportDataset / finetuneSubmitJob / finetuneCheckStatus
+ *             finetuneRegisterModel / finetuneListModels / finetuneCallModel
+ *             finetuneCompareModels / finetuneGetCostEstimate
  */
 
 'use strict';
@@ -65,6 +68,7 @@ const trainingAgentOps = require('./tools/training-agent-ops');
 const notionCosBridgeOps = require('./tools/notion-cos-bridge-ops');
 const cosCommOps = require('./tools/cos-comm-ops');
 const notionPermissionOps = require('./tools/notion-permission-ops');
+const finetuneEngineOps = require('./tools/finetune-engine-ops');
 
 // ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
 let notionOps = null;
@@ -199,6 +203,15 @@ const TOOLS = {
   notionListSharedPages:      notionPermissionOps.notionListSharedPages,
   notionGenerateRepairGuide:  notionPermissionOps.notionGenerateRepairGuide,
   notionPermissionReport:     notionPermissionOps.notionPermissionReport,
+  // 模块H · 开源模型微调引擎
+  finetuneExportDataset:      finetuneEngineOps.finetuneExportDataset,
+  finetuneSubmitJob:          finetuneEngineOps.finetuneSubmitJob,
+  finetuneCheckStatus:        finetuneEngineOps.finetuneCheckStatus,
+  finetuneRegisterModel:      finetuneEngineOps.finetuneRegisterModel,
+  finetuneListModels:         finetuneEngineOps.finetuneListModels,
+  finetuneCallModel:          finetuneEngineOps.finetuneCallModel,
+  finetuneCompareModels:      finetuneEngineOps.finetuneCompareModels,
+  finetuneGetCostEstimate:    finetuneEngineOps.finetuneGetCostEstimate,
   // 活模块操作 · S5
   registerModule:     livingModuleOps.registerModule,
   getModule:          livingModuleOps.getModule,
@@ -850,6 +863,48 @@ app.get('/notion/repair-guide', async (req, res) => {
   }
 });
 
+// ─── 微调引擎API（模块H） ───
+
+// 微调模型列表
+app.get('/finetune/:personaId/models', async (req, res) => {
+  try {
+    const result = await finetuneEngineOps.finetuneListModels({
+      persona_id: req.params.personaId
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 微调成本估算
+app.get('/finetune/:personaId/cost-estimate', async (req, res) => {
+  try {
+    const result = await finetuneEngineOps.finetuneGetCostEstimate({
+      persona_id: req.params.personaId,
+      dataset_key: req.query.dataset_key,
+      provider: req.query.provider || 'deepseek'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 微调任务状态
+app.get('/finetune/:personaId/jobs/:jobId', async (req, res) => {
+  try {
+    const result = await finetuneEngineOps.finetuneCheckStatus({
+      persona_id: req.params.personaId,
+      job_id: req.params.jobId,
+      provider: req.query.provider || 'deepseek'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
 // ─── 数据库迁移状态API ───
 
 app.get('/migrations', async (_req, res) => {
@@ -884,6 +939,7 @@ function getCategoryForTool(name) {
        'registerTrainingAgent','updateTrainingAgent','logTrainingRun','getTrainingStatus',
        'saveFile','getFile','listFiles','getFileHistory'].includes(name)) return 'persona';
   if (name.startsWith('training')) return 'training-agent';
+  if (name.startsWith('finetune')) return 'finetune-engine';
   if (['notionCosSyncPage','notionCosReadMirror','notionCosListMirror',
        'notionCosBuildIndex','notionCosWriteWorkorder','notionCosReadWorkorder',
        'notionCosListWorkorders'].includes(name)) return 'notion-cos-bridge';
