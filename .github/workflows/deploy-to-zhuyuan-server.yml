@@ -144,7 +144,7 @@ jobs:
           # 确保目标目录存在
           ssh -i ~/.ssh/zy_key \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
-            "mkdir -p ${TARGET_DIR} /opt/zhuyuan/app /opt/age-os/mcp-server /opt/age-os/logs"
+            "mkdir -p ${TARGET_DIR} /opt/zhuyuan/app /opt/age-os/mcp-server /opt/age-os/agents /opt/age-os/logs"
 
           # 同步后端应用代码
           rsync -avz --delete \
@@ -158,6 +158,12 @@ jobs:
             --exclude='node_modules' \
             server/age-os/mcp-server/ \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/age-os/mcp-server/
+
+          # 同步 AGE OS Agents 代码（活模块 · S5新增）
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/zy_key" \
+            server/age-os/agents/ \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/age-os/agents/
 
           # 同步 AGE OS Schema
           rsync -avz \

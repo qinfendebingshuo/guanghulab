@@ -255,5 +255,14 @@ VALUES
    '["push_review", "pr_review", "security_scan"]'::jsonb),
   ('ZY-MOD-DEPUTY', '铸渊副将', '留言板活体Agent·LLM多模型降级', 'agent', 'zhuyuan', 'alive', 100,
    '{"version": "2.0.0"}'::jsonb,
-   '["message_board", "llm_routing", "auto_response"]'::jsonb)
+   '["message_board", "llm_routing", "auto_response"]'::jsonb),
+  ('ZY-MOD-SY-TEST', '系统自检活模块', '全系统健康检测·DB/COS/表/模块', 'guard', 'zhuyuan', 'alive', 100,
+   '{"version": "2.0.0", "cron": "*/30 * * * *"}'::jsonb,
+   '["db_check", "cos_check", "table_check", "module_check"]'::jsonb),
+  ('ZY-MOD-SY-SCAN', '大脑结构巡检活模块', '大脑认知结构健康巡检', 'guard', 'zhuyuan', 'alive', 100,
+   '{"version": "2.0.0", "cron": "0 */6 * * *"}'::jsonb,
+   '["orphan_scan", "broken_link_scan", "duplicate_scan", "empty_folder_scan"]'::jsonb),
+  ('ZY-MOD-SY-CLASSIFY', '自动分类引擎活模块', '认知节点自动分类·规则引擎', 'agent', 'zhuyuan', 'alive', 100,
+   '{"version": "2.0.0", "cron": "0 */2 * * *"}'::jsonb,
+   '["rule_classify", "keyword_match", "tag_assignment"]'::jsonb)
 ON CONFLICT (module_id) DO NOTHING;
