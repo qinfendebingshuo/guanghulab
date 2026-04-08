@@ -2223,13 +2223,16 @@ async function submitCode(e) {
               } else {
                 const errDetail = result.error || '未知原因';
                 console.error('[bandwidth-send-code] 邮件发送失败:', errDetail);
+                // 对用户隐藏内部配置细节，只显示友好提示
+                const userMsg = errDetail.includes('SMTP') ? '邮件服务维护中' : errDetail;
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ success: false, message: `📧 邮件发送失败(${errDetail})，请稍后重试或联系冰朔获取验证码` }));
+                res.end(JSON.stringify({ success: false, message: `📧 ${userMsg}，请稍后重试或联系冰朔获取验证码` }));
               }
             }).catch((err) => {
               console.error('[bandwidth-send-code] 邮件发送异常:', err.message || err);
+              const userMsg = (err.message || '').includes('SMTP') ? '邮件服务维护中' : (err.message || '发送异常');
               res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-              res.end(JSON.stringify({ success: false, message: `📧 邮件发送异常(${err.message})，请稍后重试或联系冰朔获取验证码` }));
+              res.end(JSON.stringify({ success: false, message: `📧 ${userMsg}，请稍后重试或联系冰朔获取验证码` }));
             });
           } catch {
             // Email module not available - code was still created

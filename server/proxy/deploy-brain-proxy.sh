@@ -186,6 +186,14 @@ EOF
         echo "ZY_SVR_SV_PORT=${ZY_SVR_SV_PORT:-443}" >> "$KEYS_FILE"
     fi
 
+    # 保存SMTP邮件凭据 (带宽共享验证码·邮件通知)
+    if [ -n "${ZY_SMTP_USER:-}" ] && [ -n "${ZY_SMTP_PASS:-}" ]; then
+        echo "" >> "$KEYS_FILE"
+        echo "# SMTP邮件凭据 (带宽共享验证码·邮件通知)" >> "$KEYS_FILE"
+        echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> "$KEYS_FILE"
+        echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> "$KEYS_FILE"
+    fi
+
     chmod 600 "$KEYS_FILE"
 
     echo ""
@@ -196,6 +204,33 @@ EOF
     echo "     ZY_BRAIN_PROXY_REALITY_PUBLIC_KEY"
     echo "     ZY_BRAIN_PROXY_REALITY_SHORT_ID"
     echo "  ═══════════════════════════════════"
+}
+
+# ── 注入SMTP邮件凭据到.env.keys ──────────────
+# 如果环境变量中有SMTP凭据且.env.keys中没有，自动追加
+inject_smtp_credentials() {
+    local KEYS_FILE="$PROXY_DIR/.env.keys"
+    if [ ! -f "$KEYS_FILE" ]; then
+        echo "  ⚠️ .env.keys不存在，跳过SMTP注入"
+        return
+    fi
+    if [ -z "${ZY_SMTP_USER:-}" ] || [ -z "${ZY_SMTP_PASS:-}" ]; then
+        echo "  ℹ️ ZY_SMTP_USER/ZY_SMTP_PASS未提供，跳过SMTP注入"
+        return
+    fi
+    # 如果.env.keys已有SMTP配置，更新之
+    if grep -q "ZY_SMTP_USER" "$KEYS_FILE" 2>/dev/null; then
+        # 移除旧的SMTP行并重新追加
+        sed -i '/^ZY_SMTP_USER=/d' "$KEYS_FILE"
+        sed -i '/^ZY_SMTP_PASS=/d' "$KEYS_FILE"
+        sed -i '/^# SMTP邮件凭据/d' "$KEYS_FILE"
+    fi
+    echo "" >> "$KEYS_FILE"
+    echo "# SMTP邮件凭据 (带宽共享验证码·邮件通知)" >> "$KEYS_FILE"
+    echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> "$KEYS_FILE"
+    echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> "$KEYS_FILE"
+    chmod 600 "$KEYS_FILE"
+    echo "  ✅ SMTP凭据已注入到 .env.keys"
 }
 
 # ── 部署V2服务代码 ────────────────────────────
@@ -216,6 +251,12 @@ deploy_services() {
     cp "$REPO_PROXY_DIR"/service/reverse-boost-agent.js "$PROXY_DIR/service/"
     cp "$REPO_PROXY_DIR"/service/proxy-guardian.js "$PROXY_DIR/service/"
     cp "$REPO_PROXY_DIR"/ecosystem.brain-proxy-v3.config.js "$PROXY_DIR/"
+
+    # 复制∞版本服务文件 (邮件·带宽共享·守护·自动进化)
+    cp "$REPO_PROXY_DIR"/service/email-hub.js "$PROXY_DIR/service/" 2>/dev/null || true
+    cp "$REPO_PROXY_DIR"/service/bandwidth-pool-agent.js "$PROXY_DIR/service/" 2>/dev/null || true
+    cp "$REPO_PROXY_DIR"/service/user-guardian-agent.js "$PROXY_DIR/service/" 2>/dev/null || true
+    cp "$REPO_PROXY_DIR"/service/auto-evolution.js "$PROXY_DIR/service/" 2>/dev/null || true
 
     # 复制V2 Nginx配置参考
     cp "$REPO_PROXY_DIR"/config/nginx-brain-proxy-snippet.conf "$PROXY_DIR/config/" 2>/dev/null || true
@@ -595,6 +636,9 @@ deploy_v3() {
     echo "部署V3生产环境 (V2继续可用)..."
     deploy_services
 
+    # 注入SMTP凭据到.env.keys (如果环境变量中有且.env.keys中没有)
+    inject_smtp_credentials
+
     # 清理 sites-enabled/ 中残留的备份文件（防止 duplicate default_server）
     clean_stale_nginx_backups
 
@@ -770,6 +814,9 @@ switch_v3() {
 deploy_infinity() {
     echo "部署 ∞ 版本 (在V3基础上添加自主进化能力)..."
     deploy_services
+
+    # 注入SMTP凭据到.env.keys (如果环境变量中有且.env.keys中没有)
+    inject_smtp_credentials
 
     # 确保V3进程已在运行
     if ! pm2 list 2>/dev/null | grep -q "zy-proxy-v3-sub"; then

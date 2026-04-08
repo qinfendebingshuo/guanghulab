@@ -109,6 +109,8 @@ jobs:
           ZY_SVR_SV_REALITY_PUBLIC_KEY: ${{ secrets.ZY_SVR_SV_REALITY_PUBLIC_KEY }}
           ZY_SVR_SV_REALITY_SHORT_ID: ${{ secrets.ZY_SVR_SV_REALITY_SHORT_ID }}
           ZY_SVR_SV_PORT: ${{ secrets.ZY_SVR_SV_PORT }}
+          ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
         run: |
           ACTION="${{ github.event.inputs.action }}"
           ssh -i ~/.ssh/id_brain \
@@ -118,6 +120,8 @@ jobs:
              export ZY_SVR_SV_REALITY_PUBLIC_KEY=${ZY_SVR_SV_REALITY_PUBLIC_KEY:-} && \
              export ZY_SVR_SV_REALITY_SHORT_ID=${ZY_SVR_SV_REALITY_SHORT_ID:-} && \
              export ZY_SVR_SV_PORT=${ZY_SVR_SV_PORT:-443} && \
+             export ZY_SMTP_USER='${ZY_SMTP_USER:-}' && \
+             export ZY_SMTP_PASS='${ZY_SMTP_PASS:-}' && \
              cd /opt/zhuyuan-brain/proxy-deploy && \
              bash deploy-brain-proxy.sh ${ACTION}"
 
