@@ -260,6 +260,24 @@ function getPoolStatus() {
 }
 
 /**
+ * 检查指定邮箱是否为活跃带宽贡献者
+ * @param {string} email 用户邮箱
+ * @returns {{ is_contributor: boolean, status: string, authorized_at: string|null }}
+ */
+function isContributor(email) {
+  const data = readContributors();
+  const contributor = data.contributors.find(c => c.email === email);
+  if (!contributor) {
+    return { is_contributor: false, status: 'none', authorized_at: null };
+  }
+  return {
+    is_contributor: true,
+    status: contributor.status,
+    authorized_at: contributor.authorized_at || null
+  };
+}
+
+/**
  * 紧急切断指定用户的带宽共享
  * @param {string} email 用户邮箱
  * @param {string} reason 切断原因
@@ -426,6 +444,7 @@ module.exports = {
   // 贡献者管理
   registerContributor,
   getPoolStatus,
+  isContributor,
   readContributors,
 
   // 安全操作

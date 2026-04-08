@@ -186,6 +186,7 @@ async function sendEmail(to, subject, htmlBody) {
 
     const socket = tls.connect(smtpPort, smtpHost, {}, () => {
       let step = 0;
+      let buffer = '';
       const from = config.smtp_user;
 
       const commands = [
@@ -200,15 +201,52 @@ async function sendEmail(to, subject, htmlBody) {
         `QUIT\r\n`
       ];
 
-      socket.on('data', () => {
-        if (step < commands.length) {
-          socket.write(commands[step]);
-          step++;
-        }
-        if (step >= commands.length && !settled) {
-          settled = true;
-          clearTimeout(timeoutId);
-          resolve(true);
+      // SMTP多行响应正确处理:
+      // 多行响应格式: "250-xxx\r\n" (中间行用减号), 最终行: "250 xxx\r\n" (用空格)
+      // 只有收到最终行(NNN + 空格)时才发送下一条命令
+      socket.on('data', (chunk) => {
+        buffer += chunk.toString();
+
+        // 逐行处理完整的SMTP响应
+        while (buffer.includes('\r\n')) {
+          const lineEnd = buffer.indexOf('\r\n');
+          const line = buffer.substring(0, lineEnd);
+          buffer = buffer.substring(lineEnd + 2);
+
+          // 检查是否为最终响应行 (NNN + 空格 或 NNN 结束)
+          const match = line.match(/^(\d{3})([ -])/);
+          if (!match) continue;
+
+          const statusCode = parseInt(match[1], 10);
+          const isFinal = match[2] === ' '; // 空格=最终行, 减号=还有后续行
+
+          if (!isFinal) continue; // 多行响应中间行，等待最终行
+
+          // 检查错误响应 (4xx/5xx)
+          if (statusCode >= 400) {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timeoutId);
+              try { socket.destroy(); } catch { /* ignore */ }
+              reject(new Error(`SMTP错误(${statusCode}): ${line}`));
+            }
+            return;
+          }
+
+          // 发送下一条命令
+          if (step < commands.length) {
+            socket.write(commands[step]);
+            step++;
+          }
+
+          // 所有命令已发送且收到最终响应
+          if (step >= commands.length && !settled) {
+            settled = true;
+            clearTimeout(timeoutId);
+            try { socket.destroy(); } catch { /* ignore */ }
+            resolve(true);
+            return;
+          }
         }
       });
 

@@ -307,6 +307,20 @@ ${nodeNames}
         : `      - "♻️ 自动选择"\n${nodeNames}`)
     : nodeNames;
 
+  // Claude专线独立代理组: 只包含SV节点 + 备选
+  // 用户可以在VPN软件中手动下拉选择，精准定位Claude专线
+  const claudeProxies = svNode
+    ? `      - "${svNode.name}"\n${nodes.length > 1 ? '      - "♻️ 自动选择"\n' : ''}${nodeNames}`
+    : toolProxies;
+
+  // Claude专线代理组YAML块
+  const claudeGroupBlock = svNode ? `
+  - name: "🇺🇸 Claude专线"
+    type: select
+    proxies:
+${claudeProxies}
+` : '';
+
   return `# 光湖语言世界 · ${user.label} 的独立专线 — 冰朔开发维护
 # 自动生成 · ${new Date().toISOString()}
 # ⚠️ 此配置为 ${user.email} 专属，请勿分享
@@ -419,7 +433,7 @@ proxy-groups:
     type: select
     proxies:
 ${mainProxies}
-${autoSelectBlock}
+${autoSelectBlock}${claudeGroupBlock}
   - name: "🤖 AI服务"
     type: select
     proxies:
@@ -437,10 +451,12 @@ ${toolProxies}
 
 # ── 路由规则 ──────────────────────────────
 rules:
-  # AI服务
+  # Claude专线 (独立代理组·手动选择·精准定位)
+  - DOMAIN-SUFFIX,claude.ai,${svNode ? '🇺🇸 Claude专线' : '🤖 AI服务'}
+  - DOMAIN-SUFFIX,anthropic.com,${svNode ? '🇺🇸 Claude专线' : '🤖 AI服务'}
+
+  # AI服务 (其他AI)
   - DOMAIN-SUFFIX,openai.com,🤖 AI服务
-  - DOMAIN-SUFFIX,anthropic.com,🤖 AI服务
-  - DOMAIN-SUFFIX,claude.ai,🤖 AI服务
   - DOMAIN-SUFFIX,chatgpt.com,🤖 AI服务
   - DOMAIN-SUFFIX,gemini.google.com,🤖 AI服务
   - DOMAIN-SUFFIX,perplexity.ai,🤖 AI服务
@@ -787,6 +803,18 @@ mode: direct
         boostStatus = bs.current?.bbr?.is_bbr ? '✅ BBR加速中' : '⚠️ 未加速';
       } catch { /* ignore */ }
 
+      // 读取用户带宽共享状态
+      let bwContribStatus = '未加入';
+      let bwContribActive = false;
+      try {
+        const bwPool = require('./bandwidth-pool-agent');
+        const contribInfo = bwPool.isContributor(user.email);
+        if (contribInfo.is_contributor) {
+          bwContribActive = contribInfo.status === 'active';
+          bwContribStatus = bwContribActive ? '🚀 加速已生效' : '⚠️ 已暂停';
+        }
+      } catch { /* ignore */ }
+
       // 读取今日流量快照
       let todayGB = '—';
       try {
@@ -853,6 +881,7 @@ mode: direct
   <h3>⚡ 系统状态</h3>
   <div class="stat-row"><span class="stat-label">服务版本</span><span class="stat-value">V3.0</span></div>
   <div class="stat-row"><span class="stat-label">反向加速</span><span class="stat-value">${boostStatus}</span></div>
+  <div class="stat-row"><span class="stat-label">带宽共享</span><span class="stat-value" id="bwAccelStatus">${bwContribStatus}</span></div>
   <div class="stat-row"><span class="stat-label">在线用户</span><span class="stat-value">${poolStatus.users_count}</span></div>
   <div class="stat-row"><span class="stat-label">智能选路</span><span class="stat-value">${nodes.length > 1 ? '✅ url-test' : '单节点'}</span></div>
 </div>
@@ -991,6 +1020,9 @@ function bwVerifyCode() {
       result.style.background = '#1a3a2a';
       result.style.color = '#2ecc71';
       btn.textContent = '✅ 授权成功';
+      // 更新系统状态中的加速状态
+      var accelEl = document.getElementById('bwAccelStatus');
+      if (accelEl) accelEl.textContent = '🚀 加速已生效';
     } else {
       result.style.background = '#3a1a1a';
       result.style.color = '#e74c3c';
@@ -1935,18 +1967,23 @@ async function submitCode(e) {
           // Try to send email
           try {
             const emailHub = require('./email-hub');
-            emailHub.sendBandwidthAuthEmail(email, code).then(() => {
+            emailHub.sendBandwidthAuthEmail(email, code).then((result) => {
+              if (result.sent > 0) {
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: true, message: '验证码已发送到您的邮箱，请查收（15分钟内有效）' }));
+              } else {
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: false, message: '📧 邮件发送失败，请稍后重试或联系冰朔获取验证码' }));
+              }
+            }).catch((err) => {
+              console.error('[bandwidth-send-code] 邮件发送异常:', err.message || err);
               res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-              res.end(JSON.stringify({ success: true, message: '验证码已发送到您的邮箱，请查收（15分钟内有效）' }));
-            }).catch(() => {
-              // Email failed but code was created - still return success with code hint
-              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-              res.end(JSON.stringify({ success: true, message: '验证码已生成，邮件发送中...' }));
+              res.end(JSON.stringify({ success: false, message: '📧 邮件发送失败，请稍后重试或联系冰朔获取验证码' }));
             });
           } catch {
             // Email module not available - code was still created
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-            res.end(JSON.stringify({ success: true, message: '验证码已生成，请联系管理员获取' }));
+            res.end(JSON.stringify({ success: false, message: '邮件服务暂不可用，请联系冰朔获取验证码' }));
           }
         } catch (err) {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
