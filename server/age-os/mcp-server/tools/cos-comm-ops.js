@@ -27,6 +27,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const cos = require('../cos');
 
 // ─── 路径常量 ───
@@ -145,7 +146,7 @@ async function cosDispatchTask(input) {
   if (!title) throw new Error('缺少 title');
 
   const targetBucket = bucket || 'team';
-  const tId = task_id || `TASK-${formatDate()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+  const tId = task_id || `TASK-${formatDate()}-${crypto.randomBytes(4).toString('hex')}`;
 
   // 验证 task_id 安全性
   if (!/^[a-zA-Z0-9_-]+$/.test(tId)) {

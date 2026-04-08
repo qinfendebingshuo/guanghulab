@@ -29,6 +29,9 @@ jobs:
   alert-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
 
     steps:
       - name: 签出代码
@@ -68,14 +71,16 @@ jobs:
                 console.log(JSON.stringify(commLink, null, 2));
 
                 // 输出结果
-                console.log('::set-output name=critical::' + alerts.critical);
-                console.log('::set-output name=total::' + alerts.total);
-                console.log('::set-output name=health::' + commLink.health);
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'critical=' + alerts.critical + '\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'total=' + alerts.total + '\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'health=' + commLink.health + '\n');
               } catch (err) {
                 console.error('扫描失败:', err.message);
-                console.log('::set-output name=critical::0');
-                console.log('::set-output name=total::0');
-                console.log('::set-output name=health::error');
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'critical=0\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'total=0\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'health=error\n');
               }
             })();
           "

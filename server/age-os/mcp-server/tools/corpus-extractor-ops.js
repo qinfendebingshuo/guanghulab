@@ -389,7 +389,7 @@ function transformGPTToTCS(content, sourceKey) {
       if (conversation.mapping) {
         // ChatGPT格式
         for (const [, node] of Object.entries(conversation.mapping)) {
-          if (node.message?.content?.parts) {
+          if (node.message?.content?.parts && Array.isArray(node.message.content.parts)) {
             const text = node.message.content.parts.join('\n');
             if (text.trim()) {
               messages.push({

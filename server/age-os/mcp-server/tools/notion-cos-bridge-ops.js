@@ -28,8 +28,8 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const cos = require('../cos');
-
 // 运行时可选加载 notion-client（不影响核心功能）
 let notionClient = null;
 try {
@@ -40,6 +40,7 @@ try {
 
 // ─── 常量 ───
 const MIRROR_PREFIX = 'notion-mirror/';
+const MIRROR_PREFIX_REGEX = /^notion-mirror\/([^/]+)\//;
 const WORKORDER_PREFIX = 'workorders/';
 
 /**
@@ -158,7 +159,7 @@ async function notionCosListMirror(input) {
   // 提取唯一的page_id
   const pageIds = new Set();
   for (const file of result.files) {
-    const match = file.key.match(new RegExp(`^${MIRROR_PREFIX.replace(/[/]/g, '\\/')}([^/]+)\\/`));
+    const match = file.key.match(MIRROR_PREFIX_REGEX);
     if (match) pageIds.add(match[1]);
   }
 
@@ -202,7 +203,7 @@ async function notionCosBuildIndex(input) {
   // 提取唯一的page_id和元数据
   const pageMap = {};
   for (const file of result.files) {
-    const match = file.key.match(new RegExp(`^${MIRROR_PREFIX.replace(/[/]/g, '\\/')}([^/]+)\\/`));
+    const match = file.key.match(MIRROR_PREFIX_REGEX);
     if (match) {
       const pageId = match[1];
       if (!pageMap[pageId]) pageMap[pageId] = { files: [] };
@@ -277,7 +278,7 @@ async function notionCosWriteWorkorder(input) {
   if (!title) throw new Error('缺少 title');
 
   const targetBucket = bucket || 'team';
-  const woId = workorder_id || `WO-${formatDate()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+  const woId = workorder_id || `WO-${formatDate()}-${crypto.randomBytes(4).toString('hex')}`;
 
   // 验证 workorder_id 安全性
   if (!/^[a-zA-Z0-9_-]+$/.test(woId)) {

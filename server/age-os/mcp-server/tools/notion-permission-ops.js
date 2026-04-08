@@ -234,13 +234,10 @@ async function notionRepairPermissions(input) {
   let repaired = 0;
   let failed = 0;
 
-  // 1. 尝试重新连接（清除缓存的客户端实例）
+  // 1. 尝试重新连接
   if (auto_retry) {
     repairLog.push({ step: '重新初始化Notion客户端', status: 'attempting' });
     try {
-      // 通过重新require来重置客户端
-      delete require.cache[require.resolve('../notion-client')];
-      notionClient = require('../notion-client');
       const check = await notionClient.checkConnection();
       if (check.connected) {
         repairLog.push({ step: '重新连接', status: 'success', user: check.user });

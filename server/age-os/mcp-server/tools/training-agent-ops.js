@@ -27,6 +27,7 @@
 'use strict';
 
 const https = require('https');
+const crypto = require('crypto');
 const cos = require('../cos');
 
 // ─── LLM 配置 ───
@@ -71,6 +72,10 @@ const LLM_CONFIGS = {
 // ─── 模型降级路由 ───
 const MODEL_FALLBACK_CHAIN = ['deepseek-v3', 'qwen-max', 'glm-4-long', 'moonshot-128k'];
 
+// ─── 常量 ───
+const MAX_CONTENT_FOR_ANALYSIS = 3000;
+const MAX_PROMPT_CONTENT = 5000;
+
 /**
  * trainingStartSession — 启动训练会话
  *
@@ -85,7 +90,7 @@ async function trainingStartSession(input) {
   const { persona_id, corpus_bucket, corpus_prefix, target_model, session_name } = input;
   if (!persona_id) throw new Error('缺少 persona_id');
 
-  const sessionId = `train-${persona_id}-${Date.now()}`;
+  const sessionId = `train-${persona_id}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const now = new Date().toISOString();
 
   // 扫描可用语料
@@ -175,8 +180,8 @@ async function trainingProcessCorpus(input) {
   for (const entry of toProcess) {
     // 用LLM分析和分类
     const contentForAnalysis = typeof entry.content === 'string'
-      ? entry.content.substring(0, 3000)
-      : JSON.stringify(entry).substring(0, 3000);
+      ? entry.content.substring(0, MAX_CONTENT_FOR_ANALYSIS)
+      : JSON.stringify(entry).substring(0, MAX_CONTENT_FOR_ANALYSIS);
 
     const classificationPrompt = buildClassificationPrompt(persona_id, corpus.corpus_type, contentForAnalysis);
 
@@ -246,7 +251,7 @@ async function trainingClassifyEntry(input) {
   const prompt = buildClassificationPrompt(
     persona_id,
     corpus_type || 'generic',
-    content.substring(0, 5000)
+    content.substring(0, MAX_PROMPT_CONTENT)
   );
 
   const llmResult = await callLLMWithFallback(prompt, model);
@@ -521,10 +526,10 @@ function callLLM(config, apiKey, prompt) {
               tokens: data.usage || {}
             });
           } catch {
-            reject(new Error(`LLM响应解析失败: ${responseBody.substring(0, 200)}`));
+            reject(new Error(`LLM响应解析失败`));
           }
         } else {
-          reject(new Error(`LLM调用失败 ${res.statusCode}: ${responseBody.substring(0, 200)}`));
+          reject(new Error(`LLM调用失败 ${res.statusCode}`));
         }
       });
     });

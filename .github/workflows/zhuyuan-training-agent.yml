@@ -35,6 +35,8 @@ jobs:
   training:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
       - name: 签出代码
@@ -65,12 +67,14 @@ jobs:
                 console.log(JSON.stringify(status, null, 2));
                 // 输出待处理数量
                 const pending = status.pending || 0;
-                console.log('::set-output name=pending::' + pending);
-                console.log('::set-output name=status::success');
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'pending=' + pending + '\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=success\n');
               } catch (err) {
                 console.error('语料检查失败:', err.message);
-                console.log('::set-output name=status::error');
-                console.log('::set-output name=error::' + err.message);
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'status=error\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'error=' + err.message + '\n');
               }
             })();
           "
