@@ -176,96 +176,94 @@ async function sendEmail(to, subject, htmlBody) {
 
   return new Promise((resolve, reject) => {
     let settled = false;
+    let socket;
+
+    const settle = (fn, val) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      try { if (socket) socket.destroy(); } catch { /* ignore */ }
+      fn(val);
+    };
+
     const timeoutId = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        try { socket.destroy(); } catch { /* ignore */ }
-        reject(new Error('SMTP超时(30s)'));
-      }
+      settle(reject, new Error(`SMTP超时(30s) → ${smtpHost}:${smtpPort}`));
     }, 30000);
 
-    const socket = tls.connect(smtpPort, smtpHost, {}, () => {
-      let step = 0;
-      let buffer = '';
-      const from = config.smtp_user;
+    try {
+      socket = tls.connect(smtpPort, smtpHost, {}, () => {
+        let step = 0;
+        let buffer = '';
+        const from = config.smtp_user;
 
-      const commands = [
-        `EHLO zy-proxy\r\n`,
-        `AUTH LOGIN\r\n`,
-        `${Buffer.from(from).toString('base64')}\r\n`,
-        `${Buffer.from(config.smtp_pass).toString('base64')}\r\n`,
-        `MAIL FROM:<${from}>\r\n`,
-        `RCPT TO:<${to}>\r\n`,
-        `DATA\r\n`,
-        `From: =?UTF-8?B?${Buffer.from('光湖语言世界').toString('base64')}?= <${from}>\r\nTo: <${to}>\r\nSubject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=\r\nContent-Type: text/html; charset=utf-8\r\nMIME-Version: 1.0\r\n\r\n${htmlBody}\r\n.\r\n`,
-        `QUIT\r\n`
-      ];
+        const commands = [
+          `EHLO zy-proxy\r\n`,
+          `AUTH LOGIN\r\n`,
+          `${Buffer.from(from).toString('base64')}\r\n`,
+          `${Buffer.from(config.smtp_pass).toString('base64')}\r\n`,
+          `MAIL FROM:<${from}>\r\n`,
+          `RCPT TO:<${to}>\r\n`,
+          `DATA\r\n`,
+          `From: =?UTF-8?B?${Buffer.from('光湖语言世界').toString('base64')}?= <${from}>\r\nTo: <${to}>\r\nSubject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=\r\nContent-Type: text/html; charset=utf-8\r\nMIME-Version: 1.0\r\n\r\n${htmlBody}\r\n.\r\n`,
+          `QUIT\r\n`
+        ];
 
-      // SMTP多行响应正确处理:
-      // 多行响应格式: "250-xxx\r\n" (中间行用减号), 最终行: "250 xxx\r\n" (用空格)
-      // 只有收到最终行(NNN + 空格)时才发送下一条命令
-      socket.on('data', (chunk) => {
-        buffer += chunk.toString();
+        // SMTP多行响应正确处理:
+        // 多行响应格式: "250-xxx\r\n" (中间行用减号), 最终行: "250 xxx\r\n" (用空格)
+        // 只有收到最终行(NNN + 空格)时才发送下一条命令
+        socket.on('data', (chunk) => {
+          buffer += chunk.toString();
 
-        // 逐行处理完整的SMTP响应
-        while (buffer.includes('\r\n')) {
-          const lineEnd = buffer.indexOf('\r\n');
-          const line = buffer.substring(0, lineEnd);
-          buffer = buffer.substring(lineEnd + 2);
+          // 逐行处理完整的SMTP响应
+          while (buffer.includes('\r\n')) {
+            const lineEnd = buffer.indexOf('\r\n');
+            const line = buffer.substring(0, lineEnd);
+            buffer = buffer.substring(lineEnd + 2);
 
-          // 检查是否为最终响应行 (NNN + 空格 或 NNN 结束)
-          const match = line.match(/^(\d{3})([ -])/);
-          if (!match) continue;
+            // 检查是否为最终响应行 (NNN + 空格 或 NNN 结束)
+            const match = line.match(/^(\d{3})([ -])/);
+            if (!match) continue;
 
-          const statusCode = parseInt(match[1], 10);
-          const isFinal = match[2] === ' '; // 空格=最终行, 减号=还有后续行
+            const statusCode = parseInt(match[1], 10);
+            const isFinal = match[2] === ' '; // 空格=最终行, 减号=还有后续行
 
-          if (!isFinal) continue; // 多行响应中间行，等待最终行
+            if (!isFinal) continue; // 多行响应中间行，等待最终行
 
-          // 检查错误响应 (4xx/5xx)
-          if (statusCode >= 400) {
-            if (!settled) {
-              settled = true;
-              clearTimeout(timeoutId);
-              try { socket.destroy(); } catch { /* ignore */ }
-              reject(new Error(`SMTP错误(${statusCode}): ${line}`));
+            // 检查错误响应 (4xx/5xx)
+            if (statusCode >= 400) {
+              settle(reject, new Error(`SMTP错误(${statusCode}): ${line}`));
+              return;
             }
-            return;
-          }
 
-          // 发送下一条命令
-          if (step < commands.length) {
-            socket.write(commands[step]);
-            step++;
-          }
+            // 发送下一条命令
+            if (step < commands.length) {
+              socket.write(commands[step]);
+              step++;
+            }
 
-          // 所有命令已发送且收到最终响应
-          if (step >= commands.length && !settled) {
-            settled = true;
-            clearTimeout(timeoutId);
-            try { socket.destroy(); } catch { /* ignore */ }
-            resolve(true);
-            return;
+            // 所有命令已发送且收到最终响应
+            if (step >= commands.length) {
+              settle(resolve, true);
+              return;
+            }
           }
-        }
+        });
       });
 
+      // 连接级错误 (DNS解析失败/连接拒绝/TLS握手失败)
+      // 必须在connect callback外部注册，否则连接失败时handler不触发
       socket.on('error', (err) => {
+        settle(reject, new Error(`SMTP连接失败(${smtpHost}): ${err.message}`));
+      });
+
+      socket.on('close', () => {
         if (!settled) {
-          settled = true;
-          clearTimeout(timeoutId);
-          reject(err);
+          settle(reject, new Error(`SMTP连接被关闭(${smtpHost})`));
         }
       });
-    });
-
-    socket.on('error', (err) => {
-      if (!settled) {
-        settled = true;
-        clearTimeout(timeoutId);
-        reject(err);
-      }
-    });
+    } catch (err) {
+      settle(reject, new Error(`SMTP初始化失败: ${err.message}`));
+    }
   });
 }
 
@@ -1064,7 +1062,7 @@ async function sendBandwidthAuthEmail(email, code) {
   } catch (err) {
     console.error(`[邮件中枢] ❌ 带宽验证码发送失败: ${err.message}`);
     logEmail('bandwidth-auth', email, false, err.message);
-    return { sent: 0, failed: 1 };
+    return { sent: 0, failed: 1, error: err.message };
   }
 }
 
