@@ -890,7 +890,8 @@ mode: direct
 <script>
 // 动态计算API基路径: 通过nginx代理时页面在 /api/proxy-v3/dashboard/{token}，
 // 直接访问时在 /dashboard/{token}，需要提取 /dashboard/ 之前的前缀作为API路径基座
-var bwBasePath = window.location.pathname.replace(/\/dashboard\/[a-f0-9]+$/, '');
+var dashIdx = window.location.pathname.indexOf('/dashboard/');
+var bwBasePath = dashIdx >= 0 ? window.location.pathname.substring(0, dashIdx) : '';
 
 function bwSendCode() {
   var email = document.getElementById('bwEmail').value.trim().toLowerCase();
