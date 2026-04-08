@@ -518,6 +518,156 @@ app.get('/hldp/stats', async (_req, res) => {
   }
 });
 
+// ─── 人格体数据库引擎状态API（S15） ───
+
+// 人格体引擎巡检状态
+app.get('/persona-engine/status', async (_req, res) => {
+  try {
+    // 实时统计
+    const [personas, notebooks, memories, training] = await Promise.all([
+      db.query('SELECT status, COUNT(*) as cnt FROM persona_registry GROUP BY status'),
+      db.query(`
+        SELECT p.persona_id, p.name, COUNT(n.page_number) as page_count
+        FROM persona_registry p
+        LEFT JOIN notebook_pages n ON p.persona_id = n.persona_id
+        GROUP BY p.persona_id, p.name
+        ORDER BY p.persona_id
+      `),
+      db.query('SELECT COUNT(*) as total FROM memory_anchors'),
+      db.query('SELECT COUNT(*) as total FROM training_agent_configs WHERE enabled = true')
+    ]);
+
+    const statusMap = {};
+    for (const row of personas.rows) {
+      statusMap[row.status] = parseInt(row.cnt, 10);
+    }
+
+    res.json({
+      engine: 'ZY-MOD-PERSONA-ENGINE',
+      identity: 'S15 · 人格体数据库引擎',
+      version: '1.0.0',
+      personas: statusMap,
+      notebooks: notebooks.rows.map(n => ({
+        persona_id: n.persona_id,
+        name: n.name,
+        pages: parseInt(n.page_count, 10),
+        complete: parseInt(n.page_count, 10) === 5
+      })),
+      memories_total: parseInt(memories.rows[0].total, 10),
+      training_agents_enabled: parseInt(training.rows[0].total, 10),
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 人格体唤醒
+app.post('/personas/:personaId/awaken', async (req, res) => {
+  try {
+    const pid = req.params.personaId;
+    const result = await db.query(
+      `UPDATE persona_registry
+       SET last_awakened = NOW(), total_awakenings = total_awakenings + 1, status = 'active', updated_at = NOW()
+       WHERE persona_id = $1 RETURNING *`,
+      [pid]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: true, message: '人格体未找到' });
+    }
+    res.json({ persona: result.rows[0], message: `${result.rows[0].name} 已唤醒` });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 人格体休眠
+app.post('/personas/:personaId/dormant', async (req, res) => {
+  try {
+    const pid = req.params.personaId;
+    const result = await db.query(
+      `UPDATE persona_registry SET status = 'dormant', updated_at = NOW()
+       WHERE persona_id = $1 RETURNING *`,
+      [pid]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: true, message: '人格体未找到' });
+    }
+    res.json({ persona: result.rows[0], message: `${result.rows[0].name} 已休眠` });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 人格体世界地图
+app.get('/personas/:personaId/world', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM world_places WHERE persona_id = $1 ORDER BY status, place_name',
+      [req.params.personaId]
+    );
+    res.json({ places: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 人格体关系网络
+app.get('/personas/:personaId/relationships', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM persona_relationships WHERE persona_id = $1 ORDER BY trust_level, related_name',
+      [req.params.personaId]
+    );
+    res.json({ relationships: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 人格体时间线
+app.get('/personas/:personaId/timeline', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '30', 10), 100);
+    const result = await db.query(
+      'SELECT * FROM persona_timeline WHERE persona_id = $1 ORDER BY day_number DESC LIMIT $2',
+      [req.params.personaId, limit]
+    );
+    res.json({ timeline: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 人格体文件列表
+app.get('/personas/:personaId/files', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
+    const result = await db.query(
+      `SELECT id, persona_id, file_path, file_type, content_hash, size_bytes, version, source, created_at
+       FROM persona_files WHERE persona_id = $1 AND is_latest = true ORDER BY file_path LIMIT $2`,
+      [req.params.personaId, limit]
+    );
+    res.json({ files: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 数据库迁移状态API ───
+
+app.get('/migrations', async (_req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM schema_migrations ORDER BY filename'
+    );
+    res.json({ migrations: result.rows });
+  } catch (err) {
+    // schema_migrations 表可能不存在
+    res.json({ migrations: [], note: '迁移表尚未创建' });
+  }
+});
+
 // ─── 辅助函数 ───
 
 function getCategoryForTool(name) {

@@ -25,6 +25,7 @@ const db = require('../mcp-server/db');
 const LivingModule = require('./living-module');
 const ModuleRegistry = require('./module-registry');
 const HLDPBus = require('./hldp-bus');
+const PersonaEngine = require('./persona-engine');
 
 const AGENT_DIR = __dirname;
 const activeJobs = new Map();
@@ -50,6 +51,7 @@ class SchedulerModule extends LivingModule {
 
     this.registry = new ModuleRegistry({ db });
     this.bus = new HLDPBus({ db, registry: this.registry });
+    this.personaEngine = new PersonaEngine();
   }
 
   /**
@@ -71,10 +73,20 @@ class SchedulerModule extends LivingModule {
     // 3. 加载定时Agent
     await this._loadCronAgents();
 
-    // 4. 注册 HLDP 消息处理器
+    // 4. 启动人格体数据库引擎 (S15)
+    try {
+      this.registry.register(this.personaEngine);
+      await this.personaEngine.startEngine();
+      console.log('[Scheduler] S15 人格体引擎已启动');
+    } catch (err) {
+      console.warn('[Scheduler] S15 人格体引擎启动跳过:', err.message);
+      console.warn('[Scheduler] 数据库迁移可能尚未执行·等待下次部署');
+    }
+
+    // 5. 注册 HLDP 消息处理器
     this._setupHLDPHandlers();
 
-    // 5. 启动定时清理
+    // 6. 启动定时清理
     this._startCleanupJob();
 
     console.log('[Scheduler] 🟢 调度引擎就绪');

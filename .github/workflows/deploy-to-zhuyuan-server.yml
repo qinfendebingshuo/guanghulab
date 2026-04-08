@@ -242,6 +242,14 @@ jobs:
             /tmp/zhuyuan-sovereign.conf \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf
 
+      - name: 📦 同步迁移脚本
+        run: |
+          # 同步数据库迁移运行器
+          rsync -avz \
+            -e "ssh -i ~/.ssh/zy_key" \
+            server/age-os/scripts/ \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/age-os/scripts/
+
       - name: 📥 安装依赖 & 重启
         env:
           ZHUYUAN_API_KEY: ${{ secrets.ZHUYUAN_API_KEY }}
@@ -297,8 +305,23 @@ ENV_EOF
           echo "ZY_DB_PORT=${ZY_DB_PORT:-5432}" >> /opt/age-os/.env.mcp
           chmod 600 /opt/age-os/.env.mcp
 
+          # ─── 自动执行数据库迁移 ───
+          echo ""
+          echo "═══ 数据库迁移 ═══"
+          cd /opt/age-os
+          # 加载环境变量供迁移脚本使用
+          export ZY_DB_HOST="${ZY_DB_HOST:-127.0.0.1}"
+          export ZY_DB_USER="${ZY_DB_USER:-zy_admin}"
+          export ZY_DB_PASS="${ZY_DB_PASS}"
+          export ZY_DB_NAME="${ZY_DB_NAME:-age_os}"
+          export ZY_DB_PORT="${ZY_DB_PORT:-5432}"
+          node scripts/db-migrate.js || echo "⚠️ 数据库迁移有警告（非致命·应用仍会启动）"
+          echo "═══════════════════"
+          echo ""
+
           # PM2 重启 MCP Server（读取 .env.mcp）
           pm2 delete age-os-mcp 2>/dev/null || true
+          pm2 delete age-os-agents 2>/dev/null || true
           cd /opt/age-os && pm2 start ecosystem.config.js
           pm2 save
 

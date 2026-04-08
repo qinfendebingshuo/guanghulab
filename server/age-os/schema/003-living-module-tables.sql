@@ -264,5 +264,8 @@ VALUES
    '["orphan_scan", "broken_link_scan", "duplicate_scan", "empty_folder_scan"]'::jsonb),
   ('ZY-MOD-SY-CLASSIFY', '自动分类引擎活模块', '认知节点自动分类·规则引擎', 'agent', 'zhuyuan', 'alive', 100,
    '{"version": "2.0.0", "cron": "0 */2 * * *"}'::jsonb,
-   '["rule_classify", "keyword_match", "tag_assignment"]'::jsonb)
+   '["rule_classify", "keyword_match", "tag_assignment"]'::jsonb),
+  ('ZY-MOD-PERSONA-ENGINE', '人格体数据库引擎', 'S15·人格体生命周期管理·笔记本维护·记忆巡检', 'core', 'zhuyuan', 'alive', 100,
+   '{"version": "1.0.0", "scan_interval": "6h"}'::jsonb,
+   '["persona_lifecycle", "notebook_integrity", "memory_scan", "training_coordination"]'::jsonb)
 ON CONFLICT (module_id) DO NOTHING;
