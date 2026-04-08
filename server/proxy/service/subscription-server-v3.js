@@ -891,7 +891,7 @@ mode: direct
   <div class="stat-row"><span class="stat-label">加速池人数</span><span class="stat-value" id="poolContributors">${bwPoolInfo.active_contributors}人在线 / ${bwPoolInfo.total_contributors}人</span></div>
   ${bwContribAuthTime ? '<div class="stat-row"><span class="stat-label">授权时间</span><span class="stat-value" style="font-size:0.8em;color:#aaa;">' + new Date(bwContribAuthTime).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + '</span></div>' : ''}
   <div style="margin-top: 10px; text-align: center;">
-    <button class="refresh-btn" onclick="refreshAccelStatus()">🔄 刷新加速状态</button>
+    <button class="refresh-btn" onclick="refreshAccelStatus(event)">🔄 刷新加速状态</button>
   </div>
 </div>
 
@@ -970,8 +970,8 @@ var dashIdx = window.location.pathname.indexOf('/dashboard/');
 var bwBasePath = dashIdx >= 0 ? window.location.pathname.substring(0, dashIdx) : '';
 
 // 刷新加速状态 (从带宽池API获取最新数据)
-function refreshAccelStatus() {
-  var btn = event.target;
+function refreshAccelStatus(e) {
+  var btn = e.target;
   btn.textContent = '⏳ 刷新中...';
   btn.disabled = true;
 
@@ -1091,9 +1091,14 @@ function bwVerifyCode() {
       document.getElementById('speedBoostStatus').textContent = '✅ 已开启';
       var badge = document.getElementById('accelBadge');
       if (badge) { badge.textContent = '加速中'; badge.className = 'accel-badge accel-on'; }
-      result.textContent = (data.message || '授权成功！') + ' 刷新页面查看完整状态';
+      result.textContent = (data.message || '授权成功！') + ' 3秒后自动刷新...';
       // 3秒后自动刷新页面，加载最新服务器状态
-      setTimeout(function() { window.location.reload(); }, 3000);
+      var cd2 = 3;
+      var reloadTimer = setInterval(function() {
+        cd2--;
+        result.textContent = '✅ 授权成功！' + cd2 + '秒后自动刷新...';
+        if (cd2 <= 0) { clearInterval(reloadTimer); window.location.reload(); }
+      }, 1000);
     } else {
       result.style.background = '#3a1a1a';
       result.style.color = '#e74c3c';
