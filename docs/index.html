@@ -718,34 +718,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .app-card:hover .app-card-arrow{opacity:1;transform:translateX(4px)}
 
 /* ═══ PAGE: Bandwidth Sharing (带宽共享) ═══ */
-#pg-bandwidth .bw-hero{text-align:center;padding:28px 0 20px}
-#pg-bandwidth .bw-hero h2{font-size:1.4em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-#pg-bandwidth .bw-hero p{color:var(--dim);font-size:.9em;margin-top:6px}
-#pg-bandwidth .bw-stats{display:flex;justify-content:space-around;margin:16px 0;gap:12px}
-#pg-bandwidth .bw-stat{text-align:center;flex:1}
-#pg-bandwidth .bw-stat .num{font-size:1.5em;font-weight:700;color:var(--accent);font-family:var(--m)}
-#pg-bandwidth .bw-stat .label{font-size:.75em;color:var(--dim);margin-top:4px}
-#pg-bandwidth .bw-card{background:var(--bg1);border-radius:var(--r);padding:20px;margin:12px 0;border:1px solid var(--border)}
-#pg-bandwidth .bw-card h3{font-size:1em;color:var(--accent);margin-bottom:14px}
-#pg-bandwidth .bw-input{width:100%;padding:12px 14px;background:var(--bg2);border:2px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:1em;outline:none;transition:border-color .3s;font-family:var(--f)}
-#pg-bandwidth .bw-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(138,180,248,.15)}
-#pg-bandwidth .bw-input::placeholder{color:var(--dim);font-size:.85em}
-#pg-bandwidth .bw-code-input{text-align:center;letter-spacing:8px;font-size:1.3em;font-family:var(--m)}
-#pg-bandwidth .bw-code-input::placeholder{letter-spacing:0;font-size:.6em}
-#pg-bandwidth .bw-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--rs);font-size:1em;font-weight:600;cursor:pointer;transition:opacity .3s,transform .15s;margin-top:8px;font-family:var(--f)}
-#pg-bandwidth .bw-btn:hover{opacity:.9}
-#pg-bandwidth .bw-btn:active{transform:scale(.98)}
-#pg-bandwidth .bw-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-#pg-bandwidth .bw-btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}
-#pg-bandwidth .bw-btn-outline:hover{background:rgba(138,180,248,.1)}
-#pg-bandwidth .bw-result{text-align:center;padding:14px;border-radius:var(--rs);margin-top:12px;display:none;font-size:.9em;line-height:1.6}
-#pg-bandwidth .bw-result.ok{display:block;background:rgba(52,211,153,.1);color:var(--ok);border:1px solid rgba(52,211,153,.2)}
-#pg-bandwidth .bw-result.err{display:block;background:rgba(248,113,113,.1);color:var(--err);border:1px solid rgba(248,113,113,.2)}
-#pg-bandwidth .bw-info{background:var(--bg2);border-radius:var(--rs);padding:14px 16px;margin:10px 0;font-size:.85em;line-height:1.8;color:var(--dim);border-left:3px solid var(--accent)}
-#pg-bandwidth .bw-consent{display:flex;align-items:flex-start;gap:10px;margin:14px 0;padding:12px 14px;background:var(--bg2);border-radius:var(--rs);border:1px solid var(--border);cursor:pointer;transition:border-color .3s}
-#pg-bandwidth .bw-consent:hover{border-color:var(--accent)}
-#pg-bandwidth .bw-consent input{margin-top:3px;width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-#pg-bandwidth .bw-consent span{color:var(--dim);font-size:.85em;line-height:1.7}
+
 </style>
 </head>
 <body>
@@ -951,9 +924,9 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <div class="sys-section">
       <div class="sys-section-title">⚡ 快速入口</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="sys-team-card" style="cursor:pointer" onclick="go('bandwidth')">
+        <div class="sys-team-card">
           <div class="sys-team-av" style="background:linear-gradient(135deg,#22d3ee,#06b6d4)">🌊</div>
-          <div><div class="sys-team-nm">带宽共享加速池</div><div class="sys-team-role">共享你的带宽 · 加速所有人</div></div>
+          <div><div class="sys-team-nm">带宽共享加速池</div><div class="sys-team-role">请在用户仪表盘中操作</div></div>
         </div>
         <a href="https://github.com/qinfendebingshuo/guanghulab/issues/new?labels=deputy-message-board&title=给铸渊副将留言" style="text-decoration:none;color:inherit" target="_blank">
           <div class="sys-team-card" style="cursor:pointer">
@@ -1202,61 +1175,8 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 </div>
 
 <!-- ═══════════════════════════════════════ -->
-<!-- PAGE: Bandwidth Sharing (带宽共享)    -->
+<!-- PAGE: Bandwidth (已迁移到用户仪表盘)  -->
 <!-- ═══════════════════════════════════════ -->
-<div class="page" id="pg-bandwidth" data-state="hidden">
-  <div class="bar">
-    <button class="btn" onclick="go('home')">← 首页</button>
-    <div class="bar-title">🌊 带宽共享</div>
-    <div class="bar-right"><span class="dot"></span></div>
-  </div>
-  <div class="content">
-    <div class="bw-hero">
-      <h2>🌊 带宽共享加速池</h2>
-      <p>共享你的带宽 · 加速所有人</p>
-    </div>
-
-    <div class="bw-stats">
-      <div class="bw-stat"><div class="num" id="bwContributors">—</div><div class="label">贡献者</div></div>
-      <div class="bw-stat"><div class="num" id="bwActive">—</div><div class="label">活跃</div></div>
-      <div class="bw-stat"><div class="num" id="bwContributed">—</div><div class="label">总贡献(GB)</div></div>
-    </div>
-
-    <div class="bw-card">
-      <h3>📧 第一步 · 发送验证码</h3>
-      <div style="margin-bottom:10px">
-        <input type="email" class="bw-input" id="bwEmail" placeholder="输入你的QQ邮箱" autocomplete="email">
-      </div>
-      <button class="bw-btn" id="bwSendCode" onclick="bwSendCode()">发送验证码</button>
-      <div class="bw-result" id="bwSendResult"></div>
-    </div>
-
-    <div class="bw-card">
-      <h3>🔑 第二步 · 输入验证码</h3>
-      <div style="margin-bottom:10px">
-        <input type="text" class="bw-input bw-code-input" id="bwCode" maxlength="6" placeholder="6位验证码" inputmode="numeric" pattern="[0-9]*">
-      </div>
-      <div class="bw-consent" onclick="var cb=document.getElementById('bwConsent');cb.checked=!cb.checked">
-        <input type="checkbox" id="bwConsent">
-        <span>我自愿共享多余带宽加入加速池。系统优先保障我的专属通道，仅将我用不上的资源共享给其他成员。我可以随时退出。</span>
-      </div>
-      <button class="bw-btn" id="bwVerify" onclick="bwVerifyCode()">提交验证码</button>
-      <div class="bw-result" id="bwVerifyResult"></div>
-    </div>
-
-    <div class="bw-info">
-      <strong style="color:var(--text);display:block;margin-bottom:6px">💡 带宽共享说明</strong>
-      ✅ 提供了验证码的用户 → 优先保障你的专属通道<br>
-      ✅ 你用不上的资源才会被共享 → 不抢你的带宽<br>
-      ✅ 随时可退出 → 你有完全的控制权<br>
-      ⚠️ 验证码15分钟内有效 · 一次性使用
-    </div>
-
-    <div style="text-align:center;padding:20px 0;color:var(--dim);font-size:.75em">
-      <p>© 2026 光湖语言世界 · 国作登字-2026-A-00037559</p>
-    </div>
-  </div>
-</div>
 
 <!-- ═══════════════════════════════════════ -->
 <!-- PAGE: Workspace (个人码字工作台)       -->
@@ -3576,128 +3496,9 @@ offline = function(msg){
 })();
 
 /* ════════════════════════════════════════
-   BANDWIDTH SHARING AGENT (带宽共享验证)
-   GitHub Pages 前端 → 后端API桥接
+   BANDWIDTH SHARING (已迁移到用户仪表盘)
+   验证码功能现在在 /dashboard/{token} 中
    ════════════════════════════════════════ */
-var BW_API_BASE = 'https://guanghulab.online/api/proxy-v3';
-
-function bwSendCode(){
-  var email = document.getElementById('bwEmail').value.trim().toLowerCase();
-  var btn = document.getElementById('bwSendCode');
-  var result = document.getElementById('bwSendResult');
-
-  if(!email || email.indexOf('@') === -1){
-    result.className = 'bw-result err';
-    result.textContent = '请输入有效的邮箱地址';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = '发送中...';
-  result.className = 'bw-result';
-  result.style.display = 'none';
-
-  fetch(BW_API_BASE + '/bandwidth-send-code', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email: email})
-  }).then(function(r){ return r.json(); }).then(function(data){
-    btn.disabled = false;
-    btn.textContent = '发送验证码';
-    result.className = 'bw-result ' + (data.success ? 'ok' : 'err');
-    result.textContent = data.message || (data.success ? '验证码已发送' : '发送失败');
-
-    if(data.success){
-      // Cooldown 60s
-      var cd = 60;
-      btn.disabled = true;
-      var timer = setInterval(function(){
-        cd--;
-        btn.textContent = cd + 's 后可重发';
-        if(cd <= 0){
-          clearInterval(timer);
-          btn.disabled = false;
-          btn.textContent = '发送验证码';
-        }
-      }, 1000);
-    }
-  }).catch(function(err){
-    btn.disabled = false;
-    btn.textContent = '发送验证码';
-    result.className = 'bw-result err';
-    result.textContent = '网络错误，请检查网络后重试';
-  });
-}
-
-function bwVerifyCode(){
-  var email = document.getElementById('bwEmail').value.trim().toLowerCase();
-  var code = document.getElementById('bwCode').value.trim();
-  var consent = document.getElementById('bwConsent').checked;
-  var btn = document.getElementById('bwVerify');
-  var result = document.getElementById('bwVerifyResult');
-
-  if(!email || email.indexOf('@') === -1){
-    result.className = 'bw-result err';
-    result.textContent = '请先在上方输入邮箱';
-    return;
-  }
-  if(!code || code.length !== 6){
-    result.className = 'bw-result err';
-    result.textContent = '请输入6位验证码';
-    return;
-  }
-  if(!consent){
-    result.className = 'bw-result err';
-    result.textContent = '请先勾选同意带宽共享协议';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = '验证中...';
-  result.className = 'bw-result';
-  result.style.display = 'none';
-
-  fetch(BW_API_BASE + '/bandwidth-verify-code', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email: email, code: code})
-  }).then(function(r){ return r.json(); }).then(function(data){
-    btn.disabled = false;
-    btn.textContent = '提交验证码';
-    result.className = 'bw-result ' + (data.success ? 'ok' : 'err');
-    result.textContent = data.message || (data.success ? '授权成功！' : '验证失败');
-    if(data.success) bwLoadPoolStatus();
-  }).catch(function(){
-    btn.disabled = false;
-    btn.textContent = '提交验证码';
-    result.className = 'bw-result err';
-    result.textContent = '网络错误，请检查网络后重试';
-  });
-}
-
-function bwLoadPoolStatus(){
-  fetch(BW_API_BASE + '/bandwidth-pool-status').then(function(r){
-    return r.json();
-  }).then(function(data){
-    var el1 = document.getElementById('bwContributors');
-    var el2 = document.getElementById('bwActive');
-    var el3 = document.getElementById('bwContributed');
-    if(el1) el1.textContent = data.total_contributors || 0;
-    if(el2) el2.textContent = data.active_contributors || 0;
-    if(el3) el3.textContent = data.total_contributed_gb || 0;
-  }).catch(function(){
-    /* Pool status unavailable - keep defaults */
-  });
-}
-
-// Auto-load pool status when bandwidth page is shown
-var _origGo = window.go;
-if(typeof _origGo === 'function'){
-  window.go = function(target){
-    _origGo(target);
-    if(target === 'bandwidth') bwLoadPoolStatus();
-  };
-}
 
 })();
 </script>
