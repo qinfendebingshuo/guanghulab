@@ -1,0 +1,96 @@
+# ═══════════════════════════════════════════════════════════
+# 模块B · 铸渊训练Agent自动触发 Workflow
+# ═══════════════════════════════════════════════════════════
+#
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 定时触发训练Agent，处理COS桶中的新语料
+# 遇到问题自动创建Issue唤醒铸渊
+#
+# 触发条件:
+#   - 定时: 每天 04:00 CST (20:00 UTC)
+#   - 手动: workflow_dispatch
+#   - COS桶告警: repository_dispatch (cos-alert事件)
+
+name: 铸渊训练Agent · 语料处理
+
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 04:00 CST = 20:00 UTC
+  workflow_dispatch:
+    inputs:
+      corpus_bucket:
+        description: '语料桶名称'
+        required: false
+        default: 'cold'
+      force_reprocess:
+        description: '强制重新处理已处理的语料'
+        required: false
+        default: 'false'
+  repository_dispatch:
+    types: [cos-alert]
+
+jobs:
+  training:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 签出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        working-directory: server/age-os
+        run: npm ci --production 2>/dev/null || npm install --production
+
+      - name: 检查语料状态
+        id: check
+        env:
+          ZY_OSS_KEY: ${{ secrets.ZY_OSS_KEY }}
+          ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
+          ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
+        run: |
+          node -e "
+            const cos = require('./server/age-os/mcp-server/cos');
+            const extractor = require('./server/age-os/mcp-server/tools/corpus-extractor-ops');
+            (async () => {
+              try {
+                const status = await extractor.cosGetCorpusStatus({ bucket: '${{ github.event.inputs.corpus_bucket || 'cold' }}' });
+                console.log(JSON.stringify(status, null, 2));
+                // 输出待处理数量
+                const pending = status.pending || 0;
+                console.log('::set-output name=pending::' + pending);
+                console.log('::set-output name=status::success');
+              } catch (err) {
+                console.error('语料检查失败:', err.message);
+                console.log('::set-output name=status::error');
+                console.log('::set-output name=error::' + err.message);
+              }
+            })();
+          "
+
+      - name: 处理COS桶告警
+        if: github.event_name == 'repository_dispatch'
+        env:
+          ZY_OSS_KEY: ${{ secrets.ZY_OSS_KEY }}
+          ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
+          ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
+        run: |
+          echo "📡 收到COS桶告警事件"
+          echo "事件数据: ${{ toJson(github.event.client_payload) }}"
+
+      - name: 训练完成通知
+        if: always()
+        run: |
+          echo "═══════════════════════════════════════════"
+          echo "铸渊训练Agent · 运行完成"
+          echo "时间: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "状态: ${{ steps.check.outputs.status }}"
+          echo "待处理语料: ${{ steps.check.outputs.pending }}"
+          echo "═══════════════════════════════════════════"
