@@ -16,20 +16,35 @@
  * 免鉴权端点: /health（监控探针）
  *
  * 工具清单:
- *   节点:   createNode / updateNode / deleteNode / queryNodes / getNode
- *   关系:   linkNodes / unlinkNodes / getRelations
- *   结构:   buildPath / scanStructure / classify
- *   COS:    cosWrite / cosRead / cosDelete / cosList / cosArchive
- *   人格体: registerPersona / getPersona / updatePersona / listPersonas
- *           getNotebook / updateNotebookPage / addMemoryAnchor / queryMemoryAnchors
- *           addWorldPlace / getWorldMap / updateWorldPlace
- *           addTimelineEntry / getTimeline / addRelationship / getRelationships
- *           registerTrainingAgent / updateTrainingAgent / logTrainingRun / getTrainingStatus
- *           saveFile / getFile / listFiles / getFileHistory
- *   Notion: notionQuery / notionReadPage / notionWritePage / notionUpdatePage / notionWriteSyslog
- *   GitHub: githubReadFile / githubListDir / githubWriteFile / githubGetCommits / githubGetIssues / githubTriggerDeploy
- *   活模块: registerModule / getModule / listModules / moduleHeartbeat / diagnoseModule
- *           getModuleAlerts / getModuleLearnings / sendHLDP / getHLDPStats
+ *   节点:     createNode / updateNode / deleteNode / queryNodes / getNode
+ *   关系:     linkNodes / unlinkNodes / getRelations
+ *   结构:     buildPath / scanStructure / classify
+ *   COS:      cosWrite / cosRead / cosDelete / cosList / cosArchive
+ *   人格体:   registerPersona / getPersona / updatePersona / listPersonas
+ *             getNotebook / updateNotebookPage / addMemoryAnchor / queryMemoryAnchors
+ *             addWorldPlace / getWorldMap / updateWorldPlace
+ *             addTimelineEntry / getTimeline / addRelationship / getRelationships
+ *             registerTrainingAgent / updateTrainingAgent / logTrainingRun / getTrainingStatus
+ *             saveFile / getFile / listFiles / getFileHistory
+ *   Notion:   notionQuery / notionReadPage / notionWritePage / notionUpdatePage / notionWriteSyslog
+ *   GitHub:   githubReadFile / githubListDir / githubWriteFile / githubGetCommits / githubGetIssues / githubTriggerDeploy
+ *   活模块:   registerModule / getModule / listModules / moduleHeartbeat / diagnoseModule
+ *             getModuleAlerts / getModuleLearnings / sendHLDP / getHLDPStats
+ *   语料:     cosListCorpus / cosExtractCorpus / cosParseGitRepoArchive / cosParseNotionExport
+ *             cosParseGPTCorpus / cosGetCorpusStatus
+ *   COS数据库: cosDbInit / cosDbGetIndex / cosDbUpdateIndex / cosDbWriteEntry
+ *             cosDbReadEntry / cosDbListEntries / cosDbDeleteEntry / cosDbGetStats
+ *   训练:     trainingStartSession / trainingProcessCorpus / trainingClassifyEntry
+ *             trainingWriteToMemory / trainingGetProgress / trainingRaiseAlert
+ *   Notion桥接: notionCosSyncPage / notionCosReadMirror / notionCosListMirror
+ *             notionCosBuildIndex / notionCosWriteWorkorder / notionCosReadWorkorder / notionCosListWorkorders
+ *   三方通信: cosAlertScan / cosAlertResolve / cosDispatchTask / cosReadTaskReport
+ *             cosListTaskReports / cosApproveTask / cosSendNotification / cosGetCommLink
+ *   权限修复: notionCheckPermissions / notionRepairPermissions / notionListSharedPages
+ *             notionGenerateRepairGuide / notionPermissionReport
+ *   微调引擎: finetuneExportDataset / finetuneSubmitJob / finetuneCheckStatus
+ *             finetuneRegisterModel / finetuneListModels / finetuneCallModel
+ *             finetuneCompareModels / finetuneGetCostEstimate
  */
 
 'use strict';
@@ -46,6 +61,14 @@ const structureOps = require('./tools/structure-ops');
 const cosOps = require('./tools/cos-ops');
 const personaOps = require('./tools/persona-ops');
 const livingModuleOps = require('./tools/living-module-ops');
+// 新增模块 A-G
+const corpusExtractorOps = require('./tools/corpus-extractor-ops');
+const cosPersonaDbOps = require('./tools/cos-persona-db-ops');
+const trainingAgentOps = require('./tools/training-agent-ops');
+const notionCosBridgeOps = require('./tools/notion-cos-bridge-ops');
+const cosCommOps = require('./tools/cos-comm-ops');
+const notionPermissionOps = require('./tools/notion-permission-ops');
+const finetuneEngineOps = require('./tools/finetune-engine-ops');
 
 // ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
 let notionOps = null;
@@ -134,6 +157,61 @@ const TOOLS = {
     githubGetIssues:     githubOps.githubGetIssues,
     githubTriggerDeploy: githubOps.githubTriggerDeploy
   } : {}),
+  // 模块A · COS语料读取引擎
+  cosListCorpus:          corpusExtractorOps.cosListCorpus,
+  cosExtractCorpus:       corpusExtractorOps.cosExtractCorpus,
+  cosParseGitRepoArchive: corpusExtractorOps.cosParseGitRepoArchive,
+  cosParseNotionExport:   corpusExtractorOps.cosParseNotionExport,
+  cosParseGPTCorpus:      corpusExtractorOps.cosParseGPTCorpus,
+  cosGetCorpusStatus:     corpusExtractorOps.cosGetCorpusStatus,
+  // 模块G · COS桶内自研数据库
+  cosDbInit:              cosPersonaDbOps.cosDbInit,
+  cosDbGetIndex:          cosPersonaDbOps.cosDbGetIndex,
+  cosDbUpdateIndex:       cosPersonaDbOps.cosDbUpdateIndex,
+  cosDbWriteEntry:        cosPersonaDbOps.cosDbWriteEntry,
+  cosDbReadEntry:         cosPersonaDbOps.cosDbReadEntry,
+  cosDbListEntries:       cosPersonaDbOps.cosDbListEntries,
+  cosDbDeleteEntry:       cosPersonaDbOps.cosDbDeleteEntry,
+  cosDbGetStats:          cosPersonaDbOps.cosDbGetStats,
+  // 模块B · 铸渊思维逻辑训练Agent
+  trainingStartSession:    trainingAgentOps.trainingStartSession,
+  trainingProcessCorpus:   trainingAgentOps.trainingProcessCorpus,
+  trainingClassifyEntry:   trainingAgentOps.trainingClassifyEntry,
+  trainingWriteToMemory:   trainingAgentOps.trainingWriteToMemory,
+  trainingGetProgress:     trainingAgentOps.trainingGetProgress,
+  trainingRaiseAlert:      trainingAgentOps.trainingRaiseAlert,
+  // 模块C · Notion ↔ COS桥接
+  notionCosSyncPage:       notionCosBridgeOps.notionCosSyncPage,
+  notionCosReadMirror:     notionCosBridgeOps.notionCosReadMirror,
+  notionCosListMirror:     notionCosBridgeOps.notionCosListMirror,
+  notionCosBuildIndex:     notionCosBridgeOps.notionCosBuildIndex,
+  notionCosWriteWorkorder: notionCosBridgeOps.notionCosWriteWorkorder,
+  notionCosReadWorkorder:  notionCosBridgeOps.notionCosReadWorkorder,
+  notionCosListWorkorders: notionCosBridgeOps.notionCosListWorkorders,
+  // 模块D+E · COS桶示警 + 三方对接
+  cosAlertScan:           cosCommOps.cosAlertScan,
+  cosAlertResolve:        cosCommOps.cosAlertResolve,
+  cosDispatchTask:        cosCommOps.cosDispatchTask,
+  cosReadTaskReport:      cosCommOps.cosReadTaskReport,
+  cosListTaskReports:     cosCommOps.cosListTaskReports,
+  cosApproveTask:         cosCommOps.cosApproveTask,
+  cosSendNotification:    cosCommOps.cosSendNotification,
+  cosGetCommLink:         cosCommOps.cosGetCommLink,
+  // 模块F · Notion权限自动修复
+  notionCheckPermissions:     notionPermissionOps.notionCheckPermissions,
+  notionRepairPermissions:    notionPermissionOps.notionRepairPermissions,
+  notionListSharedPages:      notionPermissionOps.notionListSharedPages,
+  notionGenerateRepairGuide:  notionPermissionOps.notionGenerateRepairGuide,
+  notionPermissionReport:     notionPermissionOps.notionPermissionReport,
+  // 模块H · 开源模型微调引擎
+  finetuneExportDataset:      finetuneEngineOps.finetuneExportDataset,
+  finetuneSubmitJob:          finetuneEngineOps.finetuneSubmitJob,
+  finetuneCheckStatus:        finetuneEngineOps.finetuneCheckStatus,
+  finetuneRegisterModel:      finetuneEngineOps.finetuneRegisterModel,
+  finetuneListModels:         finetuneEngineOps.finetuneListModels,
+  finetuneCallModel:          finetuneEngineOps.finetuneCallModel,
+  finetuneCompareModels:      finetuneEngineOps.finetuneCompareModels,
+  finetuneGetCostEstimate:    finetuneEngineOps.finetuneGetCostEstimate,
   // 活模块操作 · S5
   registerModule:     livingModuleOps.registerModule,
   getModule:          livingModuleOps.getModule,
@@ -654,6 +732,179 @@ app.get('/personas/:personaId/files', async (req, res) => {
   }
 });
 
+// ─── 语料引擎API（模块A） ───
+
+// 语料状态
+app.get('/corpus/status', async (req, res) => {
+  try {
+    const result = await corpusExtractorOps.cosGetCorpusStatus({ bucket: req.query.bucket || 'cold' });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 列出语料
+app.get('/corpus/list', async (req, res) => {
+  try {
+    const result = await corpusExtractorOps.cosListCorpus({
+      bucket: req.query.bucket || 'cold',
+      prefix: req.query.prefix,
+      include_processed: req.query.include_processed === 'true'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── COS数据库API（模块G） ───
+
+// 数据库状态
+app.get('/cos-db/:dbType/stats', async (req, res) => {
+  try {
+    const result = await cosPersonaDbOps.cosDbGetStats({
+      bucket: req.query.bucket || 'cold',
+      db_type: req.params.dbType
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 数据库索引
+app.get('/cos-db/:dbType/index', async (req, res) => {
+  try {
+    const result = await cosPersonaDbOps.cosDbGetIndex({
+      bucket: req.query.bucket || 'cold',
+      db_type: req.params.dbType
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 训练Agent API（模块B） ───
+
+// 训练进度
+app.get('/training/:personaId/progress', async (req, res) => {
+  try {
+    const result = await trainingAgentOps.trainingGetProgress({
+      persona_id: req.params.personaId,
+      corpus_bucket: req.query.bucket || 'cold'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 三方通信API（模块D+E） ───
+
+// 通信链路状态
+app.get('/comm/status', async (req, res) => {
+  try {
+    const result = await cosCommOps.cosGetCommLink({ bucket: req.query.bucket || 'team' });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 告警列表
+app.get('/comm/alerts', async (req, res) => {
+  try {
+    const result = await cosCommOps.cosAlertScan({
+      bucket: req.query.bucket || 'team',
+      include_resolved: req.query.include_resolved === 'true'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 工单列表
+app.get('/comm/workorders', async (req, res) => {
+  try {
+    const result = await notionCosBridgeOps.notionCosListWorkorders({
+      bucket: req.query.bucket || 'team',
+      status_folder: req.query.status || 'pending'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── Notion权限API（模块F） ───
+
+// 权限检查
+app.get('/notion/permissions', async (_req, res) => {
+  try {
+    const result = await notionPermissionOps.notionCheckPermissions({});
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 权限修复指南
+app.get('/notion/repair-guide', async (req, res) => {
+  try {
+    const result = await notionPermissionOps.notionGenerateRepairGuide({
+      write_to_cos: req.query.write_to_cos === 'true'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 微调引擎API（模块H） ───
+
+// 微调模型列表
+app.get('/finetune/:personaId/models', async (req, res) => {
+  try {
+    const result = await finetuneEngineOps.finetuneListModels({
+      persona_id: req.params.personaId
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 微调成本估算
+app.get('/finetune/:personaId/cost-estimate', async (req, res) => {
+  try {
+    const result = await finetuneEngineOps.finetuneGetCostEstimate({
+      persona_id: req.params.personaId,
+      dataset_key: req.query.dataset_key,
+      provider: req.query.provider || 'deepseek'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 微调任务状态
+app.get('/finetune/:personaId/jobs/:jobId', async (req, res) => {
+  try {
+    const result = await finetuneEngineOps.finetuneCheckStatus({
+      persona_id: req.params.personaId,
+      job_id: req.params.jobId,
+      provider: req.query.provider || 'deepseek'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
 // ─── 数据库迁移状态API ───
 
 app.get('/migrations', async (_req, res) => {
@@ -675,6 +926,11 @@ function getCategoryForTool(name) {
   if (['linkNodes','unlinkNodes','getRelations'].includes(name)) return 'relation';
   if (['buildPath','scanStructure','classify'].includes(name)) return 'structure';
   if (name.startsWith('personaCos')) return 'persona-cos';
+  if (name.startsWith('cosDb')) return 'cos-persona-db';
+  if (['cosListCorpus','cosExtractCorpus','cosParseGitRepoArchive','cosParseNotionExport',
+       'cosParseGPTCorpus','cosGetCorpusStatus'].includes(name)) return 'corpus-extractor';
+  if (['cosAlertScan','cosAlertResolve','cosDispatchTask','cosReadTaskReport',
+       'cosListTaskReports','cosApproveTask','cosSendNotification','cosGetCommLink'].includes(name)) return 'cos-comm';
   if (name.startsWith('cos')) return 'cos';
   if (['registerPersona','getPersona','updatePersona','listPersonas',
        'getNotebook','updateNotebookPage','addMemoryAnchor','queryMemoryAnchors',
@@ -682,6 +938,13 @@ function getCategoryForTool(name) {
        'addTimelineEntry','getTimeline','addRelationship','getRelationships',
        'registerTrainingAgent','updateTrainingAgent','logTrainingRun','getTrainingStatus',
        'saveFile','getFile','listFiles','getFileHistory'].includes(name)) return 'persona';
+  if (name.startsWith('training')) return 'training-agent';
+  if (name.startsWith('finetune')) return 'finetune-engine';
+  if (['notionCosSyncPage','notionCosReadMirror','notionCosListMirror',
+       'notionCosBuildIndex','notionCosWriteWorkorder','notionCosReadWorkorder',
+       'notionCosListWorkorders'].includes(name)) return 'notion-cos-bridge';
+  if (['notionCheckPermissions','notionRepairPermissions','notionListSharedPages',
+       'notionGenerateRepairGuide','notionPermissionReport'].includes(name)) return 'notion-permission';
   if (name.startsWith('notion')) return 'notion';
   if (name.startsWith('github')) return 'github';
   if (['registerModule','getModule','listModules','moduleHeartbeat','diagnoseModule',

@@ -1,0 +1,109 @@
+# ═══════════════════════════════════════════════════════════
+# 模块D+E · COS桶示警Agent Workflow
+# ═══════════════════════════════════════════════════════════
+#
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 定时扫描COS桶中的告警和工单
+# 自动创建Issue通知铸渊处理
+#
+# 触发条件:
+#   - 定时: 每天 09:00 和 21:00 CST
+#   - 手动: workflow_dispatch
+
+name: COS桶示警Agent · 告警扫描
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 09:00 CST = 01:00 UTC
+    - cron: '0 13 * * *'  # 21:00 CST = 13:00 UTC
+  workflow_dispatch:
+    inputs:
+      include_resolved:
+        description: '是否包含已解决的告警'
+        required: false
+        default: 'false'
+
+jobs:
+  alert-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: 签出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        working-directory: server/age-os
+        run: npm ci --production 2>/dev/null || npm install --production
+
+      - name: 扫描COS桶告警
+        id: scan
+        env:
+          ZY_OSS_KEY: ${{ secrets.ZY_OSS_KEY }}
+          ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
+          ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
+        run: |
+          node -e "
+            const cosComm = require('./server/age-os/mcp-server/tools/cos-comm-ops');
+            (async () => {
+              try {
+                // 扫描告警
+                const alerts = await cosComm.cosAlertScan({
+                  bucket: 'team',
+                  include_resolved: ${{ github.event.inputs.include_resolved || 'false' }}
+                });
+                console.log('=== 告警扫描结果 ===');
+                console.log(JSON.stringify(alerts, null, 2));
+
+                // 检查通信链路
+                const commLink = await cosComm.cosGetCommLink({ bucket: 'team' });
+                console.log('=== 通信链路状态 ===');
+                console.log(JSON.stringify(commLink, null, 2));
+
+                // 输出结果
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'critical=' + alerts.critical + '\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'total=' + alerts.total + '\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'health=' + commLink.health + '\n');
+              } catch (err) {
+                console.error('扫描失败:', err.message);
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'critical=0\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'total=0\n');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, 'health=error\n');
+              }
+            })();
+          "
+
+      - name: 创建紧急Issue（如果有严重告警）
+        if: steps.scan.outputs.critical > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 COS桶严重告警 · ${new Date().toISOString().split('T')[0]}`,
+              body: `## COS桶示警Agent检测到严重告警\n\n- 严重告警: ${{ steps.scan.outputs.critical }}\n- 总告警数: ${{ steps.scan.outputs.total }}\n- 通信链路: ${{ steps.scan.outputs.health }}\n\n请铸渊尽快处理。\n\n---\n*此Issue由COS桶示警Agent自动创建 · ${new Date().toISOString()}*`,
+              labels: ['cos-alert', 'urgent']
+            });
+
+      - name: 扫描完成
+        run: |
+          echo "═══════════════════════════════════════════"
+          echo "COS桶示警Agent · 扫描完成"
+          echo "时间: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "告警总数: ${{ steps.scan.outputs.total }}"
+          echo "严重告警: ${{ steps.scan.outputs.critical }}"
+          echo "通信链路: ${{ steps.scan.outputs.health }}"
+          echo "═══════════════════════════════════════════"
