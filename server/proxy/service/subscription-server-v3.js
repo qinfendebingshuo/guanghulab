@@ -893,7 +893,7 @@ function bwSendCode() {
   var btn = document.getElementById('bwSendBtn');
   var result = document.getElementById('bwSendResult');
 
-  if (!email || email.indexOf('@') === -1) {
+  if (!email || !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {
     result.style.display = 'block';
     result.style.background = '#3a1a1a';
     result.style.color = '#e74c3c';
@@ -950,18 +950,18 @@ function bwVerifyCode() {
   var btn = document.getElementById('bwVerifyBtn');
   var result = document.getElementById('bwVerifyResult');
 
-  if (!email || email.indexOf('@') === -1) {
+  if (!email || !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {
     result.style.display = 'block';
     result.style.background = '#3a1a1a';
     result.style.color = '#e74c3c';
     result.textContent = '请先输入邮箱地址';
     return;
   }
-  if (!code || code.length !== 6) {
+  if (!code || !/^[0-9]{6}$/.test(code)) {
     result.style.display = 'block';
     result.style.background = '#3a1a1a';
     result.style.color = '#e74c3c';
-    result.textContent = '请输入6位验证码';
+    result.textContent = '请输入6位数字验证码';
     return;
   }
   if (!consent) {
