@@ -888,6 +888,10 @@ mode: direct
 </div>
 
 <script>
+// 动态计算API基路径: 通过nginx代理时页面在 /api/proxy-v3/dashboard/{token}，
+// 直接访问时在 /dashboard/{token}，需要提取 /dashboard/ 之前的前缀作为API路径基座
+var bwBasePath = window.location.pathname.replace(/\/dashboard\/[a-f0-9]+$/, '');
+
 function bwSendCode() {
   var email = document.getElementById('bwEmail').value.trim().toLowerCase();
   var btn = document.getElementById('bwSendBtn');
@@ -905,7 +909,7 @@ function bwSendCode() {
   btn.textContent = '⏳ 发送中...';
   result.style.display = 'none';
 
-  fetch('/bandwidth-send-code', {
+  fetch(bwBasePath + '/bandwidth-send-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: email })
@@ -933,7 +937,7 @@ function bwSendCode() {
       result.style.color = '#e74c3c';
     }
     result.textContent = data.message || (data.success ? '验证码已发送' : '发送失败');
-  }).catch(function() {
+  }).catch(function(err) {
     btn.disabled = false;
     btn.textContent = '📧 发送验证码';
     result.style.display = 'block';
@@ -976,7 +980,7 @@ function bwVerifyCode() {
   btn.textContent = '⏳ 验证中...';
   result.style.display = 'none';
 
-  fetch('/bandwidth-verify-code', {
+  fetch(bwBasePath + '/bandwidth-verify-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: email, code: code })
