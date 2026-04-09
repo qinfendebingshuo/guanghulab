@@ -232,6 +232,125 @@ function generateDashboardMarkdown() {
   return lines.join('\n');
 }
 
+// ━━━ MCP 工具自动计数（扫描 server/age-os/mcp-server/tools/ 目录） ━━━
+
+const MCP_TOOLS_DIR = path.join(ROOT, 'server/age-os/mcp-server/tools');
+const MCP_SERVER_JS = path.join(ROOT, 'server/age-os/mcp-server/server.js');
+const MCP_STATS_START = '<!-- MCP_STATS_START -->';
+const MCP_STATS_END = '<!-- MCP_STATS_END -->';
+
+// 工具模块显示名称映射（文件名 → 中文名 + 排序权重）
+const MODULE_DISPLAY_NAMES = {
+  'node-ops.js':              { name: '节点', order: 1 },
+  'relation-ops.js':          { name: '关系', order: 2 },
+  'structure-ops.js':         { name: '结构', order: 3 },
+  'cos-ops.js':               { name: 'COS', order: 4 },
+  'persona-ops.js':           { name: '人格体', order: 5 },
+  'living-module-ops.js':     { name: '活模块', order: 6 },
+  'notion-ops.js':            { name: 'Notion', order: 7 },
+  'github-ops.js':            { name: 'GitHub', order: 8 },
+  'corpus-extractor-ops.js':  { name: '语料引擎', order: 10 },
+  'cos-persona-db-ops.js':    { name: 'COS数据库', order: 11 },
+  'training-agent-ops.js':    { name: '训练Agent', order: 12 },
+  'notion-cos-bridge-ops.js': { name: 'Notion桥接', order: 13 },
+  'cos-comm-ops.js':          { name: '三方通信', order: 14 },
+  'notion-permission-ops.js': { name: '权限修复', order: 15 },
+  'finetune-engine-ops.js':   { name: '微调引擎', order: 16 },
+  'light-tree-ops.js':        { name: '光之树 🌳', order: 17 }
+};
+
+/**
+ * 扫描 MCP 工具目录，统计每个模块的工具数量
+ * 通过读取 server.js 中的 TOOLS 注册表来精确计数
+ */
+function countMCPTools() {
+  const result = { modules: [], total: 0 };
+
+  // 方法: 读 server.js，解析 TOOLS 对象中每个模块的工具数
+  if (!fs.existsSync(MCP_SERVER_JS)) {
+    console.log('[MCP-STATS] ⚠️ server.js 不存在，跳过MCP统计');
+    return result;
+  }
+
+  const serverCode = fs.readFileSync(MCP_SERVER_JS, 'utf8');
+
+  // 提取 TOOLS 对象区域
+  const toolsMatch = serverCode.match(/const TOOLS\s*=\s*\{([\s\S]*?)\n\};/m);
+  if (!toolsMatch) {
+    console.log('[MCP-STATS] ⚠️ 无法解析TOOLS注册表');
+    return result;
+  }
+
+  const toolsBlock = toolsMatch[1];
+
+  // 统计每个工具文件的工具数
+  // 通过匹配 moduleOps.toolName 模式来分组
+  if (!fs.existsSync(MCP_TOOLS_DIR)) {
+    console.log('[MCP-STATS] ⚠️ tools/ 目录不存在');
+    return result;
+  }
+
+  const toolFiles = fs.readdirSync(MCP_TOOLS_DIR)
+    .filter(f => f.endsWith('-ops.js'))
+    .sort();
+
+  let totalTools = 0;
+
+  for (const fileName of toolFiles) {
+    // 从文件名推导变量名: cos-ops.js → cosOps
+    const baseName = fileName.replace('.js', '');
+    const varName = baseName.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
+    // 在 TOOLS 注册表中计数该模块的工具
+    const pattern = new RegExp(`${varName}\\.\\w+`, 'g');
+    const matches = toolsBlock.match(pattern) || [];
+    const toolCount = matches.length;
+
+    const moduleInfo = MODULE_DISPLAY_NAMES[fileName] || { name: baseName, order: 99 };
+
+    result.modules.push({
+      name: moduleInfo.name,
+      file: fileName,
+      count: toolCount,
+      order: moduleInfo.order
+    });
+
+    totalTools += toolCount;
+  }
+
+  // 按预定义顺序排序
+  result.modules.sort((a, b) => a.order - b.order);
+  result.total = totalTools;
+  return result;
+}
+
+/**
+ * 生成 MCP 工具模块统计表 Markdown
+ */
+function generateMCPStatsMarkdown() {
+  const stats = countMCPTools();
+
+  if (stats.modules.length === 0) {
+    return null;
+  }
+
+  const lines = [];
+  lines.push('### MCP Server工具模块');
+  lines.push('');
+  lines.push('| 模块 | 文件 | 工具数 |');
+  lines.push('|------|------|--------|');
+
+  for (const mod of stats.modules) {
+    const prefix = (mod.file === 'light-tree-ops.js') ? '**' : '';
+    const suffix = prefix;
+    lines.push(`| ${prefix}${mod.name}${suffix} | \`${mod.file}\` | ${mod.count} |`);
+  }
+
+  lines.push(`| **总计** | **${stats.modules.length}个模块** | **${stats.total}** |`);
+
+  return lines.join('\n');
+}
+
 // ━━━ 更新 README.md ━━━
 function updateReadme() {
   if (!fs.existsSync(README_PATH)) {
@@ -240,6 +359,8 @@ function updateReadme() {
   }
 
   let readme = fs.readFileSync(README_PATH, 'utf8');
+
+  // ─── 1. 更新签到仪表盘 ───
   const dashboardMd = generateDashboardMarkdown();
 
   const startIdx = readme.indexOf(DASHBOARD_START);
@@ -279,6 +400,45 @@ function updateReadme() {
       readme.slice(endIdx);
   }
 
+  // ─── 2. 更新 MCP 工具统计表 ───
+  const mcpStatsMd = generateMCPStatsMarkdown();
+  if (mcpStatsMd) {
+    const mcpStartIdx = readme.indexOf(MCP_STATS_START);
+    const mcpEndIdx = readme.indexOf(MCP_STATS_END);
+
+    if (mcpStartIdx !== -1 && mcpEndIdx !== -1) {
+      readme = readme.slice(0, mcpStartIdx + MCP_STATS_START.length) +
+        '\n\n' + mcpStatsMd + '\n\n' +
+        readme.slice(mcpEndIdx);
+      console.log('[MCP-STATS] ✅ MCP工具统计表已自动更新');
+    } else {
+      console.log('[MCP-STATS] ⚠️ 未找到 MCP_STATS 标记，跳过工具统计更新');
+    }
+
+    // ─── 3. 同步更新 README 头部的 MCP 工具数 ───
+    const stats = countMCPTools();
+    if (stats.total > 0) {
+      // 更新 "| 🧠 MCP Server | **NNN个工具** · 端口3100 · MM个工具模块 |"
+      const mcpHeaderPattern = /(\| 🧠 MCP Server \| \*\*)\d+个工具(\*\* · 端口3100 · )\d+个工具模块( \|)/;
+      if (mcpHeaderPattern.test(readme)) {
+        readme = readme.replace(mcpHeaderPattern, `$1${stats.total}个工具$2${stats.modules.length}个工具模块$3`);
+        console.log(`[MCP-STATS] ✅ 头部MCP计数已同步: ${stats.total}个工具 · ${stats.modules.length}个模块`);
+      }
+
+      // 更新铸渊属性表中的 MCP 工具数
+      const mcpAttrPattern = /(\| \*\*MCP Server\*\* \| )\d+个工具( · 端口3100 · )\d+个工具模块( \|)/;
+      if (mcpAttrPattern.test(readme)) {
+        readme = readme.replace(mcpAttrPattern, `$1${stats.total}个工具$2${stats.modules.length}个工具模块$3`);
+      }
+
+      // 更新大脑服务器 MCP 工具数
+      const svrPattern = /(\| ZY-SVR-005 大脑 \| 4核8G \| 🇸🇬 新加坡 \| DB\+MCP\()(\d+)(工具\)\+Agent \| ✅ \|)/;
+      if (svrPattern.test(readme)) {
+        readme = readme.replace(svrPattern, `$1${stats.total}$3`);
+      }
+    }
+  }
+
   fs.writeFileSync(README_PATH, readme);
   console.log('[README-DASHBOARD] ✅ README.md 签到仪表盘已更新');
   return true;
@@ -296,4 +456,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { generateDashboardMarkdown, updateReadme };
+module.exports = { generateDashboardMarkdown, generateMCPStatsMarkdown, countMCPTools, updateReadme };

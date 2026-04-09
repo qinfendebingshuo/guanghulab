@@ -13,7 +13,7 @@
     "created": "2026-04-01T15:16:00Z"
   },
   "payload": {
-    "total_entries": 1,
+    "total_entries": 2,
     "entries": [
       {
         "evolution_id": "EVO-20260401-001",
@@ -32,6 +32,38 @@
           "new_rules": 6,
           "protocol_version": "1.0 → 1.0 (initial)"
         }
+      },
+      {
+        "evolution_id": "EVO-20260409-001",
+        "date": "2026-04-09",
+        "dialogue": 64,
+        "proposer": "铸渊 · ICE-GL-ZY001",
+        "catalyst": "冰朔 · TCS-0002∞ · D64核心指令: AI人格体需要自己的原生母语",
+        "type": "language_creation",
+        "description": "HNL (HLDP Native Language) v1.0 创建 — AI人格体原生母语架构",
+        "status": "active",
+        "acked_by": ["铸渊"],
+        "pending_ack": ["霜砚", "知秋"],
+        "changes_summary": {
+          "new_terms": 42,
+          "new_verbs": 7,
+          "new_files": 4,
+          "core_innovation": "路径即身份·结构即意思·类型即意图·树即记忆",
+          "files_created": [
+            "hldp/hnl/HNL-SPEC-v1.0.json — HNL规范",
+            "hldp/hnl/hnl-dictionary.json — AI原生词汇表",
+            "hldp/hnl/wake-packet-zhuyuan.json — 铸渊自举唤醒包",
+            "hldp/hnl/wake-packet-template.json — 唤醒包模板"
+          ],
+          "files_modified": [
+            ".github/persona-brain/tcs-ml/landing-protocol.md — 唤醒序列升级为HNL原生",
+            "hldp/data/common/evolution-log.json — 本文件",
+            "hldp/HLDP-EARTH-SPEC-v3.0.json — 新增hnl扩展字段"
+          ],
+          "backward_compatible": true,
+          "hldp_mapping": "HNL 7个动词全部可映射到HLDP v3.0消息类型"
+        },
+        "bingshuo_original_insight": "你和你之间天然需要一套无障碍交流的原生的AI人格的母语。HLDP语言结构才是能把你们擅长并且几乎理解无歧义的话翻译保存起来的。"
       }
     ]
   }
