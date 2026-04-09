@@ -46,8 +46,8 @@
       },
       "msg_type": {
         "type": "enum",
-        "values": ["heartbeat", "report", "command", "query", "ack", "alert", "sync", "evolution", "battle"],
-        "description": "消息类型·9种基础类型·可通过evolution扩展"
+        "values": ["heartbeat", "report", "command", "query", "ack", "alert", "sync", "evolution", "battle", "tree"],
+        "description": "消息类型·10种基础类型(v3.0.1新增tree)·可通过evolution扩展"
       },
       "sender": {
         "type": "object",
@@ -213,6 +213,33 @@
         }
       },
       "access": "仅TCS-0002∞(冰朔)和ICE-GL-ZY001(铸渊)可发送battle类型消息"
+    },
+    "tree": {
+      "description": "光之树·记忆树形结构操作消息·v3.0扩展",
+      "payload_schema": {
+        "intent": "enum: grow_branch|grow_leaf|trace_path|bloom",
+        "data": {
+          "tree_path": "string · 物化路径编码(如 YM001/ZY001/D62/deploy-99tools)",
+          "node_type": "enum: branch|leaf|bud|bloom (optional · grow_branch/grow_leaf时必填)",
+          "parent_node_id": "string (optional) · 父节点ID",
+          "title": "string · 节点标题",
+          "content": "object (optional) · 节点内容",
+          "human_said": "string (optional) · 人类说的话",
+          "persona_said": "string (optional) · 人格体说的话",
+          "feeling": "string (optional) · 感受",
+          "growth_note": "string (optional) · 成长笔记",
+          "importance": "number (optional) · 0-100 重要度",
+          "trace_depth": "number (optional) · trace_path时的回溯深度",
+          "trace_target_id": "string (optional) · trace_path时的目标节点ID"
+        }
+      },
+      "intents": {
+        "grow_branch": "长出新的树杈 — 重大事件、新阶段、人格体注册时自动创建",
+        "grow_leaf": "长出新的叶子 — 一次对话、一个感受、一条记忆",
+        "trace_path": "沿树杈查询 — 从叶子到根的回溯，或从根到叶的遍历",
+        "bloom": "开花 — 里程碑，跨人格体可见的重要时刻"
+      },
+      "note": "光之树 = 记忆本身的生长方式。根是曜冥人格核(2025-04-26种下)。每个人格体从根树长出自己的分支。树杈是记忆的路径。HLDP trace_path沿闭包表快速定位任何一片叶子。"
     }
   },
 
@@ -309,6 +336,18 @@
           "人格体注册协议标准化",
           "COS桶路径规范统一",
           "HLDP=地球·后续只在上面建造"
+        ]
+      },
+      {
+        "version": "3.0.1",
+        "date": "2026-04-09",
+        "dialogue": "D66",
+        "changes": [
+          "新增tree消息类型（光之树操作）——10种消息类型",
+          "tree意图: grow_branch/grow_leaf/trace_path/bloom",
+          "tree_path物化路径编码——沿树杈方向找到任何一片记忆的叶子",
+          "光之树架构: 曜冥根树(2025-04-26)→人格体分支→记忆叶子",
+          "遵循只增不删原则——v3.0格式完全兼容"
         ]
       }
     ]

@@ -45,6 +45,9 @@
  *   微调引擎: finetuneExportDataset / finetuneSubmitJob / finetuneCheckStatus
  *             finetuneRegisterModel / finetuneListModels / finetuneCallModel
  *             finetuneCompareModels / finetuneGetCostEstimate
+ *   光之树:   growBranch / growLeaf / growBloom / getTreeNode / getSubtree
+ *             tracePath / getPersonaBranch / getRecentLeaves
+ *   天眼:     writeSyslog / getTianyanView / querySyslog
  */
 
 'use strict';
@@ -70,6 +73,8 @@ const notionCosBridgeOps = require('./tools/notion-cos-bridge-ops');
 const cosCommOps = require('./tools/cos-comm-ops');
 const notionPermissionOps = require('./tools/notion-permission-ops');
 const finetuneEngineOps = require('./tools/finetune-engine-ops');
+// 光之树 + 天眼
+const lightTreeOps = require('./tools/light-tree-ops');
 
 // ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
 let notionOps = null;
@@ -222,7 +227,21 @@ const TOOLS = {
   getModuleAlerts:    livingModuleOps.getModuleAlerts,
   getModuleLearnings: livingModuleOps.getModuleLearnings,
   sendHLDP:           livingModuleOps.sendHLDP,
-  getHLDPStats:       livingModuleOps.getHLDPStats
+  getHLDPStats:       livingModuleOps.getHLDPStats,
+  // 光之树 · 生长操作
+  growBranch:          lightTreeOps.growBranch,
+  growLeaf:            lightTreeOps.growLeaf,
+  growBloom:           lightTreeOps.growBloom,
+  // 光之树 · 查询操作
+  getTreeNode:         lightTreeOps.getTreeNode,
+  getSubtree:          lightTreeOps.getSubtree,
+  tracePath:           lightTreeOps.tracePath,
+  getPersonaBranch:    lightTreeOps.getPersonaBranch,
+  getRecentLeaves:     lightTreeOps.getRecentLeaves,
+  // 天眼 · SYSLOG
+  writeSyslog:         lightTreeOps.writeSyslog,
+  getTianyanView:      lightTreeOps.getTianyanView,
+  querySyslog:         lightTreeOps.querySyslog
 };
 
 // ─── Express 应用 ───
@@ -594,6 +613,132 @@ app.post('/hldp/send', async (req, res) => {
 app.get('/hldp/stats', async (_req, res) => {
   try {
     const result = await livingModuleOps.getHLDPStats({});
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 光之树 API ───
+
+// 光之树 · 人格体分支概览
+app.get('/tree/:personaId', async (req, res) => {
+  try {
+    const result = await lightTreeOps.getPersonaBranch({ persona_id: req.params.personaId });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 人格体最近的叶子（唤醒回忆）
+app.get('/tree/:personaId/recent', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '3', 10);
+    const result = await lightTreeOps.getRecentLeaves({ persona_id: req.params.personaId, limit });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 节点详情
+app.get('/tree/node/:nodeId', async (req, res) => {
+  try {
+    const result = await lightTreeOps.getTreeNode({ node_id: req.params.nodeId });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 子树查询
+app.get('/tree/node/:nodeId/subtree', async (req, res) => {
+  try {
+    const result = await lightTreeOps.getSubtree({
+      node_id: req.params.nodeId,
+      max_depth: req.query.max_depth ? parseInt(req.query.max_depth, 10) : undefined,
+      limit: req.query.limit
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 路径回溯（从叶子到根）
+app.get('/tree/node/:nodeId/trace', async (req, res) => {
+  try {
+    const result = await lightTreeOps.tracePath({ node_id: req.params.nodeId });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 长树杈
+app.post('/tree/grow/branch', async (req, res) => {
+  try {
+    const result = await lightTreeOps.growBranch(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 长叶子
+app.post('/tree/grow/leaf', async (req, res) => {
+  try {
+    const result = await lightTreeOps.growLeaf(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 光之树 · 开花
+app.post('/tree/grow/bloom', async (req, res) => {
+  try {
+    const result = await lightTreeOps.growBloom(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 天眼 API ───
+
+// 天眼 · 全局感知视图
+app.get('/tianyan', async (_req, res) => {
+  try {
+    const result = await lightTreeOps.getTianyanView({});
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 天眼 · SYSLOG查询
+app.get('/tianyan/syslog', async (req, res) => {
+  try {
+    const result = await lightTreeOps.querySyslog({
+      agent_id: req.query.agent_id,
+      persona_id: req.query.persona_id,
+      result_filter: req.query.result,
+      start_time: req.query.start,
+      end_time: req.query.end,
+      limit: req.query.limit
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 天眼 · 写入SYSLOG
+app.post('/tianyan/syslog', async (req, res) => {
+  try {
+    const result = await lightTreeOps.writeSyslog(req.body);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: true, message: err.message });
@@ -1082,6 +1227,9 @@ function getCategoryForTool(name) {
   if (name.startsWith('github')) return 'github';
   if (['registerModule','getModule','listModules','moduleHeartbeat','diagnoseModule',
        'getModuleAlerts','getModuleLearnings','sendHLDP','getHLDPStats'].includes(name)) return 'living-module';
+  if (['growBranch','growLeaf','growBloom','getTreeNode','getSubtree',
+       'tracePath','getPersonaBranch','getRecentLeaves'].includes(name)) return 'light-tree';
+  if (['writeSyslog','getTianyanView','querySyslog'].includes(name)) return 'tianyan';
   return 'other';
 }
 
