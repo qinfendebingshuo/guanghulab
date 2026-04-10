@@ -137,7 +137,7 @@ jobs:
           # 如果有则移除本配置中的 map 块避免冲突
           HAS_MAP=$(ssh -i ~/.ssh/zy_key \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
-            "grep -r 'map.*http_upgrade.*connection_upgrade' /etc/nginx/ 2>/dev/null | head -1" || true)
+            "grep -l 'map.*http_upgrade.*connection_upgrade' /etc/nginx/nginx.conf /etc/nginx/conf.d/*.conf /etc/nginx/sites-available/*.conf 2>/dev/null | head -1" || true)
 
           if [ -n "$HAS_MAP" ]; then
             echo "ℹ️ 主配置已包含 connection_upgrade map，移除本配置中的重复定义"
@@ -292,23 +292,12 @@ jobs:
           # 更新 Nginx 配置添加 SSL
           CONF="/etc/nginx/sites-available/awen-proxy.conf"
           if [ -f "\$CONF" ] && ! grep -q "listen 443 ssl" "\$CONF"; then
-            echo "📝 注入 SSL 配置..."
-
-            # 在 server 块内 listen 80 后添加 SSL 配置
-            sudo sed -i '/listen 80;/a\\n    # ─── SSL by Let'\''s Encrypt ───\n    listen 443 ssl;\n    ssl_certificate /etc/letsencrypt/live/${AWEN_DOMAIN}/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/${AWEN_DOMAIN}/privkey.pem;\n    ssl_protocols TLSv1.2 TLSv1.3;\n    ssl_ciphers HIGH:!aNULL:!MD5;\n    ssl_prefer_server_ciphers on;\n    ssl_session_cache shared:SSL:10m;\n    ssl_session_timeout 10m;' "\$CONF"
-
-            # 验证并重载
-            if sudo nginx -t 2>&1; then
-              sudo systemctl reload nginx
-              echo "✅ SSL 已启用"
-            else
-              echo "❌ SSL 配置注入后验证失败，回滚..."
-              # 移除 SSL 行
-              sudo sed -i '/# ─── SSL by Let/,/ssl_session_timeout/d' "\$CONF"
-              sudo nginx -t && sudo systemctl reload nginx
-              echo "↩️ 已回滚"
+            echo "📝 使用 certbot 自动配置 SSL..."
+            sudo certbot --nginx -d ${AWEN_DOMAIN} --non-interactive --redirect 2>&1 || {
+              echo "❌ certbot --nginx 配置失败，SSL未启用"
               exit 1
-            fi
+            }
+            echo "✅ SSL 已通过 certbot --nginx 启用"
           else
             echo "ℹ️ SSL 配置已存在或配置文件不存在"
           fi
@@ -379,7 +368,7 @@ jobs:
           echo "  日志行数: $(wc -l < /opt/zhuyuan/data/logs/nginx-awen-proxy.log 2>/dev/null || echo 'N/A')"
 
           # 检查 SSL 证书有效期
-          if [ -f /etc/letsencrypt/live/${AWEN_DOMAIN}/fullchain.pem ] 2>/dev/null; then
+          if [ -f /etc/letsencrypt/live/${AWEN_DOMAIN}/fullchain.pem ]; then
             EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/${AWEN_DOMAIN}/fullchain.pem 2>/dev/null | cut -d= -f2)
             echo "  SSL证书到期: ${EXPIRY:-unknown}"
           else
