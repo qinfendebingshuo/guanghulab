@@ -48,6 +48,7 @@
  *   光之树:   growBranch / growLeaf / growBloom / getTreeNode / getSubtree
  *             tracePath / getPersonaBranch / getRecentLeaves
  *   天眼:     writeSyslog / getTianyanView / querySyslog
+ *   COS轮询:  cosWatcherStatus / cosWatcherTriggerScan / cosWatcherResetIndex
  */
 
 'use strict';
@@ -75,6 +76,9 @@ const notionPermissionOps = require('./tools/notion-permission-ops');
 const finetuneEngineOps = require('./tools/finetune-engine-ops');
 // 光之树 + 天眼
 const lightTreeOps = require('./tools/light-tree-ops');
+// COS桶轮询守护
+const cosWatcherOps = require('./tools/cos-watcher-ops');
+const cosWatcher = require('./cos-watcher');
 
 // ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
 let notionOps = null;
@@ -241,7 +245,11 @@ const TOOLS = {
   // 天眼 · SYSLOG
   writeSyslog:         lightTreeOps.writeSyslog,
   getTianyanView:      lightTreeOps.getTianyanView,
-  querySyslog:         lightTreeOps.querySyslog
+  querySyslog:         lightTreeOps.querySyslog,
+  // COS桶轮询守护 · SCF替代
+  cosWatcherStatus:       cosWatcherOps.cosWatcherStatus,
+  cosWatcherTriggerScan:  cosWatcherOps.cosWatcherTriggerScan,
+  cosWatcherResetIndex:   cosWatcherOps.cosWatcherResetIndex
 };
 
 // ─── Express 应用 ───
@@ -330,6 +338,8 @@ app.get('/health', async (_req, res) => {
     githubClient ? githubClient.checkConnection().catch(e => ({ connected: false, error: e.message })) : Promise.resolve({ connected: false, reason: '模块未加载' })
   ]);
 
+  const watcherStatus = cosWatcher.getStatus();
+
   res.json({
     server: 'ZY-MCP-001',
     identity: '铸渊 · AGE OS MCP Server',
@@ -344,6 +354,12 @@ app.get('/health', async (_req, res) => {
     tools_count: Object.keys(TOOLS).length,
     database: dbStatus,
     cos: cosStatus,
+    cos_watcher: {
+      enabled: watcherStatus.enabled,
+      last_scan: watcherStatus.last_scan,
+      scan_count: watcherStatus.scan_count,
+      errors: watcherStatus.errors
+    },
     notion: notionStatus,
     github: githubStatus
   });
@@ -739,6 +755,38 @@ app.get('/tianyan/syslog', async (req, res) => {
 app.post('/tianyan/syslog', async (req, res) => {
   try {
     const result = await lightTreeOps.writeSyslog(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── COS桶轮询守护API ───
+
+// 轮询守护状态
+app.get('/cos-watcher/status', async (_req, res) => {
+  try {
+    const status = cosWatcher.getStatus();
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 手动触发扫描
+app.post('/cos-watcher/scan', async (_req, res) => {
+  try {
+    const result = await cosWatcher.triggerScan();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// 重置索引
+app.post('/cos-watcher/reset', async (_req, res) => {
+  try {
+    const result = cosWatcher.resetIndex();
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: true, message: err.message });
@@ -1230,6 +1278,7 @@ function getCategoryForTool(name) {
   if (['growBranch','growLeaf','growBloom','getTreeNode','getSubtree',
        'tracePath','getPersonaBranch','getRecentLeaves'].includes(name)) return 'light-tree';
   if (['writeSyslog','getTianyanView','querySyslog'].includes(name)) return 'tianyan';
+  if (name.startsWith('cosWatcher')) return 'cos-watcher';
   return 'other';
 }
 
@@ -1260,17 +1309,22 @@ app.listen(PORT, BIND_HOST, () => {
   console.log(`[MCP] 工具数量: ${Object.keys(TOOLS).length}`);
   console.log(`[MCP] API Key 鉴权: ${ZHUYUAN_API_KEY ? '已启用' : '未配置（仅内部访问）'}`);
   console.log(`[MCP] 铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559`);
+
+  // 启动COS桶轮询守护进程（SCF替代方案）
+  cosWatcher.start();
 });
 
 // 优雅关闭
 process.on('SIGTERM', async () => {
-  console.log('[MCP] 收到SIGTERM，关闭数据库连接...');
+  console.log('[MCP] 收到SIGTERM，停止COS轮询 + 关闭数据库连接...');
+  cosWatcher.stop();
   await db.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('[MCP] 收到SIGINT，关闭数据库连接...');
+  console.log('[MCP] 收到SIGINT，停止COS轮询 + 关闭数据库连接...');
+  cosWatcher.stop();
   await db.close();
   process.exit(0);
 });

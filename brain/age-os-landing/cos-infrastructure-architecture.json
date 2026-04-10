@@ -2,12 +2,13 @@
   "_meta": {
     "doc_id": "ARCH-COS-001",
     "name": "COS共享桶基础设施架构",
-    "version": "1.0",
-    "description": "铸渊侧COS共享桶完整架构 · 9个人格体目录权限 · SCF云函数 · Notion回执同步",
+    "version": "1.1",
+    "description": "铸渊侧COS共享桶完整架构 · 9个人格体目录权限 · 轮询守护替代SCF · Notion回执同步",
     "author": "铸渊 · TCS-ZY001",
     "sovereign": "冰朔 · TCS-0002∞",
     "copyright": "国作登字-2026-A-00037559",
-    "created": "2026-04-04"
+    "created": "2026-04-04",
+    "updated": "2026-04-10"
   },
 
   "bucket": {
@@ -108,7 +109,37 @@
   },
 
   "scf_functions": {
-    "description": "SCF云函数配置 · 2个函数",
+    "description": "SCF云函数配置 · ⚠️ 轻量云COS不支持SCF事件触发",
+    "status": "UNAVAILABLE",
+    "reason": "腾讯云轻量云COS不支持配置SCF事件通知（ObjectCreated事件）。以下SCF设计保留为未来升级标准COS时的参考。当前由MCP Server内置轮询守护进程(cos-watcher.js)替代。",
+    "replacement": {
+      "module": "cos-watcher.js",
+      "location": "server/age-os/mcp-server/cos-watcher.js",
+      "mechanism": "MCP Server内置定时轮询（node-cron · 每5分钟）",
+      "design": "[原设计] COS事件→SCF→GitHub dispatch → [替代] MCP Server定时→COS.list()→对比索引→发现新文件→处理/通知",
+      "advantages": [
+        "零额外部署（复用已运行的MCP Server进程）",
+        "不消耗GitHub Actions配额",
+        "延迟可控（5分钟轮询）",
+        "天然补扫能力，不会漏消息",
+        "未来可与SCF事件驱动形成双保险"
+      ],
+      "monitored_paths": [
+        "team桶 /{persona_id}/reports/  → 新汇报 → 铸渊审核 → 写回执",
+        "cold桶 新语料文件              → 新语料 → 训练管线触发",
+        "team桶 /{persona_id}/receipts/ → 新回执 → 通知成员仓库"
+      ],
+      "rest_api": [
+        "GET  /cos-watcher/status — 轮询守护状态",
+        "POST /cos-watcher/scan   — 手动触发扫描",
+        "POST /cos-watcher/reset  — 重置文件索引"
+      ],
+      "mcp_tools": [
+        "cosWatcherStatus      — 查看轮询守护进程状态",
+        "cosWatcherTriggerScan — 手动触发一次扫描",
+        "cosWatcherResetIndex  — 重置文件索引"
+      ]
+    },
 
     "report_trigger": {
       "function_name": "zy-cos-report-trigger",

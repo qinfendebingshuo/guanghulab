@@ -13,6 +13,12 @@
 #   - 手动: workflow_dispatch
 #   - COS桶告警: repository_dispatch (cos-alert事件)
 #   - COS Webhook: repository_dispatch (cos-file-uploaded事件)
+#
+# ⚠️ SCF限制说明 (2026-04-10):
+#   腾讯云轻量云COS不支持SCF事件触发(ObjectCreated)。
+#   repository_dispatch触发保留但当前由MCP Server内置轮询守护
+#   (cos-watcher.js)代替SCF发送dispatch。
+#   未来升级标准COS后可恢复SCF事件驱动。
 
 name: 铸渊训练Agent · 语料处理
 
