@@ -115,14 +115,24 @@ async function personaList(personaId, subPrefix, limit) {
   return list('team', prefix, limit);
 }
 
+// ─── 大文件安全阈值 ───
+// Node.js字符串最大长度约 512MB (0x1fffffe8 字符)
+// 为安全起见，超过此阈值的文件使用 Buffer 模式读取
+const MAX_STRING_SAFE_BYTES = 400 * 1024 * 1024; // 400MB
+
 /**
  * 发起 COS HTTP 请求
  *
  * 修复: 签名时必须将URI路径和查询参数分开处理。
  * 腾讯云COS签名规范要求 HttpURI 不包含查询字符串(query string),
  * 否则签名哈希不匹配导致 SignatureDoesNotMatch 错误。
+ *
+ * @param {object} options - 可选配置
+ * @param {number} options.timeout - 超时时间(毫秒)，默认30000
+ * @param {boolean} options.rawBuffer - 是否返回原始 Buffer 而非字符串
  */
-function cosRequest(bucketName, objectKey, method, body, contentType) {
+function cosRequest(bucketName, objectKey, method, body, contentType, options) {
+  const { timeout = 30000, rawBuffer = false } = options || {};
   return new Promise((resolve, reject) => {
     const host = getBucketHost(bucketName);
     const fullPath = '/' + objectKey;
@@ -141,16 +151,45 @@ function cosRequest(bucketName, objectKey, method, body, contentType) {
     headers['Authorization'] = generateSignature(method, signPathname, host);
 
     const req = https.request({
-      hostname: host, port: 443, path: fullPath, method, headers, timeout: 30000
+      hostname: host, port: 443, path: fullPath, method, headers, timeout
     }, (res) => {
+      // HEAD 请求无响应体
+      if (method === 'HEAD') {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve({ statusCode: res.statusCode, body: '', headers: res.headers });
+        } else {
+          reject(new Error(`COS ${method} ${fullPath}: ${res.statusCode}`));
+        }
+        return;
+      }
+
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => {
-        const responseBody = Buffer.concat(chunks).toString();
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve({ statusCode: res.statusCode, body: responseBody, headers: res.headers });
-        } else {
-          reject(new Error(`COS ${method} ${fullPath}: ${res.statusCode} - ${responseBody.substring(0, 200)}`));
+        try {
+          const buffer = Buffer.concat(chunks);
+
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            if (rawBuffer) {
+              resolve({ statusCode: res.statusCode, body: buffer, headers: res.headers });
+            } else if (buffer.length > MAX_STRING_SAFE_BYTES) {
+              reject(new Error(
+                `文件过大 (${(buffer.length / 1024 / 1024).toFixed(1)}MB)，` +
+                `超过安全字符串转换阈值 (${MAX_STRING_SAFE_BYTES / 1024 / 1024}MB)。` +
+                `请使用 readBuffer() 方法读取大文件。`
+              ));
+            } else {
+              const responseBody = buffer.toString('utf8');
+              resolve({ statusCode: res.statusCode, body: responseBody, headers: res.headers });
+            }
+          } else {
+            const errorBody = buffer.length > MAX_STRING_SAFE_BYTES
+              ? buffer.slice(0, 500).toString('utf8')
+              : buffer.toString('utf8');
+            reject(new Error(`COS ${method} ${fullPath}: ${res.statusCode} - ${errorBody.substring(0, 200)}`));
+          }
+        } catch (err) {
+          reject(new Error(`COS响应处理失败: ${err.message}`));
         }
       });
     });
@@ -180,6 +219,129 @@ async function read(bucket, key) {
     size_bytes: Buffer.byteLength(result.body),
     last_modified: result.headers['last-modified'] || null
   };
+}
+
+/**
+ * 读取文件为 Buffer（不做字符串转换，支持任意大小）
+ */
+async function readBuffer(bucket, key) {
+  const bucketName = resolveBucketName(bucket);
+  const result = await cosRequest(bucketName, key, 'GET', null, null, {
+    rawBuffer: true,
+    timeout: 120000  // 大文件给2分钟超时
+  });
+  return {
+    buffer: result.body,
+    size_bytes: result.body.length,
+    last_modified: result.headers['last-modified'] || null
+  };
+}
+
+/**
+ * HEAD请求 — 获取文件元数据（大小/类型等），不下载内容
+ */
+async function head(bucket, key) {
+  const bucketName = resolveBucketName(bucket);
+  const result = await cosRequest(bucketName, key, 'HEAD');
+  return {
+    size_bytes: parseInt(result.headers['content-length'] || '0', 10),
+    content_type: result.headers['content-type'] || null,
+    last_modified: result.headers['last-modified'] || null,
+    etag: result.headers['etag'] || null
+  };
+}
+
+/**
+ * 从响应头解析文件总大小（content-range 或 content-length）
+ */
+function parseTotalSize(headers) {
+  // content-range 格式: bytes 0-1023/665000000
+  const range = headers['content-range'];
+  if (range) {
+    const parts = range.split('/');
+    if (parts.length === 2) {
+      const size = parseInt(parts[1], 10);
+      if (!isNaN(size)) return size;
+    }
+  }
+  const cl = parseInt(headers['content-length'] || '0', 10);
+  return isNaN(cl) ? 0 : cl;
+}
+
+/**
+ * 分块读取大文件 — 仅读取前 N 字节用于预览/采样
+ * 适用于超大语料文件的类型检测和内容预览
+ */
+async function readPartial(bucket, key, maxBytes) {
+  const limit = maxBytes || 1024 * 1024;  // 默认1MB
+  const bucketName = resolveBucketName(bucket);
+  const host = getBucketHost(bucketName);
+  const fullPath = '/' + key;
+
+  const qIdx = fullPath.indexOf('?');
+  const signPathname = qIdx >= 0 ? fullPath.substring(0, qIdx) : fullPath;
+
+  return new Promise((resolve, reject) => {
+    const headers = {
+      Host: host,
+      Range: `bytes=0-${limit - 1}`,
+      Authorization: generateSignature('GET', signPathname, host)
+    };
+
+    const req = https.request({
+      hostname: host, port: 443, path: fullPath, method: 'GET', headers, timeout: 30000
+    }, (res) => {
+      const chunks = [];
+      let received = 0;
+      res.on('data', c => {
+        chunks.push(c);
+        received += c.length;
+        if (received >= limit) {
+          res.destroy(); // 已收到足够数据，停止接收
+        }
+      });
+      res.on('end', () => {
+        try {
+          const buffer = Buffer.concat(chunks);
+          const totalSize = parseTotalSize(res.headers);
+          resolve({
+            content: buffer.toString('utf8'),
+            size_bytes: buffer.length,
+            total_size_bytes: totalSize,
+            is_partial: totalSize > buffer.length
+          });
+        } catch (err) {
+          reject(new Error(`COS partial read failed: ${err.message}`));
+        }
+      });
+      res.on('close', () => {
+        // 如果因 destroy() 而关闭，也处理已收到的数据
+        if (chunks.length > 0) {
+          try {
+            const buffer = Buffer.concat(chunks);
+            const totalSize = parseTotalSize(res.headers);
+            resolve({
+              content: buffer.toString('utf8'),
+              size_bytes: buffer.length,
+              total_size_bytes: totalSize,
+              is_partial: true
+            });
+          } catch (err) {
+            reject(new Error(`COS partial read failed: ${err.message}`));
+          }
+        }
+      });
+    });
+    req.on('error', (err) => {
+      if (err.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+        // 预期行为：主动关闭连接
+        return;
+      }
+      reject(err);
+    });
+    req.on('timeout', () => { req.destroy(); reject(new Error('COS request timeout')); });
+    req.end();
+  });
 }
 
 async function del(bucket, key) {
@@ -239,8 +401,8 @@ async function checkConnection() {
 }
 
 module.exports = {
-  write, read, del, list, archive, checkConnection,
+  write, read, readBuffer, head, readPartial, del, list, archive, checkConnection,
   personaWrite, personaRead, personaList,
   validatePersonaCosPath, resolveBucketName,
-  COS_CONFIG
+  COS_CONFIG, MAX_STRING_SAFE_BYTES
 };
