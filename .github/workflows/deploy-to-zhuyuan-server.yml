@@ -498,7 +498,6 @@ jobs:
       - name: 💚 执行健康检查
         env:
           ZY_DOMAIN_MAIN: ${{ secrets.ZY_DOMAIN_MAIN }}
-          ZY_DOMAIN_ALIAS: ${{ secrets.ZY_DOMAIN_ALIAS }}
           ZY_DOMAIN_PREVIEW: ${{ secrets.ZY_DOMAIN_PREVIEW }}
           ZY_FACE_DOMAIN: ${{ secrets.ZY_FACE_DOMAIN }}
         run: |
