@@ -89,6 +89,18 @@
       "notes": "Awen下载完整仓库后部署·铸渊主控自动唤醒"
     }
   ],
+  "cn_domain": {
+    "description": "国内ICP备案域名 · 广州落地页",
+    "domain_secret": "ZY_CN_DOMAIN",
+    "server": "ZY-SVR-004",
+    "icp_number": "陕ICP备2025071211号",
+    "nginx_config": "server/nginx/cn-domain.conf",
+    "landing_page": "server/sites/cn-landing/index.html",
+    "workflow": ".github/workflows/deploy-cn-landing.yml",
+    "deploy_path": "/opt/zhuyuan-cn/sites/cn-landing/",
+    "status": "deploying",
+    "notes": "未来将替代guanghulab.online成为国内用户首页入口"
+  },
   "domain_proxy": {
     "description": "域名未备案反向代理 · 新加坡中转架构",
     "architecture": "用户 → 域名(DNS→SG) → ZY-SVR-002 Nginx → 广州后端",

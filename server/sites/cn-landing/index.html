@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>光湖实验室 · GuanghuLab</title>
+<meta name="description" content="光湖实验室 — 语言驱动的智能创作平台">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-deep:#070b1a;
+  --glow-cyan:#22d3ee;
+  --glow-purple:#a78bfa;
+  --glow-blue:#3b82f6;
+  --glow-amber:#fbbf24;
+  --text-primary:#e8edf5;
+  --text-secondary:#8b95a8;
+  --text-dim:#4a5568;
+  --glass:rgba(12,20,40,0.55);
+  --glass-border:rgba(120,140,180,0.12);
+  --font-body:'Segoe UI','PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;
+  --font-mono:'JetBrains Mono','Fira Code',monospace;
+}
+html{font-size:16px}
+body{
+  font-family:var(--font-body);background:var(--bg-deep);color:var(--text-primary);
+  min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;
+}
+
+/* ═══ 星空画布 ═══ */
+#starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* ═══ 星云 ═══ */
+.nebula{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0;animation:nebulaDrift 20s ease-in-out infinite alternate}
+.neb-1{width:600px;height:600px;background:radial-gradient(circle,rgba(34,211,238,0.08),transparent);top:-120px;right:-100px}
+.neb-2{width:500px;height:500px;background:radial-gradient(circle,rgba(167,139,250,0.07),transparent);bottom:-80px;left:-100px}
+.neb-3{width:350px;height:350px;background:radial-gradient(circle,rgba(59,130,246,0.06),transparent);top:35%;left:15%;animation-delay:-8s}
+@keyframes nebulaDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.05)}100%{transform:translate(-20px,15px) scale(0.95)}}
+
+/* ═══ 光晕粒子 ═══ */
+.particle{position:fixed;width:3px;height:3px;border-radius:50%;pointer-events:none;z-index:0}
+.particle::after{content:'';position:absolute;width:100%;height:100%;border-radius:50%;background:inherit;filter:blur(4px);opacity:.6}
+
+/* ═══ 主容器 ═══ */
+.main-wrap{
+  position:relative;z-index:1;text-align:center;padding:40px 24px;
+  max-width:680px;width:100%;
+}
+
+/* ═══ Logo 图标 ═══ */
+.logo-icon{
+  font-size:72px;margin-bottom:24px;display:inline-block;
+  animation:logoFloat 6s ease-in-out infinite;
+  filter:drop-shadow(0 0 30px rgba(34,211,238,0.3));
+}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* ═══ 标题 ═══ */
+.title{
+  font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:0.02em;
+  margin-bottom:8px;line-height:1.3;
+  background:linear-gradient(135deg,var(--glow-cyan) 0%,var(--glow-blue) 40%,var(--glow-purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% 200%;animation:gradientShift 8s ease-in-out infinite;
+}
+@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+.title-en{
+  font-size:clamp(0.85rem,2vw,1.1rem);font-weight:400;
+  color:var(--text-secondary);letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:40px;opacity:.7;
+}
+
+/* ═══ 分割线 ═══ */
+.divider{
+  width:120px;height:2px;margin:0 auto 36px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--glow-cyan),var(--glow-purple),transparent);
+  animation:dividerPulse 4s ease-in-out infinite;
+}
+@keyframes dividerPulse{0%,100%{opacity:.5;width:120px}50%{opacity:1;width:180px}}
+
+/* ═══ 简介 ═══ */
+.tagline{
+  font-size:clamp(1rem,2.5vw,1.25rem);color:var(--text-secondary);
+  line-height:1.8;margin-bottom:48px;font-weight:300;letter-spacing:0.05em;
+}
+.tagline em{
+  font-style:normal;color:var(--glow-cyan);font-weight:500;
+}
+
+/* ═══ 状态指示 ═══ */
+.status-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 24px;border-radius:40px;
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  font-size:0.85rem;color:var(--text-secondary);
+  margin-bottom:60px;
+  animation:badgeFadeIn 1.5s ease-out 0.5s both;
+}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;background:#34d399;
+  box-shadow:0 0 8px rgba(52,211,153,0.5);
+  animation:dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(0.8)}}
+@keyframes badgeFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ 装饰环 ═══ */
+.orbit-ring{
+  position:fixed;border-radius:50%;border:1px solid rgba(34,211,238,0.04);
+  pointer-events:none;z-index:0;
+}
+.orbit-1{width:500px;height:500px;top:50%;left:50%;transform:translate(-50%,-50%);animation:orbitSpin 60s linear infinite}
+.orbit-2{width:700px;height:700px;top:50%;left:50%;transform:translate(-50%,-50%);animation:orbitSpin 90s linear infinite reverse;border-color:rgba(167,139,250,0.03)}
+.orbit-3{width:900px;height:900px;top:50%;left:50%;transform:translate(-50%,-50%);animation:orbitSpin 120s linear infinite;border-color:rgba(59,130,246,0.025)}
+@keyframes orbitSpin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* 轨道上的光点 */
+.orbit-dot{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:var(--glow-cyan);box-shadow:0 0 10px rgba(34,211,238,0.4);
+}
+.orbit-1 .orbit-dot{top:0;left:50%;transform:translate(-50%,-50%)}
+.orbit-2 .orbit-dot{bottom:0;right:30%;transform:translate(50%,50%)}
+
+/* ═══ 底部备案 ═══ */
+.footer{
+  position:fixed;bottom:0;left:0;width:100%;z-index:10;
+  padding:20px;text-align:center;
+  background:linear-gradient(to top,rgba(7,11,26,0.95),transparent);
+}
+.icp-link{
+  color:var(--text-dim);font-size:13px;text-decoration:none;
+  transition:color .3s;display:inline-flex;align-items:center;gap:6px;
+}
+.icp-link:hover{color:var(--text-secondary)}
+.icp-link .icp-icon{font-size:11px;opacity:.6}
+
+/* ═══ 入场动画 ═══ */
+.fade-up{animation:fadeUp 1s ease-out both}
+.fade-up-d1{animation-delay:0.1s}
+.fade-up-d2{animation-delay:0.3s}
+.fade-up-d3{animation-delay:0.5s}
+.fade-up-d4{animation-delay:0.7s}
+.fade-up-d5{animation-delay:0.9s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ 响应式 ═══ */
+@media(max-width:480px){
+  .logo-icon{font-size:56px}
+  .status-badge{padding:8px 18px;font-size:0.8rem}
+  .orbit-ring{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- 星空画布 -->
+<canvas id="starfield"></canvas>
+
+<!-- 星云 -->
+<div class="nebula neb-1"></div>
+<div class="nebula neb-2"></div>
+<div class="nebula neb-3"></div>
+
+<!-- 装饰轨道环 -->
+<div class="orbit-ring orbit-1"><div class="orbit-dot"></div></div>
+<div class="orbit-ring orbit-2"><div class="orbit-dot"></div></div>
+<div class="orbit-ring orbit-3"></div>
+
+<!-- 主内容 -->
+<div class="main-wrap">
+  <div class="logo-icon fade-up fade-up-d1">🌊</div>
+  <h1 class="title fade-up fade-up-d2">光湖实验室</h1>
+  <p class="title-en fade-up fade-up-d2">GuanghuLab</p>
+  <div class="divider fade-up fade-up-d3"></div>
+  <p class="tagline fade-up fade-up-d4">
+    <em>语言驱动</em>的智能创作平台<br>
+    探索人类与AI共生的数字世界
+  </p>
+  <div class="status-badge fade-up fade-up-d5">
+    <span class="status-dot"></span>
+    系统运行中 · Language-Driven OS
+  </div>
+</div>
+
+<!-- 底部ICP备案 -->
+<footer class="footer">
+  <a class="icp-link" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+    <span class="icp-icon">🛡️</span>
+    陕ICP备2025071211号
+  </a>
+</footer>
+
+<script>
+// ═══ 星空粒子系统 ═══
+(function(){
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  let shootingStars = [];
+  let W, H;
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // 生成静态星星
+  function createStars(count){
+    stars = [];
+    for(let i = 0; i < count; i++){
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.5 + 0.3,
+        alpha: Math.random() * 0.8 + 0.2,
+        twinkleSpeed: Math.random() * 0.02 + 0.005,
+        twinklePhase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+  createStars(200);
+
+  // 流星
+  function spawnShootingStar(){
+    if(shootingStars.length > 2) return;
+    shootingStars.push({
+      x: Math.random() * W * 0.8,
+      y: Math.random() * H * 0.3,
+      len: Math.random() * 80 + 40,
+      speed: Math.random() * 4 + 3,
+      angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3,
+      alpha: 1,
+      decay: Math.random() * 0.015 + 0.008
+    });
+  }
+  setInterval(spawnShootingStar, 4000);
+
+  // 浮动光粒
+  const floatingParticles = [];
+  for(let i = 0; i < 15; i++){
+    floatingParticles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 2 + 1,
+      hue: Math.random() > 0.5 ? 187 : 260, // cyan or purple
+      alpha: Math.random() * 0.4 + 0.1
+    });
+  }
+
+  let time = 0;
+  function animate(){
+    ctx.clearRect(0, 0, W, H);
+    time += 0.016;
+
+    // 绘制星星
+    for(const s of stars){
+      const twinkle = Math.sin(time * s.twinkleSpeed * 60 + s.twinklePhase) * 0.3 + 0.7;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(220,230,255,${s.alpha * twinkle})`;
+      ctx.fill();
+    }
+
+    // 绘制流星
+    for(let i = shootingStars.length - 1; i >= 0; i--){
+      const ss = shootingStars[i];
+      const endX = ss.x - Math.cos(ss.angle) * ss.len;
+      const endY = ss.y - Math.sin(ss.angle) * ss.len;
+
+      const grad = ctx.createLinearGradient(ss.x, ss.y, endX, endY);
+      grad.addColorStop(0, `rgba(220,240,255,${ss.alpha})`);
+      grad.addColorStop(1, `rgba(220,240,255,0)`);
+
+      ctx.beginPath();
+      ctx.moveTo(ss.x, ss.y);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // 头部光点
+      ctx.beginPath();
+      ctx.arc(ss.x, ss.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,230,255,${ss.alpha})`;
+      ctx.fill();
+
+      ss.x += Math.cos(ss.angle) * ss.speed;
+      ss.y += Math.sin(ss.angle) * ss.speed;
+      ss.alpha -= ss.decay;
+
+      if(ss.alpha <= 0 || ss.x > W || ss.y > H){
+        shootingStars.splice(i, 1);
+      }
+    }
+
+    // 绘制浮动光粒
+    for(const p of floatingParticles){
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      const pulse = Math.sin(time * 2 + p.x * 0.01) * 0.2 + 0.8;
+      ctx.fillStyle = `hsla(${p.hue},70%,65%,${p.alpha * pulse})`;
+      ctx.fill();
+
+      // 光晕
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue},70%,65%,${p.alpha * pulse * 0.15})`;
+      ctx.fill();
+
+      p.x += p.vx;
+      p.y += p.vy;
+      if(p.x < 0 || p.x > W) p.vx *= -1;
+      if(p.y < 0 || p.y > H) p.vy *= -1;
+    }
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // 窗口大小变化时重新生成星星
+  window.addEventListener('resize', () => createStars(200));
+})();
+
+// ═══ 鼠标跟随光晕 ═══
+(function(){
+  const glow = document.createElement('div');
+  glow.style.cssText = 'position:fixed;width:300px;height:300px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(34,211,238,0.06),transparent 70%);transition:transform .15s ease-out;will-change:transform;';
+  document.body.appendChild(glow);
+
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    glow.style.transform = `translate(${mx - 150}px, ${my - 150}px)`;
+  });
+})();
+</script>
+</body>
+</html>
