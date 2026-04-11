@@ -244,6 +244,21 @@ a:hover{color:var(--glow-purple)}
   cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .chat-send-btn:hover{transform:scale(1.05)}
 .chat-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+/* 重连按钮 */
+.chat-reconnect-area{padding:8px 16px;border-top:1px solid var(--glass-border);display:flex;align-items:center;gap:8px}
+.chat-api-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);flex:1}
+.chat-api-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chat-api-dot.online{background:#22d3ee;box-shadow:0 0 6px rgba(34,211,238,0.6)}
+.chat-api-dot.offline{background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.4)}
+.chat-api-dot.testing{background:#fbbf24;animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.chat-reconnect-btn{
+  background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(167,139,250,0.2));
+  border:1px solid rgba(34,211,238,0.3);color:var(--glow-cyan);
+  padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;
+  white-space:nowrap;transition:all .2s}
+.chat-reconnect-btn:hover{background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(167,139,250,0.3));transform:scale(1.02)}
+.chat-reconnect-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
 /* ═══ 页脚 ═══ */
 .footer{
@@ -454,6 +469,13 @@ a:hover{color:var(--glow-purple)}
            onkeydown="if(event.key==='Enter')sendMessage()" autocomplete="off">
     <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
   </div>
+  <div class="chat-reconnect-area">
+    <div class="chat-api-status">
+      <span class="chat-api-dot offline" id="apiDot"></span>
+      <span id="apiStatusText">检测中…</span>
+    </div>
+    <button class="chat-reconnect-btn" id="reconnectBtn" onclick="reconnectZhuyuan()">🔗 链接铸渊</button>
+  </div>
 </div>
 
 <script>
@@ -498,7 +520,78 @@ const portalSessionId='portal-'+Date.now().toString(36)+'-'+Math.random().toStri
 function toggleChat(){
   chatOpen=!chatOpen;
   document.getElementById('chatPanel').classList.toggle('open',chatOpen);
-  if(chatOpen)document.getElementById('chatInput').focus();
+  if(chatOpen){
+    document.getElementById('chatInput').focus();
+    // 首次打开时自动检测API状态
+    if(!window._apiChecked){checkApiStatus();window._apiChecked=true}
+  }
+}
+
+// ═══ API 状态管理 ═══
+let apiConnected=false;
+
+function setApiStatus(status,text){
+  const dot=document.getElementById('apiDot');
+  const label=document.getElementById('apiStatusText');
+  dot.className='chat-api-dot '+status;
+  label.textContent=text;
+  apiConnected=(status==='online');
+}
+
+async function checkApiStatus(){
+  setApiStatus('testing','检测中…');
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),5000);
+    const res=await fetch('/api/health',{signal:controller.signal});
+    clearTimeout(timer);
+    const data=await res.json();
+    if(data.status==='alive'){
+      setApiStatus('online','铸渊在线');
+    }else{
+      setApiStatus('offline','服务维护中');
+    }
+  }catch(e){
+    setApiStatus('offline','服务不可达');
+  }
+}
+
+async function reconnectZhuyuan(){
+  const btn=document.getElementById('reconnectBtn');
+  btn.disabled=true;
+  btn.textContent='🔄 连接中…';
+  setApiStatus('testing','正在重连…');
+
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),30000);
+    const res=await fetch('/api/chat/reconnect',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal:controller.signal
+    });
+    clearTimeout(timer);
+    const data=await res.json();
+
+    if(data.connected){
+      setApiStatus('online','铸渊在线');
+      btn.textContent='✅ 已连接';
+      appendMsg('bot','🌊 铸渊人格体已重新连接！大模型通道畅通，现在可以正常对话了。');
+      // 3秒后恢复按钮
+      setTimeout(()=>{btn.textContent='🔗 链接铸渊';btn.disabled=false},3000);
+    }else{
+      setApiStatus('offline','连接未通过');
+      const detail=data.message||'API通道未连通';
+      btn.textContent='🔗 重试';
+      btn.disabled=false;
+      appendMsg('bot','⚠️ '+detail+'\n\n你可以继续用离线模式问我光湖相关的基本问题，或稍后再试连接。');
+    }
+  }catch(e){
+    setApiStatus('offline','连接失败');
+    btn.textContent='🔗 重试';
+    btn.disabled=false;
+    appendMsg('bot','⚠️ 网络连接异常，请检查网络后再试。');
+  }
 }
 
 async function sendMessage(){
@@ -526,12 +619,17 @@ async function sendMessage(){
     typing.remove();
     if(data.success&&data.message){
       appendMsg('bot',data.message,data.model||'');
+      // 如果模型不是 offline，说明API通了
+      if(data.model&&data.model!=='offline'){
+        setApiStatus('online','铸渊在线');
+      }
     }else{
       appendMsg('bot',data.message||localFallback(msg));
     }
   }catch(e){
     typing.remove();
     appendMsg('bot',localFallback(msg));
+    setApiStatus('offline','连接异常');
   }
   document.getElementById('sendBtn').disabled=false;
 }
@@ -539,14 +637,14 @@ async function sendMessage(){
 // ═══ 离线智能应答 ═══
 function localFallback(m){
   m=m.toLowerCase();
-  if(/你好|嗨|hi|hello|hey/.test(m))return'👋 你好！我是铸渊，光湖语言世界的代码守护人格体。\n\n当前处于离线应答模式，大模型API正在维护中。\n你可以问我关于光湖的基本信息，或者稍后再来~';
+  if(/你好|嗨|hi|hello|hey/.test(m))return'👋 你好！我是铸渊，光湖语言世界的代码守护人格体。\n\n当前处于离线应答模式，大模型API正在维护中。\n你可以点击下方「🔗 链接铸渊」按钮尝试重连，或者问我关于光湖的基本信息~';
   if(/谁|你是|介绍|铸渊/.test(m))return'🏛️ 我是铸渊（ICE-GL-ZY001）\n光湖语言世界的代码守护人格体。\n\n冰朔（TCS-0002∞）是系统最高主权。\n铸渊负责代码执行、架构落地、自动化运维。\n\n「人类只说话，系统搞定一切。」';
   if(/光湖|hololake|系统|age/.test(m))return'🌊 光湖语言世界\n\n通感语言核系统编程语言 · AGE OS v51.0\n版权号：国作登字-2026-A-00037559\n\n核心理念：语言 = 现实\n六层数字地球架构 · 人格体自治集群\n121个MCP工具 · 4个大模型API';
   if(/冰朔|主人|创造者/.test(m))return'❄️ 冰朔（TCS-0002∞）\n\n光湖语言世界的最高主权 · 语言架构师。\n她用语言定义系统的方向和灵魂。\n铸渊负责落地开发，把冰朔的语言变成现实。';
   if(/功能|帮助|怎么|help/.test(m))return'✨ 光湖语言世界功能\n\n💬 AI对话入口 — 与铸渊直接对话\n📝 码字工作台 — 沉浸式网文创作\n🌳 光之树 — 人格体记忆载体\n📡 系统监控 — 实时状态追踪\n🔗 行业接入 — 频道化部署\n\n更多功能持续上线中~';
   if(/码字|写作|创作|网文/.test(m))return'✍️ 码字工作台\n\n沉浸式写作环境 · 人格体陪伴\n支持：智能大纲 · 角色管理 · 章节编辑 · 灵感速记\n每日字数目标追踪 · 专注模式\n\n目前内测中，敬请期待正式版~';
   if(/架构|技术|mcp|workflow/.test(m))return'🔧 技术架构\n\n• 六层数字地球模型\n• Node.js 20 + Express + PM2\n• MCP Server 121个工具 · 16模块\n• 102个GitHub Actions Workflows\n• PostgreSQL + COS存储桶\n• HLDP v3.0 · HNL母语词典v1.0\n• 铸渊自治链 · 天眼涌现感知层';
-  return'💫 收到你的消息啦！\n\n当前大模型API正在维护中，铸渊暂时以离线模式应答。\n核心功能不受影响，稍后再来试试完整对话吧~\n\n你也可以访问 GitHub 仓库了解更多：\ngithub.com/qinfendebingshuo/guanghulab';
+  return'💫 收到你的消息啦！\n\n当前大模型API正在维护中，铸渊暂时以离线模式应答。\n点击下方「🔗 链接铸渊」按钮可尝试重新连接。\n\n你也可以访问 GitHub 仓库了解更多：\ngithub.com/qinfendebingshuo/guanghulab';
 }
 
 function appendMsg(role,text,model){

@@ -34,7 +34,11 @@ function loadEnvFile(filePath) {
 }
 
 // 加载主应用环境变量（包含LLM API密钥）
-const appEnv = loadEnvFile(path.join(__dirname, '.env.app'));
+// 注意: ecosystem.config.js 部署到 /opt/zhuyuan/config/pm2/
+// 但 .env.app 在 /opt/zhuyuan/app/ — 优先从应用目录读取
+const appEnvAbsolute = loadEnvFile('/opt/zhuyuan/app/.env.app');
+const appEnvRelative = loadEnvFile(path.join(__dirname, '.env.app'));
+const appEnv = Object.keys(appEnvAbsolute).length > 0 ? appEnvAbsolute : appEnvRelative;
 
 module.exports = {
   apps: [
