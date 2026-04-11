@@ -143,20 +143,19 @@ jobs:
           ZY_KIMI_API_KEY: ${{ secrets.ZY_KIMI_API_KEY }}
           ZY_QINGYAN_API_KEY: ${{ secrets.ZY_QINGYAN_API_KEY }}
         run: |
-          ssh cn-target << KEYS_CMD
-          set -e
-
-          # 写入LLM API密钥环境文件
-          cat > /opt/zhuyuan-cn/config/.env.llm << 'ENVEOF'
+          # 在本地生成密钥文件（变量在此展开）
+          cat > /tmp/.env.llm << ENVEOF
           ZY_DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}
           ZY_QIANWEN_API_KEY=${ZY_QIANWEN_API_KEY}
           ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}
           ZY_QINGYAN_API_KEY=${ZY_QINGYAN_API_KEY}
           ENVEOF
-          chmod 600 /opt/zhuyuan-cn/config/.env.llm
 
+          # 上传到目标服务器
+          scp -F ~/.ssh/config /tmp/.env.llm cn-target:/opt/zhuyuan-cn/config/.env.llm
+          ssh cn-target 'chmod 600 /opt/zhuyuan-cn/config/.env.llm'
+          rm -f /tmp/.env.llm
           echo "✅ 四大国内模型API密钥已注入"
-          KEYS_CMD
 
       - name: 🔧 启用Nginx配置 & 重载
         run: |
