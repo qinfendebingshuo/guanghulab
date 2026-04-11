@@ -188,7 +188,7 @@ jobs:
           # 保留 conf.d 中的全局配置(如 gzip, ssl_params 等)
           # 只移除包含 server { 或 proxy_pass 的自定义站点配置
           for conf in /etc/nginx/conf.d/*.conf; do
-            if [ -f "$conf" ] && grep -q "server\s*{" "$conf" 2>/dev/null; then
+            if [ -f "$conf" ] && grep -qE "server[[:space:]]*\{" "$conf" 2>/dev/null; then
               echo "  🗑️ 移除conf.d冲突站点配置: $(basename "$conf")"
               sudo rm -f "$conf"
             fi
@@ -265,7 +265,7 @@ jobs:
           # 验证健康端点来自cn-domain.conf而非其他服务
           if echo "$HEALTH" | grep -q "cn-landing"; then
             echo "✅ 健康端点: 来自cn-domain.conf（正确）"
-          elif echo "$HEALTH" | grep -q "relay\|proxy\|mcp"; then
+          elif echo "$HEALTH" | grep -qE "relay|proxy|mcp"; then
             echo "❌ 健康端点: 来自其他服务 — Nginx配置冲突未完全解决"
           fi
 
@@ -367,7 +367,7 @@ jobs:
           echo "响应: ${HEALTH}"
           if echo "$HEALTH" | grep -q "cn-landing"; then
             echo "✅ 来自cn-domain.conf（正确）"
-          elif echo "$HEALTH" | grep -q "relay\|proxy\|mcp"; then
+          elif echo "$HEALTH" | grep -qE "relay|proxy|mcp"; then
             echo "❌ 来自其他服务 — 存在Nginx配置冲突"
           fi
 
