@@ -45,20 +45,68 @@ jobs:
           SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/cn_key
+          chmod 700 ~/.ssh
+
+          # 写入私钥 · 确保末尾有换行符
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/cn_key
           chmod 600 ~/.ssh/cn_key
+
+          # 格式校验
           if head -1 ~/.ssh/cn_key | grep -q "BEGIN" && tail -1 ~/.ssh/cn_key | grep -q "END"; then
             echo "✅ SSH私钥格式正确"
           else
             echo "❌ SSH私钥格式异常 — 请检查 ZY_CN_LLM_KEY"
+            echo "首行: $(head -1 ~/.ssh/cn_key)"
+            echo "末行: $(tail -1 ~/.ssh/cn_key)"
             exit 1
           fi
-          ssh-keyscan -H ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # 显示密钥指纹用于调试（不泄露私钥内容）
+          ssh-keygen -l -f ~/.ssh/cn_key && echo "✅ 密钥指纹读取成功" || echo "⚠️ 无法读取密钥指纹 — 密钥可能格式异常，请检查 ZY_CN_LLM_KEY 或重新生成密钥对"
+
+          # 写入 SSH config · 统一连接参数
+          # 使用 heredoc 直接插值 Host/User（secrets 由 GitHub Actions 运行时注入，不会出现在日志中）
+          cat > ~/.ssh/config << SSHCONF
+          Host cn-relay
+            HostName ${{ secrets.ZY_CN_LLM_HOST }}
+            User ${{ secrets.ZY_CN_LLM_USER }}
+            StrictHostKeyChecking accept-new
+            UserKnownHostsFile ~/.ssh/known_hosts
+            IdentityFile ~/.ssh/cn_key
+            IdentitiesOnly yes
+            ServerAliveInterval 15
+            ServerAliveCountMax 3
+            ConnectTimeout 30
+          SSHCONF
+          chmod 600 ~/.ssh/config
+
+          # 扫描主机公钥（不静默·便于排查）
+          echo "═══ 扫描目标主机公钥 ═══"
+          ssh-keyscan -T 10 ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>&1 || echo "⚠️ ssh-keyscan 未返回主机密钥（可能被安全组拦截）"
+          echo "known_hosts 条目数: $(wc -l < ~/.ssh/known_hosts)"
+
+      - name: 🔗 SSH连接测试
+        run: |
+          echo "═══ SSH连接测试（verbose模式） ═══"
+          ssh -vvv -o BatchMode=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/cn_key \
+            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} \
+            "echo '✅ SSH连接成功 · $(hostname) · $(date)' && test -d /opt/cn-llm-relay && echo '✅ 部署目录存在' || echo '⚠️ /opt/cn-llm-relay 不存在·首次部署将自动创建'" \
+            2>&1 || {
+              echo ""
+              echo "═══ SSH连接失败 · 排查方向 ═══"
+              echo "1. 检查广州服务器 ~/.ssh/authorized_keys 是否包含对应公钥"
+              echo "2. 检查权限: chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+              echo "3. 检查 /etc/ssh/sshd_config: PubkeyAuthentication yes"
+              echo "4. 检查腾讯云安全组是否放行 GitHub Actions IP 的 22 端口"
+              echo "5. 查看服务器 SSH 日志: journalctl -u sshd -n 50"
+              exit 1
+            }
 
       - name: 📦 同步代码到广州
         run: |
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/cn_key" \
+            -e "ssh -i ~/.ssh/cn_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30" \
             --exclude='node_modules' \
             --exclude='.env.relay' \
             --exclude='logs' \
@@ -130,14 +178,14 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/cn_key
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/cn_key
           chmod 600 ~/.ssh/cn_key
-          ssh-keyscan -H ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -T 10 ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>&1 || true
 
       - name: 🩺 检查服务状态
         run: |
-          ssh -i ~/.ssh/cn_key \
+          ssh -i ~/.ssh/cn_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
             ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} << 'CMD'
           echo "═══ PM2 状态 ═══"
           pm2 list
@@ -158,14 +206,14 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/cn_key
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/cn_key
           chmod 600 ~/.ssh/cn_key
-          ssh-keyscan -H ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -T 10 ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>&1 || true
 
       - name: 🔄 重启
         run: |
-          ssh -i ~/.ssh/cn_key \
+          ssh -i ~/.ssh/cn_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
             ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} << 'CMD'
           cd /opt/cn-llm-relay
           pm2 restart cn-llm-relay

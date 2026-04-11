@@ -415,7 +415,7 @@ jobs:
           curl -sf http://localhost:3100/health || echo "⚠️ MCP Server健康检查失败，等待更长时间..."
           sleep 5
           curl -sf http://localhost:3800/api/health && echo "✅ 主应用已上线 (3800)" || echo "❌ 主应用启动失败 (3800)"
-          curl -sf http://localhost:3801/api/health && echo "✅ 预览进程已上线 (3801)" || echo "❌ 预览进程启动失败 (3801) · guanghulab.online 可能502"
+          curl -sf http://localhost:3801/api/health && echo "✅ 预览进程已上线 (3801)" || echo "❌ 预览进程启动失败 (3801) · 若 ZY_DOMAIN_PREVIEW 域名指向此端口则该域名可能502"
           curl -sf http://localhost:3100/health && echo "✅ MCP Server已上线 (3100)" || echo "❌ MCP Server启动失败 (3100)"
 
           # 记录部署操作
