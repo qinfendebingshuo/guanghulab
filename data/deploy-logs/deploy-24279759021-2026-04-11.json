@@ -1,0 +1,209 @@
+{
+  "_meta": {
+    "observer": "铸渊全链路部署观测系统 v1.0",
+    "copyright": "国作登字-2026-A-00037559",
+    "collected_at": "2026-04-11T09:39:43.155Z"
+  },
+  "run": {
+    "id": 24279759021,
+    "workflow_name": "🚀 铸渊智能运维 · 测试站自动部署",
+    "conclusion": "failure",
+    "status": "completed",
+    "html_url": "https://github.com/qinfendebingshuo/guanghulab/actions/runs/24279759021",
+    "head_sha": "0f5c2a0da81295adc4288e8e2ada8a65bc1ab5cd",
+    "head_branch": "main",
+    "actor": "qinfendebingshuo",
+    "created_at": "2026-04-11T09:38:20Z",
+    "updated_at": "2026-04-11T09:39:30Z",
+    "run_started_at": "2026-04-11T09:38:20Z"
+  },
+  "jobs_summary": {
+    "total": 4,
+    "success": 1,
+    "failure": 2,
+    "skipped": 1,
+    "cancelled": 0
+  },
+  "failed_jobs": [
+    {
+      "job_id": 70899710841,
+      "job_name": "🔍 健康检查 + 智能分析",
+      "conclusion": "failure",
+      "started_at": "2026-04-11T09:39:11Z",
+      "completed_at": "2026-04-11T09:39:23Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "📥 检出代码",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "🟢 配置 Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "🔍 运行健康检查",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "🧠 智能日志分析 (如需要)",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5
+        },
+        {
+          "name": "📊 评估结果",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 6
+        },
+        {
+          "name": "💾 保存工单数据",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Post 🟢 配置 Node.js",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13
+        },
+        {
+          "name": "Post 📥 检出代码",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        }
+      ],
+      "log_content": "﻿2026-04-11T09:39:12.4492232Z Current runner version: '2.333.1'\n2026-04-11T09:39:12.4515152Z ##[group]Runner Image Provisioner\n2026-04-11T09:39:12.4515978Z Hosted Compute Agent\n2026-04-11T09:39:12.4516609Z Version: 20260213.493\n2026-04-11T09:39:12.4517283Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3\n2026-04-11T09:39:12.4518407Z Build Date: 2026-02-13T00:28:41Z\n2026-04-11T09:39:12.4519088Z Worker ID: {dc344305-92d3-43ed-89b3-4199639326fa}\n2026-04-11T09:39:12.4519781Z Azure Region: westus\n2026-04-11T09:39:12.4520323Z ##[endgroup]\n2026-04-11T09:39:12.4521843Z ##[group]Operating System\n2026-04-11T09:39:12.4522454Z Ubuntu\n2026-04-11T09:39:12.4522935Z 24.04.4\n2026-04-11T09:39:12.4523461Z LTS\n2026-04-11T09:39:12.4523923Z ##[endgroup]\n2026-04-11T09:39:12.4524399Z ##[group]Runner Image\n2026-04-11T09:39:12.4525001Z Image: ubuntu-24.04\n2026-04-11T09:39:12.4525601Z Version: 20260406.80.1\n2026-04-11T09:39:12.4527170Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260406.80/images/ubuntu/Ubuntu2404-Readme.md\n2026-04-11T09:39:12.4528985Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260406.80\n2026-04-11T09:39:12.4529946Z ##[endgroup]\n2026-04-11T09:39:12.4531008Z ##[group]GITHUB_TOKEN Permissions\n2026-04-11T09:39:12.4533135Z Contents: write\n2026-04-11T09:39:12.4533807Z Metadata: read\n2026-04-11T09:39:12.4534353Z ##[endgroup]\n2026-04-11T09:39:12.4536772Z Secret source: Actions\n2026-04-11T09:39:12.4537477Z Prepare workflow directory\n2026-04-11T09:39:12.4860939Z Prepare all required actions\n2026-04-11T09:39:12.4905689Z Getting action download info\n2026-04-11T09:39:13.0470705Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)\n2026-04-11T09:39:13.1916552Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)\n2026-04-11T09:39:13.4967242Z Complete job name: 🔍 健康检查 + 智能分析\n2026-04-11T09:39:13.5668122Z ##[group]Run actions/checkout@v4\n2026-04-11T09:39:13.5669020Z with:\n2026-04-11T09:39:13.5669459Z   repository: qinfendebingshuo/guanghulab\n2026-04-11T09:39:13.5670171Z   token: ***\n2026-04-11T09:39:13.5670576Z   ssh-strict: true\n2026-04-11T09:39:13.5670988Z   ssh-user: git\n2026-04-11T09:39:13.5671407Z   persist-credentials: true\n2026-04-11T09:39:13.5671856Z   clean: true\n2026-04-11T09:39:13.5672269Z   sparse-checkout-cone-mode: true\n2026-04-11T09:39:13.5672754Z   fetch-depth: 1\n2026-04-11T09:39:13.5673151Z   fetch-tags: false\n2026-04-11T09:39:13.5673562Z   show-progress: true\n2026-04-11T09:39:13.5673976Z   lfs: false\n2026-04-11T09:39:13.5674361Z   submodules: false\n2026-04-11T09:39:13.5674785Z   set-safe-directory: true\n2026-04-11T09:39:13.5675450Z ##[endgroup]\n2026-04-11T09:39:13.6738914Z Syncing repository: qinfendebingshuo/guanghulab\n2026-04-11T09:39:13.6741027Z ##[group]Getting Git version info\n2026-04-11T09:39:13.6741823Z Working directory is '/home/runner/work/guanghulab/guanghulab'\n2026-04-11T09:39:13.6742809\n\n... [截断 41935 字符] ...\n\n6-04-11T09:39:20.6150545Z  * [new branch]        copilot/zy-griddb-core-upgrade -> origin/copilot/zy-griddb-core-upgrade\n2026-04-11T09:39:20.6151246Z  * [new branch]        copilot/zy-hibernation-2026-0324-001-a -> origin/copilot/zy-hibernation-2026-0324-001-a\n2026-04-11T09:39:20.6152350Z  * [new branch]        copilot/zy-humanside-fix-2026-0325-002-system-user-service -> origin/copilot/zy-humanside-fix-2026-0325-002-system-user-service\n2026-04-11T09:39:20.6153203Z  * [new branch]        copilot/zy-id-recon-2026-update -> origin/copilot/zy-id-recon-2026-update\n2026-04-11T09:39:20.6153942Z  * [new branch]        copilot/zy-neural-upgrade-2026-0325-r2-001 -> origin/copilot/zy-neural-upgrade-2026-0325-r2-001\n2026-04-11T09:39:20.6154856Z  * [new branch]        copilot/zy-nginx-rootfix-2026-0325-001-fix-nginx-root -> origin/copilot/zy-nginx-rootfix-2026-0325-001-fix-nginx-root\n2026-04-11T09:39:20.6155740Z  * [new branch]        copilot/zy-ontology-sync-2026-0324-001-a -> origin/copilot/zy-ontology-sync-2026-0324-001-a\n2026-04-11T09:39:20.6156500Z  * [new branch]        copilot/zy-pat-audit-2026-0324-001-fix -> origin/copilot/zy-pat-audit-2026-0324-001-fix\n2026-04-11T09:39:20.6157153Z  * [new branch]        copilot/zy-redesign-readme -> origin/copilot/zy-redesign-readme\n2026-04-11T09:39:20.6158307Z  * [new branch]        copilot/zy-restruct-2026-0322-001-upgrade-github -> origin/copilot/zy-restruct-2026-0322-001-upgrade-github\n2026-04-11T09:39:20.6159247Z  * [new branch]        copilot/zy-sk-eyew-redefine-core-architecture -> origin/copilot/zy-sk-eyew-redefine-core-architecture\n2026-04-11T09:39:20.6160127Z  * [new branch]        copilot/zy-skyeeye-restore-002-core-recovery -> origin/copilot/zy-skyeeye-restore-002-core-recovery\n2026-04-11T09:39:20.6160867Z  * [new branch]        copilot/zy-skyeye-fed-2026-03 -> origin/copilot/zy-skyeye-fed-2026-03\n2026-04-11T09:39:20.6161542Z  * [new branch]        copilot/zy-sysboot-2026-03-24-phase-0 -> origin/copilot/zy-sysboot-2026-03-24-phase-0\n2026-04-11T09:39:20.6162257Z  * [new branch]        copilot/zy-tianyan-autofix-upgrade -> origin/copilot/zy-tianyan-autofix-upgrade\n2026-04-11T09:39:20.6162969Z  * [new branch]        copilot/zy-token-renew-2026-0324-001 -> origin/copilot/zy-token-renew-2026-0324-001\n2026-04-11T09:39:20.6163686Z  * [new branch]        copilot/zy-wrting-platform-0325-001 -> origin/copilot/zy-wrting-platform-0325-001\n2026-04-11T09:39:20.6164298Z  * [new branch]        dev-010-bc-integ-006    -> origin/dev-010-bc-integ-006\n2026-04-11T09:39:20.6164807Z  * [new branch]        dev/DEV-004/floating-ai -> origin/dev/DEV-004/floating-ai\n2026-04-11T09:39:20.6165309Z  * [new branch]        dev/DEV-005/bridge-auto -> origin/dev/DEV-005/bridge-auto\n2026-04-11T09:39:20.6165794Z  * [new branch]        dev/DEV-010/bridge-auto -> origin/dev/DEV-010/bridge-auto\n2026-04-11T09:39:20.6166410Z  * [new branch]        dev/DEV-012/homepage    -> origin/dev/DEV-012/homepage\n2026-04-11T09:39:20.6166861Z  * [new branch]        master                  -> origin/master\n2026-04-11T09:39:20.6167295Z  * [new branch]        step5-workflow          -> origin/step5-workflow\n2026-04-11T09:39:20.6168412Z  * [new branch]        vercel/react-server-components-cve-vu-zahxz0 -> origin/vercel/react-server-components-cve-vu-zahxz0\n2026-04-11T09:39:20.6216193Z Updating 0f5c2a0d..9acadd16\n2026-04-11T09:39:20.6216620Z Fast-forward\n2026-04-11T09:39:20.6241617Z  README.md                                          |  2 +-\n2026-04-11T09:39:20.6242309Z  data/aoac/chain-report.json                        | 16 ++---\n2026-04-11T09:39:20.6242779Z  data/aoac/chain-status.json                        |  6 +-\n2026-04-11T09:39:20.6243241Z  .../2026-04-11/AOAC-CHAIN-20260411-333.json        | 32 +++++++++\n2026-04-11T09:39:20.6243754Z  data/aoac/merge-result-log.json                    | 75 ++++++++++------------\n2026-04-11T09:39:20.6244245Z  data/aoac/readme-sync-trigger.json                 |  6 +-\n2026-04-11T09:39:20.6244643Z  6 files changed, 80 insertions(+), 57 deletions(-)\n2026-04-11T09:39:20.6245087Z  create mode 100644 data/aoac/history/2026-04-11/AOAC-CHAIN-20260411-333.json\n2026-04-11T09:39:20.6402114Z Post job cleanup.\n2026-04-11T09:39:20.7334368Z [command]/usr/bin/git version\n2026-04-11T09:39:20.7370937Z git version 2.53.0\n2026-04-11T09:39:20.7420990Z Temporarily overriding HOME='/home/runner/work/_temp/f12d63f4-7ca0-4a5f-86e6-2202bcc6025c' before making global git config changes\n2026-04-11T09:39:20.7422152Z Adding repository directory to the temporary git global config as a safe directory\n2026-04-11T09:39:20.7425926Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/guanghulab/guanghulab\n2026-04-11T09:39:20.7458125Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand\n2026-04-11T09:39:20.7489776Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"\n2026-04-11T09:39:20.7716939Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader\n2026-04-11T09:39:20.7736352Z http.https://github.com/.extraheader\n2026-04-11T09:39:20.7749166Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader\n2026-04-11T09:39:20.7778517Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"\n2026-04-11T09:39:20.7999483Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:\n2026-04-11T09:39:20.8029112Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url\n2026-04-11T09:39:20.8363649Z Evaluate and set job outputs\n2026-04-11T09:39:20.8369932Z Set output 'health_ok'\n2026-04-11T09:39:20.8371572Z Set output 'needs_retry'\n2026-04-11T09:39:20.8372515Z Cleaning up orphan processes\n2026-04-11T09:39:20.8672507Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/\n"
+    },
+    {
+      "job_id": 70899721902,
+      "job_name": "📦 归档成功工单",
+      "conclusion": "failure",
+      "started_at": "2026-04-11T09:39:25Z",
+      "completed_at": "2026-04-11T09:39:29Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "📥 检出代码",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "🟢 配置 Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "📦 归档工单",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 4
+        },
+        {
+          "name": "📊 更新仪表盘",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5
+        },
+        {
+          "name": "💾 提交归档数据",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6
+        },
+        {
+          "name": "Post 🟢 配置 Node.js",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11
+        },
+        {
+          "name": "Post 📥 检出代码",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        }
+      ],
+      "log_content": "﻿2026-04-11T09:39:26.4888104Z Current runner version: '2.333.1'\n2026-04-11T09:39:26.4922896Z ##[group]Runner Image Provisioner\n2026-04-11T09:39:26.4924237Z Hosted Compute Agent\n2026-04-11T09:39:26.4925105Z Version: 20260213.493\n2026-04-11T09:39:26.4926169Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3\n2026-04-11T09:39:26.4927260Z Build Date: 2026-02-13T00:28:41Z\n2026-04-11T09:39:26.4928228Z Worker ID: {01fb1741-4fdd-4966-b6cf-32c52ec3d13a}\n2026-04-11T09:39:26.4929349Z Azure Region: eastus\n2026-04-11T09:39:26.4930158Z ##[endgroup]\n2026-04-11T09:39:26.4931982Z ##[group]Operating System\n2026-04-11T09:39:26.4932983Z Ubuntu\n2026-04-11T09:39:26.4933638Z 24.04.4\n2026-04-11T09:39:26.4934558Z LTS\n2026-04-11T09:39:26.4935291Z ##[endgroup]\n2026-04-11T09:39:26.4936078Z ##[group]Runner Image\n2026-04-11T09:39:26.4937016Z Image: ubuntu-24.04\n2026-04-11T09:39:26.4938098Z Version: 20260406.80.1\n2026-04-11T09:39:26.4939957Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260406.80/images/ubuntu/Ubuntu2404-Readme.md\n2026-04-11T09:39:26.4942428Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260406.80\n2026-04-11T09:39:26.4943806Z ##[endgroup]\n2026-04-11T09:39:26.4945652Z ##[group]GITHUB_TOKEN Permissions\n2026-04-11T09:39:26.4948619Z Contents: write\n2026-04-11T09:39:26.4949439Z Metadata: read\n2026-04-11T09:39:26.4950179Z ##[endgroup]\n2026-04-11T09:39:26.4953043Z Secret source: Actions\n2026-04-11T09:39:26.4954616Z Prepare workflow directory\n2026-04-11T09:39:26.5402982Z Prepare all required actions\n2026-04-11T09:39:26.5456762Z Getting action download info\n2026-04-11T09:39:26.8187316Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)\n2026-04-11T09:39:26.9451311Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)\n2026-04-11T09:39:27.1402849Z Complete job name: 📦 归档成功工单\n2026-04-11T09:39:27.2076993Z ##[group]Run actions/checkout@v4\n2026-04-11T09:39:27.2077771Z with:\n2026-04-11T09:39:27.2078169Z   repository: qinfendebingshuo/guanghulab\n2026-04-11T09:39:27.2078902Z   token: ***\n2026-04-11T09:39:27.2079270Z   ssh-strict: true\n2026-04-11T09:39:27.2079654Z   ssh-user: git\n2026-04-11T09:39:27.2080037Z   persist-credentials: true\n2026-04-11T09:39:27.2080482Z   clean: true\n2026-04-11T09:39:27.2080875Z   sparse-checkout-cone-mode: true\n2026-04-11T09:39:27.2081326Z   fetch-depth: 1\n2026-04-11T09:39:27.2081706Z   fetch-tags: false\n2026-04-11T09:39:27.2082096Z   show-progress: true\n2026-04-11T09:39:27.2082488Z   lfs: false\n2026-04-11T09:39:27.2082839Z   submodules: false\n2026-04-11T09:39:27.2083233Z   set-safe-directory: true\n2026-04-11T09:39:27.2083803Z ##[endgroup]\n2026-04-11T09:39:27.3168652Z Syncing repository: qinfendebingshuo/guanghulab\n2026-04-11T09:39:27.3170344Z ##[group]Getting Git version info\n2026-04-11T09:39:27.3171142Z Working directory is '/home/runner/work/guanghulab/guanghulab'\n2026-04-11T09:39:27.3172081Z [co\n\n... [截断 1468 字符] ...\n\n can be renamed via this command:\n2026-04-11T09:39:27.3362342Z hint:\n2026-04-11T09:39:27.3362701Z hint: \tgit branch -m <name>\n2026-04-11T09:39:27.3363111Z hint:\n2026-04-11T09:39:27.3363669Z hint: Disable this message with \"git config set advice.defaultBranchName false\"\n2026-04-11T09:39:27.3365194Z Initialized empty Git repository in /home/runner/work/guanghulab/guanghulab/.git/\n2026-04-11T09:39:27.3367440Z [command]/usr/bin/git remote add origin https://github.com/qinfendebingshuo/guanghulab\n2026-04-11T09:39:27.3397688Z ##[endgroup]\n2026-04-11T09:39:27.3398400Z ##[group]Disabling automatic garbage collection\n2026-04-11T09:39:27.3401596Z [command]/usr/bin/git config --local gc.auto 0\n2026-04-11T09:39:27.3430489Z ##[endgroup]\n2026-04-11T09:39:27.3431133Z ##[group]Setting up auth\n2026-04-11T09:39:27.3437550Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand\n2026-04-11T09:39:27.3467554Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"\n2026-04-11T09:39:27.3760846Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader\n2026-04-11T09:39:27.3790822Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"\n2026-04-11T09:39:27.4025610Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:\n2026-04-11T09:39:27.4066259Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url\n2026-04-11T09:39:27.4301956Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***\n2026-04-11T09:39:27.4338242Z ##[endgroup]\n2026-04-11T09:39:27.4339080Z ##[group]Fetching the repository\n2026-04-11T09:39:27.4346481Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +0f5c2a0da81295adc4288e8e2ada8a65bc1ab5cd:refs/remotes/origin/main\n2026-04-11T09:39:28.0585651Z From https://github.com/qinfendebingshuo/guanghulab\n2026-04-11T09:39:28.0588086Z  * [new ref]         0f5c2a0da81295adc4288e8e2ada8a65bc1ab5cd -> origin/main\n2026-04-11T09:39:28.0617418Z ##[endgroup]\n2026-04-11T09:39:28.0618497Z ##[group]Determining the checkout info\n2026-04-11T09:39:28.0619718Z ##[endgroup]\n2026-04-11T09:39:28.0626226Z [command]/usr/bin/git sparse-checkout disable\n2026-04-11T09:39:28.0666580Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig\n2026-04-11T09:39:28.0695441Z ##[group]Checking out the ref\n2026-04-11T09:39:28.0698400Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main\n2026-04-11T09:39:28.3884580Z Switched to a new branch 'main'\n2026-04-11T09:39:28.3885533Z branch 'main' set up to track 'origin/main'.\n2026-04-11T09:39:28.3897493Z ##[endgroup]\n2026-04-11T09:39:28.3937132Z [command]/usr/bin/git log -1 --format=%H\n2026-04-11T09:39:28.3960904Z 0f5c2a0da81295adc4288e8e2ada8a65bc1ab5cd\n2026-04-11T09:39:28.4275320Z ##[group]Run actions/setup-node@v4\n2026-04-11T09:39:28.4276392Z with:\n2026-04-11T09:39:28.4277168Z   node-version: 20\n2026-04-11T09:39:28.4278016Z   always-auth: false\n2026-04-11T09:39:28.4278890Z   check-latest: false\n2026-04-11T09:39:28.4280030Z   token: ***\n2026-04-11T09:39:28.4280824Z ##[endgroup]\n2026-04-11T09:39:28.6052283Z Found in cache @ /opt/hostedtoolcache/node/20.20.2/x64\n2026-04-11T09:39:28.6058592Z ##[group]Environment details\n2026-04-11T09:39:28.8838805Z node: v20.20.2\n2026-04-11T09:39:28.8840550Z npm: 10.8.2\n2026-04-11T09:39:28.8840900Z yarn: 1.22.22\n2026-04-11T09:39:28.8841891Z ##[endgroup]\n2026-04-11T09:39:28.8980807Z ##[group]Run ORDER_ID=\"WO-20260411-0938\"\n2026-04-11T09:39:28.8981227Z \u001b[36;1mORDER_ID=\"WO-20260411-0938\"\u001b[0m\n2026-04-11T09:39:28.8981686Z \u001b[36;1mnode scripts/work-order-manager.js archive --id \"$ORDER_ID\"\u001b[0m\n2026-04-11T09:39:28.9017168Z shell: /usr/bin/bash -e {0}\n2026-04-11T09:39:28.9017483Z ##[endgroup]\n2026-04-11T09:39:28.9351381Z ❌ 工单不存在: WO-20260411-0938\n2026-04-11T09:39:28.9387347Z ##[error]Process completed with exit code 1.\n2026-04-11T09:39:28.9591312Z Post job cleanup.\n2026-04-11T09:39:29.0544175Z [command]/usr/bin/git version\n2026-04-11T09:39:29.0582055Z git version 2.53.0\n2026-04-11T09:39:29.0623351Z Temporarily overriding HOME='/home/runner/work/_temp/a4ea83b6-4c35-4624-a750-47c365a11488' before making global git config changes\n2026-04-11T09:39:29.0624538Z Adding repository directory to the temporary git global config as a safe directory\n2026-04-11T09:39:29.0637266Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/guanghulab/guanghulab\n2026-04-11T09:39:29.0671848Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand\n2026-04-11T09:39:29.0706057Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"\n2026-04-11T09:39:29.0950355Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader\n2026-04-11T09:39:29.0973148Z http.https://github.com/.extraheader\n2026-04-11T09:39:29.0984959Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader\n2026-04-11T09:39:29.1016866Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"\n2026-04-11T09:39:29.1258899Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:\n2026-04-11T09:39:29.1290666Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url\n2026-04-11T09:39:29.1647355Z Cleaning up orphan processes\n2026-04-11T09:39:29.1919567Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/\n"
+    }
+  ],
+  "all_jobs": [
+    {
+      "id": 70899682990,
+      "name": "🚀 部署到测试站",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-04-11T09:38:23Z",
+      "completed_at": "2026-04-11T09:39:06Z"
+    },
+    {
+      "id": 70899710841,
+      "name": "🔍 健康检查 + 智能分析",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-04-11T09:39:11Z",
+      "completed_at": "2026-04-11T09:39:23Z"
+    },
+    {
+      "id": 70899721902,
+      "name": "📦 归档成功工单",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-04-11T09:39:25Z",
+      "completed_at": "2026-04-11T09:39:29Z"
+    },
+    {
+      "id": 70899721942,
+      "name": "🆘 人工干预告警",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-04-11T09:39:23Z",
+      "completed_at": "2026-04-11T09:39:23Z"
+    }
+  ],
+  "analysis": {
+    "needs_repair": true,
+    "error_summary": "[medium] 命令执行失败",
+    "matched_patterns": [
+      {
+        "name": "命令执行失败",
+        "fix": "查看上方具体错误信息",
+        "severity": "medium"
+      }
+    ],
+    "recommendation": "副将可尝试自动修复: 查看上方具体错误信息"
+  }
+}
