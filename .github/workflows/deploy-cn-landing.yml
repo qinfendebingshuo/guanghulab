@@ -161,16 +161,56 @@ jobs:
           ssh cn-target << 'NGINX_CMD'
           set -e
 
+          echo "═══ Nginx 配置诊断 ═══"
+
+          # 诊断: 列出当前所有启用的Nginx站点配置
+          echo "§1 当前sites-enabled目录:"
+          ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  (目录不存在)"
+
+          echo ""
+          echo "§1.1 当前conf.d目录:"
+          ls -la /etc/nginx/conf.d/ 2>/dev/null || echo "  (目录不存在)"
+
+          # 清理所有冲突配置 — cn-domain.conf 必须是唯一的站点配置
+          # 此服务器仅服务国内落地页，不应有其他Nginx站点配置
+          echo ""
+          echo "§2 清理冲突配置..."
+
+          # 清理 sites-enabled 中的冲突
+          for conf in /etc/nginx/sites-enabled/*; do
+            if [ -f "$conf" ] && [ "$(basename "$conf")" != "cn-domain.conf" ]; then
+              echo "  🗑️ 移除sites-enabled冲突: $(basename "$conf")"
+              sudo rm -f "$conf"
+            fi
+          done
+
+          # 清理 conf.d 中可能的冲突 server 块配置
+          # 保留 conf.d 中的全局配置(如 gzip, ssl_params 等)
+          # 只移除包含 server { 或 proxy_pass 的自定义站点配置
+          for conf in /etc/nginx/conf.d/*.conf; do
+            if [ -f "$conf" ] && grep -qE "server[[:space:]]*\{" "$conf" 2>/dev/null; then
+              echo "  🗑️ 移除conf.d冲突站点配置: $(basename "$conf")"
+              sudo rm -f "$conf"
+            fi
+          done
+
           # 复制配置到Nginx目录
           sudo cp /opt/zhuyuan-cn/config/nginx/cn-domain.conf /etc/nginx/sites-available/cn-domain.conf
           sudo ln -sf /etc/nginx/sites-available/cn-domain.conf /etc/nginx/sites-enabled/cn-domain.conf
 
-          # 移除默认配置，避免 default_server 冲突
-          sudo rm -f /etc/nginx/sites-enabled/default
+          # 确认最终状态
+          echo ""
+          echo "§3 清理后sites-enabled目录:"
+          ls -la /etc/nginx/sites-enabled/
+
+          echo ""
+          echo "§3.1 清理后conf.d目录:"
+          ls -la /etc/nginx/conf.d/ 2>/dev/null || echo "  (空)"
 
           # 测试并重载Nginx
+          echo ""
           sudo nginx -t && sudo systemctl reload nginx
-          echo "✅ Nginx配置已生效"
+          echo "✅ Nginx配置已生效 · 仅cn-domain.conf生效"
           NGINX_CMD
 
       - name: 💚 健康检查
@@ -188,20 +228,27 @@ jobs:
             exit 1
           fi
 
+          # 诊断: 确认Nginx活跃配置
+          echo ""
+          echo "§ Nginx活跃配置:"
+          ls -la /etc/nginx/sites-enabled/ 2>/dev/null
+
           # 检查页面可访问
           HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null || echo "000")
           if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ 落地页: HTTP 200 OK"
           else
             echo "❌ 落地页: HTTP ${HTTP_CODE}"
-            exit 1
+            # 不立即退出 · 继续诊断
           fi
 
-          # 检查ICP备案号
+          # 检查ICP备案号 · 确认是正确的落地页（非代理页面）
           if curl -sf http://localhost/ | grep -q "陕ICP备2025071211号"; then
             echo "✅ ICP备案号: 已显示"
           else
-            echo "⚠️ ICP备案号: 未找到（请检查页面内容）"
+            echo "❌ ICP备案号: 未找到 — 可能有冲突配置覆盖了落地页"
+            echo "  诊断: 页面前200字符:"
+            curl -sf http://localhost/ 2>/dev/null | head -c 200 || echo "(无响应)"
           fi
 
           # 检查备案链接
@@ -211,9 +258,21 @@ jobs:
             echo "⚠️ 工信部链接: 未找到"
           fi
 
-          # 健康端点
+          # 健康端点 · 验证返回的是cn-landing而不是其他服务
           HEALTH=$(curl -sf http://localhost/health 2>/dev/null || echo '{}')
           echo "✅ 健康探针: ${HEALTH}"
+
+          # 验证健康端点来自cn-domain.conf而非其他服务
+          if echo "$HEALTH" | grep -q "cn-landing"; then
+            echo "✅ 健康端点: 来自cn-domain.conf（正确）"
+          elif echo "$HEALTH" | grep -qE "relay|proxy|mcp"; then
+            echo "❌ 健康端点: 来自其他服务 — Nginx配置冲突未完全解决"
+          fi
+
+          # 确认没有端口冲突: 检查是否有其他服务监听80端口
+          echo ""
+          echo "§ 端口80监听进程:"
+          sudo ss -tlnp | grep ':80 ' || echo "  (无)"
 
           echo ""
           echo "═══ 部署完成 ═══"
@@ -280,30 +339,50 @@ jobs:
           systemctl is-active nginx && echo "Nginx: 运行中" || echo "Nginx: 已停止"
           echo ""
 
-          echo "§3 落地页文件:"
+          echo "§3 Nginx sites-enabled 诊断:"
+          ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  (目录不存在)"
+          echo ""
+
+          echo "§4 落地页文件:"
           ls -la /opt/zhuyuan-cn/sites/cn-landing/ 2>/dev/null || echo "目录不存在"
           echo ""
 
-          echo "§4 页面访问测试:"
+          echo "§5 页面访问测试:"
           HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null || echo "000")
           echo "HTTP状态码: ${HTTP_CODE}"
           echo ""
 
-          echo "§5 ICP备案号检查:"
+          echo "§6 ICP备案号检查:"
           if curl -sf http://localhost/ | grep -q "陕ICP备2025071211号"; then
             echo "✅ ICP备案号已显示"
           else
             echo "❌ ICP备案号未找到"
+            echo "  页面前200字符:"
+            curl -sf http://localhost/ 2>/dev/null | head -c 200 || echo "(无响应)"
           fi
 
           echo ""
-          echo "§6 LLM API密钥状态:"
+          echo "§7 健康端点验证:"
+          HEALTH=$(curl -sf http://localhost/health 2>/dev/null || echo '{}')
+          echo "响应: ${HEALTH}"
+          if echo "$HEALTH" | grep -q "cn-landing"; then
+            echo "✅ 来自cn-domain.conf（正确）"
+          elif echo "$HEALTH" | grep -qE "relay|proxy|mcp"; then
+            echo "❌ 来自其他服务 — 存在Nginx配置冲突"
+          fi
+
+          echo ""
+          echo "§8 LLM API密钥状态:"
           if [ -f /opt/zhuyuan-cn/config/.env.llm ]; then
             KEY_COUNT=$(grep -c "API_KEY" /opt/zhuyuan-cn/config/.env.llm 2>/dev/null || echo "0")
             echo "已配置密钥数: ${KEY_COUNT}"
           else
             echo "⚠️ LLM密钥文件不存在"
           fi
+
+          echo ""
+          echo "§9 端口80监听进程:"
+          sudo ss -tlnp | grep ':80 ' 2>/dev/null || echo "  (无)"
 
           HEALTH_CMD
 

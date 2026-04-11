@@ -319,10 +319,11 @@ jobs:
           npm install --production 2>&1
 
           # ─── 写入主应用环境变量配置 ───
+          # 注意: PORT 和 ZY_SITE_MODE 不写入 .env.app
+          # 这两个值由 ecosystem.config.js 按实例设置 (主站3800/预览站3801)
+          # 写入 .env.app 会导致 loadEnvFile() 覆盖预览实例的端口 → 两实例抢端口 → 502
           echo "NODE_ENV=production" > /opt/zhuyuan/app/.env.app
-          echo "PORT=3800" >> /opt/zhuyuan/app/.env.app
           echo "ZY_ROOT=/opt/zhuyuan" >> /opt/zhuyuan/app/.env.app
-          echo "ZY_SITE_MODE=production" >> /opt/zhuyuan/app/.env.app
           echo "ZY_DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_QIANWEN_API_KEY=${ZY_QIANWEN_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/zhuyuan/app/.env.app

@@ -7,9 +7,18 @@ name: 🇨🇳 CN LLM中继 · 部署
 # 守护: 铸渊 · ICE-GL-ZY001
 # 版权: 国作登字-2026-A-00037559
 #
-# 功能: 将 cn-llm-relay 代理服务部署到广州服务器
-#       注入国内LLM API密钥 + 中继鉴权密钥
-#       PM2 守护进程管理
+# 连接方式: GitHub Actions → SG(ZY-SVR-002) → 广州(ZY-SVR-003)
+#           通过新加坡服务器作为SSH跳板，避免直连中国大陆网络问题
+#
+# 所需 Secrets:
+#   ZY_SERVER_HOST     — 新加坡跳板主机
+#   ZY_SERVER_USER     — 新加坡跳板用户
+#   ZY_SERVER_KEY      — 新加坡跳板私钥
+#   ZY_CN_LLM_HOST     — 广州目标主机
+#   ZY_CN_LLM_USER     — 广州目标用户
+#   ZY_CN_LLM_KEY      — 广州目标私钥
+#   ZY_CN_LLM_RELAY_KEY — 中继API鉴权密钥
+#   ZY_DEEPSEEK_API_KEY / ZY_QIANWEN_API_KEY / ZY_KIMI_API_KEY / ZY_QINGYAN_API_KEY
 # ═══════════════════════════════════════════════════════════
 
 on:
@@ -40,78 +49,108 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🔐 配置SSH
+      - name: 🔐 配置SSH跳板 (SG→广州)
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # 写入私钥 · 确保末尾有换行符
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/cn_key
-          chmod 600 ~/.ssh/cn_key
+          # 写入新加坡跳板私钥
+          printf '%s\n' "$SG_SSH_KEY" > ~/.ssh/id_sg
+          chmod 600 ~/.ssh/id_sg
+
+          # 写入广州目标私钥
+          printf '%s\n' "$CN_SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_cn
 
           # 格式校验
-          if head -1 ~/.ssh/cn_key | grep -q "BEGIN" && tail -1 ~/.ssh/cn_key | grep -q "END"; then
-            echo "✅ SSH私钥格式正确"
-          else
-            echo "❌ SSH私钥格式异常 — 请检查 ZY_CN_LLM_KEY"
-            echo "首行: $(head -1 ~/.ssh/cn_key)"
-            echo "末行: $(tail -1 ~/.ssh/cn_key)"
-            exit 1
-          fi
+          for key_file in id_sg id_cn; do
+            if head -1 ~/.ssh/${key_file} | grep -q "BEGIN" && tail -1 ~/.ssh/${key_file} | grep -q "END"; then
+              echo "✅ ${key_file}: 格式正确"
+            else
+              echo "❌ ${key_file}: 格式异常"
+              echo "  首行: $(head -1 ~/.ssh/${key_file})"
+              echo "  末行: $(tail -1 ~/.ssh/${key_file})"
+              exit 1
+            fi
+          done
 
           # 显示密钥指纹用于调试（不泄露私钥内容）
-          ssh-keygen -l -f ~/.ssh/cn_key && echo "✅ 密钥指纹读取成功" || echo "⚠️ 无法读取密钥指纹 — 密钥可能格式异常，请检查 ZY_CN_LLM_KEY 或重新生成密钥对"
+          echo ""
+          echo "═══ 密钥指纹 ═══"
+          echo "SG跳板:"
+          ssh-keygen -l -f ~/.ssh/id_sg || echo "⚠️ 无法读取SG密钥指纹"
+          echo "广州目标:"
+          ssh-keygen -l -f ~/.ssh/id_cn || echo "⚠️ 无法读取CN密钥指纹"
 
-          # 写入 SSH config · 统一连接参数
-          # 使用 heredoc 直接插值 Host/User（secrets 由 GitHub Actions 运行时注入，不会出现在日志中）
-          cat > ~/.ssh/config << SSHCONF
+          # 🔑 关键诊断: 从私钥导出公钥 · 冰朔可直接粘贴到广州服务器 authorized_keys
+          echo ""
+          echo "═══ 广州服务器所需公钥（如认证失败请将此公钥粘贴到广州 ~/.ssh/authorized_keys） ═══"
+          ssh-keygen -y -f ~/.ssh/id_cn 2>/dev/null || echo "⚠️ 无法从私钥导出公钥"
+          echo "═══ 公钥结束 ═══"
+
+          # 扫描SG跳板主机公钥
+          echo ""
+          echo "═══ 扫描SG跳板主机公钥 ═══"
+          ssh-keyscan -T 10 -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>&1 || echo "⚠️ SG主机公钥扫描失败"
+
+          # 写入SSH config · SG跳板 → 广州目标
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+            HostName ${{ secrets.ZY_SERVER_HOST }}
+            User ${{ secrets.ZY_SERVER_USER }}
+            IdentityFile ~/.ssh/id_sg
+            StrictHostKeyChecking accept-new
+            BatchMode yes
+
           Host cn-relay
             HostName ${{ secrets.ZY_CN_LLM_HOST }}
             User ${{ secrets.ZY_CN_LLM_USER }}
+            IdentityFile ~/.ssh/id_cn
+            ProxyJump sg-jump
             StrictHostKeyChecking accept-new
-            UserKnownHostsFile ~/.ssh/known_hosts
-            IdentityFile ~/.ssh/cn_key
-            IdentitiesOnly yes
+            BatchMode yes
+            ConnectTimeout 30
             ServerAliveInterval 15
             ServerAliveCountMax 3
-            ConnectTimeout 30
-          SSHCONF
+          EOF
           chmod 600 ~/.ssh/config
-
-          # 扫描主机公钥（不静默·便于排查）
-          echo "═══ 扫描目标主机公钥 ═══"
-          ssh-keyscan -T 10 ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>&1 || echo "⚠️ ssh-keyscan 未返回主机密钥（可能被安全组拦截）"
-          echo "known_hosts 条目数: $(wc -l < ~/.ssh/known_hosts)"
 
       - name: 🔗 SSH连接测试
         run: |
-          echo "═══ SSH连接测试（verbose模式） ═══"
-          ssh -vvv -o BatchMode=yes -o ConnectTimeout=15 \
-            -i ~/.ssh/cn_key \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} \
+          echo "═══ SSH连接测试 (GitHub Actions → SG → 广州) ═══"
+          ssh cn-relay \
             "echo '✅ SSH连接成功 · $(hostname) · $(date)' && test -d /opt/cn-llm-relay && echo '✅ 部署目录存在' || echo '⚠️ /opt/cn-llm-relay 不存在·首次部署将自动创建'" \
             2>&1 || {
               echo ""
               echo "═══ SSH连接失败 · 排查方向 ═══"
-              echo "1. 检查广州服务器 ~/.ssh/authorized_keys 是否包含对应公钥"
-              echo "2. 检查权限: chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
-              echo "3. 检查 /etc/ssh/sshd_config: PubkeyAuthentication yes"
-              echo "4. 检查腾讯云安全组是否放行 GitHub Actions IP 的 22 端口"
-              echo "5. 查看服务器 SSH 日志: journalctl -u sshd -n 50"
+              echo "1. 检查SG跳板连通性: ZY_SERVER_HOST + ZY_SERVER_KEY 是否正确"
+              echo "2. 检查广州 authorized_keys 是否包含上方输出的公钥"
+              echo "3. 广州服务器执行: chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+              echo "4. 检查 /etc/ssh/sshd_config: PubkeyAuthentication yes"
+              echo "5. 查看广州 SSH 日志: journalctl -u sshd -n 50"
               exit 1
             }
+
+      - name: 📂 准备目标目录
+        run: |
+          ssh cn-relay << 'PREP_CMD'
+          set -e
+          mkdir -p /opt/cn-llm-relay/logs
+          echo "✅ 目录结构就绪"
+          PREP_CMD
 
       - name: 📦 同步代码到广州
         run: |
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/cn_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30" \
+            -e "ssh -F ~/.ssh/config" \
             --exclude='node_modules' \
             --exclude='.env.relay' \
             --exclude='logs' \
             server/cn-llm-relay/ \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }}:/opt/cn-llm-relay/
+            cn-relay:/opt/cn-llm-relay/
 
       - name: 📥 安装依赖 & 配置 & 启动
         env:
@@ -121,23 +160,16 @@ jobs:
           ZY_QINGYAN_API_KEY: ${{ secrets.ZY_QINGYAN_API_KEY }}
           ZY_CN_RELAY_API_KEY: ${{ secrets.ZY_CN_LLM_RELAY_KEY }}
         run: |
-          ssh -i ~/.ssh/cn_key \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} << 'DEPLOY_CMD'
-
+          ssh cn-relay << 'DEPLOY_CMD'
           set -e
           cd /opt/cn-llm-relay
 
-          # 创建日志目录
-          mkdir -p /opt/cn-llm-relay/logs
-
           # 安装依赖
           npm install --production 2>&1
-
           DEPLOY_CMD
 
-          # 写入环境变量（在本地构建后通过SSH写入，避免heredoc变量展开问题）
-          ssh -i ~/.ssh/cn_key \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} \
+          # 写入环境变量（通过SSH写入，避免heredoc变量展开问题）
+          ssh cn-relay \
             "cat > /opt/cn-llm-relay/.env.relay << 'ENVEOF'
           RELAY_PORT=3900
           ZY_CN_RELAY_API_KEY=${ZY_CN_RELAY_API_KEY}
@@ -149,8 +181,7 @@ jobs:
           chmod 600 /opt/cn-llm-relay/.env.relay"
 
           # PM2 启动
-          ssh -i ~/.ssh/cn_key \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} << 'PM2_CMD'
+          ssh cn-relay << 'PM2_CMD'
           set -e
           cd /opt/cn-llm-relay
           pm2 delete cn-llm-relay 2>/dev/null || true
@@ -169,24 +200,48 @@ jobs:
           fi
           PM2_CMD
 
+      - name: 🧹 清理SSH密钥
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config
+
   health-check:
     name: 🩺 健康检查
     if: github.event.inputs.action == 'health-check'
     runs-on: ubuntu-latest
     steps:
-      - name: 🔐 配置SSH
+      - name: 🔐 配置SSH跳板 (SG→广州)
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/cn_key
-          chmod 600 ~/.ssh/cn_key
-          ssh-keyscan -T 10 ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>&1 || true
+          printf '%s\n' "$SG_SSH_KEY" > ~/.ssh/id_sg
+          printf '%s\n' "$CN_SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_sg ~/.ssh/id_cn
+          ssh-keyscan -T 10 -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>&1 || true
+
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+            HostName ${{ secrets.ZY_SERVER_HOST }}
+            User ${{ secrets.ZY_SERVER_USER }}
+            IdentityFile ~/.ssh/id_sg
+            StrictHostKeyChecking accept-new
+            BatchMode yes
+
+          Host cn-relay
+            HostName ${{ secrets.ZY_CN_LLM_HOST }}
+            User ${{ secrets.ZY_CN_LLM_USER }}
+            IdentityFile ~/.ssh/id_cn
+            ProxyJump sg-jump
+            StrictHostKeyChecking accept-new
+            BatchMode yes
+            ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: 🩺 检查服务状态
         run: |
-          ssh -i ~/.ssh/cn_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} << 'CMD'
+          ssh cn-relay << 'CMD'
           echo "═══ PM2 状态 ═══"
           pm2 list
           echo ""
@@ -197,26 +252,54 @@ jobs:
           pm2 logs cn-llm-relay --lines 10 --nostream 2>/dev/null || echo "无日志"
           CMD
 
+      - name: 🧹 清理SSH密钥
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config
+
   restart:
     name: 🔄 重启服务
     if: github.event.inputs.action == 'restart'
     runs-on: ubuntu-latest
     steps:
-      - name: 🔐 配置SSH
+      - name: 🔐 配置SSH跳板 (SG→广州)
         env:
-          SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          CN_SSH_KEY: ${{ secrets.ZY_CN_LLM_KEY }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/cn_key
-          chmod 600 ~/.ssh/cn_key
-          ssh-keyscan -T 10 ${{ secrets.ZY_CN_LLM_HOST }} >> ~/.ssh/known_hosts 2>&1 || true
+          printf '%s\n' "$SG_SSH_KEY" > ~/.ssh/id_sg
+          printf '%s\n' "$CN_SSH_KEY" > ~/.ssh/id_cn
+          chmod 600 ~/.ssh/id_sg ~/.ssh/id_cn
+          ssh-keyscan -T 10 -H ${{ secrets.ZY_SERVER_HOST }} >> ~/.ssh/known_hosts 2>&1 || true
+
+          cat > ~/.ssh/config << EOF
+          Host sg-jump
+            HostName ${{ secrets.ZY_SERVER_HOST }}
+            User ${{ secrets.ZY_SERVER_USER }}
+            IdentityFile ~/.ssh/id_sg
+            StrictHostKeyChecking accept-new
+            BatchMode yes
+
+          Host cn-relay
+            HostName ${{ secrets.ZY_CN_LLM_HOST }}
+            User ${{ secrets.ZY_CN_LLM_USER }}
+            IdentityFile ~/.ssh/id_cn
+            ProxyJump sg-jump
+            StrictHostKeyChecking accept-new
+            BatchMode yes
+            ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: 🔄 重启
         run: |
-          ssh -i ~/.ssh/cn_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
-            ${{ secrets.ZY_CN_LLM_USER }}@${{ secrets.ZY_CN_LLM_HOST }} << 'CMD'
+          ssh cn-relay << 'CMD'
           cd /opt/cn-llm-relay
           pm2 restart cn-llm-relay
           sleep 2
           curl -s http://127.0.0.1:3900/health || echo "❌ 重启后服务未响应"
           CMD
+
+      - name: 🧹 清理SSH密钥
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/id_cn ~/.ssh/config
