@@ -477,7 +477,11 @@ const CHANNELS=[
 })();
 
 // ═══ 聊天面板 ═══
+// ═══ 聊天面板 ═══
 let chatOpen=false;
+// 生成唯一匿名会话ID
+const portalSessionId='portal-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+
 function toggleChat(){
   chatOpen=!chatOpen;
   document.getElementById('chatPanel').classList.toggle('open',chatOpen);
@@ -503,7 +507,7 @@ async function sendMessage(){
     const res=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:msg,userId:'portal-guest'})
+      body:JSON.stringify({message:msg,userId:portalSessionId})
     });
     const data=await res.json();
     typing.remove();
@@ -523,9 +527,14 @@ function appendMsg(role,text,model){
   const body=document.getElementById('chatBody');
   const div=document.createElement('div');
   div.className='chat-msg '+role;
+  // 转义HTML防止XSS
+  const escaped=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   let meta='';
-  if(role==='bot')meta=`<div class="msg-meta">铸渊${model?' · '+model:''}</div>`;
-  div.innerHTML=text.replace(/\n/g,'<br>')+meta;
+  if(role==='bot'){
+    const safeModel=model?(model.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')):'';
+    meta=`<div class="msg-meta">铸渊${safeModel?' · '+safeModel:''}</div>`;
+  }
+  div.innerHTML=escaped+meta;
   body.appendChild(div);
   scrollChat();
 }

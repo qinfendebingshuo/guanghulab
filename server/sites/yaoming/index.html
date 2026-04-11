@@ -623,9 +623,14 @@ function appendChatMsg(role,text,model){
   const box=document.getElementById('chatMessages');
   const div=document.createElement('div');
   div.className='chat-msg '+role;
+  // 转义HTML防止XSS
+  const escaped=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   let info='';
-  if(role==='bot')info=`<div class="msg-info"><span>铸渊 · ICE-GL-ZY001</span><span>${model||currentModelLine==='domestic'?'智能路由':'第三方'}</span></div>`;
-  div.innerHTML=text.replace(/\n/g,'<br>')+info;
+  if(role==='bot'){
+    const safeModel=model?(model.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')):'';
+    info=`<div class="msg-info"><span>铸渊 · ICE-GL-ZY001</span><span>${safeModel||((currentModelLine==='domestic')?'智能路由':'第三方')}</span></div>`;
+  }
+  div.innerHTML=escaped+info;
   box.appendChild(div);
   scrollChat();
 }
@@ -694,8 +699,8 @@ function loadServices(){
     `<div class="svc-item"><span class="svc-dot green"></span><span class="svc-name">${e.name}</span><span class="svc-port">:${e.port}</span></div>`
   ).join('');
 
-  // MCP 工具数
-  document.getElementById('dashMcpCount').textContent='121';
+  // MCP 工具数 — 从API获取
+  fetchMcpCount();
 
   // 最近日志
   const now=new Date();
@@ -735,6 +740,18 @@ function loadPersonas(){
 }
 
 function formatTime(d){return d.toTimeString().slice(0,5)}
+
+// ═══ MCP 工具数获取 ═══
+async function fetchMcpCount(){
+  try{
+    const res=await fetch('/api/mcp/health');
+    const d=await res.json();
+    const count=d.tools_count||d.totalTools||'--';
+    document.getElementById('dashMcpCount').textContent=String(count);
+  }catch(e){
+    document.getElementById('dashMcpCount').textContent='--';
+  }
+}
 
 // ═══ Notion 状态检测 ═══
 async function checkNotion(){

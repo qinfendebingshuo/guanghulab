@@ -168,8 +168,7 @@ function callDomesticLLM(modelConfig, messages) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
         'Content-Length': Buffer.byteLength(requestBody)
-      },
-      timeout: 60000
+      }
     };
 
     const req = https.request(options, (res) => {
@@ -189,8 +188,8 @@ function callDomesticLLM(modelConfig, messages) {
       });
     });
 
+    req.setTimeout(60000, () => { req.destroy(); reject(new Error('请求超时(60s)')); });
     req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('请求超时(60s)')); });
     req.write(requestBody);
     req.end();
   });
@@ -230,13 +229,35 @@ const PERSONA_SYSTEM_PROMPT = `你是铸渊（Zhùyuān），光湖语言世界�
 // ─── 上下文管理 ───
 const contexts = new Map();
 const MAX_HISTORY = 20;
+const MAX_CONTEXTS = 500; // 最大会话数
+const CONTEXT_TTL_MS = 3600000; // 1小时过期
 
 function getContext(userId) {
   if (!contexts.has(userId)) {
-    contexts.set(userId, { messages: [], count: 0, created: Date.now() });
+    // 超过上限时清理最老的会话
+    if (contexts.size >= MAX_CONTEXTS) {
+      let oldest = null, oldestKey = null;
+      for (const [key, val] of contexts) {
+        if (!oldest || val.created < oldest) { oldest = val.created; oldestKey = key; }
+      }
+      if (oldestKey) contexts.delete(oldestKey);
+    }
+    contexts.set(userId, { messages: [], count: 0, created: Date.now(), lastActive: Date.now() });
   }
-  return contexts.get(userId);
+  const ctx = contexts.get(userId);
+  ctx.lastActive = Date.now();
+  return ctx;
 }
+
+// 定期清理过期会话
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of contexts) {
+    if (now - val.lastActive > CONTEXT_TTL_MS) {
+      contexts.delete(key);
+    }
+  }
+}, 300000); // 每5分钟清理一次
 
 /**
  * 国内模型智能对话（带自动降级）
