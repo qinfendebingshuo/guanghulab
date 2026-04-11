@@ -101,7 +101,11 @@ jobs:
               MSG="📡 README自动更新 · 手动触发 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
             fi
             git commit -m "$MSG [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
             echo "✅ README变更已提交并推送"
           else
             echo "ℹ️ 无变更需要提交"

@@ -65,11 +65,10 @@ function getBeijingTime(date) {
  * 获取北京时间日期 YYYY-MM-DD
  */
 function getBeijingDate(date) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
+  return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Shanghai',
     year: 'numeric', month: '2-digit', day: '2-digit'
   }).format(date);
-  return parts;
 }
 
 /**
