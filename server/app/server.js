@@ -259,6 +259,8 @@ app.post('/api/operations', (req, res) => {
 // ═══════════════════════════════════════════════════════════
 
 // ─── 人格体对话 ───
+// 优先使用国内模型智能网关（支持四路自动降级）
+// 降级顺序: domesticGateway → chatEngine → 离线回复
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, userId } = req.body;
@@ -268,22 +270,35 @@ app.post('/api/chat', async (req, res) => {
 
     const sessionId = userId || `guest-${req.ip.replace(/[.:]/g, '-')}`;
 
+    // 优先用国内模型智能网关（读取 ZY_DEEPSEEK_API_KEY 等独立密钥）
+    if (domesticGateway) {
+      try {
+        const result = await domesticGateway.chat(sessionId, message);
+        return res.json({ ...result, sessionId });
+      } catch (gwErr) {
+        console.error(`[聊天网关] 国内模型网关异常: ${gwErr.message}`);
+        // 降级到通用聊天引擎
+      }
+    }
+
+    // 降级到通用聊天引擎
     if (chatEngine) {
       const result = await chatEngine.chat(sessionId, message);
-      res.json({
+      return res.json({
         success: true,
         ...result,
         sessionId
       });
-    } else {
-      res.json({
-        success: true,
-        message: '💫 铸渊正在唤醒中...聊天引擎尚未加载。',
-        model: 'offline',
-        tier: 'free',
-        sessionId
-      });
     }
+
+    // 所有引擎都不可用
+    res.json({
+      success: true,
+      message: '💫 铸渊正在唤醒中...聊天引擎尚未加载。请稍后再试。',
+      model: 'offline',
+      tier: 'free',
+      sessionId
+    });
   } catch (err) {
     res.status(500).json({ error: true, message: err.message });
   }

@@ -316,6 +316,18 @@ jobs:
           # 安装依赖
           npm install --production 2>&1
 
+          # ─── 写入主应用环境变量配置 ───
+          echo "NODE_ENV=production" > /opt/zhuyuan/app/.env.app
+          echo "PORT=3800" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_ROOT=/opt/zhuyuan" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_SITE_MODE=production" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_QIANWEN_API_KEY=${ZY_QIANWEN_API_KEY}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_QINGYAN_API_KEY=${ZY_QINGYAN_API_KEY}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_NOTION_TOKEN=${ZY_NOTION_TOKEN}" >> /opt/zhuyuan/app/.env.app
+          chmod 600 /opt/zhuyuan/app/.env.app
+
           # 复制Nginx配置
           sudo cp /opt/zhuyuan/config/nginx/zhuyuan-sovereign.conf /etc/nginx/sites-available/zhuyuan.conf
           sudo ln -sf /etc/nginx/sites-available/zhuyuan.conf /etc/nginx/sites-enabled/zhuyuan.conf
