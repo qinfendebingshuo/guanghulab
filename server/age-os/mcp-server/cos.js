@@ -19,7 +19,7 @@ const https = require('https');
 const COS_CONFIG = {
   secretId:  process.env.ZY_OSS_KEY || '',
   secretKey: process.env.ZY_OSS_SECRET || '',
-  region:    process.env.ZY_COS_REGION || 'ap-singapore',
+  region:    process.env.ZY_COS_REGION || 'ap-guangzhou',
   buckets: {
     hot: process.env.COS_BUCKET_HOT || 'zy-core-bucket-1317346199',
     cold: process.env.COS_BUCKET_COLD || 'zy-corpus-bucket-1317346199',
@@ -117,11 +117,20 @@ async function personaList(personaId, subPrefix, limit) {
 
 /**
  * 发起 COS HTTP 请求
+ *
+ * 修复: 签名时必须将URI路径和查询参数分开处理。
+ * 腾讯云COS签名规范要求 HttpURI 不包含查询字符串(query string),
+ * 否则签名哈希不匹配导致 SignatureDoesNotMatch 错误。
  */
 function cosRequest(bucketName, objectKey, method, body, contentType) {
   return new Promise((resolve, reject) => {
     const host = getBucketHost(bucketName);
-    const pathname = '/' + objectKey;
+    const fullPath = '/' + objectKey;
+
+    // 签名时只用纯路径(不含查询参数), HTTP请求用完整路径
+    const qIdx = fullPath.indexOf('?');
+    const signPathname = qIdx >= 0 ? fullPath.substring(0, qIdx) : fullPath;
+
     const headers = {
       Host: host,
       'Content-Type': contentType || 'application/octet-stream'
@@ -129,10 +138,10 @@ function cosRequest(bucketName, objectKey, method, body, contentType) {
     if (body) {
       headers['Content-Length'] = Buffer.byteLength(body);
     }
-    headers['Authorization'] = generateSignature(method, pathname, host);
+    headers['Authorization'] = generateSignature(method, signPathname, host);
 
     const req = https.request({
-      hostname: host, port: 443, path: pathname, method, headers, timeout: 30000
+      hostname: host, port: 443, path: fullPath, method, headers, timeout: 30000
     }, (res) => {
       const chunks = [];
       res.on('data', c => chunks.push(c));
@@ -141,7 +150,7 @@ function cosRequest(bucketName, objectKey, method, body, contentType) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve({ statusCode: res.statusCode, body: responseBody, headers: res.headers });
         } else {
-          reject(new Error(`COS ${method} ${pathname}: ${res.statusCode} - ${responseBody.substring(0, 200)}`));
+          reject(new Error(`COS ${method} ${fullPath}: ${res.statusCode} - ${responseBody.substring(0, 200)}`));
         }
       });
     });

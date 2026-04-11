@@ -46,12 +46,20 @@ function hmacSha1(key, str) {
   return crypto.createHmac('sha1', key).update(str).digest();
 }
 
-function generateCosAuth(secretId, secretKey, method, pathname) {
+function generateCosAuth(secretId, secretKey, method, pathname, host) {
+  if (!host) {
+    throw new Error('COS签名需要host参数');
+  }
   const now = Math.floor(Date.now() / 1000);
   const exp = now + 600; // 10分钟有效
   const keyTime = `${now};${exp}`;
   const signKey = hmacSha1(secretKey, keyTime).toString('hex');
-  const httpString = `${method.toLowerCase()}\n${pathname}\n\nhost=\n`;
+
+  // 签名时只用纯路径(不含查询参数)
+  const qIdx = pathname.indexOf('?');
+  const signPath = qIdx >= 0 ? pathname.substring(0, qIdx) : pathname;
+
+  const httpString = `${method.toLowerCase()}\n${signPath}\n\nhost=${host}\n`;
   const sha1edHttpString = crypto.createHash('sha1').update(httpString).digest('hex');
   const stringToSign = `sha1\n${keyTime}\n${sha1edHttpString}\n`;
   const signature = hmacSha1(signKey, stringToSign).toString('hex');
@@ -63,7 +71,7 @@ function generateCosAuth(secretId, secretKey, method, pathname) {
 function cosRequest(bucket, region, pathname, method, secretId, secretKey) {
   return new Promise((resolve, reject) => {
     const host = `${bucket}.cos.${region}.myqcloud.com`;
-    const auth = generateCosAuth(secretId, secretKey, method, pathname);
+    const auth = generateCosAuth(secretId, secretKey, method, pathname, host);
 
     const options = {
       hostname: host,
