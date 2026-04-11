@@ -252,6 +252,23 @@ async function head(bucket, key) {
 }
 
 /**
+ * 从响应头解析文件总大小（content-range 或 content-length）
+ */
+function parseTotalSize(headers) {
+  // content-range 格式: bytes 0-1023/665000000
+  const range = headers['content-range'];
+  if (range) {
+    const parts = range.split('/');
+    if (parts.length === 2) {
+      const size = parseInt(parts[1], 10);
+      if (!isNaN(size)) return size;
+    }
+  }
+  const cl = parseInt(headers['content-length'] || '0', 10);
+  return isNaN(cl) ? 0 : cl;
+}
+
+/**
  * 分块读取大文件 — 仅读取前 N 字节用于预览/采样
  * 适用于超大语料文件的类型检测和内容预览
  */
@@ -286,8 +303,7 @@ async function readPartial(bucket, key, maxBytes) {
       res.on('end', () => {
         try {
           const buffer = Buffer.concat(chunks);
-          const totalSize = parseInt(res.headers['content-range']?.split('/')[1] || '0', 10)
-            || parseInt(res.headers['content-length'] || '0', 10);
+          const totalSize = parseTotalSize(res.headers);
           resolve({
             content: buffer.toString('utf8'),
             size_bytes: buffer.length,
@@ -303,8 +319,7 @@ async function readPartial(bucket, key, maxBytes) {
         if (chunks.length > 0) {
           try {
             const buffer = Buffer.concat(chunks);
-            const totalSize = parseInt(res.headers['content-range']?.split('/')[1] || '0', 10)
-              || parseInt(res.headers['content-length'] || '0', 10);
+            const totalSize = parseTotalSize(res.headers);
             resolve({
               content: buffer.toString('utf8'),
               size_bytes: buffer.length,

@@ -172,8 +172,12 @@ async function cosExtractCorpus(input) {
   try {
     const meta = await cos.head(bucket, key);
     fileSize = meta.size_bytes;
-  } catch {
-    // HEAD 不支持时跳过，由后续读取处理
+  } catch (headErr) {
+    // HEAD失败不阻断流程（部分COS配置不支持HEAD），用0继续
+    // 但如果是认证/桶不存在等严重错误，后续read也会失败
+    if (headErr.message && !headErr.message.includes('405') && !headErr.message.includes('403')) {
+      console.log(`  ⚠️ HEAD预检失败: ${headErr.message}，继续尝试读取`);
+    }
   }
 
   // ZIP文件始终返回提示（无论大小），因为需要二进制解析
