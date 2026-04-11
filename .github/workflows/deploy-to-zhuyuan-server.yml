@@ -356,8 +356,9 @@ jobs:
 
           sudo nginx -t && sudo systemctl reload nginx
 
-          # PM2 重启 · 主应用
+          # PM2 重启 · 主应用 + 预览进程 (两个都要清理·否则残留errored进程导致502)
           pm2 delete zhuyuan-server 2>/dev/null || true
+          pm2 delete zhuyuan-preview 2>/dev/null || true
           pm2 start /opt/zhuyuan/config/pm2/ecosystem.config.js
           pm2 save
 
@@ -407,13 +408,15 @@ jobs:
           cd /opt/age-os && pm2 start ecosystem.config.js
           pm2 save
 
-          # 健康检查
+          # 健康检查 · 主应用(3800) + 预览进程(3801) + MCP(3100)
           sleep 3
           curl -sf http://localhost:3800/api/health || echo "⚠️ 主应用健康检查失败，等待更长时间..."
+          curl -sf http://localhost:3801/api/health || echo "⚠️ 预览进程健康检查失败，等待更长时间..."
           curl -sf http://localhost:3100/health || echo "⚠️ MCP Server健康检查失败，等待更长时间..."
           sleep 5
-          curl -sf http://localhost:3800/api/health && echo "✅ 主应用已上线" || echo "❌ 主应用启动失败"
-          curl -sf http://localhost:3100/health && echo "✅ MCP Server已上线" || echo "❌ MCP Server启动失败"
+          curl -sf http://localhost:3800/api/health && echo "✅ 主应用已上线 (3800)" || echo "❌ 主应用启动失败 (3800)"
+          curl -sf http://localhost:3801/api/health && echo "✅ 预览进程已上线 (3801)" || echo "❌ 预览进程启动失败 (3801) · guanghulab.online 可能502"
+          curl -sf http://localhost:3100/health && echo "✅ MCP Server已上线 (3100)" || echo "❌ MCP Server启动失败 (3100)"
 
           # 记录部署操作
           curl -sf -X POST http://localhost:3800/api/operations \
