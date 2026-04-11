@@ -1,0 +1,44 @@
+{
+  "aoac_agent": "AOAC-07",
+  "aoac_agent_name": "chain-repair-agent",
+  "repair_id": "AOAC-REPAIR-20260411-272",
+  "timestamp": "2026-04-11 23:53:01+08:00",
+  "timestamp_utc": "2026-04-11T15:53:00.837Z",
+  "receipt_check": {
+    "checked": false,
+    "reason": "404: Could not find database with ID: 9f19edc4-0440-49f4-b903-d5d897cbf42c. Make sure the relevant pages and databases are shared with your integration \"曜冥纪元-HoloLake\"."
+  },
+  "diagnosis": {
+    "total_issues": 2,
+    "critical": 1,
+    "issues": [
+      {
+        "agent": "AOAC-01",
+        "issue": "never executed",
+        "severity": "info"
+      },
+      {
+        "agent": "AOAC-06",
+        "issue": "Notion sync failed: Notion API 404: Could not find database with ID: 9f19edc4-0440-49f4-b903-d5d897cbf42c. Make sure the relevant pages and databases are shared with your integration \"曜冥纪元-HoloLake\".",
+        "severity": "critical"
+      }
+    ]
+  },
+  "needed_repair": true,
+  "repair_attempts": [
+    {
+      "attempt": 1,
+      "results": [
+        {
+          "agent": "AOAC-06",
+          "issue": "Notion sync failed: Notion API 404: Could not find database with ID: 9f19edc4-0440-49f4-b903-d5d897cbf42c. Make sure the relevant pages and databases are shared with your integration \"曜冥纪元-HoloLake\".",
+          "attempt": 1,
+          "action": "reset_aoac06_for_retry",
+          "success": true
+        }
+      ]
+    }
+  ],
+  "final_result": "success",
+  "triggers_next": "AOAC-08 (repair-supervisor)"
+}
