@@ -304,6 +304,73 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// ─── 铸渊重连测试 · 用户主动触发 ───
+app.post('/api/chat/reconnect', async (_req, res) => {
+  try {
+    // 检测国内模型网关可用性
+    if (domesticGateway) {
+      const gwStats = domesticGateway.getGatewayStats();
+      if (gwStats.availableModels > 0) {
+        // 发送一条简短测试消息验证真实连通性
+        try {
+          const testResult = await domesticGateway.chat('reconnect-test', '你好');
+          if (testResult.success) {
+            return res.json({
+              success: true,
+              connected: true,
+              engine: 'domestic-gateway',
+              message: '🌊 铸渊已重新连接！大模型通道畅通。'
+            });
+          }
+        } catch (gwTestErr) {
+          console.error(`[重连] 国内网关测试失败: ${gwTestErr.message}`);
+        }
+      }
+    }
+
+    // 降级到通用聊天引擎测试
+    if (chatEngine) {
+      try {
+        const testResult = await chatEngine.chat('reconnect-test', '你好');
+        if (testResult.message && testResult.model !== 'offline') {
+          return res.json({
+            success: true,
+            connected: true,
+            engine: 'chat-engine',
+            message: '🌊 铸渊已重新连接！通用通道畅通。'
+          });
+        }
+      } catch (ceTestErr) {
+        console.error(`[重连] 通用引擎测试失败: ${ceTestErr.message}`);
+      }
+    }
+
+    // 所有通道都不可用
+    // 检查环境变量配置状态（不暴露实际密钥值）
+    const envStatus = {
+      deepseek: !!(process.env.ZY_DEEPSEEK_API_KEY && process.env.ZY_DEEPSEEK_API_KEY.length > 5),
+      qianwen: !!(process.env.ZY_QIANWEN_API_KEY && process.env.ZY_QIANWEN_API_KEY.length > 5),
+      kimi: !!(process.env.ZY_KIMI_API_KEY && process.env.ZY_KIMI_API_KEY.length > 5),
+      qingyan: !!(process.env.ZY_QINGYAN_API_KEY && process.env.ZY_QINGYAN_API_KEY.length > 5),
+      zy_llm: !!(process.env.ZY_LLM_API_KEY && process.env.ZY_LLM_API_KEY.length > 5)
+    };
+
+    const configuredCount = Object.values(envStatus).filter(Boolean).length;
+
+    res.json({
+      success: true,
+      connected: false,
+      engine: 'none',
+      keys_configured: configuredCount,
+      message: configuredCount > 0
+        ? '⚠️ API密钥已配置（' + configuredCount + '个），但连接测试未通过。可能是网络或密钥过期问题。'
+        : '⚠️ 未检测到API密钥配置。请确认服务器环境变量已正确注入。'
+    });
+  } catch (err) {
+    res.status(500).json({ error: true, message: '重连测试异常: ' + err.message });
+  }
+});
+
 // ─── 聊天统计 ───
 app.get('/api/chat/stats', (_req, res) => {
   if (chatEngine) {
