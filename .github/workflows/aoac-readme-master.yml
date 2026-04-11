@@ -64,7 +64,11 @@ jobs:
           git add data/aoac/
           if ! git diff --cached --quiet; then
             git commit -m "📋 AOAC-04 · 同步模块数据更新 [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi
 
   # ────────── AOAC-05 · 首页主控Agent ──────────
@@ -106,7 +110,11 @@ jobs:
           git add README.md data/aoac/ data/bulletin-board/ .github/persona-brain/memory.json
           if ! git diff --cached --quiet; then
             git commit -m "🏠 AOAC-05 · 首页主控更新 · $(date -u '+%Y-%m-%d %H:%M') [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi
 
   # ────────── AOAC-06 · Notion同步信号 ──────────
@@ -136,5 +144,9 @@ jobs:
           git add data/aoac/
           if ! git diff --cached --quiet; then
             git commit -m "📡 AOAC-06 · Notion同步信号已发送 [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi

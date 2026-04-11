@@ -55,7 +55,11 @@ jobs:
           git add data/aoac/merge-result-log.json data/aoac/chain-status.json
           if ! git diff --cached --quiet; then
             git commit -m "🔍 AOAC-02 · PR #${{ github.event.pull_request.number }} 合并CI日志 [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi
 
   # ────────── AOAC-03 · 合体引擎 ──────────
@@ -81,5 +85,9 @@ jobs:
           git add data/aoac/
           if ! git diff --cached --quiet; then
             git commit -m "⚡ AOAC-03 · 链路合体报告 · PR #${{ github.event.pull_request.number }} [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi

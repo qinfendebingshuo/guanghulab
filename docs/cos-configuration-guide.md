@@ -76,10 +76,10 @@ zy-core-bucket-1317346199/
 
 | Secret名称 | 用途 | 获取方式 |
 |------------|------|---------|
-| `ZY_ZHIPU_API_KEY` | 智谱GLM API密钥 | https://open.bigmodel.cn → API Keys |
-| `ZY_QWEN_API_KEY` | 通义千问API密钥 | https://dashscope.console.aliyun.com → API-KEY管理 |
+| `ZY_QINGYAN_API_KEY` | 智谱GLM API密钥 | https://open.bigmodel.cn → API Keys |
+| `ZY_QIANWEN_API_KEY` | 通义千问API密钥 | https://dashscope.console.aliyun.com → API-KEY管理 |
 
-> ⚠️ 训练Agent日志显示 `ZY_ZHIPU_API_KEY: ` 和 `ZY_QWEN_API_KEY: ` 为空值，说明这两个Secret尚未配置。训练Agent会自动降级使用可用的模型，但建议补全。
+> ⚠️ 训练Agent日志显示 `ZY_QINGYAN_API_KEY: ` 和 `ZY_QIANWEN_API_KEY: ` 为空值，说明这两个Secret尚未配置。训练Agent会自动降级使用可用的模型，但建议补全。
 
 ### 可选配置
 
@@ -128,8 +128,8 @@ zy-core-bucket-1317346199/
 
 **操作**: GitHub 仓库 → Settings → Secrets and variables → Actions
 
-- 添加 `ZY_ZHIPU_API_KEY`（智谱GLM）
-- 添加 `ZY_QWEN_API_KEY`（通义千问）
+- 添加 `ZY_QINGYAN_API_KEY`（智谱GLM）
+- 添加 `ZY_QIANWEN_API_KEY`（通义千问）
 
 > 训练Agent支持多模型降级，缺少部分密钥不会导致失败，但可用模型更多训练效果更好。
 

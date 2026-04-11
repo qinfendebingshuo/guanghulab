@@ -265,7 +265,7 @@ jobs:
 
       - name: '📋 同步工单到 Notion'
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
           RUN_ID: ${{ needs.collect-logs.outputs.run_id }}
           WORKFLOW_NAME: ${{ needs.collect-logs.outputs.workflow_name }}
           COMMIT_SHA: ${{ github.sha }}

@@ -56,7 +56,11 @@ jobs:
           git add data/aoac/
           if ! git diff --cached --quiet; then
             git commit -m "🔧 AOAC-07 · 修复报告 · ${{ steps.repair.outputs.repair_id || 'check' }} [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi
 
   # ────────── AOAC-08 · 监督Agent ──────────
@@ -89,5 +93,9 @@ jobs:
           git add data/aoac/
           if ! git diff --cached --quiet; then
             git commit -m "👁️ AOAC-08 · 监督判定 · ${{ steps.supervisor.outputs.verdict || 'check' }} [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           fi
