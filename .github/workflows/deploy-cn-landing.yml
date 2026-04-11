@@ -112,7 +112,6 @@ jobs:
       - name: 📦 同步落地页文件
         run: |
           rsync -avz --delete \
-            -e "ssh -F ~/.ssh/config" \
             server/sites/cn-landing/ \
             cn-target:/opt/zhuyuan-cn/sites/cn-landing/
           echo "✅ 落地页已同步到 /opt/zhuyuan-cn/sites/cn-landing/"
