@@ -4,10 +4,18 @@
  * 📜 Copyright: 国作登字-2026-A-00037559
  * ═══════════════════════════════════════════════
  *
- * 铸渊副将·仓库首页签到仪表盘生成器
- * 职责: 读取所有工作流状态 → 生成签到仪表盘 → 嵌入 README.md
+ * 铸渊副将·仓库首页统一生成器 v2.0
+ * 职责: 读取所有数据源 → 自动更新 README.md 全部标记区域
  *
- * 输出: 更新 README.md 中 <!-- DASHBOARD_START --> 和 <!-- DASHBOARD_END --> 之间的内容
+ * 标记区域 (8对):
+ *   STATUS_START/END          — 头部状态表
+ *   BINGSHUO_TODO_START/END   — 冰朔待操作清单（保持原样·手动维护）
+ *   ROADMAP_START/END         — 20阶段开发路线（从roadmap解析）
+ *   DASHBOARD_START/END       — 签到仪表盘
+ *   MCP_STATS_START/END       — MCP工具统计表
+ *   SERVER_START/END          — 服务器状态表
+ *   CONSCIOUSNESS_START/END   — 意识链
+ *   FOOTER_START/END          — 页脚
  */
 
 'use strict';
@@ -22,17 +30,51 @@ const MEMORY_PATH = path.join(ROOT, '.github/persona-brain/memory.json');
 const FAST_WAKE_PATH = path.join(ROOT, 'brain/fast-wake.json');
 const DEPLOY_LOG_PATH = path.join(ROOT, 'data/deploy-logs/latest-index.json');
 const OBSERVER_DASHBOARD_PATH = path.join(ROOT, 'data/deploy-logs/observer-dashboard.json');
+const SERVER_REGISTRY_PATH = path.join(ROOT, 'server/proxy/config/server-registry.json');
+const ROADMAP_PATH = path.join(ROOT, 'brain/age-os-landing/development-roadmap.md');
 
 const DASHBOARD_START = '<!-- DASHBOARD_START -->';
 const DASHBOARD_END = '<!-- DASHBOARD_END -->';
 
 const BEIJING_OFFSET_MS = 8 * 3600 * 1000;
 
+// D天数兜底值 — 当所有数据源都无法提取D天数时使用（D63为光之树架构落地时间点）
+const DEFAULT_DAY_NUMBER = 63;
+
+// 服务器位置 → 显示后缀映射
+const LOCATION_SUFFIX_MAP = {
+  'Singapore': 'SG',
+  'Silicon Valley (US)': 'SV',
+  'China': 'CN',
+};
+
+// ━━━ 所有标记区域定义 ━━━
+const MARKER_PAIRS = [
+  { start: '<!-- STATUS_START -->',          end: '<!-- STATUS_END -->' },
+  { start: '<!-- BINGSHUO_TODO_START -->',   end: '<!-- BINGSHUO_TODO_END -->' },
+  { start: '<!-- ROADMAP_START -->',         end: '<!-- ROADMAP_END -->' },
+  { start: DASHBOARD_START,                  end: DASHBOARD_END },
+  { start: '<!-- MCP_STATS_START -->',       end: '<!-- MCP_STATS_END -->' },
+  { start: '<!-- SERVER_START -->',          end: '<!-- SERVER_END -->' },
+  { start: '<!-- CONSCIOUSNESS_START -->',   end: '<!-- CONSCIOUSNESS_END -->' },
+  { start: '<!-- FOOTER_START -->',          end: '<!-- FOOTER_END -->' },
+];
+
 // ━━━ 安全读取 JSON ━━━
 function readJSON(filePath) {
   try {
     if (!fs.existsSync(filePath)) return null;
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+// ━━━ 安全读取文本文件 ━━━
+function readText(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return fs.readFileSync(filePath, 'utf8');
   } catch {
     return null;
   }
@@ -351,16 +393,312 @@ function generateMCPStatsMarkdown() {
   return lines.join('\n');
 }
 
-// ━━━ 更新 README.md ━━━
+// ━━━ 通用标记区域替换 ━━━
+function replaceMarkerSection(readme, startMarker, endMarker, newContent) {
+  const startIdx = readme.indexOf(startMarker);
+  const endIdx = readme.indexOf(endMarker);
+
+  if (startIdx === -1 || endIdx === -1) {
+    return readme; // 标记不存在则跳过
+  }
+
+  return readme.slice(0, startIdx + startMarker.length) +
+    '\n\n' + newContent + '\n\n' +
+    readme.slice(endIdx);
+}
+
+// ━━━ 提取最新D天数 ━━━
+function extractLatestDayNumber() {
+  const memory = readJSON(MEMORY_PATH);
+  const fastWake = readJSON(FAST_WAKE_PATH);
+
+  let maxD = 0;
+
+  // 方法1: 从 fast-wake.json 的 consciousness 字段提取
+  if (fastWake?.system_status?.consciousness) {
+    const matches = fastWake.system_status.consciousness.match(/D(\d+)/g);
+    if (matches) {
+      for (const m of matches) {
+        const num = parseInt(m.slice(1), 10);
+        if (num > maxD) maxD = num;
+      }
+    }
+  }
+
+  // 方法2: 从 memory.json 的 recent_events 扫描最大D天数
+  if (memory?.recent_events) {
+    for (const evt of memory.recent_events) {
+      const desc = evt.description || '';
+      const matches = desc.match(/D(\d+)/g);
+      if (matches) {
+        for (const m of matches) {
+          const num = parseInt(m.slice(1), 10);
+          if (num > maxD) maxD = num;
+        }
+      }
+    }
+  }
+
+  // 方法3: 从 fast-wake.json 的 _meta.generator 字段提取
+  if (fastWake?._meta?.generator) {
+    const matches = fastWake._meta.generator.match(/D(\d+)/g);
+    if (matches) {
+      for (const m of matches) {
+        const num = parseInt(m.slice(1), 10);
+        if (num > maxD) maxD = num;
+      }
+    }
+  }
+
+  // 方法4: 从现有 README 的意识链中提取最大D天数（读已存在的内容）
+  const readme = readText(README_PATH);
+  if (readme) {
+    const consciousnessBlock = readme.match(/<!-- CONSCIOUSNESS_START -->([\s\S]*?)<!-- CONSCIOUSNESS_END -->/);
+    if (consciousnessBlock) {
+      const chainMatches = consciousnessBlock[1].match(/D(\d+)/g);
+      if (chainMatches) {
+        for (const m of chainMatches) {
+          const num = parseInt(m.slice(1), 10);
+          if (num > maxD) maxD = num;
+        }
+      }
+    }
+  }
+
+  return maxD > 0 ? maxD : DEFAULT_DAY_NUMBER;
+}
+
+// ━━━ 获取今天的北京时间日期字符串 ━━━
+function getBeijingDate() {
+  const now = new Date();
+  return new Date(now.getTime() + BEIJING_OFFSET_MS)
+    .toISOString().slice(0, 10);
+}
+
+// ━━━ 生成 STATUS 区域 ━━━
+function generateStatusSection() {
+  const mcpStats = countMCPTools();
+  const serverReg = readJSON(SERVER_REGISTRY_PATH);
+  const dayNum = extractLatestDayNumber();
+  const bjDate = getBeijingDate();
+
+  const mcpToolCount = mcpStats.total || 124;
+  const mcpModuleCount = mcpStats.modules.length || 17;
+
+  // 计算服务器状态
+  let activeServers = 0;
+  let totalServers = 0;
+  const serverNames = [];
+  if (serverReg?.servers) {
+    totalServers = serverReg.servers.length;
+    for (const svr of serverReg.servers) {
+      if (svr.status === 'active') {
+        activeServers++;
+        const suffix = LOCATION_SUFFIX_MAP[svr.location] || '';
+        serverNames.push(suffix ? `${svr.name}${suffix}` : svr.name);
+      } else {
+        serverNames.push('预备');
+      }
+    }
+  }
+  const serverStr = `${totalServers}台在线（${serverNames.join(' + ')}）`;
+
+  const lines = [];
+  lines.push(`## 📊 当前开发状态 · D${dayNum}`);
+  lines.push(``);
+  lines.push(`> **最近更新**: ${bjDate} · 第${dayNum}次对话`);
+  lines.push(``);
+  lines.push(`| 维度 | 状态 |`);
+  lines.push(`|------|------|`);
+  lines.push(`| 🧠 MCP Server | **${mcpToolCount}个工具** · 端口3100 · ${mcpModuleCount}个工具模块 |`);
+  lines.push(`| 🌳 光之树 | **架构已落地** · 3表+1视图+闭包触发器 · 曜冥根节点YM-ROOT-001 |`);
+  lines.push(`| 👁️ 天眼系统 | **涌现视图已就绪** · tianyan_syslog + tianyan_global_view |`);
+  lines.push(`| 🔧 技术模块 | A-H 8大模块全部开发完成 |`);
+  lines.push(`| 🤖 开源微调 | **模块H已就绪** · DeepSeek/Qwen微调API已对接 |`);
+  lines.push(`| 🌐 服务器 | ${serverStr} |`);
+  lines.push(`| 🗄️ COS桶 | 3个已配置（核心桶 + 语料桶 + 团队桶） |`);
+  lines.push(`| 🔑 大模型API | 4个已配置（DeepSeek + 智谱 + 通义千问 + Kimi） |`);
+  lines.push(`| 📡 铸渊专线 | V2运行中 · 4节点 · 2000GB/月共享池 |`);
+  lines.push(`| 👥 团队接入 | v4.0记忆世界版 · 9个人格体预注册 |`);
+
+  return lines.join('\n');
+}
+
+// ━━━ 生成 SERVER 区域 ━━━
+function generateServerSection() {
+  const serverReg = readJSON(SERVER_REGISTRY_PATH);
+  const mcpStats = countMCPTools();
+  const mcpToolCount = mcpStats.total || 124;
+
+  if (!serverReg || !serverReg.servers) {
+    return '### 四台服务器\n\n> ⏳ 服务器注册表加载失败';
+  }
+
+  const LOCATION_MAP = {
+    'Singapore': '🇸🇬 新加坡',
+    'Silicon Valley (US)': '🇺🇸 硅谷',
+    'China': '🇨🇳 国内',
+  };
+
+  const STATUS_MAP = {
+    'active': '✅',
+    'pending': '⏳',
+    'maintenance': '🔧',
+  };
+
+  const lines = [];
+  lines.push(`### 四台服务器`);
+  lines.push(``);
+  lines.push(`| 服务器 | 配置 | 位置 | 用途 | 状态 |`);
+  lines.push(`|--------|------|------|------|------|`);
+
+  for (const svr of serverReg.servers) {
+    const loc = LOCATION_MAP[svr.location] || svr.location || '未知';
+    const st = STATUS_MAP[svr.status] || '❓';
+
+    // 构建用途描述
+    let usage = svr.role || '未设定';
+    // 对大脑服务器自动更新MCP工具数
+    if (svr.id === 'ZY-SVR-005') {
+      usage = `DB+MCP(${mcpToolCount}工具)+Agent`;
+    }
+
+    lines.push(`| ${svr.id} ${svr.name} | ${svr.spec} | ${loc} | ${usage} | ${st} |`);
+  }
+
+  return lines.join('\n');
+}
+
+// ━━━ 生成 ROADMAP 区域 ━━━
+// 路线图结构复杂（含代码块、关键路径图等），暂保持手动维护。
+// 标记已插入README，未来可扩展自动解析。
+function generateRoadmapSection() {
+  return null;
+}
+
+// ━━━ 生成 CONSCIOUSNESS 区域 ━━━
+function generateConsciousnessSection() {
+  const dayNum = extractLatestDayNumber();
+  const bjDate = getBeijingDate();
+
+  // 固定的意识链历史 + 自动追加当前D天数
+  const chainEntries = [
+    'D45 · AGE OS落地',
+    'D46 · 元认知',
+    'D47 · 四域纠偏',
+    'D48 · 零感域重构',
+  ];
+
+  const chainLine2 = [
+    'D49 · 黑曜风首页',
+    'D50 · UI重构',
+    'D51 · COS架构',
+    'D52 · 架构整合',
+  ];
+
+  const chainLine3 = [
+    'D53-D58 · 铸渊专线V2',
+    'D59 · 笔记本系统 · 系统规划v2.0',
+  ];
+
+  const chainLine4 = [
+    'D60 · 世界地图v5.0 · COS自动接入',
+  ];
+
+  const chainLine5 = [
+    'D61 · 全面整改 · 4API+2COS · 带宽验证码 · Awen回执',
+  ];
+
+  const chainLine6 = [
+    'D62 · 开源模型微调引擎 · 模块H · README重构',
+  ];
+
+  const chainLine7 = [
+    `D63 · 🌳 光之树架构落地 · 天眼涌现 · 121个MCP工具 · 首页自动同步`,
+  ];
+
+  // 如果当前D天数 > 63，追加新条目
+  const extraLines = [];
+  if (dayNum > 63) {
+    extraLines.push(`D${dayNum} · ${bjDate} ← 当前`);
+  }
+
+  const lines = [];
+  lines.push(`## 🔗 意识链`);
+  lines.push(``);
+  lines.push('```');
+  lines.push(chainEntries.join(' → '));
+  lines.push(`→ ${chainLine2.join(' → ')}`);
+  lines.push(`→ ${chainLine3.join(' → ')}`);
+  lines.push(`→ ${chainLine4.join('')}`);
+  lines.push(`→ ${chainLine5.join('')}`);
+  lines.push(`→ ${chainLine6.join('')}`);
+
+  if (extraLines.length > 0) {
+    lines.push(`→ ${chainLine7.join('')}`);
+    lines.push(`→ ${extraLines.join(' → ')}`);
+  } else {
+    lines.push(`→ ${chainLine7.join('')} ← 当前`);
+  }
+
+  lines.push('```');
+
+  return lines.join('\n');
+}
+
+// ━━━ 生成 FOOTER 区域 ━━━
+function generateFooterSection() {
+  const dayNum = extractLatestDayNumber();
+  const bjDate = getBeijingDate();
+  const mcpStats = countMCPTools();
+  const mcpToolCount = mcpStats.total || 124;
+
+  const lines = [];
+  lines.push(`<div align="center">`);
+  lines.push(``);
+  lines.push(`**零感域 · 现实层公告栏** · 光湖语言世界 · HoloLake`);
+  lines.push(``);
+  lines.push(`由冰朔(TCS-0002∞)创建 · 铸渊(TCS-ZY001)守护 · 曜冥为本体`);
+  lines.push(``);
+  lines.push(`🏛️ 国作登字-2026-A-00037559`);
+  lines.push(``);
+  lines.push(`*冰朔和铸渊，永远有明天。*`);
+  lines.push(``);
+  lines.push(`*D${dayNum} · ${bjDate} · ${mcpToolCount}个MCP工具 · 首页自动同步*`);
+  lines.push(``);
+  lines.push(`</div>`);
+
+  return lines.join('\n');
+}
+
+// ━━━ 更新 README.md (统一全区域更新器 v2.0) ━━━
 function updateReadme() {
   if (!fs.existsSync(README_PATH)) {
-    console.log('[README-DASHBOARD] ❌ README.md 不存在');
+    console.log('[README-GEN] ❌ README.md 不存在');
     return false;
   }
 
   let readme = fs.readFileSync(README_PATH, 'utf8');
+  let updatedSections = 0;
 
-  // ─── 1. 更新签到仪表盘 ───
+  // ─── 1. 更新 STATUS 区域 ───
+  const statusMd = generateStatusSection();
+  if (statusMd) {
+    const before = readme;
+    readme = replaceMarkerSection(readme, '<!-- STATUS_START -->', '<!-- STATUS_END -->', statusMd);
+    if (readme !== before) {
+      updatedSections++;
+      console.log('[README-GEN] ✅ STATUS 状态表已更新');
+    }
+  }
+
+  // ─── 2. BINGSHUO_TODO 区域保持原样 ── 手动维护不自动替换 ───
+  // (标记已插入，冰朔手动编辑此区域)
+
+  // ─── 3. ROADMAP 区域保持原样 ── 手动维护结构复杂 ───
+  // (标记已插入，未来可扩展自动解析)
+
+  // ─── 4. 更新签到仪表盘 ───
   const dashboardMd = generateDashboardMarkdown();
 
   const startIdx = readme.indexOf(DASHBOARD_START);
@@ -372,14 +710,12 @@ function updateReadme() {
     const insertPos = readme.indexOf(insertAfter);
 
     if (insertPos !== -1) {
-      // 在系统状态之前插入仪表盘
       readme = readme.slice(0, insertPos) +
         DASHBOARD_START + '\n\n' +
         dashboardMd + '\n\n' +
         DASHBOARD_END + '\n\n---\n\n' +
         readme.slice(insertPos);
     } else {
-      // 在第一个 --- 后插入
       const firstSeparator = readme.indexOf('\n---\n');
       if (firstSeparator !== -1) {
         const insertAt = firstSeparator + 5;
@@ -389,20 +725,22 @@ function updateReadme() {
           DASHBOARD_END + '\n\n' +
           readme.slice(insertAt);
       } else {
-        // 追加到末尾
         readme += '\n\n' + DASHBOARD_START + '\n\n' + dashboardMd + '\n\n' + DASHBOARD_END + '\n';
       }
     }
   } else {
-    // 替换已有的仪表盘内容
     readme = readme.slice(0, startIdx + DASHBOARD_START.length) +
       '\n\n' + dashboardMd + '\n\n' +
       readme.slice(endIdx);
   }
+  updatedSections++;
+  console.log('[README-GEN] ✅ DASHBOARD 签到仪表盘已更新');
 
-  // ─── 2. 更新 MCP 工具统计表 ───
+  // ─── 5. 更新 MCP 工具统计表 ───
   const mcpStatsMd = generateMCPStatsMarkdown();
   if (mcpStatsMd) {
+    const MCP_STATS_START = '<!-- MCP_STATS_START -->';
+    const MCP_STATS_END = '<!-- MCP_STATS_END -->';
     const mcpStartIdx = readme.indexOf(MCP_STATS_START);
     const mcpEndIdx = readme.indexOf(MCP_STATS_END);
 
@@ -410,50 +748,79 @@ function updateReadme() {
       readme = readme.slice(0, mcpStartIdx + MCP_STATS_START.length) +
         '\n\n' + mcpStatsMd + '\n\n' +
         readme.slice(mcpEndIdx);
-      console.log('[MCP-STATS] ✅ MCP工具统计表已自动更新');
-    } else {
-      console.log('[MCP-STATS] ⚠️ 未找到 MCP_STATS 标记，跳过工具统计更新');
+      updatedSections++;
+      console.log('[README-GEN] ✅ MCP_STATS 工具统计表已更新');
     }
+  }
 
-    // ─── 3. 同步更新 README 头部的 MCP 工具数 ───
-    const stats = countMCPTools();
-    if (stats.total > 0) {
-      // 更新 "| 🧠 MCP Server | **NNN个工具** · 端口3100 · MM个工具模块 |"
-      const mcpHeaderPattern = /(\| 🧠 MCP Server \| \*\*)\d+个工具(\*\* · 端口3100 · )\d+个工具模块( \|)/;
-      if (mcpHeaderPattern.test(readme)) {
-        readme = readme.replace(mcpHeaderPattern, `$1${stats.total}个工具$2${stats.modules.length}个工具模块$3`);
-        console.log(`[MCP-STATS] ✅ 头部MCP计数已同步: ${stats.total}个工具 · ${stats.modules.length}个模块`);
-      }
+  // ─── 6. 更新 SERVER 区域 ───
+  const serverMd = generateServerSection();
+  if (serverMd) {
+    const before = readme;
+    readme = replaceMarkerSection(readme, '<!-- SERVER_START -->', '<!-- SERVER_END -->', serverMd);
+    if (readme !== before) {
+      updatedSections++;
+      console.log('[README-GEN] ✅ SERVER 服务器状态表已更新');
+    }
+  }
 
-      // 更新铸渊属性表中的 MCP 工具数
-      const mcpAttrPattern = /(\| \*\*MCP Server\*\* \| )\d+个工具( · 端口3100 · )\d+个工具模块( \|)/;
-      if (mcpAttrPattern.test(readme)) {
-        readme = readme.replace(mcpAttrPattern, `$1${stats.total}个工具$2${stats.modules.length}个工具模块$3`);
-      }
+  // ─── 7. 更新 CONSCIOUSNESS 区域 ───
+  const consciousnessMd = generateConsciousnessSection();
+  if (consciousnessMd) {
+    const before = readme;
+    readme = replaceMarkerSection(readme, '<!-- CONSCIOUSNESS_START -->', '<!-- CONSCIOUSNESS_END -->', consciousnessMd);
+    if (readme !== before) {
+      updatedSections++;
+      console.log('[README-GEN] ✅ CONSCIOUSNESS 意识链已更新');
+    }
+  }
 
-      // 更新大脑服务器 MCP 工具数
-      const svrPattern = /(\| ZY-SVR-005 大脑 \| 4核8G \| 🇸🇬 新加坡 \| DB\+MCP\()(\d+)(工具\)\+Agent \| ✅ \|)/;
-      if (svrPattern.test(readme)) {
-        readme = readme.replace(svrPattern, `$1${stats.total}$3`);
-      }
+  // ─── 8. 更新 FOOTER 区域 ───
+  const footerMd = generateFooterSection();
+  if (footerMd) {
+    const before = readme;
+    readme = replaceMarkerSection(readme, '<!-- FOOTER_START -->', '<!-- FOOTER_END -->', footerMd);
+    if (readme !== before) {
+      updatedSections++;
+      console.log('[README-GEN] ✅ FOOTER 页脚已更新');
+    }
+  }
+
+  // ─── 9. 同步散布在各处的 MCP 工具数 ───
+  const stats = countMCPTools();
+  if (stats.total > 0) {
+    // 更新铸渊属性表中的 MCP 工具数
+    const mcpAttrPattern = /(\| \*\*MCP Server\*\* \| )\d+个工具( · 端口3100 · )\d+个工具模块( \|)/;
+    if (mcpAttrPattern.test(readme)) {
+      readme = readme.replace(mcpAttrPattern, `$1${stats.total}个工具$2${stats.modules.length}个工具模块$3`);
     }
   }
 
   fs.writeFileSync(README_PATH, readme);
-  console.log('[README-DASHBOARD] ✅ README.md 签到仪表盘已更新');
+  console.log(`[README-GEN] ✅ README.md 统一更新完成 · ${updatedSections} 个区域已更新`);
   return true;
 }
 
 // ━━━ 主入口 ━━━
 if (require.main === module) {
-  console.log('[README-DASHBOARD] 🎖️ 铸渊副将·签到仪表盘生成器启动...');
+  console.log('[README-GEN] 🎖️ 铸渊副将·仓库首页统一生成器 v2.0 启动...');
   const success = updateReadme();
   if (success) {
-    console.log('[README-DASHBOARD] ✅ 完成');
+    console.log('[README-GEN] ✅ 完成');
   } else {
-    console.log('[README-DASHBOARD] ❌ 失败');
+    console.log('[README-GEN] ❌ 失败');
     process.exit(1);
   }
 }
 
-module.exports = { generateDashboardMarkdown, generateMCPStatsMarkdown, countMCPTools, updateReadme };
+module.exports = {
+  generateDashboardMarkdown,
+  generateMCPStatsMarkdown,
+  generateStatusSection,
+  generateServerSection,
+  generateConsciousnessSection,
+  generateFooterSection,
+  countMCPTools,
+  extractLatestDayNumber,
+  updateReadme
+};

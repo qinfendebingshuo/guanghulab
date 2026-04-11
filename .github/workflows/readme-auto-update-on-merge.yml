@@ -29,6 +29,9 @@ on:
       - 'data/cos-join-registry.json'
       - 'scripts/generate-readme-dashboard.js'
       - '.github/persona-brain/memory.json'
+      - 'brain/age-os-landing/development-roadmap.md'
+      - 'brain/age-os-landing/system-development-plan-v2.md'
+      - 'hldp/**'
   workflow_dispatch:
 
 permissions:
@@ -57,17 +60,17 @@ jobs:
       - name: "📦 安装依赖"
         run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
 
-      - name: "📡 更新README签到仪表盘"
+      - name: "📡 更新README全区域"
         run: |
-          echo "[README-AUTO-UPDATE] 📡 PR合并自动触发README更新..."
+          echo "[README-AUTO-UPDATE] 📡 PR合并自动触发README全区域更新 v2.0..."
           echo "触发事件: ${{ github.event_name }}"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "PR标题: ${{ github.event.pull_request.title }}"
             echo "PR编号: #${{ github.event.pull_request.number }}"
           fi
 
-          # 运行签到仪表盘生成器
-          node scripts/generate-readme-dashboard.js || echo "⚠️ 签到仪表盘更新异常·记录并继续"
+          # 运行统一生成器 v2.0
+          node scripts/generate-readme-dashboard.js || echo "⚠️ README更新异常·记录并继续"
 
       - name: "🔄 更新README动态状态"
         run: |

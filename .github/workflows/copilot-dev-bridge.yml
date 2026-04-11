@@ -101,26 +101,11 @@ jobs:
             echo "$ISSUE_JSON" > /tmp/cab-issue.json
 
             # 提取标题和内容
-            TITLE=$(echo "$ISSUE_JSON" | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    print(data.get('title', '🌉 [CAB] 未命名任务'))
-except Exception as e:
-    print('🌉 [CAB] 未命名任务')
-    sys.exit(0)
-")
+            TITLE=$(echo "$ISSUE_JSON" | python3 -c "import sys, json; data = json.load(sys.stdin); print(data.get('title', '🌉 [CAB] 未命名任务'))" 2>/dev/null || echo "🌉 [CAB] 未命名任务")
             echo "issue_title=$TITLE" >> $GITHUB_OUTPUT
 
             # 保存 body 到文件供后续步骤使用
-            echo "$ISSUE_JSON" | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    print(data.get('body', '任务规格解析失败'))
-except Exception as e:
-    print('任务规格解析失败')
-" > /tmp/cab-issue-body.md
+            echo "$ISSUE_JSON" | python3 -c "import sys, json; data = json.load(sys.stdin); print(data.get('body', '任务规格解析失败'))" > /tmp/cab-issue-body.md 2>/dev/null || echo "任务规格解析失败" > /tmp/cab-issue-body.md
           fi
 
       # Step 3 · 创建 Issue

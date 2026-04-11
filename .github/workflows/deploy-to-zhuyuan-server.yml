@@ -290,11 +290,9 @@ jobs:
           npm install --production 2>&1
 
           # 写入 MCP Server 环境变量配置
-          cat > /opt/age-os/.env.mcp << 'ENV_EOF'
-NODE_ENV=production
-MCP_PORT=3100
-MCP_BIND_HOST=127.0.0.1
-ENV_EOF
+          echo "NODE_ENV=production" > /opt/age-os/.env.mcp
+          echo "MCP_PORT=3100" >> /opt/age-os/.env.mcp
+          echo "MCP_BIND_HOST=127.0.0.1" >> /opt/age-os/.env.mcp
 
           # 注入密钥（从 GitHub Secrets）
           echo "ZHUYUAN_API_KEY=${ZHUYUAN_API_KEY}" >> /opt/age-os/.env.mcp
