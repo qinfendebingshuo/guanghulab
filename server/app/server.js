@@ -272,8 +272,13 @@ app.post('/api/chat', async (req, res) => {
 
     // 优先用国内模型智能网关（读取 ZY_DEEPSEEK_API_KEY 等独立密钥）
     if (domesticGateway) {
-      const result = await domesticGateway.chat(sessionId, message);
-      return res.json({ ...result, sessionId });
+      try {
+        const result = await domesticGateway.chat(sessionId, message);
+        return res.json({ ...result, sessionId });
+      } catch (gwErr) {
+        console.error(`[聊天网关] 国内模型网关异常: ${gwErr.message}`);
+        // 降级到通用聊天引擎
+      }
     }
 
     // 降级到通用聊天引擎
