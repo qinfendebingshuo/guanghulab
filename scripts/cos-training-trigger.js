@@ -50,6 +50,7 @@ const DEFAULT_PERSONA = 'zhuyuan';
 const PROCESSED_PREFIX = 'tcs-structured/';
 const MAX_EXTRACT_PER_RUN = 20;  // 每次最多处理文件数
 const MAX_TRAIN_PER_RUN = 5;     // 每次最多训练文件数
+const MAX_EXTRACT_FILE_SIZE = 200 * 1024 * 1024; // 200MB — 超过此阈值的文件使用分块策略
 
 // ─── 排除路径（不视为语料的目录/文件） ───
 const EXCLUDED_PREFIXES = [
@@ -221,20 +222,44 @@ async function cmdExtract(bucket) {
 
   let extracted = 0;
   let errors = 0;
+  let skipped = 0;
   const results = [];
 
   for (const file of toProcess) {
     try {
-      console.log(`  📦 处理: ${file.key}...`);
+      // 大文件预警
+      const sizeMB = (file.size_bytes / 1024 / 1024).toFixed(1);
+      if (file.size_bytes > MAX_EXTRACT_FILE_SIZE) {
+        console.log(`  📦 处理: ${file.key} (${sizeMB}MB · 超大文件，使用分块策略)...`);
+      } else {
+        console.log(`  📦 处理: ${file.key} (${sizeMB}MB)...`);
+      }
+
       const result = await extractor.cosExtractCorpus({
         bucket: bucketName,
         key: file.key,
         output_bucket: bucketName,
         output_prefix: PROCESSED_PREFIX
       });
-      extracted++;
-      results.push({ key: file.key, status: 'success', output: result.output?.key });
-      console.log(`  ✅ 完成: ${result.output?.key || '已处理'} (${result.entries || 0} 条目)`);
+
+      // 根据返回状态分类计数
+      if (result.status === 'zip_detected') {
+        skipped++;
+        results.push({ key: file.key, status: 'skipped', reason: 'zip_needs_special_tool' });
+        console.log(`  ⏭️ 跳过: ${file.key} — ZIP文件需要专用工具处理`);
+      } else if (result.status === 'skipped_too_large') {
+        skipped++;
+        results.push({ key: file.key, status: 'skipped', reason: 'too_large', size_mb: result.size_mb });
+        console.log(`  ⏭️ 跳过: ${file.key} — ${result.message}`);
+      } else if (result.status === 'partial_extract') {
+        extracted++;
+        results.push({ key: file.key, status: 'partial', output: result.output?.key, message: result.message });
+        console.log(`  🔶 部分提取: ${result.message}`);
+      } else {
+        extracted++;
+        results.push({ key: file.key, status: 'success', output: result.output?.key });
+        console.log(`  ✅ 完成: ${result.output?.key || '已处理'} (${result.entries || 0} 条目)`);
+      }
     } catch (err) {
       errors++;
       results.push({ key: file.key, status: 'error', error: err.message });
@@ -244,16 +269,18 @@ async function cmdExtract(bucket) {
 
   console.log(`\n═══ 提取完毕 ═══`);
   console.log(`✅ 成功: ${extracted}`);
+  console.log(`⏭️ 跳过: ${skipped}`);
   console.log(`❌ 失败: ${errors}`);
   console.log(`⏳ 剩余: ${pending.length - toProcess.length}`);
 
   writeGitHubOutput(
     `extracted=${extracted}`,
+    `extract_skipped=${skipped}`,
     `extract_errors=${errors}`,
     `extract_status=${errors > 0 ? 'partial' : 'success'}`
   );
 
-  return { extracted, errors, results };
+  return { extracted, errors, skipped, results };
 }
 
 // ═══════════════════════════════════════════
@@ -379,7 +406,7 @@ async function cmdFull(bucket, personaId) {
   console.log('\n╔═══════════════════════════════════════════╗');
   console.log('║  完整训练管线 · 运行完毕                   ║');
   console.log('╚═══════════════════════════════════════════╝');
-  console.log(`  提取: ${extractResult.extracted} 成功 / ${extractResult.errors} 失败`);
+  console.log(`  提取: ${extractResult.extracted} 成功 / ${extractResult.skipped || 0} 跳过 / ${extractResult.errors} 失败`);
   console.log(`  训练: ${trainResult.trained} 成功 / ${trainResult.errors} 失败`);
   console.log(`  耗时: ${(duration / 1000).toFixed(1)}s`);
 

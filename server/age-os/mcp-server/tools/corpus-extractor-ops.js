@@ -28,6 +28,12 @@ const cos = require('../cos');
 const gunzip = promisify(zlib.gunzip);
 const inflate = promisify(zlib.inflate);
 
+// ─── 大文件处理阈值 ───
+// 超过此阈值的文件使用分块策略（读取部分内容做类型检测和采样）
+const MAX_EXTRACT_FILE_SIZE = 200 * 1024 * 1024; // 200MB
+// 分块采样时读取的最大字节数
+const PARTIAL_READ_SIZE = 2 * 1024 * 1024; // 2MB
+
 // ─── 支持的压缩格式 ───
 const COMPRESSED_EXTENSIONS = ['.zip', '.gz', '.tar.gz', '.tgz', '.json.gz'];
 
@@ -161,7 +167,33 @@ async function cosExtractCorpus(input) {
   const outputBucket = output_bucket || bucket;
   const outputBase = output_prefix || 'tcs-structured/';
 
-  // 读取源文件
+  // ── 大文件预检: 先用 HEAD 检查文件大小，避免 OOM ──
+  let fileSize = 0;
+  try {
+    const meta = await cos.head(bucket, key);
+    fileSize = meta.size_bytes;
+  } catch {
+    // HEAD 不支持时跳过，由后续读取处理
+  }
+
+  // ZIP文件始终返回提示（无论大小），因为需要二进制解析
+  if (key.toLowerCase().endsWith('.zip')) {
+    return {
+      status: 'zip_detected',
+      key,
+      size_bytes: fileSize,
+      message: 'ZIP文件已检测到。ZIP解析需要完整二进制流处理，建议使用cosParseGitRepoArchive或cosParseNotionExport专用工具处理。',
+      corpus_type: detectCorpusType(key),
+      recommendation: '请使用专用解析工具处理ZIP文件'
+    };
+  }
+
+  // ── 超大文件分块处理策略 ──
+  if (fileSize > MAX_EXTRACT_FILE_SIZE) {
+    return await extractLargeFile(bucket, key, outputBucket, outputBase, fileSize);
+  }
+
+  // ── 常规文件: 完整读取 ──
   const raw = await cos.read(bucket, key);
   let content = raw.content;
   let decompressed = false;
@@ -176,18 +208,6 @@ async function cosExtractCorpus(input) {
     } catch {
       // 可能不是gz格式，尝试原文处理
     }
-  }
-
-  // ZIP文件需要特殊处理（ZIP解析需要外部库，这里提取目录列表）
-  if (key.toLowerCase().endsWith('.zip')) {
-    return {
-      status: 'zip_detected',
-      key,
-      size_bytes: raw.size_bytes,
-      message: 'ZIP文件已检测到。ZIP解析需要完整二进制流处理，建议使用cosParseGitRepoArchive或cosParseNotionExport专用工具处理。',
-      corpus_type: detectCorpusType(key),
-      recommendation: '请使用专用解析工具处理ZIP文件'
-    };
   }
 
   // 自动检测语料类型
@@ -221,6 +241,73 @@ async function cosExtractCorpus(input) {
     tcs_version: TCS_CORPUS_VERSION,
     entries: tcsData.entries?.length || 0,
     metadata: tcsData.metadata
+  };
+}
+
+/**
+ * 超大文件分块提取策略
+ *
+ * 对于超过 MAX_EXTRACT_FILE_SIZE 的文件:
+ * 1. 使用 readPartial 读取前 2MB 做类型检测
+ * 2. 根据类型采样提取部分内容生成TCS
+ * 3. 标记为 partial_extract 状态
+ */
+async function extractLargeFile(bucket, key, outputBucket, outputBase, fileSize) {
+  const sizeMB = (fileSize / 1024 / 1024).toFixed(1);
+
+  // 读取前 2MB 用于类型检测和内容采样
+  let partial;
+  try {
+    partial = await cos.readPartial(bucket, key, PARTIAL_READ_SIZE);
+  } catch (err) {
+    return {
+      status: 'skipped_too_large',
+      key,
+      size_bytes: fileSize,
+      size_mb: sizeMB,
+      message: `文件过大 (${sizeMB}MB)，超过提取阈值 (${MAX_EXTRACT_FILE_SIZE / 1024 / 1024}MB)，且分块读取失败: ${err.message}`,
+      recommendation: '建议将大文件拆分后重新上传到COS桶'
+    };
+  }
+
+  const corpusType = detectCorpusType(key, partial.content);
+
+  // 用采样内容生成TCS（标记为部分提取）
+  let tcsData;
+  switch (corpusType) {
+    case 'gpt':
+      tcsData = transformGPTToTCS(partial.content, key);
+      break;
+    case 'notion':
+      tcsData = transformNotionToTCS(partial.content, key);
+      break;
+    case 'git-repo':
+      tcsData = transformGitRepoToTCS(partial.content, key);
+      break;
+    default:
+      tcsData = transformGenericToTCS(partial.content, key);
+  }
+
+  // 标记为部分提取
+  tcsData.metadata = tcsData.metadata || {};
+  tcsData.metadata.partial_extract = true;
+  tcsData.metadata.total_file_size_bytes = fileSize;
+  tcsData.metadata.sampled_bytes = partial.size_bytes;
+  tcsData.metadata.extraction_note = `文件过大 (${sizeMB}MB)，仅采样前 ${(partial.size_bytes / 1024 / 1024).toFixed(1)}MB 生成TCS。完整提取需要流式处理。`;
+
+  const outputKey = `${outputBase}${corpusType}/${extractFileName(key)}.partial.tcs.json`;
+  await cos.write(outputBucket, outputKey, JSON.stringify(tcsData, null, 2), 'application/json');
+
+  return {
+    status: 'partial_extract',
+    source: { bucket, key, size_bytes: fileSize },
+    output: { bucket: outputBucket, key: outputKey },
+    corpus_type: corpusType,
+    tcs_version: TCS_CORPUS_VERSION,
+    entries: tcsData.entries?.length || 0,
+    size_mb: sizeMB,
+    sampled_mb: (partial.size_bytes / 1024 / 1024).toFixed(1),
+    message: `大文件部分提取完成 (采样 ${(partial.size_bytes / 1024 / 1024).toFixed(1)}MB / 共 ${sizeMB}MB)`
   };
 }
 
