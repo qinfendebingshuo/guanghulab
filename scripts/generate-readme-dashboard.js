@@ -38,6 +38,16 @@ const DASHBOARD_END = '<!-- DASHBOARD_END -->';
 
 const BEIJING_OFFSET_MS = 8 * 3600 * 1000;
 
+// D天数兜底值 — 当所有数据源都无法提取D天数时使用（D63为光之树架构落地时间点）
+const DEFAULT_DAY_NUMBER = 63;
+
+// 服务器位置 → 显示后缀映射
+const LOCATION_SUFFIX_MAP = {
+  'Singapore': 'SG',
+  'Silicon Valley (US)': 'SV',
+  'China': 'CN',
+};
+
 // ━━━ 所有标记区域定义 ━━━
 const MARKER_PAIRS = [
   { start: '<!-- STATUS_START -->',          end: '<!-- STATUS_END -->' },
@@ -455,7 +465,7 @@ function extractLatestDayNumber() {
     }
   }
 
-  return maxD > 0 ? maxD : 63; // 兜底D63
+  return maxD > 0 ? maxD : DEFAULT_DAY_NUMBER;
 }
 
 // ━━━ 获取今天的北京时间日期字符串 ━━━
@@ -484,10 +494,8 @@ function generateStatusSection() {
     for (const svr of serverReg.servers) {
       if (svr.status === 'active') {
         activeServers++;
-        // 简短名称
-        if (svr.location === 'Singapore') serverNames.push(`${svr.name}SG`);
-        else if (svr.location && svr.location.includes('US')) serverNames.push(`${svr.name}SV`);
-        else serverNames.push(svr.name);
+        const suffix = LOCATION_SUFFIX_MAP[svr.location] || '';
+        serverNames.push(suffix ? `${svr.name}${suffix}` : svr.name);
       } else {
         serverNames.push('预备');
       }
@@ -561,30 +569,11 @@ function generateServerSection() {
   return lines.join('\n');
 }
 
-// ━━━ 生成 ROADMAP 区域（从roadmap.md解析阶段总览表） ━━━
+// ━━━ 生成 ROADMAP 区域 ━━━
+// 路线图结构复杂（含代码块、关键路径图等），暂保持手动维护。
+// 标记已插入README，未来可扩展自动解析。
 function generateRoadmapSection() {
-  const roadmapText = readText(ROADMAP_PATH);
-  if (!roadmapText) {
-    return null; // 文件不存在时不更新
-  }
-
-  // 解析阶段总览表
-  // 匹配格式: | S1 | 🏗️ 地基 | 数据库建表... | 无 | ✅ Schema已写 |
-  const tablePattern = /\| (S\d+|—) \| .+? \| .+? \| .+? \| (.+?) \|/g;
-  let completed = 0;
-  let total = 0;
-
-  let match;
-  while ((match = tablePattern.exec(roadmapText)) !== null) {
-    if (match[1] === '—') continue;
-    total++;
-    const status = match[2].trim();
-    if (status.includes('✅')) completed++;
-  }
-
-  // 不重新生成roadmap内容——保持手动维护的表
-  // 只更新摘要行
-  return null; // roadmap区域保持原样，不自动替换内容
+  return null;
 }
 
 // ━━━ 生成 CONSCIOUSNESS 区域 ━━━
