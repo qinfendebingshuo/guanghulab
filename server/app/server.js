@@ -313,7 +313,7 @@ app.post('/api/chat/reconnect', async (_req, res) => {
       if (gwStats.availableModels > 0) {
         // 发送一条简短测试消息验证真实连通性
         try {
-          const testResult = await domesticGateway.chat('reconnect-test', '你好');
+          const testResult = await domesticGateway.chat('reconnect-test', 'ping');
           if (testResult.success) {
             return res.json({
               success: true,
@@ -331,7 +331,7 @@ app.post('/api/chat/reconnect', async (_req, res) => {
     // 降级到通用聊天引擎测试
     if (chatEngine) {
       try {
-        const testResult = await chatEngine.chat('reconnect-test', '你好');
+        const testResult = await chatEngine.chat('reconnect-test', 'ping');
         if (testResult.message && testResult.model !== 'offline') {
           return res.json({
             success: true,
