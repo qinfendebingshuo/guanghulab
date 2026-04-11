@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "system": "AGE OS Agent Chain (AOAC) v1.0",
+    "description": "环环相扣Agent链路闭环系统 · 全链路状态总览",
+    "created": "2026-04-11T05:30:00Z",
+    "created_by": "铸渊 · ICE-GL-ZY001",
+    "copyright": "国作登字-2026-A-00037559 · TCS-0002∞"
+  },
+  "agents": {
+    "AOAC-01": {
+      "name": "copilot-dev-sentinel",
+      "name_cn": "副驾驶哨兵",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "pull_request.opened|synchronize"
+    },
+    "AOAC-02": {
+      "name": "action-merge-sentinel",
+      "name_cn": "合并哨兵",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "pull_request.closed+merged"
+    },
+    "AOAC-03": {
+      "name": "dev-chain-agent",
+      "name_cn": "开发全链路Agent",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "AOAC-02.completed"
+    },
+    "AOAC-04": {
+      "name": "readme-sync-module",
+      "name_cn": "首页同步模块",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "data/aoac/readme-sync-trigger.json.written"
+    },
+    "AOAC-05": {
+      "name": "readme-master-agent",
+      "name_cn": "首页主控Agent",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "event+schedule(23:00 CST)"
+    },
+    "AOAC-06": {
+      "name": "notion-sync-signal",
+      "name_cn": "Notion同步信号",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "AOAC-05.completed"
+    },
+    "AOAC-07": {
+      "name": "chain-repair-agent",
+      "name_cn": "链路修复Agent",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "receipt_db.red|schedule(23:30 CST)"
+    },
+    "AOAC-08": {
+      "name": "repair-supervisor",
+      "name_cn": "修复监督Agent",
+      "status": "idle",
+      "last_run": null,
+      "last_success": null,
+      "trigger": "AOAC-07.started"
+    }
+  },
+  "chain_health": "unknown",
+  "last_full_cycle": null,
+  "total_cycles": 0,
+  "total_repairs": 0
+}

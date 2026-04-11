@@ -1,0 +1,140 @@
+# ═══════════════════════════════════════════════════
+# AOAC-04+05+06 · 首页同步模块 + 主控Agent + Notion信号
+# AGE OS Agent Chain · 事件触发 + 时间触发双路径
+# 唤醒条件1：data/aoac/readme-sync-trigger.json 被写入（事件）
+# 唤醒条件2：每天23:00 CST = UTC 15:00（时间）
+# 版权：国作登字-2026-A-00037559 · TCS-0002∞
+# ═══════════════════════════════════════════════════
+
+name: 🏠 AOAC-04+05+06 · 首页主控+Notion同步
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/aoac/readme-sync-trigger.json'
+      - 'data/aoac/chain-report.json'
+  schedule:
+    - cron: '0 15 * * *'   # UTC 15:00 = 北京 23:00
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '运行模式'
+        type: choice
+        options:
+          - auto
+          - event
+          - scheduled
+        default: auto
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aoac-readme-master
+  cancel-in-progress: false
+
+jobs:
+  # ────────── AOAC-04 · 同步模块 ──────────
+  sync-module:
+    name: 📋 AOAC-04 · 同步模块
+    runs-on: ubuntu-latest
+    outputs:
+      has_payload: ${{ steps.sync.outputs.has_payload }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 执行同步模块
+        id: sync
+        run: |
+          node scripts/aoac/readme-sync-module.js
+          if [ -f "data/aoac/readme-update-payload.json" ]; then
+            echo "has_payload=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_payload=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 💾 提交更新数据
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/
+          if ! git diff --cached --quiet; then
+            git commit -m "📋 AOAC-04 · 同步模块数据更新 [skip ci]"
+            git push
+          fi
+
+  # ────────── AOAC-05 · 首页主控Agent ──────────
+  master-update:
+    name: 🏠 AOAC-05 · 首页主控
+    needs: sync-module
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      master_report_id: ${{ steps.master.outputs.master_report_id }}
+      readme_updated: ${{ steps.master.outputs.readme_updated }}
+      changes_summary: ${{ steps.master.outputs.changes_summary }}
+    steps:
+      - name: 📥 Checkout (最新)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 🏠 执行首页主控Agent
+        id: master
+        env:
+          ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
+        run: |
+          MODE="${{ github.event_name == 'schedule' && 'scheduled' || github.event.inputs.mode || 'event' }}"
+          node scripts/aoac/readme-master-agent.js "$MODE"
+
+      - name: 📊 同步调用仪表盘生成器
+        run: |
+          if [ -f "scripts/generate-readme-dashboard.js" ]; then
+            node scripts/generate-readme-dashboard.js || true
+          fi
+
+      - name: 💾 提交README更新
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add README.md data/aoac/ data/bulletin-board/ .github/persona-brain/memory.json
+          if ! git diff --cached --quiet; then
+            git commit -m "🏠 AOAC-05 · 首页主控更新 · $(date -u '+%Y-%m-%d %H:%M') [skip ci]"
+            git push
+          fi
+
+  # ────────── AOAC-06 · Notion同步信号 ──────────
+  notion-sync:
+    name: 📡 AOAC-06 · Notion同步
+    needs: master-update
+    if: always() && needs.master-update.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout (最新)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 📡 发送Notion同步信号
+        id: notion
+        env:
+          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          ZY_NOTION_RECEIPT_DB: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
+        run: node scripts/aoac/notion-sync-signal.js
+
+      - name: 💾 提交同步日志
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/
+          if ! git diff --cached --quiet; then
+            git commit -m "📡 AOAC-06 · Notion同步信号已发送 [skip ci]"
+            git push
+          fi

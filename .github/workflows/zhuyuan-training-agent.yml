@@ -104,8 +104,8 @@ jobs:
           ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
           ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
           ZY_DEEPSEEK_API_KEY: ${{ secrets.ZY_DEEPSEEK_API_KEY }}
-          ZY_ZHIPU_API_KEY: ${{ secrets.ZY_ZHIPU_API_KEY }}
-          ZY_QWEN_API_KEY: ${{ secrets.ZY_QWEN_API_KEY }}
+          ZY_QINGYAN_API_KEY: ${{ secrets.ZY_QINGYAN_API_KEY }}
+          ZY_QIANWEN_API_KEY: ${{ secrets.ZY_QIANWEN_API_KEY }}
           ZY_KIMI_API_KEY: ${{ secrets.ZY_KIMI_API_KEY }}
         run: |
           node scripts/cos-training-trigger.js \

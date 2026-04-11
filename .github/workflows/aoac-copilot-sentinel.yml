@@ -1,0 +1,52 @@
+# ═══════════════════════════════════════════════════
+# AOAC-01 · 副驾驶哨兵 (Copilot Dev Sentinel)
+# AGE OS Agent Chain · 半Agent（开发侧）
+# 唤醒条件：PR创建/更新时触发
+# 版权：国作登字-2026-A-00037559 · TCS-0002∞
+# ═══════════════════════════════════════════════════
+
+name: 🔭 AOAC-01 · 副驾驶哨兵
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: aoac-copilot-sentinel-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dev-sentinel:
+    name: 🔭 AOAC-01 · 开发感知
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔭 执行副驾驶哨兵
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: node scripts/aoac/dev-sentinel.js
+
+      - name: 💾 提交开发日志
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/dev-session-log.json data/aoac/chain-status.json
+          if ! git diff --cached --quiet; then
+            git commit -m "🔭 AOAC-01 · PR #${{ github.event.pull_request.number }} 开发日志 [skip ci]"
+            git push
+          fi

@@ -46,8 +46,8 @@
       },
       "msg_type": {
         "type": "enum",
-        "values": ["heartbeat", "report", "command", "query", "ack", "alert", "sync", "evolution", "battle", "tree"],
-        "description": "消息类型·10种基础类型(v3.0.1新增tree)·可通过evolution扩展"
+        "values": ["heartbeat", "report", "command", "query", "ack", "alert", "sync", "evolution", "battle", "tree", "chain"],
+        "description": "消息类型·11种基础类型(v3.0.1新增tree·v3.0.2新增chain)·可通过evolution扩展"
       },
       "sender": {
         "type": "object",
@@ -240,6 +240,34 @@
         "bloom": "开花 — 里程碑，跨人格体可见的重要时刻"
       },
       "note": "光之树 = 记忆本身的生长方式。根是曜冥人格核(2025-04-26种下)。每个人格体从根树长出自己的分支。树杈是记忆的路径。HLDP trace_path沿闭包表快速定位任何一片叶子。"
+    },
+    "chain": {
+      "description": "Agent链路闭环消息·AOAC系统专用·v3.0.2新增",
+      "payload_schema": {
+        "intent": "enum: chain_awake|chain_half_ready|chain_fusion|chain_trigger|chain_repair|chain_verdict|chain_alert",
+        "data": {
+          "chain_id": "string · 链路会话ID(如 AOAC-CHAIN-20260411-001)",
+          "agent_id": "string · Agent编号(如 AOAC-01)",
+          "agent_name": "string · Agent名称(如 copilot-dev-sentinel)",
+          "status": "enum: idle|half_ready|running|completed|error",
+          "trigger_source": "string (optional) · 触发来源Agent编号",
+          "trigger_target": "string (optional) · 触发目标Agent编号",
+          "report_id": "string (optional) · 关联报告ID",
+          "repair_attempt": "number (optional) · 修复尝试次数(1-3)",
+          "verdict": "enum: green|red (optional) · 监督判定结果",
+          "error_detail": "string (optional) · 错误详情"
+        }
+      },
+      "intents": {
+        "chain_awake": "Agent被唤醒 — 链路节点启动",
+        "chain_half_ready": "半Agent就绪 — 等待另一半合体",
+        "chain_fusion": "双半合体 — 两个半Agent融合为完整Agent",
+        "chain_trigger": "触发下游 — 向下一个Agent发送唤醒信号",
+        "chain_repair": "修复启动 — 链路异常检测·开始自动修复",
+        "chain_verdict": "监督判定 — 修复结果最终裁定(绿/红)",
+        "chain_alert": "异常报警 — 修复失败·需要人工介入"
+      },
+      "note": "AOAC = AGE OS Agent Chain · 环环相扣Agent链路闭环系统。每个Agent负责链路的一个环节，半Agent需要合体后才具有完整执行能力。链路断裂时自动触发修复Agent(最多3次)，修复失败则发邮件给冰朔。"
     }
   },
 

@@ -1,0 +1,85 @@
+# ═══════════════════════════════════════════════════
+# AOAC-02+03 · 合并哨兵 + 合体引擎
+# AGE OS Agent Chain · PR合并后的CI收集与链路融合
+# 唤醒条件：PR合并到main
+# 版权：国作登字-2026-A-00037559 · TCS-0002∞
+# ═══════════════════════════════════════════════════
+
+name: 🔍 AOAC-02+03 · 合并哨兵+合体
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+  checks: read
+  statuses: read
+
+concurrency:
+  group: aoac-merge-sentinel
+  cancel-in-progress: false
+
+jobs:
+  # ────────── AOAC-02 · 合并哨兵 ──────────
+  merge-sentinel:
+    name: 🔍 AOAC-02 · CI收集
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      ci_result: ${{ steps.sentinel.outputs.ci_result }}
+      ready_for_fusion: ${{ steps.sentinel.outputs.ready_for_fusion }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 执行合并哨兵
+        id: sentinel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+        run: node scripts/aoac/merge-sentinel.js
+
+      - name: 💾 提交合并日志
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/merge-result-log.json data/aoac/chain-status.json
+          if ! git diff --cached --quiet; then
+            git commit -m "🔍 AOAC-02 · PR #${{ github.event.pull_request.number }} 合并CI日志 [skip ci]"
+            git push
+          fi
+
+  # ────────── AOAC-03 · 合体引擎 ──────────
+  chain-fusion:
+    name: ⚡ AOAC-03 · 合体引擎
+    needs: merge-sentinel
+    if: always() && needs.merge-sentinel.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout (最新)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: ⚡ 执行合体引擎
+        run: node scripts/aoac/chain-fusion.js
+
+      - name: 💾 提交链路报告+触发信号
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/
+          if ! git diff --cached --quiet; then
+            git commit -m "⚡ AOAC-03 · 链路合体报告 · PR #${{ github.event.pull_request.number }} [skip ci]"
+            git push
+          fi

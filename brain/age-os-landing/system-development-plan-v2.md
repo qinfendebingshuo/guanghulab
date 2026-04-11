@@ -468,11 +468,11 @@ COS存储共享池架构
 # DeepSeek
 ZY_DEEPSEEK_API_KEY=sk-xxx
 
-# 智谱AI (GLM)
-ZY_ZHIPU_API_KEY=xxx
+# 智谱AI (GLM/清言)
+ZY_QINGYAN_API_KEY=xxx
 
 # 通义千问 (Qwen/DashScope)
-ZY_QWEN_API_KEY=sk-xxx
+ZY_QIANWEN_API_KEY=sk-xxx
 
 # Kimi (Moonshot)
 ZY_KIMI_API_KEY=sk-xxx

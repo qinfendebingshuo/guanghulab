@@ -1,0 +1,93 @@
+# ═══════════════════════════════════════════════════
+# AOAC-07+08 · 链路修复Agent + 监督Agent
+# AGE OS Agent Chain · 异常检测+自动修复+监督判定
+# 唤醒条件1：每天23:30 CST检查回执（时间）
+# 唤醒条件2：手动触发（workflow_dispatch）
+# 版权：国作登字-2026-A-00037559 · TCS-0002∞
+# ═══════════════════════════════════════════════════
+
+name: 🔧 AOAC-07+08 · 修复+监督
+
+on:
+  schedule:
+    - cron: '30 15 * * *'   # UTC 15:30 = 北京 23:30
+  workflow_dispatch:
+    inputs:
+      force_repair:
+        description: '强制执行修复'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: aoac-chain-repair
+  cancel-in-progress: false
+
+jobs:
+  # ────────── AOAC-07 · 修复Agent ──────────
+  repair-agent:
+    name: 🔧 AOAC-07 · 链路修复
+    runs-on: ubuntu-latest
+    outputs:
+      repair_result: ${{ steps.repair.outputs.repair_result }}
+      needed_repair: ${{ steps.repair.outputs.needed_repair }}
+      repair_id: ${{ steps.repair.outputs.repair_id }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 执行链路修复Agent
+        id: repair
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          ZY_NOTION_RECEIPT_DB: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
+        run: node scripts/aoac/chain-repair-agent.js
+
+      - name: 💾 提交修复报告
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/
+          if ! git diff --cached --quiet; then
+            git commit -m "🔧 AOAC-07 · 修复报告 · ${{ steps.repair.outputs.repair_id || 'check' }} [skip ci]"
+            git push
+          fi
+
+  # ────────── AOAC-08 · 监督Agent ──────────
+  supervisor:
+    name: 👁️ AOAC-08 · 修复监督
+    needs: repair-agent
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout (最新)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 👁️ 执行监督Agent
+        id: supervisor
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
+          ZY_NOTION_RECEIPT_DB: ${{ secrets.ZY_NOTION_RECEIPT_DB }}
+          ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
+        run: node scripts/aoac/repair-supervisor.js
+
+      - name: 💾 提交监督判定
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/aoac/
+          if ! git diff --cached --quiet; then
+            git commit -m "👁️ AOAC-08 · 监督判定 · ${{ steps.supervisor.outputs.verdict || 'check' }} [skip ci]"
+            git push
+          fi
