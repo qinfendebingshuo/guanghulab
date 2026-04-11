@@ -436,7 +436,7 @@ jobs:
           echo ""
           echo "═══ DNS 诊断 ═══"
           SERVER_IP="43.134.16.246"
-          for DOMAIN in ${ZY_DOMAIN_MAIN} ${ZY_DOMAIN_ALIAS} ${ZY_DOMAIN_PREVIEW} ${ZY_FACE_DOMAIN}; do
+          for DOMAIN in "${ZY_DOMAIN_MAIN}" "${ZY_DOMAIN_ALIAS}" "${ZY_DOMAIN_PREVIEW}" "${ZY_FACE_DOMAIN}"; do
             if [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
               RESOLVED=$(dig +short "$DOMAIN" A 2>/dev/null | head -1)
               if [ -z "$RESOLVED" ]; then
@@ -453,7 +453,8 @@ jobs:
           # Nginx 配置诊断 · 检查 server_name 冲突
           echo ""
           echo "═══ Nginx 诊断 ═══"
-          sudo nginx -T 2>&1 | grep -c "conflicting server name" | xargs -I{} echo "Nginx server_name 冲突数: {}"
+          CONFLICT_COUNT=$(sudo nginx -T 2>&1 | grep -c "conflicting server name" || true)
+          echo "Nginx server_name 冲突数: $CONFLICT_COUNT"
           echo "当前启用的站点配置:"
           ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "(无 sites-enabled 目录)"
           echo "═══════════════════"
@@ -545,7 +546,7 @@ jobs:
         run: |
           echo "═══ DNS 域名解析诊断 ═══"
           SERVER_IP="43.134.16.246"
-          for DOMAIN in $ZY_DOMAIN_MAIN $ZY_DOMAIN_ALIAS $ZY_DOMAIN_PREVIEW $ZY_FACE_DOMAIN; do
+          for DOMAIN in "$ZY_DOMAIN_MAIN" "$ZY_DOMAIN_ALIAS" "$ZY_DOMAIN_PREVIEW" "$ZY_FACE_DOMAIN"; do
             if [ -n "$DOMAIN" ] && [ "$DOMAIN" != "_" ]; then
               RESOLVED=$(dig +short "$DOMAIN" A 2>/dev/null | head -1)
               if [ -z "$RESOLVED" ]; then
