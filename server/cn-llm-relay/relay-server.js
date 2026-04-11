@@ -32,6 +32,16 @@ const app = express();
 const PORT = process.env.RELAY_PORT || 3900;
 const RELAY_API_KEY = process.env.ZY_CN_RELAY_API_KEY || '';
 
+// 启动时校验: 鉴权密钥必须配置
+if (!RELAY_API_KEY) {
+  console.error('[CN中继] ❌ ZY_CN_RELAY_API_KEY 未配置 · 服务拒绝启动');
+  console.error('[CN中继] 请在 .env.relay 中设置 ZY_CN_RELAY_API_KEY');
+  process.exit(1);
+}
+
+// API请求超时（可通过环境变量调整）
+const API_TIMEOUT_MS = parseInt(process.env.ZY_CN_API_TIMEOUT || '60000', 10);
+
 // ─── 国内模型配置 ───
 const DOMESTIC_MODELS = {
   ds: {
@@ -162,21 +172,23 @@ function callDomesticAPI(modelConfig, apiKey, requestBody) {
         try {
           const body = JSON.parse(Buffer.concat(chunks).toString());
           if (body.error) {
-            reject(new Error(body.error.message || JSON.stringify(body.error)));
+            reject(new Error(`${modelConfig.endpoint}: ${body.error.message || JSON.stringify(body.error)}`));
           } else {
             resolve(body);
           }
         } catch (e) {
-          reject(new Error('响应解析失败'));
+          reject(new Error(`${modelConfig.endpoint} 响应解析失败 (HTTP ${res.statusCode})`));
         }
       });
     });
 
-    req.setTimeout(60000, () => {
+    req.setTimeout(API_TIMEOUT_MS, () => {
       req.destroy();
-      reject(new Error('国内API请求超时(60s)'));
+      reject(new Error(`${modelConfig.endpoint} 请求超时(${API_TIMEOUT_MS}ms)`));
     });
-    req.on('error', reject);
+    req.on('error', (err) => {
+      reject(new Error(`${modelConfig.endpoint} 连接失败: ${err.message}`));
+    });
     req.write(bodyStr);
     req.end();
   });

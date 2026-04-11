@@ -208,6 +208,10 @@ function callDomesticLLM(modelConfig, messages) {
  * 通过广州CN中继调用国内模型API
  * 架构: SG(新加坡) → 广州(ZY-SVR-003):3900 → 国内API
  * 对称于硅谷Claude中继: SG → SV(SSH隧道) → Claude API
+ *
+ * 安全: SG↔广州通信走HTTP但通过已有的VPN/内网隧道加密
+ *       (setup-cn-relay.sh 建立的 CN:2053→SG:443 Xray通道)
+ *       中继鉴权密钥通过 Bearer Token 传递
  */
 function callViaCNRelay(messages, selected, fallbackOrder) {
   return new Promise((resolve, reject) => {
@@ -250,7 +254,7 @@ function callViaCNRelay(messages, selected, fallbackOrder) {
 
     req.setTimeout(CN_RELAY_TIMEOUT, () => {
       req.destroy();
-      reject(new Error(`广州中继超时(${CN_RELAY_TIMEOUT}ms)`));
+      reject(new Error(`广州中继超时(${CN_RELAY_TIMEOUT}ms) · 目标模型: ${selected.id}`));
     });
     req.on('error', (err) => {
       reject(new Error(`广州中继连接失败: ${err.message}`));

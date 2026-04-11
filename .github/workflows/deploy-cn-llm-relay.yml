@@ -111,9 +111,10 @@ jobs:
 
           # 健康检查
           sleep 3
-          if curl -sf http://127.0.0.1:3900/health > /dev/null 2>&1; then
+          HEALTH_RESULT=$(curl -s http://127.0.0.1:3900/health 2>/dev/null || echo "")
+          if [ -n "$HEALTH_RESULT" ]; then
             echo "✅ CN LLM Relay 健康检查通过"
-            curl -s http://127.0.0.1:3900/health | head -c 500
+            echo "$HEALTH_RESULT" | head -c 500
           else
             echo "⚠️ 健康检查未通过 · 查看日志"
             pm2 logs cn-llm-relay --lines 20 --nostream
