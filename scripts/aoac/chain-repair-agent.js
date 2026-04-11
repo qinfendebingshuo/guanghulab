@@ -143,19 +143,37 @@ function attemptRepair(issues, attempt) {
       }
     }
 
-    // Repair strategy: re-trigger chain from break point
+    // Repair strategy: re-trigger Notion sync on next AOAC-05 cycle
     if (issue.issue.includes('Notion sync failed') && attempt <= 2) {
-      result.action = 'will_retry_notion_sync';
-      result.success = true; // Mark as attempted; actual retry happens in next cycle
+      // Reset AOAC-06 status to idle so next AOAC-05 cycle will re-trigger it
+      const cs = readJSON(CHAIN_STATUS_PATH);
+      if (cs && cs.agents && cs.agents['AOAC-06']) {
+        cs.agents['AOAC-06'].status = 'idle';
+        writeJSON(CHAIN_STATUS_PATH, cs);
+        result.action = 'reset_aoac06_for_retry';
+        result.success = true;
+      } else {
+        result.action = 'cannot_reset_aoac06';
+        result.success = false;
+      }
     }
 
-    // Repair strategy: regenerate missing config
+    // Repair strategy: recreate missing chain-status from default template
     if (issue.issue.includes('missing or corrupt')) {
-      // Re-create chain-status.json from template
-      const defaultStatus = readJSON(path.join(ROOT, 'data', 'aoac', 'chain-status.json'));
-      if (!defaultStatus) {
-        result.action = 'cannot_repair_missing_config';
-        result.success = false;
+      const templatePath = path.join(ROOT, 'data', 'aoac', 'chain-status.json');
+      if (!fs.existsSync(templatePath)) {
+        // Recreate from scratch
+        const defaultStatus = {
+          _meta: { system: 'AGE OS Agent Chain (AOAC) v1.0', recreated: new Date().toISOString() },
+          agents: {},
+          chain_health: 'unknown',
+          last_full_cycle: null,
+          total_cycles: 0,
+          total_repairs: 0
+        };
+        writeJSON(templatePath, defaultStatus);
+        result.action = 'recreated_chain_status';
+        result.success = true;
       } else {
         result.action = 'config_exists_no_action';
         result.success = true;

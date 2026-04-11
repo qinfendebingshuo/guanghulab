@@ -108,8 +108,8 @@ async function sendAlertEmail(repairReport) {
 
   // Use nodemailer if available, otherwise use raw SMTP via https webhook
   if (!createTransport) {
-    console.log('⚠️ nodemailer不可用，使用GitHub Issue告警');
-    return { sent: false, reason: 'nodemailer_unavailable' };
+    console.log('⚠️ nodemailer不可用，将通过GitHub Issue告警');
+    return { sent: false, reason: 'nodemailer_unavailable', fallback: 'github_issue' };
   }
 
   try {

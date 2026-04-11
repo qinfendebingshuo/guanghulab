@@ -205,6 +205,16 @@ function main() {
     }
   }
 
+  // In scheduled/auto mode, also generate dashboard for full daily review
+  if (fs.existsSync(dashGen) && mode !== 'event') {
+    try {
+      execFileSync('node', [dashGen], { cwd: ROOT, timeout: 60000, stdio: 'inherit' });
+      console.log('✅ 定时仪表盘同步更新');
+    } catch (err) {
+      console.error('⚠️ 定时仪表盘更新失败:', err.message);
+    }
+  }
+
   // Generate master report
   const seq = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
   const masterReport = {
