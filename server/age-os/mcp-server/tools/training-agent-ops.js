@@ -50,14 +50,14 @@ const LLM_CONFIGS = {
     host: 'open.bigmodel.cn',
     path: '/api/paas/v4/chat/completions',
     model: 'glm-4-long',
-    keyEnv: 'ZY_ZHIPU_API_KEY',
+    keyEnv: 'ZY_QINGYAN_API_KEY',
     purpose: '长文本处理·语料分析'
   },
   'qwen-max': {
     host: 'dashscope.aliyuncs.com',
     path: '/compatible-mode/v1/chat/completions',
     model: 'qwen-max',
-    keyEnv: 'ZY_QWEN_API_KEY',
+    keyEnv: 'ZY_QIANWEN_API_KEY',
     purpose: '文本理解·代码辅助'
   },
   'moonshot-128k': {

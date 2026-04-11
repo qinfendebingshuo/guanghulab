@@ -258,6 +258,14 @@ jobs:
           ZY_DB_PASS: ${{ secrets.ZY_DB_PASS }}
           ZY_DB_NAME: ${{ secrets.ZY_DB_NAME }}
           ZY_DB_PORT: ${{ secrets.ZY_DB_PORT }}
+          ZY_DEEPSEEK_API_KEY: ${{ secrets.ZY_DEEPSEEK_API_KEY }}
+          ZY_QIANWEN_API_KEY: ${{ secrets.ZY_QIANWEN_API_KEY }}
+          ZY_KIMI_API_KEY: ${{ secrets.ZY_KIMI_API_KEY }}
+          ZY_QINGYAN_API_KEY: ${{ secrets.ZY_QINGYAN_API_KEY }}
+          ZY_OSS_KEY: ${{ secrets.ZY_OSS_KEY }}
+          ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
+          ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
+          ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
         run: |
           COMMIT_SHA="${{ github.sha }}"
           REF_NAME="${{ github.ref_name }}"
@@ -301,6 +309,14 @@ jobs:
           echo "ZY_DB_PASS=${ZY_DB_PASS}" >> /opt/age-os/.env.mcp
           echo "ZY_DB_NAME=${ZY_DB_NAME:-age_os}" >> /opt/age-os/.env.mcp
           echo "ZY_DB_PORT=${ZY_DB_PORT:-5432}" >> /opt/age-os/.env.mcp
+          echo "ZY_DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}" >> /opt/age-os/.env.mcp
+          echo "ZY_QIANWEN_API_KEY=${ZY_QIANWEN_API_KEY}" >> /opt/age-os/.env.mcp
+          echo "ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/age-os/.env.mcp
+          echo "ZY_QINGYAN_API_KEY=${ZY_QINGYAN_API_KEY}" >> /opt/age-os/.env.mcp
+          echo "ZY_OSS_KEY=${ZY_OSS_KEY}" >> /opt/age-os/.env.mcp
+          echo "ZY_OSS_SECRET=${ZY_OSS_SECRET}" >> /opt/age-os/.env.mcp
+          echo "ZY_COS_REGION=${ZY_COS_REGION:-ap-guangzhou}" >> /opt/age-os/.env.mcp
+          echo "ZY_NOTION_TOKEN=${ZY_NOTION_TOKEN}" >> /opt/age-os/.env.mcp
           chmod 600 /opt/age-os/.env.mcp
 
           # ─── 自动执行数据库迁移 ───

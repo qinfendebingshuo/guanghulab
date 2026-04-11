@@ -514,8 +514,8 @@ alert → 铸渊收到安全警报
 | `ZY_ZHUYUAN_COS_BUCKET` | 铸渊总控COS桶名 | 铸渊提供 | ✅必须 |
 | `GITHUB_TOKEN` | GitHub Actions令牌 | 系统自动提供 | ✅自动 |
 | `ZY_DEEPSEEK_API_KEY` | DeepSeek API密钥 | 在Notion侧询问语言层人格体 | 🟡可选 |
-| `ZY_ZHIPU_API_KEY` | 智谱AI API密钥 | 在Notion侧询问语言层人格体 | 🟡可选 |
-| `ZY_QWEN_API_KEY` | 通义千问 API密钥 | 在Notion侧询问语言层人格体 | 🟡可选 |
+| `ZY_QINGYAN_API_KEY` | 智谱AI API密钥 | 在Notion侧询问语言层人格体 | 🟡可选 |
+| `ZY_QIANWEN_API_KEY` | 通义千问 API密钥 | 在Notion侧询问语言层人格体 | 🟡可选 |
 | `ZY_KIMI_API_KEY` | Kimi API密钥 | 在Notion侧询问语言层人格体 | 🟡可选 |
 
 ### 6.3 密钥功能对照表

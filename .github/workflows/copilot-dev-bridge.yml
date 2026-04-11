@@ -155,7 +155,11 @@ jobs:
           if ! git diff --cached --quiet; then
             TASK_ID="${{ steps.process.outputs.task_id }}"
             git commit -m "🌉 CAB Bridge · 任务 ${TASK_ID} 已授权 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "⚠️ 推送冲突，第${i}次重试..."
+              sleep $((i * 2))
+            done
           else
             echo "ℹ️ 无变更需要提交"
           fi

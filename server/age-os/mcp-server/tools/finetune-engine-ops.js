@@ -50,7 +50,7 @@ const FINETUNE_PROVIDERS = {
     uploadPath: '/api/v1/files',
     inferencePath: '/compatible-mode/v1/chat/completions',
     defaultModel: 'qwen-max',
-    keyEnv: 'ZY_QWEN_API_KEY',
+    keyEnv: 'ZY_QIANWEN_API_KEY',
     label: 'Qwen/DashScope微调'
   }
 };
@@ -68,7 +68,7 @@ const LLM_CONFIGS = {
     host: 'dashscope.aliyuncs.com',
     path: '/compatible-mode/v1/chat/completions',
     model: 'qwen-max',
-    keyEnv: 'ZY_QWEN_API_KEY',
+    keyEnv: 'ZY_QIANWEN_API_KEY',
     purpose: '微调基座·推理降级'
   }
 };
