@@ -363,7 +363,7 @@ jobs:
           for old_dir in /var/www/guanghulab /var/www/html /usr/share/nginx/html; do
             if [ -d "$old_dir" ] && [ -f "$old_dir/index.html" ]; then
               # 检查是否是旧的铸渊助手/HoloLake页面
-              if grep -qE "铸渊助手|HoloLake|hololake|AGE.OS" "$old_dir/index.html" 2>/dev/null; then
+              if grep -iqE "铸渊助手|hololake|age.os" "$old_dir/index.html" 2>/dev/null; then
                 echo "  🗑️ 备份并清理旧内容: $old_dir/index.html"
                 mv "$old_dir/index.html" "$old_dir/index.html.old.by-landing"
                 # 放一个简单的重定向提示页
@@ -497,7 +497,7 @@ jobs:
               BASENAME=$(basename "$conf")
               [ "$BASENAME" = "guanghulab-landing.conf" ] && continue
               # 排除非.conf和已disabled的文件
-              echo "$BASENAME" | grep -qE '\.(disabled|bak|old)' && continue
+              echo "$BASENAME" | grep -qE '\.(disabled|bak|old)|by-landing' && continue
               if grep -vE '^\s*#' "$conf" 2>/dev/null | grep -qE "listen\s.*(80|443)"; then
                 echo "  ⚠️ 残留冲突: $dir/$BASENAME"
                 echo "    → 强制移除"
@@ -606,7 +606,7 @@ jobs:
           # §4 正确内容验证 — 确认是新落地页而不是旧内容
           if echo "$PAGE_CONTENT" | grep -q "光湖实验室"; then
             echo "✅ 正确内容: 光湖实验室落地页"
-          elif echo "$PAGE_CONTENT" | grep -qE "铸渊助手|HoloLake|AGE.OS"; then
+          elif echo "$PAGE_CONTENT" | grep -iqE "铸渊助手|hololake|age.os"; then
             echo "❌ 错误内容: 仍显示旧的铸渊助手/AGE OS页面"
             echo "  ⚠️ 可能仍有Nginx配置冲突或旧文件被引用"
           else
