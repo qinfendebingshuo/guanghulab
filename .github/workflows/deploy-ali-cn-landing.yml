@@ -255,11 +255,11 @@ jobs:
           BARE_DOMAIN="${BARE_DOMAIN#www.}"
           echo "🌐 配置域名: ${BARE_DOMAIN}"
 
-          # 替换占位符
+          # 替换域名占位符
           cp server/nginx/ali-cn-domain.conf /tmp/ali-cn-domain.conf
           sed -i "s/ALI_CN_DOMAIN_PLACEHOLDER/${BARE_DOMAIN}/g" /tmp/ali-cn-domain.conf
 
-          # 上传Nginx配置
+          # 上传Nginx配置模板（SSL占位符稍后在服务器上替换）
           sshpass -e scp -F ~/.ssh/config -o BatchMode=no \
             /tmp/ali-cn-domain.conf \
             ali-target:/tmp/ali-cn-domain.conf
@@ -267,8 +267,9 @@ jobs:
           sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << 'NGINX_CMD'
           set -e
           DEPLOY_PATH=/opt/guanghulab-landing
+          BARE_DOMAIN=$(grep server_name /tmp/ali-cn-domain.conf 2>/dev/null | grep -v '#' | head -1 | awk '{print $2}' | sed 's/;//' || echo "guanghulab.com")
 
-          echo "═══ Nginx 配置 · guanghulab.com 落地页 ═══"
+          echo "═══ Nginx 配置 · ${BARE_DOMAIN} 落地页 ═══"
 
           # §1 检查Nginx是否已安装
           if ! command -v nginx &> /dev/null; then
@@ -308,58 +309,160 @@ jobs:
           fi
           echo "📁 配置部署目录: ${CONF_DIR}"
 
-          # §2.5 清理冲突配置 — 禁用所有包含 guanghulab.com server_name 的旧配置
-          # 此服务器主要用途是ICP备案落地页，其他旧配置不应劫持域名流量
+          # ═══════════════════════════════════════════════════
+          # §2.5 全面清理冲突配置
+          # 此服务器唯一用途: guanghulab.com 落地页
+          # 必须移除所有其他server块，防止旧配置劫持流量
+          # ═══════════════════════════════════════════════════
           echo ""
-          echo "§2.5 扫描冲突配置..."
+          echo "§2.5 全面清理冲突配置..."
           CONFLICT_FOUND=false
 
-          # 扫描 conf.d 目录
+          # ─── A. 清理 conf.d 中所有非我们的 .conf 文件 ───
           for conf in /etc/nginx/conf.d/*.conf; do
             [ -f "$conf" ] || continue
             BASENAME=$(basename "$conf")
-            # 跳过我们自己的配置文件
-            if [ "$BASENAME" = "guanghulab-landing.conf" ]; then
-              continue
-            fi
-            # 检查是否包含未注释的 guanghulab 相关 server_name 或 default_server
-            # 排除注释行（以 # 开头），只匹配真正的指令
-            if grep -vE '^\s*#' "$conf" 2>/dev/null | grep -qE "server_name.*guanghulab"; then
-              echo "  ⚠️ 冲突配置: $BASENAME (server_name包含guanghulab)"
-              echo "    → 备份到: ${conf}.disabled.by-landing"
-              cp "$conf" "${conf}.disabled.by-landing"
-              mv "$conf" "${conf%.conf}.conf.disabled"
+            [ "$BASENAME" = "guanghulab-landing.conf" ] && continue
+            # 移除所有包含server块的配置（保留纯全局配置如gzip等）
+            if grep -vE '^\s*#' "$conf" 2>/dev/null | grep -qE "server\s*\{|listen\s|server_name\s"; then
+              echo "  🗑️ 移除conf.d冲突: $BASENAME"
+              mv "$conf" "${conf}.disabled.by-landing"
               CONFLICT_FOUND=true
             fi
           done
 
-          # 扫描 sites-enabled 目录
+          # ─── B. 清理 sites-enabled 中所有非我们的配置 ───
           if [ -d "/etc/nginx/sites-enabled" ]; then
             for conf in /etc/nginx/sites-enabled/*; do
               [ -f "$conf" ] || [ -L "$conf" ] || continue
               BASENAME=$(basename "$conf")
-              if [ "$BASENAME" = "guanghulab-landing.conf" ]; then
-                continue
-              fi
-              # 检查链接目标或文件内容
-              REAL_FILE="$conf"
-              [ -L "$conf" ] && REAL_FILE=$(readlink -f "$conf")
-              if [ -f "$REAL_FILE" ] && grep -vE '^\s*#' "$REAL_FILE" 2>/dev/null | grep -qE "server_name.*guanghulab"; then
-                echo "  ⚠️ 冲突配置(sites-enabled): $BASENAME"
-                echo "    → 移除符号链接: $conf"
-                rm -f "$conf"
-                CONFLICT_FOUND=true
-              fi
+              [ "$BASENAME" = "guanghulab-landing.conf" ] && continue
+              echo "  🗑️ 移除sites-enabled冲突: $BASENAME"
+              rm -f "$conf"
+              CONFLICT_FOUND=true
             done
           fi
 
+          # ─── C. 中和 nginx.conf 内嵌的 default server 块 ───
+          # CentOS/RHEL 默认nginx.conf通常包含一个内嵌的server块
+          # 最安全的方式：将其root指向我们的落地页目录
+          if grep -vE '^\s*#' /etc/nginx/nginx.conf 2>/dev/null | grep -qE "^\s*server\s*\{"; then
+            echo "  ⚠️ 检测到 nginx.conf 内嵌 server 块"
+            cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak.by-landing
+            # 方案：将默认root路径替换为我们的落地页目录
+            sed -i 's|root\s\+/usr/share/nginx/html|root /opt/guanghulab-landing/sites/cn-landing|g' /etc/nginx/nginx.conf
+            sed -i 's|root\s\+/var/www/html|root /opt/guanghulab-landing/sites/cn-landing|g' /etc/nginx/nginx.conf
+            sed -i 's|root\s\+/var/www/guanghulab|root /opt/guanghulab-landing/sites/cn-landing|g' /etc/nginx/nginx.conf
+            echo "  ✅ nginx.conf默认root已重定向到落地页目录"
+            CONFLICT_FOUND=true
+          fi
+
+          # ─── D. 清理旧web目录中的内容（防止被其他配置引用） ───
+          echo ""
+          echo "§2.6 清理旧网站内容..."
+          for old_dir in /var/www/guanghulab /var/www/html /usr/share/nginx/html; do
+            if [ -d "$old_dir" ] && [ -f "$old_dir/index.html" ]; then
+              # 检查是否是旧的铸渊助手/HoloLake页面
+              if grep -qE "铸渊助手|HoloLake|hololake|AGE.OS" "$old_dir/index.html" 2>/dev/null; then
+                echo "  🗑️ 备份并清理旧内容: $old_dir/index.html"
+                mv "$old_dir/index.html" "$old_dir/index.html.old.by-landing"
+                # 放一个简单的重定向提示页
+                echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/"></head><body>Redirecting...</body></html>' > "$old_dir/index.html"
+              fi
+            fi
+          done
+
           if [ "$CONFLICT_FOUND" = "true" ]; then
-            echo "  ✅ 冲突配置已清理"
+            echo "  ✅ 冲突配置已全面清理"
           else
             echo "  ✅ 未发现冲突配置"
           fi
 
-          # §3 部署我们的配置
+          # ═══════════════════════════════════════════════════
+          # §3 处理SSL并生成最终配置
+          # ═══════════════════════════════════════════════════
+          echo ""
+          echo "§3 处理SSL配置..."
+
+          if [ -n "$BARE_DOMAIN" ] && [ -d "/etc/letsencrypt/live/${BARE_DOMAIN}" ] && [ -f "/etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem" ]; then
+            echo "🔐 检测到SSL证书，生成HTTPS配置..."
+
+            # 构建SSL选项行
+            SSL_OPTS_LINE=""
+            if [ -f "/etc/letsencrypt/options-ssl-nginx.conf" ]; then
+              SSL_OPTS_LINE="    include /etc/letsencrypt/options-ssl-nginx.conf;"
+            fi
+            SSL_DH_LINE=""
+            if [ -f "/etc/letsencrypt/ssl-dhparams.pem" ]; then
+              SSL_DH_LINE="    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;"
+            fi
+
+            # 直接生成完整的带SSL的Nginx配置（避免fragile占位符替换）
+            {
+              echo "# guanghulab.com 落地页 · SSL模式 · 由部署工作流自动生成"
+              echo "# 生成时间: $(date -u '+%Y-%m-%d %H:%M UTC')"
+              echo ""
+              echo "# HTTP → HTTPS 重定向"
+              echo "server {"
+              echo "    listen 80;"
+              echo "    listen [::]:80;"
+              echo "    server_name ${BARE_DOMAIN} www.${BARE_DOMAIN};"
+              echo '    return 301 https://$host$request_uri;'
+              echo "}"
+              echo ""
+              echo "# HTTPS 主站点"
+              echo "server {"
+              echo "    listen 443 ssl default_server;"
+              echo "    listen [::]:443 ssl default_server;"
+              echo "    server_name ${BARE_DOMAIN} www.${BARE_DOMAIN};"
+              echo ""
+              echo "    ssl_certificate /etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem;"
+              echo "    ssl_certificate_key /etc/letsencrypt/live/${BARE_DOMAIN}/privkey.pem;"
+              [ -n "$SSL_OPTS_LINE" ] && echo "$SSL_OPTS_LINE"
+              [ -n "$SSL_DH_LINE" ] && echo "$SSL_DH_LINE"
+              echo ""
+              echo '    add_header X-Frame-Options "SAMEORIGIN" always;'
+              echo '    add_header X-Content-Type-Options "nosniff" always;'
+              echo '    add_header X-XSS-Protection "1; mode=block" always;'
+              echo '    add_header X-Server-Identity "ALI-SVR-CN-LANDING" always;'
+              echo '    add_header X-Site-Mode "cn-landing-ali" always;'
+              echo ""
+              echo "    root /opt/guanghulab-landing/sites/cn-landing;"
+              echo "    index index.html;"
+              echo ""
+              echo "    location / {"
+              echo '        try_files $uri $uri/ /index.html;'
+              echo "    }"
+              echo ""
+              echo "    location = /health {"
+              echo "        access_log off;"
+              echo "        return 200 '{\"status\":\"ok\",\"server\":\"ali-cn\",\"role\":\"cn-landing\",\"domain\":\"${BARE_DOMAIN}\",\"ssl\":true}';"
+              echo "        add_header Content-Type application/json;"
+              echo "    }"
+              echo ""
+              echo '    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {'
+              echo "        expires 7d;"
+              echo '        add_header Cache-Control "public, immutable";'
+              echo "    }"
+              echo ""
+              echo "    error_page 404 /index.html;"
+              echo "    error_page 500 502 503 504 /index.html;"
+              echo ""
+              echo "    access_log /opt/guanghulab-landing/logs/nginx-access.log;"
+              echo "    error_log /opt/guanghulab-landing/logs/nginx-error.log;"
+              echo "}"
+            } > /tmp/ali-cn-domain.conf
+
+            echo "✅ SSL配置已生成 · HTTPS + HTTP→HTTPS重定向"
+          else
+            echo "ℹ️ 未检测到SSL证书 · 仅HTTP模式"
+            echo "  运行 setup-ssl 动作安装Let's Encrypt证书"
+            # 无SSL：清除占位符，保留原始HTTP配置
+            sed -i '/__SSL_BLOCK_PLACEHOLDER__/d' /tmp/ali-cn-domain.conf
+            sed -i '/__HTTP_REDIRECT_BLOCK_PLACEHOLDER__/d' /tmp/ali-cn-domain.conf
+          fi
+
+          # §3.5 部署配置文件
           CONF_FILE="${CONF_DIR}/guanghulab-landing.conf"
 
           if [ "$CONF_DIR" = "/etc/nginx/sites-enabled" ]; then
@@ -371,77 +474,65 @@ jobs:
           rm -f /tmp/ali-cn-domain.conf
           echo "✅ 配置已部署: ${CONF_FILE}"
 
-          # §4 检测已有SSL证书并注入
-          BARE_DOMAIN=$(grep server_name "${CONF_FILE}" 2>/dev/null | head -1 | awk '{print $2}' | sed 's/;//' || echo "")
-          if [ -n "$BARE_DOMAIN" ] && [ -d "/etc/letsencrypt/live/${BARE_DOMAIN}" ] && [ -f "/etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem" ]; then
-            echo "🔐 检测到SSL证书，注入HTTPS配置..."
-
-            # 检查是否有 Let's Encrypt 的 options-ssl-nginx.conf
-            SSL_OPTIONS=""
-            if [ -f "/etc/letsencrypt/options-ssl-nginx.conf" ]; then
-              SSL_OPTIONS="\n    include /etc/letsencrypt/options-ssl-nginx.conf;"
-            fi
-            SSL_DHPARAM=""
-            if [ -f "/etc/letsencrypt/ssl-dhparams.pem" ]; then
-              SSL_DHPARAM="\n    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;"
-            fi
-
-            # 注入SSL监听和证书配置
-            SSL_BLOCK="    listen 443 ssl default_server;\n    listen [::]:443 ssl default_server;\n    ssl_certificate /etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/${BARE_DOMAIN}/privkey.pem;${SSL_OPTIONS}${SSL_DHPARAM}"
-            sed -i "/listen 80 default_server;/a\\${SSL_BLOCK}" "${CONF_FILE}"
-            echo "✅ SSL配置已注入 · HTTPS已启用"
-          else
-            echo "ℹ️ 未检测到SSL证书 · 仅HTTP模式"
-            echo "  运行 setup-ssl 动作安装Let's Encrypt证书"
-          fi
-
-          # §5 诊断：显示配置状态
+          # §4 诊断：显示最终配置状态
           echo ""
-          echo "§ 当前Nginx配置目录 (${CONF_DIR}):"
-          ls -la "${CONF_DIR}/" 2>/dev/null || echo "  (空)"
-          if [ -d "/etc/nginx/sites-enabled" ] && [ "$CONF_DIR" != "/etc/nginx/sites-enabled" ]; then
-            echo ""
-            echo "§ sites-enabled目录:"
+          echo "§4 最终Nginx配置状态:"
+          echo "─── conf.d 目录 ───"
+          ls -la /etc/nginx/conf.d/*.conf 2>/dev/null || echo "  (无.conf文件)"
+          if [ -d "/etc/nginx/sites-enabled" ]; then
+            echo "─── sites-enabled 目录 ───"
             ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  (空)"
           fi
+          echo "─── 配置文件内容 ───"
+          cat "${CONF_FILE}"
 
-          # §5.5 确认：检查是否还有其他 .conf 文件监听 80 或 443
+          # §4.5 最终冲突检查：扫描所有可能的监听80/443的配置
           echo ""
-          echo "§ 冲突检查:"
-          REMAINING_CONFLICTS=false
-          for conf in ${CONF_DIR}/*.conf; do
-            [ -f "$conf" ] || continue
-            BASENAME=$(basename "$conf")
-            [ "$BASENAME" = "guanghulab-landing.conf" ] && continue
-            if grep -qE "listen.*(80|443)" "$conf" 2>/dev/null; then
-              echo "  ⚠️ 仍有监听80/443的配置: $BASENAME"
-              REMAINING_CONFLICTS=true
-            fi
+          echo "§4.5 最终冲突检查:"
+          REMAINING=false
+          for dir in /etc/nginx/conf.d /etc/nginx/sites-enabled; do
+            [ -d "$dir" ] || continue
+            for conf in "$dir"/*.conf "$dir"/*; do
+              [ -f "$conf" ] || continue
+              BASENAME=$(basename "$conf")
+              [ "$BASENAME" = "guanghulab-landing.conf" ] && continue
+              # 排除非.conf和已disabled的文件
+              echo "$BASENAME" | grep -qE '\.(disabled|bak|old)' && continue
+              if grep -vE '^\s*#' "$conf" 2>/dev/null | grep -qE "listen\s.*(80|443)"; then
+                echo "  ⚠️ 残留冲突: $dir/$BASENAME"
+                echo "    → 强制移除"
+                rm -f "$conf"
+                REMAINING=true
+              fi
+            done
           done
-          if [ "$REMAINING_CONFLICTS" = "false" ]; then
-            echo "  ✅ 无其他配置监听80/443端口"
-          fi
+          [ "$REMAINING" = "false" ] && echo "  ✅ 无残留冲突"
 
-          # §6 测试并重载Nginx
+          # §5 测试并重载Nginx
           echo ""
           nginx -t 2>&1
           if [ $? -eq 0 ]; then
             systemctl reload nginx 2>/dev/null || systemctl start nginx
-            echo "✅ Nginx配置已生效 · guanghulab-landing.conf 已启用"
+            echo "✅ Nginx配置已生效 · guanghulab-landing.conf 为唯一站点"
           else
-            echo "❌ Nginx配置测试失败，回滚..."
+            echo "❌ Nginx配置测试失败，尝试恢复..."
+            # 显示错误详情
+            nginx -t 2>&1 || true
+            # 恢复nginx.conf
+            if [ -f /etc/nginx/nginx.conf.bak.by-landing ]; then
+              cp /etc/nginx/nginx.conf.bak.by-landing /etc/nginx/nginx.conf
+              echo "  ↩️ 已恢复 nginx.conf"
+            fi
             rm -f "${CONF_FILE}"
             if [ -f "/etc/nginx/sites-available/guanghulab-landing.conf" ]; then
               rm -f /etc/nginx/sites-available/guanghulab-landing.conf
             fi
             # 恢复被禁用的冲突配置
-            for disabled in /etc/nginx/conf.d/*.conf.disabled; do
-              if [ -f "${disabled}.by-landing" ]; then
-                ORIGINAL="${disabled%.disabled}"
-                mv "${disabled}" "${ORIGINAL}"
-                rm -f "${disabled}.by-landing"
-                echo "  ↩️ 已恢复: $(basename "${ORIGINAL}")"
-              fi
+            for disabled in /etc/nginx/conf.d/*.disabled.by-landing; do
+              [ -f "$disabled" ] || continue
+              ORIGINAL="${disabled%.disabled.by-landing}"
+              mv "$disabled" "$ORIGINAL"
+              echo "  ↩️ 已恢复: $(basename "$ORIGINAL")"
             done
             nginx -t && systemctl reload nginx
             exit 1
@@ -470,52 +561,76 @@ jobs:
 
           # §1.5 确认Nginx活跃配置
           echo ""
-          echo "§ Nginx conf.d 活跃配置:"
-          ls /etc/nginx/conf.d/*.conf 2>/dev/null || echo "  (无)"
+          echo "§ Nginx活跃配置:"
+          echo "  conf.d:"
+          ls /etc/nginx/conf.d/*.conf 2>/dev/null || echo "    (无)"
+          echo "  sites-enabled:"
+          ls /etc/nginx/sites-enabled/ 2>/dev/null || echo "    (无)"
 
-          # §2 页面访问测试 (跟随重定向 -L，跳过SSL验证 -k)
-          HTTP_CODE=$(curl -sLf -o /dev/null -w '%{http_code}' -k http://localhost/ 2>/dev/null || echo "000")
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ 落地页: HTTP 200 OK"
+          # §2 页面访问测试
+          # 先尝试HTTPS（可能配置了SSL），再尝试HTTP
+          echo ""
+          HTTPS_CODE=$(curl -s -o /tmp/page_https.html -w '%{http_code}' -k https://localhost/ 2>/dev/null || echo "000")
+          HTTP_CODE=$(curl -s -o /tmp/page_http.html -w '%{http_code}' http://localhost/ 2>/dev/null || echo "000")
+          echo "§ 页面访问: HTTP=${HTTP_CODE} HTTPS=${HTTPS_CODE}"
+
+          # 确定最终使用的页面内容
+          PAGE_CONTENT=""
+          if [ "$HTTPS_CODE" = "200" ]; then
+            PAGE_CONTENT=$(cat /tmp/page_https.html 2>/dev/null || echo "")
+            echo "  → 使用HTTPS响应内容"
+          elif [ "$HTTP_CODE" = "200" ]; then
+            PAGE_CONTENT=$(cat /tmp/page_http.html 2>/dev/null || echo "")
+            echo "  → 使用HTTP响应内容"
+          elif [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+            # HTTP redirects to HTTPS, follow it
+            PAGE_CONTENT=$(curl -sLk http://localhost/ 2>/dev/null || echo "")
+            echo "  → HTTP重定向到HTTPS，跟随重定向"
           else
-            echo "⚠️ 落地页 localhost: HTTP ${HTTP_CODE}"
-            # 尝试HTTPS直接访问
-            HTTPS_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -k https://localhost/ 2>/dev/null || echo "000")
-            echo "  HTTPS直接访问: ${HTTPS_CODE}"
-            # 尝试通过域名Header
-            HTTP_CODE2=$(curl -sLf -o /dev/null -w '%{http_code}' -k -H "Host: guanghulab.com" http://localhost/ 2>/dev/null || echo "000")
-            echo "  通过Host头测试: HTTP ${HTTP_CODE2}"
+            echo "  ❌ HTTP和HTTPS都无法访问"
+            PAGE_CONTENT=$(curl -sLk http://localhost/ 2>/dev/null || echo "")
           fi
 
-          # §3 ICP备案号检查 (跟随重定向 -L)
-          PAGE_CONTENT=$(curl -sLk http://localhost/ 2>/dev/null || curl -sk https://localhost/ 2>/dev/null || echo "")
+          # §3 ICP备案号检查
           if echo "$PAGE_CONTENT" | grep -q "陕ICP备2025071211号"; then
             echo "✅ ICP备案号: 已显示"
           else
             echo "❌ ICP备案号: 未找到"
+            echo "  页面title:"
+            echo "$PAGE_CONTENT" | grep -o '<title>[^<]*</title>' | head -1 || echo "    (无title)"
             echo "  页面前300字符:"
             echo "$PAGE_CONTENT" | head -c 300
+            echo ""
           fi
 
-          # §4 备案链接检查
+          # §4 正确内容验证 — 确认是新落地页而不是旧内容
+          if echo "$PAGE_CONTENT" | grep -q "光湖实验室"; then
+            echo "✅ 正确内容: 光湖实验室落地页"
+          elif echo "$PAGE_CONTENT" | grep -qE "铸渊助手|HoloLake|AGE.OS"; then
+            echo "❌ 错误内容: 仍显示旧的铸渊助手/AGE OS页面"
+            echo "  ⚠️ 可能仍有Nginx配置冲突或旧文件被引用"
+          else
+            echo "⚠️ 未知内容 — 请手动检查"
+          fi
+
+          # §5 备案链接检查
           if echo "$PAGE_CONTENT" | grep -q "beian.miit.gov.cn"; then
             echo "✅ 工信部链接: 已配置"
           else
             echo "⚠️ 工信部链接: 未找到"
           fi
 
-          # §5 健康端点
-          HEALTH=$(curl -sLk http://localhost/health 2>/dev/null || echo '{}')
+          # §6 健康端点
+          HEALTH=$(curl -sLk http://localhost/health 2>/dev/null || curl -sk https://localhost/health 2>/dev/null || echo '{}')
           echo "✅ 健康探针: ${HEALTH}"
 
-          # §5.5 验证健康端点来源
           if echo "$HEALTH" | grep -q "cn-landing"; then
             echo "✅ 健康端点来自 guanghulab-landing.conf（正确）"
           elif echo "$HEALTH" | grep -qE "relay|proxy|mcp|hololake"; then
             echo "❌ 健康端点来自其他服务 — 仍有Nginx配置冲突"
           fi
 
-          # §6 文件验证
+          # §7 文件验证
           if [ -f "/opt/guanghulab-landing/sites/cn-landing/index.html" ]; then
             echo "✅ 落地页文件: 存在"
             ls -la /opt/guanghulab-landing/sites/cn-landing/
