@@ -315,6 +315,8 @@ jobs:
           ZY_QIANWEN_API_KEY: ${{ secrets.ZY_QIANWEN_API_KEY }}
           ZY_KIMI_API_KEY: ${{ secrets.ZY_KIMI_API_KEY }}
           ZY_QINGYAN_API_KEY: ${{ secrets.ZY_QINGYAN_API_KEY }}
+          ZY_LLM_API_KEY: ${{ secrets.ZY_LLM_API_KEY }}
+          ZY_LLM_BASE_URL: ${{ secrets.ZY_LLM_BASE_URL }}
           ZY_OSS_KEY: ${{ secrets.ZY_OSS_KEY }}
           ZY_OSS_SECRET: ${{ secrets.ZY_OSS_SECRET }}
           ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
@@ -347,6 +349,15 @@ jobs:
           echo "ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_QINGYAN_API_KEY=${ZY_QINGYAN_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_NOTION_TOKEN=${ZY_NOTION_TOKEN}" >> /opt/zhuyuan/app/.env.app
+          # ─── 通用LLM聊天引擎配置（国内模型网关的备用通道） ───
+          if [ -n "${ZY_LLM_API_KEY}" ]; then
+            echo "ZY_LLM_API_KEY=${ZY_LLM_API_KEY}" >> /opt/zhuyuan/app/.env.app
+            echo "✅ 通用LLM API密钥已配置"
+          fi
+          if [ -n "${ZY_LLM_BASE_URL}" ]; then
+            echo "ZY_LLM_BASE_URL=${ZY_LLM_BASE_URL}" >> /opt/zhuyuan/app/.env.app
+            echo "✅ 通用LLM API地址已配置: ${ZY_LLM_BASE_URL}"
+          fi
           # ─── 广州CN中继配置（可选·配置后国内API走广州中继） ───
           if [ -n "${ZY_CN_LLM_RELAY_HOST}" ]; then
             echo "ZY_CN_LLM_RELAY_HOST=${ZY_CN_LLM_RELAY_HOST}" >> /opt/zhuyuan/app/.env.app
@@ -405,6 +416,13 @@ jobs:
           echo "ZY_OSS_SECRET=${ZY_OSS_SECRET}" >> /opt/age-os/.env.mcp
           echo "ZY_COS_REGION=${ZY_COS_REGION:-ap-guangzhou}" >> /opt/age-os/.env.mcp
           echo "ZY_NOTION_TOKEN=${ZY_NOTION_TOKEN}" >> /opt/age-os/.env.mcp
+          # ─── 通用LLM引擎密钥（MCP Server也可能需要） ───
+          if [ -n "${ZY_LLM_API_KEY}" ]; then
+            echo "ZY_LLM_API_KEY=${ZY_LLM_API_KEY}" >> /opt/age-os/.env.mcp
+          fi
+          if [ -n "${ZY_LLM_BASE_URL}" ]; then
+            echo "ZY_LLM_BASE_URL=${ZY_LLM_BASE_URL}" >> /opt/age-os/.env.mcp
+          fi
           chmod 600 /opt/age-os/.env.mcp
 
           # ─── 自动执行数据库迁移 ───
@@ -470,6 +488,16 @@ jobs:
           echo "可用国内模型数: ${LLM_KEY_COUNT}/4"
           if [ "$LLM_KEY_COUNT" -eq 0 ]; then
             echo "⚠️ 警告: 所有国内模型API密钥未配置 · 聊天功能将不可用"
+          fi
+          # 检查通用LLM聊天引擎（备用通道）
+          if grep -q "ZY_LLM_API_KEY=.\{6,\}" /opt/zhuyuan/app/.env.app 2>/dev/null; then
+            echo "✅ ZY_LLM_API_KEY: 已配置 (通用聊天引擎备用通道)"
+          else
+            if [ "$LLM_KEY_COUNT" -eq 0 ]; then
+              echo "❌ ZY_LLM_API_KEY: 未配置 · 国内模型+通用引擎均不可用 · 聊天完全离线"
+            else
+              echo "ℹ️ ZY_LLM_API_KEY: 未配置 · 国内模型可用则不影响"
+            fi
           fi
           echo "═══════════════════"
 

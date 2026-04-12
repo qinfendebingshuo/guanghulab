@@ -345,30 +345,80 @@ jobs:
 
           # ─── C. 中和 nginx.conf 内嵌的 default server 块 ───
           # CentOS/RHEL 默认nginx.conf通常包含一个内嵌的server块
-          # 最安全的方式：将其root指向我们的落地页目录
-          if grep -vE '^\s*#' /etc/nginx/nginx.conf 2>/dev/null | grep -qE "^\s*server\s*\{"; then
-            echo "  ⚠️ 检测到 nginx.conf 内嵌 server 块"
+          # 人类开发者手动部署可能使用了任意root路径
+          # 必须用通用正则替换所有root指令，而非仅匹配已知路径
+          echo ""
+          echo "§C 诊断 nginx.conf 内嵌 server 块..."
+          # 先显示nginx.conf中所有非注释的server和root行，用于诊断
+          echo "  nginx.conf 中活跃的 server/root/listen 行:"
+          grep -nE '^\s*(server\s*\{|root\s|listen\s|ssl_certificate)' /etc/nginx/nginx.conf 2>/dev/null | grep -vE '^\s*#' | head -20 || echo "    (无)"
+          echo ""
+
+          # 使用更宽松的匹配：检测server块中的listen或root关键词（不仅仅是 server {）
+          HAS_EMBEDDED_SERVER=false
+          if grep -vE '^\s*#' /etc/nginx/nginx.conf 2>/dev/null | grep -qE '^\s*server\s*\{'; then
+            HAS_EMBEDDED_SERVER=true
+          fi
+          # 也检测root指令（即使server块格式不匹配正则）
+          if grep -vE '^\s*#' /etc/nginx/nginx.conf 2>/dev/null | grep -qE '^\s*root\s+'; then
+            HAS_EMBEDDED_SERVER=true
+          fi
+
+          if [ "$HAS_EMBEDDED_SERVER" = "true" ]; then
+            echo "  ⚠️ 检测到 nginx.conf 内嵌 server 块或 root 指令"
             cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak.by-landing
-            # 方案：将默认root路径替换为我们的落地页目录
-            sed -i 's|root\s\+/usr/share/nginx/html|root /opt/guanghulab-landing/sites/cn-landing|g' /etc/nginx/nginx.conf
-            sed -i 's|root\s\+/var/www/html|root /opt/guanghulab-landing/sites/cn-landing|g' /etc/nginx/nginx.conf
-            sed -i 's|root\s\+/var/www/guanghulab|root /opt/guanghulab-landing/sites/cn-landing|g' /etc/nginx/nginx.conf
-            echo "  ✅ nginx.conf默认root已重定向到落地页目录"
+
+            # 通用方案：替换 nginx.conf 中 ALL root 指令为落地页目录
+            # 使用通用正则匹配任意路径（不再硬编码特定目录）
+            sed -i 's|^\(\s*\)root\s\+[^;]*;|\1root /opt/guanghulab-landing/sites/cn-landing;|g' /etc/nginx/nginx.conf
+            echo "  ✅ nginx.conf 中所有 root 指令已重定向到落地页目录"
             CONFLICT_FOUND=true
+
+            # 显示替换后的结果
+            echo "  替换后的 root 行:"
+            grep -n 'root\s' /etc/nginx/nginx.conf 2>/dev/null | head -10 || echo "    (无)"
+          else
+            echo "  ✅ nginx.conf 中无内嵌 server 块"
+          fi
+
+          # ─── C2. 清理 /etc/nginx/default.d/ (CentOS/RHEL 特有) ───
+          # CentOS nginx.conf 的 server 块通常 include /etc/nginx/default.d/*.conf
+          # certbot 或手动部署可能在此目录添加了SSL/root配置
+          if [ -d "/etc/nginx/default.d" ]; then
+            for conf in /etc/nginx/default.d/*.conf; do
+              [ -f "$conf" ] || continue
+              echo "  🗑️ 移除 default.d 冲突: $(basename "$conf")"
+              mv "$conf" "${conf}.disabled.by-landing"
+              CONFLICT_FOUND=true
+            done
           fi
 
           # ─── D. 清理旧web目录中的内容（防止被其他配置引用） ───
           echo ""
           echo "§2.6 清理旧网站内容..."
-          for old_dir in /var/www/guanghulab /var/www/html /usr/share/nginx/html; do
+          # 扩展搜索范围：包含人类开发者可能手动部署的目录
+          for old_dir in /var/www/guanghulab /var/www/html /usr/share/nginx/html /root/guanghulab /home/www /opt/guanghulab /var/www/hololake; do
             if [ -d "$old_dir" ] && [ -f "$old_dir/index.html" ]; then
               # 检查是否是旧的铸渊助手/HoloLake页面
-              if grep -iqE "铸渊助手|hololake|age.os" "$old_dir/index.html" 2>/dev/null; then
+              if grep -iqE "铸渊助手|hololake|age.os|HoloLake" "$old_dir/index.html" 2>/dev/null; then
                 echo "  🗑️ 备份并清理旧内容: $old_dir/index.html"
                 mv "$old_dir/index.html" "$old_dir/index.html.old.by-landing"
                 # 放一个简单的重定向提示页
                 echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/"></head><body>Redirecting...</body></html>' > "$old_dir/index.html"
               fi
+            fi
+          done
+          # 也用find搜索系统中可能的旧页面（限制搜索深度和web相关目录）
+          echo "  全局搜索旧内容..."
+          find /var/www /usr/share/nginx /opt -maxdepth 3 -name "index.html" -type f 2>/dev/null | while read f; do
+            if grep -iqE "铸渊助手|hololake|age\.os|HoloLake" "$f" 2>/dev/null; then
+              # 不重复处理已备份的文件（匹配 .old. .bak. .disabled. 等后缀）
+              echo "$f" | grep -qE '\.(old|bak|disabled)($|\.)' && continue
+              # 不处理我们自己的落地页
+              echo "$f" | grep -q 'guanghulab-landing' && continue
+              echo "  🗑️ 发现旧内容: $f"
+              mv "$f" "${f}.old.by-landing"
+              echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/"></head><body>Redirecting...</body></html>' > "$f"
             fi
           done
 
@@ -508,12 +558,18 @@ jobs:
           done
           [ "$REMAINING" = "false" ] && echo "  ✅ 无残留冲突"
 
-          # §5 测试并重载Nginx
+          # §5 诊断：导出完整nginx.conf（去注释版）帮助定位问题
+          echo ""
+          echo "§5 nginx.conf 生效的完整 server/root 行:"
+          nginx -T 2>/dev/null | grep -E '^\s*(server\s*\{|root\s|listen\s|server_name\s|ssl_certificate)' | head -30 || echo "  (nginx -T 不可用)"
+
+          # §6 测试并重载Nginx
           echo ""
           nginx -t 2>&1
           if [ $? -eq 0 ]; then
-            systemctl reload nginx 2>/dev/null || systemctl start nginx
-            echo "✅ Nginx配置已生效 · guanghulab-landing.conf 为唯一站点"
+            # 使用 restart 而非 reload，确保完全加载新配置
+            systemctl restart nginx 2>/dev/null || systemctl start nginx
+            echo "✅ Nginx已重启 · guanghulab-landing.conf 为唯一站点"
           else
             echo "❌ Nginx配置测试失败，尝试恢复..."
             # 显示错误详情
