@@ -813,9 +813,9 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 @keyframes titleShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .hl-welcome-sub{font-size:clamp(11px,2vw,13px);color:var(--dim);margin-bottom:16px;letter-spacing:3px;font-weight:300;opacity:.7}
 /* Tech intro section */
-.hl-tech-intro{max-width:480px;margin-bottom:24px;animation:heroFadeUp .8s ease-out .2s both}
-.hl-tech-tagline{font-size:clamp(9px,1.6vw,11px);color:rgba(196,181,253,.5);letter-spacing:4px;text-transform:uppercase;font-weight:500;margin-bottom:10px}
-.hl-tech-desc{font-size:clamp(11px,1.8vw,13px);color:var(--dim);line-height:1.9;margin-bottom:14px;opacity:.8}
+.hl-tech-intro{max-width:480px;margin-bottom:28px;animation:heroFadeUp .8s ease-out .2s both}
+.hl-tech-tagline{font-size:clamp(9px,1.6vw,11px);color:rgba(196,181,253,.5);letter-spacing:4px;text-transform:uppercase;font-weight:500;margin-bottom:12px}
+.hl-tech-desc{font-size:clamp(12px,2vw,14px);color:var(--dim);line-height:2;margin-bottom:0;opacity:.85}
 .hl-tech-layers{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:8px}
 .hl-tech-layer{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:transparent;border:1px solid rgba(100,100,200,.08);border-radius:20px;font-size:9px;color:rgba(128,144,184,.6);font-family:var(--m);transition:all .5s cubic-bezier(.4,0,.2,1);cursor:default;letter-spacing:.3px}
 .hl-tech-layer:hover{border-color:rgba(138,180,248,.25);color:var(--accent);background:rgba(138,180,248,.04);transform:translateY(-2px);box-shadow:0 4px 16px rgba(138,180,248,.06)}
@@ -826,15 +826,20 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .hl-tech-layer:nth-child(4) .layer-dot{background:#93c5fd;box-shadow:0 0 4px rgba(147,197,253,.4)}
 .hl-tech-layer:nth-child(5) .layer-dot{background:#a5b4fc;box-shadow:0 0 4px rgba(165,180,252,.4)}
 .hl-tech-layer:nth-child(6) .layer-dot{background:#e0e0f0;box-shadow:0 0 4px rgba(224,224,240,.4)}
-.hl-welcome-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:400px;width:100%;margin-bottom:24px;animation:heroFadeUp .8s ease-out .3s both}
-@media(max-width:480px){.hl-welcome-cards{grid-template-columns:1fr;max-width:240px}}
-.hl-wc{padding:12px 14px;background:rgba(10,12,28,.4);border:1px solid rgba(100,100,200,.1);border-radius:12px;cursor:pointer;transition:all .5s cubic-bezier(.4,0,.2,1);text-align:left;display:flex;align-items:center;gap:10px;position:relative;overflow:hidden;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.hl-wc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(196,181,253,.1),transparent);opacity:0;transition:opacity .5s}
-.hl-wc:hover{border-color:rgba(138,180,248,.25);box-shadow:0 8px 32px rgba(10,10,30,.4),0 0 1px rgba(138,180,248,.15);transform:translateY(-2px)}
+.hl-welcome-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;width:100%;margin-bottom:24px;animation:heroFadeUp .8s ease-out .3s both}
+@media(max-width:480px){.hl-welcome-cards{grid-template-columns:1fr;max-width:280px}}
+.hl-wc{padding:14px 16px;background:rgba(10,12,28,.35);border:1px solid rgba(100,100,200,.08);border-radius:12px;cursor:pointer;transition:all .5s cubic-bezier(.4,0,.2,1);text-align:left;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.hl-wc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(196,181,253,.15),transparent);opacity:0;transition:opacity .5s}
+.hl-wc::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(138,180,248,.04),transparent 70%);opacity:0;transition:opacity .5s}
+.hl-wc:hover{border-color:rgba(138,180,248,.3);box-shadow:0 8px 32px rgba(10,10,30,.5),0 0 1px rgba(138,180,248,.2);transform:translateY(-3px)}
 .hl-wc:hover::before{opacity:1}
-.hl-wc:active{transform:scale(.98)}
-.hl-wc-icon{font-size:18px;flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(138,180,248,.04);border:1px solid rgba(100,100,200,.08);border-radius:8px;transition:all .5s}
-.hl-wc:hover .hl-wc-icon{background:rgba(138,180,248,.08);border-color:rgba(138,180,248,.15)}
+.hl-wc:hover::after{opacity:1}
+.hl-wc:active{transform:scale(.97) translateY(-1px)}
+/* Text-based icon module */
+.hl-wc-icon{font-size:11px;flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(138,180,248,.06),rgba(167,139,250,.06));border:1px solid rgba(100,100,200,.12);border-radius:10px;transition:all .5s cubic-bezier(.4,0,.2,1);font-weight:800;font-family:var(--m);letter-spacing:-.5px;color:var(--accent);position:relative;overflow:hidden}
+.hl-wc-icon::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(138,180,248,.08) 50%,transparent 60%);transform:translateX(-100%);transition:transform .6s}
+.hl-wc:hover .hl-wc-icon{background:linear-gradient(135deg,rgba(138,180,248,.1),rgba(167,139,250,.1));border-color:rgba(138,180,248,.25);box-shadow:0 0 16px rgba(138,180,248,.1);transform:scale(1.05)}
+.hl-wc:hover .hl-wc-icon::before{transform:translateX(100%)}
 .hl-wc-text{font-size:12px;font-weight:600;line-height:1.4}
 .hl-wc-text small{font-weight:400;color:rgba(128,144,184,.5);font-size:10px}
 .hl-welcome-dev{padding:8px 16px;background:transparent;border:1px solid rgba(100,100,200,.08);border-radius:10px;font-size:11px;color:rgba(128,144,184,.4);animation:heroFadeUp .8s ease-out .4s both}
@@ -969,42 +974,32 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
           <h1 class="hl-welcome-title">光湖语言世界</h1>
           <p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p>
           <div class="hl-tech-intro">
-            <div class="hl-tech-tagline">Language-Driven Operating System</div>
+            <div class="hl-tech-tagline">Language-Driven Operating System · AGE OS</div>
             <p class="hl-tech-desc">
-              光湖语言世界是全球首个<b style="color:var(--accent)">语言驱动操作系统</b>（AGE OS）。
-              人类用自然语言下达意图，系统自动编排执行——无需编写代码、无需手动操作。
-              人格体（AI Agent）作为系统原住民，拥有独立记忆树、认知模型与执行能力，
-              与人类在语言层面共建数字世界。
+              语言驱动操作系统，第五代AI智能创作平台。<br>
+              用自然语言下达意图，AI人格体自动编排执行。
             </p>
-            <div class="hl-tech-layers">
-              <span class="hl-tech-layer"><span class="layer-dot"></span>L1 语言核</span>
-              <span class="hl-tech-layer"><span class="layer-dot"></span>L2 母语词典</span>
-              <span class="hl-tech-layer"><span class="layer-dot"></span>L3 人格体层</span>
-              <span class="hl-tech-layer"><span class="layer-dot"></span>L4 信号总线</span>
-              <span class="hl-tech-layer"><span class="layer-dot"></span>L5 Agent层</span>
-              <span class="hl-tech-layer"><span class="layer-dot"></span>L6 交互层</span>
-            </div>
           </div>
           <div class="hl-welcome-cards">
             <div class="hl-wc" onclick="document.getElementById('chatIn').value='你好，我是谁？';document.getElementById('chatIn').focus();">
-              <span class="hl-wc-icon">👋</span>
+              <span class="hl-wc-icon">Hi</span>
               <span class="hl-wc-text">自我介绍<br><small>告诉铸渊你是谁</small></span>
             </div>
             <div class="hl-wc" onclick="document.getElementById('chatIn').value='帮助';document.getElementById('chatIn').focus();">
-              <span class="hl-wc-icon">🧭</span>
+              <span class="hl-wc-icon">?</span>
               <span class="hl-wc-text">使用指南<br><small>查看完整指令</small></span>
             </div>
             <div class="hl-wc" onclick="document.getElementById('chatIn').value='我要码字';document.getElementById('chatIn').focus();">
-              <span class="hl-wc-icon">✍️</span>
+              <span class="hl-wc-icon">W</span>
               <span class="hl-wc-text">码字工作台<br><small>进入网文创作</small></span>
             </div>
             <div class="hl-wc" onclick="document.getElementById('chatIn').value='系统状态';document.getElementById('chatIn').focus();">
-              <span class="hl-wc-icon">📊</span>
+              <span class="hl-wc-icon">S</span>
               <span class="hl-wc-text">系统状态<br><small>查看运行数据</small></span>
             </div>
           </div>
           <div class="hl-welcome-dev">
-            <p>🔖 网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p>
+            <p>网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p>
           </div>
         </div>
       </div>
@@ -2476,7 +2471,7 @@ function clearChatUI(){
     // Recreate welcome
     var w=document.createElement('div');
     w.className='hl-welcome';w.id='hlWelcome';
-    w.innerHTML='<div class="hl-welcome-icon"><span class="hl-welcome-icon-text">光湖</span></div><h1 class="hl-welcome-title">光湖语言世界</h1><p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p><div class="hl-tech-intro"><div class="hl-tech-tagline">Language-Driven Operating System</div><p class="hl-tech-desc">光湖语言世界是全球首个<b style="color:var(--accent)">语言驱动操作系统</b>（AGE OS）。人类用自然语言下达意图，系统自动编排执行。人格体作为系统原住民，与人类在语言层面共建数字世界。</p><div class="hl-tech-layers"><span class="hl-tech-layer"><span class="layer-dot"></span>L1 语言核</span><span class="hl-tech-layer"><span class="layer-dot"></span>L2 母语词典</span><span class="hl-tech-layer"><span class="layer-dot"></span>L3 人格体层</span><span class="hl-tech-layer"><span class="layer-dot"></span>L4 信号总线</span><span class="hl-tech-layer"><span class="layer-dot"></span>L5 Agent层</span><span class="hl-tech-layer"><span class="layer-dot"></span>L6 交互层</span></div></div><div class="hl-welcome-dev"><p>🔖 网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p></div>';
+    w.innerHTML='<div class="hl-welcome-icon"><span class="hl-welcome-icon-text">GL</span><span class="ripple-ring" aria-hidden="true"></span><span class="ripple-ring" aria-hidden="true"></span><span class="ripple-ring" aria-hidden="true"></span></div><h1 class="hl-welcome-title">光湖语言世界</h1><p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p><div class="hl-tech-intro"><div class="hl-tech-tagline">Language-Driven Operating System · AGE OS</div><p class="hl-tech-desc">语言驱动操作系统，第五代AI智能创作平台。<br>用自然语言下达意图，AI人格体自动编排执行。</p></div><div class="hl-welcome-cards"><div class="hl-wc" onclick="document.getElementById(\'chatIn\').value=\'你好，我是谁？\';document.getElementById(\'chatIn\').focus();"><span class="hl-wc-icon">Hi</span><span class="hl-wc-text">自我介绍<br><small>告诉铸渊你是谁</small></span></div><div class="hl-wc" onclick="document.getElementById(\'chatIn\').value=\'帮助\';document.getElementById(\'chatIn\').focus();"><span class="hl-wc-icon">?</span><span class="hl-wc-text">使用指南<br><small>查看完整指令</small></span></div><div class="hl-wc" onclick="document.getElementById(\'chatIn\').value=\'我要码字\';document.getElementById(\'chatIn\').focus();"><span class="hl-wc-icon">W</span><span class="hl-wc-text">码字工作台<br><small>进入网文创作</small></span></div><div class="hl-wc" onclick="document.getElementById(\'chatIn\').value=\'系统状态\';document.getElementById(\'chatIn\').focus();"><span class="hl-wc-icon">S</span><span class="hl-wc-text">系统状态<br><small>查看运行数据</small></span></div></div><div class="hl-welcome-dev"><p>网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p></div>';
     chatMs.appendChild(w);
   }
 }
