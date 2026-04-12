@@ -2389,7 +2389,7 @@ function saveConversations(){
   if(activeConvId)try{localStorage.setItem(HL_ACTIVE_CONV,activeConvId)}catch(e){}
 }
 function newConversation(){
-  var id='conv-'+Date.now()+'-'+Math.random().toString(36).substr(2,4);
+  var id='conv-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
   var conv={id:id,title:'新对话',messages:[],created:new Date().toISOString(),updated:new Date().toISOString()};
   conversations.unshift(conv);
   activeConvId=id;
@@ -3400,8 +3400,12 @@ function renderWorkspace(){
 window.chatQuick = function(cmd){
   chatIn.value = cmd;
   // Navigate to home to show chat if on another page
-  if(currentPage!=='home'){go('home')}
-  send();
+  if(currentPage!=='home'){
+    go('home');
+    setTimeout(function(){send()},600);
+  }else{
+    send();
+  }
 };
 
 /* ════════════════════════════════════════
