@@ -284,11 +284,12 @@ jobs:
           echo "✅ 配置已部署: ${CONF_FILE}"
 
           # §4 检测已有SSL证书并注入
-          BARE_DOMAIN=$(grep server_name "${CONF_FILE}" 2>/dev/null | head -1 | awk '{print $2}' || echo "")
+          BARE_DOMAIN=$(grep server_name "${CONF_FILE}" 2>/dev/null | head -1 | awk '{print $2}' | sed 's/;//' || echo "")
           if [ -n "$BARE_DOMAIN" ] && [ -d "/etc/letsencrypt/live/${BARE_DOMAIN}" ] && [ -f "/etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem" ]; then
             echo "🔐 检测到SSL证书，注入HTTPS配置..."
-            sed -i '/listen 80;/a\\n    listen 443 ssl;\n    ssl_certificate /etc/letsencrypt/live/'"${BARE_DOMAIN}"'/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/'"${BARE_DOMAIN}"'/privkey.pem;' \
-              "${CONF_FILE}"
+            # 生成SSL配置块
+            SSL_BLOCK="    listen 443 ssl;\n    ssl_certificate /etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/${BARE_DOMAIN}/privkey.pem;"
+            sed -i "/listen 80;/a\\${SSL_BLOCK}" "${CONF_FILE}"
             echo "✅ SSL配置已注入"
           else
             echo "ℹ️ 未检测到SSL证书 · 仅HTTP模式"
@@ -618,6 +619,12 @@ jobs:
           # 确认Nginx运行中
           if ! systemctl is-active --quiet nginx; then
             systemctl start nginx
+          fi
+
+          # 验证域名格式
+          if ! echo "${BARE_DOMAIN}" | grep -qE '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$'; then
+            echo "❌ 域名格式无效: ${BARE_DOMAIN}"
+            exit 1
           fi
 
           # 申请证书
