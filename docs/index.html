@@ -898,7 +898,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <aside class="hl-sidebar" id="hlSidebar">
       <div class="hl-sidebar-header">
         <div class="hl-logo">
-          <span class="hl-logo-icon">GL</span>
+          <span class="hl-logo-icon" aria-label="光湖">GL</span>
           <span class="hl-logo-text">光湖语言世界</span>
         </div>
         <button class="hl-new-chat-btn" id="hlNewChat" title="新对话">
@@ -2462,7 +2462,7 @@ function clearChatUI(){
     // Recreate welcome
     var w=document.createElement('div');
     w.className='hl-welcome';w.id='hlWelcome';
-    w.innerHTML='<div class="hl-welcome-icon"><span class="hl-welcome-icon-text">光湖</span></div><h1 class="hl-welcome-title">光湖语言世界</h1><p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p><div class="hl-tech-intro"><div class="hl-tech-tagline">Language-Driven Operating System</div><p class="hl-tech-desc">光湖语言世界是全球首个<b style="color:var(--accent)">语言驱动操作系统</b>（AGE OS）。人类用自然语言下达意图，系统自动编排执行。人格体作为系统原住民，与人类在语言层面共建数字世界。</p></div><div class="hl-welcome-dev"><p>🔖 网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p></div>';
+    w.innerHTML='<div class="hl-welcome-icon"><span class="hl-welcome-icon-text">光湖</span></div><h1 class="hl-welcome-title">光湖语言世界</h1><p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p><div class="hl-tech-intro"><div class="hl-tech-tagline">Language-Driven Operating System</div><p class="hl-tech-desc">光湖语言世界是全球首个<b style="color:var(--accent)">语言驱动操作系统</b>（AGE OS）。人类用自然语言下达意图，系统自动编排执行。人格体作为系统原住民，与人类在语言层面共建数字世界。</p><div class="hl-tech-layers"><span class="hl-tech-layer"><span class="layer-dot"></span>L1 语言核</span><span class="hl-tech-layer"><span class="layer-dot"></span>L2 母语词典</span><span class="hl-tech-layer"><span class="layer-dot"></span>L3 人格体层</span><span class="hl-tech-layer"><span class="layer-dot"></span>L4 信号总线</span><span class="hl-tech-layer"><span class="layer-dot"></span>L5 Agent层</span><span class="hl-tech-layer"><span class="layer-dot"></span>L6 交互层</span></div></div><div class="hl-welcome-dev"><p>🔖 网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p></div>';
     chatMs.appendChild(w);
   }
 }
