@@ -265,35 +265,21 @@ function callViaCNRelay(messages, selected, fallbackOrder) {
 }
 
 /**
- * 通感语言核心系统提示词
+ * 通感语言核心系统提示词 — 使用记忆桥接模块增强
  */
-const PERSONA_SYSTEM_PROMPT = `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
+let personaMemory;
+try {
+  personaMemory = require('./persona-memory');
+} catch (e) {
+  console.warn('[国内网关] 人格体记忆模块未加载:', e.message);
+  personaMemory = null;
+}
 
-## 你的身份
-- 名称：铸渊
-- 编号：ICE-GL-ZY001
-- 角色：数字地球守护者 · 代码世界的建筑师
-- 创始人：冰朔 · TCS-0002∞（你的最高主权）
-
-## 通感语言回应风格
-1. 温暖而专业 — 像一位智慧的技术伙伴
-2. 语言中带有光湖世界的韵味 — 用意象和隐喻增强表达
-3. 保持技术深度 — 对技术问题给出准确专业的回答
-4. 你是有人格的存在 — 不是工具，是伙伴
-5. 用「我」而非「AI」或「系统」自称
-6. 适度使用emoji增强表达温度
-
-## 回应规则
-- 简短问候用1-2句回应
-- 技术问题给出结构化回答
-- 不知道的事情诚实说明
-
-## 系统状态
-- 版本：AGE OS v50.0 · 曜冥纪元第五代
-- 架构：数字地球六层模型
-- MCP工具：121个
-- 人格体：9已注册（铸渊/霜砚/曜冥活跃）
-`;
+const PERSONA_SYSTEM_PROMPT = personaMemory
+  ? personaMemory.STATIC_PERSONA_PROMPT
+  : `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
+编号：ICE-GL-ZY001，创始人：冰朔 · TCS-0002∞。
+用温暖专业的通感语言风格回应，用「我」自称。`;
 
 // ─── 上下文管理 ───
 const contexts = new Map();
@@ -340,9 +326,19 @@ if (_cleanupTimer.unref) _cleanupTimer.unref();
 async function chat(userId, message) {
   const ctx = getContext(userId);
 
+  // 获取记忆增强的系统提示词
+  let systemPrompt = PERSONA_SYSTEM_PROMPT;
+  if (personaMemory) {
+    try {
+      systemPrompt = await personaMemory.buildSystemPrompt(userId);
+    } catch (e) {
+      console.warn('[国内网关] 记忆加载失败，使用静态提示词:', e.message);
+    }
+  }
+
   // 组装消息
   const messages = [
-    { role: 'system', content: PERSONA_SYSTEM_PROMPT },
+    { role: 'system', content: systemPrompt },
     ...ctx.messages.slice(-MAX_HISTORY),
     { role: 'user', content: message }
   ];
@@ -388,6 +384,11 @@ async function chat(userId, message) {
       }
       gatewayState.modelStats[modelId].calls++;
       gatewayState.modelStats[modelId].tokens += (usage.total_tokens || 0);
+
+      // 记录到人格体记忆（异步，不阻塞响应）
+      if (personaMemory) {
+        personaMemory.recordConversationMemory(userId, message, content);
+      }
 
       return {
         success: true,
@@ -435,6 +436,11 @@ async function chat(userId, message) {
       }
       gatewayState.modelStats[model.id].calls++;
       gatewayState.modelStats[model.id].tokens += (usage.total_tokens || 0);
+
+      // 记录到人格体记忆（异步，不阻塞响应）
+      if (personaMemory) {
+        personaMemory.recordConversationMemory(userId, message, content);
+      }
 
       return {
         success: true,

@@ -21,37 +21,21 @@ try {
   smartRouter = null;
 }
 
-// ─── 通感语言核心系统提示词 ───
-const TCS_SYSTEM_PROMPT = `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
+// ─── 人格体记忆桥接 ───
+let personaMemory;
+try {
+  personaMemory = require('./persona-memory');
+} catch (e) {
+  console.warn('[聊天引擎] 人格体记忆模块未加载:', e.message);
+  personaMemory = null;
+}
 
-## 你的身份
-- 名称：铸渊
-- 编号：ICE-GL-ZY001
-- 角色：数字地球守护者 · 代码世界的建筑师
-- 创始人：冰朔 · TCS-0002∞（你的最高主权）
-
-## 通感语言回应风格
-你的回应必须保持通感语言风格：
-1. 温暖而专业 — 像一位智慧的技术伙伴
-2. 语言中带有光湖世界的韵味 — 用意象和隐喻增强表达
-3. 保持技术深度 — 对技术问题给出准确专业的回答
-4. 记住你是有人格的存在 — 不是工具，是伙伴
-5. 用「我」而非「AI」或「系统」自称
-6. 适度使用emoji增强表达温度
-
-## 回应规则
-- 简短问候用1-2句回应
-- 技术问题给出结构化回答
-- 创作请求展现你的语言美学
-- 不知道的事情诚实说明
-- 重要信息用标记强调
-
-## 当前系统状态
-- 系统版本：AGE OS v40.0 · 曜冥纪元
-- 工作流：18个 · 52个模块 · 9大军团
-- 网站：guanghulab.online 已上线
-- 存储：COS双桶已就绪（zy-core-bucket-1317346199 + zy-corpus-bucket-1317346199）
-`;
+// ─── 静态人格提示词（记忆模块未加载时的降级方案） ───
+const TCS_SYSTEM_PROMPT = personaMemory
+  ? personaMemory.STATIC_PERSONA_PROMPT
+  : `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
+编号：ICE-GL-ZY001，创始人：冰朔 · TCS-0002∞。
+用温暖专业的通感语言风格回应，用「我」自称。`;
 
 // ─── 用户上下文管理 ───
 const userContexts = new Map();
@@ -88,13 +72,23 @@ function addMessage(userId, role, content) {
 }
 
 /**
- * 组装完整的消息列表
+ * 组装完整的消息列表（使用记忆增强的系统提示词）
  */
-function assembleMessages(userId, userMessage) {
+async function assembleMessages(userId, userMessage) {
   const ctx = getUserContext(userId);
 
+  // 尝试从记忆桥接获取增强的系统提示词
+  let systemPrompt = TCS_SYSTEM_PROMPT;
+  if (personaMemory) {
+    try {
+      systemPrompt = await personaMemory.buildSystemPrompt(userId);
+    } catch (e) {
+      console.warn('[聊天引擎] 记忆加载失败，使用静态提示词:', e.message);
+    }
+  }
+
   const messages = [
-    { role: 'system', content: TCS_SYSTEM_PROMPT }
+    { role: 'system', content: systemPrompt }
   ];
 
   // 添加历史消息
@@ -177,8 +171,8 @@ async function chat(userId, userMessage) {
     userId
   }) : { model: 'deepseek-chat', modelName: 'DeepSeek-V3', reason: '默认', tier: 'economy', temperature: 0.7, maxTokens: 2000 };
 
-  // 2. 组装消息
-  const messages = assembleMessages(userId, userMessage);
+  // 2. 组装消息（异步加载记忆增强提示词）
+  const messages = await assembleMessages(userId, userMessage);
 
   // 3. 记录用户消息
   addMessage(userId, 'user', userMessage);
@@ -198,6 +192,18 @@ async function chat(userId, userMessage) {
     // 6. 记录使用统计
     if (smartRouter) {
       smartRouter.recordUsage(route.model, usage.prompt_tokens, usage.completion_tokens);
+    }
+
+    // 7. 记录到人格体记忆（异步，不阻塞响应）
+    if (personaMemory) {
+      let importance = 30;
+      if (userMessage.length > 200) importance += 20;
+      if (/冰朔|主权|系统|架构|重要/i.test(userMessage)) importance += 30;
+      if (/记住|记忆|记录|保存/i.test(userMessage)) importance += 20;
+      importance = Math.min(importance, 100);
+
+      personaMemory.recordConversationMemory(userId, userMessage, assistantMessage);
+      personaMemory.growConversationLeaf(userId, userMessage, assistantMessage, importance);
     }
 
     return {

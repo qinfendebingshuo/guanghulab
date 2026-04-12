@@ -70,7 +70,7 @@ app.use((req, res, next) => {
 });
 
 // ─── 加载模块 ───
-let cosBridge, smartRouter, chatEngine, domesticGateway;
+let cosBridge, smartRouter, chatEngine, domesticGateway, personaMemory;
 try {
   cosBridge = require('./modules/cos-bridge');
   smartRouter = require('./modules/smart-router');
@@ -82,6 +82,11 @@ try {
   domesticGateway = require('./modules/domestic-llm-gateway');
 } catch (err) {
   console.error(`国内模型网关加载警告: ${err.message}`);
+}
+try {
+  personaMemory = require('./modules/persona-memory');
+} catch (err) {
+  console.error(`人格体记忆模块加载警告: ${err.message}`);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -113,6 +118,24 @@ app.get('/api/health', (_req, res) => {
   };
 
   res.json(health);
+});
+
+// ─── 人格体记忆状态 ───
+app.get('/api/memory/status', (_req, res) => {
+  if (personaMemory) {
+    res.json({
+      server: 'ZY-SVR-002',
+      module: 'persona-memory',
+      ...personaMemory.getMemoryStatus()
+    });
+  } else {
+    res.json({
+      server: 'ZY-SVR-002',
+      module: 'persona-memory',
+      loaded: false,
+      message: '人格体记忆模块未加载'
+    });
+  }
 });
 
 // ─── 大脑状态 ───
