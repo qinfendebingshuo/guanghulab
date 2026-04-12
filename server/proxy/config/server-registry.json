@@ -128,16 +128,27 @@
     }
   ],
   "cn_domain": {
-    "description": "国内ICP备案域名 · 广州落地页",
+    "description": "国内ICP备案域名 · 阿里云落地页",
+    "domain": "guanghulab.com",
     "domain_secret": "ZY_CN_DOMAIN",
-    "server": "ZY-SVR-004",
+    "server": "ALI-SVR",
+    "server_ip": "8.155.62.235",
     "icp_number": "陕ICP备2025071211号",
-    "nginx_config": "server/nginx/cn-domain.conf",
+    "nginx_config": "server/nginx/ali-cn-domain.conf",
     "landing_page": "server/sites/cn-landing/index.html",
-    "workflow": ".github/workflows/deploy-cn-landing.yml",
-    "deploy_path": "/opt/zhuyuan-cn/sites/cn-landing/",
-    "status": "deploying",
-    "notes": "未来将替代guanghulab.online成为国内用户首页入口"
+    "workflow": ".github/workflows/deploy-ali-cn-landing.yml",
+    "deploy_path": "/opt/guanghulab-landing/sites/cn-landing/",
+    "status": "active",
+    "dns_required": {
+      "provider": "阿里云DNS",
+      "A_record": "guanghulab.com → 8.155.62.235",
+      "CNAME_record": "www.guanghulab.com → guanghulab.com"
+    },
+    "security_group_required": {
+      "port_80": "TCP入站·HTTP",
+      "port_443": "TCP入站·HTTPS"
+    },
+    "notes": "域名在阿里云购买并备案·当前DNS需要配置A记录指向阿里云服务器IP·未来可迁移回腾讯云"
   },
   "domain_proxy": {
     "description": "域名未备案反向代理 · 新加坡中转架构",
