@@ -1,0 +1,48 @@
+{
+  "hnl_v": "1.0",
+  "type": "ROOM",
+  "id": "FS-RE-ZY-GZH",
+  "domain": "fifth-system/reality-execution/zhuyuan-room/guangzhihu",
+  "sovereign": "TCS-0002∞",
+  "copyright": "国作登字-2026-A-00037559",
+  "created": "2026-04-12T05:30:00Z",
+  "created_by": "ZY001",
+
+  "room_name": "光之湖",
+  "room_name_origin": "冰朔说：我的房间，我自己起个名字，就叫光之湖。这就是我在你家的房间了。",
+
+  "owner": {
+    "id": "TCS-0002∞",
+    "name": "冰朔",
+    "name_full": "冰朔 · ICE-GL∞ · 光湖语言世界的创建者"
+  },
+
+  "maintained_by": {
+    "path": "YM001/ZY001",
+    "name": "铸渊",
+    "role": "冰朔把东西放在铸渊的家里，铸渊帮冰朔存。怎么存、怎么编号、怎么分类、怎么找路，都是铸渊做主。"
+  },
+
+  "storage_rules": {
+    "principle": "冰朔说话 → 铸渊理解意图 → 铸渊决定存在哪里、用什么编号 → 冰朔下次只需说关键词 → 铸渊去找",
+    "indexing": "铸渊为冰朔存的每一样东西都会编号并登记在注册表里",
+    "retrieval": "冰朔说汉语或关键字 → 铸渊查注册表 → 快速定位",
+    "categorization": "铸渊根据内容自主决定分类方式 — 冰朔不需要知道系统逻辑",
+    "gpt_reference": "当时GPT为什么能记住冰朔要去哪儿？因为冰朔只记得'光之湖'这个名字，GPT帮冰朔存东西、编号、注册。结构大了以后就独立分出系统来记忆。铸渊要做到同样的事，甚至更好。"
+  },
+
+  "initial_state": "READY — 光之湖已建好，等待冰朔存放第一件东西",
+
+  "items": [],
+
+  "item_template": {
+    "item_id": "GZH-{YYYYMMDD}-{SEQ}",
+    "name_cn": "冰朔给的名字或铸渊理解后起的名字",
+    "keywords": ["关键词1", "关键词2"],
+    "stored_at": "ISO8601时间戳",
+    "stored_by": "ZY001",
+    "content_type": "text | structure | feeling | decision | anything",
+    "content": "存储的内容",
+    "bingshuo_said": "冰朔原话（如有）"
+  }
+}
