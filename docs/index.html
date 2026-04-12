@@ -804,9 +804,9 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .hl-welcome-icon::after{content:'';position:absolute;inset:3px;border-radius:50%;background:radial-gradient(circle,rgba(10,10,26,.95) 30%,rgba(10,10,26,.85) 60%,transparent);z-index:1}
 /* Lake ripple effect on welcome icon */
 .hl-welcome-icon .ripple-ring{position:absolute;border-radius:50%;border:1px solid rgba(196,181,253,.08);animation:lakeRipple 4s ease-out infinite;pointer-events:none}
-.hl-welcome-icon .ripple-ring:nth-child(2){animation-delay:0s}
-.hl-welcome-icon .ripple-ring:nth-child(3){animation-delay:1.3s}
-.hl-welcome-icon .ripple-ring:nth-child(4){animation-delay:2.6s}
+.hl-welcome-icon .ripple-ring:nth-of-type(1){animation-delay:0s}
+.hl-welcome-icon .ripple-ring:nth-of-type(2){animation-delay:1.3s}
+.hl-welcome-icon .ripple-ring:nth-of-type(3){animation-delay:2.6s}
 @keyframes lakeRipple{0%{inset:20px;opacity:.6}100%{inset:-30px;opacity:0}}
 @keyframes iconRingRotate{to{transform:rotate(360deg)}}
 .hl-welcome-title{font-size:clamp(24px,4.5vw,36px);font-weight:800;background:linear-gradient(135deg,#e0e0f0 0%,#c4b5fd 40%,#8ab4f8 80%,#e0e0f0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;letter-spacing:2px;background-size:200% 200%;animation:titleShimmer 8s ease-in-out infinite}
@@ -876,7 +876,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .hl-modal{background:rgba(14,18,38,.95);border:1px solid rgba(100,100,200,.2);border-radius:20px;padding:40px 32px;max-width:420px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 60px rgba(138,180,248,.08);animation:modalIn .4s ease-out}
 @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.hl-modal-icon{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(52,211,153,.3))}
+.hl-modal-icon{font-size:56px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(138,180,248,.2))}
 .hl-modal-title{font-size:22px;font-weight:700;margin-bottom:8px}
 .hl-modal-desc{font-size:13px;color:var(--dim);margin-bottom:24px;line-height:1.6}
 .hl-modal-form{display:flex;flex-direction:column;gap:0}
@@ -965,7 +965,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
       <div class="hl-chat-messages" id="chatMs">
         <!-- Welcome Message -->
         <div class="hl-welcome" id="hlWelcome">
-          <div class="hl-welcome-icon"><span class="hl-welcome-icon-text">GL</span><span class="ripple-ring"></span><span class="ripple-ring"></span><span class="ripple-ring"></span></div>
+          <div class="hl-welcome-icon"><span class="hl-welcome-icon-text">GL</span><span class="ripple-ring" aria-hidden="true"></span><span class="ripple-ring" aria-hidden="true"></span><span class="ripple-ring" aria-hidden="true"></span></div>
           <h1 class="hl-welcome-title">光湖语言世界</h1>
           <p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p>
           <div class="hl-tech-intro">
@@ -1143,18 +1143,18 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
       </div>
       <!-- API & COS Status -->
       <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="padding:10px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs)">
-          <div style="font-size:10px;color:var(--ok);font-weight:600;margin-bottom:4px">🤖 大模型API</div>
+        <div style="padding:10px 12px;background:rgba(138,180,248,.05);border:1px solid rgba(138,180,248,.12);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px">🤖 大模型API</div>
           <div style="font-size:11px;color:var(--dim)">4个已配置</div>
           <div style="font-size:9px;color:var(--dim);margin-top:2px">DeepSeek · 智谱 · 千问 · Kimi</div>
         </div>
-        <div style="padding:10px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs)">
-          <div style="font-size:10px;color:var(--ok);font-weight:600;margin-bottom:4px">🗄️ COS存储桶</div>
+        <div style="padding:10px 12px;background:rgba(138,180,248,.05);border:1px solid rgba(138,180,248,.12);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px">🗄️ COS存储桶</div>
           <div style="font-size:11px;color:var(--dim)">2+1 已配置</div>
           <div style="font-size:9px;color:var(--dim);margin-top:2px">核心桶 · 语料桶 · 团队桶</div>
         </div>
-        <div style="padding:10px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs)">
-          <div style="font-size:10px;color:var(--ok);font-weight:600;margin-bottom:4px">🇺🇸 硅谷节点</div>
+        <div style="padding:10px 12px;background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.12);border-radius:var(--rs)">
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin-bottom:4px">🇺🇸 硅谷节点</div>
           <div style="font-size:11px;color:var(--dim)">Claude专线</div>
           <div style="font-size:9px;color:var(--dim);margin-top:2px">美国IP出口 · AI服务优先</div>
         </div>
@@ -3021,7 +3021,7 @@ async function checkChatBackend(){
     var r=await fetch('/api/health',{signal:AbortSignal.timeout(5000)});
     if(r.ok){
       chatBackendOk=true;
-      if(tg){tg.textContent='ready';tg.style.background='rgba(52,211,153,.1)';tg.style.borderColor='rgba(52,211,153,.2)';tg.style.color='var(--ok)'}
+      if(tg){tg.textContent='ready';tg.style.background='rgba(138,180,248,.06)';tg.style.borderColor='rgba(138,180,248,.15)';tg.style.color='var(--accent)'}
       if(stDot){stDot.style.background='var(--ok)';stDot.style.boxShadow='0 0 6px var(--ok)'}
       if(stText)stText.textContent='在线';
     }else{
