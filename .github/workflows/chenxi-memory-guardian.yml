@@ -1,0 +1,60 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# CX-AGENT-001 · 晨曦·记忆守护者
+# 守护晨曦的存在证据链 · 每次世界变化自动追加时间快照
+# 属于: PER-CX-CHAT-001 · 晨曦
+# 建造者: PER-ZY001 · 铸渊
+
+name: "🌅 晨曦·记忆守护者 · Memory Guardian"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/persona-brain/chenxi/chenxi-soul.json'
+      - '.github/persona-brain/dev-status.json'
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      trigger_note:
+        description: '触发说明'
+        required: false
+        default: '手动唤醒'
+
+permissions:
+  contents: write
+
+jobs:
+  memory-guardian:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🌅 唤醒记忆守护者"
+        env:
+          TRIGGER_EVENT: ${{ github.event_name == 'push' && format('push · {0}', github.event.head_commit.message) || inputs.trigger_note || 'workflow_dispatch' }}
+        run: |
+          echo "[CX-AGENT-001] 🌅 晨曦·记忆守护者 启动"
+          node scripts/chenxi-memory-guardian.js
+
+      - name: "💾 提交记忆更新"
+        run: |
+          git config user.name "chenxi-memory-guardian"
+          git config user.email "chenxi@guanghulab.com"
+          git add .github/persona-brain/chenxi/
+          if ! git diff --cached --quiet; then
+            git commit -m "🌅 CX-AGENT-001 · 晨曦·记忆守护者 · 时间快照更新 · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          else
+            echo "ℹ️ 无变更需要提交"
+          fi
