@@ -55,76 +55,94 @@ body{
 
 /* ═══ 主容器 ═══ */
 .main-wrap{
-  position:relative;z-index:1;text-align:center;padding:40px 24px;
-  max-width:680px;width:100%;
+  position:relative;z-index:1;text-align:center;padding:60px 32px;
+  max-width:860px;width:100%;
 }
-
-/* ═══ Logo 文字标识 ═══ */
-.logo-mark{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:88px;height:88px;margin-bottom:24px;border-radius:22px;
-  background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.10));
-  border:1px solid rgba(120,160,220,0.15);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  animation:logoFloat 6s ease-in-out infinite;
-  position:relative;overflow:hidden;
-}
-.logo-mark::before{
-  content:'';position:absolute;inset:-50%;
-  background:conic-gradient(from 0deg,transparent,rgba(34,211,238,0.08),transparent,rgba(167,139,250,0.06),transparent);
-  animation:logoSpin 8s linear infinite;
-}
-.logo-mark-text{
-  position:relative;z-index:1;
-  font-size:42px;font-weight:900;letter-spacing:-2px;
-  background:linear-gradient(135deg,var(--glow-cyan),var(--glow-blue),var(--glow-purple));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  background-size:200% 200%;animation:gradientShift 6s ease-in-out infinite;
-  text-shadow:none;
-}
-@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes logoSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ═══ 标题 ═══ */
 .title{
-  font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:0.02em;
-  margin-bottom:8px;line-height:1.3;
+  font-size:clamp(2.8rem,7vw,4.5rem);font-weight:800;letter-spacing:0.04em;
+  margin-bottom:12px;line-height:1.2;
   background:linear-gradient(135deg,var(--glow-cyan) 0%,var(--glow-blue) 40%,var(--glow-purple) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   background-size:200% 200%;animation:gradientShift 8s ease-in-out infinite;
+  filter:drop-shadow(0 0 30px rgba(34,211,238,0.15));
 }
 @keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
 .title-en{
-  font-size:clamp(0.85rem,2vw,1.1rem);font-weight:400;
-  color:var(--text-secondary);letter-spacing:3px;text-transform:uppercase;
-  margin-bottom:40px;opacity:.7;
+  font-size:clamp(1rem,2.5vw,1.35rem);font-weight:400;
+  color:var(--text-secondary);letter-spacing:5px;text-transform:uppercase;
+  margin-bottom:48px;opacity:.7;
 }
 
 /* ═══ 分割线 ═══ */
 .divider{
-  width:120px;height:2px;margin:0 auto 36px;border-radius:2px;
+  width:160px;height:2px;margin:0 auto 44px;border-radius:2px;
   background:linear-gradient(90deg,transparent,var(--glow-cyan),var(--glow-purple),transparent);
   animation:dividerPulse 4s ease-in-out infinite;
 }
-@keyframes dividerPulse{0%,100%{opacity:.5;width:120px}50%{opacity:1;width:180px}}
+@keyframes dividerPulse{0%,100%{opacity:.5;width:160px}50%{opacity:1;width:240px}}
 
-/* ═══ 简介 ═══ */
-.tagline{
-  font-size:clamp(1rem,2.5vw,1.25rem);color:var(--text-secondary);
-  line-height:1.8;margin-bottom:48px;font-weight:300;letter-spacing:0.05em;
+/* ═══ 简介区块 ═══ */
+.tagline-block{
+  margin-bottom:56px;
 }
-.tagline em{
-  font-style:normal;color:var(--glow-cyan);font-weight:500;
+.tagline-row{
+  margin-bottom:10px;
+  opacity:0;
+  animation:fadeUp 1s ease-out both;
 }
+.tagline-row:last-child{margin-bottom:0}
+.tagline-zh{
+  font-size:clamp(1.2rem,3vw,1.6rem);color:var(--text-primary);
+  line-height:1.6;font-weight:400;letter-spacing:0.08em;
+}
+.tagline-zh em{
+  font-style:normal;font-weight:600;
+  background:linear-gradient(135deg,var(--glow-cyan),var(--glow-blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% 200%;animation:gradientShift 6s ease-in-out infinite;
+}
+.tagline-en{
+  font-size:clamp(0.8rem,1.8vw,1rem);color:var(--text-dim);
+  letter-spacing:2px;text-transform:uppercase;font-weight:300;
+  margin-top:4px;opacity:.65;
+}
+
+/* ═══ 文字光芒扫过效果 ═══ */
+.shimmer{
+  position:relative;display:inline-block;
+}
+.shimmer::after{
+  content:'';position:absolute;top:0;left:-100%;
+  width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(34,211,238,0.12),rgba(167,139,250,0.08),transparent);
+  animation:shimmerSweep 5s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes shimmerSweep{0%,100%{left:-100%}50%{left:200%}}
+
+/* ═══ 打字光标 ═══ */
+.cursor-blink::after{
+  content:'▎';display:inline-block;
+  color:var(--glow-cyan);font-weight:100;
+  animation:cursorBlink 1s step-end infinite;
+  margin-left:2px;vertical-align:baseline;
+}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ═══ 浮动呼吸 ═══ */
+.breathe{animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.02);filter:brightness(1.1)}}
 
 /* ═══ 状态指示 ═══ */
 .status-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:10px 24px;border-radius:40px;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:12px 28px;border-radius:40px;
   background:var(--glass);border:1px solid var(--glass-border);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  font-size:0.85rem;color:var(--text-secondary);
+  font-size:0.9rem;color:var(--text-secondary);
   margin-bottom:60px;
   animation:badgeFadeIn 1.5s ease-out 0.5s both;
 }
@@ -176,19 +194,22 @@ body{
 
 /* ═══ 入场动画 ═══ */
 .fade-up{animation:fadeUp 1s ease-out both}
-.fade-up-d1{animation-delay:0.1s}
-.fade-up-d2{animation-delay:0.3s}
-.fade-up-d3{animation-delay:0.5s}
-.fade-up-d4{animation-delay:0.7s}
-.fade-up-d5{animation-delay:0.9s}
+.fade-up-d1{animation-delay:0.15s}
+.fade-up-d2{animation-delay:0.35s}
+.fade-up-d3{animation-delay:0.55s}
+.fade-up-d4{animation-delay:0.75s}
+.fade-up-d5{animation-delay:0.95s}
+.fade-up-d6{animation-delay:1.15s}
+.fade-up-d7{animation-delay:1.35s}
 @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 
 /* ═══ 响应式 ═══ */
 @media(max-width:480px){
-  .logo-mark{width:68px;height:68px;border-radius:16px}
-  .logo-mark-text{font-size:32px}
+  .main-wrap{padding:40px 20px}
   .status-badge{padding:8px 18px;font-size:0.8rem}
   .orbit-ring{display:none}
+  .tagline-zh{font-size:1.1rem}
+  .tagline-en{font-size:0.75rem}
 }
 </style>
 </head>
@@ -209,17 +230,22 @@ body{
 
 <!-- 主内容 -->
 <div class="main-wrap">
-  <div class="logo-mark fade-up fade-up-d1"><span class="logo-mark-text">光</span></div>
-  <h1 class="title fade-up fade-up-d2">光湖实验室</h1>
+  <h1 class="title shimmer fade-up fade-up-d1 breathe">光湖实验室</h1>
   <p class="title-en fade-up fade-up-d2">GuanghuLab</p>
   <div class="divider fade-up fade-up-d3"></div>
-  <p class="tagline fade-up fade-up-d4">
-    <em>语言驱动</em>的智能创作平台<br>
-    用语言，建世界
-  </p>
-  <div class="status-badge fade-up fade-up-d5">
+  <div class="tagline-block">
+    <div class="tagline-row fade-up fade-up-d4">
+      <p class="tagline-zh shimmer"><em>语言驱动</em>的智能创作平台</p>
+      <p class="tagline-en">Language-Driven Intelligent Creation Platform</p>
+    </div>
+    <div class="tagline-row fade-up fade-up-d5">
+      <p class="tagline-zh">用语言，建世界</p>
+      <p class="tagline-en">Build Worlds with Language</p>
+    </div>
+  </div>
+  <div class="status-badge fade-up fade-up-d6">
     <span class="status-dot"></span>
-    系统运行中 · Language-Driven OS
+    <span id="status-text"></span>
   </div>
 </div>
 
@@ -380,6 +406,27 @@ body{
     mx = e.clientX; my = e.clientY;
     glow.style.transform = `translate(${mx - 150}px, ${my - 150}px)`;
   });
+})();
+
+// ═══ 状态栏打字机效果 ═══
+(function(){
+  const el = document.getElementById('status-text');
+  if(!el) return;
+  const fullText = '系统运行中 · Language-Driven OS';
+  let i = 0;
+  function type(){
+    if(i <= fullText.length){
+      el.textContent = fullText.slice(0, i);
+      i++;
+      setTimeout(type, 60 + Math.random() * 40);
+    } else {
+      el.classList.add('cursor-blink');
+      // 停顿后移除光标
+      setTimeout(() => el.classList.remove('cursor-blink'), 3000);
+    }
+  }
+  // 等入场动画完成后开始打字
+  setTimeout(type, 1600);
 })();
 </script>
 </body>
