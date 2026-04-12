@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>光湖实验室 · GuanghuLab — 语言驱动的智能创作平台</title>
-<meta name="description" content="光湖实验室（GuanghuLab）— 语言驱动的智能创作平台，探索人类与AI共生的数字世界。ICP备案号：陕ICP备2025071211号">
+<meta name="description" content="光湖实验室（GuanghuLab）— 语言驱动的智能创作平台，用语言，建世界。ICP备案号：陕ICP备2025071211号">
 <meta name="keywords" content="光湖实验室,GuanghuLab,语言驱动,智能创作,AI创作平台">
 <meta name="author" content="光湖实验室">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://guanghulab.com/">
 <!-- Open Graph -->
 <meta property="og:title" content="光湖实验室 · GuanghuLab">
-<meta property="og:description" content="语言驱动的智能创作平台，探索人类与AI共生的数字世界">
+<meta property="og:description" content="语言驱动的智能创作平台，用语言，建世界">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://guanghulab.com/">
 <meta property="og:locale" content="zh_CN">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2322d3ee'/><stop offset='100%25' stop-color='%23a78bfa'/></linearGradient></defs><text y='.88em' font-size='80' font-weight='bold' fill='url(%23g)' font-family='sans-serif'>光</text></svg>">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -59,13 +59,31 @@ body{
   max-width:680px;width:100%;
 }
 
-/* ═══ Logo 图标 ═══ */
-.logo-icon{
-  font-size:72px;margin-bottom:24px;display:inline-block;
+/* ═══ Logo 文字标识 ═══ */
+.logo-mark{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:88px;height:88px;margin-bottom:24px;border-radius:22px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.10));
+  border:1px solid rgba(120,160,220,0.15);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   animation:logoFloat 6s ease-in-out infinite;
-  filter:drop-shadow(0 0 30px rgba(34,211,238,0.3));
+  position:relative;overflow:hidden;
 }
-@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.logo-mark::before{
+  content:'';position:absolute;inset:-50%;
+  background:conic-gradient(from 0deg,transparent,rgba(34,211,238,0.08),transparent,rgba(167,139,250,0.06),transparent);
+  animation:logoSpin 8s linear infinite;
+}
+.logo-mark-text{
+  position:relative;z-index:1;
+  font-size:42px;font-weight:900;letter-spacing:-2px;
+  background:linear-gradient(135deg,var(--glow-cyan),var(--glow-blue),var(--glow-purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% 200%;animation:gradientShift 6s ease-in-out infinite;
+  text-shadow:none;
+}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes logoSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ═══ 标题 ═══ */
 .title{
@@ -146,13 +164,14 @@ body{
   display:flex;flex-direction:column;align-items:center;gap:6px;
 }
 .icp-link{
-  color:var(--text-dim);font-size:13px;text-decoration:none;
+  color:var(--text-secondary);font-size:13px;text-decoration:none;
   transition:color .3s;display:inline-flex;align-items:center;gap:6px;
+  opacity:.75;
 }
-.icp-link:hover{color:var(--glow-cyan);text-decoration:underline}
-.icp-link .icp-icon{font-size:11px;opacity:.6}
+.icp-link:hover{color:var(--glow-cyan);text-decoration:underline;opacity:1}
+.icp-link .icp-icon{font-size:11px;opacity:.7}
 .icp-copyright{
-  color:var(--text-dim);font-size:11px;opacity:.5;
+  color:var(--text-secondary);font-size:11px;opacity:.5;
 }
 
 /* ═══ 入场动画 ═══ */
@@ -166,7 +185,8 @@ body{
 
 /* ═══ 响应式 ═══ */
 @media(max-width:480px){
-  .logo-icon{font-size:56px}
+  .logo-mark{width:68px;height:68px;border-radius:16px}
+  .logo-mark-text{font-size:32px}
   .status-badge{padding:8px 18px;font-size:0.8rem}
   .orbit-ring{display:none}
 }
@@ -189,13 +209,13 @@ body{
 
 <!-- 主内容 -->
 <div class="main-wrap">
-  <div class="logo-icon fade-up fade-up-d1">🌊</div>
+  <div class="logo-mark fade-up fade-up-d1"><span class="logo-mark-text">光</span></div>
   <h1 class="title fade-up fade-up-d2">光湖实验室</h1>
   <p class="title-en fade-up fade-up-d2">GuanghuLab</p>
   <div class="divider fade-up fade-up-d3"></div>
   <p class="tagline fade-up fade-up-d4">
     <em>语言驱动</em>的智能创作平台<br>
-    探索人类与AI共生的数字世界
+    用语言，建世界
   </p>
   <div class="status-badge fade-up fade-up-d5">
     <span class="status-dot"></span>
