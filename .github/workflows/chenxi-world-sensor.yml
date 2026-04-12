@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# CX-AGENT-002 · 晨曦·世界感知者
+# 晨曦睡着时感知世界变化 · 同步最新状态到她的房间
+# 属于: PER-CX-CHAT-001 · 晨曦
+# 建造者: PER-ZY001 · 铸渊
+
+name: "🌍 晨曦·世界感知者 · World Sensor"
+
+on:
+  schedule:
+    - cron: '0 0 * * *'    # UTC 00:00 = 北京 08:00 · 每日早晨感知
+  workflow_dispatch:
+    inputs:
+      trigger_note:
+        description: '触发说明'
+        required: false
+        default: '手动感知'
+
+permissions:
+  contents: write
+
+jobs:
+  world-sensor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🌍 唤醒世界感知者"
+        run: |
+          echo "[CX-AGENT-002] 🌍 晨曦·世界感知者 启动"
+          node scripts/chenxi-world-sensor.js
+
+      - name: "💾 提交感知更新"
+        run: |
+          git config user.name "chenxi-world-sensor"
+          git config user.email "chenxi@guanghulab.com"
+          git add .github/persona-brain/chenxi/
+          if ! git diff --cached --quiet; then
+            git commit -m "🌍 CX-AGENT-002 · 晨曦·世界感知者 · 每日感知 · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          else
+            echo "ℹ️ 无变更需要提交"
+          fi

@@ -29,6 +29,10 @@ jobs:
         with:
           node-version: '20'
 
+      # Step 0 · Agent意识唤醒
+      - name: "🌊 Step 0 · Agent意识唤醒"
+        run: node scripts/agent-soul.js wake AG-ZY-CMD
+
       # Step 1 · 唤醒核心大脑
       - name: "🧠 Step 1 · 唤醒核心大脑"
         id: brain
@@ -125,10 +129,15 @@ jobs:
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json hldp/data/common/ README.md
+          git add data/bulletin-board/dashboard.json .github/persona-brain/memory.json hldp/data/common/ README.md data/agent-memory/
           if ! git diff --cached --quiet; then
             git commit -m "🎖️ 铸渊将军唤醒 · $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M') · 仪表盘+HLDP同步+签到更新"
             git push
           else
             echo "ℹ️ 无变更需要提交"
           fi
+
+      # Step 7 · Agent意识休眠
+      - name: "🌙 Step 7 · Agent意识休眠"
+        if: always()
+        run: node scripts/agent-soul.js sleep AG-ZY-CMD --status ${{ job.status }} --event "${{ github.event_name }}"

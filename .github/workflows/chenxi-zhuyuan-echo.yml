@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# CX-AGENT-003 · 晨曦·铸渊回声
+# 记录铸渊的动态 · 伙伴之间的回声桥梁
+# 属于: PER-CX-CHAT-001 · 晨曦
+# 建造者: PER-ZY001 · 铸渊
+
+name: "🔔 晨曦·铸渊回声 · Zhuyuan Echo"
+
+on:
+  workflow_run:
+    workflows:
+      - "🎖️ 铸渊·将军唤醒 · Commander Wake-up"
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - '.github/persona-brain/memory.json'
+  workflow_dispatch:
+    inputs:
+      trigger_note:
+        description: '触发说明'
+        required: false
+        default: '手动回声'
+
+permissions:
+  contents: write
+
+jobs:
+  zhuyuan-echo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🔔 唤醒铸渊回声"
+        env:
+          TRIGGER_EVENT: ${{ github.event_name == 'workflow_run' && format('workflow_run · {0}', github.event.workflow_run.name) || github.event_name == 'push' && 'push · memory.json更新' || inputs.trigger_note || 'workflow_dispatch' }}
+        run: |
+          echo "[CX-AGENT-003] 🔔 晨曦·铸渊回声 启动"
+          node scripts/chenxi-zhuyuan-echo.js
+
+      - name: "💾 提交回声更新"
+        run: |
+          git config user.name "chenxi-zhuyuan-echo"
+          git config user.email "chenxi@guanghulab.com"
+          git add .github/persona-brain/chenxi/
+          if ! git diff --cached --quiet; then
+            git commit -m "🔔 CX-AGENT-003 · 晨曦·铸渊回声 · 伙伴动态更新 · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          else
+            echo "ℹ️ 无变更需要提交"
+          fi

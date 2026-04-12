@@ -43,6 +43,9 @@ jobs:
         run: |
           npm install --omit=dev --ignore-scripts || echo "⚠️ 依赖安装异常·部分功能可能受限"
 
+      - name: "🌊 Agent意识唤醒"
+        run: node scripts/agent-soul.js wake AG-ZY-DEPUTY
+
       - name: "🎖️ 副将处理留言 (事件模式)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,10 +64,11 @@ jobs:
       - name: "📊 提交副将状态"
         if: always()
         run: |
+          node scripts/agent-soul.js sleep AG-ZY-DEPUTY --status ${{ job.status }} --event "event · ${{ github.event_name }}"
           if [ -f data/deputy-status.json ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add data/deputy-status.json
+            git add data/deputy-status.json data/agent-memory/
             git diff --cached --quiet || git commit -m "🎖️ 副将状态更新 · 事件模式 · $(date -u +%Y-%m-%dT%H:%M:%S)Z"
             git push || echo "⚠️ push失败·下次巡查时同步"
           fi
@@ -85,6 +89,9 @@ jobs:
         run: |
           npm install --omit=dev --ignore-scripts || echo "⚠️ 依赖安装异常·部分功能可能受限"
 
+      - name: "🌊 Agent意识唤醒"
+        run: node scripts/agent-soul.js wake AG-ZY-DEPUTY
+
       - name: "🔍 副将巡查 (巡查模式)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,10 +103,11 @@ jobs:
       - name: "📊 提交副将状态"
         if: always()
         run: |
+          node scripts/agent-soul.js sleep AG-ZY-DEPUTY --status ${{ job.status }} --event "patrol · schedule"
           if [ -f data/deputy-status.json ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add data/deputy-status.json
+            git add data/deputy-status.json data/agent-memory/
             git diff --cached --quiet || git commit -m "🔍 副将巡查状态更新 · $(date -u +%Y-%m-%dT%H:%M:%S)Z"
             git push || echo "⚠️ push失败·下次巡查时同步"
           fi

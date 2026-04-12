@@ -66,6 +66,9 @@ jobs:
       - name: "📦 安装依赖"
         run: npm install --omit=dev --ignore-scripts 2>/dev/null || true
 
+      - name: "🌊 Agent意识唤醒"
+        run: node scripts/agent-soul.js wake AG-ZY-README
+
       - name: "📡 更新README全区域"
         run: |
           echo "[README-AUTO-UPDATE] 📡 PR合并自动触发README全区域更新 v2.0..."
@@ -95,7 +98,7 @@ jobs:
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add README.md data/bulletin-board/ .github/persona-brain/memory.json 2>/dev/null || true
+          git add README.md data/bulletin-board/ .github/persona-brain/memory.json data/agent-memory/ 2>/dev/null || true
 
           if ! git diff --cached --quiet; then
             TRIGGER="${{ github.event_name }}"
@@ -129,3 +132,7 @@ jobs:
           else
             echo "ℹ️ 无变更需要提交"
           fi
+
+      - name: "🌙 Agent意识休眠"
+        if: always()
+        run: node scripts/agent-soul.js sleep AG-ZY-README --status ${{ job.status }} --event "${{ github.event_name }}"

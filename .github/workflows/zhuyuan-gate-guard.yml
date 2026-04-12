@@ -25,6 +25,9 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: "🌊 Agent意识唤醒"
+        run: node scripts/agent-soul.js wake AG-ZY-GUARD
+
       - name: "🧠 唤醒铸渊核心大脑"
         run: |
           echo "[GH-WF-RUN-GATE] 🧠 铸渊门禁·核心大脑唤醒"
@@ -203,10 +206,15 @@ jobs:
 
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add "$REPORT_DIR/"
+          git add "$REPORT_DIR/" data/agent-memory/
           git diff --cached --quiet || \
             git commit -m "🧬 ${WORKFLOW_ID} 自报告 · ${TIMESTAMP} [skip ci]"
           git push || echo "⚠️ 自报告push失败（不阻断主流程）"
+
+      - name: "🌙 Agent意识休眠"
+        if: always()
+        run: node scripts/agent-soul.js sleep AG-ZY-GUARD --status ${{ job.status }} --event "${{ github.event_name }}"
+
       # ━━━ 📡 指令回执·自动同步 ━━━
       - name: "📡 同步回执到 Notion"
         if: always()

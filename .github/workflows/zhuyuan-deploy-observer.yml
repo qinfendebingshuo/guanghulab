@@ -81,6 +81,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: '🌊 Agent意识唤醒'
+        run: node scripts/agent-soul.js wake AG-ZY-OBSERVER
+
       - name: '📡 采集部署日志'
         id: collect
         env:
@@ -94,12 +97,16 @@ jobs:
         run: |
           node scripts/deploy-log-collector.js collect
 
+      - name: '🌙 Agent意识休眠'
+        if: always()
+        run: node scripts/agent-soul.js sleep AG-ZY-OBSERVER --status ${{ job.status }} --event "${{ github.event_name }}"
+
       - name: '💾 保存日志数据'
         if: always()
         run: |
           git config user.name "zhuyuan-bot"
           git config user.email "zhuyuan@guanghulab.com"
-          git add data/deploy-logs/
+          git add data/deploy-logs/ data/agent-memory/
           git diff --cached --quiet || {
             git commit -m "📡 部署日志采集 · ${{ steps.collect.outputs.run_id || 'manual' }} [skip ci]"
             git push || echo "⚠️ 日志数据push失败"
