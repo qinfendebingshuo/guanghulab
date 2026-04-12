@@ -2,49 +2,31 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-12 10:35:18+08:00",
-  "timestamp_utc": "2026-04-12T02:35:18.685Z",
+  "timestamp": "2026-04-12 10:59:42+08:00",
+  "timestamp_utc": "2026-04-12T02:59:42.252Z",
   "merge": {
-    "pr_number": 349,
-    "pr_title": "fix: guanghulab.com deployment — resolve Nginx config conflict, add firewall checks",
-    "merge_commit_sha": "05d20877ed8acc315631c126cce634778349c765",
-    "head_sha": "e1c15e938ae3286c9d58b27793f6f4167fc15377",
+    "pr_number": 350,
+    "pr_title": "fix: guanghulab.com serving stale content — comprehensive Nginx conflict cleanup",
+    "merge_commit_sha": "f27599610747cc80e4100a2ea828402ee1b963d7",
+    "head_sha": "970f027d6ea36577aa20dd17f1b2ee9919c2b245",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 14,
+      "total": 12,
       "passed": 0,
       "failed": 0,
       "skipped": 7
     },
     "check_runs": [
       {
-        "name": "💚 ��康检查",
+        "name": "🔒 SSL证书配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔧 服务器初始化",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 预览站→主站 一键推送",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -52,8 +34,8 @@
         "name": "🔐 安装SSL证书 (Let's Encrypt)",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -61,8 +43,17 @@
         "name": "💚 阿里云落地页健康检查",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -70,17 +61,26 @@
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🔒 SSL证书配置",
+        "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T02:35:12Z",
-        "completed_at": "2026-04-12T02:35:12Z",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T02:59:35Z",
+        "completed_at": "2026-04-12T02:59:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -88,34 +88,7 @@
         "name": "🚀 部署 guanghulab.com 到阿里云",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 部署应用代码",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 部署到测试站",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "update-readme",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
+        "started_at": "2026-04-12T02:59:37Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -124,7 +97,25 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
+        "started_at": "2026-04-12T02:59:37Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T02:59:37Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署到测试站",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T02:59:39Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -133,16 +124,7 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "📊 更新流量仪表盘",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-12T02:35:15Z",
+        "started_at": "2026-04-12T02:59:38Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
