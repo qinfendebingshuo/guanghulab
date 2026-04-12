@@ -1,0 +1,659 @@
+name: 🇨🇳 阿里云落地页 · guanghulab.com 部署
+
+# ═══════════════════════════════════════════════════════════
+# 阿里云临时服务器 · 国内ICP备案落地页部署
+# 编号: ALI-WF-CN-LANDING
+# 服务器: ALI-SVR · 8.155.62.235 · 阿里云
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════════════════
+#
+# 背景:
+#   域名 guanghulab.com 在阿里云购买并备案。
+#   备案迁移到腾讯云期间，域名解析回阿里云服务器。
+#   此工作流将落地页部署到阿里云，确保备案期间网站正常显示。
+#
+# 部署内容:
+#   1. 国内落地页 (server/sites/cn-landing/) → /opt/guanghulab-landing/sites/cn-landing/
+#   2. Nginx 配置 (server/nginx/ali-cn-domain.conf) → Nginx sites-enabled
+#
+# 密钥:
+#   ALI_SERVER_HOST — 阿里云服务器IP (8.155.62.235)
+#   ALI_SERVER_USER — SSH用户名 (root)
+#   ALI_SERVER_PASSWORD — SSH密码
+#
+# 连接策略: 直连 → 如失败 → 通过SG跳板中转
+#   路径A: GitHub Actions → ALI (直连)
+#   路径B: GitHub Actions → SG(新加坡·跳板) → ALI (中转)
+#
+# 隔离: 所有文件部署在 /opt/guanghulab-landing/ 下
+#   不干扰服务器上已有的服务和配置
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/sites/cn-landing/**'
+      - 'server/nginx/ali-cn-domain.conf'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '部署动作'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - health-check
+          - setup-ssl
+
+concurrency:
+  group: ali-cn-landing-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_PATH: /opt/guanghulab-landing
+  CN_DOMAIN: guanghulab.com
+
+jobs:
+  # ═══════════════════════════════════════
+  # §1 部署落地页
+  # ═══════════════════════════════════════
+  deploy:
+    name: 🚀 部署 guanghulab.com 到阿里云
+    if: github.event.inputs.action == 'deploy' || github.event.inputs.action == '' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📦 安装SSH工具
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass
+          echo "✅ sshpass 已安装"
+
+      - name: 🔐 配置SSH连接 (双路径)
+        env:
+          ALI_HOST: ${{ secrets.ALI_SERVER_HOST }}
+          ALI_USER: ${{ secrets.ALI_SERVER_USER }}
+          ALI_PASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          SG_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          SG_USER: ${{ secrets.ZY_SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # ─── 路径A: 直连 ───
+          echo "🔍 尝试直连阿里云服务器 ${ALI_HOST}..."
+          export SSHPASS="${ALI_PASS}"
+
+          DIRECT_OK=false
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=15 \
+            -o BatchMode=no \
+            "${ALI_USER}@${ALI_HOST}" \
+            'echo "✅ 直连成功 · $(hostname) · $(date)"' 2>/dev/null && DIRECT_OK=true || true
+
+          if [ "$DIRECT_OK" = "true" ]; then
+            echo "SSH_MODE=direct" >> $GITHUB_ENV
+            echo "✅ 使用直连模式"
+
+            # 写入SSH config用于后续步骤
+            cat > ~/.ssh/config << EOF
+          Host ali-target
+              HostName ${ALI_HOST}
+              User ${ALI_USER}
+              StrictHostKeyChecking accept-new
+              ConnectTimeout 30
+          EOF
+          else
+            echo "⚠️ 直连失败，尝试SG跳板中转..."
+
+            # ─── 路径B: SG跳板中转 ───
+            if [ -n "$SG_SSH_KEY" ] && [ -n "$SG_HOST" ]; then
+              echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+              chmod 600 ~/.ssh/id_sg
+              ssh-keyscan -H "${SG_HOST}" >> ~/.ssh/known_hosts 2>/dev/null
+
+              cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${SG_HOST}
+              User ${SG_USER}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host ali-target
+              HostName ${ALI_HOST}
+              User ${ALI_USER}
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              ConnectTimeout 30
+          EOF
+
+              # 测试SG跳板连接
+              sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target \
+                'echo "✅ SG跳板连接成功 · $(hostname) · $(date)"' || {
+                echo "❌ SG跳板连接也失败"
+                exit 1
+              }
+
+              echo "SSH_MODE=proxy" >> $GITHUB_ENV
+              echo "✅ 使用SG跳板模式"
+            else
+              echo "❌ 直连失败且无SG跳板密钥可用"
+              exit 1
+            fi
+          fi
+
+          chmod 600 ~/.ssh/config
+
+      - name: 📂 初始化目标目录
+        env:
+          SSHPASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+        run: |
+          sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << INIT_CMD
+          set -e
+
+          echo "═══ 初始化隔离部署目录 ═══"
+
+          # 创建隔离的部署目录结构
+          mkdir -p ${DEPLOY_PATH}/sites/cn-landing
+          mkdir -p ${DEPLOY_PATH}/logs
+          mkdir -p ${DEPLOY_PATH}/config/nginx
+
+          echo "✅ 目录结构就绪: ${DEPLOY_PATH}/"
+          ls -la ${DEPLOY_PATH}/
+          INIT_CMD
+
+      - name: 📦 上传落地页文件
+        env:
+          SSHPASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+        run: |
+          echo "📦 打包并上传落地页文件..."
+
+          # 使用tar打包上传（兼容性最好）
+          tar czf /tmp/cn-landing.tar.gz -C server/sites/cn-landing .
+
+          sshpass -e scp -F ~/.ssh/config -o BatchMode=no \
+            /tmp/cn-landing.tar.gz \
+            ali-target:/tmp/cn-landing.tar.gz
+
+          sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << 'EXTRACT_CMD'
+          set -e
+          DEPLOY_PATH=/opt/guanghulab-landing
+
+          # 备份旧文件（如果有）
+          if [ -f "${DEPLOY_PATH}/sites/cn-landing/index.html" ]; then
+            cp "${DEPLOY_PATH}/sites/cn-landing/index.html" "${DEPLOY_PATH}/sites/cn-landing/index.html.bak"
+          fi
+
+          # 解压新文件
+          tar xzf /tmp/cn-landing.tar.gz -C ${DEPLOY_PATH}/sites/cn-landing/
+          rm -f /tmp/cn-landing.tar.gz
+
+          echo "✅ 落地页文件已部署"
+          ls -la ${DEPLOY_PATH}/sites/cn-landing/
+          EXTRACT_CMD
+
+          rm -f /tmp/cn-landing.tar.gz
+
+      - name: 📦 上传并配置Nginx
+        env:
+          SSHPASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+          ZY_CN_DOMAIN: ${{ secrets.ZY_CN_DOMAIN }}
+        run: |
+          # 处理域名占位符替换
+          BARE_DOMAIN="${ZY_CN_DOMAIN:-guanghulab.com}"
+          BARE_DOMAIN="${BARE_DOMAIN#www.}"
+          echo "🌐 配置域名: ${BARE_DOMAIN}"
+
+          # 替换占位符
+          cp server/nginx/ali-cn-domain.conf /tmp/ali-cn-domain.conf
+          sed -i "s/ALI_CN_DOMAIN_PLACEHOLDER/${BARE_DOMAIN}/g" /tmp/ali-cn-domain.conf
+
+          # 上传Nginx配置
+          sshpass -e scp -F ~/.ssh/config -o BatchMode=no \
+            /tmp/ali-cn-domain.conf \
+            ali-target:/tmp/ali-cn-domain.conf
+
+          sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << 'NGINX_CMD'
+          set -e
+          DEPLOY_PATH=/opt/guanghulab-landing
+
+          echo "═══ Nginx 配置 (隔离模式) ═══"
+
+          # §1 检查Nginx是否已安装
+          if ! command -v nginx &> /dev/null; then
+            echo "📦 安装Nginx..."
+            if command -v apt-get &> /dev/null; then
+              apt-get update -qq
+              apt-get install -y -qq nginx
+            elif command -v yum &> /dev/null; then
+              yum install -y -q epel-release 2>/dev/null || true
+              yum install -y -q nginx
+            elif command -v dnf &> /dev/null; then
+              dnf install -y -q nginx
+            else
+              echo "❌ 无法安装Nginx：未找到包管理器"
+              exit 1
+            fi
+            systemctl enable nginx
+            echo "✅ Nginx 已安装"
+          else
+            echo "✅ Nginx 已存在: $(nginx -v 2>&1)"
+          fi
+
+          # §2 智能选择配置目录
+          # 阿里云服务器常用CentOS/RHEL，Nginx默认使用 conf.d/
+          # Ubuntu/Debian系统使用 sites-enabled/
+          # 策略: 检测nginx.conf中哪个目录被include，优先使用该目录
+          CONF_DIR=""
+          if grep -q "include.*sites-enabled" /etc/nginx/nginx.conf 2>/dev/null; then
+            CONF_DIR="/etc/nginx/sites-enabled"
+            mkdir -p /etc/nginx/sites-available 2>/dev/null || true
+            mkdir -p /etc/nginx/sites-enabled 2>/dev/null || true
+            echo "✅ 检测到 sites-enabled 模式"
+          elif grep -q "include.*conf\.d" /etc/nginx/nginx.conf 2>/dev/null; then
+            CONF_DIR="/etc/nginx/conf.d"
+            echo "✅ 检测到 conf.d 模式 (CentOS/RHEL)"
+          else
+            # 默认使用conf.d（更通用）
+            CONF_DIR="/etc/nginx/conf.d"
+            mkdir -p /etc/nginx/conf.d 2>/dev/null || true
+            echo "⚠️ 未检测到明确的配置目录，使用 conf.d"
+          fi
+
+          echo "📁 配置部署目录: ${CONF_DIR}"
+
+          # §3 部署我们的配置（仅替换我们的文件，不动其他配置）
+          CONF_FILE="${CONF_DIR}/guanghulab-landing.conf"
+
+          # 如果使用sites-enabled模式，同时放一份到sites-available
+          if [ "$CONF_DIR" = "/etc/nginx/sites-enabled" ]; then
+            cp /tmp/ali-cn-domain.conf /etc/nginx/sites-available/guanghulab-landing.conf
+            ln -sf /etc/nginx/sites-available/guanghulab-landing.conf "${CONF_FILE}"
+          else
+            cp /tmp/ali-cn-domain.conf "${CONF_FILE}"
+          fi
+          rm -f /tmp/ali-cn-domain.conf
+          echo "✅ 配置已部署: ${CONF_FILE}"
+
+          # §4 检测已有SSL证书并注入
+          BARE_DOMAIN=$(grep server_name "${CONF_FILE}" 2>/dev/null | head -1 | awk '{print $2}' | sed 's/;//' || echo "")
+          if [ -n "$BARE_DOMAIN" ] && [ -d "/etc/letsencrypt/live/${BARE_DOMAIN}" ] && [ -f "/etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem" ]; then
+            echo "🔐 检测到SSL证书，注入HTTPS配置..."
+            # 生成SSL配置块
+            SSL_BLOCK="    listen 443 ssl;\n    ssl_certificate /etc/letsencrypt/live/${BARE_DOMAIN}/fullchain.pem;\n    ssl_certificate_key /etc/letsencrypt/live/${BARE_DOMAIN}/privkey.pem;"
+            sed -i "/listen 80;/a\\${SSL_BLOCK}" "${CONF_FILE}"
+            echo "✅ SSL配置已注入"
+          else
+            echo "ℹ️ 未检测到SSL证书 · 仅HTTP模式"
+            echo "  运行 setup-ssl 动作安装Let's Encrypt证书"
+          fi
+
+          # §5 诊断：显示配置状态
+          echo ""
+          echo "§ 当前Nginx配置目录 (${CONF_DIR}):"
+          ls -la "${CONF_DIR}/" 2>/dev/null || echo "  (空)"
+          if [ -d "/etc/nginx/sites-enabled" ] && [ "$CONF_DIR" != "/etc/nginx/sites-enabled" ]; then
+            echo ""
+            echo "§ sites-enabled目录:"
+            ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  (空)"
+          fi
+
+          # §6 测试并重载Nginx
+          echo ""
+          nginx -t 2>&1
+          if [ $? -eq 0 ]; then
+            systemctl reload nginx 2>/dev/null || systemctl start nginx
+            echo "✅ Nginx配置已生效 · guanghulab-landing.conf 已启用"
+          else
+            echo "❌ Nginx配置测试失败，回滚..."
+            rm -f "${CONF_FILE}"
+            if [ -f "/etc/nginx/sites-available/guanghulab-landing.conf" ]; then
+              rm -f /etc/nginx/sites-available/guanghulab-landing.conf
+            fi
+            nginx -t && systemctl reload nginx
+            exit 1
+          fi
+          NGINX_CMD
+
+          rm -f /tmp/ali-cn-domain.conf
+
+      - name: 💚 健康检查
+        env:
+          SSHPASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+        run: |
+          sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << 'HEALTH_CMD'
+          set -e
+
+          echo "═══ 阿里云落地页部署验证 ═══"
+
+          # §1 Nginx状态
+          if systemctl is-active --quiet nginx; then
+            echo "✅ Nginx: 运行中"
+          else
+            echo "❌ Nginx: 已停止"
+            systemctl start nginx
+            echo "⚠️ Nginx: 已重新启动"
+          fi
+
+          # §2 页面访问测试
+          HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null || echo "000")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ 落地页: HTTP 200 OK"
+          else
+            echo "⚠️ 落地页 localhost: HTTP ${HTTP_CODE}"
+            # 尝试通过域名访问
+            HTTP_CODE2=$(curl -sf -o /dev/null -w '%{http_code}' -H "Host: guanghulab.com" http://localhost/ 2>/dev/null || echo "000")
+            echo "  通过Host头测试: HTTP ${HTTP_CODE2}"
+          fi
+
+          # §3 ICP备案号检查
+          PAGE_CONTENT=$(curl -sf -H "Host: guanghulab.com" http://localhost/ 2>/dev/null || curl -sf http://localhost/ 2>/dev/null || echo "")
+          if echo "$PAGE_CONTENT" | grep -q "陕ICP备2025071211号"; then
+            echo "✅ ICP备案号: 已显示"
+          else
+            echo "❌ ICP备案号: 未找到"
+            echo "  页面前300字符:"
+            echo "$PAGE_CONTENT" | head -c 300
+          fi
+
+          # §4 备案链接检查
+          if echo "$PAGE_CONTENT" | grep -q "beian.miit.gov.cn"; then
+            echo "✅ 工信部链接: 已配置"
+          else
+            echo "⚠️ 工信部链接: 未找到"
+          fi
+
+          # §5 健康端点
+          HEALTH=$(curl -sf -H "Host: guanghulab.com" http://localhost/health 2>/dev/null || echo '{}')
+          echo "✅ 健康探针: ${HEALTH}"
+
+          # §6 文件验证
+          if [ -f "/opt/guanghulab-landing/sites/cn-landing/index.html" ]; then
+            echo "✅ 落地页文件: 存在"
+            ls -la /opt/guanghulab-landing/sites/cn-landing/
+          else
+            echo "❌ 落地页文件: 不存在"
+          fi
+
+          echo ""
+          echo "═══ 部署完成 · guanghulab.com ═══"
+          HEALTH_CMD
+
+      - name: 🧹 清理
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_sg ~/.ssh/config
+          rm -f /tmp/cn-landing.tar.gz /tmp/ali-cn-domain.conf
+
+  # ═══════════════════════════════════════
+  # §2 健康检查
+  # ═══════════════════════════════════════
+  health-check:
+    name: 💚 阿里云落地页健康检查
+    if: github.event.inputs.action == 'health-check'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📦 安装SSH工具
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass
+
+      - name: 🔐 配置SSH连接
+        env:
+          ALI_HOST: ${{ secrets.ALI_SERVER_HOST }}
+          ALI_USER: ${{ secrets.ALI_SERVER_USER }}
+          ALI_PASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          SG_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          SG_USER: ${{ secrets.ZY_SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          export SSHPASS="${ALI_PASS}"
+
+          # 尝试直连
+          DIRECT_OK=false
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=15 -o BatchMode=no \
+            "${ALI_USER}@${ALI_HOST}" 'echo ok' 2>/dev/null && DIRECT_OK=true || true
+
+          if [ "$DIRECT_OK" = "true" ]; then
+            cat > ~/.ssh/config << EOF
+          Host ali-target
+              HostName ${ALI_HOST}
+              User ${ALI_USER}
+              StrictHostKeyChecking accept-new
+              ConnectTimeout 30
+          EOF
+          else
+            echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+            chmod 600 ~/.ssh/id_sg
+            ssh-keyscan -H "${SG_HOST}" >> ~/.ssh/known_hosts 2>/dev/null
+            cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${SG_HOST}
+              User ${SG_USER}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host ali-target
+              HostName ${ALI_HOST}
+              User ${ALI_USER}
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              ConnectTimeout 30
+          EOF
+          fi
+          chmod 600 ~/.ssh/config
+
+      - name: 💚 执行健康检查
+        env:
+          SSHPASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+        run: |
+          sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << 'HEALTH_CMD'
+
+          echo "═══ 阿里云落地页健康报告 ═══"
+          echo ""
+
+          echo "§1 系统状态:"
+          uptime
+          echo ""
+
+          echo "§2 Nginx 状态:"
+          systemctl is-active nginx && echo "Nginx: 运行中" || echo "Nginx: 已停止"
+          echo ""
+
+          echo "§3 Nginx 站点配置:"
+          ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  (目录不存在)"
+          echo ""
+
+          echo "§4 落地页文件:"
+          ls -la /opt/guanghulab-landing/sites/cn-landing/ 2>/dev/null || echo "  目录不存在"
+          echo ""
+
+          echo "§5 页面访问测试:"
+          HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -H "Host: guanghulab.com" http://localhost/ 2>/dev/null || echo "000")
+          echo "HTTP状态码: ${HTTP_CODE}"
+          echo ""
+
+          echo "§6 ICP备案号检查:"
+          PAGE=$(curl -sf -H "Host: guanghulab.com" http://localhost/ 2>/dev/null || curl -sf http://localhost/ 2>/dev/null || echo "")
+          if echo "$PAGE" | grep -q "陕ICP备2025071211号"; then
+            echo "✅ ICP备案号已显示"
+          else
+            echo "❌ ICP备案号未找到"
+            echo "  页面前300字符:"
+            echo "$PAGE" | head -c 300
+          fi
+
+          echo ""
+          echo "§7 健康端点:"
+          HEALTH=$(curl -sf -H "Host: guanghulab.com" http://localhost/health 2>/dev/null || echo '{}')
+          echo "响应: ${HEALTH}"
+
+          echo ""
+          echo "§8 HTTPS状态:"
+          HTTPS_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -H "Host: guanghulab.com" https://localhost/ -k 2>/dev/null || echo "000")
+          echo "HTTPS状态码: ${HTTPS_CODE}"
+
+          echo ""
+          echo "§9 SSL证书:"
+          certbot certificates 2>/dev/null || echo "  certbot未安装"
+
+          echo ""
+          echo "§10 磁盘使用:"
+          df -h /
+          echo ""
+          echo "§11 内存使用:"
+          free -m
+
+          HEALTH_CMD
+
+      - name: 🧹 清理
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/config
+
+  # ═══════════════════════════════════════
+  # §3 安装SSL证书
+  # ═══════════════════════════════════════
+  setup-ssl:
+    name: 🔐 安装SSL证书 (Let's Encrypt)
+    if: github.event.inputs.action == 'setup-ssl'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📦 安装SSH工具
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass
+
+      - name: 🔐 配置SSH连接
+        env:
+          ALI_HOST: ${{ secrets.ALI_SERVER_HOST }}
+          ALI_USER: ${{ secrets.ALI_SERVER_USER }}
+          ALI_PASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+          SG_SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+          SG_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          SG_USER: ${{ secrets.ZY_SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          export SSHPASS="${ALI_PASS}"
+
+          DIRECT_OK=false
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=15 -o BatchMode=no \
+            "${ALI_USER}@${ALI_HOST}" 'echo ok' 2>/dev/null && DIRECT_OK=true || true
+
+          if [ "$DIRECT_OK" = "true" ]; then
+            cat > ~/.ssh/config << EOF
+          Host ali-target
+              HostName ${ALI_HOST}
+              User ${ALI_USER}
+              StrictHostKeyChecking accept-new
+              ConnectTimeout 30
+          EOF
+          else
+            echo "$SG_SSH_KEY" > ~/.ssh/id_sg
+            chmod 600 ~/.ssh/id_sg
+            ssh-keyscan -H "${SG_HOST}" >> ~/.ssh/known_hosts 2>/dev/null
+            cat > ~/.ssh/config << EOF
+          Host sg-jump
+              HostName ${SG_HOST}
+              User ${SG_USER}
+              IdentityFile ~/.ssh/id_sg
+              StrictHostKeyChecking accept-new
+              BatchMode yes
+
+          Host ali-target
+              HostName ${ALI_HOST}
+              User ${ALI_USER}
+              ProxyJump sg-jump
+              StrictHostKeyChecking accept-new
+              ConnectTimeout 30
+          EOF
+          fi
+          chmod 600 ~/.ssh/config
+
+      - name: 🔐 安装certbot并申请证书
+        env:
+          SSHPASS: ${{ secrets.ALI_SERVER_PASSWORD }}
+          ZY_CN_DOMAIN: ${{ secrets.ZY_CN_DOMAIN }}
+        run: |
+          BARE_DOMAIN="${ZY_CN_DOMAIN:-guanghulab.com}"
+          BARE_DOMAIN="${BARE_DOMAIN#www.}"
+          echo "🔐 为 ${BARE_DOMAIN} + www.${BARE_DOMAIN} 申请SSL证书..."
+
+          sshpass -e ssh -F ~/.ssh/config -o BatchMode=no ali-target << SSLCMD
+          set -e
+
+          echo "═══ SSL证书安装 (阿里云) ═══"
+
+          # 安装certbot
+          if ! command -v certbot &> /dev/null; then
+            echo "📦 安装certbot..."
+            if command -v apt-get &> /dev/null; then
+              apt-get update -qq
+              apt-get install -y -qq certbot python3-certbot-nginx
+            elif command -v yum &> /dev/null; then
+              yum install -y -q certbot python3-certbot-nginx
+            elif command -v dnf &> /dev/null; then
+              dnf install -y -q certbot python3-certbot-nginx
+            fi
+          else
+            echo "✅ certbot已安装: \$(certbot --version 2>&1)"
+          fi
+
+          # 确认Nginx运行中
+          if ! systemctl is-active --quiet nginx; then
+            systemctl start nginx
+          fi
+
+          # 验证域名格式
+          if ! echo "${BARE_DOMAIN}" | grep -qE '^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$'; then
+            echo "❌ 域名格式无效: ${BARE_DOMAIN}"
+            exit 1
+          fi
+
+          # 申请证书
+          echo ""
+          echo "§1 申请Let's Encrypt证书..."
+          certbot --nginx \
+            -d ${BARE_DOMAIN} \
+            -d www.${BARE_DOMAIN} \
+            --non-interactive \
+            --agree-tos \
+            --email admin@${BARE_DOMAIN} \
+            --redirect \
+            --no-eff-email
+
+          # 验证
+          echo ""
+          echo "§2 验证证书..."
+          certbot certificates
+
+          echo ""
+          echo "§3 HTTPS访问测试..."
+          HTTP_CODE=\$(curl -sf -o /dev/null -w '%{http_code}' https://localhost/ -k 2>/dev/null || echo "000")
+          echo "HTTPS状态码: \${HTTP_CODE}"
+
+          echo ""
+          echo "═══ SSL安装完成 ═══"
+          echo "🌐 https://${BARE_DOMAIN} 已启用"
+          SSLCMD
+
+      - name: 🧹 清理
+        if: always()
+        run: rm -f ~/.ssh/id_sg ~/.ssh/config
