@@ -2821,7 +2821,14 @@ async function checkChatBackend(){
       var tip=document.createElement('div');
       tip.id='chatConnTip';
       tip.className='cm s';
-      tip.innerHTML='⚠️ 后端服务暂时未连接。本地智能回复可用，配置API密钥可解锁AI对话。<br><button onclick="retryChatBackend()" style="margin-top:6px;padding:4px 12px;border-radius:4px;border:1px solid var(--accent,#6ea8fe);background:transparent;color:var(--accent,#6ea8fe);cursor:pointer;font-size:12px">🔄 重新连接</button>';
+      var tipText=document.createTextNode('⚠️ 后端服务暂时未连接。本地智能回复可用，配置API密钥可解锁AI对话。');
+      tip.appendChild(tipText);
+      tip.appendChild(document.createElement('br'));
+      var retryBtn=document.createElement('button');
+      retryBtn.textContent='🔄 重新连接';
+      retryBtn.style.cssText='margin-top:6px;padding:4px 12px;border-radius:4px;border:1px solid var(--accent,#6ea8fe);background:transparent;color:var(--accent,#6ea8fe);cursor:pointer;font-size:12px';
+      retryBtn.addEventListener('click',retryChatBackend);
+      tip.appendChild(retryBtn);
       chatMs.appendChild(tip);
       chatMs.scrollTop=chatMs.scrollHeight;
     }
