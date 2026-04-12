@@ -2,39 +2,120 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-12 14:06:59+08:00",
-  "timestamp_utc": "2026-04-12T06:06:59.101Z",
+  "timestamp": "2026-04-12 14:33:07+08:00",
+  "timestamp_utc": "2026-04-12T06:33:07.304Z",
   "merge": {
-    "pr_number": 351,
-    "pr_title": "铸渊房间整理：AGE OS开发历程·思维逻辑·基础设施蓝图·经验索引",
-    "merge_commit_sha": "91efb0713e0fa5e55e71edf21b4b700804da2e7b",
-    "head_sha": "a52fec98ec2bc900dfd88789dfa0e564b474aa54",
+    "pr_number": 352,
+    "pr_title": "Fix guanghulab.com SEO/ICP landing page + guanghulab.online chat API error handling",
+    "merge_commit_sha": "65f7a85e3205209ef3e2c20b61f4329fe883df2f",
+    "head_sha": "077d5afeee3be2e040eb5f59d76ff97e261152c7",
     "base_branch": "main"
   },
   "ci": {
-    "combined_status": "pending",
-    "overall_result": "pending",
+    "combined_status": "failure",
+    "overall_result": "failure",
     "summary": {
-      "total": 4,
+      "total": 16,
       "passed": 0,
       "failed": 0,
-      "skipped": 1
+      "skipped": 9
     },
     "check_runs": [
       {
-        "name": "build",
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:33:04Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔐 安装SSL证书 (Let's Encrypt)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 阿里云落地页健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔐 安装SSL证书 (Let's Encrypt)",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 国内落地页健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔧 服务器初始化",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T06:06:54Z",
+        "started_at": "2026-04-12T06:33:01Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "update-readme",
+        "name": "🚀 部署到测试站",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T06:06:54Z",
+        "started_at": "2026-04-12T06:33:01Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署 guanghulab.com 到阿里云",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T06:33:01Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -43,8 +124,26 @@
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T06:06:51Z",
-        "completed_at": "2026-04-12T06:06:50Z",
+        "started_at": "2026-04-12T06:32:58Z",
+        "completed_at": "2026-04-12T06:32:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署国内落地页",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T06:33:01Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "deploy",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T06:33:02Z",
+        "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
@@ -52,7 +151,16 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T06:06:54Z",
+        "started_at": "2026-04-12T06:33:02Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "build",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T06:33:01Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
