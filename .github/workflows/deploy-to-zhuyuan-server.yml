@@ -181,6 +181,16 @@ jobs:
             server/age-os/package.json \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/age-os/
 
+      - name: 🔄 同步 docs → portal (单一数据源保障)
+        run: |
+          # docs/index.html 是 GitHub Pages 的数据源
+          # server/sites/portal/ 是服务器部署的数据源
+          # 自动同步确保两者一致，防止修改 docs/ 后服务器未更新
+          if [ -f "docs/index.html" ] && [ -d "server/sites/portal" ]; then
+            cp docs/index.html server/sites/portal/index.html
+            echo "✅ docs/index.html → server/sites/portal/index.html 已同步"
+          fi
+
       - name: 🌐 同步前端内容到站点
         run: |
           # Push事件: 直接部署到 production (guanghulab.online = ZY_DOMAIN_MAIN = production)
