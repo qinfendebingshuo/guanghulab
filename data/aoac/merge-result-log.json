@@ -2,48 +2,30 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-12 16:44:03+08:00",
-  "timestamp_utc": "2026-04-12T08:44:03.190Z",
+  "timestamp": "2026-04-12 16:46:02+08:00",
+  "timestamp_utc": "2026-04-12T08:46:02.810Z",
   "merge": {
-    "pr_number": 356,
-    "pr_title": "Redesign cn-landing page: remove logo-mark, add bilingual text, enhance typography and animations",
-    "merge_commit_sha": "7a7c5f3e1005bf293fb4715677449952217a78bd",
-    "head_sha": "6d275cdecc8de071ee0aa9120a251c3304f963f6",
+    "pr_number": 357,
+    "pr_title": "fix: remove Nginx $connection_upgrade map block causing deploy failure",
+    "merge_commit_sha": "6f2969c0c032cc51e8c395121b0129c9bf9780b0",
+    "head_sha": "0bc321c57311f586332782b403a8395000f8fa97",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 14,
+      "total": 13,
       "passed": 0,
       "failed": 0,
-      "skipped": 9
+      "skipped": 8
     },
     "check_runs": [
       {
-        "name": "🚀 预览站→主站 一键推送",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:57Z",
-        "completed_at": "2026-04-12T08:43:56Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔒 SSL证书配置",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:57Z",
-        "completed_at": "2026-04-12T08:43:56Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
         "name": "build",
-        "status": "in_progress",
+        "status": "queued",
         "conclusion": null,
-        "started_at": "2026-04-12T08:44:01Z",
+        "started_at": "2026-04-12T08:45:59Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -52,17 +34,26 @@
         "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:57Z",
-        "completed_at": "2026-04-12T08:43:56Z",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "💚 健康检查",
+        "name": "↩️ 回滚配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:57Z",
-        "completed_at": "2026-04-12T08:43:56Z",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 代理链路健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -70,8 +61,62 @@
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:57Z",
-        "completed_at": "2026-04-12T08:43:56Z",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-12T08:45:57Z",
+        "completed_at": "2026-04-12T08:45:57Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署反向代理",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T08:46:00Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署到测试站",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-12T08:45:59Z",
+        "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
@@ -79,17 +124,8 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T08:43:59Z",
+        "started_at": "2026-04-12T08:45:59Z",
         "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔐 安装SSL证书 (Let's Encrypt)",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:56Z",
-        "completed_at": "2026-04-12T08:43:56Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -97,52 +133,7 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-12T08:43:59Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💚 国内落地页健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:56Z",
-        "completed_at": "2026-04-12T08:43:56Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💚 阿里云落地页健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:56Z",
-        "completed_at": "2026-04-12T08:43:56Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔐 安装SSL证书 (Let's Encrypt)",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-12T08:43:56Z",
-        "completed_at": "2026-04-12T08:43:56Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 部署国内落地页",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-12T08:43:59Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 部署 guanghulab.com 到阿里云",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-12T08:43:59Z",
+        "started_at": "2026-04-12T08:45:59Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
