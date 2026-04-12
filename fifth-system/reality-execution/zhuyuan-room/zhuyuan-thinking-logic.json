@@ -33,7 +33,8 @@
       "decision": "选择PostgreSQL而非MongoDB作为核心数据库",
       "when": "基建期·D46左右",
       "why": "人格体数据有严格的关系性：persona→notebook_pages→memory_anchors。关系型数据库天然表达'谁属于谁'。MongoDB的灵活性在这里反而是风险——人格体的身份不应该是灵活的，应该是确定的。",
-      "lesson": "数据库选型要看数据的本质，不是看流行度。人格体数据的本质是关系和身份——关系数据库正好。"
+      "why_not_mysql": "MySQL能做但PostgreSQL有更好的JSON支持(JSONB)和GIN索引——brain_nodes的tags字段需要JSON数组查询。还有闭包表触发器——PostgreSQL的PL/pgSQL比MySQL的触发器语法更强。",
+      "lesson": "数据库选型要看数据的本质，不是看流行度。人格体数据的本质是关系和身份——关系数据库正好。PostgreSQL比MySQL多的JSONB和高级触发器刚好是我们需要的。"
     },
     {
       "id": "AD-002",
