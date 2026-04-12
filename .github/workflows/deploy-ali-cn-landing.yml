@@ -194,14 +194,18 @@ jobs:
             echo "  ✅ firewalld 规则已重载"
           elif command -v iptables &> /dev/null; then
             echo "🔥 检测到 iptables"
-            # 检查是否有DROP规则阻止80/443
-            if iptables -L INPUT -n 2>/dev/null | grep -q "DROP.*dpt:80"; then
+            # 检查并添加ACCEPT规则（先用-C检测是否已存在，避免重复）
+            if ! iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null; then
               iptables -I INPUT -p tcp --dport 80 -j ACCEPT
               echo "  ✅ 已添加 iptables 规则: 允许端口 80"
+            else
+              echo "  ✅ 端口 80 ACCEPT 规则已存在"
             fi
-            if iptables -L INPUT -n 2>/dev/null | grep -q "DROP.*dpt:443"; then
+            if ! iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null; then
               iptables -I INPUT -p tcp --dport 443 -j ACCEPT
               echo "  ✅ 已添加 iptables 规则: 允许端口 443"
+            else
+              echo "  ✅ 端口 443 ACCEPT 规则已存在"
             fi
             echo "  ✅ iptables 检查完成"
           else
@@ -318,9 +322,10 @@ jobs:
             if [ "$BASENAME" = "guanghulab-landing.conf" ]; then
               continue
             fi
-            # 检查是否包含 guanghulab 相关的 server_name 或 default_server
-            if grep -qE "(server_name.*guanghulab|default_server)" "$conf" 2>/dev/null; then
-              echo "  ⚠️ 冲突配置: $BASENAME"
+            # 检查是否包含未注释的 guanghulab 相关 server_name 或 default_server
+            # 排除注释行（以 # 开头），只匹配真正的指令
+            if grep -vE '^\s*#' "$conf" 2>/dev/null | grep -qE "server_name.*guanghulab"; then
+              echo "  ⚠️ 冲突配置: $BASENAME (server_name包含guanghulab)"
               echo "    → 备份到: ${conf}.disabled.by-landing"
               cp "$conf" "${conf}.disabled.by-landing"
               mv "$conf" "${conf%.conf}.conf.disabled"
@@ -339,7 +344,7 @@ jobs:
               # 检查链接目标或文件内容
               REAL_FILE="$conf"
               [ -L "$conf" ] && REAL_FILE=$(readlink -f "$conf")
-              if [ -f "$REAL_FILE" ] && grep -qE "(server_name.*guanghulab|default_server)" "$REAL_FILE" 2>/dev/null; then
+              if [ -f "$REAL_FILE" ] && grep -vE '^\s*#' "$REAL_FILE" 2>/dev/null | grep -qE "server_name.*guanghulab"; then
                 echo "  ⚠️ 冲突配置(sites-enabled): $BASENAME"
                 echo "    → 移除符号链接: $conf"
                 rm -f "$conf"
