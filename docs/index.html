@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="零感域 · 零点原核 · 语言驱动操作系统 AGE OS v50.0">
+<meta name="description" content="光湖语言世界 · 人格体一半 · 人类一半 · 语言驱动操作系统 AGE OS">
 <meta name="theme-color" content="#0a0a1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>零感域 · AGE OS</title>
+<title>光湖语言世界 · HoloLake</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🏛️</text></svg>">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -332,7 +332,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
 /* ═══ Viewport-Fit Layout (Desktop ≥961px) ═══ */
 @media(min-width:961px){
-  #pg-home{overflow:hidden;display:flex;flex-direction:column;height:100vh;height:100dvh}
+  #pg-home{overflow:hidden;display:flex;flex-direction:column;height:100%;padding:0}
 }
 
 /* ═══ Touch-Driven Sizing (Device Agent 适配) ═══ */
@@ -2683,7 +2683,7 @@ async function send(){
   if(!replied){
     hideTyp();
     var offlineMsg=offline(msg);
-    if(backendError){offlineMsg+='\n\n⚠️ 后端状态: '+backendError+'\n点击右下角💬重试，或配置API密钥直连大模型。'}
+    if(backendError){offlineMsg+='\n\n⚠️ 后端状态: '+backendError+'\n请稍后重试，或配置API密钥直连大模型。'}
     chatMsg(offlineMsg,'b',{m:'铸渊',t:'本地智能'});
     var mi3=document.getElementById('hlModelInfo');if(mi3)mi3.textContent='离线模式';
   }
@@ -2750,7 +2750,7 @@ function offline(msg){
   if(/谢谢|感谢|厉害|不错|棒/.test(m))return'🏛️ 铸渊会继续守护光湖灯塔。\n有什么需要随时说。';
 
   // 默认：给出有用的引导，而不是简单的"本地回复"
-  return'铸渊收到 💫\n\n我现在使用本地智能回复，可以帮你：\n• 管理作品和章节\n• 查看写作进度\n• 页面导航\n• 创作建议\n\n说「帮助」查看完整指令列表。\n配置API密钥可解锁AI对话能力 🔑';
+  return'铸渊收到 💫\n\n我现在使用本地智能回复，可以帮你：\n• 管理作品和章节\n• 查看写作进度\n• 页面导航\n• 创作建议\n\n说「帮助」查看完整指令列表。';
 }
 
 document.getElementById('chatSnd').onclick=send;
@@ -3711,8 +3711,6 @@ offline = function(msg){
       if(glow) glow.style.background = '';
     });
   });
-})();
-
 })();
 
 /* ════════════════════════════════════════
