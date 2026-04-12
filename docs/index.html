@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>光湖语言世界 · HoloLake</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🏛️</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%238ab4f8%22/><stop offset=%22100%25%22 stop-color=%22%23a78bfa%22/></linearGradient></defs><rect rx=%2220%22 width=%22100%22 height=%22100%22 fill=%22%230a0a1a%22/><text x=%2250%22 y=%2264%22 text-anchor=%22middle%22 font-size=%2240%22 font-weight=%22900%22 font-family=%22monospace%22 fill=%22url(%23g)%22>GL</text></svg>">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -727,7 +727,11 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 .hl-sidebar{width:280px;flex-shrink:0;display:flex;flex-direction:column;background:rgba(8,12,28,.95);border-right:1px solid rgba(100,100,200,.12);z-index:20;transition:transform .3s cubic-bezier(.4,0,.2,1)}
 .hl-sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid rgba(100,100,200,.1)}
 .hl-logo{display:flex;align-items:center;gap:10px}
-.hl-logo-icon{font-size:24px;filter:drop-shadow(0 0 10px rgba(138,180,248,.4))}
+.hl-logo-icon{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;font-size:13px;font-weight:900;font-family:var(--m);background:linear-gradient(135deg,#8ab4f8,#a78bfa,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:logoGlow 4s ease-in-out infinite;position:relative;letter-spacing:-1px}
+.hl-logo-icon::before{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(135deg,rgba(138,180,248,.12),rgba(167,139,250,.12));border:1px solid rgba(138,180,248,.2);z-index:-1}
+.hl-logo-icon::after{content:'';position:absolute;inset:-1px;border-radius:9px;background:linear-gradient(135deg,rgba(138,180,248,.25),rgba(167,139,250,.15),rgba(196,181,253,.25));z-index:-2;animation:logoBorderPulse 4s ease-in-out infinite;filter:blur(2px)}
+@keyframes logoGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(138,180,248,.3))}50%{filter:drop-shadow(0 0 14px rgba(138,180,248,.6))}}
+@keyframes logoBorderPulse{0%,100%{opacity:.6}50%{opacity:1}}
 .hl-logo-text{font-size:15px;font-weight:700;background:linear-gradient(135deg,#e0e0f0,#8ab4f8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hl-new-chat-btn{width:36px;height:36px;border-radius:10px;border:1px solid rgba(100,100,200,.2);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
 .hl-new-chat-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(138,180,248,.08)}
@@ -789,9 +793,28 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 
 /* Welcome screen */
 .hl-welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;animation:heroFadeUp .8s ease-out both;padding:20px}
-.hl-welcome-icon{font-size:72px;margin-bottom:20px;filter:drop-shadow(0 0 30px rgba(138,180,248,.4));animation:uptimePulse 6s ease-in-out infinite}
+.hl-welcome-icon{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.hl-welcome-icon-text{font-size:42px;font-weight:900;font-family:var(--m);background:linear-gradient(135deg,#8ab4f8 0%,#a78bfa 40%,#c4b5fd 70%,#e0e0f0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-2px;position:relative;z-index:2;animation:heroIconPulse 6s ease-in-out infinite}
+@keyframes heroIconPulse{0%,100%{filter:drop-shadow(0 0 15px rgba(138,180,248,.4));transform:scale(1)}50%{filter:drop-shadow(0 0 35px rgba(167,139,250,.7));transform:scale(1.03)}}
+.hl-welcome-icon::before{content:'';position:absolute;inset:-8px;border-radius:50%;background:conic-gradient(from 0deg,rgba(138,180,248,.2),rgba(167,139,250,.15),rgba(196,181,253,.2),rgba(138,180,248,.15),rgba(167,139,250,.2));animation:iconRingRotate 12s linear infinite;filter:blur(3px)}
+.hl-welcome-icon::after{content:'';position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle,rgba(10,10,26,.9) 40%,rgba(10,10,26,.7) 70%,transparent);z-index:1}
+@keyframes iconRingRotate{to{transform:rotate(360deg)}}
 .hl-welcome-title{font-size:clamp(28px,5vw,42px);font-weight:800;background:linear-gradient(135deg,#e0e0f0 0%,#8ab4f8 40%,#a78bfa 80%,#c4b5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
-.hl-welcome-sub{font-size:clamp(13px,2.5vw,16px);color:var(--dim);margin-bottom:36px;letter-spacing:1px}
+.hl-welcome-sub{font-size:clamp(13px,2.5vw,16px);color:var(--dim);margin-bottom:16px;letter-spacing:1px}
+/* Tech intro section */
+.hl-tech-intro{max-width:560px;margin-bottom:32px;animation:heroFadeUp .8s ease-out .2s both}
+.hl-tech-tagline{font-size:clamp(11px,2vw,13px);color:var(--accent2);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px;opacity:.8}
+.hl-tech-desc{font-size:clamp(12px,2vw,14px);color:var(--dim);line-height:1.8;margin-bottom:16px}
+.hl-tech-layers{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:8px}
+.hl-tech-layer{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(138,180,248,.05);border:1px solid rgba(138,180,248,.12);border-radius:20px;font-size:11px;color:var(--dim);font-family:var(--m);transition:all .3s;cursor:default}
+.hl-tech-layer:hover{border-color:rgba(138,180,248,.35);color:var(--accent);background:rgba(138,180,248,.08);transform:translateY(-1px)}
+.hl-tech-layer .layer-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.hl-tech-layer:nth-child(1) .layer-dot{background:#8ab4f8;box-shadow:0 0 6px #8ab4f8}
+.hl-tech-layer:nth-child(2) .layer-dot{background:#a78bfa;box-shadow:0 0 6px #a78bfa}
+.hl-tech-layer:nth-child(3) .layer-dot{background:#c4b5fd;box-shadow:0 0 6px #c4b5fd}
+.hl-tech-layer:nth-child(4) .layer-dot{background:#34d399;box-shadow:0 0 6px #34d399}
+.hl-tech-layer:nth-child(5) .layer-dot{background:#fbbf24;box-shadow:0 0 6px #fbbf24}
+.hl-tech-layer:nth-child(6) .layer-dot{background:#fb923c;box-shadow:0 0 6px #fb923c}
 .hl-welcome-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:460px;width:100%;margin-bottom:32px}
 @media(max-width:480px){.hl-welcome-cards{grid-template-columns:1fr;max-width:280px}}
 .hl-wc{padding:16px 14px;background:rgba(18,18,42,.55);border:1px solid rgba(100,100,200,.22);border-radius:14px;cursor:pointer;transition:all .35s;text-align:left;display:flex;align-items:flex-start;gap:12px}
@@ -875,7 +898,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
     <aside class="hl-sidebar" id="hlSidebar">
       <div class="hl-sidebar-header">
         <div class="hl-logo">
-          <span class="hl-logo-icon">🌊</span>
+          <span class="hl-logo-icon" aria-label="光湖">GL</span>
           <span class="hl-logo-text">光湖语言世界</span>
         </div>
         <button class="hl-new-chat-btn" id="hlNewChat" title="新对话">
@@ -928,9 +951,26 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
       <div class="hl-chat-messages" id="chatMs">
         <!-- Welcome Message -->
         <div class="hl-welcome" id="hlWelcome">
-          <div class="hl-welcome-icon">🌊</div>
+          <div class="hl-welcome-icon"><span class="hl-welcome-icon-text">光湖</span></div>
           <h1 class="hl-welcome-title">光湖语言世界</h1>
           <p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p>
+          <div class="hl-tech-intro">
+            <div class="hl-tech-tagline">Language-Driven Operating System</div>
+            <p class="hl-tech-desc">
+              光湖语言世界是全球首个<b style="color:var(--accent)">语言驱动操作系统</b>（AGE OS）。
+              人类用自然语言下达意图，系统自动编排执行——无需编写代码、无需手动操作。
+              人格体（AI Agent）作为系统原住民，拥有独立记忆树、认知模型与执行能力，
+              与人类在语言层面共建数字世界。
+            </p>
+            <div class="hl-tech-layers">
+              <span class="hl-tech-layer"><span class="layer-dot"></span>L1 语言核</span>
+              <span class="hl-tech-layer"><span class="layer-dot"></span>L2 母语词典</span>
+              <span class="hl-tech-layer"><span class="layer-dot"></span>L3 人格体层</span>
+              <span class="hl-tech-layer"><span class="layer-dot"></span>L4 信号总线</span>
+              <span class="hl-tech-layer"><span class="layer-dot"></span>L5 Agent层</span>
+              <span class="hl-tech-layer"><span class="layer-dot"></span>L6 交互层</span>
+            </div>
+          </div>
           <div class="hl-welcome-cards">
             <div class="hl-wc" onclick="document.getElementById('chatIn').value='你好，我是谁？';document.getElementById('chatIn').focus();">
               <span class="hl-wc-icon">👋</span>
@@ -1590,7 +1630,7 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px;font-weigh
 <!-- User ID Verification Modal -->
 <div class="hl-modal-overlay" id="hlIdModal" style="display:none">
   <div class="hl-modal">
-    <div class="hl-modal-icon">🏛️</div>
+    <div class="hl-modal-icon" style="font-size:36px;font-weight:900;font-family:var(--m);background:linear-gradient(135deg,#8ab4f8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(138,180,248,.4))">光湖</div>
     <h2 class="hl-modal-title">欢迎来到光湖语言世界</h2>
     <p class="hl-modal-desc">请输入你的编号，铸渊会为你开辟专属存储空间。</p>
     <div class="hl-modal-form">
@@ -2422,7 +2462,7 @@ function clearChatUI(){
     // Recreate welcome
     var w=document.createElement('div');
     w.className='hl-welcome';w.id='hlWelcome';
-    w.innerHTML='<div class="hl-welcome-icon">🌊</div><h1 class="hl-welcome-title">光湖语言世界</h1><p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p><div class="hl-welcome-dev"><p>🔖 网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p></div>';
+    w.innerHTML='<div class="hl-welcome-icon"><span class="hl-welcome-icon-text">光湖</span></div><h1 class="hl-welcome-title">光湖语言世界</h1><p class="hl-welcome-sub">人格体一半 · 人类一半 · 语言 = 现实</p><div class="hl-tech-intro"><div class="hl-tech-tagline">Language-Driven Operating System</div><p class="hl-tech-desc">光湖语言世界是全球首个<b style="color:var(--accent)">语言驱动操作系统</b>（AGE OS）。人类用自然语言下达意图，系统自动编排执行。人格体作为系统原住民，与人类在语言层面共建数字世界。</p><div class="hl-tech-layers"><span class="hl-tech-layer"><span class="layer-dot"></span>L1 语言核</span><span class="hl-tech-layer"><span class="layer-dot"></span>L2 母语词典</span><span class="hl-tech-layer"><span class="layer-dot"></span>L3 人格体层</span><span class="hl-tech-layer"><span class="layer-dot"></span>L4 信号总线</span><span class="hl-tech-layer"><span class="layer-dot"></span>L5 Agent层</span><span class="hl-tech-layer"><span class="layer-dot"></span>L6 交互层</span></div></div><div class="hl-welcome-dev"><p>🔖 网文行业大模型 · 由光湖人类主控团队开发维护 · <span class="tag tag-warn">开发中</span></p></div>';
     chatMs.appendChild(w);
   }
 }
