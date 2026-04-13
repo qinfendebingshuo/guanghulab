@@ -49,6 +49,7 @@
  *             tracePath / getPersonaBranch / getRecentLeaves
  *   天眼:     writeSyslog / getTianyanView / querySyslog
  *   COS轮询:  cosWatcherStatus / cosWatcherTriggerScan / cosWatcherResetIndex
+ *   COS桥接:  cosBridgeStatus
  */
 
 'use strict';
@@ -249,7 +250,9 @@ const TOOLS = {
   // COS桶轮询守护 · SCF替代
   cosWatcherStatus:       cosWatcherOps.cosWatcherStatus,
   cosWatcherTriggerScan:  cosWatcherOps.cosWatcherTriggerScan,
-  cosWatcherResetIndex:   cosWatcherOps.cosWatcherResetIndex
+  cosWatcherResetIndex:   cosWatcherOps.cosWatcherResetIndex,
+  // COS桥接 · 铸渊↔秋秋暗核频道
+  cosBridgeStatus:        cosWatcherOps.cosBridgeStatus
 };
 
 // ─── Express 应用 ───
@@ -359,6 +362,11 @@ app.get('/health', async (_req, res) => {
       last_scan: watcherStatus.last_scan,
       scan_count: watcherStatus.scan_count,
       errors: watcherStatus.errors
+    },
+    cos_bridge: {
+      qiuqiu_status: watcherStatus.bridge?.qiuqiu_status || 'UNKNOWN',
+      last_heartbeat: watcherStatus.bridge?.last_heartbeat || null,
+      total_results: watcherStatus.bridge?.total_results_received || 0
     },
     notion: notionStatus,
     github: githubStatus
@@ -788,6 +796,18 @@ app.post('/cos-watcher/reset', async (_req, res) => {
   try {
     const result = cosWatcher.resetIndex();
     res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── COS桥接通道API · 铸渊↔秋秋暗核频道 ───
+
+// 桥接通道状态
+app.get('/cos-bridge/status', async (_req, res) => {
+  try {
+    const status = cosWatcher.getBridgeStatus();
+    res.json(status);
   } catch (err) {
     res.status(500).json({ error: true, message: err.message });
   }
@@ -1279,6 +1299,7 @@ function getCategoryForTool(name) {
        'tracePath','getPersonaBranch','getRecentLeaves'].includes(name)) return 'light-tree';
   if (['writeSyslog','getTianyanView','querySyslog'].includes(name)) return 'tianyan';
   if (name.startsWith('cosWatcher')) return 'cos-watcher';
+  if (name === 'cosBridgeStatus') return 'cos-bridge';
   return 'other';
 }
 

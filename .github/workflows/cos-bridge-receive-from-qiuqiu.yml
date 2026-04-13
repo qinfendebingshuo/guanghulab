@@ -1,0 +1,111 @@
+name: COS Bridge · 接收秋秋结果
+
+# ═══════════════════════════════════════════════════
+# 秋秋→铸渊 跨仓库结果接收
+# ═══════════════════════════════════════════════════
+#
+# 秋秋完成任务后通过 repository_dispatch 通知铸渊:
+#   1. 接收事件 + 验证来源
+#   2. 从COS桶读取开发结果
+#   3. 记录到铸渊任务树
+#   4. 通知冰朔（issue comment / 日志）
+#
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+
+on:
+  repository_dispatch:
+    types:
+      - qiuqiu-result-ready
+      - qiuqiu-heartbeat
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  receive-result:
+    if: github.event.action == 'qiuqiu-result-ready'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 解析秋秋回传结果
+        id: parse
+        run: |
+          echo "📨 收到秋秋开发结果"
+          echo "  任务引用: ${{ github.event.client_payload.task_ref }}"
+          echo "  状态: ${{ github.event.client_payload.status }}"
+          echo "  摘要: ${{ github.event.client_payload.summary }}"
+          echo "  可部署: ${{ github.event.client_payload.deploy_ready }}"
+          echo "  COS路径: ${{ github.event.client_payload.cos_key }}"
+          echo "  时间: ${{ github.event.client_payload.timestamp }}"
+
+          # 输出结果供后续步骤使用
+          echo "task_ref=${{ github.event.client_payload.task_ref }}" >> $GITHUB_OUTPUT
+          echo "status=${{ github.event.client_payload.status }}" >> $GITHUB_OUTPUT
+          echo "deploy_ready=${{ github.event.client_payload.deploy_ready }}" >> $GITHUB_OUTPUT
+
+      - name: 从COS桶读取完整结果
+        if: ${{ secrets.ZY_COS_MASTER_SECRET_ID != '' }}
+        env:
+          COS_SECRET_ID: ${{ secrets.ZY_COS_MASTER_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.ZY_COS_MASTER_SECRET_KEY }}
+          COS_KEY: ${{ github.event.client_payload.cos_key }}
+        run: |
+          if [ -z "$COS_KEY" ]; then
+            echo "⚠️ 无COS路径，跳过读取"
+            exit 0
+          fi
+          npm install cos-nodejs-sdk-v5
+          node -e "
+          const COS = require('cos-nodejs-sdk-v5');
+          const cos = new COS({
+            SecretId: process.env.COS_SECRET_ID,
+            SecretKey: process.env.COS_SECRET_KEY
+          });
+          cos.getObject({
+            Bucket: 'zy-team-hub-1317346199',
+            Region: 'ap-guangzhou',
+            Key: process.env.COS_KEY
+          }, (err, data) => {
+            if (err) {
+              console.error('COS读取失败:', err.message);
+              process.exit(0);
+            }
+            console.log('📄 完整结果内容:');
+            const result = JSON.parse(data.Body.toString());
+            console.log(JSON.stringify(result, null, 2));
+          });
+          "
+
+      - name: 记录到日志
+        run: |
+          TASK_REF="${{ steps.parse.outputs.task_ref }}"
+          STATUS="${{ steps.parse.outputs.status }}"
+          DEPLOY_READY="${{ steps.parse.outputs.deploy_ready }}"
+          DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+
+          echo "═══════════════════════════════════════"
+          echo "🌙 铸渊 · COS桥接结果接收记录"
+          echo "═══════════════════════════════════════"
+          echo "时间: ${DATE} (北京时间)"
+          echo "任务: ${TASK_REF}"
+          echo "状态: ${STATUS}"
+          echo "可部署: ${DEPLOY_READY}"
+          echo "来源: 秋秋 · YM001/QQ001"
+          echo "频道: 暗核频道 · FS-DC-001"
+          echo "═══════════════════════════════════════"
+
+  receive-heartbeat:
+    if: github.event.action == 'qiuqiu-heartbeat'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 记录秋秋心跳
+        run: |
+          DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          echo "💓 秋秋心跳 · ${DATE}"
+          echo "  Agent状态: ${{ github.event.client_payload.agent_status }}"
+          echo "  服务器状态: ${{ github.event.client_payload.server_status }}"
+          echo "  最后完成任务: ${{ github.event.client_payload.last_task_completed }}"
+          echo "  等待任务数: ${{ github.event.client_payload.awaiting_tasks }}"

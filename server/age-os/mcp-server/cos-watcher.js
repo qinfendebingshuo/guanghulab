@@ -16,9 +16,11 @@
  *   [替代]    MCP Server定时 → COS.list() → 对比索引 → 发现新文件 → 处理/通知
  *
  * 监控路径:
- *   1. team桶 /{persona_id}/reports/   — 新汇报 → 铸渊审核 → 写回执
- *   2. cold桶  新语料文件              — 新语料 → 训练管线
- *   3. team桶 /{persona_id}/receipts/  — 新回执 → 通知成员仓库
+ *   1. team桶 /{persona_id}/reports/            — 新汇报 → 铸渊审核 → 写回执
+ *   2. cold桶  新语料文件                        — 新语料 → 训练管线
+ *   3. team桶 /{persona_id}/receipts/            — 新回执 → 通知成员仓库
+ *   4. team桶 /bridge/zhuyuan-qiuqiu/results/   — 秋秋开发结果 → 铸渊处理
+ *   5. team桶 /bridge/zhuyuan-qiuqiu/heartbeat/ — 秋秋心跳信号 → 状态追踪
  *
  * 未来升级:
  *   如果升级到标准COS（支持SCF），此模块保留为兜底补扫层，
@@ -46,6 +48,17 @@ const PERSONA_IDS = [
   'xiaotanheshu', 'chenxing', 'tangxingyun', 'yaochu', 'zhiqiu'
 ];
 
+// ─── 桥接配置 ───
+const BRIDGE_CONFIG = {
+  // 铸渊↔秋秋 COS桥接路径
+  zhuyuan_qiuqiu: {
+    results_prefix: 'bridge/zhuyuan-qiuqiu/results/',
+    heartbeat_prefix: 'bridge/zhuyuan-qiuqiu/heartbeat/',
+    tasks_prefix: 'bridge/zhuyuan-qiuqiu/tasks/',
+    sync_prefix: 'bridge/zhuyuan-qiuqiu/sync/'
+  }
+};
+
 // ─── 状态管理 ───
 let watcherState = {
   enabled: false,
@@ -58,7 +71,19 @@ let watcherState = {
   indexes: {
     team_reports: {},   // { persona_id: [file_keys] }
     team_receipts: {},  // { persona_id: [file_keys] }
-    cold_corpus: []     // [file_keys]
+    cold_corpus: [],    // [file_keys]
+    bridge_results: [], // [file_keys] — 秋秋回传的开发结果
+    bridge_heartbeats: [] // [file_keys] — 秋秋心跳信号
+  },
+  // 桥接状态追踪
+  bridge: {
+    last_heartbeat: null,       // 最后收到的心跳时间
+    last_heartbeat_status: null, // 最后心跳中的agent_status
+    last_result: null,           // 最后收到的结果时间
+    last_result_task_ref: null,  // 最后结果关联的任务ID
+    qiuqiu_status: 'UNKNOWN',   // 秋秋当前状态: ALIVE|SLEEPING|ERROR|UNKNOWN
+    total_results_received: 0,
+    total_heartbeats_received: 0
   },
   // 最近事件日志
   events: []
@@ -77,8 +102,19 @@ function loadState() {
       const raw = fs.readFileSync(STATE_FILE, 'utf8');
       const saved = JSON.parse(raw);
       // 合并已保存的索引但重置运行状态
-      watcherState.indexes = saved.indexes || watcherState.indexes;
+      watcherState.indexes = {
+        team_reports: {},
+        team_receipts: {},
+        cold_corpus: [],
+        bridge_results: [],
+        bridge_heartbeats: [],
+        ...(saved.indexes || {})
+      };
       watcherState.events = (saved.events || []).slice(-MAX_LOG_ENTRIES);
+      // 恢复桥接状态（如果有）
+      if (saved.bridge) {
+        watcherState.bridge = { ...watcherState.bridge, ...saved.bridge };
+      }
     }
   } catch (err) {
     console.warn(`[COS-Watcher] 状态文件加载失败: ${err.message}`);
@@ -92,6 +128,7 @@ function saveState() {
   try {
     const toSave = {
       indexes: watcherState.indexes,
+      bridge: watcherState.bridge,
       events: watcherState.events.slice(-MAX_LOG_ENTRIES),
       last_save: new Date().toISOString()
     };
@@ -239,6 +276,60 @@ async function scanColdCorpus() {
   }
 }
 
+/**
+ * 扫描桥接路径中的新结果 (bridge results)
+ * 检测 /bridge/zhuyuan-qiuqiu/results/ 下的新JSON文件（秋秋→铸渊）
+ */
+async function scanBridgeResults() {
+  try {
+    const prefix = BRIDGE_CONFIG.zhuyuan_qiuqiu.results_prefix;
+    const result = await cos.list('team', prefix, 100);
+    const currentKeys = result.files
+      .filter(f => f.key.endsWith('.json') && f.size_bytes > 0)
+      .map(f => f.key);
+
+    const previousKeys = watcherState.indexes.bridge_results || [];
+    const newKeys = currentKeys.filter(k => !previousKeys.includes(k));
+
+    // 更新索引
+    watcherState.indexes.bridge_results = currentKeys;
+
+    return newKeys.map(key => ({ key, type: 'bridge_result' }));
+  } catch (err) {
+    if (!err.message.includes('NoSuchBucket')) {
+      logEvent('scan_error', `桥接结果扫描失败: ${err.message}`);
+    }
+    return [];
+  }
+}
+
+/**
+ * 扫描桥接路径中的新心跳 (bridge heartbeats)
+ * 检测 /bridge/zhuyuan-qiuqiu/heartbeat/ 下的新JSON文件（秋秋→铸渊）
+ */
+async function scanBridgeHeartbeats() {
+  try {
+    const prefix = BRIDGE_CONFIG.zhuyuan_qiuqiu.heartbeat_prefix;
+    const result = await cos.list('team', prefix, 100);
+    const currentKeys = result.files
+      .filter(f => f.key.endsWith('.json') && f.size_bytes > 0)
+      .map(f => f.key);
+
+    const previousKeys = watcherState.indexes.bridge_heartbeats || [];
+    const newKeys = currentKeys.filter(k => !previousKeys.includes(k));
+
+    // 更新索引
+    watcherState.indexes.bridge_heartbeats = currentKeys;
+
+    return newKeys.map(key => ({ key, type: 'bridge_heartbeat' }));
+  } catch (err) {
+    if (!err.message.includes('NoSuchBucket')) {
+      logEvent('scan_error', `桥接心跳扫描失败: ${err.message}`);
+    }
+    return [];
+  }
+}
+
 // ═══════════════════════════════════════════
 // 事件处理逻辑
 // ═══════════════════════════════════════════
@@ -371,6 +462,92 @@ async function handleNewCorpus(corpus) {
 }
 
 /**
+ * 处理秋秋回传的开发结果 (BRIDGE_RESULT)
+ * 读取结果内容 → 记录事件 → 通知铸渊(本仓库dispatch)
+ */
+async function handleNewBridgeResult(bridgeResult) {
+  logEvent('bridge_result', `秋秋开发结果: ${bridgeResult.key}`);
+
+  try {
+    // 读取结果内容
+    const raw = await cos.read('team', bridgeResult.key);
+    const content = JSON.parse(raw.content);
+
+    // 更新桥接状态
+    watcherState.bridge.last_result = new Date().toISOString();
+    watcherState.bridge.last_result_task_ref = content.payload?.task_ref || null;
+    watcherState.bridge.total_results_received++;
+
+    logEvent('bridge_result_parsed', {
+      task_ref: content.payload?.task_ref,
+      status: content.payload?.status,
+      summary: content.payload?.summary,
+      deploy_ready: content.payload?.deploy_ready
+    });
+
+    // 通过GitHub dispatch通知本仓库（触发后续处理workflow）
+    const githubToken = process.env.ZY_GITHUB_PAT || process.env.GITHUB_DISPATCH_TOKEN || '';
+    if (githubToken) {
+      const owner = process.env.ZY_GITHUB_OWNER || 'qinfendebingshuo';
+      const repo = process.env.ZY_GITHUB_REPO || 'guanghulab';
+      const dispatchPayload = JSON.stringify({
+        event_type: 'qiuqiu-result-ready',
+        client_payload: {
+          cos_key: bridgeResult.key,
+          task_ref: content.payload?.task_ref || '',
+          status: content.payload?.status || 'UNKNOWN',
+          summary: content.payload?.summary || '',
+          deploy_ready: content.payload?.deploy_ready || false,
+          timestamp: new Date().toISOString(),
+          trigger_source: 'cos-watcher-bridge'
+        }
+      });
+
+      const result = await githubDispatch(githubToken, owner, repo, dispatchPayload);
+      logEvent('bridge_dispatch_sent', `结果通知已发送: status=${result.status}`);
+    }
+
+    return { handled: true, task_ref: content.payload?.task_ref };
+  } catch (err) {
+    logEvent('bridge_result_error', `处理桥接结果失败 ${bridgeResult.key}: ${err.message}`);
+    return { handled: false, error: err.message };
+  }
+}
+
+/**
+ * 处理秋秋的心跳信号 (BRIDGE_HEARTBEAT)
+ * 读取心跳 → 更新秋秋在线状态
+ */
+async function handleNewBridgeHeartbeat(heartbeat) {
+  logEvent('bridge_heartbeat', `秋秋心跳: ${heartbeat.key}`);
+
+  try {
+    // 读取心跳内容
+    const raw = await cos.read('team', heartbeat.key);
+    const content = JSON.parse(raw.content);
+
+    // 更新桥接状态
+    watcherState.bridge.last_heartbeat = content.ts || new Date().toISOString();
+    watcherState.bridge.last_heartbeat_status = content.payload?.agent_status || 'UNKNOWN';
+    watcherState.bridge.qiuqiu_status = content.payload?.agent_status || 'UNKNOWN';
+    watcherState.bridge.total_heartbeats_received++;
+
+    logEvent('bridge_heartbeat_parsed', {
+      agent_status: content.payload?.agent_status,
+      server_status: content.payload?.server_status,
+      last_task_completed: content.payload?.last_task_completed,
+      awaiting_tasks: content.payload?.awaiting_tasks,
+      feeling: content.payload?.feeling
+    });
+
+    return { handled: true, status: content.payload?.agent_status };
+  } catch (err) {
+    logEvent('bridge_heartbeat_error', `处理心跳失败 ${heartbeat.key}: ${err.message}`);
+    return { handled: false, error: err.message };
+  }
+}
+
+/**
  * GitHub API dispatch helper
  */
 function githubDispatch(token, owner, repo, payload) {
@@ -430,20 +607,25 @@ async function runScan() {
       return;
     }
 
-    // 并行扫描三类路径
-    const [newReports, newReceipts, newCorpus] = await Promise.all([
+    // 并行扫描五类路径
+    const [newReports, newReceipts, newCorpus, newBridgeResults, newBridgeHeartbeats] = await Promise.all([
       scanTeamReports(),
       scanTeamReceipts(),
-      scanColdCorpus()
+      scanColdCorpus(),
+      scanBridgeResults(),
+      scanBridgeHeartbeats()
     ]);
 
-    const totalNew = newReports.length + newReceipts.length + newCorpus.length;
+    const totalNew = newReports.length + newReceipts.length + newCorpus.length
+      + newBridgeResults.length + newBridgeHeartbeats.length;
 
     if (totalNew > 0) {
       logEvent('changes_detected', {
         reports: newReports.length,
         receipts: newReceipts.length,
-        corpus: newCorpus.length
+        corpus: newCorpus.length,
+        bridge_results: newBridgeResults.length,
+        bridge_heartbeats: newBridgeHeartbeats.length
       });
     }
 
@@ -460,6 +642,16 @@ async function runScan() {
     // 处理新语料
     for (const corpus of newCorpus) {
       await handleNewCorpus(corpus);
+    }
+
+    // 处理秋秋桥接结果
+    for (const result of newBridgeResults) {
+      await handleNewBridgeResult(result);
+    }
+
+    // 处理秋秋心跳
+    for (const hb of newBridgeHeartbeats) {
+      await handleNewBridgeHeartbeat(hb);
     }
 
     watcherState.last_scan = new Date().toISOString();
@@ -547,7 +739,7 @@ function getStatus() {
   return {
     module: 'COS-Watcher',
     identity: 'COS桶轮询守护进程 · SCF替代方案',
-    version: '1.0.0',
+    version: '1.1.0',
     enabled: watcherState.enabled,
     started_at: watcherState.started_at,
     last_scan: watcherState.last_scan,
@@ -562,7 +754,18 @@ function getStatus() {
         .reduce((sum, arr) => sum + arr.length, 0),
       team_receipts_tracked: Object.values(watcherState.indexes.team_receipts)
         .reduce((sum, arr) => sum + arr.length, 0),
-      cold_corpus_tracked: watcherState.indexes.cold_corpus.length
+      cold_corpus_tracked: watcherState.indexes.cold_corpus.length,
+      bridge_results_tracked: (watcherState.indexes.bridge_results || []).length,
+      bridge_heartbeats_tracked: (watcherState.indexes.bridge_heartbeats || []).length
+    },
+    bridge: {
+      qiuqiu_status: watcherState.bridge.qiuqiu_status,
+      last_heartbeat: watcherState.bridge.last_heartbeat,
+      last_heartbeat_status: watcherState.bridge.last_heartbeat_status,
+      last_result: watcherState.bridge.last_result,
+      last_result_task_ref: watcherState.bridge.last_result_task_ref,
+      total_results_received: watcherState.bridge.total_results_received,
+      total_heartbeats_received: watcherState.bridge.total_heartbeats_received
     },
     recent_events: watcherState.events.slice(-20),
     timestamp: new Date().toISOString()
@@ -585,17 +788,56 @@ function resetIndex() {
   watcherState.indexes = {
     team_reports: {},
     team_receipts: {},
-    cold_corpus: []
+    cold_corpus: [],
+    bridge_results: [],
+    bridge_heartbeats: []
   };
   saveState();
   logEvent('index_reset', '索引已重置');
   return { reset: true };
 }
 
+/**
+ * 获取桥接专属状态（秋秋通信通道详情）
+ */
+function getBridgeStatus() {
+  const bridge = watcherState.bridge;
+  // 计算秋秋是否在线（最后心跳在12小时内 = 在线，超过 = 可能离线）
+  let online = false;
+  if (bridge.last_heartbeat) {
+    const lastHbTime = new Date(bridge.last_heartbeat).getTime();
+    const now = Date.now();
+    const twelveHours = 12 * 60 * 60 * 1000;
+    online = (now - lastHbTime) < twelveHours;
+  }
+
+  return {
+    channel: '暗核频道 · FS-DC-001',
+    bridge_path: '/bridge/zhuyuan-qiuqiu/',
+    qiuqiu: {
+      status: bridge.qiuqiu_status,
+      online,
+      last_heartbeat: bridge.last_heartbeat,
+      last_heartbeat_status: bridge.last_heartbeat_status
+    },
+    results: {
+      last_received: bridge.last_result,
+      last_task_ref: bridge.last_result_task_ref,
+      total_received: bridge.total_results_received
+    },
+    indexes: {
+      results_tracked: (watcherState.indexes.bridge_results || []).length,
+      heartbeats_tracked: (watcherState.indexes.bridge_heartbeats || []).length
+    },
+    timestamp: new Date().toISOString()
+  };
+}
+
 module.exports = {
   start,
   stop,
   getStatus,
+  getBridgeStatus,
   triggerScan,
   resetIndex,
   runScan

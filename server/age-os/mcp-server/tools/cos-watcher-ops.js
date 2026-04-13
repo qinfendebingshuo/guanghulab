@@ -12,6 +12,7 @@
  *   cosWatcherStatus       — 查看轮询守护进程状态
  *   cosWatcherTriggerScan  — 手动触发一次COS桶扫描
  *   cosWatcherResetIndex   — 重置文件索引
+ *   cosBridgeStatus        — 查看铸渊↔秋秋COS桥接通道状态
  */
 
 'use strict';
@@ -67,8 +68,28 @@ async function cosWatcherResetIndex(_input) {
   return cosWatcher.resetIndex();
 }
 
+/**
+ * cosBridgeStatus — 查看铸渊↔秋秋COS桥接通道状态
+ *
+ * 查看暗核频道(FS-DC-001)的实时桥接状态，
+ * 包括秋秋在线状态、心跳记录、开发结果接收情况。
+ *
+ * input: {} (无参数)
+ *
+ * output:
+ *   channel: string           — 频道名称
+ *   bridge_path: string       — COS桶桥接路径
+ *   qiuqiu: object            — 秋秋状态(status/online/last_heartbeat)
+ *   results: object           — 结果统计(last_received/total_received)
+ *   indexes: object           — 索引统计
+ */
+async function cosBridgeStatus(_input) {
+  return cosWatcher.getBridgeStatus();
+}
+
 module.exports = {
   cosWatcherStatus,
   cosWatcherTriggerScan,
-  cosWatcherResetIndex
+  cosWatcherResetIndex,
+  cosBridgeStatus
 };
