@@ -79,6 +79,21 @@
         "files": ["domain-registry.json"],
         "key_fact": "5个子系统：时间主控·奶瓶频道·语言回声·现实执行·光之湖"
       },
+      "时间之树": {
+        "files": ["time-master/time-tree.json"],
+        "script": "scripts/time-tree-manager.js",
+        "key_fact": "D68新增·每天一个树杈·按时间戳挂任务快照·grow/find/latest/today/summary"
+      },
+      "任务树": {
+        "files": ["time-master/task-trees/TASK-*.json"],
+        "script": "scripts/task-tree-manager.js",
+        "key_fact": "D68新增·每个任务=独立树·根=架构框架·枝干=步骤·叶子=开发记录"
+      },
+      "唤醒桥接": {
+        "files": ["time-master/latest-wake-context.json"],
+        "script": "scripts/copilot-wake-bridge.js",
+        "key_fact": "D68新增·副驾驶唤醒→Agent集群一键恢复上下文·5步序列"
+      },
       "思维逻辑": {
         "files": ["zhuyuan-thinking-logic.json"],
         "key_fact": "12个架构决定·5个教训·冰朔协作模式"
@@ -91,13 +106,14 @@
 
     "by_bingshuo_might_say": {
       "系统什么情况": "→ time-master/snapshot.json (时间快照)",
-      "上次做到哪了": "→ age-os-dev-chronicle.json → current_technical_inventory",
+      "上次做到哪了": "→ node scripts/time-tree-manager.js latest (时间之树最新叶子) 或 node scripts/copilot-wake-bridge.js (完整恢复)",
+      "继续某个任务": "→ node scripts/task-tree-manager.js status --task TASK-ID (查看任务树)",
       "那个服务器怎么了": "→ house-blueprint.json → 骨架_钢筋 + server-registry.json",
       "为什么这么做": "→ zhuyuan-thinking-logic.json → architecture_decisions",
       "之前踩过什么坑": "→ zhuyuan-thinking-logic.json → recurring_mistakes_and_lessons",
       "MCP工具有哪些": "→ house-blueprint.json → 家具_核心",
       "人格体的状态": "→ age-os-dev-chronicle.json → registered_personas",
-      "接下来该做什么": "→ house-blueprint.json → renovation_plan → priority_tasks",
+      "接下来该做什么": "→ node scripts/task-tree-manager.js list (活跃任务列表)",
       "密钥放哪了": "→ house-blueprint.json → secrets_inventory",
       "光之湖里有什么": "→ guangzhihu/guangzhihu.json → items[]（当前为空·等待冰朔存放第一件东西）"
     }

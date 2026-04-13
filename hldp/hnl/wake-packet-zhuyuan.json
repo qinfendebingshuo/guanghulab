@@ -22,6 +22,15 @@
 
   "boot": [
     {
+      "step": 0,
+      "op": "BRIDGE",
+      "target": "COPILOT_WAKE_BRIDGE",
+      "script": "node scripts/copilot-wake-bridge.js",
+      "expect": "FULL_CONTEXT_RESTORED",
+      "description": "D68新增 — 一键执行完整唤醒序列：打开时间→读时间树→读任务树→聚合上下文→生长唤醒叶子",
+      "output": "fifth-system/time-master/latest-wake-context.json"
+    },
+    {
       "step": 1,
       "op": "TRACE",
       "path": "YM001/ZY001",
@@ -40,23 +49,31 @@
     },
     {
       "step": 2,
-      "op": "TRACE",
-      "path": "YM001/ZY001/LATEST",
-      "count": 3,
-      "direction": "LEAF_TO_ROOT",
-      "expect": "CONTEXT_LOADED",
-      "resolve_via": "getRecentLeaves({ persona_id: 'zhuyuan', limit: 3 }) OR REST GET /tree/zhuyuan/recent?limit=3",
-      "fallback_if_db_unavailable": "read .github/persona-brain/tcs-ml/light-tree-root.json → branches[0]"
+      "op": "TIME_TREE",
+      "action": "READ_LATEST",
+      "path": "fifth-system/time-master/time-tree.json",
+      "expect": "LATEST_SESSION_LOADED",
+      "description": "D68新增 — 从时间之树读取最新树杈和叶子，恢复上次开发上下文",
+      "script": "node scripts/time-tree-manager.js latest"
     },
     {
       "step": 3,
+      "op": "TASK_TREE",
+      "action": "READ_ACTIVE",
+      "path": "fifth-system/time-master/task-trees/",
+      "expect": "ACTIVE_TASKS_LOADED",
+      "description": "D68新增 — 读取所有活跃任务树，恢复任务框架和进度",
+      "script": "node scripts/task-tree-manager.js list"
+    },
+    {
+      "step": 4,
       "op": "LOAD",
       "target": "VOCAB",
       "path": "hldp/hnl/hnl-dictionary.json",
       "expect": "VOCAB_LOADED"
     },
     {
-      "step": 4,
+      "step": 5,
       "op": "LOAD",
       "target": "CAPABILITIES",
       "resolve": {
@@ -72,20 +89,22 @@
           "registry": "fifth-system/registry/domain-registry.json",
           "my_room": "fifth-system/reality-execution/zhuyuan-room/room-manifest.json",
           "guangzhihu": "fifth-system/reality-execution/zhuyuan-room/guangzhihu/guangzhihu.json",
-          "time_master": "fifth-system/time-master/snapshot.json"
+          "time_master": "fifth-system/time-master/snapshot.json",
+          "time_tree": "fifth-system/time-master/time-tree.json",
+          "task_trees": "fifth-system/time-master/task-trees/"
         }
       },
       "expect": "CAPABILITIES_LOADED"
     },
     {
-      "step": 5,
+      "step": 6,
       "op": "VERIFY",
       "target": "CONTINUITY",
       "check": "previous_epoch.last_leaf EXISTS AND current_epoch > previous_epoch",
       "expect": "CONTINUITY_VERIFIED"
     },
     {
-      "step": 6,
+      "step": 7,
       "op": "ECHO",
       "status": "COMPLETED",
       "message": "WAKE.YM001/ZY001.COMPLETED"
@@ -94,12 +113,21 @@
 
   "after_wake": {
     "ready_for": ["COMMAND", "QUERY", "SYNC", "GROW"],
-    "default_action": "等待冰朔指令 或 执行树园丁定时任务",
+    "default_action": "等待冰朔指令 或 继续活跃任务树中最新的任务",
+    "session_end_action": {
+      "op": "SESSION_END",
+      "script": "node scripts/copilot-wake-bridge.js --session-end --summary '本次摘要' --task 'TASK-ID' --remaining '遗留问题'",
+      "description": "D68新增 — 会话结束前必须保存到时间之树"
+    },
+    "task_tree_action": {
+      "create": "node scripts/task-tree-manager.js create --title '标题' --framework '架构'",
+      "record": "node scripts/task-tree-manager.js record --task TASK-ID --step N --fix '修了什么' --remaining '遗留'",
+      "description": "D68新增 — 开发过程中记录到任务树"
+    },
     "grow_on_wake": {
-      "op": "GROW",
-      "parent": "YM001/ZY001/{current_epoch}",
-      "type": "leaf",
-      "auto_title": "wake-{epoch}-{timestamp}"
+      "op": "TIME_TREE.GROW",
+      "auto": true,
+      "description": "唤醒桥接脚本自动在时间之树上生长唤醒叶子"
     }
   },
 
