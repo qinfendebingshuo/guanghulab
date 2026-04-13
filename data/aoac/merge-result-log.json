@@ -2,67 +2,31 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-13 16:24:16+08:00",
-  "timestamp_utc": "2026-04-13T08:24:16.223Z",
+  "timestamp": "2026-04-13 20:29:38+08:00",
+  "timestamp_utc": "2026-04-13T12:29:38.104Z",
   "merge": {
-    "pr_number": 366,
-    "pr_title": "D68-2: 暗核频道(FS-DC-001) · 硅谷服务器秋秋操作区 · COS跨仓库桥接 · 秋秋AGE体系",
-    "merge_commit_sha": "04cdfcd924f29404f9140d6e526166879439d17f",
-    "head_sha": "29f8002fe04a8d6802dca9f435afa09c0596dc55",
+    "pr_number": 367,
+    "pr_title": "D68-3 · COS桥接代码闭环 — cos-watcher双向通道 + 接收workflow",
+    "merge_commit_sha": "281a60447ebb4ea626b45c8d9841d056e6401050",
+    "head_sha": "021e7c3145201ea4e743b218ff14705043bc854d",
     "base_branch": "main"
   },
   "ci": {
-    "combined_status": "pending",
-    "overall_result": "pending",
+    "combined_status": "failure",
+    "overall_result": "failure",
     "summary": {
-      "total": 9,
+      "total": 8,
       "passed": 0,
       "failed": 0,
       "skipped": 5
     },
     "check_runs": [
       {
-        "name": "gate-guard",
+        "name": "🔧 ���务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-13T08:24:08Z",
-        "completed_at": "2026-04-13T08:24:08Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 预览站→主站 一键推送",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-13T08:24:08Z",
-        "completed_at": "2026-04-13T08:24:08Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔒 SSL证书配置",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-13T08:24:08Z",
-        "completed_at": "2026-04-13T08:24:08Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "📊 更新流量仪表盘",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-13T08:24:11Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔧 服务器初始化",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-13T08:24:08Z",
-        "completed_at": "2026-04-13T08:24:08Z",
+        "started_at": "2026-04-13T12:29:29Z",
+        "completed_at": "2026-04-13T12:29:29Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -70,17 +34,35 @@
         "name": "💚 健康检查",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-13T08:24:08Z",
-        "completed_at": "2026-04-13T08:24:08Z",
+        "started_at": "2026-04-13T12:29:29Z",
+        "completed_at": "2026-04-13T12:29:29Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "📡 Bridge E · GitHub Changes → Notion",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-13T08:24:11Z",
-        "completed_at": null,
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-13T12:29:29Z",
+        "completed_at": "2026-04-13T12:29:29Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-13T12:29:29Z",
+        "completed_at": "2026-04-13T12:29:29Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-13T12:29:29Z",
+        "completed_at": "2026-04-13T12:29:29Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -88,7 +70,16 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-13T08:24:11Z",
+        "started_at": "2026-04-13T12:29:32Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-13T12:29:32Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -97,7 +88,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-13T08:24:11Z",
+        "started_at": "2026-04-13T12:29:31Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
