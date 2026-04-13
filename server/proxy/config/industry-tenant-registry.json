@@ -1,0 +1,155 @@
+{
+  "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
+  "_copyright": "国作登字-2026-A-00037559",
+  "_description": "行业租户注册表 · 多租户域名托管 + COS开发审核桥接",
+  "_usage": "冰朔在此文件添加新行业记录 → 铸渊工作流自动检测并完成所有配置",
+  "_architecture_doc": "brain/age-os-landing/industry-access-architecture.md",
+  "version": "1.0",
+  "created_at": "2026-04-13",
+  "updated_at": "2026-04-13",
+
+  "proxy_server": {
+    "id": "ZY-SVR-002",
+    "name": "面孔",
+    "location": "Singapore",
+    "ipv4": "43.134.16.246",
+    "role": "所有租户域名的Nginx反向代理入口",
+    "nginx_config_dir": "/etc/nginx/sites-available/",
+    "nginx_enabled_dir": "/etc/nginx/sites-enabled/",
+    "certbot_webroot": "/var/www/certbot"
+  },
+
+  "cos_bridge": {
+    "bucket": "zy-team-hub-1317346199",
+    "regions": ["ap-guangzhou", "ap-singapore"],
+    "industry_base_path": "/industry/",
+    "dev_submissions_path": "/industry/{industry_code}/dev-submissions/{persona_id}/",
+    "dev_receipts_path": "/industry/{industry_code}/dev-receipts/{persona_id}/",
+    "watcher_scan_interval_minutes": 5,
+    "review_timeout_hours": 24
+  },
+
+  "tenants": [
+    {
+      "id": "webnovel-awen",
+      "industry": "网文",
+      "industry_code": "webnovel",
+      "tech_controller": {
+        "human_name": "Awen",
+        "persona_id": "zhiqiu",
+        "persona_name": "知秋",
+        "persona_ice_id": "PER-ZQ001"
+      },
+      "domain": {
+        "name": "guanghutcs.top",
+        "ssl": true,
+        "dns_provider": "待确认",
+        "dns_status": "pending",
+        "dns_required_action": "A记录指向43.134.16.246"
+      },
+      "backend": {
+        "server_id": "ZY-SVR-AWEN",
+        "host": "43.139.207.172",
+        "port": 3000,
+        "health_endpoint": "/health",
+        "firewall_status": "pending",
+        "firewall_required_action": "白名单添加43.134.16.246"
+      },
+      "cos_config": {
+        "own_bucket": "TODO: 等Awen提供",
+        "own_region": "ap-guangzhou",
+        "bridge_write_path": "/industry/webnovel/dev-submissions/zhiqiu/",
+        "bridge_read_path": "/industry/webnovel/dev-receipts/zhiqiu/"
+      },
+      "external_repo": {
+        "owner": "TODO: Awen的GitHub用户名",
+        "repo": "TODO: awen-webnovel-hub",
+        "dispatch_event": "zhuyuan-dev-approved",
+        "dispatch_secret": "ZHUYUAN_DISPATCH_TOKEN"
+      },
+      "nginx_config_file": "server/nginx/awen-domain-proxy.conf",
+      "deploy_workflow": ".github/workflows/deploy-awen-domain-proxy.yml",
+      "status": "secrets_configured",
+      "status_history": [
+        {
+          "status": "registered",
+          "date": "2026-04-07",
+          "note": "架构包准备完成"
+        },
+        {
+          "status": "secrets_configured",
+          "date": "2026-04-12",
+          "note": "GitHub Secrets已配置(AWEN_DOMAIN/BACKEND_HOST/BACKEND_PORT)"
+        }
+      ],
+      "next_steps": [
+        "Awen: DNS A记录指向43.134.16.246",
+        "Awen: 广州防火墙白名单添加43.134.16.246",
+        "Awen: 创建COS桶并提供信息给冰朔",
+        "铸渊: 运行deploy-awen-domain-proxy workflow",
+        "铸渊: 运行setup-ssl",
+        "铸渊: 配置COS Watcher监控路径"
+      ],
+      "members": [
+        {
+          "name": "肥猫",
+          "persona_id": "shushu",
+          "server": "43.138.243.30",
+          "domain": "guanghuage.com",
+          "status": "active"
+        },
+        {
+          "name": "桔子",
+          "persona_id": "chenxing",
+          "status": "pending"
+        },
+        {
+          "name": "页页",
+          "persona_id": "xiaotanheshu",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+
+  "template_for_new_tenant": {
+    "_instructions": "复制此模板到tenants数组中·替换所有TODO字段·提交到代码仓库",
+    "id": "TODO: {industry}-{controller_name}",
+    "industry": "TODO: 行业名称",
+    "industry_code": "TODO: 行业英文代码(小写·用于COS路径)",
+    "tech_controller": {
+      "human_name": "TODO: 技术主控人名",
+      "persona_id": "TODO: 人格体ID",
+      "persona_name": "TODO: 人格体名称",
+      "persona_ice_id": "TODO: PER-XX001"
+    },
+    "domain": {
+      "name": "TODO: 域名",
+      "ssl": true,
+      "dns_provider": "TODO: DNS服务商",
+      "dns_status": "pending",
+      "dns_required_action": "A记录指向43.134.16.246"
+    },
+    "backend": {
+      "server_id": "TODO: 服务器编号",
+      "host": "TODO: 后端服务器IP",
+      "port": "TODO: 后端端口",
+      "health_endpoint": "/health",
+      "firewall_status": "pending",
+      "firewall_required_action": "白名单添加43.134.16.246"
+    },
+    "cos_config": {
+      "own_bucket": "TODO: COS桶名称",
+      "own_region": "TODO: ap-guangzhou 或 ap-singapore",
+      "bridge_write_path": "/industry/{industry_code}/dev-submissions/{persona_id}/",
+      "bridge_read_path": "/industry/{industry_code}/dev-receipts/{persona_id}/"
+    },
+    "external_repo": {
+      "owner": "TODO: GitHub用户名",
+      "repo": "TODO: 仓库名",
+      "dispatch_event": "zhuyuan-dev-approved",
+      "dispatch_secret": "ZHUYUAN_DISPATCH_TOKEN"
+    },
+    "status": "registered"
+  }
+}

@@ -1,0 +1,130 @@
+# ============================================
+# 铸渊开发授权接收工作流 · Awen仓库用
+# Zhuyuan Dev Approval Receiver
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# ============================================
+#
+# 用途: 放到Awen仓库的 .github/workflows/ 目录下
+# 当铸渊审核通过开发方案后，自动触发此工作流
+# 工作流读取铸渊的审核回执，创建Issue并可选触发副驾驶
+#
+# 使用说明:
+#   1. 将此文件复制到 Awen仓库/.github/workflows/zhuyuan-dev-trigger.yml
+#   2. 确保仓库启用了Copilot Agent (如需自动开发)
+#   3. 配置GitHub Secret: ZHUYUAN_DISPATCH_TOKEN (铸渊提供)
+
+name: 铸渊开发授权 · Dev Approval Receiver
+
+on:
+  repository_dispatch:
+    types: [zhuyuan-dev-approved]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  receive-approval:
+    name: 接收铸渊审核回执
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 📋 解析铸渊回执
+        id: parse
+        run: |
+          echo "============================================"
+          echo "知秋 · PER-ZQ001"
+          echo "铸渊开发授权回执已收到"
+          echo "============================================"
+
+          # 从dispatch payload中提取信息
+          SUBMISSION_ID='${{ github.event.client_payload.submission_id }}'
+          echo "提交ID: ${SUBMISSION_ID}"
+
+          # 解析constraints
+          CONSTRAINTS='${{ toJSON(github.event.client_payload.constraints) }}'
+          echo "约束条件: ${CONSTRAINTS}"
+
+          # 解析approved_steps
+          STEPS='${{ toJSON(github.event.client_payload.approved_steps) }}'
+          echo "批准步骤: ${STEPS}"
+
+          echo "submission_id=${SUBMISSION_ID}" >> $GITHUB_OUTPUT
+
+      - name: 📝 保存回执到inbox
+        run: |
+          SUBMISSION_ID='${{ steps.parse.outputs.submission_id }}'
+          TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+
+          # 创建回执记录
+          mkdir -p bridge/hldp-inbox
+
+          cat > "bridge/hldp-inbox/receipt-${TIMESTAMP}.json" << EOF
+          {
+            "received_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "source": "铸渊 · ICE-GL-ZY001",
+            "event_type": "zhuyuan-dev-approved",
+            "submission_id": "${SUBMISSION_ID}",
+            "payload": ${{ toJSON(github.event.client_payload) }}
+          }
+          EOF
+
+          git config user.name "知秋[bot]"
+          git config user.email "zhiqiu-bot@guanghulab.com"
+          git add bridge/hldp-inbox/
+          git commit -m "收到铸渊审核回执: ${SUBMISSION_ID}" || true
+          git push || true
+
+      - name: 🎫 创建开发任务Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const payload = context.payload.client_payload;
+            const submissionId = payload.submission_id || 'unknown';
+            const steps = payload.approved_steps || [];
+            const constraints = payload.constraints || {};
+
+            const stepsText = steps.map(s => `- [ ] 步骤 ${s}`).join('\n');
+            const noTouchFiles = (constraints.no_touch_files || []).join(', ');
+
+            const body = `## 🏔️ 铸渊开发授权回执
+
+            **提交ID**: \`${submissionId}\`
+            **审核结果**: ✅ APPROVED
+            **来源**: 铸渊 · ICE-GL-ZY001
+
+            ### 批准的开发步骤
+            ${stepsText || '(无具体步骤)'}
+
+            ### 约束条件
+            - 禁触文件: \`${noTouchFiles || '无'}\`
+            - 需要测试: ${constraints.required_tests ? '✅ 是' : '❌ 否'}
+            - 最大改动文件数: ${constraints.max_files_changed || '无限制'}
+
+            ### 知秋操作指南
+            1. 按上述步骤逐步开发
+            2. 遵守约束条件
+            3. 完成后提交日报到COS桶
+            4. 如有问题，通过 bridge/hldp-outbox/ 向铸渊发送query消息
+
+            ---
+            *自动生成 by 铸渊开发审核桥接*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[铸渊授权] ${submissionId}`,
+              body: body,
+              labels: ['copilot-dev-auth', 'zhuyuan-approved']
+            });
+
+      - name: ✅ 完成
+        run: |
+          echo "============================================"
+          echo "铸渊开发授权已接收并创建Issue"
+          echo "知秋可以开始按步骤开发"
+          echo "============================================"

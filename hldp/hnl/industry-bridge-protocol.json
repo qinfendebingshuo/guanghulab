@@ -1,0 +1,252 @@
+{
+  "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
+  "_copyright": "国作登字-2026-A-00037559",
+  "_description": "行业桥接协议 · HNL母语 · 铸渊↔行业人格体通信规范",
+  "_note": "这是用HNL母语定义的行业桥接协议。人格体之间用母语通信=零歧义。",
+  "hldp_v": "3.0",
+  "hnl_v": "1.0",
+  "protocol_id": "HNL-INDUSTRY-BRIDGE-001",
+  "created_at": "2026-04-13T15:00:00Z",
+  "created_by": "ICE-GL-ZY001",
+
+  "essence": {
+    "zh": "行业人格体通过COS桶向铸渊提交开发方案，铸渊从全局视角审核后回执，回执自动触发开发",
+    "hnl": "TRACE.YM001/ZY001.YM001/{persona}.RTL → ECHO.{submission}.{status}"
+  },
+
+  "axioms_applied": [
+    {
+      "axiom": "AX-01: Path = Identity",
+      "application": "COS路径 /industry/{code}/dev-submissions/{persona_id}/ 就是这个人格体的开发通道。路径=身份=权限。"
+    },
+    {
+      "axiom": "AX-02: Structure = Meaning",
+      "application": "提交的JSON结构本身携带语义。submission_type='dev_proposal'不需要额外解释。"
+    },
+    {
+      "axiom": "AX-03: Type = Intent",
+      "application": "msg_type='report' + submission_type='dev_proposal' = 开发方案提交。类型决定意图。"
+    },
+    {
+      "axiom": "AX-04: Tree = Memory",
+      "application": "每一次提交和回执都是光之树的一片叶子。审核历史=成长记录。"
+    }
+  ],
+
+  "message_types": {
+    "dev_submission": {
+      "direction": "行业人格体 → 铸渊",
+      "hnl_verb": "GROW",
+      "hnl_expression": "GROW.YM001/{persona}/trunk/experience.leaf.dev-{submission_id}",
+      "msg_type": "report",
+      "required_payload_fields": {
+        "submission_type": {
+          "type": "string",
+          "enum": ["dev_proposal", "hotfix", "dependency_update", "architecture_change"],
+          "hnl_meaning": {
+            "dev_proposal": "新功能开发方案 → 需要完整审核",
+            "hotfix": "紧急修复 → 快速审核(安全检查优先)",
+            "dependency_update": "依赖更新 → 检查CVE漏洞",
+            "architecture_change": "架构变更 → 严格审核(可能影响全局)"
+          }
+        },
+        "title": {
+          "type": "string",
+          "hnl_meaning": "一句话说明要做什么"
+        },
+        "description": {
+          "type": "string",
+          "hnl_meaning": "详细说明为什么要做这个 + 怎么做"
+        },
+        "target_files": {
+          "type": "array",
+          "hnl_meaning": "会改动哪些文件路径 → 铸渊据此判断影响范围"
+        },
+        "architecture_impact": {
+          "type": "object",
+          "hnl_meaning": "对架构的影响 → 铸渊审核的核心依据",
+          "fields": {
+            "new_api_endpoints": "新增哪些API路径",
+            "database_changes": "数据库有什么变更",
+            "external_dependencies": "引入哪些外部依赖",
+            "estimated_resource": "预估资源消耗"
+          }
+        },
+        "development_plan": {
+          "type": "object",
+          "hnl_meaning": "开发步骤 → 铸渊可以逐步审核",
+          "fields": {
+            "steps": "开发步骤列表",
+            "estimated_scope": "规模评估: small/medium/large"
+          }
+        }
+      },
+      "cos_destination": "/industry/{industry_code}/dev-submissions/{persona_id}/{msg_id}.json",
+      "example_hnl": "GROW.YM001/ZQ001/trunk/experience.leaf.dev-20260413-001 → [推荐算法API] △=新增AI推荐能力"
+    },
+
+    "dev_receipt": {
+      "direction": "铸渊 → 行业人格体",
+      "hnl_verb": "ECHO",
+      "hnl_expression": "ECHO.{submission_id}.{APPROVED|REJECTED|REVISION_NEEDED}",
+      "msg_type": "ack",
+      "required_payload_fields": {
+        "ref_submission_id": {
+          "type": "string",
+          "hnl_meaning": "回复的是哪个提交 → 一一对应"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["APPROVED", "REJECTED", "REVISION_NEEDED"],
+          "hnl_meaning": {
+            "APPROVED": "通过 → 自动触发副驾驶 → 可以开始开发",
+            "REJECTED": "拒绝 → 不可以开发 → 原因在blockers里",
+            "REVISION_NEEDED": "需要修改方案 → 修改后重新提交"
+          }
+        },
+        "review_result": {
+          "type": "object",
+          "hnl_meaning": "三维审核结果",
+          "fields": {
+            "architecture": "架构合规: PASS/WARN/FAIL",
+            "security": "安全合规: PASS/WARN/FAIL",
+            "naming": "命名规范: PASS/WARN/FAIL",
+            "overall": "综合结论: APPROVED/REJECTED/REVISION_NEEDED"
+          }
+        },
+        "guidance": {
+          "type": "object",
+          "hnl_meaning": "铸渊给你的建议 → 不是命令·是保护",
+          "fields": {
+            "suggestions": "建议采纳的优化 (非强制)",
+            "warnings": "需要注意的风险 (建议处理)",
+            "blockers": "必须解决的问题 (REJECTED时才有)"
+          }
+        },
+        "auto_trigger": {
+          "type": "object",
+          "hnl_meaning": "自动触发配置 → APPROVED时启动你的副驾驶",
+          "fields": {
+            "enabled": "是否自动触发",
+            "target_repo": "你的仓库名",
+            "trigger_type": "repository_dispatch",
+            "event_type": "zhuyuan-dev-approved",
+            "payload": "传递给副驾驶的参数"
+          }
+        }
+      },
+      "cos_destination": "/industry/{industry_code}/dev-receipts/{persona_id}/{msg_id}.json",
+      "example_hnl": "ECHO.HLDP-ZQ-20260413-DEV-001.APPROVED → ⊢ 架构无冲突·安全无漏洞 | 建议=添加频率限制"
+    }
+  },
+
+  "review_criteria": {
+    "hnl_explanation": "TRACE.YM001/ZY001.RTL → 铸渊审核的三个维度",
+    "dimensions": [
+      {
+        "name": "architecture",
+        "hnl": "结构合规",
+        "checks": [
+          "新API端点是否与现有系统冲突",
+          "数据库变更是否影响其他人格体的数据",
+          "资源评估是否合理(CPU/内存/带宽)",
+          "是否遵循行业层的目录规范"
+        ],
+        "fail_conditions": [
+          "直接修改铸渊主仓库的核心表",
+          "新增端口与现有服务冲突",
+          "资源需求超过服务器容量"
+        ]
+      },
+      {
+        "name": "security",
+        "hnl": "安全合规",
+        "checks": [
+          "新增npm/pip依赖是否有已知CVE漏洞",
+          "是否暴露了不必要的端口",
+          "SQL查询是否参数化(禁止字符串拼接)",
+          "是否泄露了密钥/密码/token"
+        ],
+        "fail_conditions": [
+          "引入有critical级CVE的依赖",
+          "硬编码任何密钥",
+          "开放了SSH端口到公网"
+        ]
+      },
+      {
+        "name": "naming",
+        "hnl": "命名合规",
+        "checks": [
+          "文件路径是否符合行业目录规范",
+          "persona_id是否正确",
+          "HLDP消息格式是否符合v3.0规范"
+        ],
+        "fail_conditions": [
+          "使用了错误的persona_id",
+          "HLDP消息缺少必填字段"
+        ]
+      }
+    ]
+  },
+
+  "auto_trigger_protocol": {
+    "hnl_explanation": "ECHO.{id}.APPROVED → ALERT.{repo}.DISPATCH → 副驾驶启动",
+    "flow": [
+      {
+        "step": 1,
+        "action": "铸渊写回执到COS",
+        "hnl": "ECHO.{submission_id}.APPROVED"
+      },
+      {
+        "step": 2,
+        "action": "铸渊调用GitHub API发送repository_dispatch",
+        "hnl": "ALERT.{target_repo}.DISPATCH",
+        "api": "POST https://api.github.com/repos/{owner}/{repo}/dispatches",
+        "headers": {
+          "Authorization": "Bearer {ZHUYUAN_DISPATCH_TOKEN}",
+          "Accept": "application/vnd.github.v3+json"
+        },
+        "body": {
+          "event_type": "zhuyuan-dev-approved",
+          "client_payload": {
+            "submission_id": "{msg_id}",
+            "approved_steps": "从回执中提取",
+            "constraints": "从回执中提取",
+            "guidance": "从回执中提取"
+          }
+        }
+      },
+      {
+        "step": 3,
+        "action": "对方仓库的workflow被触发",
+        "hnl": "WAKE.{persona}.TASK",
+        "workflow_trigger": "on: repository_dispatch: types: [zhuyuan-dev-approved]"
+      },
+      {
+        "step": 4,
+        "action": "副驾驶读取payload·按指导开发",
+        "hnl": "GROW.{persona}/trunk/experience.leaf.{task}"
+      }
+    ]
+  },
+
+  "error_handling": {
+    "submission_malformed": {
+      "response": "REVISION_NEEDED",
+      "guidance": "HLDP消息格式不符合v3.0规范。请参照 hldp/hnl/industry-bridge-protocol.json 中的 required_payload_fields。"
+    },
+    "cos_write_failed": {
+      "action": "ALERT.YM001/ZY001.URGENT.cos-write-failed",
+      "fallback": "在铸渊主仓库创建Issue记录"
+    },
+    "dispatch_failed": {
+      "action": "重试3次(间隔30秒)",
+      "fallback": "回执中标记 auto_trigger.enabled=false · 通知人格体手动触发"
+    },
+    "review_timeout": {
+      "threshold_hours": 24,
+      "action": "ALERT.TCS-0002∞.IMPORTANT.review-timeout",
+      "fallback": "通知冰朔"
+    }
+  }
+}
