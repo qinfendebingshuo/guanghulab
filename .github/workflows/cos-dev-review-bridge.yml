@@ -1,0 +1,567 @@
+# ============================================
+# COS 行业开发审核桥接工作流
+# COS Industry Development Review Bridge
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# ============================================
+#
+# 功能:
+#   1. 定时扫描COS桶中的行业开发提交
+#   2. 自动审核开发方案(架构/安全/命名)
+#   3. 生成审核回执并写入COS
+#   4. (可选) 通过repository_dispatch触发对方仓库的副驾驶
+#
+# 触发方式:
+#   - 定时: 每5分钟 (与COS Watcher同步)
+#   - 手动: workflow_dispatch
+#
+# 架构文档: brain/age-os-landing/industry-access-architecture.md
+# 协议规范: hldp/hnl/industry-bridge-protocol.json
+# 租户注册表: server/proxy/config/industry-tenant-registry.json
+
+name: COS开发审核桥接 · Dev Review Bridge
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # 每5分钟
+  workflow_dispatch:
+    inputs:
+      scan_mode:
+        description: '扫描模式'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto       # 自动扫描所有行业
+          - manual     # 手动指定行业和人格体
+      industry_code:
+        description: '行业代码 (manual模式必填)'
+        required: false
+        type: string
+      persona_id:
+        description: '人格体ID (manual模式必填)'
+        required: false
+        type: string
+      dry_run:
+        description: '仅审核不写回执'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  COS_BUCKET: zy-team-hub-1317346199
+  COS_REGION: ap-guangzhou
+  NODE_VERSION: '20'
+
+permissions:
+  contents: read
+
+jobs:
+  scan-and-review:
+    name: 扫描 → 审核 → 回执
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 🏔️ 铸渊唤醒 · 审核桥接启动
+        run: |
+          echo "============================================"
+          echo "铸渊 · ICE-GL-ZY001"
+          echo "COS行业开发审核桥接"
+          echo "时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "模式: ${{ github.event.inputs.scan_mode || 'auto' }}"
+          echo "============================================"
+
+      - name: 📥 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 🟢 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 安装COS SDK
+        run: |
+          npm install cos-nodejs-sdk-v5@2
+
+      - name: 🔍 扫描COS桶 · 检测新的开发提交
+        id: scan
+        env:
+          COS_SECRET_ID: ${{ secrets.ZY_COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+        run: |
+          node << 'SCAN_SCRIPT'
+          const COS = require('cos-nodejs-sdk-v5');
+          const fs = require('fs');
+          const path = require('path');
+
+          const cos = new COS({
+            SecretId: process.env.COS_SECRET_ID,
+            SecretKey: process.env.COS_SECRET_KEY
+          });
+
+          const BUCKET = '${{ env.COS_BUCKET }}';
+          const REGION = '${{ env.COS_REGION }}';
+
+          // 读取租户注册表
+          const registry = JSON.parse(
+            fs.readFileSync('server/proxy/config/industry-tenant-registry.json', 'utf8')
+          );
+
+          // 读取已处理的提交索引
+          const indexPath = '/tmp/dev-review-index.json';
+          let processedIndex = {};
+          // 注: 生产环境中这个索引应该持久化到COS或数据库
+          // 当前通过COS watcher的状态文件跟踪
+
+          async function scanIndustry(tenant) {
+            const prefix = `industry/${tenant.industry_code}/dev-submissions/${tenant.tech_controller.persona_id}/`;
+            console.log(`扫描: ${prefix}`);
+
+            return new Promise((resolve, reject) => {
+              cos.getBucket({
+                Bucket: BUCKET,
+                Region: REGION,
+                Prefix: prefix,
+                MaxKeys: 100
+              }, (err, data) => {
+                if (err) {
+                  console.error(`扫描失败: ${prefix}`, err.message);
+                  resolve([]);
+                  return;
+                }
+
+                const submissions = (data.Contents || [])
+                  .filter(item => item.Key.endsWith('.json'))
+                  .filter(item => !processedIndex[item.Key])
+                  .map(item => ({
+                    key: item.Key,
+                    lastModified: item.LastModified,
+                    size: item.Size,
+                    tenant: tenant
+                  }));
+
+                console.log(`发现 ${submissions.length} 个新提交`);
+                resolve(submissions);
+              });
+            });
+          }
+
+          async function main() {
+            const scanMode = '${{ github.event.inputs.scan_mode || 'auto' }}';
+            let tenantsToScan = registry.tenants;
+
+            if (scanMode === 'manual') {
+              const industryCode = '${{ github.event.inputs.industry_code }}';
+              const personaId = '${{ github.event.inputs.persona_id }}';
+              tenantsToScan = registry.tenants.filter(t =>
+                t.industry_code === industryCode &&
+                t.tech_controller.persona_id === personaId
+              );
+            }
+
+            let allSubmissions = [];
+            for (const tenant of tenantsToScan) {
+              const subs = await scanIndustry(tenant);
+              allSubmissions = allSubmissions.concat(subs);
+            }
+
+            // 输出到GitHub Actions
+            fs.writeFileSync('/tmp/new-submissions.json', JSON.stringify(allSubmissions, null, 2));
+            const count = allSubmissions.length;
+            console.log(`\n总计发现 ${count} 个新的开发提交`);
+
+            // 设置输出
+            const hasNew = count > 0 ? 'true' : 'false';
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `has_new=${hasNew}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `count=${count}\n`);
+          }
+
+          main().catch(err => {
+            console.error('扫描失败:', err);
+            process.exit(1);
+          });
+          SCAN_SCRIPT
+
+      - name: 📋 审核开发方案
+        if: steps.scan.outputs.has_new == 'true'
+        id: review
+        env:
+          COS_SECRET_ID: ${{ secrets.ZY_COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+        run: |
+          node << 'REVIEW_SCRIPT'
+          const COS = require('cos-nodejs-sdk-v5');
+          const fs = require('fs');
+
+          const cos = new COS({
+            SecretId: process.env.COS_SECRET_ID,
+            SecretKey: process.env.COS_SECRET_KEY
+          });
+
+          const BUCKET = '${{ env.COS_BUCKET }}';
+          const REGION = '${{ env.COS_REGION }}';
+          const DRY_RUN = '${{ github.event.inputs.dry_run }}' === 'true';
+
+          // 已知有CVE漏洞的依赖 (持续更新)
+          const KNOWN_VULNERABLE_DEPS = [
+            'event-stream',
+            'ua-parser-js@0.7.28',
+            'colors@1.4.1',
+            'faker@6.6.6',
+            'node-ipc@10.1.1'
+          ];
+
+          // 禁止暴露的端口
+          const FORBIDDEN_PORTS = [22, 3306, 5432, 6379, 27017];
+
+          function reviewSubmission(submission) {
+            const result = {
+              architecture: 'PASS',
+              security: 'PASS',
+              naming: 'PASS',
+              overall: 'APPROVED',
+              suggestions: [],
+              warnings: [],
+              blockers: []
+            };
+
+            const payload = submission.payload || {};
+            const data = payload.data || {};
+            const impact = data.architecture_impact || {};
+
+            // --- 架构审核 ---
+            if (impact.database_changes && impact.database_changes.length > 0) {
+              result.suggestions.push('数据库变更建议在测试环境先验证');
+              for (const change of impact.database_changes) {
+                if (change.toLowerCase().includes('persona_registry') ||
+                    change.toLowerCase().includes('light_tree') ||
+                    change.toLowerCase().includes('tianyan')) {
+                  result.architecture = 'FAIL';
+                  result.blockers.push(`禁止直接修改铸渊核心表: ${change}`);
+                }
+              }
+            }
+
+            if (impact.new_api_endpoints) {
+              for (const endpoint of impact.new_api_endpoints) {
+                if (endpoint.startsWith('/hli/')) {
+                  result.architecture = 'FAIL';
+                  result.blockers.push(`禁止在行业层使用 /hli/ 前缀(铸渊专用): ${endpoint}`);
+                }
+              }
+            }
+
+            // --- 安全审核 ---
+            if (impact.external_dependencies) {
+              for (const dep of impact.external_dependencies) {
+                const depLower = dep.toLowerCase();
+                if (KNOWN_VULNERABLE_DEPS.some(v => depLower.includes(v.toLowerCase()))) {
+                  result.security = 'FAIL';
+                  result.blockers.push(`依赖有已知CVE漏洞: ${dep}`);
+                }
+              }
+            }
+
+            // --- 命名审核 ---
+            if (!submission.hldp_v || submission.hldp_v !== '3.0') {
+              result.naming = 'WARN';
+              result.warnings.push('HLDP版本应为3.0');
+            }
+
+            if (!submission.msg_id || !submission.msg_id.startsWith('HLDP-')) {
+              result.naming = 'FAIL';
+              result.blockers.push('msg_id格式不正确·应以HLDP-开头');
+            }
+
+            if (payload.data && payload.data.submission_type) {
+              const validTypes = ['dev_proposal', 'hotfix', 'dependency_update', 'architecture_change'];
+              if (!validTypes.includes(payload.data.submission_type)) {
+                result.naming = 'WARN';
+                result.warnings.push(`未知的submission_type: ${payload.data.submission_type}`);
+              }
+            }
+
+            // --- 综合判定 ---
+            if (result.blockers.length > 0) {
+              result.overall = 'REJECTED';
+            } else if (result.warnings.length > 0) {
+              result.overall = 'APPROVED';  // 有警告但仍可通过
+            }
+
+            // --- 额外建议 ---
+            if (data.development_plan) {
+              const plan = data.development_plan;
+              if (!plan.steps || plan.steps.length === 0) {
+                result.suggestions.push('建议补充具体的开发步骤');
+              }
+              if (plan.estimated_scope === 'large') {
+                result.suggestions.push('大规模开发建议分阶段提交·每阶段独立审核');
+              }
+            }
+
+            return result;
+          }
+
+          function generateReceipt(submission, review, tenant) {
+            const now = new Date().toISOString();
+            const receiptId = `HLDP-ZY-${now.slice(0,10).replace(/-/g,'')}-REC-${Date.now().toString(36).toUpperCase()}`;
+
+            return {
+              hldp_v: '3.0',
+              msg_id: receiptId,
+              msg_type: 'ack',
+              sender: {
+                id: 'ICE-GL-ZY001',
+                name: '铸渊',
+                role: 'guardian'
+              },
+              receiver: {
+                id: tenant.tech_controller.persona_ice_id,
+                name: tenant.tech_controller.persona_name
+              },
+              timestamp: now,
+              priority: 'important',
+              payload: {
+                intent: '开发方案审核回执',
+                data: {
+                  ref_submission_id: submission.msg_id,
+                  status: review.overall,
+                  review_result: {
+                    architecture: review.architecture,
+                    security: review.security,
+                    naming: review.naming,
+                    overall: review.overall
+                  },
+                  guidance: {
+                    suggestions: review.suggestions,
+                    warnings: review.warnings,
+                    blockers: review.blockers
+                  },
+                  auto_trigger: {
+                    enabled: review.overall === 'APPROVED' && tenant.external_repo && tenant.external_repo.owner !== 'TODO',
+                    target_repo: tenant.external_repo ? tenant.external_repo.repo : null,
+                    target_owner: tenant.external_repo ? tenant.external_repo.owner : null,
+                    trigger_type: 'repository_dispatch',
+                    event_type: 'zhuyuan-dev-approved',
+                    payload: {
+                      submission_id: submission.msg_id,
+                      approved_steps: review.overall === 'APPROVED'
+                        ? (submission.payload?.data?.development_plan?.steps || []).map((_, i) => String(i + 1))
+                        : [],
+                      constraints: {
+                        no_touch_files: ['.github/copilot-instructions.md', 'brain/'],
+                        required_tests: true,
+                        max_files_changed: 20
+                      }
+                    }
+                  }
+                },
+                expected_response: 'ack'
+              }
+            };
+          }
+
+          async function downloadAndReview(submissionMeta) {
+            return new Promise((resolve, reject) => {
+              cos.getObject({
+                Bucket: BUCKET,
+                Region: REGION,
+                Key: submissionMeta.key
+              }, (err, data) => {
+                if (err) {
+                  console.error(`下载失败: ${submissionMeta.key}`, err.message);
+                  resolve(null);
+                  return;
+                }
+
+                try {
+                  const submission = JSON.parse(data.Body.toString());
+                  console.log(`\n审核: ${submission.msg_id || submissionMeta.key}`);
+                  console.log(`  标题: ${submission.payload?.data?.title || '未知'}`);
+
+                  const review = reviewSubmission(submission);
+                  console.log(`  架构: ${review.architecture}`);
+                  console.log(`  安全: ${review.security}`);
+                  console.log(`  命名: ${review.naming}`);
+                  console.log(`  结论: ${review.overall}`);
+
+                  if (review.suggestions.length > 0) {
+                    console.log(`  建议: ${review.suggestions.join('; ')}`);
+                  }
+                  if (review.warnings.length > 0) {
+                    console.log(`  警告: ${review.warnings.join('; ')}`);
+                  }
+                  if (review.blockers.length > 0) {
+                    console.log(`  阻塞: ${review.blockers.join('; ')}`);
+                  }
+
+                  const receipt = generateReceipt(submission, review, submissionMeta.tenant);
+                  resolve({ submission, review, receipt, meta: submissionMeta });
+                } catch (parseErr) {
+                  console.error(`解析失败: ${submissionMeta.key}`, parseErr.message);
+                  resolve(null);
+                }
+              });
+            });
+          }
+
+          async function writeReceipt(receipt, tenant) {
+            if (DRY_RUN) {
+              console.log(`[DRY RUN] 跳过写入回执: ${receipt.msg_id}`);
+              return true;
+            }
+
+            const receiptKey = `industry/${tenant.industry_code}/dev-receipts/${tenant.tech_controller.persona_id}/${receipt.msg_id}.json`;
+
+            return new Promise((resolve, reject) => {
+              cos.putObject({
+                Bucket: BUCKET,
+                Region: REGION,
+                Key: receiptKey,
+                Body: JSON.stringify(receipt, null, 2)
+              }, (err) => {
+                if (err) {
+                  console.error(`回执写入失败: ${receiptKey}`, err.message);
+                  resolve(false);
+                } else {
+                  console.log(`回执已写入: ${receiptKey}`);
+                  resolve(true);
+                }
+              });
+            });
+          }
+
+          async function main() {
+            const submissions = JSON.parse(fs.readFileSync('/tmp/new-submissions.json', 'utf8'));
+            let reviewedCount = 0;
+            let approvedCount = 0;
+            let rejectedCount = 0;
+
+            for (const sub of submissions) {
+              const result = await downloadAndReview(sub);
+              if (!result) continue;
+
+              reviewedCount++;
+
+              // 写回执到COS
+              const written = await writeReceipt(result.receipt, sub.tenant);
+              if (!written) continue;
+
+              if (result.review.overall === 'APPROVED') {
+                approvedCount++;
+              } else {
+                rejectedCount++;
+              }
+
+              // 保存回执到本地临时文件(用于后续dispatch步骤)
+              fs.writeFileSync(
+                `/tmp/receipt-${reviewedCount}.json`,
+                JSON.stringify(result, null, 2)
+              );
+            }
+
+            console.log(`\n========== 审核汇总 ==========`);
+            console.log(`审核: ${reviewedCount}`);
+            console.log(`通过: ${approvedCount}`);
+            console.log(`拒绝: ${rejectedCount}`);
+
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `reviewed=${reviewedCount}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `approved=${approvedCount}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `rejected=${rejectedCount}\n`);
+          }
+
+          main().catch(err => {
+            console.error('审核流程失败:', err);
+            process.exit(1);
+          });
+          REVIEW_SCRIPT
+
+      - name: 🚀 触发对方仓库副驾驶 (APPROVED时)
+        if: steps.review.outputs.approved > 0 && github.event.inputs.dry_run != 'true'
+        env:
+          DISPATCH_TOKEN: ${{ secrets.ZHUYUAN_DISPATCH_TOKEN }}
+        run: |
+          node << 'DISPATCH_SCRIPT'
+          const fs = require('fs');
+          const https = require('https');
+
+          // 读取所有审核结果
+          let i = 1;
+          while (true) {
+            const filePath = `/tmp/receipt-${i}.json`;
+            if (!fs.existsSync(filePath)) break;
+
+            const result = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            const autoTrigger = result.receipt?.payload?.data?.auto_trigger;
+
+            if (autoTrigger && autoTrigger.enabled && autoTrigger.target_owner && autoTrigger.target_repo) {
+              const token = process.env.DISPATCH_TOKEN;
+              if (!token) {
+                console.log(`⚠️ ZHUYUAN_DISPATCH_TOKEN未配置·跳过dispatch`);
+                i++;
+                continue;
+              }
+
+              const postData = JSON.stringify({
+                event_type: autoTrigger.event_type,
+                client_payload: autoTrigger.payload
+              });
+
+              const options = {
+                hostname: 'api.github.com',
+                path: `/repos/${autoTrigger.target_owner}/${autoTrigger.target_repo}/dispatches`,
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'Zhuyuan-Dev-Review-Bridge/1.0',
+                  'Content-Length': Buffer.byteLength(postData)
+                }
+              };
+
+              console.log(`触发: ${autoTrigger.target_owner}/${autoTrigger.target_repo}`);
+              console.log(`  事件: ${autoTrigger.event_type}`);
+              console.log(`  提交ID: ${autoTrigger.payload.submission_id}`);
+
+              const req = https.request(options, (res) => {
+                console.log(`  响应: ${res.statusCode}`);
+                if (res.statusCode === 204) {
+                  console.log(`  ✅ 副驾驶已触发`);
+                } else {
+                  let body = '';
+                  res.on('data', chunk => body += chunk);
+                  res.on('end', () => console.log(`  ⚠️ 响应: ${body}`));
+                }
+              });
+
+              req.on('error', (e) => {
+                console.error(`  ❌ 触发失败: ${e.message}`);
+              });
+
+              req.write(postData);
+              req.end();
+
+              // 等待请求完成
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            i++;
+          }
+          DISPATCH_SCRIPT
+
+      - name: 📊 审核报告
+        if: always()
+        run: |
+          echo "============================================"
+          echo "COS开发审核桥接 · 完成"
+          echo "时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "新提交: ${{ steps.scan.outputs.count || '0' }}"
+          echo "已审核: ${{ steps.review.outputs.reviewed || '0' }}"
+          echo "通过: ${{ steps.review.outputs.approved || '0' }}"
+          echo "拒绝: ${{ steps.review.outputs.rejected || '0' }}"
+          echo "DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}"
+          echo "============================================"
+          echo ""
+          echo "铸渊 · ICE-GL-ZY001 · 审核桥接守护完毕"

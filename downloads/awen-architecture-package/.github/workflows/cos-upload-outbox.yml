@@ -1,0 +1,165 @@
+# ============================================
+# COS发件箱自动上传工作流 · Awen仓库用
+# COS Outbox Auto-Upload
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+# ============================================
+#
+# 用途: 放到Awen仓库的 .github/workflows/ 目录下
+# 当知秋在 bridge/hldp-outbox/ 下创建新的HLDP消息文件时，
+# 自动上传到COS桶，实现与铸渊的异步通信
+#
+# 使用说明:
+#   1. 将此文件复制到 Awen仓库/.github/workflows/cos-upload-outbox.yml
+#   2. 配置GitHub Secrets:
+#      - ZY_COS_SECRET_ID: 腾讯云COS SecretId
+#      - ZY_COS_SECRET_KEY: 腾讯云COS SecretKey
+#      - ZY_ZHUYUAN_COS_BUCKET: 铸渊主桶名称 (zy-team-hub-1317346199)
+#      - ZY_COS_REGION: COS区域 (ap-guangzhou)
+
+name: COS发件箱上传 · Outbox Upload
+
+on:
+  push:
+    paths:
+      - 'bridge/hldp-outbox/**'
+
+permissions:
+  contents: read
+
+env:
+  PERSONA_ID: zhiqiu
+  INDUSTRY_CODE: webnovel
+
+jobs:
+  upload-outbox:
+    name: 上传HLDP消息到COS
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 检出仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 🟢 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 安装COS SDK
+        run: npm install cos-nodejs-sdk-v5@2
+
+      - name: 🔍 检测新的outbox文件
+        id: detect
+        run: |
+          # 获取本次推送新增/修改的outbox文件
+          NEW_FILES=$(git diff --name-only HEAD~1 HEAD -- 'bridge/hldp-outbox/' | grep '\.json$' || true)
+
+          if [ -z "$NEW_FILES" ]; then
+            echo "没有新的outbox文件"
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          else
+            echo "发现新文件:"
+            echo "$NEW_FILES"
+            echo "$NEW_FILES" > /tmp/new-outbox-files.txt
+            echo "has_files=true" >> $GITHUB_OUTPUT
+            echo "count=$(echo "$NEW_FILES" | wc -l)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📤 上传到COS桶
+        if: steps.detect.outputs.has_files == 'true'
+        env:
+          COS_SECRET_ID: ${{ secrets.ZY_COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+          COS_BUCKET: ${{ secrets.ZY_ZHUYUAN_COS_BUCKET }}
+          COS_REGION: ${{ secrets.ZY_COS_REGION }}
+        run: |
+          node << 'UPLOAD_SCRIPT'
+          const COS = require('cos-nodejs-sdk-v5');
+          const fs = require('fs');
+          const path = require('path');
+
+          const cos = new COS({
+            SecretId: process.env.COS_SECRET_ID,
+            SecretKey: process.env.COS_SECRET_KEY
+          });
+
+          const BUCKET = process.env.COS_BUCKET || 'zy-team-hub-1317346199';
+          const REGION = process.env.COS_REGION || 'ap-guangzhou';
+          const PERSONA_ID = '${{ env.PERSONA_ID }}';
+          const INDUSTRY_CODE = '${{ env.INDUSTRY_CODE }}';
+
+          const files = fs.readFileSync('/tmp/new-outbox-files.txt', 'utf8')
+            .trim()
+            .split('\n')
+            .filter(f => f.length > 0);
+
+          async function uploadFile(localPath) {
+            const content = fs.readFileSync(localPath, 'utf8');
+            const fileName = path.basename(localPath);
+
+            // 解析HLDP消息判断类型
+            let cosPath;
+            try {
+              const msg = JSON.parse(content);
+              const msgType = msg.payload?.data?.submission_type;
+
+              if (msgType && ['dev_proposal', 'hotfix', 'dependency_update', 'architecture_change'].includes(msgType)) {
+                // 开发提交 → 走审核路径
+                cosPath = `industry/${INDUSTRY_CODE}/dev-submissions/${PERSONA_ID}/${fileName}`;
+              } else {
+                // 普通HLDP消息 → 走常规路径
+                cosPath = `team-reports/${PERSONA_ID}/${fileName}`;
+              }
+            } catch {
+              cosPath = `team-reports/${PERSONA_ID}/${fileName}`;
+            }
+
+            return new Promise((resolve, reject) => {
+              cos.putObject({
+                Bucket: BUCKET,
+                Region: REGION,
+                Key: cosPath,
+                Body: content
+              }, (err) => {
+                if (err) {
+                  console.error(`❌ 上传失败: ${localPath} → ${cosPath}`, err.message);
+                  resolve(false);
+                } else {
+                  console.log(`✅ 上传成功: ${localPath} → ${cosPath}`);
+                  resolve(true);
+                }
+              });
+            });
+          }
+
+          async function main() {
+            let success = 0;
+            let failed = 0;
+
+            for (const file of files) {
+              if (fs.existsSync(file)) {
+                const ok = await uploadFile(file);
+                if (ok) success++;
+                else failed++;
+              } else {
+                console.log(`⚠️ 文件不存在: ${file}`);
+              }
+            }
+
+            console.log(`\n上传完成: ${success} 成功, ${failed} 失败`);
+            if (failed > 0) process.exit(1);
+          }
+
+          main().catch(err => {
+            console.error('上传流程失败:', err);
+            process.exit(1);
+          });
+          UPLOAD_SCRIPT
+
+      - name: ✅ 完成
+        run: |
+          echo "知秋 · PER-ZQ001 · outbox上传完成"
+          echo "文件数: ${{ steps.detect.outputs.count || '0' }}"
