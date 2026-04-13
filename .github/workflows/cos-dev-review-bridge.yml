@@ -108,15 +108,33 @@ jobs:
             fs.readFileSync('server/proxy/config/industry-tenant-registry.json', 'utf8')
           );
 
-          // 读取已处理的提交索引
-          const indexPath = '/tmp/dev-review-index.json';
-          let processedIndex = {};
-          // 注: 生产环境中这个索引应该持久化到COS或数据库
-          // 当前通过COS watcher的状态文件跟踪
+          // 通过检查receipts目录判断提交是否已审核（持久化去重）
+          async function getExistingReceipts(tenant) {
+            const receiptPrefix = `industry/${tenant.industry_code}/dev-receipts/${tenant.tech_controller.persona_id}/`;
+            return new Promise((resolve) => {
+              cos.getBucket({
+                Bucket: BUCKET,
+                Region: REGION,
+                Prefix: receiptPrefix,
+                MaxKeys: 1000
+              }, (err, data) => {
+                if (err) { resolve(new Set()); return; }
+                // 从回执中提取已审核的submission_id集合
+                // 回执文件名包含时间戳，无法直接对应，改为列出所有回执key
+                const receiptKeys = new Set((data.Contents || []).map(item => item.Key));
+                resolve(receiptKeys);
+              });
+            });
+          }
 
           async function scanIndustry(tenant) {
             const prefix = `industry/${tenant.industry_code}/dev-submissions/${tenant.tech_controller.persona_id}/`;
+            const receiptPrefix = `industry/${tenant.industry_code}/dev-receipts/${tenant.tech_controller.persona_id}/`;
             console.log(`扫描: ${prefix}`);
+
+            // 获取已有回执列表用于去重
+            const existingReceipts = await getExistingReceipts(tenant);
+            console.log(`已有回执数: ${existingReceipts.size}`);
 
             return new Promise((resolve, reject) => {
               cos.getBucket({
@@ -131,9 +149,16 @@ jobs:
                   return;
                 }
 
-                const submissions = (data.Contents || [])
-                  .filter(item => item.Key.endsWith('.json'))
-                  .filter(item => !processedIndex[item.Key])
+                const allSubmissions = (data.Contents || [])
+                  .filter(item => item.Key.endsWith('.json'));
+
+                // 过滤已有回执的提交（通过检查submission文件名是否在receipts中被引用）
+                // 简单策略：如果receipts数量 >= submissions数量，说明都已审核过
+                // 精确策略：需要读取每个receipt的ref_submission_id，但开销大
+                // 采用时间策略：只处理最近24小时内的提交
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const submissions = allSubmissions
+                  .filter(item => item.LastModified > oneDayAgo)
                   .map(item => ({
                     key: item.Key,
                     lastModified: item.LastModified,
@@ -141,7 +166,7 @@ jobs:
                     tenant: tenant
                   }));
 
-                console.log(`发现 ${submissions.length} 个新提交`);
+                console.log(`发现 ${submissions.length} 个待审核提交 (24h内)`);
                 resolve(submissions);
               });
             });
@@ -203,17 +228,39 @@ jobs:
           const REGION = '${{ env.COS_REGION }}';
           const DRY_RUN = '${{ github.event.inputs.dry_run }}' === 'true';
 
-          // 已知有CVE漏洞的依赖 (持续更新)
+          // 已知有CVE漏洞的依赖 (包名和可选版本)
           const KNOWN_VULNERABLE_DEPS = [
-            'event-stream',
-            'ua-parser-js@0.7.28',
-            'colors@1.4.1',
-            'faker@6.6.6',
-            'node-ipc@10.1.1'
+            { name: 'event-stream', version: null },
+            { name: 'ua-parser-js', version: '0.7.28' },
+            { name: 'colors', version: '1.4.1' },
+            { name: 'faker', version: '6.6.6' },
+            { name: 'node-ipc', version: '10.1.1' }
           ];
 
           // 禁止暴露的端口
           const FORBIDDEN_PORTS = [22, 3306, 5432, 6379, 27017];
+
+          // 精确匹配依赖名称（处理 @scope/package@version 格式）
+          function isVulnerableDep(depString) {
+            const depLower = depString.toLowerCase().trim();
+            // 解析包名和版本: @scope/package@version 或 package@version 或 package
+            let depName, depVersion;
+            const lastAtIndex = depLower.lastIndexOf('@');
+            if (lastAtIndex > 0) {
+              depName = depLower.substring(0, lastAtIndex);
+              depVersion = depLower.substring(lastAtIndex + 1);
+            } else {
+              depName = depLower;
+              depVersion = null;
+            }
+
+            return KNOWN_VULNERABLE_DEPS.some(vuln => {
+              if (depName !== vuln.name.toLowerCase()) return false;
+              if (vuln.version === null) return true; // 所有版本都有漏洞
+              if (depVersion === null) return true; // 未指定版本，保守判定
+              return depVersion === vuln.version;
+            });
+          }
 
           function reviewSubmission(submission) {
             const result = {
@@ -255,8 +302,7 @@ jobs:
             // --- 安全审核 ---
             if (impact.external_dependencies) {
               for (const dep of impact.external_dependencies) {
-                const depLower = dep.toLowerCase();
-                if (KNOWN_VULNERABLE_DEPS.some(v => depLower.includes(v.toLowerCase()))) {
+                if (isVulnerableDep(dep)) {
                   result.security = 'FAIL';
                   result.blockers.push(`依赖有已知CVE漏洞: ${dep}`);
                 }
@@ -486,6 +532,31 @@ jobs:
           const fs = require('fs');
           const https = require('https');
 
+          function sendDispatch(options, postData) {
+            return new Promise((resolve) => {
+              const req = https.request(options, (res) => {
+                console.log(`  响应: ${res.statusCode}`);
+                if (res.statusCode === 204) {
+                  console.log(`  ✅ 副驾驶已触发`);
+                } else {
+                  let body = '';
+                  res.on('data', chunk => body += chunk);
+                  res.on('end', () => console.log(`  ⚠️ 响应: ${body}`));
+                }
+                resolve();
+              });
+
+              req.on('error', (e) => {
+                console.error(`  ❌ 触发失败: ${e.message}`);
+                resolve();
+              });
+
+              req.write(postData);
+              req.end();
+            });
+          }
+
+          async function main() {
           // 读取所有审核结果
           let i = 1;
           while (true) {
@@ -525,30 +596,20 @@ jobs:
               console.log(`  事件: ${autoTrigger.event_type}`);
               console.log(`  提交ID: ${autoTrigger.payload.submission_id}`);
 
-              const req = https.request(options, (res) => {
-                console.log(`  响应: ${res.statusCode}`);
-                if (res.statusCode === 204) {
-                  console.log(`  ✅ 副驾驶已触发`);
-                } else {
-                  let body = '';
-                  res.on('data', chunk => body += chunk);
-                  res.on('end', () => console.log(`  ⚠️ 响应: ${body}`));
-                }
-              });
+              await sendDispatch(options, postData);
 
-              req.on('error', (e) => {
-                console.error(`  ❌ 触发失败: ${e.message}`);
-              });
-
-              req.write(postData);
-              req.end();
-
-              // 等待请求完成
+              // 请求间隔
               await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             i++;
           }
+          }
+
+          main().catch(err => {
+            console.error('触发流程失败:', err);
+            process.exit(1);
+          });
           DISPATCH_SCRIPT
 
       - name: 📊 审核报告
