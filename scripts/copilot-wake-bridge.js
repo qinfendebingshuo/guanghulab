@@ -38,7 +38,6 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const BEIJING_OFFSET_MS = 8 * 3600 * 1000;
 
 // ─── 文件路径 ───
 const PATHS = {
@@ -53,22 +52,35 @@ const PATHS = {
 
 // ─── 工具函数 ───
 
-function getBeijingNow() {
-  return new Date(Date.now() + BEIJING_OFFSET_MS);
-}
-
 function getBeijingDateStr() {
-  return getBeijingNow().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
 }
 
 function getBeijingTimeStr() {
-  return getBeijingNow().toISOString().slice(0, 19).replace('T', ' ') + ' CST';
+  return new Date().toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }) + ' CST';
 }
 
 function daysSinceOrigin(dateStr) {
   const origin = new Date('2025-02-26T00:00:00+08:00');
   const target = new Date(dateStr + 'T00:00:00+08:00');
   return Math.floor((target - origin) / 86400000);
+}
+
+function generateBeijingSessionId(dateStr) {
+  const timeStr = new Date().toLocaleString('en-GB', {
+    timeZone: 'Asia/Shanghai',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }).replace(/:/g, '');
+  return `TS-${dateStr.replace(/-/g, '')}-${timeStr}`;
 }
 
 function readJSON(filePath) {
@@ -292,7 +304,7 @@ function growWakeLeaf(clock) {
   if (!tree) return;
 
   const todayStr = clock.todayStr;
-  const sessionId = `TS-${todayStr.replace(/-/g, '')}-${getBeijingNow().toISOString().slice(11, 19).replace(/:/g, '')}`;
+  const sessionId = generateBeijingSessionId(todayStr);
 
   // 确保今天的树杈存在
   if (!tree.branches[todayStr]) {
@@ -345,7 +357,7 @@ function sessionEnd(opts) {
   }
 
   const todayStr = getBeijingDateStr();
-  const sessionId = `TS-${todayStr.replace(/-/g, '')}-${getBeijingNow().toISOString().slice(11, 19).replace(/:/g, '')}`;
+  const sessionId = generateBeijingSessionId(todayStr);
 
   if (!tree.branches[todayStr]) {
     tree.branches[todayStr] = {

@@ -44,26 +44,23 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const TASK_TREES_DIR = path.join(ROOT, 'fifth-system', 'time-master', 'task-trees');
 const TIME_TREE_PATH = path.join(ROOT, 'fifth-system', 'time-master', 'time-tree.json');
-const BEIJING_OFFSET_MS = 8 * 3600 * 1000;
 
 // ─── 工具函数 ───
 
-function getBeijingNow() {
-  return new Date(Date.now() + BEIJING_OFFSET_MS);
-}
-
 function getBeijingDateStr() {
-  return getBeijingNow().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
 }
 
 function generateTaskId() {
-  const now = getBeijingNow();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const dateStr = getBeijingDateStr().replace(/-/g, '');
   // 查看当天已有多少任务
   const existing = fs.readdirSync(TASK_TREES_DIR)
-    .filter(f => f.startsWith(`TASK-${date}`) && f.endsWith('.json'));
+    .filter(f => f.startsWith(`TASK-${dateStr}`) && f.endsWith('.json'));
   const seq = String(existing.length + 1).padStart(3, '0');
-  return `TASK-${date}-${seq}`;
+  return `TASK-${dateStr}-${seq}`;
 }
 
 function readJSON(filePath) {

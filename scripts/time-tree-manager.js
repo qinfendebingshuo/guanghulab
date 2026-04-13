@@ -40,22 +40,25 @@ const ROOT = path.resolve(__dirname, '..');
 const TIME_TREE_PATH = path.join(ROOT, 'fifth-system', 'time-master', 'time-tree.json');
 const TASK_TREES_DIR = path.join(ROOT, 'fifth-system', 'time-master', 'task-trees');
 const ORIGIN_DATE = new Date('2025-02-26T00:00:00+08:00');
-const BEIJING_OFFSET_MS = 8 * 3600 * 1000;
 
 // ─── 工具函数 ───
 
-function getBeijingNow() {
-  return new Date(Date.now() + BEIJING_OFFSET_MS);
-}
-
 function getBeijingDateStr(date) {
-  const d = date || getBeijingNow();
-  return d.toISOString().slice(0, 10);
+  const d = date || new Date();
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
 }
 
 function getBeijingTimeStr(date) {
-  const d = date || getBeijingNow();
-  return d.toISOString().slice(0, 19).replace('T', ' ') + '+08:00';
+  const d = date || new Date();
+  return d.toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }) + ' CST';
 }
 
 function daysSinceOrigin(dateStr) {
@@ -64,10 +67,14 @@ function daysSinceOrigin(dateStr) {
 }
 
 function generateSessionId() {
-  const now = getBeijingNow();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const time = now.toISOString().slice(11, 19).replace(/:/g, '');
-  return `TS-${date}-${time}`;
+  const now = new Date();
+  const dateStr = getBeijingDateStr(now).replace(/-/g, '');
+  const timeStr = now.toLocaleString('en-GB', {
+    timeZone: 'Asia/Shanghai',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }).replace(/:/g, '');
+  return `TS-${dateStr}-${timeStr}`;
 }
 
 function readTree() {
