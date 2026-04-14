@@ -839,7 +839,7 @@ function getLocalReply(msg){
 var dashData={health:null,mcp:null,memory:null};
 
 function formatUptime(s){
-  if(!s&&s!==0)return '—';
+  if(s==null)return '—';
   var d=Math.floor(s/86400);var h=Math.floor((s%86400)/3600);var m=Math.floor((s%3600)/60);
   if(d>0)return d+'d '+h+'h';
   if(h>0)return h+'h '+m+'m';
@@ -905,7 +905,7 @@ function updateHealthUI(d){
   document.getElementById('sysMemFree').textContent=(mem.free_mb||'—')+' MB 空闲';
   document.getElementById('sysMemTotal').textContent=(mem.total_mb||'—')+' MB 总量';
   document.getElementById('sysCpus').textContent=(sys.cpus||'—')+' 核';
-  document.getElementById('sysLoad').textContent=(sys.load?sys.load.map(function(v){return v.toFixed(2)}).join(' / '):'—');
+  document.getElementById('sysLoad').textContent=(Array.isArray(sys.load)?sys.load.map(function(v){return v.toFixed(2)}).join(' / '):'—');
   document.getElementById('sysNode').textContent=d.node||'—';
 
   var sysBadge=document.getElementById('sysBadge');
@@ -927,12 +927,12 @@ function updateHealthOffline(){
 }
 
 function updateMcpUI(d){
-  var tools=d.tools_count||d.tools?.length||0;
+  var tools=d.tools_count||(d.tools&&d.tools.length)||0;
   document.getElementById('mcpToolCount').innerHTML=tools+'<span class="unit"> 个工具</span>';
-  document.getElementById('mcpDbStatus').textContent=d.database?.connected?'已连接':'未连接';
-  document.getElementById('mcpCosStatus').textContent=d.cos?.connected?'已连接':'未连接';
-  document.getElementById('mcpNotionStatus').textContent=d.notion?.connected?'已连接':'未连接';
-  document.getElementById('mcpWatcherStatus').textContent=d.cos_watcher?.enabled?'运行中 ('+( d.cos_watcher.scan_count||0)+' scans)':'停止';
+  document.getElementById('mcpDbStatus').textContent=(d.database&&d.database.connected)?'已连接':'未连接';
+  document.getElementById('mcpCosStatus').textContent=(d.cos&&d.cos.connected)?'已连接':'未连接';
+  document.getElementById('mcpNotionStatus').textContent=(d.notion&&d.notion.connected)?'已连接':'未连接';
+  document.getElementById('mcpWatcherStatus').textContent=(d.cos_watcher&&d.cos_watcher.enabled)?'运行中 ('+(d.cos_watcher.scan_count||0)+' scans)':'停止';
 
   var mcpBadge=document.getElementById('mcpBadge');
   mcpBadge.textContent=tools+' 工具';
