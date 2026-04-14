@@ -566,6 +566,31 @@ a{color:var(--cyan);text-decoration:none}
             </div>
           </div>
 
+          <!-- Dev Tasks (full width) -->
+          <div class="s-card s-card-full">
+            <div class="s-card-head">
+              <span class="s-card-title">跨层开发任务 · Agent → 副驾驶</span>
+              <span class="s-card-badge badge-ok" id="devBadge">检测中</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">总任务</span>
+              <span class="metric-val" id="devTotal">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">待处理</span>
+              <span class="metric-val" id="devPending">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">进行中</span>
+              <span class="metric-val" id="devActive">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">已完成</span>
+              <span class="metric-val" id="devCompleted">—</span>
+            </div>
+            <div id="devTaskList" class="svr-list" style="margin-top:8px"></div>
+          </div>
+
           <!-- COS Bridge -->
           <div class="s-card">
             <div class="s-card-head">
@@ -836,7 +861,7 @@ function getLocalReply(msg){
 }
 
 /* ═══ Dashboard Data Fetching ═══ */
-var dashData={health:null,mcp:null,memory:null};
+var dashData={health:null,mcp:null,memory:null,devTasks:null};
 
 function formatUptime(s){
   if(s==null)return '—';
@@ -890,6 +915,18 @@ function fetchDashboard(){
   .catch(function(){
     dashData.memory=null;
     updateMemoryOffline();
+  });
+
+  /* Fetch /api/mcp/dev-tasks/stats (开发任务统计) */
+  fetch('/api/mcp/dev-tasks/stats')
+  .then(function(r){return r.json()})
+  .then(function(data){
+    dashData.devTasks=data;
+    updateDevTasksUI(data);
+  })
+  .catch(function(){
+    dashData.devTasks=null;
+    updateDevTasksOffline();
   });
 }
 
@@ -981,6 +1018,51 @@ function updateMemoryOffline(){
   memBadge.textContent='离线';memBadge.className='s-card-badge badge-err';
   document.getElementById('memLoaded').textContent='—';
   document.getElementById('memAnchors').textContent='—';
+}
+
+function updateDevTasksUI(d){
+  var ov=d.overview||{};
+  var devBadge=document.getElementById('devBadge');
+  var total=ov.total_tasks||0;
+  var pending=(ov.pending||0)+(ov.authorized||0);
+  var active=(ov.in_progress||0)+(ov.in_review||0);
+  var completed=ov.completed||0;
+
+  document.getElementById('devTotal').textContent=total;
+  document.getElementById('devPending').textContent=pending;
+  document.getElementById('devActive').textContent=active;
+  document.getElementById('devCompleted').textContent=completed;
+
+  if(active>0){devBadge.textContent=active+' 进行中';devBadge.className='s-card-badge badge-warn'}
+  else if(pending>0){devBadge.textContent=pending+' 待处理';devBadge.className='s-card-badge badge-ok'}
+  else if(total>0){devBadge.textContent='空闲';devBadge.className='s-card-badge badge-ok'}
+  else{devBadge.textContent='就绪';devBadge.className='s-card-badge badge-ok'}
+
+  /* Render active task list */
+  var list=document.getElementById('devTaskList');
+  var tasks=d.active_tasks||[];
+  if(tasks.length===0){
+    list.innerHTML='<div style="font-size:11px;color:var(--dim);padding:4px 0">暂无活跃任务 · 人格体Agent可通过MCP工具提交开发请求</div>';
+    return;
+  }
+  var html='';
+  for(var i=0;i<Math.min(tasks.length,5);i++){
+    var t=tasks[i];
+    var sc=t.status==='in_progress'?'on':t.status==='review'?'pending':'unknown';
+    var st=t.status==='in_progress'?'开发中':t.status==='review'?'审查中':t.status==='authorized'?'已授权':'待处理';
+    html+='<div class="svr-row"><span class="svr-dot '+sc+'"></span><span class="svr-name">'+escapeHtml(t.submitted_by||'—')+'</span><span class="svr-role">'+escapeHtml(t.title||'—')+'</span><span class="svr-loc">'+st+'</span></div>';
+  }
+  list.innerHTML=html;
+}
+
+function updateDevTasksOffline(){
+  var devBadge=document.getElementById('devBadge');
+  devBadge.textContent='离线';devBadge.className='s-card-badge badge-err';
+  document.getElementById('devTotal').textContent='—';
+  document.getElementById('devPending').textContent='—';
+  document.getElementById('devActive').textContent='—';
+  document.getElementById('devCompleted').textContent='—';
+  document.getElementById('devTaskList').innerHTML='';
 }
 
 function updateSidebarStatus(online){
