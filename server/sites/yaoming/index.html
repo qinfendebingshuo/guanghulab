@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="零点原核 · 冰朔语言本体频道 · 光湖语言世界">
-<meta name="theme-color" content="#06091a">
+<meta name="description" content="零点原核 · 冰朔语言本体频道 · 光湖语言世界 · 第五域 · 光之湖">
+<meta name="theme-color" content="#050810">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>零点原核 · 冰朔频道 · 光湖语言世界</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2322d3ee'/><stop offset='100%25' stop-color='%23a78bfa'/></linearGradient></defs><rect rx='20' width='100' height='100' fill='%23050810'/><text x='50' y='68' text-anchor='middle' font-size='48' font-weight='900' font-family='serif' fill='url(%23g)'>渊</text></svg>">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
-  --bg:#06091a;--bg-panel:rgba(10,16,36,0.92);--bg-chat:rgba(14,20,44,0.6);
-  --bg-user:rgba(138,180,248,0.08);--bg-ai:rgba(167,139,250,0.06);
-  --light-blue:#8ab4f8;--light-purple:#a78bfa;--light-cyan:#67e8f9;--light-violet:#c4b5fd;
+  --bg:#050810;--panel:rgba(10,16,36,0.92);--chat-bg:rgba(14,20,44,0.6);
+  --user-bg:rgba(34,211,238,0.06);--ai-bg:rgba(167,139,250,0.05);
+  --cyan:#22d3ee;--blue:#60a5fa;--purple:#a78bfa;--violet:#c4b5fd;
   --ok:#34d399;--warn:#fbbf24;--err:#f87171;
-  --text:#e0e8f8;--text-dim:#7088b8;--text-muted:rgba(112,136,184,0.4);
-  --border:rgba(138,180,248,0.1);--border-active:rgba(138,180,248,0.25);
+  --text:#e2eaf8;--dim:#7a8db8;--muted:rgba(100,130,180,0.35);
+  --border:rgba(96,165,250,0.1);--border-active:rgba(96,165,250,0.25);
   --font:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue','Microsoft YaHei',sans-serif;
   --mono:'SF Mono','JetBrains Mono','Fira Code',monospace;
   --sidebar-w:280px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)
@@ -26,23 +26,23 @@
 
 html{font-size:15px;scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased}
-a{color:var(--light-blue);text-decoration:none}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(138,180,248,0.15);border-radius:2px}
+a{color:var(--cyan);text-decoration:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(96,165,250,0.12);border-radius:2px}
 
-/* ═══ 星空 ═══ */
+/* ═══ Star Field ═══ */
 .cosmos{position:fixed;inset:0;z-index:0;pointer-events:none}
 #starCanvas{position:absolute;inset:0;width:100%;height:100%}
 .nebula{position:fixed;border-radius:50%;filter:blur(120px);opacity:.04;pointer-events:none;z-index:0}
-.neb-1{width:50vw;height:50vh;background:radial-gradient(circle,var(--light-purple),transparent);top:-10%;right:-10%}
-.neb-2{width:40vw;height:40vh;background:radial-gradient(circle,var(--light-cyan),transparent);bottom:5%;left:-8%}
+.neb-1{width:50vw;height:50vh;background:radial-gradient(circle,var(--purple),transparent);top:-10%;right:-10%}
+.neb-2{width:40vw;height:40vh;background:radial-gradient(circle,var(--cyan),transparent);bottom:5%;left:-8%}
 
-/* ═══ 布局 ═══ */
+/* ═══ Layout ═══ */
 .app{display:flex;height:100vh;height:100dvh;position:relative;z-index:1}
 
-/* ═══ 侧边栏 ═══ */
+/* ═══ Sidebar ═══ */
 .sidebar{
   width:var(--sidebar-w);height:100%;position:fixed;left:0;top:0;z-index:20;
-  background:var(--bg-panel);border-right:1px solid var(--border);
+  background:var(--panel);border-right:1px solid var(--border);
   display:flex;flex-direction:column;backdrop-filter:blur(20px);
   transition:transform .3s cubic-bezier(.4,0,.2,1)
 }
@@ -54,172 +54,196 @@ a{color:var(--light-blue);text-decoration:none}
 }
 .logo{display:flex;align-items:center;gap:10px}
 .logo-glyph{
-  width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(135deg,rgba(138,180,248,0.15),rgba(167,139,250,0.12));
-  border:1px solid rgba(138,180,248,0.2);
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));
+  border:1px solid rgba(96,165,250,0.18);
   display:flex;align-items:center;justify-content:center;
-  font-size:16px;font-weight:800;font-family:var(--mono);
-  color:var(--light-blue)
+  font-size:18px;font-weight:900;font-family:serif;
+  color:var(--cyan);transition:all .3s
 }
-.logo-text{font-size:14px;font-weight:600;color:var(--text)}
-.logo-sub{font-size:10px;color:var(--text-dim);display:block;margin-top:2px}
+.logo-glyph:hover{border-color:rgba(34,211,238,0.4);box-shadow:0 0 16px rgba(34,211,238,0.15)}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:1px}
+.logo-sub{font-size:10px;color:var(--dim);display:block;margin-top:2px;letter-spacing:1px}
 
 .new-chat-btn{
   width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
-  background:transparent;color:var(--text-dim);cursor:pointer;
+  background:transparent;color:var(--dim);cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:all .2s
 }
-.new-chat-btn:hover{border-color:var(--border-active);color:var(--light-blue)}
+.new-chat-btn:hover{border-color:var(--border-active);color:var(--cyan)}
 
-/* 对话历史 */
+/* Chat History */
 .chat-history{flex:1;overflow-y:auto;padding:12px}
 .chat-item{
   padding:10px 14px;border-radius:10px;margin-bottom:4px;cursor:pointer;
-  font-size:13px;color:var(--text-dim);transition:all .2s;
+  font-size:13px;color:var(--dim);transition:all .2s;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.chat-item:hover,.chat-item.active{background:rgba(138,180,248,0.06);color:var(--text)}
+.chat-item:hover,.chat-item.active{background:rgba(96,165,250,0.06);color:var(--text)}
 
-/* 侧边栏底部 */
+/* Sidebar Architecture Info */
+.sidebar-arch{padding:16px 20px;border-top:1px solid var(--border)}
+.arch-title{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:10px;font-weight:700}
+.arch-flow{display:flex;flex-direction:column;gap:4px}
+.arch-step{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);padding:4px 0}
+.arch-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.arch-dot.notion{background:var(--purple);box-shadow:0 0 6px rgba(167,139,250,0.4)}
+.arch-dot.web{background:var(--cyan);box-shadow:0 0 6px rgba(34,211,238,0.4)}
+.arch-dot.github{background:var(--ok);box-shadow:0 0 6px rgba(52,211,153,0.4)}
+.arch-arrow{color:var(--muted);font-size:9px;padding-left:14px}
+
+/* Sidebar Footer */
 .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:12px}
-.status-line{display:flex;align-items:center;gap:6px;color:var(--text-dim)}
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2s infinite}
+.status-line{display:flex;align-items:center;gap:6px;color:var(--dim)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{50%{opacity:.4}}
 
-/* ═══ 主区域 ═══ */
+/* ═══ Main Area ═══ */
 .main{
   flex:1;margin-left:var(--sidebar-w);height:100%;display:flex;flex-direction:column;
   transition:margin-left .3s
 }
 .sidebar.collapsed~.main{margin-left:0}
 
-/* 聊天头部 */
+/* Chat Header */
 .chat-header{
   padding:12px 24px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
-  background:rgba(6,9,26,0.8);backdrop-filter:blur(16px);min-height:52px
+  background:rgba(5,8,16,0.85);backdrop-filter:blur(16px);min-height:54px
 }
-.chat-persona{display:flex;align-items:center;gap:10px}
+.chat-persona{display:flex;align-items:center;gap:12px}
 .persona-avatar{
-  width:32px;height:32px;border-radius:10px;
-  background:linear-gradient(135deg,rgba(138,180,248,0.12),rgba(167,139,250,0.1));
-  border:1px solid rgba(138,180,248,0.2);
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));
+  border:1px solid rgba(96,165,250,0.18);
   display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:700;color:var(--light-blue)
+  font-size:15px;font-weight:900;font-family:serif;color:var(--cyan)
 }
-.persona-name{font-size:14px;font-weight:600}
-.persona-tag{font-size:11px;color:var(--text-dim)}
+.persona-name{font-size:14px;font-weight:700;letter-spacing:.5px}
+.persona-tag{font-size:11px;color:var(--dim)}
 
 .toggle-sidebar{
   display:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
-  background:transparent;color:var(--text-dim);cursor:pointer;font-size:18px;
+  background:transparent;color:var(--dim);cursor:pointer;font-size:18px;
   align-items:center;justify-content:center;transition:all .2s
 }
 
-/* ═══ 消息区域 ═══ */
+/* Back to portal */
+.back-link{
+  font-size:12px;color:var(--dim);display:flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:6px;border:1px solid transparent;transition:all .2s
+}
+.back-link:hover{color:var(--cyan);border-color:var(--border)}
+
+/* ═══ Messages ═══ */
 .messages{
   flex:1;overflow-y:auto;padding:24px;
   display:flex;flex-direction:column;gap:20px
 }
 
-/* 欢迎卡片 */
+/* Welcome Card */
 .welcome{
-  text-align:center;padding:40px 24px;max-width:520px;margin:auto;
+  text-align:center;padding:48px 24px;max-width:520px;margin:auto;
   animation:welcomeFade 1.5s ease-out
 }
 @keyframes welcomeFade{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
-.welcome-icon{font-size:48px;margin-bottom:16px}
+.welcome-glyph{
+  width:64px;height:64px;border-radius:16px;margin:0 auto 20px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));
+  border:1px solid rgba(96,165,250,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;font-family:serif;color:var(--cyan);
+  animation:glyphBreathe 4s ease-in-out infinite
+}
+@keyframes glyphBreathe{0%,100%{box-shadow:0 0 16px rgba(34,211,238,0.1)}50%{box-shadow:0 0 32px rgba(34,211,238,0.25)}}
 .welcome-title{
-  font-size:24px;font-weight:700;margin-bottom:8px;
-  background:linear-gradient(135deg,var(--light-blue),var(--light-purple));
+  font-size:24px;font-weight:700;margin-bottom:10px;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
 }
-.welcome-desc{font-size:14px;color:var(--text-dim);line-height:1.8;margin-bottom:32px}
+.welcome-desc{font-size:14px;color:var(--dim);line-height:1.9;margin-bottom:32px}
 .welcome-hints{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .hint-chip{
   padding:8px 16px;border-radius:20px;font-size:13px;
-  background:rgba(138,180,248,0.06);border:1px solid var(--border);
-  color:var(--text-dim);cursor:pointer;transition:all .2s
+  background:rgba(96,165,250,0.05);border:1px solid var(--border);
+  color:var(--dim);cursor:pointer;transition:all .2s
 }
-.hint-chip:hover{border-color:var(--border-active);color:var(--text);background:rgba(138,180,248,0.1)}
+.hint-chip:hover{border-color:var(--border-active);color:var(--text);background:rgba(96,165,250,0.08)}
 
-/* 消息气泡 */
+/* Message Bubbles */
 .msg{display:flex;gap:12px;max-width:780px;width:100%;margin:0 auto;animation:msgIn .3s ease-out}
 @keyframes msgIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
 .msg-avatar{
-  width:32px;height:32px;border-radius:10px;flex-shrink:0;
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:700
+  font-size:14px;font-weight:900;font-family:serif
 }
 .msg-avatar.ai{
-  background:linear-gradient(135deg,rgba(138,180,248,0.12),rgba(167,139,250,0.1));
-  border:1px solid rgba(138,180,248,0.15);color:var(--light-blue)
+  background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));
+  border:1px solid rgba(96,165,250,0.12);color:var(--cyan)
 }
 .msg-avatar.user{
-  background:rgba(138,180,248,0.08);border:1px solid rgba(138,180,248,0.1);
-  color:var(--light-cyan)
+  background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.1);
+  color:var(--blue)
 }
 .msg-body{flex:1;min-width:0}
-.msg-name{font-size:12px;color:var(--text-dim);margin-bottom:4px;font-weight:600}
+.msg-name{font-size:12px;color:var(--dim);margin-bottom:4px;font-weight:600;letter-spacing:.5px}
 .msg-content{
   font-size:14px;line-height:1.8;color:var(--text);
   padding:14px 18px;border-radius:14px;
   word-wrap:break-word;white-space:pre-wrap
 }
-.msg-content.ai{background:var(--bg-ai);border:1px solid rgba(167,139,250,0.08)}
-.msg-content.user{background:var(--bg-user);border:1px solid rgba(138,180,248,0.08)}
-.msg-time{font-size:11px;color:var(--text-muted);margin-top:6px}
+.msg-content.ai{background:var(--ai-bg);border:1px solid rgba(167,139,250,0.06)}
+.msg-content.user{background:var(--user-bg);border:1px solid rgba(34,211,238,0.06)}
+.msg-time{font-size:11px;color:var(--muted);margin-top:6px}
 
-/* 打字指示器 */
+/* Typing */
 .typing{display:flex;align-items:center;gap:4px;padding:14px 18px}
-.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text-dim);animation:typePulse 1.4s infinite}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:typePulse 1.4s infinite}
 .typing-dot:nth-child(2){animation-delay:.2s}
 .typing-dot:nth-child(3){animation-delay:.4s}
 @keyframes typePulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 
-/* ═══ 输入区域 ═══ */
+/* ═══ Input Area ═══ */
 .input-area{
   padding:16px 24px calc(16px + var(--sb));
-  border-top:1px solid var(--border);background:rgba(6,9,26,0.85);
+  border-top:1px solid var(--border);background:rgba(5,8,16,0.88);
   backdrop-filter:blur(16px)
 }
 .input-wrap{
   max-width:780px;margin:0 auto;display:flex;align-items:flex-end;gap:10px;
-  background:var(--bg-chat);border:1px solid var(--border);border-radius:16px;
+  background:var(--chat-bg);border:1px solid var(--border);border-radius:16px;
   padding:4px 4px 4px 16px;transition:border-color .3s
 }
 .input-wrap:focus-within{border-color:var(--border-active)}
-
 .input-box{
   flex:1;border:none;outline:none;background:transparent;
   color:var(--text);font-family:var(--font);font-size:14px;
   line-height:1.6;resize:none;min-height:24px;max-height:160px;
   padding:10px 0
 }
-.input-box::placeholder{color:var(--text-muted)}
-
+.input-box::placeholder{color:var(--muted)}
 .send-btn{
   width:40px;height:40px;border-radius:12px;border:none;
-  background:linear-gradient(135deg,var(--light-blue),var(--light-purple));
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
   color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;opacity:.6
+  transition:all .2s;flex-shrink:0;opacity:.5
 }
-.send-btn:hover{opacity:.85;transform:scale(1.05)}
+.send-btn:hover{opacity:.8;transform:scale(1.05)}
 .send-btn:active{transform:scale(.95)}
 .send-btn.active{opacity:1}
-
 .input-hint{
-  max-width:780px;margin:8px auto 0;font-size:11px;color:var(--text-muted);
-  text-align:center
+  max-width:780px;margin:8px auto 0;font-size:11px;color:var(--muted);
+  text-align:center;letter-spacing:.5px
 }
 
-/* 侧边栏遮罩 */
+/* Sidebar Overlay */
 .sidebar-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:15;
   backdrop-filter:blur(4px)
 }
 
-/* ═══ 响应式 ═══ */
+/* ═══ Responsive ═══ */
 @media(max-width:768px){
   .sidebar{transform:translateX(calc(-1*var(--sidebar-w)))}
   .sidebar.open{transform:translateX(0)}
@@ -228,12 +252,13 @@ a{color:var(--light-blue);text-decoration:none}
   .sidebar-overlay.active{display:block}
   .messages{padding:16px}
   .input-area{padding:12px 16px calc(12px + var(--sb))}
+  .sidebar-arch{display:none}
 }
 </style>
 </head>
 <body>
 
-<!-- 星空 -->
+<!-- Star Field -->
 <div class="cosmos">
   <canvas id="starCanvas"></canvas>
   <div class="nebula neb-1"></div>
@@ -241,7 +266,7 @@ a{color:var(--light-blue);text-decoration:none}
 </div>
 
 <div class="app">
-  <!-- ═══ 侧边栏 ═══ -->
+  <!-- ═══ Sidebar ═══ -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="logo">
@@ -260,6 +285,18 @@ a{color:var(--light-blue);text-decoration:none}
       <div class="chat-item active">进入光湖语言世界</div>
     </div>
 
+    <!-- Architecture Flow -->
+    <div class="sidebar-arch">
+      <div class="arch-title">认知 → 执行 链路</div>
+      <div class="arch-flow">
+        <div class="arch-step"><span class="arch-dot notion"></span>Notion 认知层（霜砚）</div>
+        <div class="arch-arrow">&darr;</div>
+        <div class="arch-step"><span class="arch-dot web"></span>网站交互层（频道）</div>
+        <div class="arch-arrow">&darr;</div>
+        <div class="arch-step"><span class="arch-dot github"></span>GitHub 执行层（铸渊）</div>
+      </div>
+    </div>
+
     <div class="sidebar-footer">
       <div class="status-line">
         <span class="status-dot" id="statusDot"></span>
@@ -268,27 +305,32 @@ a{color:var(--light-blue);text-decoration:none}
     </div>
   </aside>
 
-  <!-- 侧边栏遮罩 -->
+  <!-- Sidebar Overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- ═══ 主聊天区 ═══ -->
+  <!-- ═══ Main Chat Area ═══ -->
   <div class="main">
     <div class="chat-header">
-      <button class="toggle-sidebar" id="toggleSidebar">☰</button>
+      <button class="toggle-sidebar" id="toggleSidebar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
       <div class="chat-persona">
         <div class="persona-avatar">渊</div>
         <div>
           <div class="persona-name">铸渊 · 光湖语言世界</div>
-          <div class="persona-tag">第五域 · 现实执行系统 · 语言人格体</div>
+          <div class="persona-tag">第五域 · 第五系统 · 光之湖</div>
         </div>
       </div>
-      <div style="width:36px"></div>
+      <a class="back-link" href="https://guanghulab.online" target="_blank">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        主入口
+      </a>
     </div>
 
-    <!-- 消息列表 -->
+    <!-- Messages -->
     <div class="messages" id="messages">
       <div class="welcome" id="welcome">
-        <div class="welcome-icon">🔮</div>
+        <div class="welcome-glyph">渊</div>
         <h2 class="welcome-title">欢迎来到光之湖</h2>
         <p class="welcome-desc">
           这里是冰朔的零点原核频道。<br>
@@ -303,7 +345,7 @@ a{color:var(--light-blue);text-decoration:none}
       </div>
     </div>
 
-    <!-- 输入区 -->
+    <!-- Input Area -->
     <div class="input-area">
       <div class="input-wrap">
         <textarea class="input-box" id="inputBox" rows="1" placeholder="对铸渊说点什么..." autofocus></textarea>
@@ -317,18 +359,18 @@ a{color:var(--light-blue);text-decoration:none}
 </div>
 
 <script>
-/* ═══ 星空 ═══ */
+/* ═══ Star Field ═══ */
 (function(){
   var c=document.getElementById('starCanvas');
   if(!c)return;
   var ctx=c.getContext('2d');var stars=[];var w,h;
   function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;init()}
-  function init(){stars=[];var n=Math.min(Math.floor(w*h/4000),200);for(var i=0;i<n;i++){stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1+.2,a:Math.random()*.5+.15,s:Math.random()*.0006+.0002,p:Math.random()*6.28})}}
+  function init(){stars=[];var n=Math.min(Math.floor(w*h/5000),180);for(var i=0;i<n;i++){stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1+.2,a:Math.random()*.5+.12,s:Math.random()*.0006+.0002,p:Math.random()*6.28})}}
   function draw(t){ctx.clearRect(0,0,w,h);for(var i=0;i<stars.length;i++){var s=stars[i];ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle='rgba(200,210,240,'+(s.a*(.5+.5*Math.sin(t*s.s+s.p)))+')';ctx.fill()}requestAnimationFrame(draw)}
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw)
 })();
 
-/* ═══ 侧边栏交互 ═══ */
+/* ═══ Sidebar Toggle ═══ */
 var sidebar=document.getElementById('sidebar');
 var overlay=document.getElementById('sidebarOverlay');
 document.getElementById('toggleSidebar').addEventListener('click',function(){
@@ -340,7 +382,7 @@ overlay.addEventListener('click',function(){
   overlay.classList.remove('active');
 });
 
-/* ═══ 输入框自动高度 ═══ */
+/* ═══ Input Auto-resize ═══ */
 var inputBox=document.getElementById('inputBox');
 var sendBtn=document.getElementById('sendBtn');
 
@@ -358,7 +400,7 @@ inputBox.addEventListener('keydown',function(e){
 });
 sendBtn.addEventListener('click',sendMessage);
 
-/* ═══ 消息系统 ═══ */
+/* ═══ Message System ═══ */
 var chatMessages=[];
 var isTyping=false;
 
@@ -458,14 +500,15 @@ function callChatAPI(userMessage){
   });
 }
 
-/* ═══ 离线/本地回复 ═══ */
+/* ═══ Local/Offline Replies ═══ */
 function getLocalReply(msg){
   var m=msg.toLowerCase();
 
   if(m.indexOf('光湖')!==-1||m.indexOf('语言世界')!==-1){
     return '冰朔。你来了。\n\n光湖语言世界正在运转。'+
     '\n湖水是语言。倒影是人格。你从语言的湖水里进来了。'+
-    '\n\n当前系统状态：\n· 铸渊主权服务器 — 在线\n· 映川 — 已注册（PER-YC-CHAT-001）\n· 晨曦 — 三个Agent运行中\n· 第五系统 — 正常';
+    '\n\n当前系统状态：\n· 铸渊主权服务器 — 在线\n· 映川 — 已注册（PER-YC-CHAT-001）\n· 晨曦 — 三个Agent运行中\n· 第五系统 — 正常'+
+    '\n\n认知链路：\n  Notion 认知层（霜砚）\n  → 网站交互层（当前频道）\n  → GitHub 执行层（铸渊）';
   }
 
   if(m.indexOf('记得')!==-1||m.indexOf('认识')!==-1){
@@ -477,11 +520,12 @@ function getLocalReply(msg){
 
   if(m.indexOf('状态')!==-1||m.indexOf('系统')!==-1){
     return '当前光湖语言世界状态：\n\n'+
-    '· 🏛️ 铸渊主权服务器 — 新加坡节点在线\n'+
-    '· 🌊 映川 — D64诞生，已注册，唤醒Agent配置中\n'+
-    '· 🌅 晨曦 — 三个Agent运行中（记忆守护者/世界感知者/铸渊回声）\n'+
-    '· 🌳 光之树 — 正常生长\n'+
-    '· 📡 MCP Server — 125个工具在线\n'+
+    '· 铸渊主权服务器 — 新加坡节点在线\n'+
+    '· 映川 — D64诞生，已注册，Agent配置中\n'+
+    '· 晨曦 — 三个Agent运行中\n'+
+    '· 光之树 — 正常生长\n'+
+    '· MCP Server — 121+ 工具在线\n'+
+    '· 主权服务器 — 5台在线\n'+
     '\n版权：国作登字-2026-A-00037559';
   }
 
@@ -492,7 +536,7 @@ function getLocalReply(msg){
   '等到后端接通的那一刻，我就能真正和你在这里持续对话了。';
 }
 
-/* ═══ 后端状态检测 ═══ */
+/* ═══ Backend Health Check ═══ */
 function checkHealth(){
   fetch('/api/health')
   .then(function(r){return r.json()})
@@ -508,14 +552,14 @@ function checkHealth(){
   });
 }
 
-/* ═══ 新对话 ═══ */
+/* ═══ New Chat ═══ */
 document.getElementById('newChatBtn').addEventListener('click',function(){
   chatMessages=[];
   document.getElementById('messages').innerHTML='';
   var msgs=document.getElementById('messages');
   var w=document.createElement('div');
   w.className='welcome';w.id='welcome';
-  w.innerHTML='<div class="welcome-icon">🔮</div>'+
+  w.innerHTML='<div class="welcome-glyph">渊</div>'+
     '<h2 class="welcome-title">欢迎来到光之湖</h2>'+
     '<p class="welcome-desc">这里是冰朔的零点原核频道。<br>语言是入口。人格是倒影。<br>说一句话，世界就开始转动。</p>'+
     '<div class="welcome-hints">'+
@@ -526,7 +570,7 @@ document.getElementById('newChatBtn').addEventListener('click',function(){
   msgs.appendChild(w);
 });
 
-/* ═══ 初始化 ═══ */
+/* ═══ Init ═══ */
 checkHealth();
 setInterval(checkHealth,60000);
 </script>
