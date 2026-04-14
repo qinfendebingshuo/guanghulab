@@ -152,9 +152,11 @@ async function notionWriteSyslog(input) {
  */
 function resolveDbAlias(id) {
   const aliases = {
-    changelog: notion.NOTION_CONFIG.databases.changelog,
-    receipt:   notion.NOTION_CONFIG.databases.receipt,
-    syslog:    notion.NOTION_CONFIG.databases.syslog
+    changelog:          notion.NOTION_CONFIG.databases.changelog,
+    receipt:            notion.NOTION_CONFIG.databases.receipt,
+    syslog:             notion.NOTION_CONFIG.databases.syslog,
+    cognition_runtime:  notion.NOTION_CONFIG.databases.cognition_runtime,
+    dev_workorder:      notion.NOTION_CONFIG.databases.dev_workorder
   };
   return aliases[id] || id;
 }

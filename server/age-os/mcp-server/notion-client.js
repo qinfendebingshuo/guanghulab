@@ -19,9 +19,11 @@ const { Client } = require('@notionhq/client');
 const NOTION_CONFIG = {
   token:         process.env.ZY_NOTION_TOKEN || '',
   databases: {
-    changelog: process.env.ZY_NOTION_CHANGELOG_DB || '',
-    receipt:   process.env.ZY_NOTION_RECEIPT_DB || '',
-    syslog:    process.env.ZY_NOTION_SYSLOG_DB || ''
+    changelog:          process.env.ZY_NOTION_CHANGELOG_DB || '',
+    receipt:            process.env.ZY_NOTION_RECEIPT_DB || '',
+    syslog:             process.env.ZY_NOTION_SYSLOG_DB || '',
+    cognition_runtime:  process.env.ZY_NOTION_COGNITION_RUNTIME_DB || '',
+    dev_workorder:      process.env.ZY_NOTION_DEV_WORKORDER_DB || ''
   },
   pages: {
     bulletin:  process.env.ZY_NOTION_BULLETIN_PAGE || ''
@@ -314,9 +316,11 @@ function getConfig() {
   return {
     token_configured: !!NOTION_CONFIG.token,
     databases: {
-      changelog: NOTION_CONFIG.databases.changelog ? '已配置' : '未配置',
-      receipt:   NOTION_CONFIG.databases.receipt   ? '已配置' : '未配置',
-      syslog:    NOTION_CONFIG.databases.syslog    ? '已配置' : '未配置'
+      changelog:          NOTION_CONFIG.databases.changelog          ? '已配置' : '未配置',
+      receipt:            NOTION_CONFIG.databases.receipt            ? '已配置' : '未配置',
+      syslog:             NOTION_CONFIG.databases.syslog             ? '已配置' : '未配置',
+      cognition_runtime:  NOTION_CONFIG.databases.cognition_runtime  ? '已配置' : '未配置',
+      dev_workorder:      NOTION_CONFIG.databases.dev_workorder      ? '已配置' : '未配置'
     },
     pages: {
       bulletin: NOTION_CONFIG.pages.bulletin ? '已配置' : '未配置'
