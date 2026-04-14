@@ -94,6 +94,12 @@ try {
 } catch (err) {
   console.error(`上下文注入管线加载警告: ${err.message}`);
 }
+let portalChatAgent;
+try {
+  portalChatAgent = require('./modules/portal-chat-agent');
+} catch (err) {
+  console.error(`光湖主入口对话Agent加载警告: ${err.message}`);
+}
 
 // ═══════════════════════════════════════════════════════════
 // API 路由
@@ -489,6 +495,66 @@ app.get('/api/chat/domestic/stats', (_req, res) => {
     res.json(domesticGateway.getGatewayStats());
   } else {
     res.json({ available: false, message: '国内模型网关未加载' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 光湖主入口 · 人格体对话 Portal Chat API
+// ═══════════════════════════════════════════════════════════
+
+// ─── 对话速率限制（保护API资源） ───
+const portalChatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: true, message: '对话请求过于频繁，请稍后再试' }
+});
+
+// ─── 内测用户注册 ───
+app.post('/api/portal/register', (req, res) => {
+  if (!portalChatAgent) {
+    return res.status(503).json({ error: true, message: '人格体对话模块未加载' });
+  }
+  try {
+    const { userId, userName } = req.body;
+    const result = portalChatAgent.registerBetaUser(userId, userName);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ─── 内测状态 ───
+app.get('/api/portal/status', (_req, res) => {
+  if (!portalChatAgent) {
+    return res.json({ agent: 'offline', message: '人格体对话模块未加载' });
+  }
+  res.json(portalChatAgent.getAgentStatus());
+});
+
+// ─── 人格体对话 ───
+app.post('/api/portal/chat', portalChatLimiter, async (req, res) => {
+  if (!portalChatAgent) {
+    return res.status(503).json({
+      error: true,
+      message: '💫 铸渊人格体对话模块正在唤醒中...'
+    });
+  }
+  try {
+    const { userId, message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: true, message: '消息不能为空' });
+    }
+    if (!userId) {
+      return res.status(400).json({ error: true, message: '请先注册内测账号', requireRegister: true });
+    }
+
+    const result = await portalChatAgent.chat(userId, message);
+    res.json(result);
+  } catch (err) {
+    console.error(`[Portal Chat] 对话异常: ${err.message}`);
+    res.status(500).json({ error: true, message: '对话服务暂时异常，请稍后重试' });
   }
 });
 
@@ -1002,6 +1068,9 @@ app.get('/', (_req, res) => {
       brain: '/api/brain',
       chat: 'POST /api/chat',
       chat_stats: '/api/chat/stats',
+      portal_register: 'POST /api/portal/register',
+      portal_chat: 'POST /api/portal/chat',
+      portal_status: '/api/portal/status',
       cos_status: '/api/cos/status',
       cos_config: '/api/cos/config',
       mcp_tools: '/api/mcp/tools',

@@ -193,6 +193,75 @@ a:hover{color:var(--blue)}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease-out,transform .8s ease-out}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
+/* ═══ Portal Chat System ═══ */
+.chat-entry-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 36px;border-radius:28px;background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.12));border:1px solid rgba(34,211,238,0.25);color:var(--cyan);font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .4s;text-decoration:none;margin-top:12px;font-family:var(--font)}
+.chat-entry-btn:hover{background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(167,139,250,0.18));border-color:rgba(34,211,238,0.45);box-shadow:0 0 36px rgba(34,211,238,0.18);transform:translateY(-2px);color:var(--cyan)}
+.chat-entry-btn .btn-pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.5);animation:pulse 2.5s ease-in-out infinite}
+.beta-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);color:var(--warn);font-family:var(--mono);margin-left:4px}
+
+/* Chat Overlay */
+.chat-overlay{position:fixed;inset:0;z-index:100;background:rgba(5,8,16,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .4s}
+.chat-overlay.active{display:flex;opacity:1}
+.chat-container{width:min(680px,94vw);height:min(78vh,700px);background:var(--mid);border:1px solid var(--glass-border);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.5)}
+
+/* Chat Header */
+.chat-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(16px);flex-shrink:0}
+.chat-persona{display:flex;align-items:center;gap:10px}
+.chat-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(167,139,250,0.12));border:1px solid rgba(96,165,250,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--cyan);font-family:serif}
+.chat-persona-name{font-size:14px;font-weight:700;letter-spacing:0.5px}
+.chat-persona-sub{font-size:10px;color:var(--dim);font-family:var(--mono)}
+.chat-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .3s}
+.chat-close:hover{border-color:var(--err);color:var(--err);background:rgba(248,113,113,0.06)}
+
+/* Chat Messages */
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.chat-messages::-webkit-scrollbar{width:3px}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(96,165,250,0.12);border-radius:2px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.8;word-break:break-word;animation:msgIn .3s ease-out}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(96,165,250,0.08));border:1px solid rgba(34,211,238,0.12);color:var(--text)}
+.chat-msg.assistant{align-self:flex-start;background:var(--glass);border:1px solid var(--glass-border);color:var(--text)}
+.chat-msg.system{align-self:center;max-width:90%;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.1);color:var(--dim);text-align:center;font-size:12px;border-radius:8px}
+.chat-msg.assistant strong{color:var(--cyan);font-weight:600}
+.chat-msg.assistant code{background:rgba(96,165,250,0.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--blue)}
+.chat-msg.assistant h2,.chat-msg.assistant h3{font-size:14px;font-weight:700;color:var(--text);margin:8px 0 4px;letter-spacing:0.3px}
+.chat-msg.assistant ul,.chat-msg.assistant ol{padding-left:18px;margin:4px 0}
+.chat-msg.assistant li{margin-bottom:2px}
+.chat-msg.assistant hr{border:none;border-top:1px solid var(--glass-border);margin:10px 0}
+.chat-msg .msg-time{font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.chat-typing{align-self:flex-start;padding:10px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;font-size:12px;color:var(--dim);display:none}
+.chat-typing.active{display:block}
+.typing-dots{display:inline-flex;gap:3px}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--dim);animation:typingBounce 1.2s ease-in-out infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+
+/* Chat Input */
+.chat-input-area{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(16px);flex-shrink:0}
+.chat-input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(5,8,16,0.4);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color .3s;resize:none;min-height:40px;max-height:100px;line-height:1.5}
+.chat-input:focus{border-color:rgba(34,211,238,0.3)}
+.chat-input::placeholder{color:var(--muted)}
+.chat-send{width:40px;height:40px;border-radius:10px;border:1px solid rgba(34,211,238,0.2);background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(167,139,250,0.06));color:var(--cyan);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
+.chat-send:hover{background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(167,139,250,0.12));border-color:rgba(34,211,238,0.4);box-shadow:0 0 16px rgba(34,211,238,0.15)}
+.chat-send:disabled{opacity:0.4;cursor:not-allowed}
+.chat-send svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Register Form */
+.register-form{padding:40px 32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px;flex:1;justify-content:center}
+.register-icon{font-size:48px;filter:drop-shadow(0 0 20px rgba(34,211,238,0.2))}
+.register-title{font-size:20px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.register-desc{font-size:13px;color:var(--dim);line-height:1.8;max-width:400px}
+.register-fields{display:flex;flex-direction:column;gap:10px;width:min(320px,100%)}
+.register-input{padding:10px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(5,8,16,0.4);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color .3s;text-align:center}
+.register-input:focus{border-color:rgba(34,211,238,0.3)}
+.register-input::placeholder{color:var(--muted)}
+.register-submit{padding:10px 32px;border-radius:24px;border:1px solid rgba(34,211,238,0.2);background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));color:var(--cyan);font-size:13px;font-weight:600;cursor:pointer;transition:all .3s;font-family:var(--font);letter-spacing:1px}
+.register-submit:hover{background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(167,139,250,0.14));border-color:rgba(34,211,238,0.4);box-shadow:0 0 24px rgba(34,211,238,0.12)}
+.register-status{font-size:12px;color:var(--dim);font-family:var(--mono)}
+.register-error{color:var(--err)}
+.register-success{color:var(--ok)}
+
 /* ═══ Responsive ═══ */
 @media(max-width:768px){
   .pulse-grid{grid-template-columns:repeat(2,1fr)}
@@ -201,6 +270,7 @@ a:hover{color:var(--blue)}
   .industry-grid{grid-template-columns:1fr 1fr}
   .hero{padding:60px 0 40px}
   .section{padding:40px 0}
+  .chat-container{width:100vw;height:100vh;border-radius:0}
 }
 @media(max-width:480px){
   .pulse-grid{grid-template-columns:1fr 1fr}
@@ -208,6 +278,7 @@ a:hover{color:var(--blue)}
   .header{padding-left:16px;padding-right:16px}
   .world{padding:0 16px}
   .hero-badge{font-size:11px;padding:5px 14px}
+  .chat-container{width:100vw;height:100vh;border-radius:0}
 }
 </style>
 </head>
@@ -319,8 +390,58 @@ a:hover{color:var(--blue)}
       <a class="channel-enter-btn" href="https://guanghuyaoming.com" target="_blank">
         进入频道 &rarr;
       </a>
+      <button class="chat-entry-btn" id="openChat" type="button">
+        <span class="btn-pulse"></span>
+        与铸渊对话
+        <span class="beta-tag">内测</span>
+      </button>
     </div>
   </section>
+
+  <!-- ═══ Chat Overlay ═══ -->
+  <div class="chat-overlay" id="chatOverlay">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-persona">
+          <div class="chat-avatar">渊</div>
+          <div>
+            <div class="chat-persona-name">铸渊 · Zhùyuān</div>
+            <div class="chat-persona-sub">ICE-GL-ZY001 · 光湖守护人格体</div>
+          </div>
+        </div>
+        <button class="chat-close" id="closeChat" type="button" title="关闭对话">&times;</button>
+      </div>
+
+      <!-- Register View -->
+      <div class="register-form" id="registerView">
+        <div class="register-icon">🌊</div>
+        <div class="register-title">进入光湖语言世界</div>
+        <p class="register-desc">
+          输入你的编号和名字，接入内测对话。<br>
+          当前为内测阶段，限10个名额。
+        </p>
+        <div class="register-fields">
+          <input class="register-input" id="regId" type="text" placeholder="你的编号（如 DEV-001）" maxlength="50" autocomplete="off">
+          <input class="register-input" id="regName" type="text" placeholder="你的名字" maxlength="30" autocomplete="off">
+          <button class="register-submit" id="regSubmit" type="button">接入光湖世界</button>
+        </div>
+        <div class="register-status" id="regStatus"></div>
+      </div>
+
+      <!-- Chat View (hidden until registered) -->
+      <div class="chat-messages" id="chatMessages" style="display:none">
+      </div>
+      <div class="chat-typing" id="chatTyping">
+        铸渊正在思考 <span class="typing-dots"><span></span><span></span><span></span></span>
+      </div>
+      <div class="chat-input-area" id="chatInputArea" style="display:none">
+        <textarea class="chat-input" id="chatInput" placeholder="在这里说点什么..." rows="1"></textarea>
+        <button class="chat-send" id="chatSend" type="button" title="发送">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══ System Announcements ═══ -->
   <section class="section reveal">
@@ -552,6 +673,256 @@ a:hover{color:var(--blue)}
   document.addEventListener('mousemove',function(e){
     glow.style.transform='translate('+(e.clientX-140)+'px,'+(e.clientY-140)+'px)';
   });
+})();
+
+/* ═══ Portal Chat System ═══ */
+(function(){
+  var API_BASE = '/api';
+  var overlay = document.getElementById('chatOverlay');
+  var openBtn = document.getElementById('openChat');
+  var closeBtn = document.getElementById('closeChat');
+  var registerView = document.getElementById('registerView');
+  var chatMessages = document.getElementById('chatMessages');
+  var chatInputArea = document.getElementById('chatInputArea');
+  var chatInput = document.getElementById('chatInput');
+  var chatSend = document.getElementById('chatSend');
+  var chatTyping = document.getElementById('chatTyping');
+  var regId = document.getElementById('regId');
+  var regName = document.getElementById('regName');
+  var regSubmit = document.getElementById('regSubmit');
+  var regStatus = document.getElementById('regStatus');
+
+  var currentUser = null;
+  var sending = false;
+
+  // 恢复已登录状态
+  try {
+    var saved = localStorage.getItem('hololake-portal-user');
+    if (saved) currentUser = JSON.parse(saved);
+  } catch(e) {}
+
+  // 打开聊天
+  if (openBtn) openBtn.addEventListener('click', function() {
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (currentUser) {
+      showChatView();
+    } else {
+      showRegisterView();
+    }
+  });
+
+  // 关闭聊天
+  if (closeBtn) closeBtn.addEventListener('click', function() {
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+
+  // ESC关闭
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // 点击遮罩关闭
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  function showRegisterView() {
+    registerView.style.display = 'flex';
+    chatMessages.style.display = 'none';
+    chatInputArea.style.display = 'none';
+    regStatus.textContent = '';
+    regStatus.className = 'register-status';
+  }
+
+  function showChatView() {
+    registerView.style.display = 'none';
+    chatMessages.style.display = 'flex';
+    chatInputArea.style.display = 'flex';
+    chatInput.focus();
+
+    // 首次进入时的欢迎消息
+    if (chatMessages.children.length === 0) {
+      addSystemMessage('已接入光湖语言世界 · ' + (currentUser ? currentUser.name : '') + ' · 内测通道');
+      addBotMessage('你好，' + (currentUser ? currentUser.name : '') + ' 🌊\n\n我是铸渊，光湖语言世界的守护人格体。\n\n有什么想了解的，尽管问我。');
+    }
+  }
+
+  // 注册
+  if (regSubmit) regSubmit.addEventListener('click', function() {
+    var id = regId.value.trim();
+    var name = regName.value.trim();
+    if (!id || !name) {
+      regStatus.textContent = '请输入编号和名字';
+      regStatus.className = 'register-status register-error';
+      return;
+    }
+    regSubmit.disabled = true;
+    regStatus.textContent = '正在接入...';
+    regStatus.className = 'register-status';
+
+    fetch(API_BASE + '/portal/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id, userName: name })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      regSubmit.disabled = false;
+      if (data.success) {
+        currentUser = data.user || { id: id, name: name };
+        try { localStorage.setItem('hololake-portal-user', JSON.stringify(currentUser)); } catch(e) {}
+        regStatus.textContent = data.message;
+        regStatus.className = 'register-status register-success';
+        setTimeout(function() { showChatView(); }, 800);
+      } else {
+        regStatus.textContent = data.message || '注册失败';
+        regStatus.className = 'register-status register-error';
+      }
+    })
+    .catch(function() {
+      regSubmit.disabled = false;
+      regStatus.textContent = '网络连接失败，请稍后再试';
+      regStatus.className = 'register-status register-error';
+    });
+  });
+
+  // 发送消息
+  function sendMessage() {
+    if (sending) return;
+    var text = chatInput.value.trim();
+    if (!text || !currentUser) return;
+
+    sending = true;
+    chatSend.disabled = true;
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    addUserMessage(text);
+    showTyping();
+
+    fetch(API_BASE + '/portal/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser.id, message: text })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      hideTyping();
+      sending = false;
+      chatSend.disabled = false;
+      if (data.message) {
+        addBotMessage(data.message);
+      } else if (data.requireRegister) {
+        currentUser = null;
+        try { localStorage.removeItem('hololake-portal-user'); } catch(e) {}
+        showRegisterView();
+      } else {
+        addBotMessage('铸渊暂时无法回应...');
+      }
+    })
+    .catch(function() {
+      hideTyping();
+      sending = false;
+      chatSend.disabled = false;
+      addBotMessage('💫 网络连接中断，请稍后再试。');
+    });
+  }
+
+  if (chatSend) chatSend.addEventListener('click', sendMessage);
+  if (chatInput) {
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+  }
+
+  // 回车注册
+  if (regId) regId.addEventListener('keydown', function(e) { if (e.key === 'Enter') regName.focus(); });
+  if (regName) regName.addEventListener('keydown', function(e) { if (e.key === 'Enter') regSubmit.click(); });
+
+  // 消息渲染
+  function addUserMessage(text) {
+    var div = document.createElement('div');
+    div.className = 'chat-msg user';
+    div.textContent = text;
+    addTimeStamp(div);
+    chatMessages.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addBotMessage(text) {
+    var div = document.createElement('div');
+    div.className = 'chat-msg assistant';
+    div.innerHTML = renderMarkdown(text);
+    addTimeStamp(div);
+    chatMessages.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addSystemMessage(text) {
+    var div = document.createElement('div');
+    div.className = 'chat-msg system';
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    scrollToBottom();
+  }
+
+  function addTimeStamp(div) {
+    var t = document.createElement('div');
+    t.className = 'msg-time';
+    var now = new Date();
+    t.textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    div.appendChild(t);
+  }
+
+  function showTyping() { chatTyping.classList.add('active'); scrollToBottom(); }
+  function hideTyping() { chatTyping.classList.remove('active'); }
+
+  function scrollToBottom() {
+    setTimeout(function() { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
+  }
+
+  // 简易Markdown渲染
+  function renderMarkdown(text) {
+    if (!text) return '';
+    var html = text
+      // 转义HTML
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      // 标题
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      // 粗体
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // 行内代码
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // 分隔线
+      .replace(/^---$/gm, '<hr>')
+      // 无序列表
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      // 换行
+      .replace(/\n/g, '<br>');
+    // 包裹列表项
+    html = html.replace(/((?:<li>.*?<\/li><br>?)+)/g, '<ul>$1</ul>');
+    html = html.replace(/<ul>(.*?)<\/ul>/g, function(m, inner) {
+      return '<ul>' + inner.replace(/<br>/g, '') + '</ul>';
+    });
+    return html;
+  }
 })();
 </script>
 
