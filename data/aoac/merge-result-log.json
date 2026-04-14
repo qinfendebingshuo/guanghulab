@@ -2,31 +2,31 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-14 21:46:34+08:00",
-  "timestamp_utc": "2026-04-14T13:46:34.216Z",
+  "timestamp": "2026-04-14 23:00:36+08:00",
+  "timestamp_utc": "2026-04-14T15:00:36.748Z",
   "merge": {
-    "pr_number": 375,
-    "pr_title": "fix: sync portal/index.html + fix eval() false positive + XSS hardening",
-    "merge_commit_sha": "a9c0dc92a6e903821103617e6ceaac7be6197619",
-    "head_sha": "380fcca84433ffbe3c4a6215b2b31ef5c0b26f44",
+    "pr_number": 377,
+    "pr_title": "fix: add missing schema/scripts dirs to mkdir in deploy workflow",
+    "merge_commit_sha": "cb65ff5acca98b17f0293aa0d4f32403439b95bf",
+    "head_sha": "4b7472e6b5ab36bca0e18edc300c2904074a3790",
     "base_branch": "main"
   },
   "ci": {
-    "combined_status": "failure",
-    "overall_result": "failure",
+    "combined_status": "pending",
+    "overall_result": "pending",
     "summary": {
-      "total": 4,
+      "total": 3,
       "passed": 0,
       "failed": 0,
       "skipped": 1
     },
     "check_runs": [
       {
-        "name": "build",
-        "status": "queued",
-        "conclusion": null,
-        "started_at": "2026-04-14T13:46:29Z",
-        "completed_at": null,
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-14T15:00:30Z",
+        "completed_at": "2026-04-14T15:00:30Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -34,25 +34,16 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-14T13:46:30Z",
+        "started_at": "2026-04-14T15:00:35Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "gate-guard",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-14T13:46:25Z",
-        "completed_at": "2026-04-14T13:46:25Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "deploy",
+        "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-14T13:46:31Z",
+        "started_at": "2026-04-14T15:00:34Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
