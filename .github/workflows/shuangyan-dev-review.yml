@@ -145,7 +145,8 @@ jobs:
           # 排除.yml/.yaml工作流文件自身（避免grep模式自匹配）
           JS_CHANGED=$(echo "$CHANGED_FILES" | grep -E '\.(js|ts|mjs|cjs)$' || true)
           if [ -n "$JS_CHANGED" ]; then
-            if echo "$JS_CHANGED" | xargs grep -l 'eval(' 2>/dev/null | head -1; then
+            # 精确匹配独立eval()调用，排除evaluateXxx等函数名
+            if echo "$JS_CHANGED" | xargs grep -El '(^|[^a-zA-Z_])eval\s*\(' 2>/dev/null | head -1; then
               REVIEW_NOTES="${REVIEW_NOTES}\n⚠️ 发现eval()调用，需人工审查"
             fi
             if echo "$JS_CHANGED" | xargs grep -l 'process\.env\.' 2>/dev/null | grep -v '\.config\.' | head -3; then
