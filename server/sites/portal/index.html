@@ -23,6 +23,20 @@
   --mono:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace;
   --r:14px;--rs:8px;
   --sb:env(safe-area-inset-bottom,0px);
+  --header-bg:rgba(5,8,16,0.75);
+  --star-show:1;--lake-show:1;--nebula-show:1;
+}
+
+/* ═══ Day Theme ═══ */
+[data-theme="day"]{
+  --deep:#f0f4f8;--mid:#e8ecf2;--surface:rgba(255,255,255,0.75);
+  --cyan:#0891b2;--blue:#2563eb;--purple:#7c3aed;--violet:#6d28d9;
+  --ok:#059669;--warn:#d97706;--err:#dc2626;
+  --text:#1e293b;--dim:#64748b;--muted:rgba(100,116,139,0.25);
+  --border:rgba(148,163,184,0.2);--border-hover:rgba(59,130,246,0.3);
+  --glass:rgba(255,255,255,0.65);--glass-border:rgba(148,163,184,0.18);
+  --header-bg:rgba(240,244,248,0.82);
+  --star-show:0;--lake-show:0;--nebula-show:0;
 }
 
 html{font-size:16px;scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
@@ -32,16 +46,16 @@ a:hover{color:var(--blue)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(96,165,250,0.15);border-radius:2px}
 
 /* ═══ Star Field ═══ */
-.cosmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.cosmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:var(--star-show);transition:opacity .8s}
 #starCanvas{position:absolute;inset:0;width:100%;height:100%}
-.nebula{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;animation:nebDrift 24s ease-in-out infinite alternate}
+.nebula{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;animation:nebDrift 24s ease-in-out infinite alternate;opacity:var(--nebula-show);transition:opacity .8s}
 .neb-1{width:50vw;height:50vh;background:radial-gradient(circle,rgba(34,211,238,0.05),transparent 70%);top:-12%;right:-8%}
 .neb-2{width:45vw;height:45vh;background:radial-gradient(circle,rgba(167,139,250,0.04),transparent 70%);bottom:-8%;left:-10%;animation-delay:-12s}
 .neb-3{width:30vw;height:30vh;background:radial-gradient(circle,rgba(96,165,250,0.035),transparent 70%);top:40%;left:20%;animation-delay:-6s}
 @keyframes nebDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(25px,-15px) scale(1.04)}100%{transform:translate(-15px,10px) scale(0.96)}}
 
 /* Lake Reflection */
-.lake{position:fixed;bottom:0;left:0;right:0;height:30vh;z-index:0;pointer-events:none;background:linear-gradient(to top,rgba(34,211,238,0.02),transparent)}
+.lake{position:fixed;bottom:0;left:0;right:0;height:30vh;z-index:0;pointer-events:none;background:linear-gradient(to top,rgba(34,211,238,0.02),transparent);opacity:var(--lake-show);transition:opacity .8s}
 .lake::before{content:'';position:absolute;bottom:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.12),rgba(167,139,250,0.1),transparent);animation:lakeShimmer 10s ease-in-out infinite alternate}
 @keyframes lakeShimmer{0%{opacity:.4;left:8%;right:8%}100%{opacity:.8;left:5%;right:5%}}
 
@@ -49,7 +63,7 @@ a:hover{color:var(--blue)}
 .world{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 24px}
 
 /* ═══ Header ═══ */
-.header{padding:20px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:rgba(5,8,16,0.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin:0 -24px;padding-left:24px;padding-right:24px;border-bottom:1px solid rgba(96,165,250,0.06)}
+.header{padding:20px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin:0 -24px;padding-left:24px;padding-right:24px;border-bottom:1px solid var(--glass-border);transition:background .5s,border-color .5s}
 .header-logo{display:flex;align-items:center;gap:10px}
 .logo-glyph{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));border:1px solid rgba(96,165,250,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:var(--cyan);font-family:serif;transition:all .4s}
 .logo-glyph:hover{border-color:rgba(34,211,238,0.4);box-shadow:0 0 20px rgba(34,211,238,0.15)}
@@ -168,6 +182,28 @@ a:hover{color:var(--blue)}
 .footer-links a{font-size:11px;color:var(--dim);transition:color .3s}
 .footer-links a:hover{color:var(--cyan)}
 
+/* ═══ Theme Toggle ═══ */
+.theme-toggle{width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .4s;flex-shrink:0;margin-left:12px}
+.theme-toggle:hover{border-color:var(--border-hover);box-shadow:0 0 16px rgba(96,165,250,0.15);transform:scale(1.08)}
+.theme-toggle:active{transform:scale(0.95)}
+.theme-toggle svg{width:18px;height:18px;fill:none;stroke:var(--dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
+.theme-toggle:hover svg{stroke:var(--cyan)}
+.theme-icon-moon,[data-theme="day"] .theme-icon-sun{display:none}
+[data-theme="day"] .theme-icon-moon{display:block}
+.theme-icon-sun{display:block}
+
+/* ═══ Day Theme Extras ═══ */
+[data-theme="day"] body{background:var(--deep)}
+[data-theme="day"] .hero-title{background:linear-gradient(135deg,var(--text) 0%,var(--cyan) 35%,var(--blue) 55%,var(--purple) 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gradShift 10s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(8,145,178,0.12))}
+[data-theme="day"] .pulse-num{background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="day"] .concept-icon.c1{background:linear-gradient(135deg,rgba(8,145,178,0.1),rgba(37,99,235,0.08));color:var(--cyan)}
+[data-theme="day"] .concept-icon.c2{background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(109,40,217,0.08));color:var(--purple)}
+[data-theme="day"] .concept-icon.c3{background:linear-gradient(135deg,rgba(5,150,105,0.1),rgba(16,185,129,0.08));color:var(--ok)}
+[data-theme="day"] .footer-logo{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="day"] .divider{background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),transparent)}
+[data-theme="day"] .status-dot{background:var(--ok);box-shadow:0 0 6px rgba(5,150,105,0.4)}
+[data-theme="day"] .lake::before{background:linear-gradient(90deg,transparent,rgba(37,99,235,0.15),rgba(124,58,237,0.12),transparent)}
+
 /* ═══ Scroll Reveal ═══ */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease-out,transform .8s ease-out}
 .reveal.visible{opacity:1;transform:translateY(0)}
@@ -215,6 +251,10 @@ a:hover{color:var(--blue)}
     <div class="header-status">
       <span class="status-dot"></span>
       <span id="headerStatus">系统运行中</span>
+      <button class="theme-toggle" id="themeToggle" title="切换日/夜模式" aria-label="切换日/夜模式">
+        <svg class="theme-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
     </div>
   </header>
 
@@ -532,6 +572,21 @@ a:hover{color:var(--blue)}
     });
   },{threshold:0.12});
   els.forEach(function(el){obs.observe(el)});
+})();
+
+/* ═══ Theme Toggle ═══ */
+(function(){
+  var html=document.documentElement;
+  var btn=document.getElementById('themeToggle');
+  var saved=localStorage.getItem('hololake-theme');
+  if(saved==='day'){html.setAttribute('data-theme','day');}
+  if(btn){
+    btn.addEventListener('click',function(){
+      var isDark=html.getAttribute('data-theme')!=='day';
+      html.setAttribute('data-theme',isDark?'day':'night');
+      localStorage.setItem('hololake-theme',isDark?'day':'night');
+    });
+  }
 })();
 
 /* ═══ Mouse Glow ═══ */

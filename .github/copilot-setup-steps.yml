@@ -1,0 +1,27 @@
+# ═══════════════════════════════════════════════════════════
+# Copilot Cloud Agent · 环境配置
+# 光湖语言世界 · HoloLake · AGE OS
+# ═══════════════════════════════════════════════════════════
+# 此文件在 Copilot Agent 防火墙启用前运行
+# 用于安装依赖和配置开发环境
+# ═══════════════════════════════════════════════════════════
+
+name: "Copilot Setup Steps"
+
+steps:
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: "20"
+
+  - name: Install server dependencies
+    run: |
+      if [ -f server/package.json ]; then
+        cd server && npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+      fi
+
+  - name: Install root dependencies
+    run: |
+      if [ -f package.json ]; then
+        npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+      fi
