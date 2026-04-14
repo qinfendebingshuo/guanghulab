@@ -142,11 +142,15 @@ jobs:
 
           # ── 检查3: 安全性 ──
           echo "🔍 检查3: 安全性检查"
-          if echo "$CHANGED_FILES" | xargs grep -l "eval(" 2>/dev/null | head -1; then
-            REVIEW_NOTES="${REVIEW_NOTES}\n⚠️ 发现eval()调用，需人工审查"
-          fi
-          if echo "$CHANGED_FILES" | xargs grep -l "process\.env\." 2>/dev/null | grep -v "\.config\." | head -3; then
-            REVIEW_NOTES="${REVIEW_NOTES}\n📝 发现环境变量引用，确保无硬编码密钥"
+          # 排除.yml/.yaml工作流文件自身（避免grep模式自匹配）
+          JS_CHANGED=$(echo "$CHANGED_FILES" | grep -E '\.(js|ts|mjs|cjs)$' || true)
+          if [ -n "$JS_CHANGED" ]; then
+            if echo "$JS_CHANGED" | xargs grep -l 'eval(' 2>/dev/null | head -1; then
+              REVIEW_NOTES="${REVIEW_NOTES}\n⚠️ 发现eval()调用，需人工审查"
+            fi
+            if echo "$JS_CHANGED" | xargs grep -l 'process\.env\.' 2>/dev/null | grep -v '\.config\.' | head -3; then
+              REVIEW_NOTES="${REVIEW_NOTES}\n📝 发现环境变量引用，确保无硬编码密钥"
+            fi
           fi
 
           # ── 检查4: 命名规范 ──
