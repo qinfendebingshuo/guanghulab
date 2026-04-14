@@ -553,6 +553,7 @@ app.post('/api/portal/chat', portalChatLimiter, async (req, res) => {
     const result = await portalChatAgent.chat(userId, message);
     res.json(result);
   } catch (err) {
+    console.error(`[Portal Chat] 对话异常: ${err.message}`);
     res.status(500).json({ error: true, message: '对话服务暂时异常，请稍后重试' });
   }
 });

@@ -25,6 +25,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const http = require('http');
 
 // ─── 常量 ───
 const MAX_BETA_USERS = 10;
@@ -399,7 +400,7 @@ function persistSession(userId, session) {
 }
 
 function sanitizeFilename(name) {
-  return String(name).replace(/[^a-zA-Z0-9_\u4e00-\u9fff∞-]/g, '_').slice(0, 60);
+  return String(name).replace(/[^a-zA-Z0-9_\u4e00-\u9fff∞\-]/g, '_').slice(0, 60);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -437,7 +438,7 @@ function callLLM(messages) {
       timeout: 60000
     };
 
-    const protocol = url.protocol === 'https:' ? https : require('http');
+    const protocol = url.protocol === 'https:' ? https : http;
     const req = protocol.request(options, (res) => {
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
