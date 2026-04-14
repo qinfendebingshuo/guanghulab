@@ -296,8 +296,11 @@ function apiKeyAuth(req, res, next) {
   if (req.path.startsWith('/webhook/')) return next();
 
   // 内部回环地址免鉴权
-  const remoteIp = req.ip || req.connection.remoteAddress || '';
-  const isLocal = remoteIp === '127.0.0.1' || remoteIp === '::1' || remoteIp === '::ffff:127.0.0.1';
+  // 注意: 使用 req.socket.remoteAddress 获取实际TCP连接地址
+  // req.ip 在 trust proxy 模式下返回 X-Forwarded-For 中的客户端真实IP
+  // 但本地 Nginx 代理的请求 socket 连接仍来自 127.0.0.1
+  const socketIp = req.socket?.remoteAddress || req.connection?.remoteAddress || '';
+  const isLocal = socketIp === '127.0.0.1' || socketIp === '::1' || socketIp === '::ffff:127.0.0.1';
   if (isLocal) return next();
 
   // API Key 未配置时，拒绝所有外部请求
