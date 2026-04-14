@@ -298,8 +298,8 @@ function enterWorld(){
   gate.style.opacity='0';
   gate.style.transform='scale(1.05)';
   setTimeout(function(){
-    /* 进入后跳转到主站应用（当前仍在同一域名） */
-    window.location.href='/app';
+    /* 进入后回到主站主页（portal index.html，即当前站点的完整应用） */
+    window.location.href='/index.html';
   },800);
 }
 

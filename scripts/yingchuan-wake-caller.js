@@ -53,13 +53,15 @@ function writeJSON(filePath, data) {
 }
 
 function getLatestCommits(count = 5) {
+  const safeCount = Math.max(1, Math.min(Math.floor(Number(count)) || 5, 50));
   try {
     const log = execSync(
-      `git --no-pager log --oneline -${count} --format="%h %s" 2>/dev/null`,
-      { cwd: ROOT, encoding: 'utf8' }
+      `git --no-pager log --oneline -${safeCount} --format="%h %s"`,
+      { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
     ).trim();
     return log.split('\n').filter(Boolean);
-  } catch {
+  } catch (err) {
+    console.log('⚠️ Git log读取失败:', err.message);
     return [];
   }
 }
