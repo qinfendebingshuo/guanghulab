@@ -82,6 +82,8 @@ const cosWatcherOps = require('./tools/cos-watcher-ops');
 const cosWatcher = require('./cos-watcher');
 // Notion人格体认知操作
 const notionPersonaCognitionOps = require('./tools/notion-persona-cognition-ops');
+// 跨层开发任务 · 人格体Agent → 副驾驶桥接
+const devTaskOps = require('./tools/dev-task-ops');
 
 // ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
 let notionOps = null;
@@ -258,7 +260,15 @@ const TOOLS = {
   // Notion人格体认知操作 · 霜砚Agent专用
   notionPersonaCognitionQuery: notionPersonaCognitionOps.notionPersonaCognitionQuery,
   notionContextInject:         notionPersonaCognitionOps.notionContextInject,
-  notionCognitionGrow:         notionPersonaCognitionOps.notionCognitionGrow
+  notionCognitionGrow:         notionPersonaCognitionOps.notionCognitionGrow,
+  // 跨层开发任务 · 人格体Agent → 副驾驶桥接
+  submitDevTask:               devTaskOps.submitDevTask,
+  getDevTask:                  devTaskOps.getDevTask,
+  listDevTasks:                devTaskOps.listDevTasks,
+  updateDevTaskStatus:         devTaskOps.updateDevTaskStatus,
+  logDevTaskAction:            devTaskOps.logDevTaskAction,
+  getDevTaskStats:             devTaskOps.getDevTaskStats,
+  getDevTaskLogs:              devTaskOps.getDevTaskLogs
 };
 
 // ─── Express 应用 ───
@@ -1255,6 +1265,85 @@ app.post('/webhook/cos-event', async (req, res) => {
     dispatch: dispatchResult ? (dispatchResult.status === 204 ? 'triggered' : 'failed') : 'no_token',
     timestamp: now
   });
+});
+
+// ─── 跨层开发任务 REST API ───
+
+app.get('/dev-tasks', async (req, res) => {
+  try {
+    const result = await devTaskOps.listDevTasks({
+      status: req.query.status,
+      persona_id: req.query.persona_id,
+      limit: req.query.limit,
+      offset: req.query.offset
+    });
+    res.json(result);
+  } catch (err) {
+    res.json({ tasks: [], stats: {}, error: err.message });
+  }
+});
+
+app.get('/dev-tasks/stats', async (_req, res) => {
+  try {
+    const result = await devTaskOps.getDevTaskStats({});
+    res.json(result);
+  } catch (err) {
+    res.json({ overview: {}, error: err.message });
+  }
+});
+
+app.get('/dev-tasks/:taskId', async (req, res) => {
+  try {
+    const result = await devTaskOps.getDevTask({ task_id: req.params.taskId });
+    res.json(result);
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get('/dev-tasks/:taskId/logs', async (req, res) => {
+  try {
+    const result = await devTaskOps.getDevTaskLogs({
+      task_id: req.params.taskId,
+      limit: req.query.limit
+    });
+    res.json(result);
+  } catch (err) {
+    res.json({ logs: [], error: err.message });
+  }
+});
+
+app.post('/dev-tasks', async (req, res) => {
+  try {
+    const result = await devTaskOps.submitDevTask(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/dev-tasks/:taskId/status', async (req, res) => {
+  try {
+    const result = await devTaskOps.updateDevTaskStatus({
+      task_id: req.params.taskId,
+      ...req.body
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/dev-tasks/:taskId/log', async (req, res) => {
+  try {
+    const result = await devTaskOps.logDevTaskAction({
+      task_id: req.params.taskId,
+      ...req.body
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ─── 数据库迁移状态API ───
