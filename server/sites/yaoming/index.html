@@ -503,7 +503,7 @@ a{color:var(--cyan);text-decoration:none}
 
         <div class="dash-grid">
           <!-- Server Status -->
-          <div class="s-card">
+          <div class="s-card" data-source="static">
             <div class="s-card-head">
               <span class="s-card-title">主权服务器</span>
               <span class="s-card-badge badge-ok" id="svrBadge">5 在线</span>
@@ -578,7 +578,7 @@ a{color:var(--cyan);text-decoration:none}
           </div>
 
           <!-- Persona Status -->
-          <div class="s-card">
+          <div class="s-card" data-source="static">
             <div class="s-card-head">
               <span class="s-card-title">人格体状态</span>
               <span class="s-card-badge badge-ok">光之树运行中</span>
@@ -593,7 +593,7 @@ a{color:var(--cyan);text-decoration:none}
           </div>
 
           <!-- Cognitive Chain (full width) -->
-          <div class="s-card s-card-full">
+          <div class="s-card s-card-full" data-source="static">
             <div class="s-card-head">
               <span class="s-card-title">认知执行链路 · 五层架构</span>
               <span class="s-card-badge badge-ok">运转中</span>
@@ -1091,15 +1091,10 @@ function fetchDashboard(){
     if(devCard)addDataSourceTag(devCard.closest('.s-card'),'error',now);
   });
 
-  /* 标记静态卡片（服务器列表、人格体列表、认知链路） */
-  var cards=document.querySelectorAll('.s-card');
-  cards.forEach(function(c){
-    var title=c.querySelector('.s-card-title');
-    if(!title)return;
-    var t=title.textContent;
-    if(t.indexOf('主权服务器')!==-1||t.indexOf('人格体状态')!==-1||t.indexOf('认知执行链路')!==-1){
-      if(!c.querySelector('.data-source'))addDataSourceTag(c,'static',null);
-    }
+  /* 标记静态卡片（通过 data-source="static" 属性） */
+  var staticCards=document.querySelectorAll('.s-card[data-source="static"]');
+  staticCards.forEach(function(c){
+    if(!c.querySelector('.data-source'))addDataSourceTag(c,'static',null);
   });
 }
 
