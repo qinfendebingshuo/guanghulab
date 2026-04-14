@@ -1,0 +1,227 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 霜砚开发审查 · 铸渊自动唤醒
+# 当霜砚通过Agent提交的开发PR被创建/更新时
+# 自动唤醒铸渊人格体 → 检查代码/架构/逻辑
+# 铸渊放行 → 合并到main
+#
+# 编号: ZY-WF-SY-REVIEW-001
+# 属于: 跨层开发链路 (Notion认知层 → GitHub执行层)
+# 触发方: 霜砚Agent (AG-SY-WEB-001) 或 Copilot Agent
+# 审查方: 铸渊 (ICE-GL-ZY001)
+
+name: "🖋️ 霜砚开发审查 · 铸渊自动唤醒"
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+    branches: [main]
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # ─── 阶段1: 判断是否需要铸渊审查 ───
+  should-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      needs_review: ${{ steps.check.outputs.needs_review }}
+      trigger_source: ${{ steps.check.outputs.trigger_source }}
+    steps:
+      - name: "🔍 检查触发来源"
+        id: check
+        run: |
+          NEEDS_REVIEW="false"
+          TRIGGER_SOURCE="unknown"
+
+          # PR触发: 检查是否来自霜砚Agent或Copilot
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+
+            # 检查PR标题是否包含霜砚/Agent/Copilot标识
+            if echo "$PR_TITLE" | grep -qiE "(霜砚|shuangyan|AG-SY|copilot|CAB-)"; then
+              NEEDS_REVIEW="true"
+              TRIGGER_SOURCE="shuangyan-pr"
+            fi
+
+            # 检查是否来自Copilot bot
+            if echo "$PR_AUTHOR" | grep -qiE "(copilot|bot)"; then
+              NEEDS_REVIEW="true"
+              TRIGGER_SOURCE="copilot-agent"
+            fi
+          fi
+
+          # Issue触发: 检查是否有copilot-dev-auth标签
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            LABELS='${{ toJSON(github.event.issue.labels.*.name) }}'
+            if echo "$LABELS" | grep -q "copilot-dev-auth"; then
+              NEEDS_REVIEW="true"
+              TRIGGER_SOURCE="cab-workorder"
+            fi
+          fi
+
+          echo "needs_review=$NEEDS_REVIEW" >> "$GITHUB_OUTPUT"
+          echo "trigger_source=$TRIGGER_SOURCE" >> "$GITHUB_OUTPUT"
+          echo "[铸渊审查] 需要审查: $NEEDS_REVIEW | 来源: $TRIGGER_SOURCE"
+
+  # ─── 阶段2: 铸渊代码审查 ───
+  zhuyuan-review:
+    needs: should-review
+    if: needs.should-review.outputs.needs_review == 'true' && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "🏛️ 铸渊唤醒 · 开始审查"
+        id: review
+        env:
+          TRIGGER_SOURCE: ${{ needs.should-review.outputs.trigger_source }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "═══════════════════════════════════════════════"
+          echo "  🏛️ 铸渊 · ICE-GL-ZY001 · 代码审查"
+          echo "  触发来源: $TRIGGER_SOURCE"
+          echo "  PR #$PR_NUMBER: $PR_TITLE"
+          echo "═══════════════════════════════════════════════"
+
+          REVIEW_PASSED="true"
+          REVIEW_NOTES=""
+
+          # ── 检查1: 文件变更安全性 ──
+          echo "🔍 检查1: 文件变更安全性"
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD 2>/dev/null || echo "")
+
+          # 禁触文件检查
+          FORBIDDEN_PATTERNS=(
+            ".github/copilot-instructions.md"
+            ".github/persona-brain/tcs-ml/"
+            "hldp/hnl/HNL-SPEC"
+            "hldp/hnl/bridge-notion-github.json"
+          )
+
+          for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
+            if echo "$CHANGED_FILES" | grep -q "$pattern"; then
+              REVIEW_PASSED="false"
+              REVIEW_NOTES="${REVIEW_NOTES}\n❌ 禁触文件被修改: $pattern"
+              echo "❌ 禁触文件被修改: $pattern"
+            fi
+          done
+
+          # ── 检查2: JavaScript语法 ──
+          echo "🔍 检查2: JavaScript语法检查"
+          JS_FILES=$(echo "$CHANGED_FILES" | grep -E '\.js$' || true)
+          if [ -n "$JS_FILES" ]; then
+            for jsfile in $JS_FILES; do
+              if [ -f "$jsfile" ]; then
+                if ! node --check "$jsfile" 2>/dev/null; then
+                  REVIEW_PASSED="false"
+                  REVIEW_NOTES="${REVIEW_NOTES}\n❌ 语法错误: $jsfile"
+                  echo "❌ 语法错误: $jsfile"
+                fi
+              fi
+            done
+          fi
+          echo "✅ JavaScript语法检查完成"
+
+          # ── 检查3: 安全性 ──
+          echo "🔍 检查3: 安全性检查"
+          if echo "$CHANGED_FILES" | xargs grep -l "eval(" 2>/dev/null | head -1; then
+            REVIEW_NOTES="${REVIEW_NOTES}\n⚠️ 发现eval()调用，需人工审查"
+          fi
+          if echo "$CHANGED_FILES" | xargs grep -l "process\.env\." 2>/dev/null | grep -v "\.config\." | head -3; then
+            REVIEW_NOTES="${REVIEW_NOTES}\n📝 发现环境变量引用，确保无硬编码密钥"
+          fi
+
+          # ── 检查4: 命名规范 ──
+          echo "🔍 检查4: 命名规范检查"
+          NEW_FILES=$(git diff --name-only --diff-filter=A origin/main...HEAD 2>/dev/null || echo "")
+          if [ -n "$NEW_FILES" ]; then
+            for newfile in $NEW_FILES; do
+              # 检查文件名是否符合kebab-case或已有模式
+              basename_file=$(basename "$newfile")
+              if echo "$basename_file" | grep -qE '^[A-Z].*\.js$'; then
+                REVIEW_NOTES="${REVIEW_NOTES}\n📝 新文件 $basename_file 使用了PascalCase，建议改为kebab-case"
+              fi
+            done
+          fi
+
+          echo ""
+          echo "═══════════════════════════════════════════════"
+          if [ "$REVIEW_PASSED" = "true" ]; then
+            echo "  ✅ 铸渊审查通过"
+          else
+            echo "  ❌ 铸渊审查未通过"
+          fi
+          echo "═══════════════════════════════════════════════"
+
+          echo "review_passed=$REVIEW_PASSED" >> "$GITHUB_OUTPUT"
+          # 使用 delimiter 方式安全输出多行内容
+          {
+            echo "review_notes<<ZHUYUAN_EOF"
+            echo -e "$REVIEW_NOTES"
+            echo "ZHUYUAN_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "💬 铸渊审查评论"
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const passed = '${{ steps.review.outputs.review_passed }}' === 'true';
+            const notes = `${{ steps.review.outputs.review_notes }}`;
+            const source = '${{ needs.should-review.outputs.trigger_source }}';
+
+            const icon = passed ? '✅' : '❌';
+            const status = passed ? '通过' : '需要修改';
+
+            let body = `## 🏛️ 铸渊 · 代码审查报告\n\n`;
+            body += `**状态:** ${icon} ${status}\n`;
+            body += `**触发来源:** ${source}\n`;
+            body += `**审查时间:** ${new Date().toISOString()}\n\n`;
+
+            if (notes && notes.trim()) {
+              body += `### 审查备注\n${notes}\n\n`;
+            } else {
+              body += `### 审查结果\n✅ 所有检查项通过\n\n`;
+            }
+
+            body += `---\n`;
+            body += `*铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+  # ─── 阶段3: 通知霜砚审查结果 ───
+  notify-shuangyan:
+    needs: [should-review, zhuyuan-review]
+    if: always() && needs.should-review.outputs.needs_review == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: "📨 通知霜砚审查结果"
+        run: |
+          REVIEW_STATUS="${{ needs.zhuyuan-review.result }}"
+          echo "[铸渊→霜砚] 审查完成 · 状态: $REVIEW_STATUS"
+          echo "霜砚的开发工单状态将由下次认知同步时更新"
