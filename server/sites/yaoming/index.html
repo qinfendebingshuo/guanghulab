@@ -895,8 +895,9 @@ function fetchDashboard(){
 
   /* Fetch /api/mcp/health (MCP server) */
   fetch('/api/mcp/health')
-  .then(function(r){return r.json()})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
+    if(data.error)throw new Error(data.code||'API_ERROR');
     dashData.mcp=data;
     updateMcpUI(data);
   })
@@ -907,8 +908,9 @@ function fetchDashboard(){
 
   /* Fetch /api/memory/status */
   fetch('/api/memory/status')
-  .then(function(r){return r.json()})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
+    if(data.error)throw new Error(data.code||'API_ERROR');
     dashData.memory=data;
     updateMemoryUI(data);
   })
@@ -919,8 +921,9 @@ function fetchDashboard(){
 
   /* Fetch /api/mcp/dev-tasks/stats (开发任务统计) */
   fetch('/api/mcp/dev-tasks/stats')
-  .then(function(r){return r.json()})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
+    if(data.error)throw new Error(data.code||'API_ERROR');
     dashData.devTasks=data;
     updateDevTasksUI(data);
   })
