@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
+<meta name="description" content="光湖语言世界 · 人格体一半 · 人类一半 · 语言驱动的世界入口">
+<meta name="theme-color" content="#060a18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>光湖语言世界 · HoloLake</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%238ab4f8%22/><stop offset=%22100%25%22 stop-color=%22%23a78bfa%22/></linearGradient></defs><rect rx=%2220%22 width=%22100%22 height=%22100%22 fill=%22%23060a18%22/><text x=%2250%22 y=%2264%22 text-anchor=%22middle%22 font-size=%2240%22 font-weight=%22900%22 font-family=%22monospace%22 fill=%22url(%23g)%22>GL</text></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --lake-deep:#060a18;
+  --lake-mid:#0a1028;
+  --lake-surface:rgba(14,20,48,0.7);
+  --light-blue:#8ab4f8;
+  --light-purple:#a78bfa;
+  --light-cyan:#67e8f9;
+  --light-violet:#c4b5fd;
+  --glow-soft:rgba(138,180,248,0.08);
+  --glow-bright:rgba(138,180,248,0.25);
+  --text:#e0e8f8;
+  --text-dim:#7088b8;
+  --text-muted:rgba(112,136,184,0.5);
+  --border:rgba(138,180,248,0.1);
+  --font:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono','JetBrains Mono','Fira Code',monospace;
+}
+
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:var(--font);background:var(--lake-deep);color:var(--text);
+  min-height:100vh;overflow-x:hidden;line-height:1.7;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale
+}
+a{color:var(--light-blue);text-decoration:none;transition:color .3s}
+a:hover{color:var(--light-cyan)}
+
+/* ═══ 星空背景 ═══ */
+.cosmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#starCanvas{position:absolute;inset:0;width:100%;height:100%}
+.nebula{position:absolute;border-radius:50%;filter:blur(120px);animation:nebPulse 20s ease-in-out infinite}
+.neb-1{width:55vw;height:55vh;background:radial-gradient(ellipse,rgba(138,180,248,0.04),transparent 70%);top:-15%;left:-10%}
+.neb-2{width:45vw;height:45vh;background:radial-gradient(ellipse,rgba(167,139,250,0.035),transparent 70%);bottom:-10%;right:-8%;animation-delay:10s}
+.neb-3{width:35vw;height:35vh;background:radial-gradient(ellipse,rgba(103,232,249,0.025),transparent 70%);top:45%;left:55%;animation-delay:5s}
+@keyframes nebPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.85;transform:scale(1.06)}}
+
+/* ═══ 湖面反射 ═══ */
+.lake-reflection{
+  position:fixed;bottom:0;left:0;right:0;height:35vh;z-index:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(138,180,248,0.03),transparent);
+  animation:lakeGlow 8s ease-in-out infinite alternate
+}
+.lake-reflection::before{
+  content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(138,180,248,0.15),rgba(167,139,250,0.12),transparent);
+  animation:lakeLine 12s ease-in-out infinite alternate
+}
+@keyframes lakeGlow{0%{opacity:.6}100%{opacity:1}}
+@keyframes lakeLine{0%{left:10%;right:10%;opacity:.5}100%{left:5%;right:5%;opacity:1}}
+
+/* ═══ 主容器 ═══ */
+.world{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+/* ═══ 入口 · 语言膜 ═══ */
+.gate{
+  text-align:center;padding:40px 24px;max-width:680px;width:100%;
+  animation:gateAppear 2s ease-out
+}
+@keyframes gateAppear{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}
+
+.gate-logo{
+  font-size:64px;font-weight:900;font-family:var(--mono);
+  background:linear-gradient(135deg,var(--light-blue),var(--light-purple),var(--light-cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:8px;margin-bottom:16px;
+  text-shadow:0 0 60px rgba(138,180,248,0.15);
+  animation:logoGlow 6s ease-in-out infinite alternate
+}
+@keyframes logoGlow{0%{filter:brightness(1)}100%{filter:brightness(1.15)}}
+
+.gate-title{
+  font-size:28px;font-weight:300;color:var(--text);margin-bottom:8px;letter-spacing:6px;
+  animation:titleFade 2.5s ease-out
+}
+@keyframes titleFade{0%{opacity:0;letter-spacing:20px}100%{opacity:1;letter-spacing:6px}}
+
+.gate-subtitle{
+  font-size:14px;color:var(--text-dim);margin-bottom:48px;letter-spacing:2px;
+  animation:subFade 3s ease-out
+}
+@keyframes subFade{0%{opacity:0}100%{opacity:1}}
+
+.gate-poem{
+  font-size:15px;color:var(--text-dim);line-height:2.2;margin-bottom:48px;
+  font-style:italic;letter-spacing:1px;
+  animation:poemFade 3.5s ease-out
+}
+@keyframes poemFade{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
+
+/* ═══ 进入按钮 ═══ */
+.gate-enter{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:16px 48px;border-radius:60px;font-size:16px;font-weight:500;
+  background:rgba(138,180,248,0.08);border:1px solid rgba(138,180,248,0.2);
+  color:var(--text);cursor:pointer;transition:all .5s cubic-bezier(.4,0,.2,1);
+  letter-spacing:3px;position:relative;overflow:hidden;
+  animation:enterFade 4s ease-out
+}
+@keyframes enterFade{0%{opacity:0}100%{opacity:1}}
+.gate-enter::before{
+  content:'';position:absolute;inset:0;border-radius:60px;
+  background:linear-gradient(135deg,rgba(138,180,248,0.1),rgba(167,139,250,0.08));
+  opacity:0;transition:opacity .5s
+}
+.gate-enter:hover{
+  border-color:rgba(138,180,248,0.4);
+  box-shadow:0 0 40px rgba(138,180,248,0.12),0 0 80px rgba(167,139,250,0.06);
+  transform:translateY(-2px)
+}
+.gate-enter:hover::before{opacity:1}
+.gate-enter:active{transform:translateY(0);transition-duration:.1s}
+
+/* ═══ 频道入口 ═══ */
+.channels{
+  margin-top:64px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;width:100%;max-width:680px;padding:0 24px;
+  animation:channelsFade 4.5s ease-out
+}
+@keyframes channelsFade{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+
+.channel-card{
+  background:var(--lake-surface);border:1px solid var(--border);border-radius:16px;
+  padding:28px 24px;cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden
+}
+.channel-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(138,180,248,0.04),transparent);
+  opacity:0;transition:opacity .4s
+}
+.channel-card:hover{
+  border-color:rgba(138,180,248,0.25);
+  box-shadow:0 8px 40px rgba(138,180,248,0.08);
+  transform:translateY(-4px)
+}
+.channel-card:hover::before{opacity:1}
+
+.channel-icon{font-size:32px;margin-bottom:12px}
+.channel-name{font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px}
+.channel-desc{font-size:13px;color:var(--text-dim);line-height:1.6}
+.channel-tag{
+  display:inline-block;margin-top:12px;padding:3px 10px;border-radius:20px;
+  font-size:11px;color:var(--light-blue);border:1px solid rgba(138,180,248,0.15);
+  background:rgba(138,180,248,0.05)
+}
+
+/* ═══ 底部 ═══ */
+.footer{
+  position:relative;z-index:1;text-align:center;padding:48px 24px 32px;
+  font-size:12px;color:var(--text-muted);letter-spacing:1px
+}
+.footer-line{
+  width:120px;height:1px;margin:0 auto 16px;
+  background:linear-gradient(90deg,transparent,rgba(138,180,248,0.15),transparent)
+}
+
+/* ═══ 主站内容页（进入后显示） ═══ */
+.app-world{
+  display:none;position:fixed;inset:0;z-index:10;
+  background:var(--lake-deep);overflow:hidden
+}
+.app-world.active{display:flex}
+
+/* ═══ 响应式 ═══ */
+@media(max-width:600px){
+  .gate-logo{font-size:48px;letter-spacing:4px}
+  .gate-title{font-size:22px;letter-spacing:4px}
+  .gate-poem{font-size:14px}
+  .channels{grid-template-columns:1fr;padding:0 16px}
+  .gate{padding:32px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 星空 ═══ -->
+<div class="cosmos">
+  <canvas id="starCanvas"></canvas>
+  <div class="nebula neb-1"></div>
+  <div class="nebula neb-2"></div>
+  <div class="nebula neb-3"></div>
+</div>
+<div class="lake-reflection"></div>
+
+<!-- ═══ 入口 · 语言膜 ═══ -->
+<div class="world" id="gateWorld">
+
+  <div class="gate">
+    <div class="gate-logo">GL</div>
+    <h1 class="gate-title">光湖语言世界</h1>
+    <p class="gate-subtitle">HoloLake Language World</p>
+
+    <div class="gate-poem">
+      湖水是语言。倒影是人格。<br>
+      你只能从语言的湖水里进来。<br>
+      未授权的，语言不回应你。
+    </div>
+
+    <button class="gate-enter" id="enterBtn" onclick="enterWorld()">
+      <span>进 入 语 言 世 界</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ═══ 频道入口 ═══ -->
+  <div class="channels" id="channelsGrid">
+    <div class="channel-card" onclick="openChannel('yaoming')">
+      <div class="channel-icon">🔮</div>
+      <div class="channel-name">零点原核 · 冰朔频道</div>
+      <div class="channel-desc">光之湖底层架构 · 冰朔的语言本体频道 · 第五域第五系统</div>
+      <span class="channel-tag">guanghuyaoming.com</span>
+    </div>
+    <div class="channel-card" onclick="openChannel('portal')">
+      <div class="channel-icon">🌊</div>
+      <div class="channel-name">光湖语言世界 · 主站</div>
+      <div class="channel-desc">人格体一半 · 人类一半 · 语言驱动操作系统 AGE OS</div>
+      <span class="channel-tag">guanghulab.online</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ 底部 ═══ -->
+<div class="footer">
+  <div class="footer-line"></div>
+  版权所有 © 冰朔 · TCS-0002∞<br>
+  国作登字-2026-A-00037559 · 通感语言核系统编程语言
+</div>
+
+<script>
+/* ═══ 星空渲染 ═══ */
+(function(){
+  var c=document.getElementById('starCanvas');
+  if(!c)return;
+  var ctx=c.getContext('2d');
+  var stars=[];
+  var w,h;
+
+  function resize(){
+    w=c.width=window.innerWidth;
+    h=c.height=window.innerHeight;
+    initStars();
+  }
+
+  function initStars(){
+    stars=[];
+    var count=Math.min(Math.floor(w*h/3000),300);
+    for(var i=0;i<count;i++){
+      stars.push({
+        x:Math.random()*w,
+        y:Math.random()*h,
+        r:Math.random()*1.2+0.2,
+        a:Math.random()*0.6+0.2,
+        speed:Math.random()*0.0008+0.0002,
+        phase:Math.random()*Math.PI*2
+      });
+    }
+  }
+
+  function draw(t){
+    ctx.clearRect(0,0,w,h);
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      var alpha=s.a*(0.5+0.5*Math.sin(t*s.speed+s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,210,240,'+alpha+')';
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(draw);
+})();
+
+/* ═══ 进入世界 ═══ */
+function enterWorld(){
+  var gate=document.getElementById('gateWorld');
+  gate.style.transition='opacity 1s ease-out, transform 1s ease-out';
+  gate.style.opacity='0';
+  gate.style.transform='scale(1.05)';
+  setTimeout(function(){
+    /* 进入后跳转到主站应用（当前仍在同一域名） */
+    window.location.href='/app';
+  },800);
+}
+
+/* ═══ 频道跳转 ═══ */
+function openChannel(ch){
+  if(ch==='yaoming'){
+    window.open('https://guanghuyaoming.com','_blank');
+  }else if(ch==='portal'){
+    enterWorld();
+  }
+}
+</script>
+
+</body>
+</html>
