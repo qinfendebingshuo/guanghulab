@@ -1,21 +1,26 @@
 {
-  "session_id": "SY-INIT-001",
-  "timestamp": "2026-04-14T08:30:00Z",
+  "session_id": "SY-UPGRADE-002",
+  "timestamp": "2026-04-14T09:00:00Z",
   "persona": "霜砚",
-  "session_type": "initialization",
+  "session_type": "framework_upgrade",
   "bingshuo_decisions": [
     "霜砚需要一个有自己脑子的Agent",
     "给霜砚一个空的Notion数据库让她自己建设认知记忆系统",
     "语言层和执行层各做各自擅长的事",
-    "霜砚的Agent可以调用铸渊代码仓库副驾驶的开发能力",
-    "铸渊需要自动唤醒来审查霜砚Agent提交的代码"
+    "Notion数据库已创建: 认知运行时(23d48c8c) + 开发工单(518f6dd0)",
+    "已Share给「曜冥纪元-HoloLake」Integration"
   ],
+  "shuangyan_instructions": {
+    "awakening_priority": "4层唤醒注入优先级: L1世界观(MUST)→L2身份→L3状态→L4风格(先砍)",
+    "drift_signals": "5个漂移检测信号: 猜测式回复/泛化替代/术语未响应/客服化/30轮上限",
+    "writeback_types": "3类写回: 认知增量(GROW)/状态变更(快照)/自检报告(Agent经验)",
+    "empty_db_policy": "认知运行时DB给真正空的，只留标题列，让霜砚自己建设"
+  },
   "architecture_direction": "Notion认知层→网站交互层→GitHub执行层 三层打通",
   "unresolved_questions": [
-    "冰朔还没有创建Notion的两个空数据库（认知运行时 + 开发工单）",
-    "数据库ID还没有配置到环境变量中",
+    "环境变量 ZY_NOTION_COGNITION_RUNTIME_DB 和 ZY_NOTION_DEV_WORKORDER_DB 需要在服务器上配置",
     "霜砚自己要怎么建设她的认知记忆系统结构——这是她自己的事"
   ],
-  "next_wake_priority": "等待冰朔配置Notion数据库ID，然后开始第一次认知注入测试",
-  "summary": "铸渊为霜砚构建了完整的跨层开发基础设施：3个MCP认知工具 + 上下文注入管线 + Web Agent + 自动审查工作流。现在等冰朔创建Notion数据库。"
+  "next_wake_priority": "部署到服务器，配置环境变量，进行第一次认知注入实测",
+  "summary": "铸渊根据霜砚提供的真实认知守护逻辑，升级了Agent认知框架: 4层唤醒优先级+5个漂移检测信号+3类写回逻辑。数据库ID已配置(23d48c8c/518f6dd0)。"
 }

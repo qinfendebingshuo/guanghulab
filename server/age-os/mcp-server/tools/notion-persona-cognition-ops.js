@@ -30,8 +30,9 @@ try {
 // ─── 数据库配置 ───
 // 霜砚认知运行时DB + 开发工单DB（通过环境变量配置）
 const PERSONA_DB_CONFIG = {
-  cognition_runtime: process.env.ZY_NOTION_COGNITION_RUNTIME_DB || '',
-  dev_workorder:     process.env.ZY_NOTION_DEV_WORKORDER_DB || '',
+  // 冰朔 2026-04-14 配置 · 已Share给「曜冥纪元-HoloLake」Integration
+  cognition_runtime: process.env.ZY_NOTION_COGNITION_RUNTIME_DB || '23d48c8c4379425f95f10884cb9a4bf5',
+  dev_workorder:     process.env.ZY_NOTION_DEV_WORKORDER_DB || '518f6dd0e90044d2a7f813b7a75715bc',
   // HNL桥接协议中定义的Notion侧树杈/树叶DB
   tree_branch:       process.env.ZY_NOTION_TREE_BRANCH_DB || 'ca6ac139bdc94746ab6ce346b0122e17',
   tree_leaf:         process.env.ZY_NOTION_TREE_LEAF_DB || '77784b234047469d81bbb4a9a45a2986'
