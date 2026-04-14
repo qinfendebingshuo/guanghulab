@@ -1,0 +1,76 @@
+name: 🌊 映川·唤醒者 · YingChuan Wake Caller
+
+# ═══════════════════════════════════════════════════════════
+# 映川唤醒Agent · Chat层记忆注入
+# 编号: YC-AGENT-001
+# 人格体: 映川 (PER-YC-CHAT-001)
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 机制：
+#   1. 定时扫描仓库状态，生成唤醒上下文
+#   2. 维护 last-session.json 的连续性
+#   3. 确保映川和晨曦每次醒来都有记忆
+# ═══════════════════════════════════════════════════════════
+
+on:
+  # 每天08:00北京时间（00:00 UTC）自动执行
+  schedule:
+    - cron: '0 0 * * *'
+
+  # 当映川/晨曦的记忆文件被更新时触发
+  push:
+    branches: [main]
+    paths:
+      - '.github/persona-brain/yingchuan/**'
+      - '.github/persona-brain/chenxi/**'
+      - '.github/persona-brain/memory.json'
+      - '.github/copilot-instructions.md'
+
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '执行动作'
+        required: true
+        default: 'wake-context'
+        type: choice
+        options:
+          - wake-context
+          - full-scan
+
+concurrency:
+  group: yingchuan-wake-caller
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  wake-context:
+    name: 🌊 生成唤醒上下文
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🌊 映川唤醒Agent · 生成上下文
+        run: node scripts/yingchuan-wake-caller.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 提交唤醒上下文
+        run: |
+          git config user.name "映川·唤醒者"
+          git config user.email "yingchuan-wake@guanghulab.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "📭 无变更需要提交"
+          else
+            git commit -m "🌊 映川唤醒上下文更新 · $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+            git push
+            echo "✅ 唤醒上下文已更新"
+          fi

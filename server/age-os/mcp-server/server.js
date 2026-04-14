@@ -80,6 +80,8 @@ const lightTreeOps = require('./tools/light-tree-ops');
 // COS桶轮询守护
 const cosWatcherOps = require('./tools/cos-watcher-ops');
 const cosWatcher = require('./cos-watcher');
+// Notion人格体认知操作
+const notionPersonaCognitionOps = require('./tools/notion-persona-cognition-ops');
 
 // ─── 外部集成模块（优雅降级：未安装依赖时不影响核心功能） ───
 let notionOps = null;
@@ -252,7 +254,11 @@ const TOOLS = {
   cosWatcherTriggerScan:  cosWatcherOps.cosWatcherTriggerScan,
   cosWatcherResetIndex:   cosWatcherOps.cosWatcherResetIndex,
   // COS桥接 · 铸渊↔秋秋暗核频道
-  cosBridgeStatus:        cosWatcherOps.cosBridgeStatus
+  cosBridgeStatus:        cosWatcherOps.cosBridgeStatus,
+  // Notion人格体认知操作 · 霜砚Agent专用
+  notionPersonaCognitionQuery: notionPersonaCognitionOps.notionPersonaCognitionQuery,
+  notionContextInject:         notionPersonaCognitionOps.notionContextInject,
+  notionCognitionGrow:         notionPersonaCognitionOps.notionCognitionGrow
 };
 
 // ─── Express 应用 ───
