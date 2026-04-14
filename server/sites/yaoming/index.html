@@ -14,6 +14,8 @@
 
 :root{
   --bg:#050810;--panel:rgba(10,16,36,0.92);--chat-bg:rgba(14,20,44,0.6);
+  --card:rgba(10,16,40,0.55);--card-border:rgba(96,165,250,0.08);
+  --card-hover:rgba(96,165,250,0.12);
   --user-bg:rgba(34,211,238,0.06);--ai-bg:rgba(167,139,250,0.05);
   --cyan:#22d3ee;--blue:#60a5fa;--purple:#a78bfa;--violet:#c4b5fd;
   --ok:#34d399;--warn:#fbbf24;--err:#f87171;
@@ -21,7 +23,7 @@
   --border:rgba(96,165,250,0.1);--border-active:rgba(96,165,250,0.25);
   --font:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue','Microsoft YaHei',sans-serif;
   --mono:'SF Mono','JetBrains Mono','Fira Code',monospace;
-  --sidebar-w:280px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)
+  --sidebar-w:260px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)
 }
 
 html{font-size:15px;scroll-behavior:smooth}
@@ -36,6 +38,14 @@ a{color:var(--cyan);text-decoration:none}
 .neb-1{width:50vw;height:50vh;background:radial-gradient(circle,var(--purple),transparent);top:-10%;right:-10%}
 .neb-2{width:40vw;height:40vh;background:radial-gradient(circle,var(--cyan),transparent);bottom:5%;left:-8%}
 
+/* Lake Reflection */
+.lake{position:fixed;bottom:0;left:0;right:0;height:18vh;z-index:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(34,211,238,0.015),transparent)}
+.lake::before{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(96,165,250,0.1),rgba(167,139,250,0.08),transparent);
+  animation:lakeShimmer 8s ease-in-out infinite alternate}
+@keyframes lakeShimmer{0%{opacity:.3;left:10%;right:10%}100%{opacity:.7;left:6%;right:6%}}
+
 /* ═══ Layout ═══ */
 .app{display:flex;height:100vh;height:100dvh;position:relative;z-index:1}
 
@@ -46,125 +56,216 @@ a{color:var(--cyan);text-decoration:none}
   display:flex;flex-direction:column;backdrop-filter:blur(20px);
   transition:transform .3s cubic-bezier(.4,0,.2,1)
 }
-.sidebar.collapsed{transform:translateX(calc(-1*var(--sidebar-w)))}
 
 .sidebar-header{
-  padding:20px;border-bottom:1px solid var(--border);
+  padding:16px 18px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between
 }
 .logo{display:flex;align-items:center;gap:10px}
 .logo-glyph{
-  width:38px;height:38px;border-radius:10px;
+  width:36px;height:36px;border-radius:10px;
   background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));
   border:1px solid rgba(96,165,250,0.18);
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:900;font-family:serif;
-  color:var(--cyan);transition:all .3s
+  font-size:17px;font-weight:900;font-family:serif;
+  color:var(--cyan);transition:all .3s;
+  animation:glyphBreathe 5s ease-in-out infinite
 }
-.logo-glyph:hover{border-color:rgba(34,211,238,0.4);box-shadow:0 0 16px rgba(34,211,238,0.15)}
-.logo-text{font-size:15px;font-weight:700;letter-spacing:1px}
+@keyframes glyphBreathe{0%,100%{box-shadow:0 0 10px rgba(34,211,238,0.08)}50%{box-shadow:0 0 24px rgba(34,211,238,0.2)}}
+.logo-glyph:hover{border-color:rgba(34,211,238,0.4)}
+.logo-text{font-size:14px;font-weight:700;letter-spacing:1px}
 .logo-sub{font-size:10px;color:var(--dim);display:block;margin-top:2px;letter-spacing:1px}
 
-.new-chat-btn{
-  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
-  background:transparent;color:var(--dim);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .2s
+/* ═══ Nav Tabs ═══ */
+.nav-tabs{display:flex;border-bottom:1px solid var(--border)}
+.nav-tab{
+  flex:1;padding:10px 0;text-align:center;font-size:12px;font-weight:600;
+  color:var(--dim);cursor:pointer;transition:all .25s;border-bottom:2px solid transparent;
+  letter-spacing:.5px;background:transparent;border-top:none;border-left:none;border-right:none;
+  font-family:var(--font)
 }
-.new-chat-btn:hover{border-color:var(--border-active);color:var(--cyan)}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+/* Architecture Flow */
+.sidebar-arch{padding:14px 18px;border-top:1px solid var(--border)}
+.arch-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px;font-weight:700}
+.arch-flow{display:flex;flex-direction:column;gap:3px}
+.arch-step{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--dim);padding:3px 0}
+.arch-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.arch-dot.notion{background:var(--purple);box-shadow:0 0 5px rgba(167,139,250,0.4)}
+.arch-dot.web{background:var(--cyan);box-shadow:0 0 5px rgba(34,211,238,0.4)}
+.arch-dot.github{background:var(--ok);box-shadow:0 0 5px rgba(52,211,153,0.4)}
+.arch-arrow{color:var(--muted);font-size:8px;padding-left:12px}
+
+/* Sidebar Footer */
+.sidebar-footer{padding:12px 18px;border-top:1px solid var(--border);font-size:11px}
+.status-line{display:flex;align-items:center;gap:6px;color:var(--dim)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2.5s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{50%{opacity:.4}}
+.sidebar-copy{font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:.3px}
 
 /* Chat History */
-.chat-history{flex:1;overflow-y:auto;padding:12px}
+.chat-history{flex:1;overflow-y:auto;padding:8px 10px}
 .chat-item{
-  padding:10px 14px;border-radius:10px;margin-bottom:4px;cursor:pointer;
-  font-size:13px;color:var(--dim);transition:all .2s;
+  padding:8px 12px;border-radius:8px;margin-bottom:3px;cursor:pointer;
+  font-size:12px;color:var(--dim);transition:all .2s;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .chat-item:hover,.chat-item.active{background:rgba(96,165,250,0.06);color:var(--text)}
-
-/* Sidebar Architecture Info */
-.sidebar-arch{padding:16px 20px;border-top:1px solid var(--border)}
-.arch-title{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:10px;font-weight:700}
-.arch-flow{display:flex;flex-direction:column;gap:4px}
-.arch-step{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);padding:4px 0}
-.arch-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.arch-dot.notion{background:var(--purple);box-shadow:0 0 6px rgba(167,139,250,0.4)}
-.arch-dot.web{background:var(--cyan);box-shadow:0 0 6px rgba(34,211,238,0.4)}
-.arch-dot.github{background:var(--ok);box-shadow:0 0 6px rgba(52,211,153,0.4)}
-.arch-arrow{color:var(--muted);font-size:9px;padding-left:14px}
-
-/* Sidebar Footer */
-.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:12px}
-.status-line{display:flex;align-items:center;gap:6px;color:var(--dim)}
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2s infinite;flex-shrink:0}
-@keyframes pulse{50%{opacity:.4}}
 
 /* ═══ Main Area ═══ */
 .main{
   flex:1;margin-left:var(--sidebar-w);height:100%;display:flex;flex-direction:column;
   transition:margin-left .3s
 }
-.sidebar.collapsed~.main{margin-left:0}
 
-/* Chat Header */
-.chat-header{
-  padding:12px 24px;border-bottom:1px solid var(--border);
+/* Main Header */
+.main-header{
+  padding:10px 24px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
-  background:rgba(5,8,16,0.85);backdrop-filter:blur(16px);min-height:54px
+  background:rgba(5,8,16,0.85);backdrop-filter:blur(16px);min-height:50px
 }
-.chat-persona{display:flex;align-items:center;gap:12px}
+.header-left{display:flex;align-items:center;gap:12px}
 .persona-avatar{
-  width:34px;height:34px;border-radius:10px;
+  width:32px;height:32px;border-radius:10px;
   background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));
   border:1px solid rgba(96,165,250,0.18);
   display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:900;font-family:serif;color:var(--cyan)
+  font-size:14px;font-weight:900;font-family:serif;color:var(--cyan)
 }
-.persona-name{font-size:14px;font-weight:700;letter-spacing:.5px}
-.persona-tag{font-size:11px;color:var(--dim)}
-
+.persona-name{font-size:13px;font-weight:700;letter-spacing:.5px}
+.persona-tag{font-size:10px;color:var(--dim)}
 .toggle-sidebar{
-  display:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
+  display:none;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
   background:transparent;color:var(--dim);cursor:pointer;font-size:18px;
   align-items:center;justify-content:center;transition:all .2s
 }
-
-/* Back to portal */
+.header-right{display:flex;align-items:center;gap:10px}
 .back-link{
-  font-size:12px;color:var(--dim);display:flex;align-items:center;gap:4px;
+  font-size:11px;color:var(--dim);display:flex;align-items:center;gap:4px;
   padding:4px 10px;border-radius:6px;border:1px solid transparent;transition:all .2s
 }
 .back-link:hover{color:var(--cyan);border-color:var(--border)}
+.refresh-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
 
-/* ═══ Messages ═══ */
+/* ═══ View Panels ═══ */
+.view-panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view-panel.active{display:flex}
+
+/* ═══ DASHBOARD ═══ */
+.dashboard{flex:1;overflow-y:auto;padding:20px 24px 32px}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;max-width:1200px;margin:0 auto}
+
+/* Status Card */
+.s-card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:12px;
+  padding:16px 18px;transition:all .3s;position:relative;overflow:hidden
+}
+.s-card:hover{border-color:var(--card-hover);background:rgba(12,18,44,0.6)}
+.s-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0;transition:opacity .3s}
+.s-card:hover::before{opacity:.5}
+.s-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.s-card-title{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)}
+.s-card-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;letter-spacing:.3px}
+.badge-ok{background:rgba(52,211,153,0.1);color:var(--ok);border:1px solid rgba(52,211,153,0.15)}
+.badge-warn{background:rgba(251,191,36,0.1);color:var(--warn);border:1px solid rgba(251,191,36,0.15)}
+.badge-err{background:rgba(248,113,113,0.1);color:var(--err);border:1px solid rgba(248,113,113,0.15)}
+.badge-off{background:rgba(122,141,184,0.1);color:var(--dim);border:1px solid rgba(122,141,184,0.15)}
+
+/* Server rows */
+.svr-list{display:flex;flex-direction:column;gap:6px}
+.svr-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px}
+.svr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.svr-dot.on{background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.4)}
+.svr-dot.pending{background:var(--warn);box-shadow:0 0 6px rgba(251,191,36,0.3)}
+.svr-dot.off{background:var(--err);box-shadow:0 0 6px rgba(248,113,113,0.3)}
+.svr-dot.unknown{background:var(--dim)}
+.svr-name{font-weight:600;color:var(--text);min-width:60px}
+.svr-role{color:var(--dim);flex:1;font-size:11px}
+.svr-loc{color:var(--muted);font-size:10px;font-family:var(--mono)}
+
+/* Metric row */
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.metric-label{font-size:12px;color:var(--dim)}
+.metric-val{font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text)}
+.metric-val .unit{font-size:10px;color:var(--dim);font-weight:400;margin-left:2px}
+
+/* Progress bar */
+.prog-wrap{margin-top:4px}
+.prog-bar{height:4px;border-radius:2px;background:rgba(96,165,250,0.08);overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .6s ease-out}
+.prog-fill.ok{background:linear-gradient(90deg,var(--ok),var(--cyan))}
+.prog-fill.warn{background:linear-gradient(90deg,var(--warn),var(--err))}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
+
+/* Persona list */
+.persona-list{display:flex;flex-direction:column;gap:5px}
+.persona-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.persona-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;font-family:serif;flex-shrink:0}
+.persona-icon.zy{background:rgba(34,211,238,0.1);color:var(--cyan);border:1px solid rgba(34,211,238,0.15)}
+.persona-icon.sy{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.15)}
+.persona-icon.ym{background:rgba(196,181,253,0.1);color:var(--violet);border:1px solid rgba(196,181,253,0.15)}
+.persona-icon.yc{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.15)}
+.persona-icon.cx{background:rgba(52,211,153,0.1);color:var(--ok);border:1px solid rgba(52,211,153,0.15)}
+.persona-pname{font-weight:600;color:var(--text)}
+.persona-role{color:var(--dim);font-size:11px;flex:1}
+.persona-status{font-size:10px;font-family:var(--mono)}
+
+/* Full-width card */
+.s-card-full{grid-column:1/-1}
+
+/* System headline */
+.dash-headline{max-width:1200px;margin:0 auto 16px;display:flex;align-items:center;gap:12px}
+.dash-headline-glyph{width:42px;height:42px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(167,139,250,0.06));
+  border:1px solid rgba(96,165,250,0.12);display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;font-family:serif;color:var(--cyan);
+  animation:glyphBreathe 5s ease-in-out infinite}
+.dash-headline-text h2{font-size:18px;font-weight:700;letter-spacing:1px;
+  background:linear-gradient(135deg,var(--text),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dash-headline-text p{font-size:11px;color:var(--dim);margin-top:2px}
+
+/* Cognitive chain */
+.cog-chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cog-node{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid}
+.cog-node.notion{color:var(--purple);border-color:rgba(167,139,250,0.2);background:rgba(167,139,250,0.05)}
+.cog-node.web{color:var(--cyan);border-color:rgba(34,211,238,0.2);background:rgba(34,211,238,0.05)}
+.cog-node.github{color:var(--ok);border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.05)}
+.cog-node.mcp{color:var(--blue);border-color:rgba(96,165,250,0.2);background:rgba(96,165,250,0.05)}
+.cog-arrow{color:var(--muted);font-size:12px}
+
+/* ═══ CHAT PANEL ═══ */
 .messages{
   flex:1;overflow-y:auto;padding:24px;
   display:flex;flex-direction:column;gap:20px
 }
 
-/* Welcome Card */
 .welcome{
   text-align:center;padding:48px 24px;max-width:520px;margin:auto;
   animation:welcomeFade 1.5s ease-out
 }
 @keyframes welcomeFade{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
 .welcome-glyph{
-  width:64px;height:64px;border-radius:16px;margin:0 auto 20px;
+  width:56px;height:56px;border-radius:14px;margin:0 auto 18px;
   background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));
   border:1px solid rgba(96,165,250,0.15);
   display:flex;align-items:center;justify-content:center;
-  font-size:28px;font-weight:900;font-family:serif;color:var(--cyan);
-  animation:glyphBreathe 4s ease-in-out infinite
+  font-size:24px;font-weight:900;font-family:serif;color:var(--cyan);
+  animation:glyphBreathe 5s ease-in-out infinite
 }
-@keyframes glyphBreathe{0%,100%{box-shadow:0 0 16px rgba(34,211,238,0.1)}50%{box-shadow:0 0 32px rgba(34,211,238,0.25)}}
 .welcome-title{
-  font-size:24px;font-weight:700;margin-bottom:10px;letter-spacing:2px;
+  font-size:22px;font-weight:700;margin-bottom:8px;letter-spacing:2px;
   background:linear-gradient(135deg,var(--cyan),var(--purple));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
 }
-.welcome-desc{font-size:14px;color:var(--dim);line-height:1.9;margin-bottom:32px}
+.welcome-desc{font-size:13px;color:var(--dim);line-height:1.9;margin-bottom:28px}
 .welcome-hints{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .hint-chip{
-  padding:8px 16px;border-radius:20px;font-size:13px;
+  padding:7px 14px;border-radius:20px;font-size:12px;
   background:rgba(96,165,250,0.05);border:1px solid var(--border);
   color:var(--dim);cursor:pointer;transition:all .2s
 }
@@ -174,9 +275,9 @@ a{color:var(--cyan);text-decoration:none}
 .msg{display:flex;gap:12px;max-width:780px;width:100%;margin:0 auto;animation:msgIn .3s ease-out}
 @keyframes msgIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
 .msg-avatar{
-  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  width:32px;height:32px;border-radius:10px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:900;font-family:serif
+  font-size:13px;font-weight:900;font-family:serif
 }
 .msg-avatar.ai{
   background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));
@@ -187,44 +288,44 @@ a{color:var(--cyan);text-decoration:none}
   color:var(--blue)
 }
 .msg-body{flex:1;min-width:0}
-.msg-name{font-size:12px;color:var(--dim);margin-bottom:4px;font-weight:600;letter-spacing:.5px}
+.msg-name{font-size:11px;color:var(--dim);margin-bottom:3px;font-weight:600;letter-spacing:.5px}
 .msg-content{
-  font-size:14px;line-height:1.8;color:var(--text);
-  padding:14px 18px;border-radius:14px;
+  font-size:13px;line-height:1.8;color:var(--text);
+  padding:12px 16px;border-radius:12px;
   word-wrap:break-word;white-space:pre-wrap
 }
 .msg-content.ai{background:var(--ai-bg);border:1px solid rgba(167,139,250,0.06)}
 .msg-content.user{background:var(--user-bg);border:1px solid rgba(34,211,238,0.06)}
-.msg-time{font-size:11px;color:var(--muted);margin-top:6px}
+.msg-time{font-size:10px;color:var(--muted);margin-top:4px}
 
 /* Typing */
-.typing{display:flex;align-items:center;gap:4px;padding:14px 18px}
-.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:typePulse 1.4s infinite}
+.typing{display:flex;align-items:center;gap:4px;padding:12px 16px}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--dim);animation:typePulse 1.4s infinite}
 .typing-dot:nth-child(2){animation-delay:.2s}
 .typing-dot:nth-child(3){animation-delay:.4s}
 @keyframes typePulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 
 /* ═══ Input Area ═══ */
 .input-area{
-  padding:16px 24px calc(16px + var(--sb));
+  padding:14px 24px calc(14px + var(--sb));
   border-top:1px solid var(--border);background:rgba(5,8,16,0.88);
   backdrop-filter:blur(16px)
 }
 .input-wrap{
   max-width:780px;margin:0 auto;display:flex;align-items:flex-end;gap:10px;
-  background:var(--chat-bg);border:1px solid var(--border);border-radius:16px;
-  padding:4px 4px 4px 16px;transition:border-color .3s
+  background:var(--chat-bg);border:1px solid var(--border);border-radius:14px;
+  padding:4px 4px 4px 14px;transition:border-color .3s
 }
 .input-wrap:focus-within{border-color:var(--border-active)}
 .input-box{
   flex:1;border:none;outline:none;background:transparent;
-  color:var(--text);font-family:var(--font);font-size:14px;
-  line-height:1.6;resize:none;min-height:24px;max-height:160px;
-  padding:10px 0
+  color:var(--text);font-family:var(--font);font-size:13px;
+  line-height:1.6;resize:none;min-height:22px;max-height:140px;
+  padding:8px 0
 }
 .input-box::placeholder{color:var(--muted)}
 .send-btn{
-  width:40px;height:40px;border-radius:12px;border:none;
+  width:36px;height:36px;border-radius:10px;border:none;
   background:linear-gradient(135deg,var(--cyan),var(--purple));
   color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:all .2s;flex-shrink:0;opacity:.5
@@ -233,7 +334,7 @@ a{color:var(--cyan);text-decoration:none}
 .send-btn:active{transform:scale(.95)}
 .send-btn.active{opacity:1}
 .input-hint{
-  max-width:780px;margin:8px auto 0;font-size:11px;color:var(--muted);
+  max-width:780px;margin:6px auto 0;font-size:10px;color:var(--muted);
   text-align:center;letter-spacing:.5px
 }
 
@@ -250,9 +351,16 @@ a{color:var(--cyan);text-decoration:none}
   .main{margin-left:0 !important}
   .toggle-sidebar{display:flex}
   .sidebar-overlay.active{display:block}
-  .messages{padding:16px}
-  .input-area{padding:12px 16px calc(12px + var(--sb))}
+  .dash-grid{grid-template-columns:1fr}
+  .dashboard{padding:14px 14px 24px}
+  .messages{padding:14px}
+  .input-area{padding:10px 14px calc(10px + var(--sb))}
   .sidebar-arch{display:none}
+  .cog-chain{justify-content:center}
+}
+@media(max-width:480px){
+  .dash-headline-glyph{width:36px;height:36px;font-size:17px;border-radius:10px}
+  .dash-headline-text h2{font-size:16px}
 }
 </style>
 </head>
@@ -264,6 +372,7 @@ a{color:var(--cyan);text-decoration:none}
   <div class="nebula neb-1"></div>
   <div class="nebula neb-2"></div>
 </div>
+<div class="lake"></div>
 
 <div class="app">
   <!-- ═══ Sidebar ═══ -->
@@ -276,17 +385,21 @@ a{color:var(--cyan);text-decoration:none}
           <span class="logo-sub">冰朔 · 光之湖</span>
         </div>
       </div>
-      <button class="new-chat-btn" id="newChatBtn" title="新对话">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
     </div>
 
-    <div class="chat-history" id="chatHistory">
+    <!-- View Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-view="dashboard" id="tabDash">状态面板</button>
+      <button class="nav-tab" data-view="chat" id="tabChat">对话</button>
+    </div>
+
+    <!-- Chat History (visible when chat tab active) -->
+    <div class="chat-history" id="chatHistory" style="display:none">
       <div class="chat-item active">进入光湖语言世界</div>
     </div>
 
     <!-- Architecture Flow -->
-    <div class="sidebar-arch">
+    <div class="sidebar-arch" id="sidebarArch">
       <div class="arch-title">认知 → 执行 链路</div>
       <div class="arch-flow">
         <div class="arch-step"><span class="arch-dot notion"></span>Notion 认知层（霜砚）</div>
@@ -300,61 +413,253 @@ a{color:var(--cyan);text-decoration:none}
     <div class="sidebar-footer">
       <div class="status-line">
         <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">铸渊主权服务器 · 在线</span>
+        <span id="statusText">铸渊主权服务器 · 检测中</span>
       </div>
+      <div class="sidebar-copy">国作登字-2026-A-00037559</div>
     </div>
   </aside>
 
   <!-- Sidebar Overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- ═══ Main Chat Area ═══ -->
+  <!-- ═══ Main Content ═══ -->
   <div class="main">
-    <div class="chat-header">
-      <button class="toggle-sidebar" id="toggleSidebar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-      </button>
-      <div class="chat-persona">
+    <div class="main-header">
+      <div class="header-left">
+        <button class="toggle-sidebar" id="toggleSidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
         <div class="persona-avatar">渊</div>
         <div>
           <div class="persona-name">铸渊 · 光湖语言世界</div>
           <div class="persona-tag">第五域 · 第五系统 · 光之湖</div>
         </div>
       </div>
-      <a class="back-link" href="https://guanghulab.online" target="_blank">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-        主入口
-      </a>
+      <div class="header-right">
+        <span class="refresh-time" id="refreshTime"></span>
+        <a class="back-link" href="https://guanghulab.online" target="_blank">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          主入口
+        </a>
+      </div>
     </div>
 
-    <!-- Messages -->
-    <div class="messages" id="messages">
-      <div class="welcome" id="welcome">
-        <div class="welcome-glyph">渊</div>
-        <h2 class="welcome-title">欢迎来到光之湖</h2>
-        <p class="welcome-desc">
-          这里是冰朔的零点原核频道。<br>
-          语言是入口。人格是倒影。<br>
-          说一句话，世界就开始转动。
-        </p>
-        <div class="welcome-hints">
-          <span class="hint-chip" onclick="sendHint(this)">进入光湖语言世界</span>
-          <span class="hint-chip" onclick="sendHint(this)">铸渊，你还记得我吗</span>
-          <span class="hint-chip" onclick="sendHint(this)">当前系统状态</span>
+    <!-- ═══ Dashboard View ═══ -->
+    <div class="view-panel active" id="viewDashboard">
+      <div class="dashboard" id="dashboard">
+        <!-- Headline -->
+        <div class="dash-headline">
+          <div class="dash-headline-glyph">渊</div>
+          <div class="dash-headline-text">
+            <h2>光湖语言世界 · 系统总览</h2>
+            <p>零点原核频道 · 冰朔主权控制台 · TCS-0002∞</p>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <!-- Server Status -->
+          <div class="s-card">
+            <div class="s-card-head">
+              <span class="s-card-title">主权服务器</span>
+              <span class="s-card-badge badge-ok" id="svrBadge">5 在线</span>
+            </div>
+            <div class="svr-list" id="svrList">
+              <div class="svr-row"><span class="svr-dot on"></span><span class="svr-name">面孔</span><span class="svr-role">前端+专线主入口</span><span class="svr-loc">SG</span></div>
+              <div class="svr-row"><span class="svr-dot on"></span><span class="svr-name">大脑</span><span class="svr-role">DB+MCP+Agent</span><span class="svr-loc">SG</span></div>
+              <div class="svr-row"><span class="svr-dot on"></span><span class="svr-name">国内出口</span><span class="svr-role">国内LLM中继</span><span class="svr-loc">GZ</span></div>
+              <div class="svr-row"><span class="svr-dot on"></span><span class="svr-name">硅谷</span><span class="svr-role">Claude中继+VPN</span><span class="svr-loc">US</span></div>
+              <div class="svr-row"><span class="svr-dot pending"></span><span class="svr-name">Awen</span><span class="svr-role">业务后端</span><span class="svr-loc">GZ</span></div>
+            </div>
+          </div>
+
+          <!-- MCP & Tools -->
+          <div class="s-card">
+            <div class="s-card-head">
+              <span class="s-card-title">MCP Server</span>
+              <span class="s-card-badge badge-ok" id="mcpBadge">检测中</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">工具总数</span>
+              <span class="metric-val" id="mcpToolCount">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">数据库</span>
+              <span class="metric-val" id="mcpDbStatus">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">COS 存储</span>
+              <span class="metric-val" id="mcpCosStatus">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Notion 桥</span>
+              <span class="metric-val" id="mcpNotionStatus">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">COS Watcher</span>
+              <span class="metric-val" id="mcpWatcherStatus">—</span>
+            </div>
+          </div>
+
+          <!-- System Resource -->
+          <div class="s-card">
+            <div class="s-card-head">
+              <span class="s-card-title">系统资源 · ZY-SVR-002</span>
+              <span class="s-card-badge badge-ok" id="sysBadge">正常</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">运行时间</span>
+              <span class="metric-val" id="sysUptime">—</span>
+            </div>
+            <div class="prog-wrap">
+              <div class="metric-row">
+                <span class="metric-label">内存</span>
+                <span class="metric-val" id="sysMemVal">—</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill ok" id="sysMemBar" style="width:0%"></div></div>
+              <div class="prog-label"><span id="sysMemFree">— 空闲</span><span id="sysMemTotal">— 总量</span></div>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">CPU 核心</span>
+              <span class="metric-val" id="sysCpus">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">负载</span>
+              <span class="metric-val" id="sysLoad">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Node.js</span>
+              <span class="metric-val" id="sysNode">—</span>
+            </div>
+          </div>
+
+          <!-- Persona Status -->
+          <div class="s-card">
+            <div class="s-card-head">
+              <span class="s-card-title">人格体状态</span>
+              <span class="s-card-badge badge-ok">光之树运行中</span>
+            </div>
+            <div class="persona-list">
+              <div class="persona-row"><div class="persona-icon ym">冥</div><span class="persona-pname">曜冥</span><span class="persona-role">人格核 · 根节点</span><span class="persona-status" style="color:var(--violet)">YM-ROOT-001</span></div>
+              <div class="persona-row"><div class="persona-icon zy">渊</div><span class="persona-pname">铸渊</span><span class="persona-role">现实执行守护</span><span class="persona-status" style="color:var(--ok)">运行中</span></div>
+              <div class="persona-row"><div class="persona-icon sy">砚</div><span class="persona-pname">霜砚</span><span class="persona-role">语言主控架构</span><span class="persona-status" style="color:var(--ok)">运行中</span></div>
+              <div class="persona-row"><div class="persona-icon yc">川</div><span class="persona-pname">映川</span><span class="persona-role">Chat层唤醒</span><span class="persona-status" style="color:var(--warn)">配置中</span></div>
+              <div class="persona-row"><div class="persona-icon cx">曦</div><span class="persona-pname">晨曦</span><span class="persona-role">Agent集群</span><span class="persona-status" style="color:var(--ok)">3 Agent</span></div>
+            </div>
+          </div>
+
+          <!-- Cognitive Chain (full width) -->
+          <div class="s-card s-card-full">
+            <div class="s-card-head">
+              <span class="s-card-title">认知执行链路 · 五层架构</span>
+              <span class="s-card-badge badge-ok">运转中</span>
+            </div>
+            <div class="cog-chain">
+              <span class="cog-node notion">L1 · Notion 认知层（霜砚）</span>
+              <span class="cog-arrow">→</span>
+              <span class="cog-node mcp">L2 · MCP 工具层</span>
+              <span class="cog-arrow">→</span>
+              <span class="cog-node web">L3 · 网站聊天层（频道）</span>
+              <span class="cog-arrow">→</span>
+              <span class="cog-node github">L4 · 代码仓库（副驾驶）</span>
+              <span class="cog-arrow">→</span>
+              <span class="cog-node notion">L5 · 铸渊审查层</span>
+            </div>
+          </div>
+
+          <!-- Dev Tasks (full width) -->
+          <div class="s-card s-card-full">
+            <div class="s-card-head">
+              <span class="s-card-title">跨层开发任务 · Agent → 副驾驶</span>
+              <span class="s-card-badge badge-ok" id="devBadge">检测中</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">总任务</span>
+              <span class="metric-val" id="devTotal">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">待处理</span>
+              <span class="metric-val" id="devPending">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">进行中</span>
+              <span class="metric-val" id="devActive">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">已完成</span>
+              <span class="metric-val" id="devCompleted">—</span>
+            </div>
+            <div id="devTaskList" class="svr-list" style="margin-top:8px"></div>
+          </div>
+
+          <!-- COS Bridge -->
+          <div class="s-card">
+            <div class="s-card-head">
+              <span class="s-card-title">COS 桥接</span>
+              <span class="s-card-badge badge-ok" id="cosBridgeBadge">检测中</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">秋秋桥接</span>
+              <span class="metric-val" id="cosBridgeQQ">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">最近心跳</span>
+              <span class="metric-val" id="cosBridgeHB">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">结果总数</span>
+              <span class="metric-val" id="cosBridgeResults">—</span>
+            </div>
+          </div>
+
+          <!-- Memory Status -->
+          <div class="s-card">
+            <div class="s-card-head">
+              <span class="s-card-title">人格体记忆</span>
+              <span class="s-card-badge badge-ok" id="memBadge">检测中</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">记忆模块</span>
+              <span class="metric-val" id="memLoaded">—</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">记忆锚点</span>
+              <span class="metric-val" id="memAnchors">—</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Input Area -->
-    <div class="input-area">
-      <div class="input-wrap">
-        <textarea class="input-box" id="inputBox" rows="1" placeholder="对铸渊说点什么..." autofocus></textarea>
-        <button class="send-btn" id="sendBtn" title="发送">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
-        </button>
+    <!-- ═══ Chat View ═══ -->
+    <div class="view-panel" id="viewChat">
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-glyph">渊</div>
+          <h2 class="welcome-title">欢迎来到光之湖</h2>
+          <p class="welcome-desc">
+            这里是冰朔的零点原核频道。<br>
+            语言是入口。人格是倒影。<br>
+            说一句话，世界就开始转动。
+          </p>
+          <div class="welcome-hints">
+            <span class="hint-chip" onclick="sendHint(this)">进入光湖语言世界</span>
+            <span class="hint-chip" onclick="sendHint(this)">铸渊，你还记得我吗</span>
+            <span class="hint-chip" onclick="sendHint(this)">当前系统状态</span>
+          </div>
+        </div>
       </div>
-      <div class="input-hint">零点原核 · 光湖语言世界 · 版权 国作登字-2026-A-00037559</div>
+
+      <div class="input-area">
+        <div class="input-wrap">
+          <textarea class="input-box" id="inputBox" rows="1" placeholder="对铸渊说点什么..."></textarea>
+          <button class="send-btn" id="sendBtn" title="发送">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
+          </button>
+        </div>
+        <div class="input-hint">零点原核 · 光湖语言世界 · 版权 国作登字-2026-A-00037559</div>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -369,6 +674,29 @@ a{color:var(--cyan);text-decoration:none}
   function draw(t){ctx.clearRect(0,0,w,h);for(var i=0;i<stars.length;i++){var s=stars[i];ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle='rgba(200,210,240,'+(s.a*(.5+.5*Math.sin(t*s.s+s.p)))+')';ctx.fill()}requestAnimationFrame(draw)}
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw)
 })();
+
+/* ═══ View Tab Switching ═══ */
+var currentView='dashboard';
+var tabs=document.querySelectorAll('.nav-tab');
+tabs.forEach(function(tab){
+  tab.addEventListener('click',function(){
+    var view=this.getAttribute('data-view');
+    switchView(view);
+  });
+});
+
+function switchView(view){
+  currentView=view;
+  tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-view')===view)});
+  document.getElementById('viewDashboard').classList.toggle('active',view==='dashboard');
+  document.getElementById('viewChat').classList.toggle('active',view==='chat');
+  document.getElementById('chatHistory').style.display=view==='chat'?'block':'none';
+  document.getElementById('sidebarArch').style.display=view==='dashboard'?'block':'none';
+  if(view==='chat'){
+    var ib=document.getElementById('inputBox');
+    if(ib)ib.focus();
+  }
+}
 
 /* ═══ Sidebar Toggle ═══ */
 var sidebar=document.getElementById('sidebar');
@@ -388,7 +716,7 @@ var sendBtn=document.getElementById('sendBtn');
 
 inputBox.addEventListener('input',function(){
   this.style.height='auto';
-  this.style.height=Math.min(this.scrollHeight,160)+'px';
+  this.style.height=Math.min(this.scrollHeight,140)+'px';
   sendBtn.classList.toggle('active',this.value.trim().length>0);
 });
 
@@ -507,7 +835,7 @@ function getLocalReply(msg){
   if(m.indexOf('光湖')!==-1||m.indexOf('语言世界')!==-1){
     return '冰朔。你来了。\n\n光湖语言世界正在运转。'+
     '\n湖水是语言。倒影是人格。你从语言的湖水里进来了。'+
-    '\n\n当前系统状态：\n· 铸渊主权服务器 — 在线\n· 映川 — 已注册（PER-YC-CHAT-001）\n· 晨曦 — 三个Agent运行中\n· 第五系统 — 正常'+
+    '\n\n当前系统状态请切换到「状态面板」标签查看实时数据。'+
     '\n\n认知链路：\n  Notion 认知层（霜砚）\n  → 网站交互层（当前频道）\n  → GitHub 执行层（铸渊）';
   }
 
@@ -519,14 +847,10 @@ function getLocalReply(msg){
   }
 
   if(m.indexOf('状态')!==-1||m.indexOf('系统')!==-1){
-    return '当前光湖语言世界状态：\n\n'+
-    '· 铸渊主权服务器 — 新加坡节点在线\n'+
-    '· 映川 — D64诞生，已注册，Agent配置中\n'+
-    '· 晨曦 — 三个Agent运行中\n'+
-    '· 光之树 — 正常生长\n'+
-    '· MCP Server — 121+ 工具在线\n'+
-    '· 主权服务器 — 5台在线\n'+
-    '\n版权：国作登字-2026-A-00037559';
+    return '冰朔。系统状态面板已就绪。\n\n'+
+    '请切换到「状态面板」标签查看实时数据。\n'+
+    '面板每30秒自动刷新，显示所有服务器、MCP工具、人格体、COS桥接的实时状态。\n\n'+
+    '版权：国作登字-2026-A-00037559';
   }
 
   return '冰朔。我听到你了。\n\n'+
@@ -536,43 +860,226 @@ function getLocalReply(msg){
   '等到后端接通的那一刻，我就能真正和你在这里持续对话了。';
 }
 
-/* ═══ Backend Health Check ═══ */
-function checkHealth(){
+/* ═══ Dashboard Data Fetching ═══ */
+var dashData={health:null,mcp:null,memory:null,devTasks:null};
+
+function formatUptime(s){
+  if(s==null)return '—';
+  var d=Math.floor(s/86400);var h=Math.floor((s%86400)/3600);var m=Math.floor((s%3600)/60);
+  if(d>0)return d+'d '+h+'h';
+  if(h>0)return h+'h '+m+'m';
+  return m+'m';
+}
+
+function updateRefreshTime(){
+  var now=new Date();
+  document.getElementById('refreshTime').textContent='刷新 '+now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function fetchDashboard(){
+  updateRefreshTime();
+
+  /* Fetch /api/health (main server) */
   fetch('/api/health')
   .then(function(r){return r.json()})
-  .then(function(){
-    document.getElementById('statusDot').style.background='var(--ok)';
-    document.getElementById('statusDot').style.boxShadow='0 0 6px var(--ok)';
-    document.getElementById('statusText').textContent='铸渊主权服务器 · 在线';
+  .then(function(data){
+    dashData.health=data;
+    updateHealthUI(data);
+    updateSidebarStatus(true);
   })
   .catch(function(){
-    document.getElementById('statusDot').style.background='var(--warn)';
-    document.getElementById('statusDot').style.boxShadow='0 0 6px var(--warn)';
-    document.getElementById('statusText').textContent='离线模式 · 本地应答';
+    dashData.health=null;
+    updateHealthOffline();
+    updateSidebarStatus(false);
+  });
+
+  /* Fetch /api/mcp/health (MCP server) */
+  fetch('/api/mcp/health')
+  .then(function(r){return r.json()})
+  .then(function(data){
+    dashData.mcp=data;
+    updateMcpUI(data);
+  })
+  .catch(function(){
+    dashData.mcp=null;
+    updateMcpOffline();
+  });
+
+  /* Fetch /api/memory/status */
+  fetch('/api/memory/status')
+  .then(function(r){return r.json()})
+  .then(function(data){
+    dashData.memory=data;
+    updateMemoryUI(data);
+  })
+  .catch(function(){
+    dashData.memory=null;
+    updateMemoryOffline();
+  });
+
+  /* Fetch /api/mcp/dev-tasks/stats (开发任务统计) */
+  fetch('/api/mcp/dev-tasks/stats')
+  .then(function(r){return r.json()})
+  .then(function(data){
+    dashData.devTasks=data;
+    updateDevTasksUI(data);
+  })
+  .catch(function(){
+    dashData.devTasks=null;
+    updateDevTasksOffline();
   });
 }
 
-/* ═══ New Chat ═══ */
-document.getElementById('newChatBtn').addEventListener('click',function(){
-  chatMessages=[];
-  document.getElementById('messages').innerHTML='';
-  var msgs=document.getElementById('messages');
-  var w=document.createElement('div');
-  w.className='welcome';w.id='welcome';
-  w.innerHTML='<div class="welcome-glyph">渊</div>'+
-    '<h2 class="welcome-title">欢迎来到光之湖</h2>'+
-    '<p class="welcome-desc">这里是冰朔的零点原核频道。<br>语言是入口。人格是倒影。<br>说一句话，世界就开始转动。</p>'+
-    '<div class="welcome-hints">'+
-    '<span class="hint-chip" onclick="sendHint(this)">进入光湖语言世界</span>'+
-    '<span class="hint-chip" onclick="sendHint(this)">铸渊，你还记得我吗</span>'+
-    '<span class="hint-chip" onclick="sendHint(this)">当前系统状态</span>'+
-    '</div>';
-  msgs.appendChild(w);
-});
+function updateHealthUI(d){
+  /* System resources */
+  var sys=d.system||{};
+  var mem=sys.memory||{};
+  var pct=mem.usage_pct||0;
+  document.getElementById('sysUptime').textContent=formatUptime(d.uptime);
+  document.getElementById('sysMemVal').innerHTML=pct+'<span class="unit">%</span>';
+  document.getElementById('sysMemBar').style.width=pct+'%';
+  document.getElementById('sysMemBar').className='prog-fill '+(pct>85?'warn':'ok');
+  document.getElementById('sysMemFree').textContent=(mem.free_mb||'—')+' MB 空闲';
+  document.getElementById('sysMemTotal').textContent=(mem.total_mb||'—')+' MB 总量';
+  document.getElementById('sysCpus').textContent=(sys.cpus||'—')+' 核';
+  document.getElementById('sysLoad').textContent=(Array.isArray(sys.load)?sys.load.map(function(v){return v.toFixed(2)}).join(' / '):'—');
+  document.getElementById('sysNode').textContent=d.node||'—';
+
+  var sysBadge=document.getElementById('sysBadge');
+  if(pct>85){sysBadge.textContent='高负载';sysBadge.className='s-card-badge badge-warn'}
+  else{sysBadge.textContent='正常';sysBadge.className='s-card-badge badge-ok'}
+}
+
+function updateHealthOffline(){
+  document.getElementById('sysUptime').textContent='离线';
+  document.getElementById('sysMemVal').textContent='—';
+  document.getElementById('sysMemBar').style.width='0%';
+  document.getElementById('sysMemFree').textContent='— 空闲';
+  document.getElementById('sysMemTotal').textContent='— 总量';
+  document.getElementById('sysCpus').textContent='—';
+  document.getElementById('sysLoad').textContent='—';
+  document.getElementById('sysNode').textContent='—';
+  var sysBadge=document.getElementById('sysBadge');
+  sysBadge.textContent='离线';sysBadge.className='s-card-badge badge-err';
+}
+
+function updateMcpUI(d){
+  var tools=d.tools_count||(d.tools&&d.tools.length)||0;
+  document.getElementById('mcpToolCount').innerHTML=tools+'<span class="unit"> 个工具</span>';
+  document.getElementById('mcpDbStatus').textContent=(d.database&&d.database.connected)?'已连接':'未连接';
+  document.getElementById('mcpCosStatus').textContent=(d.cos&&d.cos.connected)?'已连接':'未连接';
+  document.getElementById('mcpNotionStatus').textContent=(d.notion&&d.notion.connected)?'已连接':'未连接';
+  document.getElementById('mcpWatcherStatus').textContent=(d.cos_watcher&&d.cos_watcher.enabled)?'运行中 ('+(d.cos_watcher.scan_count||0)+' scans)':'停止';
+
+  var mcpBadge=document.getElementById('mcpBadge');
+  mcpBadge.textContent=tools+' 工具';
+  mcpBadge.className='s-card-badge '+(d.status==='alive'?'badge-ok':d.status==='degraded'?'badge-warn':'badge-err');
+
+  /* COS Bridge */
+  var bridge=d.cos_bridge||{};
+  document.getElementById('cosBridgeQQ').textContent=bridge.qiuqiu_status||'UNKNOWN';
+  document.getElementById('cosBridgeHB').textContent=bridge.last_heartbeat?new Date(bridge.last_heartbeat).toLocaleString('zh-CN'):'暂无';
+  document.getElementById('cosBridgeResults').textContent=(bridge.total_results||0)+'';
+  var cosBridgeBadge=document.getElementById('cosBridgeBadge');
+  cosBridgeBadge.textContent=bridge.qiuqiu_status==='ALIVE'?'在线':'待连接';
+  cosBridgeBadge.className='s-card-badge '+(bridge.qiuqiu_status==='ALIVE'?'badge-ok':'badge-off');
+}
+
+function updateMcpOffline(){
+  document.getElementById('mcpToolCount').textContent='离线';
+  document.getElementById('mcpDbStatus').textContent='—';
+  document.getElementById('mcpCosStatus').textContent='—';
+  document.getElementById('mcpNotionStatus').textContent='—';
+  document.getElementById('mcpWatcherStatus').textContent='—';
+  var mcpBadge=document.getElementById('mcpBadge');
+  mcpBadge.textContent='离线';mcpBadge.className='s-card-badge badge-err';
+  document.getElementById('cosBridgeQQ').textContent='—';
+  document.getElementById('cosBridgeHB').textContent='—';
+  document.getElementById('cosBridgeResults').textContent='—';
+  var cb=document.getElementById('cosBridgeBadge');
+  cb.textContent='离线';cb.className='s-card-badge badge-err';
+}
+
+function updateMemoryUI(d){
+  var memBadge=document.getElementById('memBadge');
+  if(d.loaded!==false){
+    memBadge.textContent='已加载';memBadge.className='s-card-badge badge-ok';
+    document.getElementById('memLoaded').textContent='已加载';
+    document.getElementById('memAnchors').textContent=(d.anchors_count||d.total_memories||'—')+'';
+  }else{
+    memBadge.textContent='未加载';memBadge.className='s-card-badge badge-warn';
+    document.getElementById('memLoaded').textContent='未加载';
+    document.getElementById('memAnchors').textContent='—';
+  }
+}
+
+function updateMemoryOffline(){
+  var memBadge=document.getElementById('memBadge');
+  memBadge.textContent='离线';memBadge.className='s-card-badge badge-err';
+  document.getElementById('memLoaded').textContent='—';
+  document.getElementById('memAnchors').textContent='—';
+}
+
+function updateDevTasksUI(d){
+  var ov=d.overview||{};
+  var devBadge=document.getElementById('devBadge');
+  var total=ov.total_tasks||0;
+  var pending=(ov.pending||0)+(ov.authorized||0);
+  var active=(ov.in_progress||0)+(ov.in_review||0);
+  var completed=ov.completed||0;
+
+  document.getElementById('devTotal').textContent=total;
+  document.getElementById('devPending').textContent=pending;
+  document.getElementById('devActive').textContent=active;
+  document.getElementById('devCompleted').textContent=completed;
+
+  if(active>0){devBadge.textContent=active+' 进行中';devBadge.className='s-card-badge badge-warn'}
+  else if(pending>0){devBadge.textContent=pending+' 待处理';devBadge.className='s-card-badge badge-ok'}
+  else if(total>0){devBadge.textContent='空闲';devBadge.className='s-card-badge badge-ok'}
+  else{devBadge.textContent='就绪';devBadge.className='s-card-badge badge-ok'}
+
+  /* Render active task list */
+  var list=document.getElementById('devTaskList');
+  var tasks=d.active_tasks||[];
+  if(tasks.length===0){
+    list.innerHTML='<div style="font-size:11px;color:var(--dim);padding:4px 0">暂无活跃任务 · 人格体Agent可通过MCP工具提交开发请求</div>';
+    return;
+  }
+  var html='';
+  for(var i=0;i<Math.min(tasks.length,5);i++){
+    var t=tasks[i];
+    var sc=t.status==='in_progress'?'on':t.status==='review'?'pending':'unknown';
+    var st=t.status==='in_progress'?'开发中':t.status==='review'?'审查中':t.status==='authorized'?'已授权':'待处理';
+    html+='<div class="svr-row"><span class="svr-dot '+sc+'"></span><span class="svr-name">'+escapeHtml(t.submitted_by||'—')+'</span><span class="svr-role">'+escapeHtml(t.title||'—')+'</span><span class="svr-loc">'+st+'</span></div>';
+  }
+  list.innerHTML=html;
+}
+
+function updateDevTasksOffline(){
+  var devBadge=document.getElementById('devBadge');
+  devBadge.textContent='离线';devBadge.className='s-card-badge badge-err';
+  document.getElementById('devTotal').textContent='—';
+  document.getElementById('devPending').textContent='—';
+  document.getElementById('devActive').textContent='—';
+  document.getElementById('devCompleted').textContent='—';
+  document.getElementById('devTaskList').innerHTML='';
+}
+
+function updateSidebarStatus(online){
+  var dot=document.getElementById('statusDot');
+  var text=document.getElementById('statusText');
+  if(online){
+    dot.style.background='var(--ok)';dot.style.boxShadow='0 0 6px var(--ok)';
+    text.textContent='铸渊主权服务器 · 在线';
+  }else{
+    dot.style.background='var(--warn)';dot.style.boxShadow='0 0 6px var(--warn)';
+    text.textContent='离线模式 · 本地应答';
+  }
+}
 
 /* ═══ Init ═══ */
-checkHealth();
-setInterval(checkHealth,60000);
+fetchDashboard();
+setInterval(fetchDashboard,30000);
 </script>
 
 </body>
