@@ -36,6 +36,9 @@ const sessionStates = new Map();
 const SESSION_TTL = 3600000; // 1小时
 const MAX_SESSIONS = 1000;
 const SUMMARY_THRESHOLD = 40; // 超过40轮触发摘要压缩
+const MAX_SUMMARY_LENGTH = 2000; // 摘要最大长度
+const TRUNCATED_SUMMARY_LENGTH = 1500; // 摘要截断后保留长度
+const KEY_MESSAGE_MIN_LENGTH = 50; // 消息达到此长度视为有意义
 
 // ─── 人格体唤醒词 ───
 const PERSONA_TRIGGERS = {
@@ -246,7 +249,7 @@ function compressConversation(session, recentMessages) {
     const content = msg.content || '';
 
     // 提取包含关键信息的消息
-    if (content.length > 50 || /开发|架构|部署|修复|任务|系统|人格|认知|霜砚|铸渊|冰朔/.test(content)) {
+    if (content.length > KEY_MESSAGE_MIN_LENGTH || /开发|架构|部署|修复|任务|系统|人格|认知|霜砚|铸渊|冰朔/.test(content)) {
       keyPoints.push(content.substring(0, 100));
     }
   }
@@ -260,8 +263,8 @@ function compressConversation(session, recentMessages) {
       : summary;
 
     // 限制摘要总长度
-    if (session.compressedSummary.length > 2000) {
-      session.compressedSummary = session.compressedSummary.slice(-1500);
+    if (session.compressedSummary.length > MAX_SUMMARY_LENGTH) {
+      session.compressedSummary = session.compressedSummary.slice(-TRUNCATED_SUMMARY_LENGTH);
     }
   }
 }
@@ -272,17 +275,21 @@ function compressConversation(session, recentMessages) {
 
 /**
  * 检测对话中是否包含开发任务需求
+ * 使用长度限制的非贪婪匹配，避免ReDoS
  */
 function detectDevTask(message) {
+  // 限制检测长度防止ReDoS
+  const msg = message.length > 500 ? message.substring(0, 500) : message;
+
   const DEV_PATTERNS = [
-    /请.*(?:开发|实现|修复|部署|创建|新增|添加|删除|更新|重构)/,
-    /(?:需要|想要|希望).*(?:功能|接口|页面|模块|工具|脚本)/,
-    /(?:bug|问题|错误|异常).*(?:修复|解决|处理)/,
-    /生成.*(?:开发|任务|工单|授权)/
+    /请.{0,30}(?:开发|实现|修复|部署|创建|新增|添加|删除|更新|重构)/,
+    /(?:需要|想要|希望).{0,30}(?:功能|接口|页面|模块|工具|脚本)/,
+    /(?:bug|问题|错误|异常).{0,30}(?:修复|解决|处理)/,
+    /生成.{0,30}(?:开发|任务|工单|授权)/
   ];
 
   for (const pattern of DEV_PATTERNS) {
-    if (pattern.test(message)) {
+    if (pattern.test(msg)) {
       return true;
     }
   }

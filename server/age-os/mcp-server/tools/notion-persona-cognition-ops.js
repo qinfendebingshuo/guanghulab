@@ -34,7 +34,7 @@ const PERSONA_DB_CONFIG = {
   dev_workorder:     process.env.ZY_NOTION_DEV_WORKORDER_DB || '',
   // HNL桥接协议中定义的Notion侧树杈/树叶DB
   tree_branch:       process.env.ZY_NOTION_TREE_BRANCH_DB || 'ca6ac139bdc94746ab6ce346b0122e17',
-  tree_leaf:         process.env.ZY_NOTION_TREE_LEAF_DB || '77784b2340474069d81bbb4a9a45a2986'
+  tree_leaf:         process.env.ZY_NOTION_TREE_LEAF_DB || '77784b234047469d81bbb4a9a45a2986'
 };
 
 // ─── 四枝干映射 ───
