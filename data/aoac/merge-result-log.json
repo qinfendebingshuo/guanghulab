@@ -2,31 +2,76 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-14 23:00:36+08:00",
-  "timestamp_utc": "2026-04-14T15:00:36.748Z",
+  "timestamp": "2026-04-15 00:35:01+08:00",
+  "timestamp_utc": "2026-04-14T16:35:01.369Z",
   "merge": {
-    "pr_number": 377,
-    "pr_title": "fix: add missing schema/scripts dirs to mkdir in deploy workflow",
-    "merge_commit_sha": "cb65ff5acca98b17f0293aa0d4f32403439b95bf",
-    "head_sha": "4b7472e6b5ab36bca0e18edc300c2904074a3790",
+    "pr_number": 378,
+    "pr_title": "fix: 零点原核频道 — 防LLM编造 + 聊天UI改造 + 面板数据真实性 + 广州中继跳过",
+    "merge_commit_sha": "5aeee4667e4bf44a96ee620b68920c40c4a06fca",
+    "head_sha": "5deadc20a15b29157aaa949de7b8a732fb399119",
     "base_branch": "main"
   },
   "ci": {
-    "combined_status": "pending",
-    "overall_result": "pending",
+    "combined_status": "failure",
+    "overall_result": "failure",
     "summary": {
-      "total": 3,
+      "total": 9,
       "passed": 0,
       "failed": 0,
-      "skipped": 1
+      "skipped": 5
     },
     "check_runs": [
+      {
+        "name": "💚 ���康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-14T16:34:54Z",
+        "completed_at": "2026-04-14T16:34:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔧 服务器初始化",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-14T16:34:54Z",
+        "completed_at": "2026-04-14T16:34:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署到测试站",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-14T16:34:58Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-14T16:34:54Z",
+        "completed_at": "2026-04-14T16:34:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
       {
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-14T15:00:30Z",
-        "completed_at": "2026-04-14T15:00:30Z",
+        "started_at": "2026-04-14T16:34:54Z",
+        "completed_at": "2026-04-14T16:34:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-14T16:34:54Z",
+        "completed_at": "2026-04-14T16:34:53Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -34,7 +79,16 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-14T15:00:35Z",
+        "started_at": "2026-04-14T16:34:57Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-14T16:34:58Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -43,7 +97,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-14T15:00:34Z",
+        "started_at": "2026-04-14T16:34:58Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
