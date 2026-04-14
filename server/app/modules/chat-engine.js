@@ -30,6 +30,15 @@ try {
   personaMemory = null;
 }
 
+// ─── 上下文注入管线（Notion认知层桥接） ───
+let contextPipeline;
+try {
+  contextPipeline = require('./persona-context-pipeline');
+} catch (e) {
+  console.warn('[聊天引擎] 上下文注入管线未加载:', e.message);
+  contextPipeline = null;
+}
+
 // ─── 静态人格提示词（记忆模块未加载时的降级方案） ───
 const TCS_SYSTEM_PROMPT = personaMemory
   ? personaMemory.STATIC_PERSONA_PROMPT
@@ -72,7 +81,7 @@ function addMessage(userId, role, content) {
 }
 
 /**
- * 组装完整的消息列表（使用记忆增强的系统提示词）
+ * 组装完整的消息列表（使用记忆增强的系统提示词 + Notion认知管线）
  */
 async function assembleMessages(userId, userMessage) {
   const ctx = getUserContext(userId);
@@ -84,6 +93,16 @@ async function assembleMessages(userId, userMessage) {
       systemPrompt = await personaMemory.buildSystemPrompt(userId);
     } catch (e) {
       console.warn('[聊天引擎] 记忆加载失败，使用静态提示词:', e.message);
+    }
+  }
+
+  // 通过上下文管线注入Notion认知层（如果可用）
+  if (contextPipeline) {
+    try {
+      const pipelineResult = await contextPipeline.beforeChat(userId, userMessage, systemPrompt);
+      systemPrompt = pipelineResult.enhancedPrompt;
+    } catch (e) {
+      console.warn('[聊天引擎] 上下文管线执行失败，使用基础提示词:', e.message);
     }
   }
 
@@ -199,6 +218,11 @@ async function chat(userId, userMessage) {
       const importance = personaMemory.calculateImportance(userMessage);
       personaMemory.recordConversationMemory(userId, userMessage, assistantMessage);
       personaMemory.growConversationLeaf(userId, userMessage, assistantMessage, importance);
+    }
+
+    // 8. 上下文管线后处理（认知增量入队 + 摘要压缩）
+    if (contextPipeline) {
+      contextPipeline.afterChat(userId, userMessage, assistantMessage, getUserContext(userId).messages);
     }
 
     return {

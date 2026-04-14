@@ -88,6 +88,12 @@ try {
 } catch (err) {
   console.error(`人格体记忆模块加载警告: ${err.message}`);
 }
+let contextPipeline;
+try {
+  contextPipeline = require('./modules/persona-context-pipeline');
+} catch (err) {
+  console.error(`上下文注入管线加载警告: ${err.message}`);
+}
 
 // ═══════════════════════════════════════════════════════════
 // API 路由
@@ -428,11 +434,18 @@ app.get('/api/chat/stats', (_req, res) => {
     if (domesticGateway) {
       stats.domesticGateway = domesticGateway.getGatewayStats();
     }
+    // 合并上下文管线状态
+    if (contextPipeline) {
+      stats.contextPipeline = contextPipeline.getPipelineStatus();
+    }
     res.json(stats);
   } else {
     const stats = { activeUsers: 0, modelUsage: {}, pricing: {} };
     if (domesticGateway) {
       stats.domesticGateway = domesticGateway.getGatewayStats();
+    }
+    if (contextPipeline) {
+      stats.contextPipeline = contextPipeline.getPipelineStatus();
     }
     res.json(stats);
   }
