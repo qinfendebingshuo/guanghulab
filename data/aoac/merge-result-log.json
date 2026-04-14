@@ -2,75 +2,30 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-14 21:45:08+08:00",
-  "timestamp_utc": "2026-04-14T13:45:08.086Z",
+  "timestamp": "2026-04-14 21:46:34+08:00",
+  "timestamp_utc": "2026-04-14T13:46:34.216Z",
   "merge": {
-    "pr_number": 376,
-    "pr_title": "fix: MCP auth middleware loopback detection broken by trust proxy",
-    "merge_commit_sha": "55825f988aa497fefe4d9e8641490e26b783aa54",
-    "head_sha": "75eef5fda639edd245c12e97dd7dc3936807230a",
+    "pr_number": 375,
+    "pr_title": "fix: sync portal/index.html + fix eval() false positive + XSS hardening",
+    "merge_commit_sha": "a9c0dc92a6e903821103617e6ceaac7be6197619",
+    "head_sha": "380fcca84433ffbe3c4a6215b2b31ef5c0b26f44",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 8,
+      "total": 4,
       "passed": 0,
       "failed": 0,
-      "skipped": 5
+      "skipped": 1
     },
     "check_runs": [
       {
-        "name": "🚀 预��站→主站 一键推送",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-14T13:44:59Z",
-        "completed_at": "2026-04-14T13:44:59Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "gate-guard",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-14T13:44:59Z",
-        "completed_at": "2026-04-14T13:44:59Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔒 SSL证书配置",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-14T13:44:59Z",
-        "completed_at": "2026-04-14T13:44:59Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💚 健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-14T13:44:59Z",
-        "completed_at": "2026-04-14T13:44:59Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔧 服务器初始化",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-14T13:44:59Z",
-        "completed_at": "2026-04-14T13:44:59Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 部署应用代码",
-        "status": "in_progress",
+        "name": "build",
+        "status": "queued",
         "conclusion": null,
-        "started_at": "2026-04-14T13:45:03Z",
+        "started_at": "2026-04-14T13:46:29Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -79,16 +34,25 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-14T13:45:02Z",
+        "started_at": "2026-04-14T13:46:30Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "build",
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-14T13:46:25Z",
+        "completed_at": "2026-04-14T13:46:25Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "deploy",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-14T13:45:01Z",
+        "started_at": "2026-04-14T13:46:31Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
