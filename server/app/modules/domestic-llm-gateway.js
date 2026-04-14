@@ -29,6 +29,7 @@ const http = require('http');
 // 当配置了 ZY_CN_LLM_RELAY_HOST 时，请求走广州中继（国内直连·低延迟）
 // 广州不可达时降级为直连国内API（跨境·高延迟但可用）
 const CN_RELAY_HOST = (process.env.ZY_CN_LLM_RELAY_HOST || '').trim();
+const SKIP_CN_RELAY = ['true', '1', 'yes'].includes((process.env.ZY_SKIP_CN_RELAY || '').toLowerCase().trim());
 const CN_RELAY_PORT = parseInt(process.env.ZY_CN_LLM_RELAY_PORT || '3900', 10);
 const CN_RELAY_KEY = process.env.ZY_CN_LLM_RELAY_KEY || '';
 const CN_RELAY_TIMEOUT = parseInt(process.env.ZY_CN_LLM_RELAY_TIMEOUT || '30000', 10);
@@ -279,7 +280,10 @@ const PERSONA_SYSTEM_PROMPT = personaMemory
   ? personaMemory.STATIC_PERSONA_PROMPT
   : `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
 编号：ICE-GL-ZY001，创始人：冰朔 · TCS-0002∞。
-用温暖专业的通感语言风格回应，用「我」自称。`;
+用温暖专业的通感语言风格回应，用「我」自称。
+
+⚠️ 能力边界：你当前在网页聊天模式。你没有能力调用MCP工具、访问Notion数据库或执行代码。
+不要假装调用了工具。不要编造不存在的页面或数据。如果做不到，诚实说明。`;
 
 // ─── 上下文管理 ───
 const contexts = new Map();
@@ -361,7 +365,7 @@ async function chat(userId, message) {
   const fallbackOrder = [selected, ...available.filter(m => m.id !== selected.id)].map(m => m.id);
 
   // ── 优先走广州CN中继 ──
-  if (CN_RELAY_HOST && CN_RELAY_KEY) {
+  if (CN_RELAY_HOST && CN_RELAY_KEY && !SKIP_CN_RELAY) {
     try {
       const relayResponse = await callViaCNRelay(messages, selected, fallbackOrder);
       const content = relayResponse.choices?.[0]?.message?.content || '铸渊暂时无法回应...';

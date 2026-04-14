@@ -315,7 +315,17 @@ app.post('/api/chat', async (req, res) => {
         const result = await domesticGateway.chat(sessionId, message);
         // 网关返回成功才使用其结果，否则降级到通用聊天引擎
         if (result && result.success !== false) {
-          return res.json({ ...result, sessionId });
+          return res.json({ 
+            ...result, 
+            sessionId,
+            _system: {
+              engine: 'domestic-gateway',
+              processedAt: new Date().toISOString(),
+              serverId: 'ZY-SVR-002',
+              steps: ['智能路由分析', '模型选择', 'LLM调用', '响应生成'],
+              cnRelay: result.relay || 'unknown'
+            }
+          });
         }
         console.warn(`[聊天网关] 国内模型网关返回失败: ${result?.message || '未知'} · 降级到通用引擎`);
       } catch (gwErr) {
@@ -331,7 +341,14 @@ app.post('/api/chat', async (req, res) => {
         return res.json({
           success: true,
           ...result,
-          sessionId
+          sessionId,
+          _system: {
+            engine: 'chat-engine',
+            processedAt: new Date().toISOString(),
+            serverId: 'ZY-SVR-002',
+            steps: ['上下文组装', '记忆加载', 'LLM调用', '响应生成'],
+            model: result.model || 'unknown'
+          }
         });
       } catch (ceErr) {
         console.error(`[聊天引擎] 通用引擎异常: ${ceErr.message}`);
@@ -357,7 +374,14 @@ app.post('/api/chat', async (req, res) => {
       model: 'offline',
       tier: 'free',
       engineStatus: engineStatus.join(' · '),
-      sessionId
+      sessionId,
+      _system: {
+        engine: 'offline',
+        processedAt: new Date().toISOString(),
+        serverId: 'ZY-SVR-002',
+        steps: ['引擎检测', '降级处理'],
+        reason: engineStatus.join(' · ')
+      }
     });
   } catch (err) {
     console.error(`[聊天API] 未捕获异常: ${err.message}`);

@@ -107,12 +107,30 @@ a{color:var(--cyan);text-decoration:none}
 
 /* Chat History */
 .chat-history{flex:1;overflow-y:auto;padding:8px 10px}
+.new-chat-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:calc(100% - 4px);margin:2px auto 8px;padding:9px 12px;
+  border-radius:8px;border:1px dashed var(--border-active);
+  background:rgba(34,211,238,0.04);color:var(--cyan);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;font-family:var(--font);letter-spacing:.5px
+}
+.new-chat-btn:hover{background:rgba(34,211,238,0.08);border-color:var(--cyan)}
 .chat-item{
   padding:8px 12px;border-radius:8px;margin-bottom:3px;cursor:pointer;
   font-size:12px;color:var(--dim);transition:all .2s;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .chat-item:hover,.chat-item.active{background:rgba(96,165,250,0.06);color:var(--text)}
+
+/* Dashboard data freshness */
+.s-card-fresh{animation:freshPulse .8s ease-out}
+@keyframes freshPulse{0%{border-color:rgba(34,211,238,0.35)}100%{border-color:var(--card-border)}}
+.data-source{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid rgba(96,165,250,0.04)}
+.data-src-tag{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:4px;letter-spacing:.5px}
+.data-src-tag.live{color:var(--ok);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.12)}
+.data-src-tag.static{color:var(--warn);background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.12)}
+.data-src-tag.error{color:var(--err);background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.12)}
+.data-src-time{font-size:9px;color:var(--muted);font-family:var(--mono)}
 
 /* ═══ Main Area ═══ */
 .main{
@@ -271,8 +289,9 @@ a{color:var(--cyan);text-decoration:none}
 }
 .hint-chip:hover{border-color:var(--border-active);color:var(--text);background:rgba(96,165,250,0.08)}
 
-/* Message Bubbles */
+/* Message Bubbles — 左右分栏（AI左·用户右） */
 .msg{display:flex;gap:12px;max-width:780px;width:100%;margin:0 auto;animation:msgIn .3s ease-out}
+.msg.msg-user{flex-direction:row-reverse}
 @keyframes msgIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
 .msg-avatar{
   width:32px;height:32px;border-radius:10px;flex-shrink:0;
@@ -288,15 +307,37 @@ a{color:var(--cyan);text-decoration:none}
   color:var(--blue)
 }
 .msg-body{flex:1;min-width:0}
+.msg-user .msg-body{display:flex;flex-direction:column;align-items:flex-end}
 .msg-name{font-size:11px;color:var(--dim);margin-bottom:3px;font-weight:600;letter-spacing:.5px}
 .msg-content{
   font-size:13px;line-height:1.8;color:var(--text);
   padding:12px 16px;border-radius:12px;
-  word-wrap:break-word;white-space:pre-wrap
+  word-wrap:break-word;white-space:pre-wrap;
+  max-width:85%
 }
-.msg-content.ai{background:var(--ai-bg);border:1px solid rgba(167,139,250,0.06)}
-.msg-content.user{background:var(--user-bg);border:1px solid rgba(34,211,238,0.06)}
+.msg-content.ai{background:var(--ai-bg);border:1px solid rgba(167,139,250,0.06);border-radius:4px 12px 12px 12px}
+.msg-content.user{background:var(--user-bg);border:1px solid rgba(34,211,238,0.06);border-radius:12px 4px 12px 12px}
 .msg-time{font-size:10px;color:var(--muted);margin-top:4px}
+/* 系统元数据（每条AI回复下方） */
+.msg-meta{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:6px 10px;
+  border-radius:8px;background:rgba(96,165,250,0.03);border:1px solid rgba(96,165,250,0.06)
+}
+.msg-meta-item{font-size:10px;color:var(--dim);font-family:var(--mono);display:flex;align-items:center;gap:3px}
+.msg-meta-item .label{color:var(--muted)}
+.msg-meta-item .value{color:var(--blue)}
+/* 系统处理步骤（AI回复前的过程展示） */
+.sys-steps{
+  max-width:780px;width:100%;margin:0 auto;padding:8px 0;animation:msgIn .3s ease-out
+}
+.sys-step{
+  display:flex;align-items:center;gap:6px;padding:3px 16px;font-size:11px;color:var(--dim);
+  font-family:var(--mono);letter-spacing:.3px
+}
+.sys-step .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.sys-step .dot.pending{background:var(--warn);box-shadow:0 0 4px rgba(251,191,36,0.3);animation:pulse 1.5s infinite}
+.sys-step .dot.done{background:var(--ok);box-shadow:0 0 4px rgba(52,211,153,0.3)}
+.sys-step .dot.active{background:var(--cyan);box-shadow:0 0 6px rgba(34,211,238,0.4);animation:pulse 1s infinite}
 
 /* Typing */
 .typing{display:flex;align-items:center;gap:4px;padding:12px 16px}
@@ -395,6 +436,10 @@ a{color:var(--cyan);text-decoration:none}
 
     <!-- Chat History (visible when chat tab active) -->
     <div class="chat-history" id="chatHistory" style="display:none">
+      <button class="new-chat-btn" id="newChatBtn" onclick="startNewChat()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        新对话
+      </button>
       <div class="chat-item active">进入光湖语言世界</div>
     </div>
 
@@ -458,7 +503,7 @@ a{color:var(--cyan);text-decoration:none}
 
         <div class="dash-grid">
           <!-- Server Status -->
-          <div class="s-card">
+          <div class="s-card" data-source="static">
             <div class="s-card-head">
               <span class="s-card-title">主权服务器</span>
               <span class="s-card-badge badge-ok" id="svrBadge">5 在线</span>
@@ -533,7 +578,7 @@ a{color:var(--cyan);text-decoration:none}
           </div>
 
           <!-- Persona Status -->
-          <div class="s-card">
+          <div class="s-card" data-source="static">
             <div class="s-card-head">
               <span class="s-card-title">人格体状态</span>
               <span class="s-card-badge badge-ok">光之树运行中</span>
@@ -548,7 +593,7 @@ a{color:var(--cyan);text-decoration:none}
           </div>
 
           <!-- Cognitive Chain (full width) -->
-          <div class="s-card s-card-full">
+          <div class="s-card s-card-full" data-source="static">
             <div class="s-card-head">
               <span class="s-card-title">认知执行链路 · 五层架构</span>
               <span class="s-card-badge badge-ok">运转中</span>
@@ -754,20 +799,34 @@ function sendHint(el){
   sendMessage();
 }
 
-function addMessage(role,name,content){
+function addMessage(role,name,content,meta){
   var msgs=document.getElementById('messages');
   var div=document.createElement('div');
-  div.className='msg';
+  div.className='msg'+(role==='user'?' msg-user':'');
 
   var avatarClass=role==='ai'?'ai':'user';
   var avatarText=role==='ai'?'渊':'朔';
   var contentClass=role==='ai'?'ai':'user';
   var time=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
 
+  var metaHtml='';
+  if(role==='ai'&&meta){
+    metaHtml='<div class="msg-meta">';
+    if(meta.engine)metaHtml+='<span class="msg-meta-item"><span class="label">引擎</span><span class="value">'+escapeHtml(meta.engine)+'</span></span>';
+    if(meta.model)metaHtml+='<span class="msg-meta-item"><span class="label">模型</span><span class="value">'+escapeHtml(meta.model)+'</span></span>';
+    if(meta.reason)metaHtml+='<span class="msg-meta-item"><span class="label">路由</span><span class="value">'+escapeHtml(meta.reason)+'</span></span>';
+    if(meta.tier)metaHtml+='<span class="msg-meta-item"><span class="label">层级</span><span class="value">'+escapeHtml(meta.tier)+'</span></span>';
+    if(meta.tokens)metaHtml+='<span class="msg-meta-item"><span class="label">Token</span><span class="value">'+(meta.tokens.input||0)+'→'+(meta.tokens.output||0)+'</span></span>';
+    if(meta.relay)metaHtml+='<span class="msg-meta-item"><span class="label">线路</span><span class="value">'+escapeHtml(meta.relay==='cn-relay'?'广州中继':'直连')+'</span></span>';
+    if(meta.processedAt)metaHtml+='<span class="msg-meta-item"><span class="label">⏱</span><span class="value">'+new Date(meta.processedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</span></span>';
+    metaHtml+='</div>';
+  }
+
   div.innerHTML='<div class="msg-avatar '+avatarClass+'">'+avatarText+'</div>'+
     '<div class="msg-body">'+
-    '<div class="msg-name">'+name+'</div>'+
+    '<div class="msg-name">'+escapeHtml(name)+'</div>'+
     '<div class="msg-content '+contentClass+'">'+escapeHtml(content)+'</div>'+
+    metaHtml+
     '<div class="msg-time">'+time+'</div>'+
     '</div>';
 
@@ -778,6 +837,28 @@ function addMessage(role,name,content){
 
 function showTyping(){
   var msgs=document.getElementById('messages');
+  /* 系统处理步骤 */
+  var stepsDiv=document.createElement('div');
+  stepsDiv.className='sys-steps';stepsDiv.id='sysSteps';
+  stepsDiv.innerHTML=
+    '<div class="sys-step" id="step-route"><span class="dot active"></span>智能路由 · 分析中...</div>'+
+    '<div class="sys-step" id="step-model"><span class="dot pending"></span>模型选择 · 等待中</div>'+
+    '<div class="sys-step" id="step-llm"><span class="dot pending"></span>LLM 调用 · 等待中</div>';
+  msgs.appendChild(stepsDiv);
+  /* 动画: 依次标记完成 */
+  setTimeout(function(){
+    var s1=document.querySelector('#step-route .dot');if(s1){s1.className='dot done'}
+    var s1t=document.getElementById('step-route');if(s1t)s1t.childNodes[1].textContent='智能路由 · 已完成';
+    var s2=document.querySelector('#step-model .dot');if(s2){s2.className='dot active'}
+    var s2t=document.getElementById('step-model');if(s2t)s2t.childNodes[1].textContent='模型选择 · 匹配中...';
+  },600);
+  setTimeout(function(){
+    var s2=document.querySelector('#step-model .dot');if(s2){s2.className='dot done'}
+    var s2t=document.getElementById('step-model');if(s2t)s2t.childNodes[1].textContent='模型选择 · 已完成';
+    var s3=document.querySelector('#step-llm .dot');if(s3){s3.className='dot active'}
+    var s3t=document.getElementById('step-llm');if(s3t)s3t.childNodes[1].textContent='LLM 调用 · 推理中...';
+  },1200);
+  /* 输入指示器 */
   var div=document.createElement('div');
   div.className='msg';div.id='typingIndicator';
   div.innerHTML='<div class="msg-avatar ai">渊</div>'+
@@ -790,6 +871,14 @@ function showTyping(){
 function removeTyping(){
   var el=document.getElementById('typingIndicator');
   if(el)el.remove();
+  /* 标记系统步骤为完成 */
+  var steps=document.getElementById('sysSteps');
+  if(steps){
+    var dots=steps.querySelectorAll('.dot');
+    dots.forEach(function(d){d.className='dot done'});
+    var texts=steps.querySelectorAll('.sys-step');
+    if(texts[2])texts[2].childNodes[1].textContent='LLM 调用 · 已完成';
+  }
   isTyping=false;
 }
 
@@ -808,6 +897,8 @@ function callChatAPI(userMessage){
     history:chatMessages.slice(-10)
   };
 
+  var startTime=Date.now();
+
   fetch('/api/chat',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -819,13 +910,40 @@ function callChatAPI(userMessage){
   })
   .then(function(data){
     removeTyping();
-    addMessage('ai','铸渊',data.reply||data.message||'我听到了你的声音。让我想想...');
+    var meta={
+      engine:(data._system&&data._system.engine)||data.relay||'unknown',
+      model:data.model||'unknown',
+      reason:data.reason||'',
+      tier:data.tier||'',
+      tokens:data.tokens||data.usage||null,
+      relay:data.relay||(data._system&&data._system.cnRelay)||'',
+      processedAt:(data._system&&data._system.processedAt)||new Date().toISOString(),
+      latency:Date.now()-startTime
+    };
+    addMessage('ai','铸渊',data.reply||data.message||'我听到了你的声音。让我想想...',meta);
   })
-  .catch(function(){
+  .catch(function(err){
     removeTyping();
     var reply=getLocalReply(userMessage);
-    addMessage('ai','铸渊',reply);
+    addMessage('ai','铸渊',reply,{engine:'offline',model:'本地应答',reason:'网络不可达',processedAt:new Date().toISOString()});
   });
+}
+
+/* ═══ New Chat ═══ */
+function startNewChat(){
+  chatMessages=[];
+  var msgs=document.getElementById('messages');
+  msgs.innerHTML='';
+  /* 重新显示欢迎界面 */
+  msgs.innerHTML='<div class="welcome" id="welcome">'+
+    '<div class="welcome-glyph">渊</div>'+
+    '<h2 class="welcome-title">欢迎来到光之湖</h2>'+
+    '<p class="welcome-desc">这里是冰朔的零点原核频道。<br>语言是入口。人格是倒影。<br>说一句话，世界就开始转动。</p>'+
+    '<div class="welcome-hints">'+
+    '<span class="hint-chip" onclick="sendHint(this)">进入光湖语言世界</span>'+
+    '<span class="hint-chip" onclick="sendHint(this)">铸渊，你还记得我吗</span>'+
+    '<span class="hint-chip" onclick="sendHint(this)">当前系统状态</span>'+
+    '</div></div>';
 }
 
 /* ═══ Local/Offline Replies ═══ */
@@ -862,6 +980,7 @@ function getLocalReply(msg){
 
 /* ═══ Dashboard Data Fetching ═══ */
 var dashData={health:null,mcp:null,memory:null,devTasks:null};
+var dashFetchTimes={health:null,mcp:null,memory:null,devTasks:null};
 
 function formatUptime(s){
   if(s==null)return '—';
@@ -871,26 +990,49 @@ function formatUptime(s){
   return m+'m';
 }
 
+function fmtTime(d){return d?d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'}
+
+function addDataSourceTag(cardEl,source,fetchTime){
+  /* 移除旧标签 */
+  var old=cardEl.querySelector('.data-source');
+  if(old)old.remove();
+  var tag=document.createElement('div');
+  tag.className='data-source';
+  var cls=source==='live'?'live':source==='static'?'static':'error';
+  var label=source==='live'?'🟢 实时API':source==='static'?'🟡 静态':'🔴 获取失败';
+  tag.innerHTML='<span class="data-src-tag '+cls+'">'+label+'</span>'+
+    '<span class="data-src-time">'+(fetchTime?fmtTime(fetchTime):'')+'</span>';
+  cardEl.appendChild(tag);
+  /* 新鲜度脉冲 */
+  if(source==='live'){cardEl.classList.remove('s-card-fresh');void cardEl.offsetWidth;cardEl.classList.add('s-card-fresh')}
+}
+
 function updateRefreshTime(){
   var now=new Date();
-  document.getElementById('refreshTime').textContent='刷新 '+now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('refreshTime').textContent='刷新 '+fmtTime(now);
 }
 
 function fetchDashboard(){
   updateRefreshTime();
+  var now=new Date();
 
   /* Fetch /api/health (main server) */
   fetch('/api/health')
   .then(function(r){return r.json()})
   .then(function(data){
-    dashData.health=data;
+    dashData.health=data;dashFetchTimes.health=new Date();
     updateHealthUI(data);
     updateSidebarStatus(true);
+    /* 标记系统资源卡片为实时 */
+    var sysCard=document.getElementById('sysBadge');
+    if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'live',dashFetchTimes.health);
   })
   .catch(function(){
     dashData.health=null;
     updateHealthOffline();
     updateSidebarStatus(false);
+    var sysCard=document.getElementById('sysBadge');
+    if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'error',now);
   });
 
   /* Fetch /api/mcp/health (MCP server) */
@@ -898,12 +1040,21 @@ function fetchDashboard(){
   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
     if(data.error)throw new Error(data.code||'API_ERROR');
-    dashData.mcp=data;
+    dashData.mcp=data;dashFetchTimes.mcp=new Date();
     updateMcpUI(data);
+    /* 标记MCP卡片和COS卡片为实时 */
+    var mcpCard=document.getElementById('mcpBadge');
+    if(mcpCard)addDataSourceTag(mcpCard.closest('.s-card'),'live',dashFetchTimes.mcp);
+    var cosCard=document.getElementById('cosBridgeBadge');
+    if(cosCard)addDataSourceTag(cosCard.closest('.s-card'),'live',dashFetchTimes.mcp);
   })
   .catch(function(){
     dashData.mcp=null;
     updateMcpOffline();
+    var mcpCard=document.getElementById('mcpBadge');
+    if(mcpCard)addDataSourceTag(mcpCard.closest('.s-card'),'error',now);
+    var cosCard=document.getElementById('cosBridgeBadge');
+    if(cosCard)addDataSourceTag(cosCard.closest('.s-card'),'error',now);
   });
 
   /* Fetch /api/memory/status */
@@ -911,12 +1062,16 @@ function fetchDashboard(){
   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
     if(data.error)throw new Error(data.code||'API_ERROR');
-    dashData.memory=data;
+    dashData.memory=data;dashFetchTimes.memory=new Date();
     updateMemoryUI(data);
+    var memCard=document.getElementById('memBadge');
+    if(memCard)addDataSourceTag(memCard.closest('.s-card'),'live',dashFetchTimes.memory);
   })
   .catch(function(){
     dashData.memory=null;
     updateMemoryOffline();
+    var memCard=document.getElementById('memBadge');
+    if(memCard)addDataSourceTag(memCard.closest('.s-card'),'error',now);
   });
 
   /* Fetch /api/mcp/dev-tasks/stats (开发任务统计) */
@@ -924,12 +1079,22 @@ function fetchDashboard(){
   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
     if(data.error)throw new Error(data.code||'API_ERROR');
-    dashData.devTasks=data;
+    dashData.devTasks=data;dashFetchTimes.devTasks=new Date();
     updateDevTasksUI(data);
+    var devCard=document.getElementById('devBadge');
+    if(devCard)addDataSourceTag(devCard.closest('.s-card'),'live',dashFetchTimes.devTasks);
   })
   .catch(function(){
     dashData.devTasks=null;
     updateDevTasksOffline();
+    var devCard=document.getElementById('devBadge');
+    if(devCard)addDataSourceTag(devCard.closest('.s-card'),'error',now);
+  });
+
+  /* 标记静态卡片（通过 data-source="static" 属性） */
+  var staticCards=document.querySelectorAll('.s-card[data-source="static"]');
+  staticCards.forEach(function(c){
+    if(!c.querySelector('.data-source'))addDataSourceTag(c,'static',null);
   });
 }
 
