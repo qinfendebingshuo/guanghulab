@@ -1,0 +1,152 @@
+{
+  "registry_id": "ZY-YAOMING-FEATURE-REGISTRY",
+  "domain": "guanghuyaoming.com",
+  "channel": "零点原核 · 冰朔个人频道",
+  "guardian": "铸渊 · ICE-GL-ZY001",
+  "copyright": "国作登字-2026-A-00037559",
+  "last_updated": "2026-04-15",
+  "purpose": "记录零点原核频道所有功能的开发状态、验证结果和问题修复历史。铸渊每次开发前必须先读此文件，确保已完成功能不被破坏。",
+
+  "features": [
+    {
+      "id": "YM-FEAT-001",
+      "name": "QQ邮箱验证码登录",
+      "module": "server/app/modules/email-auth.js",
+      "routes": [
+        "POST /api/auth/send-code",
+        "POST /api/auth/verify-code",
+        "GET /api/auth/session",
+        "POST /api/auth/logout",
+        "GET /api/auth/status"
+      ],
+      "status": "fixed",
+      "verified_at": "2026-04-15",
+      "depends_on": ["ZY_SMTP_USER", "ZY_SMTP_PASS"],
+      "history": [
+        {
+          "date": "2026-04-15",
+          "action": "bug-fix",
+          "problem": "验证码发送失败 · 错误: SMTP未配置",
+          "root_cause": "deploy-to-zhuyuan-server.yml 生成 .env.app 时遗漏了 ZY_SMTP_USER 和 ZY_SMTP_PASS 两个环境变量。PM2启动后 email-auth.js 的 getTransporter() 找不到凭据。",
+          "why_vpn_worked": "VPN邮件系统的 deploy-proxy-service.yml 和 deploy-brain-proxy.yml 明确将SMTP凭据注入到 .env.keys 中，但主应用部署流程未做同样处理。",
+          "fix": "在 deploy-to-zhuyuan-server.yml 中添加 ZY_SMTP_USER/ZY_SMTP_PASS 到 env 列表和 .env.app 生成逻辑",
+          "files_changed": [
+            ".github/workflows/deploy-to-zhuyuan-server.yml",
+            "server/app/modules/email-auth.js"
+          ],
+          "verification_steps": [
+            "部署后访问 /api/auth/status 确认 smtp_configured: true",
+            "发送验证码到QQ邮箱，确认收到邮件",
+            "输入验证码，确认登录成功",
+            "刷新页面，确认session有效"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "YM-FEAT-002",
+      "name": "AI对话 · 国内模型智能网关",
+      "module": "server/app/modules/domestic-llm-gateway.js",
+      "routes": [
+        "POST /api/chat",
+        "POST /api/chat/domestic",
+        "GET /api/chat/stats",
+        "GET /api/chat/domestic/stats",
+        "POST /api/chat/reconnect"
+      ],
+      "status": "needs-investigation",
+      "depends_on": [
+        "ZY_DEEPSEEK_API_KEY",
+        "ZY_QIANWEN_API_KEY",
+        "ZY_KIMI_API_KEY",
+        "ZY_QINGYAN_API_KEY"
+      ],
+      "architecture": {
+        "priority_chain": "domesticGateway → chatEngine → offline",
+        "models": [
+          "DeepSeek (deepseek-chat) · priority 1",
+          "通义千问 (qwen-turbo) · priority 2",
+          "Moonshot/Kimi (moonshot-v1-8k) · priority 3",
+          "智谱清言 (glm-4-flash) · priority 4"
+        ],
+        "cn_relay": "可选 · ZY_CN_LLM_RELAY_HOST → 广州中继 · 低延迟"
+      },
+      "history": [
+        {
+          "date": "2026-04-15",
+          "action": "investigation",
+          "problem": "API模型调用有问题",
+          "notes": "需要进一步排查: 1) 检查各模型API密钥是否有效 2) 检查新加坡→国内API直连延迟 3) 检查广州CN中继是否配置正确 4) 检查模型返回的错误信息"
+        }
+      ]
+    },
+    {
+      "id": "YM-FEAT-003",
+      "name": "前端静态页面",
+      "module": "server/sites/yaoming/index.html",
+      "status": "verified",
+      "verified_at": "2026-04-15",
+      "components": [
+        "登录页面 · 邮箱验证码",
+        "对话界面 · 聊天面板",
+        "状态面板 · 系统监控",
+        "星空背景 · CSS动画",
+        "响应式布局 · 移动端适配"
+      ]
+    },
+    {
+      "id": "YM-FEAT-004",
+      "name": "Nginx反向代理",
+      "module": "server/nginx/guanghuyaoming.conf",
+      "status": "verified",
+      "verified_at": "2026-04-15",
+      "proxy_rules": [
+        "/api/ → 127.0.0.1:3800 (主服务器)",
+        "/api/chat → 127.0.0.1:3800 (SSE/chunked)",
+        "/api/mcp/ → 127.0.0.1:3100 (MCP Server)",
+        "/api/auth/ → 127.0.0.1:3800 (认证)",
+        "/ws → 127.0.0.1:8080 (WebSocket)",
+        "/ → 静态文件 (/opt/zhuyuan/sites/yaoming/)"
+      ]
+    },
+    {
+      "id": "YM-FEAT-005",
+      "name": "Session管理",
+      "module": "server/app/modules/email-auth.js",
+      "status": "verified",
+      "verified_at": "2026-04-15",
+      "details": {
+        "storage": "内存 Map (可扩展为DB)",
+        "token": "32字节 crypto.randomBytes",
+        "expiry": "7天",
+        "cleanup": "每10分钟自动清理",
+        "middleware": "authMiddleware · Bearer token"
+      }
+    }
+  ],
+
+  "environment_checklist": {
+    "required_for_email": ["ZY_SMTP_USER", "ZY_SMTP_PASS"],
+    "required_for_chat": ["ZY_DEEPSEEK_API_KEY 或其他模型密钥"],
+    "deployment_files": {
+      "main_app": ".github/workflows/deploy-to-zhuyuan-server.yml → .env.app",
+      "proxy_service": ".github/workflows/deploy-proxy-service.yml → .env.keys",
+      "pm2_config": "server/ecosystem.config.js → 读取 .env.app"
+    }
+  },
+
+  "lessons_learned": [
+    {
+      "id": "LL-001",
+      "date": "2026-04-15",
+      "lesson": "新增模块依赖环境变量时，必须同步更新部署流程中的 .env 文件生成逻辑。否则本地开发正常但线上部署后模块初始化失败。",
+      "pattern": "每次新增 process.env.XXX 引用，立即检查 deploy-to-zhuyuan-server.yml 的 env 列表和 .env.app 生成段"
+    },
+    {
+      "id": "LL-002",
+      "date": "2026-04-15",
+      "lesson": "不同服务（主应用 vs 代理服务）的环境变量注入路径不同。主应用走 .env.app (deploy-to-zhuyuan-server.yml)，代理服务走 .env.keys (deploy-proxy-service.yml)。新增共享环境变量需要在两处都配置。",
+      "pattern": "VPN邮件能用、主应用邮件不能用 → 对比两个部署流程的环境变量注入"
+    }
+  ]
+}

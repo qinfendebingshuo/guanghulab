@@ -333,6 +333,8 @@ jobs:
           ZY_NOTION_TOKEN: ${{ secrets.ZY_NOTION_TOKEN }}
           ZY_CN_LLM_RELAY_HOST: ${{ secrets.ZY_CN_LLM_RELAY_HOST }}
           ZY_CN_LLM_RELAY_KEY: ${{ secrets.ZY_CN_LLM_RELAY_KEY }}
+          ZY_SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          ZY_SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
           ZY_DOMAIN_MAIN: ${{ secrets.ZY_DOMAIN_MAIN }}
           ZY_DOMAIN_PREVIEW: ${{ secrets.ZY_DOMAIN_PREVIEW }}
           ZY_FACE_DOMAIN: ${{ secrets.ZY_FACE_DOMAIN }}
@@ -359,6 +361,14 @@ jobs:
           echo "ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_QINGYAN_API_KEY=${ZY_QINGYAN_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_NOTION_TOKEN=${ZY_NOTION_TOKEN}" >> /opt/zhuyuan/app/.env.app
+          # ─── QQ邮箱SMTP配置（零点原核频道邮箱验证码登录） ───
+          if [ -n "${ZY_SMTP_USER}" ] && [ -n "${ZY_SMTP_PASS}" ]; then
+            echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> /opt/zhuyuan/app/.env.app
+            echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> /opt/zhuyuan/app/.env.app
+            echo "✅ QQ邮箱SMTP凭据已配置"
+          else
+            echo "⚠️ ZY_SMTP_USER/ZY_SMTP_PASS未配置·邮箱验证码功能不可用"
+          fi
           # ─── 通用LLM聊天引擎配置（国内模型网关的备用通道） ───
           if [ -n "${ZY_LLM_API_KEY}" ]; then
             echo "ZY_LLM_API_KEY=${ZY_LLM_API_KEY}" >> /opt/zhuyuan/app/.env.app

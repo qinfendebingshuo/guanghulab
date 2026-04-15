@@ -182,8 +182,15 @@ async function sendCode(email) {
   } catch (err) {
     // 发送失败，清理验证码
     pendingCodes.delete(normalizedEmail);
-    console.error(`[Email Auth] 发送失败: ${err.message}`);
-    return { success: false, message: '验证码发送失败，请稍后重试' };
+    // 直接检查环境变量是否缺失，而非依赖错误消息字符串匹配
+    const isConfigError = !process.env.ZY_SMTP_USER || !process.env.ZY_SMTP_PASS;
+    console.error(`[Email Auth] 发送失败: ${err.message}${isConfigError ? ' · 请检查 ZY_SMTP_USER 和 ZY_SMTP_PASS 环境变量是否已在 .env.app 中配置' : ''}`);
+    return {
+      success: false,
+      message: isConfigError
+        ? '邮件服务未配置，请联系管理员'
+        : '验证码发送失败，请稍后重试'
+    };
   }
 }
 
