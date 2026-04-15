@@ -108,6 +108,38 @@ try {
 }
 
 // ═══════════════════════════════════════════════════════════
+// 聊天数据采集 · Chat Data Collection
+// ═══════════════════════════════════════════════════════════
+// 内测阶段：系统后台配置专属采集聊天数据，用于更新优化人格体回复的Agent
+// 数据存储在 DATA_DIR/chat-logs/ 目录下，按日期分片
+const CHAT_LOG_DIR = path.join(DATA_DIR, 'chat-logs');
+
+function collectChatData(sessionId, userMessage, assistantMessage, meta = {}) {
+  try {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const logDir = CHAT_LOG_DIR;
+    fs.mkdirSync(logDir, { recursive: true });
+
+    const logEntry = {
+      timestamp: now.toISOString(),
+      sessionId: sessionId.slice(0, 6) + '***',
+      user: userMessage,
+      assistant: (assistantMessage || '').slice(0, 2000),
+      engine: meta.engine || 'unknown',
+      relay: meta.relay || null,
+      pipeline: meta.pipeline ? { active: meta.pipeline.active, layers: (meta.pipeline.layers || []).length } : null,
+      latency: meta.latency || 0
+    };
+
+    const logFile = path.join(logDir, `chat-${dateStr}.jsonl`);
+    fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
+  } catch (err) {
+    console.error(`[聊天采集] 数据写入失败: ${err.message}`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // API 路由
 // ═══════════════════════════════════════════════════════════
 
@@ -314,13 +346,37 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const sessionId = userId || `guest-${req.ip.replace(/[.:]/g, '-')}`;
+    const chatStartTime = Date.now();
+
+    // 构建系统处理步骤追踪
+    const steps = [];
+    const addStep = (name, status, detail) => {
+      steps.push({ name, status, detail, time: Date.now() - chatStartTime });
+    };
+
+    addStep('接收消息', 'done', `用户: ${sessionId.slice(0, 6)}***`);
 
     // 优先用国内模型智能网关（读取 ZY_DEEPSEEK_API_KEY 等独立密钥）
     if (domesticGateway) {
       try {
+        addStep('智能路由分析', 'active', '国内模型网关');
         const result = await domesticGateway.chat(sessionId, message);
         // 网关返回成功才使用其结果，否则降级到通用聊天引擎
         if (result && result.success !== false) {
+          addStep('智能路由分析', 'done', '匹配到国内模型');
+          addStep('上下文注入', result.pipeline?.active ? 'done' : 'skip',
+            result.pipeline?.active ? `已注入 ${(result.pipeline.layers || []).length} 层` : '管线未就绪');
+          addStep('模型调用', 'done', result.relay === 'cn-relay' ? '广州中继' : '直连');
+          addStep('响应生成', 'done', `${Date.now() - chatStartTime}ms`);
+
+          // 聊天数据采集（异步，不阻塞响应）
+          collectChatData(sessionId, message, result.message, {
+            engine: 'domestic-gateway',
+            relay: result.relay,
+            pipeline: result.pipeline,
+            latency: Date.now() - chatStartTime
+          });
+
           return res.json({ 
             ...result, 
             sessionId,
@@ -328,13 +384,16 @@ app.post('/api/chat', async (req, res) => {
               engine: 'domestic-gateway',
               processedAt: new Date().toISOString(),
               serverId: 'ZY-SVR-002',
-              steps: ['智能路由分析', '模型选择', 'LLM调用', '响应生成'],
-              cnRelay: result.relay || 'unknown'
+              steps,
+              cnRelay: result.relay || 'unknown',
+              pipeline: result.pipeline || { active: false }
             }
           });
         }
+        addStep('智能路由分析', 'warn', '国内网关返回失败，降级');
         console.warn(`[聊天网关] 国内模型网关返回失败: ${result?.message || '未知'} · 降级到通用引擎`);
       } catch (gwErr) {
+        addStep('智能路由分析', 'error', gwErr.message);
         console.error(`[聊天网关] 国内模型网关异常: ${gwErr.message}`);
         // 降级到通用聊天引擎
       }
@@ -343,7 +402,16 @@ app.post('/api/chat', async (req, res) => {
     // 降级到通用聊天引擎
     if (chatEngine) {
       try {
+        addStep('降级引擎', 'active', '通用聊天引擎');
         const result = await chatEngine.chat(sessionId, message);
+        addStep('降级引擎', 'done', '通用引擎响应完成');
+
+        // 聊天数据采集
+        collectChatData(sessionId, message, result.message, {
+          engine: 'chat-engine',
+          latency: Date.now() - chatStartTime
+        });
+
         return res.json({
           success: true,
           ...result,
@@ -352,17 +420,19 @@ app.post('/api/chat', async (req, res) => {
             engine: 'chat-engine',
             processedAt: new Date().toISOString(),
             serverId: 'ZY-SVR-002',
-            steps: ['上下文组装', '记忆加载', 'LLM调用', '响应生成'],
+            steps,
             model: result.model || 'unknown'
           }
         });
       } catch (ceErr) {
+        addStep('降级引擎', 'error', ceErr.message);
         console.error(`[聊天引擎] 通用引擎异常: ${ceErr.message}`);
         // 继续到离线回复
       }
     }
 
     // 所有引擎都不可用 — 仍然返回成功，给用户有意义的反馈
+    addStep('降级处理', 'done', '所有引擎离线，使用本地应答');
     const engineStatus = [];
     if (!domesticGateway) engineStatus.push('国内模型网关未加载');
     else {
@@ -385,7 +455,7 @@ app.post('/api/chat', async (req, res) => {
         engine: 'offline',
         processedAt: new Date().toISOString(),
         serverId: 'ZY-SVR-002',
-        steps: ['引擎检测', '降级处理'],
+        steps,
         reason: engineStatus.join(' · ')
       }
     });
