@@ -195,7 +195,7 @@ function callDomesticLLM(modelConfig, messages) {
             resolve(body);
           }
         } catch (e) {
-          reject(new Error(`[${modelConfig.id}] 响应解析失败(HTTP ${res.statusCode}): ${rawBody.slice(0, 200)}`));
+          reject(new Error(`[${modelConfig.id}] 响应解析失败(HTTP ${res.statusCode})`));
         }
       });
     });
