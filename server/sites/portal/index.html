@@ -906,14 +906,14 @@ a:hover{color:var(--blue)}
     var html = text
       // 转义HTML
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-      // 标题
+      // 标题 (# maps to h2 deliberately — h1 reserved for page, chat uses h2 as top-level)
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^# (.+)$/gm, '<h2>$1</h2>')
       // 粗体
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // 斜体
-      .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+      // 斜体 (simple pattern for broader browser support)
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       // 行内代码
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       // 分隔线
@@ -925,7 +925,7 @@ a:hover{color:var(--blue)}
       // 换行
       .replace(/\n/g, '<br>');
     // 包裹有序列表项
-    html = html.replace(/((?:<li class="ol-item">.*?<\/li><br>?)+)/g, function(m, inner) {
+    html = html.replace(/((?:<li class="ol-item">[^<]*<\/li>(?:<br>)?)+)/g, function(m, inner) {
       return '<ol>' + inner.replace(/class="ol-item"/g, '').replace(/<br>/g, '') + '</ol>';
     });
     // 包裹无序列表项

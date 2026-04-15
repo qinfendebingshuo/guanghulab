@@ -1471,6 +1471,7 @@ function parseMarkdown(text) {
   });
 
   /* Headers (process before bold, so **text** inside headers works) */
+  /* Note: # maps to h2 deliberately — h1 is reserved for page title, chat messages use h2 as top-level */
   s = s.replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>');
   s = s.replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>');
   s = s.replace(/^#{1}\s+(.+)$/gm, '<h2>$1</h2>');
@@ -1493,14 +1494,14 @@ function parseMarkdown(text) {
   s = s.replace(/^&gt;\s?(.*)$/gm, '<blockquote>$1</blockquote>');
 
   /* Ordered list (1. 2. 3. etc) */
-  s = s.replace(/^\d+\.\s+(.*)$/gm, '<li class="ol-item">$1</li>');
+  s = s.replace(/^\d+\.\s+(.+)$/gm, '<li class="ol-item">$1</li>');
 
   /* Unordered list */
   s = s.replace(/^[·•]\s+(.*)$/gm, '<li>$1</li>');
   s = s.replace(/^[-]\s+(.*)$/gm, '<li>$1</li>');
 
   /* Wrap consecutive ordered <li> in <ol> */
-  s = s.replace(/((?:<li class="ol-item">.*?<\/li>\n?)+)/g, function(match) {
+  s = s.replace(/((?:<li class="ol-item">[^<]*<\/li>\n?)+)/g, function(match) {
     return '<ol>' + match.replace(/class="ol-item"/g, '') + '</ol>';
   });
 
