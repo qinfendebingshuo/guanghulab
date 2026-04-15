@@ -67,12 +67,18 @@ function getTransporter() {
 }
 
 /**
- * 生成6位数字验证码
+ * 生成6位数字验证码（无偏差）
  */
 function generateCode() {
-  const bytes = crypto.randomBytes(4);
-  const num = bytes.readUInt32BE(0) % 1000000;
-  return String(num).padStart(CODE_LENGTH, '0');
+  // 使用 rejection sampling 避免 modulo bias
+  const max = 999999;
+  const bytesNeeded = 4;
+  const maxValid = Math.floor(0xFFFFFFFF / (max + 1)) * (max + 1);
+  let num;
+  do {
+    num = crypto.randomBytes(bytesNeeded).readUInt32BE(0);
+  } while (num >= maxValid);
+  return String(num % (max + 1)).padStart(CODE_LENGTH, '0');
 }
 
 /**
@@ -83,12 +89,20 @@ function generateToken() {
 }
 
 /**
- * 验证邮箱格式（基础校验）
+ * 验证邮箱格式（基础校验，避免ReDoS）
  */
 function isValidEmail(email) {
   if (!email || typeof email !== 'string') return false;
-  // 基础正则，不做过于复杂的校验
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
+  if (email.length > 254) return false;
+  // 简单格式检查，不使用可能导致ReDoS的复杂正则
+  const atIndex = email.indexOf('@');
+  if (atIndex < 1 || atIndex === email.length - 1) return false;
+  const domain = email.slice(atIndex + 1);
+  if (domain.indexOf('.') < 1) return false;
+  if (domain.endsWith('.')) return false;
+  // 不允许空格
+  if (email.indexOf(' ') !== -1) return false;
+  return true;
 }
 
 /**

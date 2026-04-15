@@ -834,6 +834,7 @@ function checkSession() {
   .then(function(data) {
     if (data.valid) {
       authEmail = data.email;
+      localStorage.setItem('zy_auth_verified_at', String(Date.now()));
       hideLogin();
       updateUserBar();
     } else {
@@ -845,11 +846,18 @@ function checkSession() {
     }
   })
   .catch(function() {
-    /* 网络不可达时，如果有缓存token则放行（离线模式） */
-    if (authToken && authEmail) {
+    /* 网络不可达时，如果有缓存token且在24小时内，则放行（离线模式） */
+    var lastVerified = parseInt(localStorage.getItem('zy_auth_verified_at') || '0', 10);
+    var offlineMaxMs = 24 * 60 * 60 * 1000; /* 24小时 */
+    if (authToken && authEmail && (Date.now() - lastVerified) < offlineMaxMs) {
       hideLogin();
       updateUserBar();
     } else {
+      authToken = null;
+      authEmail = null;
+      localStorage.removeItem('zy_auth_token');
+      localStorage.removeItem('zy_auth_email');
+      localStorage.removeItem('zy_auth_verified_at');
       showLogin();
     }
   });
@@ -983,8 +991,16 @@ function updateUserBar() {
   var emailSpan = document.getElementById('userBarEmail');
   if (bar && authEmail) {
     bar.classList.add('show');
-    /* 显示邮箱前3位+*** */
-    var masked = authEmail.length > 3 ? authEmail.slice(0, 3) + '***' : authEmail;
+    /* 显示部分邮箱: abc***@qq.com */
+    var atIdx = authEmail.indexOf('@');
+    var masked;
+    if (atIdx > 3) {
+      masked = authEmail.slice(0, 3) + '***' + authEmail.slice(atIdx);
+    } else if (atIdx > 0) {
+      masked = authEmail.slice(0, 1) + '***' + authEmail.slice(atIdx);
+    } else {
+      masked = authEmail.slice(0, 3) + '***';
+    }
     if (emailSpan) emailSpan.textContent = masked;
   }
 }
@@ -999,6 +1015,7 @@ function handleUserBarClick() {
     authEmail = null;
     localStorage.removeItem('zy_auth_token');
     localStorage.removeItem('zy_auth_email');
+    localStorage.removeItem('zy_auth_verified_at');
     var bar = document.getElementById('userBar');
     if (bar) bar.classList.remove('show');
     /* 重置登录表单 */
