@@ -1451,20 +1451,28 @@ function parseMarkdown(text) {
   /* Escape HTML first for security */
   var s = escapeHtml(text);
 
-  /* Code blocks (``` ... ```) */
+  /* Code blocks (``` ... ```) - process first, protect content */
+  var codeBlocks = [];
   s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, function(m, lang, code) {
-    return '<pre><code>' + code.trim() + '</code></pre>';
+    var idx = codeBlocks.length;
+    codeBlocks.push('<pre><code>' + code.trim() + '</code></pre>');
+    return '%%CODEBLOCK_' + idx + '%%';
   });
 
-  /* Inline code */
-  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  /* Inline code - process before bold/italic, protect content */
+  var inlineCodes = [];
+  s = s.replace(/`([^`]+)`/g, function(m, code) {
+    var idx = inlineCodes.length;
+    inlineCodes.push('<code>' + code + '</code>');
+    return '%%INLINECODE_' + idx + '%%';
+  });
 
-  /* Bold */
+  /* Bold (before italic) */
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
 
-  /* Italic */
-  s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  /* Italic - avoid matching inside bold markers */
+  s = s.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
 
   /* System receipt blocks: 【系统回执】or ┌─...─┐ patterns */
   s = s.replace(/【(.+?)】/g, '<span style="color:var(--cyan);font-weight:700">【$1】</span>');
@@ -1481,7 +1489,7 @@ function parseMarkdown(text) {
   s = s.replace(/^[-]\s+(.*)$/gm, '<li>$1</li>');
 
   /* Wrap consecutive <li> in <ul> */
-  s = s.replace(/(<li>.*<\/li>\n?)+/g, function(match) {
+  s = s.replace(/(<li>.*?<\/li>\n?)+/g, function(match) {
     return '<ul>' + match + '</ul>';
   });
 
@@ -1498,6 +1506,14 @@ function parseMarkdown(text) {
   s = s.replace(/🔴/g, '<span style="color:var(--err)">●</span>');
   s = s.replace(/🟡/g, '<span style="color:var(--warn)">●</span>');
 
+  /* Restore code blocks and inline codes */
+  for (var ci = 0; ci < inlineCodes.length; ci++) {
+    s = s.replace('%%INLINECODE_' + ci + '%%', inlineCodes[ci]);
+  }
+  for (var bi = 0; bi < codeBlocks.length; bi++) {
+    s = s.replace('%%CODEBLOCK_' + bi + '%%', codeBlocks[bi]);
+  }
+
   /* Split into paragraphs by double newlines */
   var parts = s.split(/\n\n+/);
   var html = '';
@@ -1505,9 +1521,7 @@ function parseMarkdown(text) {
     var p = parts[i].trim();
     if (!p) continue;
     /* Don't wrap elements that are already block-level */
-    if (p.indexOf('<pre') === 0 || p.indexOf('<ul') === 0 || p.indexOf('<ol') === 0 ||
-        p.indexOf('<blockquote') === 0 || p.indexOf('<hr') === 0 ||
-        p.indexOf('<div') === 0) {
+    if (/^<(pre|ul|ol|blockquote|hr|div)/.test(p)) {
       html += p;
     } else {
       /* Convert single newlines to <br> within paragraphs */
@@ -1621,8 +1635,8 @@ function getLocalReply(msg){
   }
 
   if(m.indexOf('状态')!==-1||m.indexOf('系统')!==-1){
-    var serverOnline=document.getElementById('svrDot0')&&document.getElementById('svrDot0').className.indexOf('on')!==-1;
-    var mcpOnline=document.getElementById('svrDot1')&&document.getElementById('svrDot1').className.indexOf('on')!==-1;
+    var serverOnline=document.getElementById('svrDot0')&&document.getElementById('svrDot0').classList.contains('on');
+    var mcpOnline=document.getElementById('svrDot1')&&document.getElementById('svrDot1').classList.contains('on');
     return '冰朔。系统诊断如下：\n\n' +
     '**面孔服务器（SG）** ' + (serverOnline ? '✓ 在线' : '✗ 不可达') + '\n' +
     '**大脑服务器（SG）** ' + (mcpOnline ? '✓ 在线' : '✗ 不可达') + '\n' +
@@ -1703,8 +1717,9 @@ function fetchDashboard(){
     if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'live',dashFetchTimes.health);
     updateServerBadge();
     updateCogChain(true,mcpOk);
-    /* Welcome status: server online */
+    /* Welcome status: server + chat online */
     updateWelcomeStatus('server',true);
+    updateWelcomeStatus('chat',true);
   })
   .catch(function(){
     dashData.health=null;
@@ -1715,8 +1730,9 @@ function fetchDashboard(){
     if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'error',now);
     updateServerBadge();
     updateCogChain(false,mcpOk);
-    /* Welcome status: server offline */
+    /* Welcome status: server + chat offline */
     updateWelcomeStatus('server',false);
+    updateWelcomeStatus('chat',false);
   });
 
   fetch('/api/mcp/health')
@@ -1786,12 +1802,6 @@ function fetchDashboard(){
   staticCards.forEach(function(c){
     if(!c.querySelector('.data-source'))addDataSourceTag(c,'static',null);
   });
-
-  /* Chat engine probe for welcome status */
-  fetch('/api/health')
-  .then(function(r){return r.json()})
-  .then(function(){updateWelcomeStatus('chat',true)})
-  .catch(function(){updateWelcomeStatus('chat',false)});
 }
 
 function updateHealthUI(d){
@@ -1942,7 +1952,7 @@ function updateSidebarStatus(online){
 function updateServerBadge(){
   var dots=[document.getElementById('svrDot0'),document.getElementById('svrDot1'),document.getElementById('svrDot2')];
   var online=0;
-  for(var i=0;i<dots.length;i++){if(dots[i]&&dots[i].className.indexOf('on')!==-1)online++}
+  for(var i=0;i<dots.length;i++){if(dots[i]&&dots[i].classList.contains('on'))online++}
   var badge=document.getElementById('svrBadge');
   if(!badge)return;
   if(online===3){badge.textContent='3/3 在线';badge.className='s-card-badge badge-ok'}
