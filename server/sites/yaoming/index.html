@@ -1116,7 +1116,15 @@ var activeSessionId = null;
 var isTyping = false;
 
 function genSessionId() {
-  return 'cs-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  var arr = new Uint8Array(8);
+  if (window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(arr);
+  } else {
+    for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+  }
+  var hex = '';
+  for (var j = 0; j < arr.length; j++) hex += ('0' + arr[j].toString(16)).slice(-2);
+  return 'cs-' + Date.now().toString(36) + '-' + hex.slice(0, 8);
 }
 
 function loadSessions() {
@@ -1351,13 +1359,13 @@ function updateSysSteps(apiSteps) {
   for (var i = 0; i < apiSteps.length; i++) {
     var step = apiSteps[i];
     var dotClass = 'done';
-    if (step.status === 'error') dotClass = 'dot pending';
-    else if (step.status === 'skip') dotClass = 'dot';
-    else if (step.status === 'warn') dotClass = 'dot pending';
-    else dotClass = 'dot done';
+    if (step.status === 'error') dotClass = 'pending'; /* red pulsing */
+    else if (step.status === 'skip') dotClass = ''; /* dim neutral */
+    else if (step.status === 'warn') dotClass = 'active'; /* yellow-ish */
+    else dotClass = 'done'; /* green */
     var label = step.name + ' · ' + (step.detail || step.status);
     if (step.time != null) label += ' (' + step.time + 'ms)';
-    stepsDiv.innerHTML += '<div class="sys-step"><span class="' + dotClass + '"></span>' + escapeHtml(label) + '</div>';
+    stepsDiv.innerHTML += '<div class="sys-step"><span class="dot ' + dotClass + '"></span>' + escapeHtml(label) + '</div>';
   }
 }
 

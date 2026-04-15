@@ -113,6 +113,7 @@ try {
 // 内测阶段：系统后台配置专属采集聊天数据，用于更新优化人格体回复的Agent
 // 数据存储在 DATA_DIR/chat-logs/ 目录下，按日期分片
 const CHAT_LOG_DIR = path.join(DATA_DIR, 'chat-logs');
+const CHAT_LOG_MAX_REPLY_LEN = 2000; // 单条AI回复最大存储字符数（控制日志体积）
 
 function collectChatData(sessionId, userMessage, assistantMessage, meta = {}) {
   try {
@@ -123,9 +124,9 @@ function collectChatData(sessionId, userMessage, assistantMessage, meta = {}) {
 
     const logEntry = {
       timestamp: now.toISOString(),
-      sessionId: sessionId.slice(0, 6) + '***',
+      sessionId: sessionId.slice(0, 3) + '***',
       user: userMessage,
-      assistant: (assistantMessage || '').slice(0, 2000),
+      assistant: (assistantMessage || '').slice(0, CHAT_LOG_MAX_REPLY_LEN),
       engine: meta.engine || 'unknown',
       relay: meta.relay || null,
       pipeline: meta.pipeline ? { active: meta.pipeline.active, layers: (meta.pipeline.layers || []).length } : null,
@@ -354,7 +355,7 @@ app.post('/api/chat', async (req, res) => {
       steps.push({ name, status, detail, time: Date.now() - chatStartTime });
     };
 
-    addStep('接收消息', 'done', `用户: ${sessionId.slice(0, 6)}***`);
+    addStep('接收消息', 'done', `用户: ${sessionId.slice(0, 3)}***`);
 
     // 优先用国内模型智能网关（读取 ZY_DEEPSEEK_API_KEY 等独立密钥）
     if (domesticGateway) {
