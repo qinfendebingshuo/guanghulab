@@ -46,6 +46,76 @@ a{color:var(--cyan);text-decoration:none}
   animation:lakeShimmer 8s ease-in-out infinite alternate}
 @keyframes lakeShimmer{0%{opacity:.3;left:10%;right:10%}100%{opacity:.7;left:6%;right:6%}}
 
+/* ═══ Login Overlay ═══ */
+.login-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .5s,visibility .5s
+}
+.login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.login-card{
+  width:90%;max-width:380px;
+  background:var(--panel);border-radius:20px;
+  border:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  padding:40px 32px;text-align:center;
+  animation:loginFadeIn .6s ease-out
+}
+@keyframes loginFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.login-glyph{
+  width:64px;height:64px;line-height:64px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));
+  border:1px solid rgba(96,165,250,0.18);
+  font-size:28px;font-weight:900;font-family:serif;color:var(--cyan);
+  margin:0 auto 20px;
+  animation:glyphBreathe 5s ease-in-out infinite
+}
+.login-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.login-desc{font-size:12px;color:var(--dim);margin-bottom:28px}
+.login-input-group{margin-bottom:16px;text-align:left}
+.login-label{font-size:11px;color:var(--dim);margin-bottom:6px;display:block;font-weight:600;letter-spacing:.5px}
+.login-input-row{display:flex;gap:8px}
+.login-input{
+  flex:1;background:rgba(10,16,40,0.6);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;color:var(--text);font-size:14px;font-family:var(--font);
+  outline:none;transition:border-color .25s
+}
+.login-input:focus{border-color:var(--cyan)}
+.login-input::placeholder{color:var(--muted)}
+.login-send-btn{
+  padding:12px 16px;border:1px solid rgba(34,211,238,0.2);border-radius:10px;
+  background:rgba(34,211,238,0.08);color:var(--cyan);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .25s;white-space:nowrap;font-family:var(--font)
+}
+.login-send-btn:hover:not(:disabled){background:rgba(34,211,238,0.15);border-color:rgba(34,211,238,0.4)}
+.login-send-btn:disabled{opacity:.4;cursor:not-allowed}
+.login-code-wrap{display:none}
+.login-code-wrap.show{display:block}
+.login-submit{
+  width:100%;padding:14px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(167,139,250,0.15));
+  border:1px solid rgba(34,211,238,0.25);
+  color:var(--text);font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .3s;font-family:var(--font);margin-top:8px
+}
+.login-submit:hover:not(:disabled){background:linear-gradient(135deg,rgba(34,211,238,0.3),rgba(167,139,250,0.25));border-color:rgba(34,211,238,0.5)}
+.login-submit:disabled{opacity:.4;cursor:not-allowed}
+.login-msg{font-size:12px;margin-top:12px;min-height:18px;transition:color .25s}
+.login-msg.ok{color:var(--ok)}
+.login-msg.err{color:var(--err)}
+.login-msg.info{color:var(--cyan)}
+.login-footer{margin-top:24px;font-size:10px;color:rgba(100,130,180,0.35)}
+.login-user-bar{
+  display:none;align-items:center;gap:8px;
+  padding:4px 10px;border-radius:8px;
+  background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.1);
+  font-size:11px;color:var(--dim);cursor:pointer;transition:all .25s
+}
+.login-user-bar:hover{border-color:rgba(34,211,238,0.25)}
+.login-user-bar.show{display:flex}
+.login-user-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+
 /* ═══ Layout ═══ */
 .app{display:flex;height:100vh;height:100dvh;position:relative;z-index:1}
 
@@ -415,6 +485,39 @@ a{color:var(--cyan);text-decoration:none}
 </div>
 <div class="lake"></div>
 
+<!-- ═══ Login Overlay ═══ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="cosmos" style="z-index:0">
+    <canvas id="loginStarCanvas"></canvas>
+    <div class="nebula neb-1"></div>
+    <div class="nebula neb-2"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-glyph">渊</div>
+    <div class="login-title">零点原核</div>
+    <div class="login-desc">光湖语言世界 · 冰朔频道 · 验证登录</div>
+
+    <div class="login-input-group">
+      <label class="login-label">邮箱地址</label>
+      <div class="login-input-row">
+        <input class="login-input" id="loginEmail" type="email" placeholder="输入邮箱地址" autocomplete="email">
+        <button class="login-send-btn" id="loginSendBtn" onclick="loginSendCode()">发送验证码</button>
+      </div>
+    </div>
+
+    <div class="login-code-wrap" id="loginCodeWrap">
+      <div class="login-input-group">
+        <label class="login-label">验证码</label>
+        <input class="login-input" id="loginCode" type="text" inputmode="numeric" maxlength="6" placeholder="输入6位验证码" autocomplete="one-time-code">
+      </div>
+      <button class="login-submit" id="loginSubmitBtn" onclick="loginVerify()">确认登录</button>
+    </div>
+
+    <div class="login-msg" id="loginMsg"></div>
+    <div class="login-footer">版权 国作登字-2026-A-00037559 · TCS-0002∞</div>
+  </div>
+</div>
+
 <div class="app">
   <!-- ═══ Sidebar ═══ -->
   <aside class="sidebar" id="sidebar">
@@ -481,6 +584,10 @@ a{color:var(--cyan);text-decoration:none}
         </div>
       </div>
       <div class="header-right">
+        <div class="login-user-bar" id="userBar" onclick="handleUserBarClick()">
+          <span class="login-user-dot"></span>
+          <span id="userBarEmail">未登录</span>
+        </div>
         <span class="refresh-time" id="refreshTime"></span>
         <a class="back-link" href="https://guanghulab.online" target="_blank">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -709,6 +816,239 @@ a{color:var(--cyan);text-decoration:none}
 </div>
 
 <script>
+/* ═══ Auth / Login System ═══ */
+var authToken = localStorage.getItem('zy_auth_token') || null;
+var authEmail = localStorage.getItem('zy_auth_email') || null;
+var loginCooldown = 0;
+var loginTimer = null;
+
+function checkSession() {
+  if (!authToken) {
+    showLogin();
+    return;
+  }
+  fetch('/api/auth/session', {
+    headers: { 'Authorization': 'Bearer ' + authToken }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.valid) {
+      authEmail = data.email;
+      localStorage.setItem('zy_auth_verified_at', String(Date.now()));
+      hideLogin();
+      updateUserBar();
+    } else {
+      authToken = null;
+      authEmail = null;
+      localStorage.removeItem('zy_auth_token');
+      localStorage.removeItem('zy_auth_email');
+      showLogin();
+    }
+  })
+  .catch(function() {
+    /* 网络不可达时，如果有缓存token且在24小时内，则放行（离线模式） */
+    var lastVerified = parseInt(localStorage.getItem('zy_auth_verified_at') || '0', 10);
+    var offlineMaxMs = 24 * 60 * 60 * 1000; /* 24小时 */
+    if (authToken && authEmail && (Date.now() - lastVerified) < offlineMaxMs) {
+      hideLogin();
+      updateUserBar();
+    } else {
+      authToken = null;
+      authEmail = null;
+      localStorage.removeItem('zy_auth_token');
+      localStorage.removeItem('zy_auth_email');
+      localStorage.removeItem('zy_auth_verified_at');
+      showLogin();
+    }
+  });
+}
+
+function showLogin() {
+  var overlay = document.getElementById('loginOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+function hideLogin() {
+  var overlay = document.getElementById('loginOverlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+function setLoginMsg(text, type) {
+  var el = document.getElementById('loginMsg');
+  if (el) {
+    el.textContent = text;
+    el.className = 'login-msg ' + (type || '');
+  }
+}
+
+function loginSendCode() {
+  var emailInput = document.getElementById('loginEmail');
+  var email = emailInput ? emailInput.value.trim() : '';
+  if (!email) {
+    setLoginMsg('请输入邮箱地址', 'err');
+    return;
+  }
+
+  var btn = document.getElementById('loginSendBtn');
+  if (btn) btn.disabled = true;
+  setLoginMsg('正在发送验证码...', 'info');
+
+  fetch('/api/auth/send-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      setLoginMsg('验证码已发送，请查收邮箱', 'ok');
+      var codeWrap = document.getElementById('loginCodeWrap');
+      if (codeWrap) codeWrap.classList.add('show');
+      var codeInput = document.getElementById('loginCode');
+      if (codeInput) codeInput.focus();
+      startCooldown(60);
+    } else {
+      setLoginMsg(data.message || '发送失败', 'err');
+      if (data.cooldown) {
+        startCooldown(data.cooldown);
+      } else {
+        if (btn) btn.disabled = false;
+      }
+    }
+  })
+  .catch(function(err) {
+    setLoginMsg('网络错误，请检查连接', 'err');
+    if (btn) btn.disabled = false;
+  });
+}
+
+function startCooldown(seconds) {
+  loginCooldown = seconds;
+  var btn = document.getElementById('loginSendBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = loginCooldown + 's';
+  }
+  if (loginTimer) clearInterval(loginTimer);
+  loginTimer = setInterval(function() {
+    loginCooldown--;
+    if (btn) btn.textContent = loginCooldown > 0 ? loginCooldown + 's' : '发送验证码';
+    if (loginCooldown <= 0) {
+      clearInterval(loginTimer);
+      loginTimer = null;
+      if (btn) btn.disabled = false;
+    }
+  }, 1000);
+}
+
+function loginVerify() {
+  var emailInput = document.getElementById('loginEmail');
+  var codeInput = document.getElementById('loginCode');
+  var email = emailInput ? emailInput.value.trim() : '';
+  var code = codeInput ? codeInput.value.trim() : '';
+
+  if (!email || !code) {
+    setLoginMsg('请输入邮箱和验证码', 'err');
+    return;
+  }
+  if (code.length !== 6) {
+    setLoginMsg('验证码为6位数字', 'err');
+    return;
+  }
+
+  var btn = document.getElementById('loginSubmitBtn');
+  if (btn) btn.disabled = true;
+  setLoginMsg('验证中...', 'info');
+
+  fetch('/api/auth/verify-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, code: code })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      authToken = data.token;
+      authEmail = data.email;
+      localStorage.setItem('zy_auth_token', data.token);
+      localStorage.setItem('zy_auth_email', data.email);
+      setLoginMsg('登录成功，正在进入...', 'ok');
+      updateUserBar();
+      setTimeout(function() { hideLogin(); }, 500);
+    } else {
+      setLoginMsg(data.message || '验证失败', 'err');
+      if (btn) btn.disabled = false;
+    }
+  })
+  .catch(function() {
+    setLoginMsg('网络错误，请检查连接', 'err');
+    if (btn) btn.disabled = false;
+  });
+}
+
+function updateUserBar() {
+  var bar = document.getElementById('userBar');
+  var emailSpan = document.getElementById('userBarEmail');
+  if (bar && authEmail) {
+    bar.classList.add('show');
+    /* 显示部分邮箱: abc***@qq.com */
+    var atIdx = authEmail.indexOf('@');
+    var masked = authEmail;
+    if (atIdx >= 3) {
+      masked = authEmail.slice(0, 3) + '***' + authEmail.slice(atIdx);
+    } else if (atIdx >= 1) {
+      masked = authEmail.slice(0, 1) + '***' + authEmail.slice(atIdx);
+    }
+    if (emailSpan) emailSpan.textContent = masked;
+  }
+}
+
+function handleUserBarClick() {
+  if (confirm('是否退出登录？')) {
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + authToken }
+    }).catch(function() {});
+    authToken = null;
+    authEmail = null;
+    localStorage.removeItem('zy_auth_token');
+    localStorage.removeItem('zy_auth_email');
+    localStorage.removeItem('zy_auth_verified_at');
+    var bar = document.getElementById('userBar');
+    if (bar) bar.classList.remove('show');
+    /* 重置登录表单 */
+    var emailInput = document.getElementById('loginEmail');
+    var codeInput = document.getElementById('loginCode');
+    var codeWrap = document.getElementById('loginCodeWrap');
+    if (emailInput) emailInput.value = '';
+    if (codeInput) codeInput.value = '';
+    if (codeWrap) codeWrap.classList.remove('show');
+    setLoginMsg('', '');
+    var sendBtn = document.getElementById('loginSendBtn');
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '发送验证码'; }
+    showLogin();
+  }
+}
+
+/* 页面加载时检查session */
+checkSession();
+
+/* 验证码输入框回车提交 */
+document.addEventListener('DOMContentLoaded', function() {
+  var codeInput = document.getElementById('loginCode');
+  if (codeInput) {
+    codeInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); loginVerify(); }
+    });
+  }
+  var emailInput = document.getElementById('loginEmail');
+  if (emailInput) {
+    emailInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); loginSendCode(); }
+    });
+  }
+});
+
 /* ═══ Star Field ═══ */
 (function(){
   var c=document.getElementById('starCanvas');
@@ -892,6 +1232,7 @@ function escapeHtml(s){
 function callChatAPI(userMessage){
   var body={
     message:userMessage,
+    userId:authEmail||'guest',
     persona:'zhuyuan',
     channel:'yaoming',
     history:chatMessages.slice(-10)
@@ -899,9 +1240,12 @@ function callChatAPI(userMessage){
 
   var startTime=Date.now();
 
+  var headers = {'Content-Type':'application/json'};
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+
   fetch('/api/chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers: headers,
     body:JSON.stringify(body)
   })
   .then(function(res){
