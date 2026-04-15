@@ -434,8 +434,11 @@ a{color:var(--cyan);text-decoration:none}
 .msg-content.ai .sys-receipt .receipt-row{display:flex;justify-content:space-between;padding:2px 0}
 .msg-content.ai .sys-receipt .receipt-label{color:var(--muted)}
 .msg-content.ai .sys-receipt .receipt-val{color:var(--text)}
+.msg-content.ai h2{font-size:14px;font-weight:700;color:var(--cyan);margin:12px 0 6px;letter-spacing:.3px}
+.msg-content.ai h3{font-size:13px;font-weight:600;color:var(--text);margin:10px 0 4px;letter-spacing:.2px}
 .msg-content.ai hr{border:none;border-top:1px solid rgba(96,165,250,0.08);margin:10px 0}
 .msg-content.ai ul,.msg-content.ai ol{padding-left:20px;margin:6px 0}
+.msg-content.ai ol{list-style-type:decimal;counter-reset:none}
 .msg-content.ai li{margin-bottom:4px}
 .msg-content.ai blockquote{border-left:2px solid var(--purple);padding:4px 12px;margin:8px 0;color:var(--dim);font-style:italic;background:rgba(167,139,250,0.03);border-radius:0 6px 6px 0}
 .msg-time{font-size:10px;color:var(--muted);margin-top:4px}
@@ -1467,6 +1470,11 @@ function parseMarkdown(text) {
     return '%%INLINECODE_' + idx + '%%';
   });
 
+  /* Headers (process before bold, so **text** inside headers works) */
+  s = s.replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>');
+  s = s.replace(/^#{1}\s+(.+)$/gm, '<h2>$1</h2>');
+
   /* Bold (before italic) */
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
@@ -1484,12 +1492,20 @@ function parseMarkdown(text) {
   /* Blockquote */
   s = s.replace(/^&gt;\s?(.*)$/gm, '<blockquote>$1</blockquote>');
 
+  /* Ordered list (1. 2. 3. etc) */
+  s = s.replace(/^\d+\.\s+(.*)$/gm, '<li class="ol-item">$1</li>');
+
   /* Unordered list */
   s = s.replace(/^[·•]\s+(.*)$/gm, '<li>$1</li>');
   s = s.replace(/^[-]\s+(.*)$/gm, '<li>$1</li>');
 
-  /* Wrap consecutive <li> in <ul> */
-  s = s.replace(/(<li>.*?<\/li>\n?)+/g, function(match) {
+  /* Wrap consecutive ordered <li> in <ol> */
+  s = s.replace(/((?:<li class="ol-item">.*?<\/li>\n?)+)/g, function(match) {
+    return '<ol>' + match.replace(/class="ol-item"/g, '') + '</ol>';
+  });
+
+  /* Wrap consecutive unordered <li> in <ul> */
+  s = s.replace(/((?:<li>.*?<\/li>\n?)+)/g, function(match) {
     return '<ul>' + match + '</ul>';
   });
 
@@ -1521,7 +1537,7 @@ function parseMarkdown(text) {
     var p = parts[i].trim();
     if (!p) continue;
     /* Don't wrap elements that are already block-level */
-    if (/^<(pre|ul|ol|blockquote|hr|div)/.test(p)) {
+    if (/^<(pre|ul|ol|blockquote|hr|h[1-6]|div)/.test(p)) {
       html += p;
     } else {
       /* Convert single newlines to <br> within paragraphs */
