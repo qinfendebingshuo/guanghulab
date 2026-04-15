@@ -359,10 +359,10 @@ async function chat(userId, message) {
       systemPrompt = pipelineResult.enhancedPrompt;
       pipelineStatus = {
         active: true,
-        layers: pipelineResult.injectedLayers || [],
         persona: pipelineResult.persona || 'zhuyuan',
-        notionContext: !!pipelineResult.notionContext,
-        awakeningState: pipelineResult.awakeningState || null
+        personaSwitched: !!pipelineResult.personaSwitched,
+        devTaskDetected: !!pipelineResult.devTaskDetected,
+        turnCount: pipelineResult.session ? pipelineResult.session.turnCount : 0
       };
     } catch (e) {
       console.warn('[国内网关] 上下文管线执行失败，使用基础提示词:', e.message);

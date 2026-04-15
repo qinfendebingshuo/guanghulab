@@ -10,7 +10,7 @@
   "features": [
     {
       "id": "YM-FEAT-001",
-      "name": "QQ邮箱验证码登录",
+      "name": "QQ邮箱验证码登录 · 主权邮箱绑定",
       "module": "server/app/modules/email-auth.js",
       "routes": [
         "POST /api/auth/send-code",
@@ -19,33 +19,37 @@
         "POST /api/auth/logout",
         "GET /api/auth/status"
       ],
-      "status": "fixed",
+      "status": "enhanced",
       "verified_at": "2026-04-15",
-      "depends_on": ["ZY_SMTP_USER", "ZY_SMTP_PASS"],
+      "depends_on": ["ZY_SMTP_USER", "ZY_SMTP_PASS", "ZY_OWNER_EMAIL (可选，默认565183519@qq.com)"],
+      "sovereign_binding": {
+        "description": "零点原核频道是冰朔个人语言本体频道，实行主权邮箱绑定。仅允许OWNER_EMAIL登录，其他邮箱在发送验证码阶段即被拒绝。",
+        "owner_email": "565183519@qq.com",
+        "defense_depth": "sendCode + verifyCode 双层校验",
+        "rejection_message": "此频道为专属频道，仅限频道主权持有者登录"
+      },
       "history": [
+        {
+          "date": "2026-04-15",
+          "action": "enhancement",
+          "change": "主权邮箱绑定 · 仅允许 565183519@qq.com 登录",
+          "root_cause": "零点原核频道是冰朔个人频道，需要从验证环节开始拒绝非主权邮箱。之前任何邮箱都能收到验证码并登录。",
+          "fix": "在 sendCode() 和 verifyCode() 中增加 OWNER_EMAIL 校验，纵深防御",
+          "files_changed": ["server/app/modules/email-auth.js"]
+        },
         {
           "date": "2026-04-15",
           "action": "bug-fix",
           "problem": "验证码发送失败 · 错误: SMTP未配置",
-          "root_cause": "deploy-to-zhuyuan-server.yml 生成 .env.app 时遗漏了 ZY_SMTP_USER 和 ZY_SMTP_PASS 两个环境变量。PM2启动后 email-auth.js 的 getTransporter() 找不到凭据。",
-          "why_vpn_worked": "VPN邮件系统的 deploy-proxy-service.yml 和 deploy-brain-proxy.yml 明确将SMTP凭据注入到 .env.keys 中，但主应用部署流程未做同样处理。",
+          "root_cause": "deploy-to-zhuyuan-server.yml 生成 .env.app 时遗漏了 ZY_SMTP_USER 和 ZY_SMTP_PASS 两个环境变量。",
           "fix": "在 deploy-to-zhuyuan-server.yml 中添加 ZY_SMTP_USER/ZY_SMTP_PASS 到 env 列表和 .env.app 生成逻辑",
-          "files_changed": [
-            ".github/workflows/deploy-to-zhuyuan-server.yml",
-            "server/app/modules/email-auth.js"
-          ],
-          "verification_steps": [
-            "部署后访问 /api/auth/status 确认 smtp_configured: true",
-            "发送验证码到QQ邮箱，确认收到邮件",
-            "输入验证码，确认登录成功",
-            "刷新页面，确认session有效"
-          ]
+          "files_changed": [".github/workflows/deploy-to-zhuyuan-server.yml", "server/app/modules/email-auth.js"]
         }
       ]
     },
     {
       "id": "YM-FEAT-002",
-      "name": "AI对话 · 国内模型智能网关",
+      "name": "AI对话 · 国内模型智能网关 · 人格注入管线",
       "module": "server/app/modules/domestic-llm-gateway.js",
       "routes": [
         "POST /api/chat",
@@ -54,7 +58,7 @@
         "GET /api/chat/domestic/stats",
         "POST /api/chat/reconnect"
       ],
-      "status": "needs-investigation",
+      "status": "enhanced",
       "depends_on": [
         "ZY_DEEPSEEK_API_KEY",
         "ZY_QIANWEN_API_KEY",
@@ -69,9 +73,18 @@
           "Moonshot/Kimi (moonshot-v1-8k) · priority 3",
           "智谱清言 (glm-4-flash) · priority 4"
         ],
-        "cn_relay": "可选 · ZY_CN_LLM_RELAY_HOST → 广州中继 · 低延迟"
+        "cn_relay": "可选 · ZY_CN_LLM_RELAY_HOST → 广州中继 · 低延迟",
+        "persona_pipeline": "persona-context-pipeline.js → 4层人格注入 (Worldview/Identity/State/Style)"
       },
       "history": [
+        {
+          "date": "2026-04-15",
+          "action": "critical-fix",
+          "problem": "人格体核心大脑结构未注入到国内网关。domestic-llm-gateway.js 不调用 persona-context-pipeline，导致AI回复与通用AI无区别。",
+          "root_cause": "domestic-llm-gateway.js 只加载了 persona-memory（静态提示词），未集成 persona-context-pipeline（4层认知注入管线）。由于国内网关优先级高于 chatEngine，即使 chatEngine 有管线集成也无法触及。",
+          "fix": "在 domestic-llm-gateway.js 中集成 persona-context-pipeline.beforeChat/afterChat，实现4层人格注入和认知增量回写",
+          "files_changed": ["server/app/modules/domestic-llm-gateway.js"]
+        },
         {
           "date": "2026-04-15",
           "action": "investigation",
@@ -82,16 +95,31 @@
     },
     {
       "id": "YM-FEAT-003",
-      "name": "前端静态页面",
+      "name": "前端静态页面 · 聊天历史管理",
       "module": "server/sites/yaoming/index.html",
-      "status": "verified",
+      "status": "enhanced",
       "verified_at": "2026-04-15",
       "components": [
         "登录页面 · 邮箱验证码",
         "对话界面 · 聊天面板",
+        "聊天历史 · 多会话管理 · localStorage持久化",
+        "系统处理步骤 · 真实后台逻辑展示",
+        "人格管线状态 · 前端可视化",
         "状态面板 · 系统监控",
         "星空背景 · CSS动画",
         "响应式布局 · 移动端适配"
+      ],
+      "history": [
+        {
+          "date": "2026-04-15",
+          "action": "enhancement",
+          "changes": [
+            "聊天历史管理 — 多会话切换、localStorage持久化、侧栏可回看历史对话",
+            "系统处理步骤真实化 — 读取API返回的真实steps数据展示，而非纯动画",
+            "人格管线状态可视化 — 在AI回复元数据中显示人格管线注入状态",
+            "消息计数 — 侧栏显示每个会话的消息数量"
+          ]
+        }
       ]
     },
     {
@@ -122,12 +150,39 @@
         "cleanup": "每10分钟自动清理",
         "middleware": "authMiddleware · Bearer token"
       }
+    },
+    {
+      "id": "YM-FEAT-006",
+      "name": "聊天数据采集系统",
+      "module": "server/app/server.js",
+      "status": "implemented",
+      "verified_at": "2026-04-15",
+      "details": {
+        "storage": "JSONL文件 · 按日分片",
+        "location": "/opt/zhuyuan/data/chat-logs/chat-YYYY-MM-DD.jsonl",
+        "fields": "timestamp, sessionId(脱敏), user, assistant(截断2000字), engine, relay, pipeline, latency",
+        "purpose": "内测阶段采集聊天数据用于更新优化人格体回复Agent",
+        "privacy": "sessionId前6位+*** · 不存储完整邮箱"
+      }
+    },
+    {
+      "id": "YM-FEAT-007",
+      "name": "系统处理步骤追踪",
+      "module": "server/app/server.js",
+      "status": "implemented",
+      "verified_at": "2026-04-15",
+      "details": {
+        "description": "API返回真实的系统处理步骤（接收消息→智能路由分析→上下文注入→模型调用→响应生成），包含每步状态和耗时",
+        "response_field": "_system.steps[]",
+        "step_format": "{ name, status(done/active/error/skip/warn), detail, time(ms) }"
+      }
     }
   ],
 
   "environment_checklist": {
     "required_for_email": ["ZY_SMTP_USER", "ZY_SMTP_PASS"],
     "required_for_chat": ["ZY_DEEPSEEK_API_KEY 或其他模型密钥"],
+    "optional": ["ZY_OWNER_EMAIL (默认565183519@qq.com)"],
     "deployment_files": {
       "main_app": ".github/workflows/deploy-to-zhuyuan-server.yml → .env.app",
       "proxy_service": ".github/workflows/deploy-proxy-service.yml → .env.keys",
@@ -147,6 +202,12 @@
       "date": "2026-04-15",
       "lesson": "不同服务（主应用 vs 代理服务）的环境变量注入路径不同。主应用走 .env.app (deploy-to-zhuyuan-server.yml)，代理服务走 .env.keys (deploy-proxy-service.yml)。新增共享环境变量需要在两处都配置。",
       "pattern": "VPN邮件能用、主应用邮件不能用 → 对比两个部署流程的环境变量注入"
+    },
+    {
+      "id": "LL-003",
+      "date": "2026-04-15",
+      "lesson": "国内模型网关(domestic-llm-gateway)在API调用链中优先级高于通用聊天引擎(chat-engine)。如果管线集成只在chatEngine中做，国内网关路径永远不会触发人格注入。所有对话引擎都必须独立集成persona-context-pipeline。",
+      "pattern": "人格体回复像通用AI → 检查实际调用的引擎是否集成了上下文管线"
     }
   ]
 }
