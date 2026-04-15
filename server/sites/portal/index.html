@@ -223,9 +223,12 @@ a:hover{color:var(--blue)}
 .chat-msg.assistant{align-self:flex-start;background:var(--glass);border:1px solid var(--glass-border);color:var(--text)}
 .chat-msg.system{align-self:center;max-width:90%;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.1);color:var(--dim);text-align:center;font-size:12px;border-radius:8px}
 .chat-msg.assistant strong{color:var(--cyan);font-weight:600}
+.chat-msg.assistant em{color:var(--purple);font-style:italic}
 .chat-msg.assistant code{background:rgba(96,165,250,0.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--blue)}
-.chat-msg.assistant h2,.chat-msg.assistant h3{font-size:14px;font-weight:700;color:var(--text);margin:8px 0 4px;letter-spacing:0.3px}
+.chat-msg.assistant h2{font-size:14px;font-weight:700;color:var(--cyan);margin:8px 0 4px;letter-spacing:0.3px}
+.chat-msg.assistant h3{font-size:13px;font-weight:600;color:var(--text);margin:8px 0 4px;letter-spacing:0.2px}
 .chat-msg.assistant ul,.chat-msg.assistant ol{padding-left:18px;margin:4px 0}
+.chat-msg.assistant ol{list-style-type:decimal}
 .chat-msg.assistant li{margin-bottom:2px}
 .chat-msg.assistant hr{border:none;border-top:1px solid var(--glass-border);margin:10px 0}
 .chat-msg .msg-time{font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
@@ -903,20 +906,29 @@ a:hover{color:var(--blue)}
     var html = text
       // 转义HTML
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-      // 标题
+      // 标题 (# maps to h2 deliberately — h1 reserved for page, chat uses h2 as top-level)
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h2>$1</h2>')
       // 粗体
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // 斜体 (simple pattern for broader browser support)
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       // 行内代码
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       // 分隔线
       .replace(/^---$/gm, '<hr>')
+      // 有序列表
+      .replace(/^\d+\.\s+(.+)$/gm, '<li class="ol-item">$1</li>')
       // 无序列表
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/^[-·•]\s+(.+)$/gm, '<li>$1</li>')
       // 换行
       .replace(/\n/g, '<br>');
-    // 包裹列表项
+    // 包裹有序列表项
+    html = html.replace(/((?:<li class="ol-item">[^<]*<\/li>(?:<br>)?)+)/g, function(m, inner) {
+      return '<ol>' + inner.replace(/class="ol-item"/g, '').replace(/<br>/g, '') + '</ol>';
+    });
+    // 包裹无序列表项
     html = html.replace(/((?:<li>.*?<\/li><br>?)+)/g, '<ul>$1</ul>');
     html = html.replace(/<ul>(.*?)<\/ul>/g, function(m, inner) {
       return '<ul>' + inner.replace(/<br>/g, '') + '</ul>';

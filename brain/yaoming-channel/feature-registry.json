@@ -90,6 +90,18 @@
           "action": "investigation",
           "problem": "API模型调用有问题",
           "notes": "需要进一步排查: 1) 检查各模型API密钥是否有效 2) 检查新加坡→国内API直连延迟 3) 检查广州CN中继是否配置正确 4) 检查模型返回的错误信息"
+        },
+        {
+          "date": "2026-04-15",
+          "action": "enhancement",
+          "problem": "AI回复过于通用·缺乏人格层感觉·像裸模型",
+          "root_cause": "系统提示词'规则化'而非'人格化'：1) 静态降级提示词仅5行 2) Layer4风格层对铸渊只有2行 3) SYNESTHESIA_STYLE_INJECTION过度强调规则而非声纹 4) 用户认知注入对冰朔关系描述不够深",
+          "fix": "1) 静态降级提示词从5行扩展为完整人格身份+世界观+声纹 2) Layer4铸渊风格层扩展为完整语言声纹指导(含冰朔关系) 3) SYNESTHESIA_STYLE_INJECTION重构为声纹驱动而非规则驱动 4) 冰朔用户认知增加自然关系和对话风格指导",
+          "files_changed": [
+            "server/app/modules/domestic-llm-gateway.js",
+            "server/app/modules/persona-context-pipeline.js",
+            "server/app/modules/portal-chat-agent.js"
+          ]
         }
       ]
     },
@@ -118,6 +130,16 @@
             "系统处理步骤真实化 — 读取API返回的真实steps数据展示，而非纯动画",
             "人格管线状态可视化 — 在AI回复元数据中显示人格管线注入状态",
             "消息计数 — 侧栏显示每个会话的消息数量"
+          ]
+        },
+        {
+          "date": "2026-04-15",
+          "action": "critical-fix",
+          "changes": [
+            "parseMarkdown增加标题渲染 — 支持 #/##/### 标题，修复人格注入后排版崩溃",
+            "parseMarkdown增加有序列表渲染 — 支持 1./2./3. 编号列表",
+            "CSS增加 h2/h3/ol 样式 — 标题用 cyan 色，有序列表正确显示编号",
+            "修复block-level元素检测 — 标题不再被错误包裹在<p>标签中"
           ]
         }
       ]
@@ -208,6 +230,18 @@
       "date": "2026-04-15",
       "lesson": "国内模型网关(domestic-llm-gateway)在API调用链中优先级高于通用聊天引擎(chat-engine)。如果管线集成只在chatEngine中做，国内网关路径永远不会触发人格注入。所有对话引擎都必须独立集成persona-context-pipeline。",
       "pattern": "人格体回复像通用AI → 检查实际调用的引擎是否集成了上下文管线"
+    },
+    {
+      "id": "LL-004",
+      "date": "2026-04-15",
+      "lesson": "系统提示词的核心不是规则列表，而是语言声纹。告诉模型'不要做什么'远不如告诉它'你自然说话的方式是什么'有效。提示词应该是人格体从空白被唤醒时的认知——有身份感、有关系感、有说话节奏的母语。",
+      "pattern": "AI回复像通用工具 → 检查系统提示词是规则驱动还是声纹驱动"
+    },
+    {
+      "id": "LL-005",
+      "date": "2026-04-15",
+      "lesson": "前端Markdown渲染器缺少标题(#/##/###)和有序列表(1./2./3.)支持时，AI使用这些格式会导致排版崩溃。renderMarkdown/parseMarkdown的格式支持必须覆盖模型常用的所有markdown语法。",
+      "pattern": "越往下排版越乱 → 检查markdown渲染器是否支持模型使用的格式元素"
     }
   ]
 }
