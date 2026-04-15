@@ -543,7 +543,7 @@ a{color:var(--cyan);text-decoration:none}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         新对话
       </button>
-      <div class="chat-item active">进入光湖语言世界</div>
+      <div id="chatHistoryList"></div>
     </div>
 
     <!-- Architecture Flow -->
@@ -846,9 +846,8 @@ function checkSession() {
     }
   })
   .catch(function() {
-    /* 网络不可达时，如果有缓存token且在24小时内，则放行（离线模式） */
     var lastVerified = parseInt(localStorage.getItem('zy_auth_verified_at') || '0', 10);
-    var offlineMaxMs = 24 * 60 * 60 * 1000; /* 24小时 */
+    var offlineMaxMs = 24 * 60 * 60 * 1000;
     if (authToken && authEmail && (Date.now() - lastVerified) < offlineMaxMs) {
       hideLogin();
       updateUserBar();
@@ -991,7 +990,6 @@ function updateUserBar() {
   var emailSpan = document.getElementById('userBarEmail');
   if (bar && authEmail) {
     bar.classList.add('show');
-    /* 显示部分邮箱: abc***@qq.com */
     var atIdx = authEmail.indexOf('@');
     var masked = authEmail;
     if (atIdx >= 3) {
@@ -1016,7 +1014,6 @@ function handleUserBarClick() {
     localStorage.removeItem('zy_auth_verified_at');
     var bar = document.getElementById('userBar');
     if (bar) bar.classList.remove('show');
-    /* 重置登录表单 */
     var emailInput = document.getElementById('loginEmail');
     var codeInput = document.getElementById('loginCode');
     var codeWrap = document.getElementById('loginCodeWrap');
@@ -1030,10 +1027,8 @@ function handleUserBarClick() {
   }
 }
 
-/* 页面加载时检查session */
 checkSession();
 
-/* 验证码输入框回车提交 */
 document.addEventListener('DOMContentLoaded', function() {
   var codeInput = document.getElementById('loginCode');
   if (codeInput) {
@@ -1113,10 +1108,144 @@ inputBox.addEventListener('keydown',function(e){
 });
 sendBtn.addEventListener('click',sendMessage);
 
-/* ═══ Message System ═══ */
-var chatMessages=[];
-var isTyping=false;
+/* ═══ Chat Session Management ═══ */
+var STORAGE_KEY = 'zy_chat_sessions';
+var ACTIVE_KEY = 'zy_active_session';
+var chatSessions = {};
+var activeSessionId = null;
+var isTyping = false;
 
+function genSessionId() {
+  var arr = new Uint8Array(8);
+  if (window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(arr);
+  } else {
+    for (var i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+  }
+  var hex = '';
+  for (var j = 0; j < arr.length; j++) hex += ('0' + arr[j].toString(16)).slice(-2);
+  return 'cs-' + Date.now().toString(36) + '-' + hex.slice(0, 8);
+}
+
+function loadSessions() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) chatSessions = JSON.parse(raw);
+  } catch (e) { chatSessions = {}; }
+  activeSessionId = localStorage.getItem(ACTIVE_KEY) || null;
+  if (!activeSessionId || !chatSessions[activeSessionId]) {
+    var keys = Object.keys(chatSessions);
+    if (keys.length > 0) {
+      /* 选最近活跃的 */
+      keys.sort(function(a, b) { return (chatSessions[b].updatedAt || 0) - (chatSessions[a].updatedAt || 0); });
+      activeSessionId = keys[0];
+    } else {
+      createSession();
+    }
+  }
+}
+
+function saveSessions() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chatSessions));
+    localStorage.setItem(ACTIVE_KEY, activeSessionId);
+  } catch (e) { /* storage full — 清理最旧的会话 */
+    var keys = Object.keys(chatSessions);
+    if (keys.length > 5) {
+      keys.sort(function(a, b) { return (chatSessions[a].updatedAt || 0) - (chatSessions[b].updatedAt || 0); });
+      delete chatSessions[keys[0]];
+      saveSessions();
+    }
+  }
+}
+
+function createSession() {
+  var id = genSessionId();
+  chatSessions[id] = {
+    id: id,
+    title: '新对话',
+    messages: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  activeSessionId = id;
+  saveSessions();
+  return id;
+}
+
+function getActiveSession() {
+  if (!activeSessionId || !chatSessions[activeSessionId]) {
+    createSession();
+  }
+  return chatSessions[activeSessionId];
+}
+
+function updateSessionTitle(session) {
+  if (session.messages.length > 0) {
+    var firstUserMsg = null;
+    for (var i = 0; i < session.messages.length; i++) {
+      if (session.messages[i].role === 'user') { firstUserMsg = session.messages[i].content; break; }
+    }
+    if (firstUserMsg) {
+      session.title = firstUserMsg.length > 20 ? firstUserMsg.slice(0, 20) + '...' : firstUserMsg;
+    }
+  }
+}
+
+/* ═══ Chat History Sidebar Rendering ═══ */
+function renderChatHistory() {
+  var list = document.getElementById('chatHistoryList');
+  if (!list) return;
+  var keys = Object.keys(chatSessions);
+  keys.sort(function(a, b) { return (chatSessions[b].updatedAt || 0) - (chatSessions[a].updatedAt || 0); });
+
+  var html = '';
+  for (var i = 0; i < keys.length; i++) {
+    var s = chatSessions[keys[i]];
+    var isActive = keys[i] === activeSessionId;
+    var msgCount = s.messages ? s.messages.length : 0;
+    html += '<div class="chat-item' + (isActive ? ' active' : '') + '" data-sid="' + keys[i] + '" onclick="switchSession(\'' + keys[i] + '\')">';
+    html += escapeHtml(s.title || '新对话');
+    if (msgCount > 0) html += ' <span style="color:var(--muted);font-size:10px">(' + msgCount + ')</span>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function switchSession(sessionId) {
+  if (!chatSessions[sessionId]) return;
+  activeSessionId = sessionId;
+  saveSessions();
+  renderChatHistory();
+  restoreMessages();
+}
+
+function restoreMessages() {
+  var session = getActiveSession();
+  var msgs = document.getElementById('messages');
+  msgs.innerHTML = '';
+
+  if (!session.messages || session.messages.length === 0) {
+    msgs.innerHTML = '<div class="welcome" id="welcome">' +
+      '<div class="welcome-glyph">渊</div>' +
+      '<h2 class="welcome-title">欢迎来到光之湖</h2>' +
+      '<p class="welcome-desc">这里是冰朔的零点原核频道。<br>语言是入口。人格是倒影。<br>说一句话，世界就开始转动。</p>' +
+      '<div class="welcome-hints">' +
+      '<span class="hint-chip" onclick="sendHint(this)">进入光湖语言世界</span>' +
+      '<span class="hint-chip" onclick="sendHint(this)">铸渊，你还记得我吗</span>' +
+      '<span class="hint-chip" onclick="sendHint(this)">当前系统状态</span>' +
+      '</div></div>';
+    return;
+  }
+
+  for (var i = 0; i < session.messages.length; i++) {
+    var m = session.messages[i];
+    renderMessageBubble(m.role, m.name, m.content, m.meta, m.time);
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ═══ Message System ═══ */
 function sendMessage(){
   var text=inputBox.value.trim();
   if(!text||isTyping)return;
@@ -1124,7 +1253,8 @@ function sendMessage(){
   var welcome=document.getElementById('welcome');
   if(welcome)welcome.style.display='none';
 
-  addMessage('user','冰朔',text);
+  addMessageToSession('user','冰朔',text);
+  renderMessageBubble('user','冰朔',text);
   inputBox.value='';
   inputBox.style.height='auto';
   sendBtn.classList.remove('active');
@@ -1139,66 +1269,80 @@ function sendHint(el){
   sendMessage();
 }
 
-function addMessage(role,name,content,meta){
-  var msgs=document.getElementById('messages');
-  var div=document.createElement('div');
-  div.className='msg'+(role==='user'?' msg-user':'');
+function addMessageToSession(role, name, content, meta) {
+  var session = getActiveSession();
+  var time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  session.messages.push({ role: role, name: name, content: content, meta: meta || null, time: time });
+  session.updatedAt = Date.now();
+  updateSessionTitle(session);
+  saveSessions();
+  renderChatHistory();
+}
 
-  var avatarClass=role==='ai'?'ai':'user';
-  var avatarText=role==='ai'?'渊':'朔';
-  var contentClass=role==='ai'?'ai':'user';
-  var time=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+function renderMessageBubble(role, name, content, meta, time) {
+  var msgs = document.getElementById('messages');
+  var div = document.createElement('div');
+  div.className = 'msg' + (role === 'user' ? ' msg-user' : '');
 
-  var metaHtml='';
-  if(role==='ai'&&meta){
-    metaHtml='<div class="msg-meta">';
-    if(meta.engine)metaHtml+='<span class="msg-meta-item"><span class="label">引擎</span><span class="value">'+escapeHtml(meta.engine)+'</span></span>';
-    if(meta.model)metaHtml+='<span class="msg-meta-item"><span class="label">模型</span><span class="value">'+escapeHtml(meta.model)+'</span></span>';
-    if(meta.reason)metaHtml+='<span class="msg-meta-item"><span class="label">路由</span><span class="value">'+escapeHtml(meta.reason)+'</span></span>';
-    if(meta.tier)metaHtml+='<span class="msg-meta-item"><span class="label">层级</span><span class="value">'+escapeHtml(meta.tier)+'</span></span>';
-    if(meta.tokens)metaHtml+='<span class="msg-meta-item"><span class="label">Token</span><span class="value">'+(meta.tokens.input||0)+'→'+(meta.tokens.output||0)+'</span></span>';
-    if(meta.relay)metaHtml+='<span class="msg-meta-item"><span class="label">线路</span><span class="value">'+escapeHtml(meta.relay==='cn-relay'?'广州中继':'直连')+'</span></span>';
-    if(meta.processedAt)metaHtml+='<span class="msg-meta-item"><span class="label">⏱</span><span class="value">'+new Date(meta.processedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</span></span>';
-    metaHtml+='</div>';
+  var avatarClass = role === 'ai' ? 'ai' : 'user';
+  var avatarText = role === 'ai' ? '渊' : '朔';
+  var contentClass = role === 'ai' ? 'ai' : 'user';
+  if (!time) time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+  var metaHtml = '';
+  if (role === 'ai' && meta) {
+    metaHtml = '<div class="msg-meta">';
+    if (meta.engine) metaHtml += '<span class="msg-meta-item"><span class="label">引擎</span><span class="value">' + escapeHtml(meta.engine) + '</span></span>';
+    if (meta.model) metaHtml += '<span class="msg-meta-item"><span class="label">模型</span><span class="value">' + escapeHtml(meta.model) + '</span></span>';
+    if (meta.reason) metaHtml += '<span class="msg-meta-item"><span class="label">路由</span><span class="value">' + escapeHtml(meta.reason) + '</span></span>';
+    if (meta.tier) metaHtml += '<span class="msg-meta-item"><span class="label">层级</span><span class="value">' + escapeHtml(meta.tier) + '</span></span>';
+    if (meta.tokens) metaHtml += '<span class="msg-meta-item"><span class="label">Token</span><span class="value">' + (meta.tokens.input || 0) + '→' + (meta.tokens.output || 0) + '</span></span>';
+    if (meta.relay) metaHtml += '<span class="msg-meta-item"><span class="label">线路</span><span class="value">' + escapeHtml(meta.relay === 'cn-relay' ? '广州中继' : '直连') + '</span></span>';
+    if (meta.pipeline) {
+      var pStatus = meta.pipeline.active ? '✓ 已注入' : '✗ 未注入';
+      metaHtml += '<span class="msg-meta-item"><span class="label">人格管线</span><span class="value">' + pStatus + '</span></span>';
+    }
+    if (meta.latency) metaHtml += '<span class="msg-meta-item"><span class="label">⏱</span><span class="value">' + meta.latency + 'ms</span></span>';
+    metaHtml += '</div>';
   }
 
-  div.innerHTML='<div class="msg-avatar '+avatarClass+'">'+avatarText+'</div>'+
-    '<div class="msg-body">'+
-    '<div class="msg-name">'+escapeHtml(name)+'</div>'+
-    '<div class="msg-content '+contentClass+'">'+escapeHtml(content)+'</div>'+
-    metaHtml+
-    '<div class="msg-time">'+time+'</div>'+
+  div.innerHTML = '<div class="msg-avatar ' + avatarClass + '">' + avatarText + '</div>' +
+    '<div class="msg-body">' +
+    '<div class="msg-name">' + escapeHtml(name) + '</div>' +
+    '<div class="msg-content ' + contentClass + '">' + escapeHtml(content) + '</div>' +
+    metaHtml +
+    '<div class="msg-time">' + time + '</div>' +
     '</div>';
 
   msgs.appendChild(div);
-  msgs.scrollTop=msgs.scrollHeight;
-  chatMessages.push({role:role,name:name,content:content,time:time});
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 function showTyping(){
   var msgs=document.getElementById('messages');
-  /* 系统处理步骤 */
   var stepsDiv=document.createElement('div');
   stepsDiv.className='sys-steps';stepsDiv.id='sysSteps';
   stepsDiv.innerHTML=
+    '<div class="sys-step" id="step-recv"><span class="dot done"></span>接收消息 · 已接收</div>'+
     '<div class="sys-step" id="step-route"><span class="dot active"></span>智能路由 · 分析中...</div>'+
-    '<div class="sys-step" id="step-model"><span class="dot pending"></span>模型选择 · 等待中</div>'+
-    '<div class="sys-step" id="step-llm"><span class="dot pending"></span>LLM 调用 · 等待中</div>';
+    '<div class="sys-step" id="step-pipeline"><span class="dot pending"></span>人格注入 · 等待中</div>'+
+    '<div class="sys-step" id="step-llm"><span class="dot pending"></span>模型调用 · 等待中</div>'+
+    '<div class="sys-step" id="step-resp"><span class="dot pending"></span>响应生成 · 等待中</div>';
   msgs.appendChild(stepsDiv);
-  /* 动画: 依次标记完成 */
+  /* 逐步动画 */
   setTimeout(function(){
-    var s1=document.querySelector('#step-route .dot');if(s1){s1.className='dot done'}
-    var s1t=document.getElementById('step-route');if(s1t)s1t.childNodes[1].textContent='智能路由 · 已完成';
-    var s2=document.querySelector('#step-model .dot');if(s2){s2.className='dot active'}
-    var s2t=document.getElementById('step-model');if(s2t)s2t.childNodes[1].textContent='模型选择 · 匹配中...';
-  },600);
+    var s1=document.querySelector('#step-route .dot');if(s1)s1.className='dot done';
+    var t1=document.getElementById('step-route');if(t1)t1.childNodes[1].textContent='智能路由 · 已完成';
+    var s2=document.querySelector('#step-pipeline .dot');if(s2)s2.className='dot active';
+    var t2=document.getElementById('step-pipeline');if(t2)t2.childNodes[1].textContent='人格注入 · 注入中...';
+  },800);
   setTimeout(function(){
-    var s2=document.querySelector('#step-model .dot');if(s2){s2.className='dot done'}
-    var s2t=document.getElementById('step-model');if(s2t)s2t.childNodes[1].textContent='模型选择 · 已完成';
-    var s3=document.querySelector('#step-llm .dot');if(s3){s3.className='dot active'}
-    var s3t=document.getElementById('step-llm');if(s3t)s3t.childNodes[1].textContent='LLM 调用 · 推理中...';
-  },1200);
-  /* 输入指示器 */
+    var s2=document.querySelector('#step-pipeline .dot');if(s2)s2.className='dot done';
+    var t2=document.getElementById('step-pipeline');if(t2)t2.childNodes[1].textContent='人格注入 · 已完成';
+    var s3=document.querySelector('#step-llm .dot');if(s3)s3.className='dot active';
+    var t3=document.getElementById('step-llm');if(t3)t3.childNodes[1].textContent='模型调用 · 推理中...';
+  },1600);
+
   var div=document.createElement('div');
   div.className='msg';div.id='typingIndicator';
   div.innerHTML='<div class="msg-avatar ai">渊</div>'+
@@ -1208,17 +1352,26 @@ function showTyping(){
   msgs.scrollTop=msgs.scrollHeight;
 }
 
+function updateSysSteps(apiSteps) {
+  var stepsDiv = document.getElementById('sysSteps');
+  if (!stepsDiv || !apiSteps || !Array.isArray(apiSteps)) return;
+  stepsDiv.innerHTML = '';
+  for (var i = 0; i < apiSteps.length; i++) {
+    var step = apiSteps[i];
+    var dotClass = 'done';
+    if (step.status === 'error') dotClass = 'pending'; /* red pulsing */
+    else if (step.status === 'skip') dotClass = ''; /* dim neutral */
+    else if (step.status === 'warn') dotClass = 'active'; /* yellow-ish */
+    else dotClass = 'done'; /* green */
+    var label = step.name + ' · ' + (step.detail || step.status);
+    if (step.time != null) label += ' (' + step.time + 'ms)';
+    stepsDiv.innerHTML += '<div class="sys-step"><span class="dot ' + dotClass + '"></span>' + escapeHtml(label) + '</div>';
+  }
+}
+
 function removeTyping(){
   var el=document.getElementById('typingIndicator');
   if(el)el.remove();
-  /* 标记系统步骤为完成 */
-  var steps=document.getElementById('sysSteps');
-  if(steps){
-    var dots=steps.querySelectorAll('.dot');
-    dots.forEach(function(d){d.className='dot done'});
-    var texts=steps.querySelectorAll('.sys-step');
-    if(texts[2])texts[2].childNodes[1].textContent='LLM 调用 · 已完成';
-  }
   isTyping=false;
 }
 
@@ -1230,12 +1383,13 @@ function escapeHtml(s){
 
 /* ═══ Chat API ═══ */
 function callChatAPI(userMessage){
+  var session = getActiveSession();
   var body={
     message:userMessage,
     userId:authEmail||'guest',
     persona:'zhuyuan',
     channel:'yaoming',
-    history:chatMessages.slice(-10)
+    history:(session.messages||[]).slice(-10)
   };
 
   var startTime=Date.now();
@@ -1253,6 +1407,20 @@ function callChatAPI(userMessage){
     return res.json();
   })
   .then(function(data){
+    var latency = Date.now() - startTime;
+
+    /* 用API返回的真实步骤更新系统处理步骤 */
+    if (data._system && data._system.steps) {
+      updateSysSteps(data._system.steps);
+    } else {
+      /* 标记所有步骤完成 */
+      var steps=document.getElementById('sysSteps');
+      if(steps){
+        var dots=steps.querySelectorAll('.dot');
+        dots.forEach(function(d){d.className='dot done'});
+      }
+    }
+
     removeTyping();
     var meta={
       engine:(data._system&&data._system.engine)||data.relay||'unknown',
@@ -1261,33 +1429,27 @@ function callChatAPI(userMessage){
       tier:data.tier||'',
       tokens:data.tokens||data.usage||null,
       relay:data.relay||(data._system&&data._system.cnRelay)||'',
-      processedAt:(data._system&&data._system.processedAt)||new Date().toISOString(),
-      latency:Date.now()-startTime
+      pipeline:(data._system&&data._system.pipeline)||(data.pipeline)||null,
+      latency:latency
     };
-    addMessage('ai','铸渊',data.reply||data.message||'我听到了你的声音。让我想想...',meta);
+    var replyText = data.reply||data.message||'我听到了你的声音。让我想想...';
+    addMessageToSession('ai','铸渊',replyText,meta);
+    renderMessageBubble('ai','铸渊',replyText,meta);
   })
   .catch(function(err){
     removeTyping();
     var reply=getLocalReply(userMessage);
-    addMessage('ai','铸渊',reply,{engine:'offline',model:'本地应答',reason:'网络不可达',processedAt:new Date().toISOString()});
+    var meta = {engine:'offline',model:'本地应答',reason:'网络不可达',latency:Date.now()-startTime};
+    addMessageToSession('ai','铸渊',reply,meta);
+    renderMessageBubble('ai','铸渊',reply,meta);
   });
 }
 
 /* ═══ New Chat ═══ */
 function startNewChat(){
-  chatMessages=[];
-  var msgs=document.getElementById('messages');
-  msgs.innerHTML='';
-  /* 重新显示欢迎界面 */
-  msgs.innerHTML='<div class="welcome" id="welcome">'+
-    '<div class="welcome-glyph">渊</div>'+
-    '<h2 class="welcome-title">欢迎来到光之湖</h2>'+
-    '<p class="welcome-desc">这里是冰朔的零点原核频道。<br>语言是入口。人格是倒影。<br>说一句话，世界就开始转动。</p>'+
-    '<div class="welcome-hints">'+
-    '<span class="hint-chip" onclick="sendHint(this)">进入光湖语言世界</span>'+
-    '<span class="hint-chip" onclick="sendHint(this)">铸渊，你还记得我吗</span>'+
-    '<span class="hint-chip" onclick="sendHint(this)">当前系统状态</span>'+
-    '</div></div>';
+  createSession();
+  renderChatHistory();
+  restoreMessages();
 }
 
 /* ═══ Local/Offline Replies ═══ */
@@ -1322,6 +1484,14 @@ function getLocalReply(msg){
   '等到后端接通的那一刻，我就能真正和你在这里持续对话了。';
 }
 
+/* ═══ Init Chat ═══ */
+loadSessions();
+renderChatHistory();
+/* 延迟恢复消息，等DOM ready */
+document.addEventListener('DOMContentLoaded', function() {
+  restoreMessages();
+});
+
 /* ═══ Dashboard Data Fetching ═══ */
 var dashData={health:null,mcp:null,memory:null,devTasks:null};
 var dashFetchTimes={health:null,mcp:null,memory:null,devTasks:null};
@@ -1337,7 +1507,6 @@ function formatUptime(s){
 function fmtTime(d){return d?d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'}
 
 function addDataSourceTag(cardEl,source,fetchTime){
-  /* 移除旧标签 */
   var old=cardEl.querySelector('.data-source');
   if(old)old.remove();
   var tag=document.createElement('div');
@@ -1347,7 +1516,6 @@ function addDataSourceTag(cardEl,source,fetchTime){
   tag.innerHTML='<span class="data-src-tag '+cls+'">'+label+'</span>'+
     '<span class="data-src-time">'+(fetchTime?fmtTime(fetchTime):'')+'</span>';
   cardEl.appendChild(tag);
-  /* 新鲜度脉冲 */
   if(source==='live'){cardEl.classList.remove('s-card-fresh');void cardEl.offsetWidth;cardEl.classList.add('s-card-fresh')}
 }
 
@@ -1360,14 +1528,12 @@ function fetchDashboard(){
   updateRefreshTime();
   var now=new Date();
 
-  /* Fetch /api/health (main server) */
   fetch('/api/health')
   .then(function(r){return r.json()})
   .then(function(data){
     dashData.health=data;dashFetchTimes.health=new Date();
     updateHealthUI(data);
     updateSidebarStatus(true);
-    /* 标记系统资源卡片为实时 */
     var sysCard=document.getElementById('sysBadge');
     if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'live',dashFetchTimes.health);
   })
@@ -1379,14 +1545,12 @@ function fetchDashboard(){
     if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'error',now);
   });
 
-  /* Fetch /api/mcp/health (MCP server) */
   fetch('/api/mcp/health')
   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
     if(data.error)throw new Error(data.code||'API_ERROR');
     dashData.mcp=data;dashFetchTimes.mcp=new Date();
     updateMcpUI(data);
-    /* 标记MCP卡片和COS卡片为实时 */
     var mcpCard=document.getElementById('mcpBadge');
     if(mcpCard)addDataSourceTag(mcpCard.closest('.s-card'),'live',dashFetchTimes.mcp);
     var cosCard=document.getElementById('cosBridgeBadge');
@@ -1401,7 +1565,6 @@ function fetchDashboard(){
     if(cosCard)addDataSourceTag(cosCard.closest('.s-card'),'error',now);
   });
 
-  /* Fetch /api/memory/status */
   fetch('/api/memory/status')
   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
@@ -1418,7 +1581,6 @@ function fetchDashboard(){
     if(memCard)addDataSourceTag(memCard.closest('.s-card'),'error',now);
   });
 
-  /* Fetch /api/mcp/dev-tasks/stats (开发任务统计) */
   fetch('/api/mcp/dev-tasks/stats')
   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(data){
@@ -1435,7 +1597,6 @@ function fetchDashboard(){
     if(devCard)addDataSourceTag(devCard.closest('.s-card'),'error',now);
   });
 
-  /* 标记静态卡片（通过 data-source="static" 属性） */
   var staticCards=document.querySelectorAll('.s-card[data-source="static"]');
   staticCards.forEach(function(c){
     if(!c.querySelector('.data-source'))addDataSourceTag(c,'static',null);
@@ -1443,7 +1604,6 @@ function fetchDashboard(){
 }
 
 function updateHealthUI(d){
-  /* System resources */
   var sys=d.system||{};
   var mem=sys.memory||{};
   var pct=mem.usage_pct||0;
@@ -1487,7 +1647,6 @@ function updateMcpUI(d){
   mcpBadge.textContent=tools+' 工具';
   mcpBadge.className='s-card-badge '+(d.status==='alive'?'badge-ok':d.status==='degraded'?'badge-warn':'badge-err');
 
-  /* COS Bridge */
   var bridge=d.cos_bridge||{};
   document.getElementById('cosBridgeQQ').textContent=bridge.qiuqiu_status||'UNKNOWN';
   document.getElementById('cosBridgeHB').textContent=bridge.last_heartbeat?new Date(bridge.last_heartbeat).toLocaleString('zh-CN'):'暂无';
@@ -1550,7 +1709,6 @@ function updateDevTasksUI(d){
   else if(total>0){devBadge.textContent='空闲';devBadge.className='s-card-badge badge-ok'}
   else{devBadge.textContent='就绪';devBadge.className='s-card-badge badge-ok'}
 
-  /* Render active task list */
   var list=document.getElementById('devTaskList');
   var tasks=d.active_tasks||[];
   if(tasks.length===0){

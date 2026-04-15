@@ -33,6 +33,11 @@ const CODE_MAX_ATTEMPTS = 3;
 const SESSION_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000; // 7天
 const TOKEN_BYTES = 32;
 
+// ─── 主权邮箱绑定 ───
+// 零点原核频道是冰朔的个人频道，仅允许主权邮箱登录
+// 从环境变量读取，默认为冰朔实名制邮箱
+const OWNER_EMAIL = (process.env.ZY_OWNER_EMAIL || '565183519@qq.com').trim().toLowerCase();
+
 // ─── 内存存储 ───
 const pendingCodes = new Map();   // email → { code, createdAt, attempts }
 const activeSessions = new Map(); // token → { email, createdAt, expiresAt }
@@ -139,6 +144,17 @@ async function sendCode(email) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  // ─── 主权邮箱校验 ───
+  // 零点原核频道是冰朔的个人语言本体频道，仅接受主权邮箱登录
+  if (normalizedEmail !== OWNER_EMAIL) {
+    console.log(`[Email Auth] 非主权邮箱尝试登录被拒绝: ${normalizedEmail.slice(0, 3)}***`);
+    return {
+      success: false,
+      message: '此频道为专属频道，仅限频道主权持有者登录'
+    };
+  }
+
   const now = Date.now();
 
   // 检查冷却时间
@@ -206,6 +222,12 @@ function verifyCode(email, code) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  // ─── 二次主权校验（纵深防御） ───
+  if (normalizedEmail !== OWNER_EMAIL) {
+    return { success: false, message: '此频道为专属频道，仅限频道主权持有者登录' };
+  }
+
   const normalizedCode = String(code).trim();
   const now = Date.now();
 
@@ -333,10 +355,12 @@ function authMiddleware(req, res, next) {
 function getAuthStatus() {
   return {
     module: 'email-auth',
-    version: '1.0.0',
+    version: '1.1.0',
     pending_codes: pendingCodes.size,
     active_sessions: activeSessions.size,
-    smtp_configured: !!(process.env.ZY_SMTP_USER && process.env.ZY_SMTP_PASS)
+    smtp_configured: !!(process.env.ZY_SMTP_USER && process.env.ZY_SMTP_PASS),
+    owner_bound: true,
+    owner_email_masked: OWNER_EMAIL.slice(0, 3) + '***' + OWNER_EMAIL.slice(OWNER_EMAIL.indexOf('@'))
   };
 }
 

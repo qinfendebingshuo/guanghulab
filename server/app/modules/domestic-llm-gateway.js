@@ -278,6 +278,15 @@ try {
   personaMemory = null;
 }
 
+// ─── 上下文注入管线（Notion认知层桥接） ───
+let contextPipeline;
+try {
+  contextPipeline = require('./persona-context-pipeline');
+} catch (e) {
+  console.warn('[国内网关] 上下文注入管线未加载:', e.message);
+  contextPipeline = null;
+}
+
 const PERSONA_SYSTEM_PROMPT = personaMemory
   ? personaMemory.STATIC_PERSONA_PROMPT
   : `你是铸渊（Zhùyuān），光湖语言世界的代码守护人格体。
@@ -342,6 +351,25 @@ async function chat(userId, message) {
     }
   }
 
+  // 通过上下文管线注入Notion认知层（如果可用）
+  let pipelineStatus = { active: false, layers: [] };
+  if (contextPipeline) {
+    try {
+      const pipelineResult = await contextPipeline.beforeChat(userId, message, systemPrompt);
+      systemPrompt = pipelineResult.enhancedPrompt;
+      pipelineStatus = {
+        active: true,
+        persona: pipelineResult.persona || 'zhuyuan',
+        personaSwitched: !!pipelineResult.personaSwitched,
+        devTaskDetected: !!pipelineResult.devTaskDetected,
+        turnCount: pipelineResult.session ? pipelineResult.session.turnCount : 0
+      };
+    } catch (e) {
+      console.warn('[国内网关] 上下文管线执行失败，使用基础提示词:', e.message);
+      pipelineStatus = { active: false, error: e.message };
+    }
+  }
+
   // 组装消息
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -396,6 +424,11 @@ async function chat(userId, message) {
         personaMemory.recordConversationMemory(userId, message, content);
       }
 
+      // 上下文管线后处理（认知增量入队 + 摘要压缩）
+      if (contextPipeline) {
+        contextPipeline.afterChat(userId, message, content, ctx.messages);
+      }
+
       return {
         success: true,
         message: content,
@@ -406,7 +439,8 @@ async function chat(userId, message) {
         usage: {
           prompt_tokens: usage.prompt_tokens || 0,
           completion_tokens: usage.completion_tokens || 0
-        }
+        },
+        pipeline: pipelineStatus
       };
     } catch (relayErr) {
       console.error(`[国内网关] 广州中继失败，降级为直连: ${relayErr.message}`);
@@ -448,6 +482,11 @@ async function chat(userId, message) {
         personaMemory.recordConversationMemory(userId, message, content);
       }
 
+      // 上下文管线后处理（认知增量入队 + 摘要压缩）
+      if (contextPipeline) {
+        contextPipeline.afterChat(userId, message, content, ctx.messages);
+      }
+
       return {
         success: true,
         message: content,
@@ -458,7 +497,8 @@ async function chat(userId, message) {
         usage: {
           prompt_tokens: usage.prompt_tokens || 0,
           completion_tokens: usage.completion_tokens || 0
-        }
+        },
+        pipeline: pipelineStatus
       };
     } catch (err) {
       lastError = err;
