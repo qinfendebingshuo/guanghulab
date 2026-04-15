@@ -93,15 +93,16 @@ function generateToken() {
  */
 function isValidEmail(email) {
   if (!email || typeof email !== 'string') return false;
-  if (email.length > 254) return false;
-  // 简单格式检查，不使用可能导致ReDoS的复杂正则
+  if (email.length > 254 || email.length < 5) return false;
+  // 不允许空格
+  if (email.indexOf(' ') !== -1) return false;
+  // 确保只有一个@
   const atIndex = email.indexOf('@');
   if (atIndex < 1 || atIndex === email.length - 1) return false;
+  if (atIndex !== email.lastIndexOf('@')) return false;
   const domain = email.slice(atIndex + 1);
   if (domain.indexOf('.') < 1) return false;
   if (domain.endsWith('.')) return false;
-  // 不允许空格
-  if (email.indexOf(' ') !== -1) return false;
   return true;
 }
 
@@ -338,10 +339,10 @@ function getAuthStatus() {
 function buildEmailHtml(code) {
   return `
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>零点原核·登录验证码</title></head>
 <body style="margin:0;padding:0;background:#050810;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif">
-<div style="max-width:480px;margin:0 auto;padding:40px 24px">
+<main style="max-width:480px;margin:0 auto;padding:40px 24px">
   <div style="text-align:center;margin-bottom:32px">
     <div style="display:inline-block;width:56px;height:56px;line-height:56px;border-radius:14px;background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(167,139,250,0.12));border:1px solid rgba(96,165,250,0.2);font-size:24px;font-weight:900;color:#22d3ee;font-family:serif">渊</div>
   </div>
@@ -357,7 +358,7 @@ function buildEmailHtml(code) {
   <div style="text-align:center;margin-top:24px">
     <p style="color:rgba(100,130,180,0.4);font-size:10px;margin:0">版权 国作登字-2026-A-00037559 · TCS-0002∞</p>
   </div>
-</div>
+</main>
 </body>
 </html>`;
 }

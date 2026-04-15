@@ -993,13 +993,11 @@ function updateUserBar() {
     bar.classList.add('show');
     /* 显示部分邮箱: abc***@qq.com */
     var atIdx = authEmail.indexOf('@');
-    var masked;
-    if (atIdx > 3) {
+    var masked = authEmail;
+    if (atIdx >= 3) {
       masked = authEmail.slice(0, 3) + '***' + authEmail.slice(atIdx);
-    } else if (atIdx > 0) {
+    } else if (atIdx >= 1) {
       masked = authEmail.slice(0, 1) + '***' + authEmail.slice(atIdx);
-    } else {
-      masked = authEmail.slice(0, 3) + '***';
     }
     if (emailSpan) emailSpan.textContent = masked;
   }
