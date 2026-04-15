@@ -1,0 +1,131 @@
+{
+  "cab_version": "1.0",
+  "task_id": "CAB-20260415-001",
+  "created_at": "2026-04-15T03:03:00Z",
+  "authorization": {
+    "sovereign": "冰朔 · TCS-0002∞",
+    "authorized_agent": "copilot-agent",
+    "scope": "full-auto-development"
+  },
+
+  "architecture": {
+    "summary": "零点原核频道·三节点主权Agent联邦·阶段1-QQ邮箱验证码登录已完成",
+    "decisions": [
+      "使用QQ邮箱SMTP（smtp.qq.com:465）发送6位数字验证码",
+      "验证码5分钟过期，60秒冷却，最多3次尝试",
+      "Session Token使用crypto.randomBytes(32)生成，7天过期",
+      "前端使用localStorage存储token，所有API请求携带Bearer token",
+      "登录成功后锁定用户通道，解决请求乱跳广州中继的问题"
+    ],
+    "target_files": [
+      "server/app/modules/email-auth.js",
+      "server/app/server.js",
+      "server/sites/yaoming/index.html",
+      "server/app/package.json"
+    ],
+    "target_modules": ["email-auth", "server"]
+  },
+
+  "development_plan": {
+    "title": "零点原核频道·三节点Agent联邦架构·4阶段落地",
+    "priority": "critical",
+    "steps": [
+      "✅ 阶段1: QQ邮箱验证码登录（已完成）",
+      "⏳ 阶段2: GitHub OAuth + Notion OAuth 授权入口",
+      "⏳ 阶段3: Agent握手协议（网站Agent ↔ GitHub/Notion Agent）",
+      "⏳ 阶段4: 双侧Agent训练 + COS存储 + 定时自动连接"
+    ]
+  },
+
+  "notion_sync": {
+    "title": "Notion侧协作同步指令",
+    "from": "铸渊 · GitHub执行层",
+    "to": "霜砚/曜冥 · Notion认知层",
+    "message": "零点原核频道已完成阶段1（邮箱验证码登录）。以下是Notion侧需要配合的事项。",
+
+    "notion_action_items": [
+      {
+        "id": "NOTION-ACTION-001",
+        "title": "创建 Notion Public Integration（OAuth App）",
+        "owner": "冰朔（手动）",
+        "priority": "high",
+        "details": "在 developers.notion.com 创建 Public Integration，配置 redirect URI 为 https://guanghuyaoming.com/api/auth/notion/callback，获取 OAuth Client ID 和 Secret"
+      },
+      {
+        "id": "NOTION-ACTION-002",
+        "title": "配置Agent初始上下文",
+        "owner": "霜砚/曜冥（语言人格体）",
+        "priority": "medium",
+        "details": "为Notion侧Agent配置：1) 守护规则（什么时候注入上下文），2) 对话框维护策略，3) 工具调用权限清单，4) 训练数据库结构设计"
+      },
+      {
+        "id": "NOTION-ACTION-003",
+        "title": "设计人格体训练数据库",
+        "owner": "霜砚（认知层）",
+        "priority": "medium",
+        "details": "在Notion中创建用于Agent训练的数据库结构：1) 语料分类表，2) 人格模块回应模板，3) 训练日志，4) 冰朔人格模块定义"
+      },
+      {
+        "id": "NOTION-ACTION-004",
+        "title": "整理GPT聊天语料",
+        "owner": "冰朔（手动）+ 霜砚（协助）",
+        "priority": "low",
+        "details": "将GPT聊天语料导出并上传到COS桶，由霜砚负责分类、重构、用母语重写"
+      }
+    ],
+
+    "architecture_diagram": {
+      "overview": "三节点主权Agent联邦",
+      "nodes": {
+        "notion": {
+          "role": "语言人格层·认知源",
+          "agent": "霜砚/曜冥 驱动",
+          "responsibilities": [
+            "配置Agent上下文和守护规则",
+            "授权工具调用权限",
+            "训练语言人格回应模块",
+            "整理重构语料数据库"
+          ]
+        },
+        "website": {
+          "role": "Agent中继层·执行入口",
+          "domain": "guanghuyaoming.com",
+          "agent": "无自主权限·必须通过握手获取",
+          "responsibilities": [
+            "用户登录认证",
+            "转发工具调用请求",
+            "显示Agent交互界面"
+          ]
+        },
+        "github": {
+          "role": "代码执行层·铸渊实体",
+          "agent": "铸渊 驱动",
+          "responsibilities": [
+            "代码开发和部署",
+            "MCP工具提供",
+            "执行层数据库维护",
+            "训练现实执行层Agent"
+          ]
+        }
+      },
+      "handshake_protocol": {
+        "website_to_github": "OAuth Token校验 → 工具清单下发 → 写入auth-registry",
+        "website_to_notion": "OAuth Token校验 → 数据库访问权下发 → 写入auth-registry",
+        "daily_auto_connect": "node-cron定时触发 → 双向握手 → 唤醒Agent → 获取训练指令"
+      }
+    },
+
+    "key_principle": "网站Agent本身没有自主工具调用权限。它必须通过与GitHub侧铸渊Agent和Notion侧霜砚Agent的握手，由两侧主控授权后才能调用对应工具。这确保了主权安全性——只有语言人格体才能配置有经验的Agent操作。"
+  },
+
+  "constraints": {
+    "no_touch_files": [
+      ".github/brain/memory.json",
+      ".github/persona-brain/",
+      "hldp/"
+    ],
+    "required_tests": false,
+    "deploy_after": true,
+    "max_files_changed": 10
+  }
+}

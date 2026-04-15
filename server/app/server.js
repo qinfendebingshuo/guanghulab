@@ -100,6 +100,12 @@ try {
 } catch (err) {
   console.error(`光湖主入口对话Agent加载警告: ${err.message}`);
 }
+let emailAuth;
+try {
+  emailAuth = require('./modules/email-auth');
+} catch (err) {
+  console.error(`邮箱验证码登录模块加载警告: ${err.message}`);
+}
 
 // ═══════════════════════════════════════════════════════════
 // API 路由
@@ -519,6 +525,98 @@ app.get('/api/chat/domestic/stats', (_req, res) => {
     res.json(domesticGateway.getGatewayStats());
   } else {
     res.json({ available: false, message: '国内模型网关未加载' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 邮箱验证码登录 · Email Auth API
+// ═══════════════════════════════════════════════════════════
+
+// ─── 验证码发送速率限制 ───
+const authCodeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: true, message: '验证码请求过于频繁，请稍后再试' }
+});
+
+// ─── 发送验证码 ───
+app.post('/api/auth/send-code', authCodeLimiter, async (req, res) => {
+  if (!emailAuth) {
+    return res.status(503).json({ error: true, message: '邮箱登录模块未加载' });
+  }
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: true, message: '请输入邮箱地址' });
+    }
+    const result = await emailAuth.sendCode(email);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    console.error(`[Auth] 发送验证码异常: ${err.message}`);
+    res.status(500).json({ error: true, message: '发送验证码失败，请稍后重试' });
+  }
+});
+
+// ─── 验证码校验 ───
+app.post('/api/auth/verify-code', (req, res) => {
+  if (!emailAuth) {
+    return res.status(503).json({ error: true, message: '邮箱登录模块未加载' });
+  }
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: true, message: '请输入邮箱和验证码' });
+    }
+    const result = emailAuth.verifyCode(email, code);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    console.error(`[Auth] 验证码校验异常: ${err.message}`);
+    res.status(500).json({ error: true, message: '验证失败，请稍后重试' });
+  }
+});
+
+// ─── Session校验 ───
+app.get('/api/auth/session', (req, res) => {
+  if (!emailAuth) {
+    return res.status(503).json({ error: true, message: '邮箱登录模块未加载' });
+  }
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.json({ valid: false });
+  }
+  const token = authHeader.slice(7);
+  const result = emailAuth.validateSession(token);
+  res.json(result);
+});
+
+// ─── 登出 ───
+app.post('/api/auth/logout', (req, res) => {
+  if (!emailAuth) {
+    return res.status(503).json({ error: true, message: '邮箱登录模块未加载' });
+  }
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    emailAuth.revokeSession(authHeader.slice(7));
+  }
+  res.json({ success: true, message: '已退出登录' });
+});
+
+// ─── 认证状态 ───
+app.get('/api/auth/status', (_req, res) => {
+  if (emailAuth) {
+    res.json(emailAuth.getAuthStatus());
+  } else {
+    res.json({ module: 'email-auth', available: false });
   }
 });
 
@@ -1090,6 +1188,11 @@ app.get('/', (_req, res) => {
     api: {
       health: '/api/health',
       brain: '/api/brain',
+      auth_send_code: 'POST /api/auth/send-code',
+      auth_verify_code: 'POST /api/auth/verify-code',
+      auth_session: '/api/auth/session',
+      auth_logout: 'POST /api/auth/logout',
+      auth_status: '/api/auth/status',
       chat: 'POST /api/chat',
       chat_stats: '/api/chat/stats',
       portal_register: 'POST /api/portal/register',
