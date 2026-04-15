@@ -185,15 +185,17 @@ function callDomesticLLM(modelConfig, messages) {
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
+        const rawBody = Buffer.concat(chunks).toString();
         try {
-          const body = JSON.parse(Buffer.concat(chunks).toString());
-          if (body.error) {
-            reject(new Error(body.error.message || JSON.stringify(body.error)));
+          const body = JSON.parse(rawBody);
+          if (res.statusCode >= 400 || body.error) {
+            const errMsg = body.error?.message || body.error?.type || JSON.stringify(body.error) || `HTTP ${res.statusCode}`;
+            reject(new Error(`[${modelConfig.id}] API错误(${res.statusCode}): ${errMsg}`));
           } else {
             resolve(body);
           }
         } catch (e) {
-          reject(new Error('响应解析失败'));
+          reject(new Error(`[${modelConfig.id}] 响应解析失败(HTTP ${res.statusCode}): ${rawBody.slice(0, 200)}`));
         }
       });
     });
