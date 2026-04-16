@@ -1,0 +1,332 @@
+name: '🛡️ 语言保护罩 · ZY-SVR-006 部署与监控'
+
+# ═══════════════════════════════════════════════════════════
+# 语言保护罩部署工作流
+# 编号: ZY-WF-NOVEL-SHIELD
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 目标服务器: ZY-SVR-006 (43.153.203.105 · 新加坡 · 智库节点)
+#
+# 功能:
+#   1. deploy     — 部署 Nginx 语言保护罩 + fail2ban 到 ZY-SVR-006
+#   2. setup-ssl  — 为 novel.guanghuyaoming.com 申请 SSL 证书
+#   3. health     — 检查保护罩运行状态
+#   4. rollback   — 回滚到上一份配置
+#
+# 所需 GitHub Secrets:
+#   ZY_NOVEL_HOST  — ZY-SVR-006 新加坡服务器 IP (43.153.203.105)
+#   ZY_NOVEL_KEY   — ZY-SVR-006 SSH 私钥 (PEM格式)
+#   ZY_NOVEL_USER  — ZY-SVR-006 SSH 用户名 (root)
+#   ZY_NOVEL_PATH  — 部署路径 (/opt/novel-db)
+# ═══════════════════════════════════════════════════════════
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/nginx/novel-mirror-shield.conf'
+      - 'server/novel-db/security/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '执行动作'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - setup-ssl
+          - health
+          - rollback
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════
+  # Job 1: 部署语言保护罩
+  # ═══════════════════════════════════════════════════════
+  deploy:
+    name: '🛡️ 部署语言保护罩'
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/novel_key
+          chmod 600 ~/.ssh/novel_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: '📦 安装依赖 (nginx + fail2ban)'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          echo "=== 更新软件包列表 ==="
+          apt-get update -q
+          echo "=== 安装 nginx ==="
+          apt-get install -y nginx
+          echo "=== 安装 fail2ban ==="
+          apt-get install -y fail2ban
+          echo "=== 创建部署目录 ==="
+          mkdir -p ${{ secrets.ZY_NOVEL_PATH }}
+          mkdir -p /var/log/novel-shield
+          touch /var/log/novel-shield-bans.log
+          chmod 644 /var/log/novel-shield-bans.log
+          echo "=== 依赖安装完成 ==="
+          ENDSSH
+
+      - name: '🗄️ 备份现有 Nginx 配置'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          BACKUP_TS=$(date +%Y%m%d_%H%M%S)
+          if [ -f /etc/nginx/sites-available/novel-mirror-shield.conf ]; then
+            cp /etc/nginx/sites-available/novel-mirror-shield.conf \
+               /etc/nginx/sites-available/novel-mirror-shield.conf.bak.$BACKUP_TS
+            echo "已备份 Nginx 配置 → novel-mirror-shield.conf.bak.$BACKUP_TS"
+          fi
+          ENDSSH
+
+      - name: '📤 上传 Nginx 语言保护罩配置'
+        run: |
+          scp -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            server/nginx/novel-mirror-shield.conf \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/nginx/sites-available/novel-mirror-shield.conf
+
+      - name: '🔧 配置 Nginx 速率限制全局参数'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          # 写入速率限制配置片段
+          cat > /etc/nginx/conf.d/shield-rate-limit.conf << 'NGINX_CONF'
+          # 语言保护罩速率限制区域
+          limit_req_zone $binary_remote_addr zone=shield_limit:10m rate=10r/m;
+          limit_conn_zone $binary_remote_addr zone=shield_conn:10m;
+          server_tokens off;
+          NGINX_CONF
+          echo "速率限制配置写入完成"
+          ENDSSH
+
+      - name: '🔗 启用 Nginx 站点配置'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          # 启用站点
+          ln -sf /etc/nginx/sites-available/novel-mirror-shield.conf \
+                 /etc/nginx/sites-enabled/novel-mirror-shield.conf
+          # 禁用默认站点（蜜罐接管 80 端口）
+          rm -f /etc/nginx/sites-enabled/default
+          # 验证配置
+          nginx -t
+          echo "Nginx 配置验证通过"
+          # 重载
+          systemctl reload nginx || systemctl restart nginx
+          echo "Nginx 重载成功"
+          ENDSSH
+
+      - name: '🛡️ 部署 fail2ban 保护层 (L3)'
+        run: |
+          scp -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            server/novel-db/security/fail2ban-novel.conf \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/fail2ban/jail.d/novel-shield.conf
+          scp -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            server/novel-db/security/fail2ban-filter-novel-scan.conf \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/fail2ban/filter.d/novel-scan.conf
+
+      - name: '📝 创建 fail2ban 封禁日志动作'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          # 创建自定义封禁日志动作
+          cat > /etc/fail2ban/action.d/novel-ban-log.conf << 'F2B_ACTION'
+          [Definition]
+          actionban   = echo "$(date -Iseconds) BAN <ip> jail=<name> attempts=<failures>" >> /var/log/novel-shield-bans.log
+          actionunban = echo "$(date -Iseconds) UNBAN <ip> jail=<name>" >> /var/log/novel-shield-bans.log
+          F2B_ACTION
+          # 启用 fail2ban
+          systemctl enable fail2ban
+          systemctl restart fail2ban
+          echo "fail2ban 启动成功"
+          fail2ban-client status
+          ENDSSH
+
+      - name: '🔒 配置 iptables 扫描端口引流 (L3 增强)'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          # 常见扫描端口流量引导到蜜罐 80 端口
+          # 先清理旧规则（忽略错误）
+          iptables -t nat -D PREROUTING -p tcp --dport 8080 -j REDIRECT --to-port 80 2>/dev/null || true
+          iptables -t nat -D PREROUTING -p tcp --dport 8443 -j REDIRECT --to-port 80 2>/dev/null || true
+          iptables -t nat -D PREROUTING -p tcp --dport 3000 -j REDIRECT --to-port 80 2>/dev/null || true
+          iptables -t nat -D PREROUTING -p tcp --dport 3001 -j REDIRECT --to-port 80 2>/dev/null || true
+          iptables -t nat -D PREROUTING -p tcp --dport 3002 -j REDIRECT --to-port 80 2>/dev/null || true
+          iptables -t nat -D PREROUTING -p tcp --dport 8888 -j REDIRECT --to-port 80 2>/dev/null || true
+          iptables -t nat -D PREROUTING -p tcp --dport 9090 -j REDIRECT --to-port 80 2>/dev/null || true
+          # 添加新规则
+          iptables -t nat -A PREROUTING -p tcp --dport 8080 -j REDIRECT --to-port 80
+          iptables -t nat -A PREROUTING -p tcp --dport 8443 -j REDIRECT --to-port 80
+          iptables -t nat -A PREROUTING -p tcp --dport 3000 -j REDIRECT --to-port 80
+          iptables -t nat -A PREROUTING -p tcp --dport 3001 -j REDIRECT --to-port 80
+          iptables -t nat -A PREROUTING -p tcp --dport 3002 -j REDIRECT --to-port 80
+          iptables -t nat -A PREROUTING -p tcp --dport 8888 -j REDIRECT --to-port 80
+          iptables -t nat -A PREROUTING -p tcp --dport 9090 -j REDIRECT --to-port 80
+          # 持久化规则
+          apt-get install -y iptables-persistent -q || true
+          iptables-save > /etc/iptables/rules.v4 2>/dev/null || netfilter-persistent save 2>/dev/null || true
+          echo "iptables 扫描端口引流配置完成"
+          iptables -t nat -L PREROUTING --line-numbers
+          ENDSSH
+
+      - name: '✅ 部署验证'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          echo "=== Nginx 运行状态 ==="
+          systemctl status nginx --no-pager -l | head -20
+          echo "=== fail2ban 运行状态 ==="
+          systemctl status fail2ban --no-pager -l | head -20
+          echo "=== fail2ban 激活的 Jail ==="
+          fail2ban-client status
+          echo "=== 蜜罐响应测试 (本地) ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}" http://127.0.0.1/ || true
+          echo ""
+          echo "=== 保护罩部署完成 · ZY-SVR-006 · 语言保护罩 L2+L3 已激活 ==="
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 2: 申请 SSL 证书
+  # ═══════════════════════════════════════════════════════
+  setup-ssl:
+    name: '🔐 申请 SSL 证书'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/novel_key
+          chmod 600 ~/.ssh/novel_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: '🔐 申请 Let\'s Encrypt SSL 证书'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          # 安装 certbot
+          apt-get install -y certbot python3-certbot-nginx
+          # 申请证书 (DNS 需提前指向此服务器)
+          certbot --nginx \
+            -d novel.guanghuyaoming.com \
+            --non-interactive \
+            --agree-tos \
+            --email admin@guanghuyaoming.com \
+            --redirect
+          # 验证续期
+          certbot renew --dry-run
+          echo "=== SSL 证书申请成功 ==="
+          certbot certificates
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 3: 健康检查
+  # ═══════════════════════════════════════════════════════
+  health:
+    name: '🔍 保护罩健康检查'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/novel_key
+          chmod 600 ~/.ssh/novel_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: '🔍 检查保护罩状态'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          echo "═══ 语言保护罩健康检查 · ZY-SVR-006 ═══"
+          echo ""
+          echo "─── Nginx 状态 ───"
+          systemctl is-active nginx && echo "✓ Nginx 在线" || echo "✗ Nginx 离线"
+          nginx -t 2>&1 | tail -2
+          echo ""
+          echo "─── fail2ban 状态 ───"
+          systemctl is-active fail2ban && echo "✓ fail2ban 在线" || echo "✗ fail2ban 离线"
+          fail2ban-client status
+          echo ""
+          echo "─── 今日封禁记录 ───"
+          TODAY=$(date +%Y-%m-%d)
+          BANS=$(grep "$TODAY" /var/log/novel-shield-bans.log 2>/dev/null | wc -l)
+          echo "今日拦截: $BANS 次"
+          if [ "$BANS" -gt 0 ]; then
+            echo "最近10条:"
+            tail -10 /var/log/novel-shield-bans.log
+          fi
+          echo ""
+          echo "─── iptables 扫描引流规则 ───"
+          iptables -t nat -L PREROUTING --line-numbers 2>/dev/null | grep -E "REDIRECT|target" | head -15 || echo "无规则或无权限查看"
+          echo ""
+          echo "─── 蜜罐响应测试 ───"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 http://127.0.0.1/ 2>/dev/null || echo "超时")
+          echo "蜜罐 HTTP 响应码: $HTTP_CODE"
+          echo ""
+          echo "─── SSL 证书状态 ───"
+          if [ -f /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem ]; then
+            EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem 2>/dev/null || echo "无法读取")
+            echo "SSL 证书到期: $EXPIRY"
+          else
+            echo "SSL 证书: 未申请 (运行 setup-ssl 动作)"
+          fi
+          echo ""
+          echo "═══ 检查完成 ═══"
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 4: 回滚
+  # ═══════════════════════════════════════════════════════
+  rollback:
+    name: '⏪ 回滚配置'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/novel_key
+          chmod 600 ~/.ssh/novel_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: '⏪ 回滚到上一份配置'
+        run: |
+          ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          LATEST_BAK=$(ls -t /etc/nginx/sites-available/novel-mirror-shield.conf.bak.* 2>/dev/null | head -1)
+          if [ -z "$LATEST_BAK" ]; then
+            echo "✗ 没有找到备份文件，无法回滚"
+            exit 1
+          fi
+          echo "回滚到: $LATEST_BAK"
+          cp "$LATEST_BAK" /etc/nginx/sites-available/novel-mirror-shield.conf
+          nginx -t
+          systemctl reload nginx
+          echo "✓ 回滚成功"
+          ENDSSH

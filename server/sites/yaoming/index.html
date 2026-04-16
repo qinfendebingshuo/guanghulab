@@ -162,6 +162,29 @@ a{color:var(--cyan);text-decoration:none}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
 
+/* ─── 侧边栏竖向导航 ─── */
+.sidebar-nav{flex:1;overflow-y:auto;padding:6px 0}
+.sidebar-nav::-webkit-scrollbar{width:3px}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--border)}
+.snav-section{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);padding:10px 18px 4px;font-weight:700}
+.snav-item{
+  display:flex;align-items:center;gap:9px;padding:8px 18px;font-size:12px;
+  color:var(--dim);cursor:pointer;transition:all .2s;
+  border-left:2px solid transparent;text-decoration:none;
+  font-family:var(--font);font-weight:500;letter-spacing:.3px;
+  background:transparent;border-top:none;border-right:none;border-bottom:none;width:100%;text-align:left
+}
+.snav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.snav-item.active{color:var(--cyan);border-left-color:var(--cyan);background:rgba(34,211,238,.05)}
+.snav-icon{font-size:13px;width:17px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.snav-badge{margin-left:auto;font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:4px;background:rgba(34,211,238,.1);color:var(--cyan)}
+.snav-divider{height:1px;background:var(--border);margin:4px 18px}
+/* 新增状态徽章 */
+.snav-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-left:auto}
+.snav-dot.ok{background:var(--ok);box-shadow:0 0 4px rgba(52,211,153,.4)}
+.snav-dot.warn{background:var(--warn);box-shadow:0 0 4px rgba(251,191,36,.4);animation:pulse 2s infinite}
+.snav-dot.off{background:var(--muted)}
+
 /* Architecture Flow */
 .sidebar-arch{padding:14px 18px;border-top:1px solid var(--border)}
 .arch-title{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px;font-weight:700}
@@ -264,6 +287,63 @@ a{color:var(--cyan);text-decoration:none}
 .dash-section-title{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
 .dash-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
 .dash-section-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ─── 保护罩日志 · Shield Log ─── */
+.shield-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;max-width:1200px;margin:0 auto 16px}
+.shield-stat{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:14px 16px}
+.shield-stat-num{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--cyan);margin-bottom:2px}
+.shield-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.shield-log{max-width:1200px;margin:0 auto;background:var(--card);border:1px solid var(--card-border);border-radius:12px;overflow:hidden}
+.shield-log-head{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.shield-log-title{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono)}
+.shield-log-body{max-height:320px;overflow-y:auto;font-family:var(--mono);font-size:11px}
+.shield-log-body::-webkit-scrollbar{width:3px}
+.shield-log-body::-webkit-scrollbar-thumb{background:var(--border)}
+.shield-log-row{display:flex;align-items:center;gap:10px;padding:6px 16px;border-bottom:1px solid rgba(255,255,255,.03)}
+.shield-log-row:last-child{border-bottom:none}
+.shield-log-ts{color:var(--muted);min-width:140px;flex-shrink:0}
+.shield-log-action.ban{color:var(--err)}
+.shield-log-action.unban{color:var(--ok)}
+.shield-log-ip{color:var(--warn);font-weight:600}
+.shield-log-jail{color:var(--dim)}
+.shield-log-empty{padding:24px 16px;text-align:center;color:var(--muted);font-size:12px}
+.shield-layers{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;max-width:1200px;margin:16px auto 0}
+.shield-layer{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:14px 16px}
+.shield-layer-tag{font-size:9px;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.shield-layer-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.shield-layer-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.shield-layer-status{margin-top:8px;font-size:10px;font-family:var(--mono);display:flex;align-items:center;gap:5px}
+
+/* ─── 项目进度 · Project Progress ─── */
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;max-width:1200px;margin:0 auto}
+.project-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 18px}
+.project-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.project-card-server{font-size:9px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.project-card-name{font-size:13px;font-weight:700;color:var(--text)}
+.project-list{display:flex;flex-direction:column;gap:6px}
+.project-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.project-item:last-child{border-bottom:none}
+.project-name{font-size:12px;color:var(--dim);flex:1}
+.project-desc{font-size:10px;color:var(--muted);margin-top:1px}
+.proj-badge{font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.proj-badge.active{background:rgba(34,211,238,.1);color:var(--cyan);border:1px solid rgba(34,211,238,.2)}
+.proj-badge.done{background:rgba(52,211,153,.1);color:var(--ok);border:1px solid rgba(52,211,153,.2)}
+.proj-badge.enabled{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.proj-badge.pending{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.proj-badge.error{background:rgba(239,68,68,.1);color:var(--err);border:1px solid rgba(239,68,68,.2)}
+.proj-badge.planned{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+
+/* ─── 智库节点 · Novel Node ─── */
+.novel-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-width:1200px;margin:0 auto 16px}
+.novel-stat{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:14px 16px}
+.novel-stat-num{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--purple);margin-bottom:2px}
+.novel-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.novel-module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;max-width:1200px;margin:0 auto}
+.novel-module{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px}
+.novel-module-icon{font-size:18px;margin-bottom:6px}
+.novel-module-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.novel-module-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.novel-module-status{font-size:10px;font-family:var(--mono);display:flex;align-items:center;gap:5px}
 
 /* ─── Server Cards (matrix view) ─── */
 .server-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:1200px;margin:0 auto}
@@ -660,12 +740,6 @@ a{color:var(--cyan);text-decoration:none}
       </div>
     </div>
 
-    <!-- View Tabs -->
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-view="dashboard" id="tabDash">状态面板</button>
-      <button class="nav-tab" data-view="chat" id="tabChat">对话</button>
-    </div>
-
     <!-- Chat History (visible when chat tab active) -->
     <div class="chat-history" id="chatHistory" style="display:none">
       <button class="new-chat-btn" id="newChatBtn" onclick="startNewChat()">
@@ -674,6 +748,41 @@ a{color:var(--cyan);text-decoration:none}
       </button>
       <div id="chatHistoryList"></div>
     </div>
+
+    <!-- 竖向导航菜单 -->
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="snav-section">系统监控</div>
+      <button class="snav-item active" data-view="servers" id="navServers">
+        <span class="snav-icon">📡</span>服务器矩阵
+        <span class="snav-badge" id="navSvrBadge">6</span>
+      </button>
+      <button class="snav-item" data-view="projects" id="navProjects">
+        <span class="snav-icon">🚀</span>项目进度
+      </button>
+      <button class="snav-item" data-view="agents" id="navAgents">
+        <span class="snav-icon">🤖</span>Agent集群
+      </button>
+      <button class="snav-item" data-view="personas" id="navPersonas">
+        <span class="snav-icon">👤</span>人格体状态
+      </button>
+      <div class="snav-divider"></div>
+      <div class="snav-section">新功能</div>
+      <button class="snav-item" data-view="shield" id="navShield">
+        <span class="snav-icon">🛡️</span>保护罩日志
+        <span class="snav-dot off" id="navShieldDot"></span>
+      </button>
+      <button class="snav-item" data-view="novel" id="navNovel">
+        <span class="snav-icon">📚</span>智库节点
+        <span class="snav-dot warn" id="navNovelDot"></span>
+      </button>
+      <button class="snav-item" data-view="cab" id="navCab">
+        <span class="snav-icon">📋</span>CAB任务看板
+      </button>
+      <div class="snav-divider"></div>
+      <button class="snav-item" data-view="chat" id="navChat">
+        <span class="snav-icon">💬</span>对话
+      </button>
+    </nav>
 
     <!-- Architecture Flow -->
     <div class="sidebar-arch" id="sidebarArch">
@@ -725,9 +834,9 @@ a{color:var(--cyan);text-decoration:none}
       </div>
     </div>
 
-    <!-- ═══ Dashboard View ═══ -->
-    <div class="view-panel active" id="viewDashboard">
-      <div class="dashboard" id="dashboard">
+    <!-- ═══ Dashboard View: 服务器矩阵 ═══ -->
+    <div class="view-panel active" id="viewServers">
+      <div class="dashboard">
 
         <!-- Headline -->
         <div class="dash-headline">
@@ -738,7 +847,7 @@ a{color:var(--cyan);text-decoration:none}
           </div>
         </div>
 
-        <!-- ═══ Section 1: 服务器矩阵 ═══ -->
+        <!-- 服务器矩阵 -->
         <div class="dash-section">
           <div class="dash-section-title">服务器矩阵 <span id="svrOnlineCount" style="color:var(--ok);font-family:var(--mono);text-transform:none;letter-spacing:0">—</span></div>
           <div class="dash-section-sub">光湖语言世界托管的全部服务器 · 实时状态从 MCP API 拉取 · 其余节点展示静态配置</div>
@@ -923,34 +1032,129 @@ a{color:var(--cyan);text-decoration:none}
             </div>
           </div>
 
-          <!-- 新加坡·待配置 -->
-          <div class="srv-card" id="srvCardNew">
+          <!-- ZY-SVR-006 · 智库节点 · Singapore -->
+          <div class="srv-card" id="srvCard006">
             <div class="srv-card-head">
               <div class="srv-card-info">
                 <div class="srv-card-name">
-                  <span class="srv-status-dot config" id="srvDotNew"></span>
-                  新加坡·新服务器
+                  <span class="srv-status-dot config" id="srvDot006"></span>
+                  智库节点
                 </div>
-                <div class="srv-card-role">待配置 · 规划中 · 新购入</div>
+                <div class="srv-card-role">智能小说书库 + 成员Agent + 语言保护罩 · ZY-SVR-006</div>
                 <div class="srv-card-meta">
                   <span class="srv-badge loc">新加坡 SG</span>
-                  <span class="srv-badge off">待配置</span>
+                  <span class="srv-badge spec">2核4G</span>
+                  <span class="srv-badge warn" id="srvBadge006">配置中</span>
                 </div>
               </div>
             </div>
             <div class="srv-divider"></div>
             <div class="srv-services">
-              <div class="srv-svc"><span class="srv-svc-dot static"></span><div class="srv-svc-info"><div class="srv-svc-name">规划：小说阅读器私有数据库</div><div class="srv-svc-desc">冰朔私有数据库节点，团队可接入各自服务器，铸渊负责开发</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">🛡️ 语言保护罩 · Nginx蜜罐</div><div class="srv-svc-desc">L2入站蜜罐+L3 fail2ban自动封禁，扫描者看到自己的镜像</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot static"></span><div class="srv-svc-info"><div class="srv-svc-name">novel-api · 下载+分章引擎</div><div class="srv-svc-desc">整合七猫/番茄/阅文/晋江开源下载器，L1出站代理池伪装</div></div><span class="srv-svc-port">:4000</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot static"></span><div class="srv-svc-info"><div class="srv-svc-name">novel-reader · 在线阅读WebApp</div><div class="srv-svc-desc">单章翻页、字体调节、深/亮色模式，类番茄/七猫体验</div></div><span class="srv-svc-port">:4001</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot static"></span><div class="srv-svc-info"><div class="srv-svc-name">member-agent · 成员智能书库Agent</div><div class="srv-svc-desc">每人独立Agent，永久记忆，接DeepSeek/Kimi，协助大纲拆文</div></div><span class="srv-svc-port">:4002</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot relay"></span><div class="srv-svc-info"><div class="srv-svc-name">cos-bridge · 团队书库COS桥接</div><div class="srv-svc-desc">zy-team-hub-sg-1317346199，男频/女频共用桶，去重存储</div></div></div>
             </div>
             <div class="srv-divider"></div>
             <div class="srv-conn">
-              <span class="srv-conn-tag">🔧 待冰朔下达任务开始配置</span>
+              <span class="srv-conn-tag">🌐 novel.guanghuyaoming.com</span>
+              <span class="srv-conn-tag">🛡️ 保护罩已部署</span>
             </div>
           </div>
 
         </div>
 
-        <!-- ═══ Section 2: Agent集群 ═══ -->
+      </div>
+    </div>
+
+    <!-- ═══ 项目进度 View ═══ -->
+    <div class="view-panel" id="viewProjects">
+      <div class="dashboard">
+        <div class="dash-section">
+          <div class="dash-section-title">项目进度</div>
+          <div class="dash-section-sub">每台服务器上运行的项目 · 开发状态 · 功能清单</div>
+        </div>
+        <div class="project-grid">
+
+          <!-- ZY-SVR-002 面孔 -->
+          <div class="project-card">
+            <div class="project-card-head">
+              <div>
+                <div class="project-card-server">ZY-SVR-002 · 新加坡</div>
+                <div class="project-card-name">面孔服务器</div>
+              </div>
+              <span class="srv-badge loc">在线</span>
+            </div>
+            <div class="project-list">
+              <div class="project-item"><div><div class="project-name">主站 API 后端</div><div class="project-desc">聊天引擎 + 人格体接口 :3800</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">预览站</div><div class="project-desc">新功能预览部署 :3801</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">persona-studio</div><div class="project-desc">人格工作室后台 :3002</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">Awen 域名代理</div><div class="project-desc">新加坡→广州反向代理</div></div><span class="proj-badge active">配置中</span></div>
+              <div class="project-item"><div><div class="project-name">语言保护罩 (ZY-SVR-002)</div><div class="project-desc">面孔服务器基础防护</div></div><span class="proj-badge done">已完成</span></div>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-005 大脑 -->
+          <div class="project-card">
+            <div class="project-card-head">
+              <div>
+                <div class="project-card-server">ZY-SVR-005 · 新加坡</div>
+                <div class="project-card-name">大脑服务器</div>
+              </div>
+              <span class="srv-badge loc">在线</span>
+            </div>
+            <div class="project-list">
+              <div class="project-item"><div><div class="project-name">MCP Server</div><div class="project-desc">铸渊大脑·135个工具 :3100</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">PostgreSQL 人格体数据库</div><div class="project-desc">记忆·光之树·Agent配置</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">subscription-v3 多用户专线</div><div class="project-desc">团队带宽管理 :3805</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">OpenClaw 铸渊闭环</div><div class="project-desc">每6小时自动巡检+开发</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">auto-evolution 自动进化</div><div class="project-desc">月度系统进化引擎</div></div><span class="proj-badge enabled">已启用</span></div>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-006 智库 -->
+          <div class="project-card">
+            <div class="project-card-head">
+              <div>
+                <div class="project-card-server">ZY-SVR-006 · 新加坡</div>
+                <div class="project-card-name">智库节点</div>
+              </div>
+              <span class="srv-badge warn">配置中</span>
+            </div>
+            <div class="project-list">
+              <div class="project-item"><div><div class="project-name">语言保护罩 L2+L3</div><div class="project-desc">Nginx蜜罐 + fail2ban</div></div><span class="proj-badge done">已开发·待部署</span></div>
+              <div class="project-item"><div><div class="project-name">novel-api 下载引擎</div><div class="project-desc">七猫/番茄/阅文/晋江 :4000</div></div><span class="proj-badge planned">规划中</span></div>
+              <div class="project-item"><div><div class="project-name">novel-reader 阅读器</div><div class="project-desc">在线阅读WebApp :4001</div></div><span class="proj-badge planned">规划中</span></div>
+              <div class="project-item"><div><div class="project-name">member-agent 成员书库</div><div class="project-desc">永久记忆Agent :4002</div></div><span class="proj-badge planned">规划中</span></div>
+              <div class="project-item"><div><div class="project-name">智能分章 Agent</div><div class="project-desc">AI自动切割章节</div></div><span class="proj-badge planned">规划中</span></div>
+            </div>
+          </div>
+
+          <!-- 其他服务器 -->
+          <div class="project-card">
+            <div class="project-card-head">
+              <div>
+                <div class="project-card-server">ZY-SVR-003/SV/AWEN/004</div>
+                <div class="project-card-name">其他服务器</div>
+              </div>
+            </div>
+            <div class="project-list">
+              <div class="project-item"><div><div class="project-name">国内LLM API中继 (003)</div><div class="project-desc">豆包/通义/Kimi代理 :3900</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">Claude API中继 (SV)</div><div class="project-desc">硅谷→Claude API</div></div><span class="proj-badge enabled">已启用</span></div>
+              <div class="project-item"><div><div class="project-name">Awen业务后端 (AWEN)</div><div class="project-desc">guanghutcs.top :3000</div></div><span class="proj-badge active">配置中</span></div>
+              <div class="project-item"><div><div class="project-name">ICP备案落地页 (004)</div><div class="project-desc">guanghulab.com</div></div><span class="proj-badge enabled">已启用</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Agent集群 View ═══ -->
+    <div class="view-panel" id="viewAgents">
+      <div class="dashboard">
+        <!-- ═══ Agent集群 ═══ -->
         <div class="dash-section" style="margin-top:28px">
           <div class="dash-section-title">Agent集群</div>
           <div class="dash-section-sub">运行在各服务器上的自动化Agent · 实时状态 + 出发服务器 + 工作职责</div>
@@ -1038,7 +1242,13 @@ a{color:var(--cyan);text-decoration:none}
 
         </div>
 
-        <!-- ═══ Section 3: 人格体在线状态 ═══ -->
+      </div>
+    </div>
+
+    <!-- ═══ 人格体状态 View ═══ -->
+    <div class="view-panel" id="viewPersonas">
+      <div class="dashboard">
+        <!-- ═══ 人格体在线状态 ═══ -->
         <div class="dash-section" style="margin-top:28px">
           <div class="dash-section-title">人格体在线状态</div>
           <div class="dash-section-sub">光湖语言世界各人格体当前状态 · 通过 MCP + Notion桥接实时检测</div>
@@ -1059,10 +1269,10 @@ a{color:var(--cyan);text-decoration:none}
             </div>
           </div>
 
-          <!-- Dev Tasks -->
+          <!-- Dev Tasks (summary in personas view) -->
           <div class="s-card s-card-full">
             <div class="s-card-head">
-              <span class="s-card-title">跨层开发任务 · CAB桥接</span>
+              <span class="s-card-title">跨层开发任务 · CAB桥接 <span style="font-size:10px;color:var(--muted)">（详情见 📋 CAB任务看板）</span></span>
               <span class="s-card-badge badge-ok" id="devBadge">检测中</span>
             </div>
             <div style="display:flex;gap:20px;flex-wrap:wrap">
@@ -1071,10 +1281,206 @@ a{color:var(--cyan);text-decoration:none}
               <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">进行中</span><span class="metric-val" id="devActive">—</span></div>
               <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">已完成</span><span class="metric-val" id="devCompleted">—</span></div>
             </div>
-            <div id="devTaskList" class="svr-list" style="margin-top:8px"></div>
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ═══ 保护罩日志 View ═══ -->
+    <div class="view-panel" id="viewShield">
+      <div class="dashboard">
+        <div class="dash-section">
+          <div class="dash-section-title">🛡️ 语言保护罩日志</div>
+          <div class="dash-section-sub">ZY-SVR-006 三层IP隐身架构 · 拦截记录 · 实时状态 · 从服务器拉取</div>
+        </div>
+
+        <!-- 三层保护状态 -->
+        <div class="shield-layers">
+          <div class="shield-layer">
+            <div class="shield-layer-tag">L1 · 出站伪装层</div>
+            <div class="shield-layer-name">出站代理池</div>
+            <div class="shield-layer-desc">小说下载请求不用本机IP发出，经代理池轮转后到达目标平台。目标平台看到的是代理IP，永远看不到 43.153.203.105</div>
+            <div class="shield-layer-status">
+              <span class="srv-svc-dot static" style="width:6px;height:6px;border-radius:50%;flex-shrink:0"></span>
+              <span style="color:var(--muted);font-size:10px;font-family:var(--mono)">待部署（Phase 2）</span>
+            </div>
+          </div>
+          <div class="shield-layer">
+            <div class="shield-layer-tag">L2 · 入站蜜罐层</div>
+            <div class="shield-layer-name">镜像反射蜜罐</div>
+            <div class="shield-layer-desc">未授权访问一律返回伪装为 Amazon S3 的响应。扫描者探查时，只能看到自己的信息被原样反射回去。</div>
+            <div class="shield-layer-status">
+              <span class="srv-svc-dot live" style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--warn)"></span>
+              <span style="color:var(--warn);font-size:10px;font-family:var(--mono)" id="shieldL2Status">待部署（Secrets配置后触发）</span>
+            </div>
+          </div>
+          <div class="shield-layer">
+            <div class="shield-layer-tag">L3 · 自动封禁层</div>
+            <div class="shield-layer-name">fail2ban 智能封禁</div>
+            <div class="shield-layer-desc">自动识别端口扫描、路径爬取、暴力破解行为，封禁后IP的连接会被 TARPIT 挂起，耗尽扫描工具资源。</div>
+            <div class="shield-layer-status">
+              <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--warn)"></span>
+              <span style="color:var(--warn);font-size:10px;font-family:var(--mono)" id="shieldL3Status">待部署（Secrets配置后触发）</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 统计数字 -->
+        <div class="shield-stat-grid" style="margin-top:16px">
+          <div class="shield-stat">
+            <div class="shield-stat-num" id="shieldTodayBans">—</div>
+            <div class="shield-stat-label">今日封禁</div>
+          </div>
+          <div class="shield-stat">
+            <div class="shield-stat-num" id="shieldTotalBans">—</div>
+            <div class="shield-stat-label">累计封禁</div>
+          </div>
+          <div class="shield-stat">
+            <div class="shield-stat-num" id="shieldActiveBans">—</div>
+            <div class="shield-stat-label">当前封禁中</div>
+          </div>
+          <div class="shield-stat">
+            <div class="shield-stat-num" id="shieldNginxStatus">—</div>
+            <div class="shield-stat-label">蜜罐状态</div>
+          </div>
+        </div>
+
+        <!-- 封禁日志 -->
+        <div class="shield-log">
+          <div class="shield-log-head">
+            <div class="shield-log-title">封禁日志 · /var/log/novel-shield-bans.log</div>
+            <span style="font-size:10px;color:var(--muted);font-family:var(--mono)" id="shieldLogTime">—</span>
+          </div>
+          <div class="shield-log-body" id="shieldLogBody">
+            <div class="shield-log-empty">保护罩待部署 · 配置 GitHub Secrets 后运行 deploy-novel-mirror-shield workflow</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ 智库节点 View ═══ -->
+    <div class="view-panel" id="viewNovel">
+      <div class="dashboard">
+        <div class="dash-section">
+          <div class="dash-section-title">📚 智库节点 · ZY-SVR-006</div>
+          <div class="dash-section-sub">智能小说书库 · 成员阅读器 · 分章Agent · novel.guanghuyaoming.com</div>
+        </div>
+
+        <!-- 统计 -->
+        <div class="novel-stat-grid">
+          <div class="novel-stat">
+            <div class="novel-stat-num" id="novelBookCount">—</div>
+            <div class="novel-stat-label">书库总量</div>
+          </div>
+          <div class="novel-stat">
+            <div class="novel-stat-num" id="novelMemberCount">—</div>
+            <div class="novel-stat-label">在线成员</div>
+          </div>
+          <div class="novel-stat">
+            <div class="novel-stat-num" id="novelDownToday">—</div>
+            <div class="novel-stat-label">今日下载</div>
+          </div>
+          <div class="novel-stat">
+            <div class="novel-stat-num" id="novelChapterProcessed">—</div>
+            <div class="novel-stat-label">已分章书籍</div>
+          </div>
+        </div>
+
+        <!-- 模块列表 -->
+        <div class="dash-section" style="margin-top:20px">
+          <div class="dash-section-title">功能模块</div>
+        </div>
+        <div class="novel-module-grid">
+          <div class="novel-module">
+            <div class="novel-module-icon">🛡️</div>
+            <div class="novel-module-name">语言保护罩</div>
+            <div class="novel-module-desc">Nginx蜜罐(L2)+fail2ban自动封禁(L3)，出站代理池(L1待部署)。服务器永远不暴露真实IP。</div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--warn)"></span><span style="color:var(--warn);font-size:10px;font-family:var(--mono)">已开发·待部署</span></div>
+          </div>
+          <div class="novel-module">
+            <div class="novel-module-icon">📥</div>
+            <div class="novel-module-name">下载引擎</div>
+            <div class="novel-module-desc">整合七猫/番茄/阅文/晋江开源下载器，统一接口。输入书名+作者+平台，输出TXT并自动入桶。</div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--muted)"></span><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">规划中（Phase 2）</span></div>
+          </div>
+          <div class="novel-module">
+            <div class="novel-module-icon">✂️</div>
+            <div class="novel-module-name">智能分章 Agent</div>
+            <div class="novel-module-desc">下载完成自动触发，AI识别章节规律，无章节标识时按内容结构分段，输出整齐TXT+目录。</div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--muted)"></span><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">规划中（Phase 2）</span></div>
+          </div>
+          <div class="novel-module">
+            <div class="novel-module-icon">📖</div>
+            <div class="novel-module-name">在线阅读器</div>
+            <div class="novel-module-desc">单章翻页、字体调节、深/亮色模式，类番茄/七猫体验。阅读进度自动存档到成员Agent记忆。</div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--muted)"></span><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">规划中（Phase 2）</span></div>
+          </div>
+          <div class="novel-module">
+            <div class="novel-module-icon">📦</div>
+            <div class="novel-module-name">COS 团队书库</div>
+            <div class="novel-module-desc">zy-team-hub-sg-1317346199，男频/女频分区，同一本书只存一份，去重存储，成员书库用引用。</div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--muted)"></span><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">规划中（Phase 3）</span></div>
+          </div>
+          <div class="novel-module">
+            <div class="novel-module-icon">🤝</div>
+            <div class="novel-module-name">成员专属 Agent</div>
+            <div class="novel-module-desc">每成员独立Agent，永久记忆（读到哪章/偏好/在做大纲），接DeepSeek/Kimi，协助拆文/大纲/摘要。</div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--muted)"></span><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">规划中（Phase 3）</span></div>
+          </div>
+        </div>
+
+        <!-- 访问信息 -->
+        <div class="dash-section" style="margin-top:20px">
+          <div class="dash-section-title">部署信息</div>
+        </div>
+        <div class="server-grid" style="max-width:800px">
+          <div class="s-card">
+            <div class="s-card-head"><span class="s-card-title">访问地址</span></div>
+            <div class="svr-list">
+              <div class="svr-list-row"><span class="svr-list-label">域名</span><span class="svr-list-val" style="color:var(--cyan)">novel.guanghuyaoming.com</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">服务器IP</span><span class="svr-list-val" style="color:var(--warn)">43.153.203.105（对外不暴露）</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">部署路径</span><span class="svr-list-val">/opt/novel-db</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">DNS配置</span><span class="svr-list-val">novel.guanghuyaoming.com A → 43.153.203.105</span></div>
+            </div>
+          </div>
+          <div class="s-card">
+            <div class="s-card-head"><span class="s-card-title">Secrets配置状态</span></div>
+            <div class="svr-list">
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_HOST</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_USER</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_KEY</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_PATH</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ CAB任务看板 View ═══ -->
+    <div class="view-panel" id="viewCab">
+      <div class="dashboard">
+        <div class="dash-section">
+          <div class="dash-section-title">📋 CAB任务看板</div>
+          <div class="dash-section-sub">跨层开发任务 · Chat-to-Agent Bridge · 铸渊开发进度</div>
+        </div>
+        <div class="dash-grid">
+          <div class="s-card s-card-full">
+            <div class="s-card-head">
+              <span class="s-card-title">跨层开发任务 · CAB桥接</span>
+              <span class="s-card-badge badge-ok" id="devBadgeCab">检测中</span>
+            </div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap">
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">总任务</span><span class="metric-val" id="devTotalCab">—</span></div>
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">待处理</span><span class="metric-val" id="devPendingCab">—</span></div>
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">进行中</span><span class="metric-val" id="devActiveCab">—</span></div>
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">已完成</span><span class="metric-val" id="devCompletedCab">—</span></div>
+            </div>
+            <div id="devTaskList" class="svr-list" style="margin-top:8px"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1349,26 +1755,56 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw)
 })();
 
-/* ═══ View Tab Switching ═══ */
-var currentView='dashboard';
-var tabs=document.querySelectorAll('.nav-tab');
-tabs.forEach(function(tab){
-  tab.addEventListener('click',function(){
-    var view=this.getAttribute('data-view');
-    switchView(view);
+/* ═══ Sidebar Nav Switching ═══ */
+var ALL_VIEWS = ['servers','projects','agents','personas','shield','novel','cab','chat'];
+var currentView = 'servers';
+
+var snavItems = document.querySelectorAll('.snav-item');
+snavItems.forEach(function(item){
+  item.addEventListener('click', function(){
+    var view = this.getAttribute('data-view');
+    if(view) switchView(view);
   });
 });
 
 function switchView(view){
-  currentView=view;
-  tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-view')===view)});
-  document.getElementById('viewDashboard').classList.toggle('active',view==='dashboard');
-  document.getElementById('viewChat').classList.toggle('active',view==='chat');
-  document.getElementById('chatHistory').style.display=view==='chat'?'block':'none';
-  document.getElementById('sidebarArch').style.display=view==='dashboard'?'block':'none';
-  if(view==='chat'){
-    var ib=document.getElementById('inputBox');
-    if(ib)ib.focus();
+  currentView = view;
+  // Update sidebar nav active state
+  snavItems.forEach(function(it){
+    it.classList.toggle('active', it.getAttribute('data-view') === view);
+  });
+  // Show/hide view panels
+  ALL_VIEWS.forEach(function(v){
+    var panel = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+    if(panel) panel.classList.toggle('active', v === view);
+  });
+  // Chat history only visible in chat view
+  var ch = document.getElementById('chatHistory');
+  if(ch) ch.style.display = view === 'chat' ? 'block' : 'none';
+  // Architecture flow only in servers view
+  var arch = document.getElementById('sidebarArch');
+  if(arch) arch.style.display = view === 'servers' ? 'block' : 'none';
+  if(view === 'chat'){
+    var ib = document.getElementById('inputBox');
+    if(ib) ib.focus();
+  }
+  // CAB view: sync badge/counters from primary devBadge
+  if(view === 'cab'){
+    syncCabPanel();
+  }
+}
+
+function syncCabPanel(){
+  ['Total','Pending','Active','Completed'].forEach(function(k){
+    var src = document.getElementById('dev'+k);
+    var dst = document.getElementById('dev'+k+'Cab');
+    if(src && dst) dst.textContent = src.textContent;
+  });
+  var srcB = document.getElementById('devBadge');
+  var dstB = document.getElementById('devBadgeCab');
+  if(srcB && dstB){
+    dstB.textContent = srcB.textContent;
+    dstB.className = srcB.className;
   }
 }
 
