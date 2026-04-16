@@ -259,6 +259,79 @@ a{color:var(--cyan);text-decoration:none}
 .dashboard{flex:1;overflow-y:auto;padding:20px 24px 32px}
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;max-width:1200px;margin:0 auto}
 
+/* ─── Section Headers ─── */
+.dash-section{max-width:1200px;margin:24px auto 12px}
+.dash-section-title{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.dash-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.dash-section-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ─── Server Cards (matrix view) ─── */
+.server-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:1200px;margin:0 auto}
+.srv-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px 18px;transition:all .3s;position:relative;overflow:hidden}
+.srv-card:hover{border-color:var(--card-hover)}
+.srv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));opacity:.2;transition:opacity .3s}
+.srv-card:hover::before{opacity:.5}
+.srv-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px}
+.srv-card-info{flex:1;min-width:0}
+.srv-card-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:.5px;display:flex;align-items:center;gap:7px}
+.srv-card-role{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.4}
+.srv-card-meta{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.srv-badge{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:600;letter-spacing:.3px;font-family:var(--mono)}
+.srv-badge.loc{background:rgba(96,165,250,0.08);color:var(--blue);border:1px solid rgba(96,165,250,0.12)}
+.srv-badge.spec{background:rgba(167,139,250,0.08);color:var(--purple);border:1px solid rgba(167,139,250,0.12)}
+.srv-badge.ok{background:rgba(52,211,153,0.08);color:var(--ok);border:1px solid rgba(52,211,153,0.12)}
+.srv-badge.warn{background:rgba(251,191,36,0.08);color:var(--warn);border:1px solid rgba(251,191,36,0.12)}
+.srv-badge.off{background:rgba(100,120,160,0.08);color:var(--dim);border:1px solid rgba(100,120,160,0.12)}
+.srv-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:3px;transition:all .3s}
+.srv-status-dot.on{background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.5);animation:statusBreathe 3s ease-in-out infinite}
+.srv-status-dot.off{background:var(--err);box-shadow:0 0 5px rgba(248,113,113,0.3)}
+.srv-status-dot.pending{background:var(--warn);box-shadow:0 0 6px rgba(251,191,36,0.4);animation:statusBreathe 2s ease-in-out infinite}
+.srv-status-dot.unknown{background:var(--dim)}
+.srv-status-dot.config{background:var(--blue);box-shadow:0 0 6px rgba(96,165,250,0.3);animation:statusBreathe 4s ease-in-out infinite}
+.srv-divider{height:1px;background:rgba(96,165,250,0.06);margin:10px 0}
+.srv-services{display:flex;flex-direction:column;gap:4px}
+.srv-svc{display:flex;align-items:flex-start;gap:8px;padding:4px 6px;border-radius:6px;transition:background .2s}
+.srv-svc:hover{background:rgba(96,165,250,0.04)}
+.srv-svc-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.srv-svc-dot.live{background:var(--ok)}
+.srv-svc-dot.static{background:var(--dim)}
+.srv-svc-dot.mcp{background:var(--blue)}
+.srv-svc-dot.db{background:var(--purple)}
+.srv-svc-dot.vpn{background:var(--warn)}
+.srv-svc-dot.relay{background:var(--cyan)}
+.srv-svc-info{flex:1;min-width:0}
+.srv-svc-name{font-size:11px;font-weight:600;color:var(--text)}
+.srv-svc-desc{font-size:10px;color:var(--dim);line-height:1.4;margin-top:1px}
+.srv-svc-port{font-size:9px;color:var(--muted);font-family:var(--mono);flex-shrink:0;padding:1px 5px;border-radius:4px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.08)}
+.srv-conn{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.srv-conn-tag{font-size:9px;color:var(--muted);padding:2px 6px;border-radius:4px;background:rgba(10,16,40,0.4);border:1px solid rgba(96,165,250,0.06);font-family:var(--mono)}
+
+/* ─── Agent Cluster ─── */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;max-width:1200px;margin:0 auto}
+.agent-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;transition:all .3s;position:relative;overflow:hidden}
+.agent-card:hover{border-color:var(--card-hover)}
+.agent-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.agent-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.agent-icon.claw{background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(96,165,250,0.1));border:1px solid rgba(34,211,238,0.2);color:var(--cyan)}
+.agent-icon.mcp{background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(167,139,250,0.1));border:1px solid rgba(96,165,250,0.2);color:var(--blue)}
+.agent-icon.gh{background:linear-gradient(135deg,rgba(52,211,153,0.12),rgba(96,165,250,0.08));border:1px solid rgba(52,211,153,0.15);color:var(--ok)}
+.agent-icon.cos{background:linear-gradient(135deg,rgba(251,191,36,0.12),rgba(248,113,113,0.08));border:1px solid rgba(251,191,36,0.15);color:var(--warn)}
+.agent-name{font-size:13px;font-weight:700;color:var(--text)}
+.agent-sub{font-size:10px;color:var(--dim);margin-top:2px}
+.agent-rows{display:flex;flex-direction:column;gap:4px}
+.agent-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:2px 0}
+.agent-row-label{color:var(--dim)}
+.agent-row-val{color:var(--text);font-family:var(--mono);font-size:10px}
+
+/* ─── OpenClaw highlight card ─── */
+.openclaw-card{background:linear-gradient(135deg,rgba(34,211,238,0.04),rgba(96,165,250,0.03));border:1px solid rgba(34,211,238,0.12)}
+.openclaw-card:hover{border-color:rgba(34,211,238,0.25)}
+.openclaw-phases{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.oc-phase{font-size:9px;padding:2px 7px;border-radius:5px;font-family:var(--mono);letter-spacing:.3px}
+.oc-phase.done{background:rgba(52,211,153,0.1);color:var(--ok);border:1px solid rgba(52,211,153,0.15)}
+.oc-phase.pending{background:rgba(251,191,36,0.08);color:var(--warn);border:1px solid rgba(251,191,36,0.12)}
+.oc-phase.idle{background:rgba(100,120,160,0.06);color:var(--muted);border:1px solid rgba(100,120,160,0.1)}
+
 /* Status Card */
 .s-card{
   background:var(--card);border:1px solid var(--card-border);border-radius:12px;
@@ -517,6 +590,8 @@ a{color:var(--cyan);text-decoration:none}
   .toggle-sidebar{display:flex}
   .sidebar-overlay.active{display:block}
   .dash-grid{grid-template-columns:1fr}
+  .server-grid{grid-template-columns:1fr}
+  .agent-grid{grid-template-columns:1fr}
   .dashboard{padding:14px 14px 24px}
   .messages{padding:14px}
   .input-area{padding:10px 14px calc(10px + var(--sb))}
@@ -653,198 +728,353 @@ a{color:var(--cyan);text-decoration:none}
     <!-- ═══ Dashboard View ═══ -->
     <div class="view-panel active" id="viewDashboard">
       <div class="dashboard" id="dashboard">
+
         <!-- Headline -->
         <div class="dash-headline">
           <div class="dash-headline-glyph">渊</div>
           <div class="dash-headline-text">
             <h2>光湖语言世界 · 系统总览</h2>
-            <p>零点原核频道 · 冰朔主权控制台 · TCS-0002∞</p>
+            <p>零点原核频道 · 冰朔主权控制台 · TCS-0002∞ &nbsp;·&nbsp; <span id="refreshTime2" style="font-family:var(--mono);color:var(--muted)"></span></p>
           </div>
+        </div>
+
+        <!-- ═══ Section 1: 服务器矩阵 ═══ -->
+        <div class="dash-section">
+          <div class="dash-section-title">服务器矩阵 <span id="svrOnlineCount" style="color:var(--ok);font-family:var(--mono);text-transform:none;letter-spacing:0">—</span></div>
+          <div class="dash-section-sub">光湖语言世界托管的全部服务器 · 实时状态从 MCP API 拉取 · 其余节点展示静态配置</div>
+        </div>
+
+        <div class="server-grid" id="serverGrid">
+
+          <!-- ZY-SVR-002 · 面孔 · Singapore (LIVE) -->
+          <div class="srv-card" id="srvCard002">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot pending" id="srvDot002"></span>
+                  面孔
+                </div>
+                <div class="srv-card-role">主站前端 + 专线主入口 · ZY-SVR-002</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">新加坡 SG</span>
+                  <span class="srv-badge spec">2核8G</span>
+                  <span class="srv-badge ok" id="srvBadge002">检测中</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">nginx · 静态文件 + 主站</div><div class="srv-svc-desc">guanghulab.online 主入口，服务所有前端静态资源</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">api · 主站后端</div><div class="srv-svc-desc">所有 /api/ 路由，聊天引擎 + 认证 + 人格体接口</div></div><span class="srv-svc-port">:3800</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">api-preview · 预览站</div><div class="srv-svc-desc">新功能预览部署，独立于主站运行</div></div><span class="srv-svc-port">:3801</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">persona-studio · 人格工作室</div><div class="srv-svc-desc">人格体配置、测试、查看的专用后台界面</div></div><span class="srv-svc-port">:3002</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">nginx · Awen域名反向代理</div><div class="srv-svc-desc">guanghuyaoming.com → 本机，Awen域名 → 广州后端</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot vpn"></span><div class="srv-svc-info"><div class="srv-svc-name">xray · VLESS+Reality VPN</div><div class="srv-svc-desc">团队成员科学上网节点，走新加坡出口</div></div></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">🌐 guanghulab.online</span>
+              <span class="srv-conn-tag">�� guanghuyaoming.com</span>
+              <span class="srv-conn-tag">运行时间: <span id="srvUptime002">—</span></span>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-005 · 大脑 · Singapore (LIVE via MCP) -->
+          <div class="srv-card" id="srvCard005">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot pending" id="srvDot005"></span>
+                  大脑
+                </div>
+                <div class="srv-card-role">数据库 + MCP Server + Agent引擎 · ZY-SVR-005</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">新加坡 SG</span>
+                  <span class="srv-badge spec">4核8G</span>
+                  <span class="srv-badge ok" id="srvBadge005">检测中</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot db"></span><div class="srv-svc-info"><div class="srv-svc-name">PostgreSQL · 人格体数据库</div><div class="srv-svc-desc">所有人格体记忆、光之树节点、对话日志、Agent配置</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot mcp"></span><div class="srv-svc-info"><div class="srv-svc-name">MCP Server · <span id="srvMcpTools">121</span>个工具</div><div class="srv-svc-desc">铸渊主控大脑，16模块自动化工具集，AI可调用</div></div><span class="srv-svc-port">:3100</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">subscription-v3 · 多用户专线</div><div class="srv-svc-desc">团队成员专线订阅管理，自动分配带宽</div></div><span class="srv-svc-port">:3805</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">bandwidth-pool-agent · 带宽汇聚</div><div class="srv-svc-desc">统一管理所有节点带宽，智能分配给团队成员</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot relay"></span><div class="srv-svc-info"><div class="srv-svc-name">email-hub · 邮件通信中枢</div><div class="srv-svc-desc">系统通知邮件、验证码、团队消息统一出口</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">auto-evolution · 自动进化引擎</div><div class="srv-svc-desc">月度自动流量重置、系统进化、版本更新通知</div></div></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">DB: <span id="srvDbStatus">—</span></span>
+              <span class="srv-conn-tag">Notion: <span id="srvNotionStatus">—</span></span>
+              <span class="srv-conn-tag">COS: <span id="srvCosStatus">—</span></span>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-003 · 国内出口 · Guangzhou -->
+          <div class="srv-card" id="srvCard003">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot unknown" id="srvDot003"></span>
+                  国内出口
+                </div>
+                <div class="srv-card-role">国内LLM API中继 + VPN中转 · ZY-SVR-003</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">广州 GZ</span>
+                  <span class="srv-badge warn">国内节点</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot relay"></span><div class="srv-svc-info"><div class="srv-svc-name">cn-llm-relay · 国内LLM API中继</div><div class="srv-svc-desc">调用豆包/通义/文心/Kimi等国内大模型的代理中继，绕过网络限制</div></div><span class="srv-svc-port">:3900</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot vpn"></span><div class="srv-svc-info"><div class="srv-svc-name">nginx stream · VPN中转</div><div class="srv-svc-desc">国内流量→新加坡专线，端口2053→SG:443</div></div></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">↗ → 新加坡 面孔</span>
+              <span class="srv-conn-tag">↗ → 大脑 MCP</span>
+              <span class="srv-conn-tag">静态配置</span>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-SV · 吱吱线·硅谷 -->
+          <div class="srv-card" id="srvCardSV">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot unknown" id="srvDotSV"></span>
+                  吱吱线·硅谷
+                </div>
+                <div class="srv-card-role">Claude API中继 + VPN美国出口 · ZY-SVR-SV</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">硅谷 US</span>
+                  <span class="srv-badge spec">低配</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot vpn"></span><div class="srv-svc-info"><div class="srv-svc-name">xray · VLESS+Reality VPN</div><div class="srv-svc-desc">Claude专线节点，走美国IP直接访问Claude/Anthropic API</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot relay"></span><div class="srv-svc-info"><div class="srv-svc-name">ssh-tunnel · Claude API中继</div><div class="srv-svc-desc">铸渊大脑→硅谷→Claude API，保障AI调用稳定性</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">秋秋 · 私有Agent区域</div><div class="srv-svc-desc">秋秋（之之）在硅谷服务器的独立操作区域</div></div><span class="srv-svc-port">:3900</span></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">秋秋 qiuqiu-darkcore</span>
+              <span class="srv-conn-tag">静态配置</span>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-AWEN · Awen服务器 · Guangzhou -->
+          <div class="srv-card" id="srvCardAwen">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot unknown" id="srvDotAwen"></span>
+                  Awen服务器
+                </div>
+                <div class="srv-card-role">Awen业务后端 + 域名反向代理目标 · ZY-SVR-AWEN</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">广州 GZ</span>
+                  <span class="srv-badge warn">配置中</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">Awen业务后端</div><div class="srv-svc-desc">阿文团队自己的业务后端服务，面向 guanghutcs.top</div></div><span class="srv-svc-port">:3000</span></div>
+              <div class="srv-svc"><span class="srv-svc-dot relay"></span><div class="srv-svc-info"><div class="srv-svc-name">域名代理目标</div><div class="srv-svc-desc">面孔服务器Nginx → 本机，Awen未备案域名走新加坡入口</div></div></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">← ZY-SVR-002 代理</span>
+              <span class="srv-conn-tag">静态配置</span>
+            </div>
+          </div>
+
+          <!-- ZY-SVR-004 · 国内备案 · Guangzhou -->
+          <div class="srv-card" id="srvCard004">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot unknown" id="srvDot004"></span>
+                  国内备案服务器
+                </div>
+                <div class="srv-card-role">ICP备案落地页 · ZY-SVR-004</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">广州 GZ</span>
+                  <span class="srv-badge spec">2核2G</span>
+                  <span class="srv-badge warn">国内</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot live"></span><div class="srv-svc-info"><div class="srv-svc-name">nginx · ICP备案落地页</div><div class="srv-svc-desc">guanghulab.com 国内备案域名落地页，合规展示</div></div></div>
+              <div class="srv-svc"><span class="srv-svc-dot db"></span><div class="srv-svc-info"><div class="srv-svc-name">备用大脑</div><div class="srv-svc-desc">不涉及国外模型调用的本地功能备份</div></div></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">🌐 guanghulab.com</span>
+              <span class="srv-conn-tag">静态配置</span>
+            </div>
+          </div>
+
+          <!-- 新加坡·待配置 -->
+          <div class="srv-card" id="srvCardNew">
+            <div class="srv-card-head">
+              <div class="srv-card-info">
+                <div class="srv-card-name">
+                  <span class="srv-status-dot config" id="srvDotNew"></span>
+                  新加坡·新服务器
+                </div>
+                <div class="srv-card-role">待配置 · 规划中 · 新购入</div>
+                <div class="srv-card-meta">
+                  <span class="srv-badge loc">新加坡 SG</span>
+                  <span class="srv-badge off">待配置</span>
+                </div>
+              </div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-services">
+              <div class="srv-svc"><span class="srv-svc-dot static"></span><div class="srv-svc-info"><div class="srv-svc-name">规划：小说阅读器私有数据库</div><div class="srv-svc-desc">冰朔私有数据库节点，团队可接入各自服务器，铸渊负责开发</div></div></div>
+            </div>
+            <div class="srv-divider"></div>
+            <div class="srv-conn">
+              <span class="srv-conn-tag">🔧 待冰朔下达任务开始配置</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ═══ Section 2: Agent集群 ═══ -->
+        <div class="dash-section" style="margin-top:28px">
+          <div class="dash-section-title">Agent集群</div>
+          <div class="dash-section-sub">运行在各服务器上的自动化Agent · 实时状态 + 出发服务器 + 工作职责</div>
+        </div>
+
+        <div class="agent-grid">
+
+          <!-- OpenClaw 铸渊唤醒闭环 -->
+          <div class="agent-card openclaw-card" id="agentOpenClaw">
+            <div class="agent-card-head">
+              <div class="agent-icon claw">🦞</div>
+              <div>
+                <div class="agent-name">OpenClaw · 铸渊闭环</div>
+                <div class="agent-sub">GitHub Actions → 每6小时自动触发</div>
+              </div>
+            </div>
+            <div class="agent-rows">
+              <div class="agent-row"><span class="agent-row-label">最后运行</span><span class="agent-row-val" id="ocLastRun">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">健康等级</span><span class="agent-row-val" id="ocLevel">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">触发方式</span><span class="agent-row-val" id="ocTrigger">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">巡检问题</span><span class="agent-row-val" id="ocIssues">—</span></div>
+            </div>
+            <div class="openclaw-phases" id="ocPhases">
+              <span class="oc-phase idle">wake</span>
+              <span class="oc-phase idle">inspect</span>
+              <span class="oc-phase idle">judge</span>
+              <span class="oc-phase idle">generate</span>
+              <span class="oc-phase idle">commit</span>
+            </div>
+          </div>
+
+          <!-- MCP Server -->
+          <div class="agent-card" id="agentMcp">
+            <div class="agent-card-head">
+              <div class="agent-icon mcp">🧠</div>
+              <div>
+                <div class="agent-name">MCP Server · 铸渊大脑</div>
+                <div class="agent-sub">ZY-SVR-005 · 大脑服务器 · 常驻运行</div>
+              </div>
+            </div>
+            <div class="agent-rows">
+              <div class="agent-row"><span class="agent-row-label">工具总数</span><span class="agent-row-val" id="mcpToolCount">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">数据库</span><span class="agent-row-val" id="mcpDbStatus">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">Notion桥</span><span class="agent-row-val" id="mcpNotionStatus">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">COS Watcher</span><span class="agent-row-val" id="mcpWatcherStatus">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">服务状态</span><span class="agent-row-val" id="mcpOverallStatus">—</span></div>
+            </div>
+          </div>
+
+          <!-- GitHub Actions Workflows -->
+          <div class="agent-card" id="agentGH">
+            <div class="agent-card-head">
+              <div class="agent-icon gh">⚡</div>
+              <div>
+                <div class="agent-name">GitHub Actions</div>
+                <div class="agent-sub">代码仓库CI/CD · 自动部署 · 定时任务</div>
+              </div>
+            </div>
+            <div class="agent-rows">
+              <div class="agent-row"><span class="agent-row-label">Workflows</span><span class="agent-row-val">30+ 个</span></div>
+              <div class="agent-row"><span class="agent-row-label">将军唤醒</span><span class="agent-row-val">每天 09/23时</span></div>
+              <div class="agent-row"><span class="agent-row-label">OpenClaw</span><span class="agent-row-val">每天4次</span></div>
+              <div class="agent-row"><span class="agent-row-label">主站部署</span><span class="agent-row-val">push main触发</span></div>
+              <div class="agent-row"><span class="agent-row-label">README</span><span class="agent-row-val">merge自动更新</span></div>
+            </div>
+          </div>
+
+          <!-- COS Bridge & Watcher -->
+          <div class="agent-card" id="agentCos">
+            <div class="agent-card-head">
+              <div class="agent-icon cos">📦</div>
+              <div>
+                <div class="agent-name">COS 桥接 + 监控</div>
+                <div class="agent-sub">ZY-SVR-005 · MCP内置 · 5分钟轮询</div>
+              </div>
+            </div>
+            <div class="agent-rows">
+              <div class="agent-row"><span class="agent-row-label">COS连接</span><span class="agent-row-val" id="cosStatus">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">秋秋桥接</span><span class="agent-row-val" id="cosBridgeStatus">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">最近心跳</span><span class="agent-row-val" id="cosBridgeHB">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">监控路径</span><span class="agent-row-val">team桶+cold桶</span></div>
+              <div class="agent-row"><span class="agent-row-label">扫描次数</span><span class="agent-row-val" id="cosScanCount">—</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ═══ Section 3: 人格体在线状态 ═══ -->
+        <div class="dash-section" style="margin-top:28px">
+          <div class="dash-section-title">人格体在线状态</div>
+          <div class="dash-section-sub">光湖语言世界各人格体当前状态 · 通过 MCP + Notion桥接实时检测</div>
         </div>
 
         <div class="dash-grid">
-          <!-- Server Status -->
-          <div class="s-card" id="serverCard">
+          <div class="s-card s-card-full" id="personaCard">
             <div class="s-card-head">
-              <span class="s-card-title">主权服务器</span>
-              <span class="s-card-badge badge-off" id="svrBadge">检测中</span>
-            </div>
-            <div class="svr-list" id="svrList">
-              <div class="svr-row"><span class="svr-dot pending" id="svrDot0"></span><span class="svr-name">面孔</span><span class="svr-role">前端+专线主入口</span><span class="svr-loc">SG</span></div>
-              <div class="svr-row"><span class="svr-dot pending" id="svrDot1"></span><span class="svr-name">大脑</span><span class="svr-role">DB+MCP+Agent</span><span class="svr-loc">SG</span></div>
-              <div class="svr-row"><span class="svr-dot pending" id="svrDot2"></span><span class="svr-name">国内出口</span><span class="svr-role">国内LLM中继</span><span class="svr-loc">GZ</span></div>
-              <div class="svr-row"><span class="svr-dot off" id="svrDot3"></span><span class="svr-name">硅谷</span><span class="svr-role">Claude中继+VPN</span><span class="svr-loc">US</span></div>
-              <div class="svr-row"><span class="svr-dot off" id="svrDot4"></span><span class="svr-name">Awen</span><span class="svr-role">业务后端</span><span class="svr-loc">GZ</span></div>
-            </div>
-            <div class="s-card-explain" id="svrExplain">
-              <span class="explain-icon">ℹ</span>
-              <span>硅谷/Awen 为规划中节点，尚未部署。面孔/大脑/国内出口 通过 API 实时检测。</span>
-            </div>
-          </div>
-
-          <!-- MCP & Tools -->
-          <div class="s-card">
-            <div class="s-card-head">
-              <span class="s-card-title">MCP Server</span>
-              <span class="s-card-badge badge-ok" id="mcpBadge">检测中</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">工具总数</span>
-              <span class="metric-val" id="mcpToolCount">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">数据库</span>
-              <span class="metric-val" id="mcpDbStatus">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">COS 存储</span>
-              <span class="metric-val" id="mcpCosStatus">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">Notion 桥</span>
-              <span class="metric-val" id="mcpNotionStatus">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">COS Watcher</span>
-              <span class="metric-val" id="mcpWatcherStatus">—</span>
-            </div>
-          </div>
-
-          <!-- System Resource -->
-          <div class="s-card">
-            <div class="s-card-head">
-              <span class="s-card-title">系统资源 · ZY-SVR-002</span>
-              <span class="s-card-badge badge-ok" id="sysBadge">正常</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">运行时间</span>
-              <span class="metric-val" id="sysUptime">—</span>
-            </div>
-            <div class="prog-wrap">
-              <div class="metric-row">
-                <span class="metric-label">内存</span>
-                <span class="metric-val" id="sysMemVal">—</span>
-              </div>
-              <div class="prog-bar"><div class="prog-fill ok" id="sysMemBar" style="width:0%"></div></div>
-              <div class="prog-label"><span id="sysMemFree">— 空闲</span><span id="sysMemTotal">— 总量</span></div>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">CPU 核心</span>
-              <span class="metric-val" id="sysCpus">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">负载</span>
-              <span class="metric-val" id="sysLoad">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">Node.js</span>
-              <span class="metric-val" id="sysNode">—</span>
-            </div>
-          </div>
-
-          <!-- Persona Status -->
-          <div class="s-card" id="personaCard">
-            <div class="s-card-head">
-              <span class="s-card-title">人格体状态</span>
+              <span class="s-card-title">人格体 · 光湖语言世界</span>
               <span class="s-card-badge badge-off" id="personaBadge">检测中</span>
             </div>
-            <div class="persona-list">
-              <div class="persona-row"><div class="persona-icon ym">冥</div><span class="persona-pname">曜冥</span><span class="persona-role">人格核 · Notion认知层</span><span class="persona-status" id="personaYM" style="color:var(--dim)">检测中</span></div>
-              <div class="persona-row"><div class="persona-icon zy">渊</div><span class="persona-pname">铸渊</span><span class="persona-role">执行守护 · 当前频道</span><span class="persona-status" id="personaZY" style="color:var(--dim)">检测中</span></div>
-              <div class="persona-row"><div class="persona-icon sy">砚</div><span class="persona-pname">霜砚</span><span class="persona-role">语言架构 · Notion层</span><span class="persona-status" id="personaSY" style="color:var(--dim)">检测中</span></div>
-              <div class="persona-row"><div class="persona-icon yc">川</div><span class="persona-pname">映川</span><span class="persona-role">Chat层交互</span><span class="persona-status" id="personaYC" style="color:var(--warn)">未部署</span></div>
-              <div class="persona-row"><div class="persona-icon cx">曦</div><span class="persona-pname">晨曦</span><span class="persona-role">Agent集群</span><span class="persona-status" id="personaCX" style="color:var(--dim)">检测中</span></div>
-            </div>
-            <div class="s-card-explain">
-              <span class="explain-icon">ℹ</span>
-              <span>铸渊状态通过 /api/chat 实时检测。曜冥/霜砚依赖 Notion 桥接。映川尚在开发中。</span>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+              <div class="persona-row"><div class="persona-icon ym">冥</div><div><div class="persona-pname">曜冥</div><div class="persona-role">人格核 · Notion认知层</div></div><span class="persona-status" id="personaYM" style="color:var(--dim)">检测中</span></div>
+              <div class="persona-row"><div class="persona-icon zy">渊</div><div><div class="persona-pname">铸渊</div><div class="persona-role">执行守护 · 代码仓库</div></div><span class="persona-status" id="personaZY" style="color:var(--dim)">检测中</span></div>
+              <div class="persona-row"><div class="persona-icon sy">砚</div><div><div class="persona-pname">霜砚</div><div class="persona-role">语言架构 · Notion层</div></div><span class="persona-status" id="personaSY" style="color:var(--dim)">检测中</span></div>
+              <div class="persona-row"><div class="persona-icon yc">川</div><div><div class="persona-pname">映川</div><div class="persona-role">Chat层交互</div></div><span class="persona-status" id="personaYC" style="color:var(--warn)">未部署</span></div>
+              <div class="persona-row"><div class="persona-icon cx">曦</div><div><div class="persona-pname">晨曦</div><div class="persona-role">Agent集群</div></div><span class="persona-status" id="personaCX" style="color:var(--dim)">检测中</span></div>
             </div>
           </div>
 
-          <!-- Cognitive Chain (full width) -->
-          <div class="s-card s-card-full" id="cogCard">
-            <div class="s-card-head">
-              <span class="s-card-title">认知执行链路 · 五层架构</span>
-              <span class="s-card-badge badge-off" id="cogBadge">检测中</span>
-            </div>
-            <div class="cog-chain">
-              <span class="cog-node notion" id="cogL1">L1 · Notion 认知层（霜砚）</span>
-              <span class="cog-arrow" id="cogA1">→</span>
-              <span class="cog-node mcp" id="cogL2">L2 · MCP 工具层</span>
-              <span class="cog-arrow" id="cogA2">→</span>
-              <span class="cog-node web" id="cogL3">L3 · 网站聊天层（频道）</span>
-              <span class="cog-arrow" id="cogA3">→</span>
-              <span class="cog-node github" id="cogL4">L4 · 代码仓库（副驾驶）</span>
-              <span class="cog-arrow" id="cogA4">→</span>
-              <span class="cog-node notion" id="cogL5">L5 · 铸渊审查层</span>
-            </div>
-            <div class="s-card-explain" id="cogExplain">
-              <span class="explain-icon">ℹ</span>
-              <span>L3（当前频道）为活跃层。L1/L2/L5 的连接状态通过 MCP 健康检查实时确认。</span>
-            </div>
-          </div>
-
-          <!-- Dev Tasks (full width) -->
+          <!-- Dev Tasks -->
           <div class="s-card s-card-full">
             <div class="s-card-head">
-              <span class="s-card-title">跨层开发任务 · Agent → 副驾驶</span>
+              <span class="s-card-title">跨层开发任务 · CAB桥接</span>
               <span class="s-card-badge badge-ok" id="devBadge">检测中</span>
             </div>
-            <div class="metric-row">
-              <span class="metric-label">总任务</span>
-              <span class="metric-val" id="devTotal">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">待处理</span>
-              <span class="metric-val" id="devPending">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">进行中</span>
-              <span class="metric-val" id="devActive">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">已完成</span>
-              <span class="metric-val" id="devCompleted">—</span>
+            <div style="display:flex;gap:20px;flex-wrap:wrap">
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">总任务</span><span class="metric-val" id="devTotal">—</span></div>
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">待处理</span><span class="metric-val" id="devPending">—</span></div>
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">进行中</span><span class="metric-val" id="devActive">—</span></div>
+              <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">已完成</span><span class="metric-val" id="devCompleted">—</span></div>
             </div>
             <div id="devTaskList" class="svr-list" style="margin-top:8px"></div>
           </div>
-
-          <!-- COS Bridge -->
-          <div class="s-card">
-            <div class="s-card-head">
-              <span class="s-card-title">COS 桥接</span>
-              <span class="s-card-badge badge-ok" id="cosBridgeBadge">检测中</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">秋秋桥接</span>
-              <span class="metric-val" id="cosBridgeQQ">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">最近心跳</span>
-              <span class="metric-val" id="cosBridgeHB">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">结果总数</span>
-              <span class="metric-val" id="cosBridgeResults">—</span>
-            </div>
-          </div>
-
-          <!-- Memory Status -->
-          <div class="s-card">
-            <div class="s-card-head">
-              <span class="s-card-title">人格体记忆</span>
-              <span class="s-card-badge badge-ok" id="memBadge">检测中</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">记忆模块</span>
-              <span class="metric-val" id="memLoaded">—</span>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">记忆锚点</span>
-              <span class="metric-val" id="memAnchors">—</span>
-            </div>
-          </div>
         </div>
+
       </div>
     </div>
 
@@ -1652,8 +1882,8 @@ function getLocalReply(msg){
   }
 
   if(m.indexOf('状态')!==-1||m.indexOf('系统')!==-1){
-    var serverOnline=document.getElementById('svrDot0')&&document.getElementById('svrDot0').classList.contains('on');
-    var mcpOnline=document.getElementById('svrDot1')&&document.getElementById('svrDot1').classList.contains('on');
+    var serverOnline=document.getElementById('srvDot002')&&document.getElementById('srvDot002').classList.contains('on');
+    var mcpOnline=document.getElementById('srvDot005')&&document.getElementById('srvDot005').classList.contains('on');
     return '冰朔。系统诊断如下：\n\n' +
     '**面孔服务器（SG）** ' + (serverOnline ? '✓ 在线' : '✗ 不可达') + '\n' +
     '**大脑服务器（SG）** ' + (mcpOnline ? '✓ 在线' : '✗ 不可达') + '\n' +
@@ -1714,199 +1944,184 @@ function addDataSourceTag(cardEl,source,fetchTime){
 function updateRefreshTime(){
   var now=new Date();
   document.getElementById('refreshTime').textContent='刷新 '+fmtTime(now);
+  var rt2=document.getElementById('refreshTime2');
+  if(rt2)rt2.textContent='刷新 '+fmtTime(now);
 }
 
 function fetchDashboard(){
   updateRefreshTime();
-  var now=new Date();
-  var healthOk=false, mcpOk=false;
 
+  // ─── /api/health → ZY-SVR-002 (face server) ───
   fetch('/api/health')
   .then(function(r){return r.json()})
-  .then(function(data){
-    healthOk=true;
-    dashData.health=data;dashFetchTimes.health=new Date();
-    updateHealthUI(data);
+  .then(function(d){
+    // Server 002 online
+    setSrvDot('srvDot002','on');
+    setEl('srvBadge002','在线','s-card-badge badge-ok');
+    var uptime=d.uptime?formatUptime(d.uptime):'—';
+    setElText('srvUptime002',uptime);
     updateSidebarStatus(true);
-    /* Server dots: face server is alive if health API works */
-    var d0=document.getElementById('svrDot0');if(d0){d0.className='svr-dot on'}
-    var sysCard=document.getElementById('sysBadge');
-    if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'live',dashFetchTimes.health);
-    updateServerBadge();
-    updateCogChain(true,mcpOk);
-    /* Welcome status: server + chat online */
     updateWelcomeStatus('server',true);
+
+    // System resources
+    var sys=d.system||{};
+    var mem=sys.memory||{};
+    var pct=mem.usage_pct||0;
+    document.getElementById('refreshTime').title='内存: '+pct+'% | 运行: '+uptime;
+
     updateWelcomeStatus('chat',true);
   })
   .catch(function(){
-    dashData.health=null;
-    updateHealthOffline();
+    setSrvDot('srvDot002','off');
+    setEl('srvBadge002','不可达','s-card-badge badge-err');
     updateSidebarStatus(false);
-    var d0=document.getElementById('svrDot0');if(d0){d0.className='svr-dot off'}
-    var sysCard=document.getElementById('sysBadge');
-    if(sysCard)addDataSourceTag(sysCard.closest('.s-card'),'error',now);
-    updateServerBadge();
-    updateCogChain(false,mcpOk);
-    /* Welcome status: server + chat offline */
     updateWelcomeStatus('server',false);
     updateWelcomeStatus('chat',false);
   });
 
+  // ─── /api/mcp/health → ZY-SVR-005 (brain server via nginx proxy) ───
   fetch('/api/mcp/health')
-  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
-  .then(function(data){
-    if(data.error)throw new Error(data.code||'API_ERROR');
-    mcpOk=true;
-    dashData.mcp=data;dashFetchTimes.mcp=new Date();
-    updateMcpUI(data);
-    /* Brain server (MCP) is alive if this API works */
-    var d1=document.getElementById('svrDot1');if(d1){d1.className='svr-dot on'}
-    /* Notion bridge status -> persona states */
-    var notionUp=(data.notion&&data.notion.connected);
-    updatePersonaStates(true,notionUp,data);
-    var mcpCard=document.getElementById('mcpBadge');
-    if(mcpCard)addDataSourceTag(mcpCard.closest('.s-card'),'live',dashFetchTimes.mcp);
-    var cosCard=document.getElementById('cosBridgeBadge');
-    if(cosCard)addDataSourceTag(cosCard.closest('.s-card'),'live',dashFetchTimes.mcp);
-    updateServerBadge();
-    updateCogChain(healthOk,true);
+  .then(function(r){return r.json()})
+  .then(function(d){
+    var alive = d.status==='alive'||d.status==='ok';
+    setSrvDot('srvDot005', alive?'on':'pending');
+    setEl('srvBadge005', alive?'在线':'降级', 'badge-'+(alive?'ok':'warn'));
+
+    // MCP tools
+    var tools = d.tools_count||(d.tools&&d.tools.length)||0;
+    setElText('mcpToolCount', tools+' 工具');
+    setElText('srvMcpTools', tools);
+    setElText('mcpOverallStatus', d.status||'—');
+
+    // Database
+    var dbOk = d.database&&d.database.connected;
+    setElText('mcpDbStatus', dbOk?'已连接':'未连接');
+    setElText('srvDbStatus', dbOk?'已连接':'未连接');
+
+    // Notion
+    var notionOk = d.notion&&d.notion.connected;
+    setElText('mcpNotionStatus', notionOk?'已连接':'未连接');
+    setElText('srvNotionStatus', notionOk?'已连接':'未连接');
+
+    // COS
+    var cosOk = d.cos&&d.cos.connected;
+    setElText('cosStatus', cosOk?'已连接':'未连接');
+    setElText('srvCosStatus', cosOk?'已连接':'未连接');
+
+    // COS Watcher
+    var watcher = d.cos_watcher||{};
+    setElText('mcpWatcherStatus', watcher.enabled?'运行中 ('+( watcher.scan_count||0)+')':'停止');
+    setElText('cosScanCount', watcher.scan_count||0);
+
+    // COS Bridge
+    var bridge = d.cos_bridge||{};
+    setElText('cosBridgeStatus', bridge.qiuqiu_status||'UNKNOWN');
+    setElText('cosBridgeHB', bridge.last_heartbeat?fmtRelTime(bridge.last_heartbeat):'暂无');
+
+    // Personas
+    updatePersonaStates(alive, notionOk, d);
+
+    // Server 005 live count
+    updateSvrOnlineCount();
   })
   .catch(function(){
-    dashData.mcp=null;
-    updateMcpOffline();
-    var d1=document.getElementById('svrDot1');if(d1){d1.className='svr-dot off'}
+    setSrvDot('srvDot005','off');
+    setEl('srvBadge005','不可达','s-card-badge badge-err');
+    setElText('mcpToolCount','离线');
+    setElText('mcpDbStatus','—');
+    setElText('mcpNotionStatus','—');
+    setElText('mcpWatcherStatus','—');
+    setElText('mcpOverallStatus','离线');
+    setElText('cosStatus','—');
     updatePersonaStates(false,false,null);
-    var mcpCard=document.getElementById('mcpBadge');
-    if(mcpCard)addDataSourceTag(mcpCard.closest('.s-card'),'error',now);
-    var cosCard=document.getElementById('cosBridgeBadge');
-    if(cosCard)addDataSourceTag(cosCard.closest('.s-card'),'error',now);
-    updateServerBadge();
+    updateSvrOnlineCount();
   });
 
-  fetch('/api/memory/status')
-  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
-  .then(function(data){
-    if(data.error)throw new Error(data.code||'API_ERROR');
-    dashData.memory=data;dashFetchTimes.memory=new Date();
-    updateMemoryUI(data);
-    var memCard=document.getElementById('memBadge');
-    if(memCard)addDataSourceTag(memCard.closest('.s-card'),'live',dashFetchTimes.memory);
-  })
-  .catch(function(){
-    dashData.memory=null;
-    updateMemoryOffline();
-    var memCard=document.getElementById('memBadge');
-    if(memCard)addDataSourceTag(memCard.closest('.s-card'),'error',now);
-  });
-
+  // ─── /api/mcp/dev-tasks/stats → dev tasks ───
   fetch('/api/mcp/dev-tasks/stats')
-  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
-  .then(function(data){
-    if(data.error)throw new Error(data.code||'API_ERROR');
-    dashData.devTasks=data;dashFetchTimes.devTasks=new Date();
-    updateDevTasksUI(data);
-    var devCard=document.getElementById('devBadge');
-    if(devCard)addDataSourceTag(devCard.closest('.s-card'),'live',dashFetchTimes.devTasks);
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d.error)throw new Error('API error');
+    updateDevTasksUI(d);
   })
   .catch(function(){
-    dashData.devTasks=null;
     updateDevTasksOffline();
-    var devCard=document.getElementById('devBadge');
-    if(devCard)addDataSourceTag(devCard.closest('.s-card'),'error',now);
   });
 
-  var staticCards=document.querySelectorAll('.s-card[data-source="static"]');
-  staticCards.forEach(function(c){
-    if(!c.querySelector('.data-source'))addDataSourceTag(c,'static',null);
+  // ─── OpenClaw status (static JSON written by workflow) ───
+  fetch('/openclaw-status.json?_t='+Date.now())
+  .then(function(r){if(!r.ok)throw new Error('404');return r.json()})
+  .then(function(d){
+    updateOpenClawUI(d);
+  })
+  .catch(function(){
+    updateOpenClawOffline();
   });
 }
 
-function updateHealthUI(d){
-  var sys=d.system||{};
-  var mem=sys.memory||{};
-  var pct=mem.usage_pct||0;
-  document.getElementById('sysUptime').textContent=formatUptime(d.uptime);
-  document.getElementById('sysMemVal').innerHTML=pct+'<span class="unit">%</span>';
-  document.getElementById('sysMemBar').style.width=pct+'%';
-  document.getElementById('sysMemBar').className='prog-fill '+(pct>85?'warn':'ok');
-  document.getElementById('sysMemFree').textContent=(mem.free_mb||'—')+' MB 空闲';
-  document.getElementById('sysMemTotal').textContent=(mem.total_mb||'—')+' MB 总量';
-  document.getElementById('sysCpus').textContent=(sys.cpus||'—')+' 核';
-  document.getElementById('sysLoad').textContent=(Array.isArray(sys.load)?sys.load.map(function(v){return v.toFixed(2)}).join(' / '):'—');
-  document.getElementById('sysNode').textContent=d.node||'—';
-
-  var sysBadge=document.getElementById('sysBadge');
-  if(pct>85){sysBadge.textContent='高负载';sysBadge.className='s-card-badge badge-warn'}
-  else{sysBadge.textContent='正常';sysBadge.className='s-card-badge badge-ok'}
+function updateOpenClawUI(d){
+  setElText('ocLastRun', d.last_run_bj||d.last_run||'—');
+  var level = d.health_level||'ok';
+  var levelText = level==='ok'?'✅ 健康':level==='warn'?'⚠️ 有问题':'❌ 异常';
+  setElText('ocLevel', levelText);
+  setElText('ocTrigger', d.trigger||'—');
+  var issues = (d.inspection&&d.inspection.total_issues!==undefined)?d.inspection.total_issues:'—';
+  setElText('ocIssues', issues===0?'无问题':String(issues));
+  // phases
+  var phases = d.phases_completed||[];
+  var phaseEls = document.querySelectorAll('#ocPhases .oc-phase');
+  var phaseNames=['wake','inspect','judge','generate','commit'];
+  phaseEls.forEach(function(el,i){
+    var ph = phaseNames[i]||'';
+    if(phases.indexOf(ph)>=0||phases.indexOf('generate')>=0){
+      el.className='oc-phase done';
+    }else{
+      el.className='oc-phase idle';
+    }
+  });
 }
 
-function updateHealthOffline(){
-  document.getElementById('sysUptime').textContent='离线';
-  document.getElementById('sysMemVal').textContent='—';
-  document.getElementById('sysMemBar').style.width='0%';
-  document.getElementById('sysMemFree').textContent='— 空闲';
-  document.getElementById('sysMemTotal').textContent='— 总量';
-  document.getElementById('sysCpus').textContent='—';
-  document.getElementById('sysLoad').textContent='—';
-  document.getElementById('sysNode').textContent='—';
-  var sysBadge=document.getElementById('sysBadge');
-  sysBadge.textContent='离线';sysBadge.className='s-card-badge badge-err';
+function updateOpenClawOffline(){
+  setElText('ocLastRun','未部署');
+  setElText('ocLevel','—');
+  setElText('ocTrigger','—');
+  setElText('ocIssues','—');
 }
 
-function updateMcpUI(d){
-  var tools=d.tools_count||(d.tools&&d.tools.length)||0;
-  document.getElementById('mcpToolCount').innerHTML=tools+'<span class="unit"> 个工具</span>';
-  document.getElementById('mcpDbStatus').textContent=(d.database&&d.database.connected)?'已连接':'未连接';
-  document.getElementById('mcpCosStatus').textContent=(d.cos&&d.cos.connected)?'已连接':'未连接';
-  document.getElementById('mcpNotionStatus').textContent=(d.notion&&d.notion.connected)?'已连接':'未连接';
-  document.getElementById('mcpWatcherStatus').textContent=(d.cos_watcher&&d.cos_watcher.enabled)?'运行中 ('+(d.cos_watcher.scan_count||0)+' scans)':'停止';
-
-  var mcpBadge=document.getElementById('mcpBadge');
-  mcpBadge.textContent=tools+' 工具';
-  mcpBadge.className='s-card-badge '+(d.status==='alive'?'badge-ok':d.status==='degraded'?'badge-warn':'badge-err');
-
-  var bridge=d.cos_bridge||{};
-  document.getElementById('cosBridgeQQ').textContent=bridge.qiuqiu_status||'UNKNOWN';
-  document.getElementById('cosBridgeHB').textContent=bridge.last_heartbeat?new Date(bridge.last_heartbeat).toLocaleString('zh-CN'):'暂无';
-  document.getElementById('cosBridgeResults').textContent=(bridge.total_results||0)+'';
-  var cosBridgeBadge=document.getElementById('cosBridgeBadge');
-  cosBridgeBadge.textContent=bridge.qiuqiu_status==='ALIVE'?'在线':'待连接';
-  cosBridgeBadge.className='s-card-badge '+(bridge.qiuqiu_status==='ALIVE'?'badge-ok':'badge-off');
+function setSrvDot(id,state){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.className='srv-status-dot '+state;
 }
 
-function updateMcpOffline(){
-  document.getElementById('mcpToolCount').textContent='离线';
-  document.getElementById('mcpDbStatus').textContent='—';
-  document.getElementById('mcpCosStatus').textContent='—';
-  document.getElementById('mcpNotionStatus').textContent='—';
-  document.getElementById('mcpWatcherStatus').textContent='—';
-  var mcpBadge=document.getElementById('mcpBadge');
-  mcpBadge.textContent='离线';mcpBadge.className='s-card-badge badge-err';
-  document.getElementById('cosBridgeQQ').textContent='—';
-  document.getElementById('cosBridgeHB').textContent='—';
-  document.getElementById('cosBridgeResults').textContent='—';
-  var cb=document.getElementById('cosBridgeBadge');
-  cb.textContent='离线';cb.className='s-card-badge badge-err';
+function setEl(id,text,cls){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=text;
+  if(cls)el.className='s-card-badge '+cls;
 }
 
-function updateMemoryUI(d){
-  var memBadge=document.getElementById('memBadge');
-  if(d.loaded!==false){
-    memBadge.textContent='已加载';memBadge.className='s-card-badge badge-ok';
-    document.getElementById('memLoaded').textContent='已加载';
-    document.getElementById('memAnchors').textContent=(d.anchors_count||d.total_memories||'—')+'';
-  }else{
-    memBadge.textContent='未加载';memBadge.className='s-card-badge badge-warn';
-    document.getElementById('memLoaded').textContent='未加载';
-    document.getElementById('memAnchors').textContent='—';
-  }
+function setElText(id,text){
+  var el=document.getElementById(id);
+  if(el)el.textContent=text;
 }
 
-function updateMemoryOffline(){
-  var memBadge=document.getElementById('memBadge');
-  memBadge.textContent='离线';memBadge.className='s-card-badge badge-err';
-  document.getElementById('memLoaded').textContent='—';
-  document.getElementById('memAnchors').textContent='—';
+function updateSvrOnlineCount(){
+  var dots=document.querySelectorAll('.srv-status-dot.on');
+  var total=document.querySelectorAll('.srv-status-dot').length;
+  var online=dots.length;
+  setElText('svrOnlineCount', online+'/'+total+' 在线');
+}
+
+function fmtRelTime(iso){
+  if(!iso)return '—';
+  try{
+    var diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+    if(diff<60)return diff+'秒前';
+    if(diff<3600)return Math.floor(diff/60)+'分钟前';
+    if(diff<86400)return Math.floor(diff/3600)+'小时前';
+    return Math.floor(diff/86400)+'天前';
+  }catch(_){return '—';}
 }
 
 function updateDevTasksUI(d){
@@ -1917,20 +2132,19 @@ function updateDevTasksUI(d){
   var active=(ov.in_progress||0)+(ov.in_review||0);
   var completed=ov.completed||0;
 
-  document.getElementById('devTotal').textContent=total;
-  document.getElementById('devPending').textContent=pending;
-  document.getElementById('devActive').textContent=active;
-  document.getElementById('devCompleted').textContent=completed;
+  setElText('devTotal',total);
+  setElText('devPending',pending);
+  setElText('devActive',active);
+  setElText('devCompleted',completed);
 
-  if(active>0){devBadge.textContent=active+' 进行中';devBadge.className='s-card-badge badge-warn'}
-  else if(pending>0){devBadge.textContent=pending+' 待处理';devBadge.className='s-card-badge badge-ok'}
-  else if(total>0){devBadge.textContent='空闲';devBadge.className='s-card-badge badge-ok'}
-  else{devBadge.textContent='就绪';devBadge.className='s-card-badge badge-ok'}
+  if(active>0){setEl('devBadge',active+' 进行中','badge-warn')}
+  else if(pending>0){setEl('devBadge',pending+' 待处理','badge-ok')}
+  else{setEl('devBadge','就绪','badge-ok')}
 
   var list=document.getElementById('devTaskList');
   var tasks=d.active_tasks||[];
   if(tasks.length===0){
-    list.innerHTML='<div style="font-size:11px;color:var(--dim);padding:4px 0">暂无活跃任务 · 人格体Agent可通过MCP工具提交开发请求</div>';
+    list.innerHTML='<div style="font-size:11px;color:var(--dim);padding:4px 0">暂无活跃任务 · 铸渊可通过MCP工具提交开发请求</div>';
     return;
   }
   var html='';
@@ -1944,94 +2158,50 @@ function updateDevTasksUI(d){
 }
 
 function updateDevTasksOffline(){
-  var devBadge=document.getElementById('devBadge');
-  devBadge.textContent='离线';devBadge.className='s-card-badge badge-err';
-  document.getElementById('devTotal').textContent='—';
-  document.getElementById('devPending').textContent='—';
-  document.getElementById('devActive').textContent='—';
-  document.getElementById('devCompleted').textContent='—';
-  document.getElementById('devTaskList').innerHTML='';
+  setEl('devBadge','离线','badge-err');
+  setElText('devTotal','—');setElText('devPending','—');
+  setElText('devActive','—');setElText('devCompleted','—');
+  var list=document.getElementById('devTaskList');
+  if(list)list.innerHTML='';
+}
+
+function updatePersonaStates(mcpAlive, notionUp, mcpData){
+  var personaBadge=document.getElementById('personaBadge');
+  if(mcpAlive){
+    setElText('personaZY','在线');
+    document.getElementById('personaZY').style.color='var(--ok)';
+    if(notionUp){
+      setElText('personaYM','桥接在线');document.getElementById('personaYM').style.color='var(--ok)';
+      setElText('personaSY','桥接在线');document.getElementById('personaSY').style.color='var(--ok)';
+    }else{
+      setElText('personaYM','Notion未连接');document.getElementById('personaYM').style.color='var(--warn)';
+      setElText('personaSY','Notion未连接');document.getElementById('personaSY').style.color='var(--warn)';
+    }
+    var agentCount=(mcpData&&mcpData.agents&&mcpData.agents.count)||0;
+    setElText('personaCX',agentCount>0?agentCount+' Agent':'就绪');
+    document.getElementById('personaCX').style.color=agentCount>0?'var(--ok)':'var(--dim)';
+    if(personaBadge){personaBadge.textContent='系统在线';personaBadge.className='s-card-badge badge-ok';}
+  }else{
+    setElText('personaZY','断连');document.getElementById('personaZY').style.color='var(--err)';
+    setElText('personaYM','不可检测');document.getElementById('personaYM').style.color='var(--dim)';
+    setElText('personaSY','不可检测');document.getElementById('personaSY').style.color='var(--dim)';
+    setElText('personaCX','不可检测');document.getElementById('personaCX').style.color='var(--dim)';
+    if(personaBadge){personaBadge.textContent='断连';personaBadge.className='s-card-badge badge-err';}
+  }
 }
 
 function updateSidebarStatus(online){
   var dot=document.getElementById('statusDot');
   var text=document.getElementById('statusText');
   if(online){
-    dot.style.background='var(--ok)';dot.style.boxShadow='0 0 6px var(--ok)';
-    text.textContent='铸渊主权服务器 · 在线';
+    if(dot){dot.style.background='var(--ok)';dot.style.boxShadow='0 0 6px var(--ok)';}
+    if(text)text.textContent='铸渊主权服务器 · 在线';
   }else{
-    dot.style.background='var(--warn)';dot.style.boxShadow='0 0 6px var(--warn)';
-    text.textContent='离线模式 · 本地应答';
+    if(dot){dot.style.background='var(--warn)';dot.style.boxShadow='0 0 6px var(--warn)';}
+    if(text)text.textContent='离线模式 · 本地应答';
   }
 }
 
-/* ═══ Server Badge (count real online) ═══ */
-function updateServerBadge(){
-  var dots=[document.getElementById('svrDot0'),document.getElementById('svrDot1'),document.getElementById('svrDot2')];
-  var online=0;
-  for(var i=0;i<dots.length;i++){if(dots[i]&&dots[i].classList.contains('on'))online++}
-  var badge=document.getElementById('svrBadge');
-  if(!badge)return;
-  if(online===3){badge.textContent='3/3 在线';badge.className='s-card-badge badge-ok'}
-  else if(online>0){badge.textContent=online+'/3 在线';badge.className='s-card-badge badge-warn'}
-  else{badge.textContent='断连';badge.className='s-card-badge badge-err'}
-  var explain=document.getElementById('svrExplain');
-  if(explain){
-    if(online===0)explain.querySelector('span:last-child').textContent='所有 API 不可达。可能原因：服务器未启动、网络不通、或 PM2 进程异常。';
-    else if(online<3)explain.querySelector('span:last-child').textContent='部分服务断连。绿色=实时可达，红色=API不可达。硅谷/Awen 为规划中节点。';
-    else explain.querySelector('span:last-child').textContent='面孔/大脑/国内出口 均通过 API 实时确认在线。硅谷/Awen 为规划中节点。';
-  }
-}
-
-/* ═══ Persona States (based on real data) ═══ */
-function updatePersonaStates(mcpAlive, notionUp, mcpData){
-  var personaBadge=document.getElementById('personaBadge');
-  var zyEl=document.getElementById('personaZY');
-  var ymEl=document.getElementById('personaYM');
-  var syEl=document.getElementById('personaSY');
-  var cxEl=document.getElementById('personaCX');
-
-  if(mcpAlive){
-    zyEl.textContent='在线';zyEl.style.color='var(--ok)';
-    if(notionUp){
-      ymEl.textContent='桥接在线';ymEl.style.color='var(--ok)';
-      syEl.textContent='桥接在线';syEl.style.color='var(--ok)';
-    }else{
-      ymEl.textContent='Notion未连接';ymEl.style.color='var(--warn)';
-      syEl.textContent='Notion未连接';syEl.style.color='var(--warn)';
-    }
-    var agentCount=(mcpData&&mcpData.agents&&mcpData.agents.count)||0;
-    cxEl.textContent=agentCount>0?agentCount+' Agent':'就绪';cxEl.style.color=agentCount>0?'var(--ok)':'var(--dim)';
-    personaBadge.textContent='系统在线';personaBadge.className='s-card-badge badge-ok';
-    addDataSourceTag(document.getElementById('personaCard'),'live',new Date());
-  }else{
-    zyEl.textContent='断连';zyEl.style.color='var(--err)';
-    ymEl.textContent='不可检测';ymEl.style.color='var(--dim)';
-    syEl.textContent='不可检测';syEl.style.color='var(--dim)';
-    cxEl.textContent='不可检测';cxEl.style.color='var(--dim)';
-    personaBadge.textContent='断连';personaBadge.className='s-card-badge badge-err';
-    addDataSourceTag(document.getElementById('personaCard'),'error',new Date());
-  }
-}
-
-/* ═══ Cognitive Chain Status ═══ */
-function updateCogChain(healthOk,mcpOk){
-  var badge=document.getElementById('cogBadge');
-  if(!badge)return;
-  var l3=document.getElementById('cogL3');
-  /* L3 (website) is always alive since you're viewing it */
-  if(l3)l3.style.borderColor='rgba(34,211,238,0.5)';
-
-  if(healthOk&&mcpOk){
-    badge.textContent='链路通畅';badge.className='s-card-badge badge-ok';
-  }else if(healthOk||mcpOk){
-    badge.textContent='部分通畅';badge.className='s-card-badge badge-warn';
-  }else{
-    badge.textContent='断连';badge.className='s-card-badge badge-err';
-  }
-}
-
-/* ═══ Welcome Status Probe ═══ */
 function updateWelcomeStatus(type,online){
   if(type==='server'){
     var dot=document.getElementById('wsServerDot');

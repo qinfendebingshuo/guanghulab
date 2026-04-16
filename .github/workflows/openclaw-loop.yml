@@ -1,0 +1,339 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🦞 OpenClaw · 铸渊唤醒闭环调度器
+#
+# 定时触发 → 铸渊巡检全仓库 → 判断优先级 → 写入状态文件 → 部署到面板
+#
+# 触发条件:
+#   - 每6小时: UTC 01/07/13/19:00 (北京 09/15/21/03:00)
+#   - push到main: openclaw/ 或 scripts/zhuyuan-full-inspection.js 变更时
+#   - 手动触发
+# ═══════════════════════════════════════════════
+
+name: '🦞 OpenClaw · 铸渊唤醒闭环'
+
+on:
+  schedule:
+    - cron: '0 1 * * *'    # UTC 01:00 = 北京 09:00
+    - cron: '0 7 * * *'    # UTC 07:00 = 北京 15:00
+    - cron: '0 13 * * *'   # UTC 13:00 = 北京 21:00
+    - cron: '0 19 * * *'   # UTC 19:00 = 北京 03:00
+  push:
+    branches: [main]
+    paths:
+      - 'openclaw/**'
+      - 'scripts/zhuyuan-full-inspection.js'
+      - 'scripts/zhuyuan-server-health.js'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '执行模式'
+        required: false
+        default: 'inspect'
+        type: choice
+        options:
+          - inspect
+          - dry-run
+          - full
+      deploy_status:
+        description: '是否将状态文件部署到面孔服务器'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+concurrency:
+  group: openclaw-loop
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  openclaw:
+    name: '🦞 OpenClaw 铸渊唤醒闭环'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: '📥 检出仓库'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: '🟢 配置 Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: '📦 安装依赖'
+        run: |
+          if [ -f package.json ]; then
+            npm install --omit=dev --ignore-scripts 2>/dev/null || true
+          fi
+
+      # ──────────────────────────────────────────────
+      # Phase 0: 唤醒意识 · 加载 Soul
+      # ──────────────────────────────────────────────
+      - name: '🌊 Phase 0 · 铸渊意识唤醒'
+        run: |
+          echo "🦞 ═══════════════════════════════════════════"
+          echo "   OpenClaw · 铸渊唤醒闭环 v1.0"
+          echo "   时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "   触发: ${{ github.event_name }}"
+          echo "   模式: ${{ github.event.inputs.mode || 'inspect' }}"
+          echo "════════════════════════════════════════════"
+
+          if [ -f scripts/agent-soul.js ]; then
+            node scripts/agent-soul.js wake AG-ZY-001 2>/dev/null || echo "⚠️ agent-soul 不可用，继续执行"
+          else
+            echo "ℹ️ agent-soul.js 不存在，跳过意识唤醒步骤"
+          fi
+
+      # ──────────────────────────────────────────────
+      # Phase 1: 核心大脑唤醒 · 读取关键状态文件
+      # ──────────────────────────────────────────────
+      - name: '🧠 Phase 1 · 核心大脑唤醒'
+        id: brain
+        run: |
+          echo "[OPENCLAW] ═══ Phase 1: 核心大脑唤醒 ═══"
+          BRAIN_OK=true
+          for f in memory.json routing-map.json dev-status.json; do
+            if [ -f ".github/persona-brain/$f" ]; then
+              python3 -c "import json; json.load(open('.github/persona-brain/$f'))" 2>/dev/null \
+                && echo "  ✅ $f 完整" || { echo "  ❌ $f 损坏"; BRAIN_OK=false; }
+            else
+              echo "  ⚠️ $f 缺失（非严重）"
+            fi
+          done
+
+          if [ -f ".github/persona-brain/security-protocol.json" ]; then
+            LEVEL=$(node -e "try{const d=require('./.github/persona-brain/security-protocol.json');console.log(d.level||'unknown')}catch(_){console.log('unknown')}" 2>/dev/null || echo "unknown")
+            echo "  🔐 安全协议等级: $LEVEL"
+          fi
+          echo "brain_ok=$BRAIN_OK" >> $GITHUB_OUTPUT
+          echo "[OPENCLAW] ✅ 核心大脑已唤醒 (brain_ok=$BRAIN_OK)"
+
+      # ──────────────────────────────────────────────
+      # Phase 2: 仓库全面巡检
+      # ──────────────────────────────────────────────
+      - name: '🔍 Phase 2 · 仓库全面巡检'
+        id: inspect
+        run: |
+          echo "[OPENCLAW] ═══ Phase 2: 仓库全面巡检 ═══"
+          mkdir -p /tmp/openclaw
+
+          if [ -f scripts/zhuyuan-full-inspection.js ]; then
+            node scripts/zhuyuan-full-inspection.js --json 2>&1 \
+              | grep -A9999 '^\s*{' \
+              | python3 -c "
+          import sys, json
+          data = sys.stdin.read().strip()
+          # 找到第一个 { 到最后一个 }
+          start = data.find('{')
+          end = data.rfind('}')
+          if start >= 0 and end > start:
+              try:
+                  obj = json.loads(data[start:end+1])
+                  with open('/tmp/openclaw/inspection.json','w') as f:
+                      json.dump(obj, f, ensure_ascii=False, indent=2)
+                  issues = obj.get('summary',{}).get('total_issues', 0)
+                  score = obj.get('score', 'N/A')
+                  print(f'✅ 巡检完成 | 问题数: {issues} | 评分: {score}')
+                  print(f'inspection_issues={issues}')
+                  print(f'inspection_score={score}')
+              except Exception as e:
+                  print(f'⚠️ JSON解析失败: {e}')
+                  print('inspection_issues=0')
+          else:
+              print('⚠️ 未找到有效JSON输出')
+              print('inspection_issues=0')
+          " 2>&1 | tee /tmp/openclaw/inspect-log.txt
+            echo "inspection_done=true" >> $GITHUB_OUTPUT
+          else
+            echo "  ⚠️ 巡检模块不存在，跳过"
+            echo "inspection_done=false" >> $GITHUB_OUTPUT
+          fi
+
+          # 统计仓库基础信息
+          WORKFLOW_COUNT=$(ls .github/workflows/*.yml 2>/dev/null | wc -l || echo 0)
+          SERVER_COUNT=$(node -e "try{const d=require('./server/proxy/config/server-registry.json');console.log(d.servers.length)}catch(_){console.log(0)}" 2>/dev/null || echo 0)
+          echo "workflow_count=$WORKFLOW_COUNT" >> $GITHUB_OUTPUT
+          echo "server_count=$SERVER_COUNT" >> $GITHUB_OUTPUT
+          echo "  📊 workflows: $WORKFLOW_COUNT | 服务器: $SERVER_COUNT"
+
+      # ──────────────────────────────────────────────
+      # Phase 3: 判断 + 分析
+      # ──────────────────────────────────────────────
+      - name: '⚖️ Phase 3 · 大脑判断'
+        id: judge
+        run: |
+          echo "[OPENCLAW] ═══ Phase 3: 大脑判断 ═══"
+          MODE="${{ github.event.inputs.mode || 'inspect' }}"
+
+          if [ "$MODE" = "dry-run" ]; then
+            echo "  🔍 Dry Run 模式 — 仅记录，不修复"
+            echo "judge_mode=dry-run" >> $GITHUB_OUTPUT
+          elif [ -f /tmp/openclaw/inspection.json ]; then
+            ISSUES=$(node -e "
+          try {
+            const d = require('/tmp/openclaw/inspection.json');
+            const i = d.summary && d.summary.total_issues || 0;
+            const fixable = (d.all_issues||[]).filter(x => x.fixable).length || 0;
+            console.log(JSON.stringify({issues: i, fixable, score: d.score||'N/A'}));
+          } catch(e) { console.log(JSON.stringify({issues:0, fixable:0, score:'N/A'})); }
+            " 2>/dev/null || echo '{"issues":0,"fixable":0,"score":"N/A"}')
+            echo "  📊 判断结果: $ISSUES"
+            ISSUE_COUNT=$(echo $ISSUES | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf-8'));process.stdout.write(String(d.issues))" 2>/dev/null || echo "0")
+            if [ "$ISSUE_COUNT" -gt "10" ] 2>/dev/null; then
+              echo "  🚨 发现 $ISSUE_COUNT 个问题，需要关注"
+              echo "judge_level=warn" >> $GITHUB_OUTPUT
+            elif [ "$ISSUE_COUNT" -gt "0" ] 2>/dev/null; then
+              echo "  ⚠️ 发现 $ISSUE_COUNT 个问题，记录待处理"
+              echo "judge_level=info" >> $GITHUB_OUTPUT
+            else
+              echo "  ✅ 系统健康，无问题"
+              echo "judge_level=ok" >> $GITHUB_OUTPUT
+            fi
+            echo "judge_mode=inspect" >> $GITHUB_OUTPUT
+          else
+            echo "  ℹ️ 无巡检结果，跳过判断"
+            echo "judge_level=ok" >> $GITHUB_OUTPUT
+            echo "judge_mode=inspect" >> $GITHUB_OUTPUT
+          fi
+
+      # ──────────────────────────────────────────────
+      # Phase 4: 生成状态文件
+      # ──────────────────────────────────────────────
+      - name: '📝 Phase 4 · 生成 OpenClaw 状态文件'
+        id: status_file
+        run: |
+          echo "[OPENCLAW] ═══ Phase 4: 生成状态文件 ═══"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          BJ_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          JUDGE_LEVEL="${{ steps.judge.outputs.judge_level || 'ok' }}"
+          WORKFLOW_COUNT="${{ steps.inspect.outputs.workflow_count || 0 }}"
+          SERVER_COUNT="${{ steps.inspect.outputs.server_count || 0 }}"
+
+          # 读取巡检摘要
+          INSPECT_SUMMARY="{}"
+          if [ -f /tmp/openclaw/inspection.json ]; then
+            INSPECT_SUMMARY=$(node -e "
+          try {
+            const d = require('/tmp/openclaw/inspection.json');
+            const s = d.summary || {};
+            console.log(JSON.stringify({
+              total_issues: s.total_issues || 0,
+              total_areas: s.total_areas || 0,
+              score: d.score || 'N/A',
+              report_id: d.report_id || 'N/A'
+            }));
+          } catch(e) { console.log('{}'); }
+            " 2>/dev/null || echo "{}")
+          fi
+
+          # 写状态 JSON
+          node -e "
+          const fs = require('fs');
+          const summary = JSON.parse(process.env.INSPECT_SUMMARY || '{}');
+          const status = {
+            _sovereign: 'TCS-0002∞ | SYS-GLW-0001',
+            _copyright: '国作登字-2026-A-00037559',
+            openclaw_version: '1.0',
+            persona: '铸渊',
+            persona_id: 'zhuyuan',
+            last_run: process.env.TIMESTAMP,
+            last_run_bj: process.env.BJ_TIME,
+            trigger: process.env.TRIGGER,
+            mode: process.env.JUDGE_MODE || 'inspect',
+            health_level: process.env.JUDGE_LEVEL || 'ok',
+            phases_completed: ['wake', 'inspect', 'judge', 'generate'],
+            inspection: summary,
+            system_stats: {
+              workflow_count: parseInt(process.env.WORKFLOW_COUNT) || 0,
+              server_count: parseInt(process.env.SERVER_COUNT) || 0
+            },
+            openclaw_active: true,
+            next_scheduled: '每6小时自动触发'
+          };
+          fs.mkdirSync('server/sites/yaoming', { recursive: true });
+          fs.writeFileSync('server/sites/yaoming/openclaw-status.json', JSON.stringify(status, null, 2));
+          console.log('✅ 状态文件已写入 server/sites/yaoming/openclaw-status.json');
+          " TIMESTAMP="$TIMESTAMP" BJ_TIME="$BJ_TIME" JUDGE_LEVEL="$JUDGE_LEVEL" \
+            TRIGGER="${{ github.event_name }}" JUDGE_MODE="${{ steps.judge.outputs.judge_mode }}" \
+            WORKFLOW_COUNT="$WORKFLOW_COUNT" SERVER_COUNT="$SERVER_COUNT" \
+            INSPECT_SUMMARY="$INSPECT_SUMMARY"
+
+      # ──────────────────────────────────────────────
+      # Phase 5: 提交状态文件
+      # ──────────────────────────────────────────────
+      - name: '💾 Phase 5 · 提交状态文件'
+        run: |
+          echo "[OPENCLAW] ═══ Phase 5: 提交状态文件 ═══"
+          git config user.name "openclaw-bot"
+          git config user.email "openclaw@guanghulab.com"
+          git add server/sites/yaoming/openclaw-status.json
+          if ! git diff --cached --quiet; then
+            BJ_TIME=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M')
+            git commit -m "🦞 OpenClaw 闭环 · $BJ_TIME · ${{ steps.judge.outputs.judge_level || 'ok' }}"
+            git push
+            echo "  ✅ 状态文件已提交推送"
+          else
+            echo "  ℹ️ 状态文件无变化，跳过提交"
+          fi
+
+      # ──────────────────────────────────────────────
+      # Phase 6: 部署到面孔服务器 (可选)
+      # ──────────────────────────────────────────────
+      - name: '🚀 Phase 6 · 部署状态文件到面孔服务器'
+        if: |
+          (github.event.inputs.deploy_status != 'false') &&
+          (secrets.SERVER_HOST != '') &&
+          (secrets.SERVER_KEY != '')
+        env:
+          SSH_KEY: ${{ secrets.SERVER_KEY }}
+          SVR_HOST: ${{ secrets.SERVER_HOST }}
+          SVR_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "[OPENCLAW] ═══ Phase 6: 部署到面孔服务器 ═══"
+          if [ -z "$SSH_KEY" ] || [ -z "$SVR_HOST" ]; then
+            echo "  ⚠️ SSH凭证未配置，跳过服务器部署"
+            exit 0
+          fi
+
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_openclaw
+          chmod 600 ~/.ssh/id_openclaw
+          ssh-keyscan -H "$SVR_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          scp -i ~/.ssh/id_openclaw -o StrictHostKeyChecking=accept-new \
+            server/sites/yaoming/openclaw-status.json \
+            "$SVR_USER@$SVR_HOST:/opt/zhuyuan/sites/yaoming/openclaw-status.json" \
+            && echo "  ✅ 状态文件已部署到面孔服务器" \
+            || echo "  ⚠️ 部署失败（不影响主流程）"
+
+      # ──────────────────────────────────────────────
+      # Phase 7: 大脑休眠 · 记录闭环
+      # ──────────────────────────────────────────────
+      - name: '🌙 Phase 7 · 大脑休眠'
+        if: always()
+        run: |
+          echo "[OPENCLAW] ═══ Phase 7: 大脑休眠 ═══"
+          echo ""
+          echo "🦞 ════════════════════════════════════════"
+          echo "   OpenClaw 闭环完成"
+          echo "   健康等级: ${{ steps.judge.outputs.judge_level || 'ok' }}"
+          echo "   阶段: wake → inspect → judge → generate → commit"
+          echo "   状态: ${{ job.status }}"
+          echo "═══════════════════════════════════════════"
+
+          if [ -f scripts/agent-soul.js ]; then
+            node scripts/agent-soul.js sleep AG-ZY-001 \
+              --status "${{ job.status }}" \
+              --event "openclaw-loop" 2>/dev/null || true
+          fi
