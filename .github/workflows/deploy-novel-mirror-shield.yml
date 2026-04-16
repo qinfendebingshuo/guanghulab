@@ -214,8 +214,21 @@ jobs:
             server/novel-db/security/fail2ban-action-ban-log.conf \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/fail2ban/action.d/novel-ban-log.conf
           ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'systemctl enable fail2ban && systemctl restart fail2ban && echo "✓ fail2ban 启动成功" && fail2ban-client status'
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          systemctl enable fail2ban
+          systemctl restart fail2ban
+          echo "✓ fail2ban 启动成功"
+          # 等待 fail2ban socket 就绪（异步启动，socket 需要数秒创建）
+          for i in 1 2 3 4 5; do
+            if [ -S /var/run/fail2ban/fail2ban.sock ]; then
+              echo "✓ fail2ban socket 已就绪 (第${i}次检测)"
+              break
+            fi
+            echo "⏳ 等待 fail2ban socket 就绪... (${i}/5)"
+            sleep 2
+          done
+          fail2ban-client status || echo "⚠ fail2ban-client status 查询失败，服务可能仍在初始化"
+          ENDSSH
 
       - name: '🔒 配置 iptables 扫描端口引流 (L3 增强)'
         run: |
@@ -403,7 +416,7 @@ jobs:
           echo ""
           echo "─── fail2ban 状态 ───"
           systemctl is-active fail2ban && echo "✓ fail2ban 在线" || echo "✗ fail2ban 离线"
-          fail2ban-client status
+          fail2ban-client status 2>/dev/null || echo "⚠ fail2ban-client 无法连接 socket"
           echo ""
           echo "─── 今日封禁记录 ───"
           TODAY=$(date +%Y-%m-%d)

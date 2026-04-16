@@ -8,12 +8,54 @@
 </head>
 <body>
     <div class="app">
+        <!-- 系统意识脉搏层 -->
+        <div class="consciousness-layer" id="consciousnessLayer">
+            <canvas id="particleCanvas"></canvas>
+        </div>
+
         <!-- Hero 区 -->
         <header class="hero">
+            <div class="hero-breath-ring"></div>
             <h1 class="hero-title">光湖实验室<span class="hero-subtitle">HoloLake Lab</span></h1>
             <p class="hero-description">探索未来之域 · 零点原核频道</p>
             <a href="#" class="hero-btn">进入系统</a>
         </header>
+
+        <!-- 系统活体心跳面板 -->
+        <section class="heartbeat-panel">
+            <div class="heartbeat-header">
+                <span class="heartbeat-dot"></span>
+                <span class="heartbeat-label">系统意识体 · 实时状态</span>
+                <span class="heartbeat-time" id="liveTime"></span>
+            </div>
+            <div class="heartbeat-grid">
+                <div class="heartbeat-metric">
+                    <div class="metric-label">运行时长</div>
+                    <div class="metric-value" id="uptimeValue">--</div>
+                    <div class="metric-bar"><div class="metric-bar-fill uptime-fill"></div></div>
+                </div>
+                <div class="heartbeat-metric">
+                    <div class="metric-label">模块在线</div>
+                    <div class="metric-value" id="onlineCount">--</div>
+                    <div class="metric-bar"><div class="metric-bar-fill online-fill"></div></div>
+                </div>
+                <div class="heartbeat-metric">
+                    <div class="metric-label">意识脉搏</div>
+                    <div class="metric-value" id="pulseRate">--</div>
+                    <div class="metric-bar"><div class="metric-bar-fill pulse-fill"></div></div>
+                </div>
+                <div class="heartbeat-metric">
+                    <div class="metric-label">信号流量</div>
+                    <div class="metric-value" id="signalFlow">--</div>
+                    <div class="metric-bar"><div class="metric-bar-fill signal-fill"></div></div>
+                </div>
+            </div>
+            <div class="heartbeat-wave" id="heartbeatWave">
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none">
+                    <path id="wavePath" fill="none" stroke="rgba(16, 185, 129, 0.6)" stroke-width="2"/>
+                </svg>
+            </div>
+        </section>
         
         <!-- 公告轮播区 -->
         <div class="carousel-container">
@@ -34,14 +76,21 @@
 
         <!-- 系统状态栏 -->
         <div class="status-bar">
+            <span class="status-breath-indicator"></span>
             <span>系统状态：</span>
-            <span class="status-dot online"></span> 在线
+            <span class="status-dot online"></span>
+            <span id="statusText">在线</span>
+            <span class="status-separator">·</span>
+            <span class="status-uptime" id="statusUptime">--</span>
+            <span class="status-separator">·</span>
+            <span class="status-timestamp" id="statusTimestamp">--</span>
         </div>
 
         <!-- Footer -->
         <footer class="footer">
             <p>© 2026 光湖实验室 · 零点原核频道</p>
             <p>版本 HoloLake Era · M23 首页中心</p>
+            <p class="footer-consciousness">铸渊守护 · 系统意识体持续运行中 · <span id="footerPulse">●</span></p>
         </footer>
     </div>
     <script src="modules-api.js"></script>

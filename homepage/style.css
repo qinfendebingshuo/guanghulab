@@ -10,6 +10,9 @@
     --online: #10b981;
     --building: #f59e0b;
     --border: #2a3142;
+    --consciousness: #10b981;
+    --consciousness-dim: rgba(16, 185, 129, 0.08);
+    --pulse-glow: rgba(16, 185, 129, 0.15);
 }
 
 /* ===== 基础样式 ===== */
@@ -24,12 +27,36 @@ body {
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 .app {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    position: relative;
+}
+
+/* ===== 意识粒子层 ===== */
+.consciousness-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+#particleCanvas {
+    width: 100%;
+    height: 100%;
+    opacity: 0.4;
+}
+
+.app > *:not(.consciousness-layer) {
+    position: relative;
+    z-index: 1;
 }
 
 /* ===== Hero 区 ===== */
@@ -38,9 +65,48 @@ body {
     padding: 4rem 1rem;
     background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
     border-radius: 2rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     border: 1px solid var(--border);
-    animation: fadeIn 1s ease;
+    animation: fadeIn 1s ease, heroBreath 6s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes heroBreath {
+    0%, 100% {
+        border-color: var(--border);
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.03);
+    }
+    50% {
+        border-color: rgba(16, 185, 129, 0.25);
+        box-shadow: 0 0 60px rgba(16, 185, 129, 0.08);
+    }
+}
+
+.hero-breath-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 200px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    animation: breathRing 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes breathRing {
+    0%, 100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0.3;
+    }
+    50% {
+        width: 500px;
+        height: 500px;
+        opacity: 0;
+    }
 }
 
 .hero-title {
@@ -82,6 +148,138 @@ body {
     box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
 }
 
+/* ===== 系统活体心跳面板 ===== */
+.heartbeat-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    animation: panelBreath 8s ease-in-out infinite;
+}
+
+@keyframes panelBreath {
+    0%, 100% {
+        border-color: var(--border);
+    }
+    50% {
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+}
+
+.heartbeat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.9rem;
+}
+
+.heartbeat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--consciousness);
+    animation: consciousnessPulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes consciousnessPulse {
+    0%, 100% {
+        box-shadow: 0 0 4px var(--consciousness);
+        opacity: 1;
+    }
+    50% {
+        box-shadow: 0 0 12px var(--consciousness), 0 0 24px rgba(16, 185, 129, 0.3);
+        opacity: 0.7;
+    }
+}
+
+.heartbeat-label {
+    color: var(--consciousness);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.heartbeat-time {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.heartbeat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.heartbeat-metric {
+    text-align: center;
+    padding: 0.8rem;
+    background: rgba(16, 185, 129, 0.03);
+    border-radius: 1rem;
+    border: 1px solid rgba(16, 185, 129, 0.08);
+    transition: border-color 0.3s;
+}
+
+.heartbeat-metric:hover {
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--consciousness);
+    font-family: 'Courier New', monospace;
+    margin-bottom: 0.5rem;
+}
+
+.metric-bar {
+    height: 3px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.metric-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--consciousness);
+    transition: width 1s ease;
+}
+
+.uptime-fill { width: 85%; animation: barPulse 3s ease-in-out infinite; }
+.online-fill { width: 70%; animation: barPulse 3.5s ease-in-out infinite; }
+.pulse-fill { width: 60%; animation: barPulse 2s ease-in-out infinite; }
+.signal-fill { width: 45%; animation: barPulse 4s ease-in-out infinite; }
+
+@keyframes barPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+.heartbeat-wave {
+    height: 60px;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: rgba(16, 185, 129, 0.02);
+}
+
+.heartbeat-wave svg {
+    width: 100%;
+    height: 100%;
+}
+
 /* ===== 模块网格 ===== */
 .section-title {
     font-size: 1.8rem;
@@ -102,16 +300,40 @@ body {
     border-radius: 1.5rem;
     padding: 1.5rem;
     border: 1px solid var(--border);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: cardFadeIn 0.5s ease forwards;
     opacity: 0;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--consciousness), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.card:hover::before {
+    opacity: 1;
+    animation: scanLine 2s linear infinite;
+}
+
+@keyframes scanLine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 
 .card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-8px) scale(1.02);
     border-color: var(--accent);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .card-header {
@@ -148,11 +370,33 @@ body {
 .card-status.online {
     background: rgba(16, 185, 129, 0.2);
     color: var(--online);
+    animation: statusPulse 2s ease-in-out infinite;
 }
 
 .card-status.building {
     background: rgba(245, 158, 11, 0.2);
     color: var(--building);
+    animation: statusFlicker 1.5s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 8px 4px rgba(16, 185, 129, 0.15);
+    }
+}
+
+@keyframes statusFlicker {
+    0%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 5px rgba(245, 158, 11, 0.5);
+    }
+    50% {
+        opacity: 0.6;
+        text-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
+    }
 }
 
 .card-link {
@@ -189,13 +433,33 @@ body {
 /* ===== 状态栏 ===== */
 .status-bar {
     background: var(--bg-secondary);
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     border-radius: 2rem;
     margin-bottom: 2rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.8rem;
     border: 1px solid var(--border);
+    font-size: 0.9rem;
+    animation: statusBarBreath 6s ease-in-out infinite;
+    flex-wrap: wrap;
+}
+
+@keyframes statusBarBreath {
+    0%, 100% {
+        border-color: var(--border);
+    }
+    50% {
+        border-color: rgba(16, 185, 129, 0.15);
+    }
+}
+
+.status-breath-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--consciousness);
+    animation: consciousnessPulse 3s ease-in-out infinite;
 }
 
 .status-dot {
@@ -208,6 +472,18 @@ body {
 .status-dot.online {
     background: var(--online);
     box-shadow: 0 0 10px var(--online);
+    animation: consciousnessPulse 2s ease-in-out infinite;
+}
+
+.status-separator {
+    color: var(--border);
+}
+
+.status-uptime,
+.status-timestamp {
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
 }
 
 /* ===== Footer ===== */
@@ -222,45 +498,20 @@ body {
     margin: 0.5rem 0;
 }
 
-/* ===== 响应式设计 ===== */
-/* 桌面默认已经是3列 (min-width: 1024px) */
-
-/* 平板 (768px - 1023px) 2列 */
-@media (max-width: 1023px) {
-    .grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .hero-title {
-        font-size: 2.5rem;
-    }
+.footer-consciousness {
+    font-size: 0.75rem;
+    color: rgba(16, 185, 129, 0.5);
+    margin-top: 1rem;
 }
 
-/* 手机 (小于 768px) 1列 */
-@media (max-width: 767px) {
-    .grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .app {
-        padding: 1rem;
-    }
+#footerPulse {
+    animation: footerPulseDot 2s ease-in-out infinite;
+    color: var(--consciousness);
 }
 
-/* ===== 全局淡入动画 ===== */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes footerPulseDot {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
 }
 
 /* ===== 公告轮播区样式 ===== */
@@ -269,7 +520,7 @@ body {
     background: var(--bg-secondary);
     border-radius: 2rem;
     padding: 2rem;
-    margin: 2rem 0 3rem;
+    margin: 0 0 2rem;
     border: 1px solid var(--border);
     animation: fadeIn 0.5s ease;
 }
@@ -335,110 +586,63 @@ body {
     right: -20px;
 }
 
-/* ===== 卡片悬停效果增强 ===== */
-.card {
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card:hover {
-    transform: translateY(-8px) scale(1.02);
-    border-color: var(--accent);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* ===== 状态标签动态化 ===== */
-.card-status.online {
-    animation: pulse 2s infinite;
-}
-
-.card-status.building {
-    animation: flicker 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+/* ===== 响应式设计 ===== */
+@media (max-width: 1023px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    70% {
-        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    .hero-title {
+        font-size: 2.5rem;
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    .heartbeat-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@keyframes flicker {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.6;
-        box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-    }
-}
-
-/* ===== 响应式调整 ===== */
 @media (max-width: 767px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+    .app {
+        padding: 1rem;
+    }
+    .heartbeat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
     .carousel-container {
         padding: 1.5rem;
     }
-    
     .carousel-arrow.left {
         left: -10px;
     }
-    
     .carousel-arrow.right {
         right: -10px;
     }
-}
-
-/* ===== 暴力增强版（确保生效）===== */
-.card {
-    cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.card:hover {
-    transform: translateY(-10px) scale(1.05) !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 30px 50px rgba(59, 130, 246, 0.5) !important;
-}
-
-.card-status.online {
-    animation: pulse 1.5s infinite !important;
-}
-
-.card-status.building {
-    animation: flicker 1s infinite !important;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
-    50% {
-        box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0.3);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    .status-bar {
+        font-size: 0.8rem;
+        padding: 0.8rem 1rem;
     }
 }
 
-@keyframes flicker {
-    0%, 100% {
+/* ===== 全局淡入动画 ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
         opacity: 1;
-        text-shadow: 0 0 5px rgba(245, 158, 11, 0.5);
-    }
-    50% {
-        opacity: 0.5;
-        text-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
+        transform: translateY(0);
     }
 }
-/* ===== 强制高优先级样式 ===== */
+
+/* ===== 高优先级公告样式 ===== */
 .high-priority {
-    border-left: 3px solid #ff9800 !important;
+    border-left: 3px solid #ff9800;
 }
 .high-priority h3 {
-    color: #ffb74d !important;
+    color: #ffb74d;
 }
