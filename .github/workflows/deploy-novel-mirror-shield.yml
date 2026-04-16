@@ -173,14 +173,14 @@ jobs:
           # 全新服务器上这些文件不存在 → nginx -t 失败 → certbot 也无法运行
           # 修复方案: 先创建临时占位文件让 nginx -t 通过，certbot 申请成功后会替换为真实文件
           if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
-            cat > /etc/letsencrypt/options-ssl-nginx.conf << 'SSLEOF'
-ssl_session_cache shared:le_nginx_SSL:10m;
-ssl_session_timeout 1440m;
-ssl_session_tickets off;
-ssl_protocols TLSv1.2 TLSv1.3;
-ssl_prefer_server_ciphers off;
-ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256";
-SSLEOF
+            printf '%s\n' \
+              'ssl_session_cache shared:le_nginx_SSL:10m;' \
+              'ssl_session_timeout 1440m;' \
+              'ssl_session_tickets off;' \
+              'ssl_protocols TLSv1.2 TLSv1.3;' \
+              'ssl_prefer_server_ciphers off;' \
+              'ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256";' \
+              > /etc/letsencrypt/options-ssl-nginx.conf
             echo "✓ 已创建 options-ssl-nginx.conf 占位文件"
           fi
           if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
@@ -254,6 +254,7 @@ SSLEOF
               --non-interactive \
               --agree-tos \
               --email admin@guanghuyaoming.com \
+              --preferred-challenges http \
               --quiet
             echo "✓ Let's Encrypt 证书申请成功，重载 Nginx 激活真实证书..."
             systemctl reload nginx
@@ -315,25 +316,63 @@ SSLEOF
           ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
-          # 安装 certbot
-          apt-get install -y certbot python3-certbot-nginx
-          mkdir -p /var/www/certbot
+          # 安装 certbot (不安装 python3-certbot-nginx，避免 nginx 插件干扰 webroot 方式)
+          apt-get update -q
+          apt-get install -y certbot
+          mkdir -p /var/www/certbot /etc/letsencrypt/live/novel.guanghuyaoming.com
+
+          # ─── SSL 占位文件引导（与 deploy job 相同逻辑） ───
+          # nginx 配置引用 letsencrypt 文件，全新服务器上不存在 → nginx -t 失败
+          # 先创建临时占位文件让 nginx 可以运行
+          if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
+            printf '%s\n' \
+              'ssl_session_cache shared:le_nginx_SSL:10m;' \
+              'ssl_session_timeout 1440m;' \
+              'ssl_session_tickets off;' \
+              'ssl_protocols TLSv1.2 TLSv1.3;' \
+              'ssl_prefer_server_ciphers off;' \
+              'ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256";' \
+              > /etc/letsencrypt/options-ssl-nginx.conf
+            echo "✓ 已创建 options-ssl-nginx.conf 占位文件"
+          fi
+          if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
+            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 1024 2>/dev/null
+            echo "✓ 已生成 ssl-dhparams.pem 占位文件"
+          fi
+          if [ ! -f /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem ]; then
+            openssl req -x509 -nodes -newkey rsa:2048 \
+              -keyout /etc/letsencrypt/live/novel.guanghuyaoming.com/privkey.pem \
+              -out /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem \
+              -days 1 -subj '/CN=novel.guanghuyaoming.com' 2>/dev/null
+            echo "✓ 已创建临时自签名证书占位"
+          fi
+
+          # 确保 nginx 能启动（占位文件就绪）
+          nginx -t && systemctl reload nginx || systemctl restart nginx
+
           # 使用 webroot 方式申请证书
-          # 不依赖 nginx 插件，不会触发 nginx -t（避免因 letsencrypt 文件不存在而失败）
-          # 前提：nginx 已运行，且 novel.guanghuyaoming.com 的 HTTP server 已配置
-          #        /.well-known/acme-challenge/ 路由到 /var/www/certbot
+          # --preferred-challenges http 确保只用 HTTP-01 验证，不触发 nginx 插件
           certbot certonly --webroot \
             -w /var/www/certbot \
             -d novel.guanghuyaoming.com \
             --non-interactive \
             --agree-tos \
-            --email admin@guanghuyaoming.com
-          # 重载 nginx 使用新证书
+            --email admin@guanghuyaoming.com \
+            --preferred-challenges http
+          echo "✓ Let's Encrypt 证书申请成功"
+
+          # 重载 nginx 使用真实证书
           systemctl reload nginx
-          # 验证续期
-          certbot renew --dry-run
-          echo "=== SSL 证书申请成功 ==="
-          certbot certificates
+          echo "✓ Nginx 重载 · HTTPS 已激活"
+
+          # 设置自动续期（幂等）
+          if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
+            (crontab -l 2>/dev/null; echo "0 3 1 * * certbot renew --quiet --post-hook 'systemctl reload nginx'") | crontab -
+            echo "✓ SSL 自动续期 cron 已配置"
+          fi
+
+          certbot certificates 2>/dev/null | grep -E "Domains|Expiry|Certificate" || true
+          echo "=== SSL 证书配置完成 ==="
           ENDSSH
 
   # ═══════════════════════════════════════════════════════
