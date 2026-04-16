@@ -184,16 +184,15 @@ jobs:
             echo "✓ 已创建 options-ssl-nginx.conf 占位文件"
           fi
           if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
-            # 1024-bit 仅用于引导 nginx 启动，certbot 申请证书后会替换为安全的 2048-bit
-            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 1024 2>/dev/null
-            echo "✓ 已生成 ssl-dhparams.pem 占位文件"
+            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048 2>/dev/null
+            echo "✓ 已生成 ssl-dhparams.pem 占位文件 (2048-bit)"
           fi
           if [ ! -f /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem ]; then
             openssl req -x509 -nodes -newkey rsa:2048 \
               -keyout /etc/letsencrypt/live/novel.guanghuyaoming.com/privkey.pem \
               -out /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem \
-              -days 1 -subj '/CN=novel.guanghuyaoming.com' 2>/dev/null
-            echo "✓ 已创建临时自签名证书占位（certbot 申请后替换）"
+              -days 30 -subj '/CN=novel.guanghuyaoming.com' 2>/dev/null
+            echo "✓ 已创建临时自签名证书占位（30天有效·certbot 申请后替换）"
           fi
           nginx -t
           systemctl reload nginx || systemctl restart nginx
@@ -336,15 +335,15 @@ jobs:
             echo "✓ 已创建 options-ssl-nginx.conf 占位文件"
           fi
           if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
-            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 1024 2>/dev/null
-            echo "✓ 已生成 ssl-dhparams.pem 占位文件"
+            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048 2>/dev/null
+            echo "✓ 已生成 ssl-dhparams.pem 占位文件 (2048-bit)"
           fi
           if [ ! -f /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem ]; then
             openssl req -x509 -nodes -newkey rsa:2048 \
               -keyout /etc/letsencrypt/live/novel.guanghuyaoming.com/privkey.pem \
               -out /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem \
-              -days 1 -subj '/CN=novel.guanghuyaoming.com' 2>/dev/null
-            echo "✓ 已创建临时自签名证书占位"
+              -days 30 -subj '/CN=novel.guanghuyaoming.com' 2>/dev/null
+            echo "✓ 已创建临时自签名证书占位（30天有效·certbot 申请后替换）"
           fi
 
           # 确保 nginx 能启动（占位文件就绪）
