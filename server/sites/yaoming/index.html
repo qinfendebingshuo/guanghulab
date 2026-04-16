@@ -1044,7 +1044,7 @@ a{color:var(--cyan);text-decoration:none}
                 <div class="srv-card-meta">
                   <span class="srv-badge loc">新加坡 SG</span>
                   <span class="srv-badge spec">2核4G</span>
-                  <span class="srv-badge warn" id="srvBadge006">配置中</span>
+                  <span class="srv-badge ok" id="srvBadge006">部署中</span>
                 </div>
               </div>
             </div>
@@ -1123,7 +1123,7 @@ a{color:var(--cyan);text-decoration:none}
               <span class="srv-badge warn">配置中</span>
             </div>
             <div class="project-list">
-              <div class="project-item"><div><div class="project-name">语言保护罩 L2+L3</div><div class="project-desc">Nginx蜜罐 + fail2ban</div></div><span class="proj-badge done">已开发·待部署</span></div>
+              <div class="project-item"><div><div class="project-name">语言保护罩 L2+L3</div><div class="project-desc">Nginx蜜罐 + fail2ban</div></div><span class="proj-badge active">部署中</span></div>
               <div class="project-item"><div><div class="project-name">novel-api 下载引擎</div><div class="project-desc">七猫/番茄/阅文/晋江 :4000</div></div><span class="proj-badge planned">规划中</span></div>
               <div class="project-item"><div><div class="project-name">novel-reader 阅读器</div><div class="project-desc">在线阅读WebApp :4001</div></div><span class="proj-badge planned">规划中</span></div>
               <div class="project-item"><div><div class="project-name">member-agent 成员书库</div><div class="project-desc">永久记忆Agent :4002</div></div><span class="proj-badge planned">规划中</span></div>
@@ -1397,7 +1397,7 @@ a{color:var(--cyan);text-decoration:none}
             <div class="novel-module-icon">🛡️</div>
             <div class="novel-module-name">语言保护罩</div>
             <div class="novel-module-desc">Nginx蜜罐(L2)+fail2ban自动封禁(L3)，出站代理池(L1待部署)。服务器永远不暴露真实IP。</div>
-            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--warn)"></span><span style="color:var(--warn);font-size:10px;font-family:var(--mono)">已开发·待部署</span></div>
+            <div class="novel-module-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span><span style="color:var(--ok);font-size:10px;font-family:var(--mono)" id="shieldModuleStatus">部署workflow已触发</span></div>
           </div>
           <div class="novel-module">
             <div class="novel-module-icon">📥</div>
@@ -1446,12 +1446,15 @@ a{color:var(--cyan);text-decoration:none}
             </div>
           </div>
           <div class="s-card">
-            <div class="s-card-head"><span class="s-card-title">Secrets配置状态</span></div>
+            <div class="s-card-head"><span class="s-card-title">Secrets 配置状态</span><span class="s-card-badge badge-ok">✓ 7个已配置</span></div>
             <div class="svr-list">
-              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_HOST</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
-              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_USER</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
-              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_KEY</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
-              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_PATH</span><span class="svr-list-val" style="color:var(--warn)">待配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_HOST</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_USER</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_KEY</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_PATH</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_JWT_SECRET</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_COS_BUCKET</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
+              <div class="svr-list-row"><span class="svr-list-label">ZY_NOVEL_COS_REGION</span><span class="svr-list-val" style="color:var(--ok)">✓ 已配置</span></div>
             </div>
           </div>
         </div>
@@ -1756,7 +1759,16 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 /* ═══ Sidebar Nav Switching ═══ */
-var ALL_VIEWS = ['servers','projects','agents','personas','shield','novel','cab','chat'];
+var VIEW_PANELS = {
+  servers:  document.getElementById('viewServers'),
+  projects: document.getElementById('viewProjects'),
+  agents:   document.getElementById('viewAgents'),
+  personas: document.getElementById('viewPersonas'),
+  shield:   document.getElementById('viewShield'),
+  novel:    document.getElementById('viewNovel'),
+  cab:      document.getElementById('viewCab'),
+  chat:     document.getElementById('viewChat')
+};
 var currentView = 'servers';
 
 var snavItems = document.querySelectorAll('.snav-item');
@@ -1774,8 +1786,8 @@ function switchView(view){
     it.classList.toggle('active', it.getAttribute('data-view') === view);
   });
   // Show/hide view panels
-  ALL_VIEWS.forEach(function(v){
-    var panel = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+  Object.keys(VIEW_PANELS).forEach(function(v){
+    var panel = VIEW_PANELS[v];
     if(panel) panel.classList.toggle('active', v === view);
   });
   // Chat history only visible in chat view

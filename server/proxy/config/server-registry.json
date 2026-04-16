@@ -147,7 +147,7 @@
       "location": "Singapore",
       "ipv4": "43.153.203.105",
       "spec": "2核4G",
-      "status": "pending",
+      "status": "active",
       "deploy_path": "/opt/novel-db",
       "domain": "novel.guanghuyaoming.com",
       "services": [
@@ -171,7 +171,10 @@
         "host": "ZY_NOVEL_HOST",
         "key": "ZY_NOVEL_KEY",
         "user": "ZY_NOVEL_USER",
-        "path": "ZY_NOVEL_PATH"
+        "path": "ZY_NOVEL_PATH",
+        "jwt_secret": "ZY_NOVEL_JWT_SECRET",
+        "cos_bucket": "ZY_NOVEL_COS_BUCKET",
+        "cos_region": "ZY_NOVEL_COS_REGION"
       },
       "dns_required": {
         "A_record": "novel.guanghuyaoming.com → 43.153.203.105"
