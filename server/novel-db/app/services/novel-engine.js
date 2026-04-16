@@ -316,7 +316,8 @@ function getOutline(novelId) {
 // AI辅助写作 (MVP: 模板生成 · Phase 4: 接入LLM)
 // ══════════════════════════════════════════
 
-function aiContinue(novelId, chapterId, { prompt, length }) {
+function aiContinue(novelId, chapterId, options) {
+  const prompt = typeof options.prompt === 'string' ? options.prompt : '续写';
   const chapter = getChapter(novelId, chapterId);
   if (!chapter) throw new Error('章节不存在');
 
@@ -325,7 +326,7 @@ function aiContinue(novelId, chapterId, { prompt, length }) {
   // MVP: 生成模板续写提示
   return {
     type: 'continue',
-    prompt_used: prompt || '续写',
+    prompt_used: prompt,
     context: lastParagraph.slice(-200),
     generated: `[AI续写预留位 · 接入DeepSeek后自动生成]\n\n基于上文"${lastParagraph.slice(-50)}..."的续写将在此处呈现。\n\n当前为MVP占位内容。`,
     model: 'placeholder',
@@ -333,18 +334,21 @@ function aiContinue(novelId, chapterId, { prompt, length }) {
   };
 }
 
-function aiRewrite(novelId, chapterId, { text, style }) {
+function aiRewrite(novelId, chapterId, options) {
+  const text = typeof options.text === 'string' ? options.text : '';
+  const style = typeof options.style === 'string' ? options.style : 'default';
   return {
     type: 'rewrite',
-    original: (text || '').slice(0, 500),
-    style: style || 'default',
-    generated: `[AI改写预留位 · 接入DeepSeek后自动生成]\n\n原文将按"${style || '默认'}"风格改写。`,
+    original: text.slice(0, 500),
+    style: style,
+    generated: `[AI改写预留位 · 接入DeepSeek后自动生成]\n\n原文将按"${style}"风格改写。`,
     model: 'placeholder',
     note: 'Phase 4 将接入 DeepSeek/Kimi API 实现真实改写'
   };
 }
 
-function aiSuggest(novelId, { type }) {
+function aiSuggest(novelId, options) {
+  const type = typeof options.type === 'string' ? options.type : 'plot';
   const novel = getNovel(novelId);
   if (!novel) throw new Error('小说不存在');
 
@@ -352,7 +356,7 @@ function aiSuggest(novelId, { type }) {
   const chapterCount = novel.chapters.length;
 
   return {
-    type: type || 'plot',
+    type: type,
     novel_title: novel.title,
     context: `${novel.genre}类型 · ${chapterCount}章 · 人物: ${charNames}`,
     suggestions: [
