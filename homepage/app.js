@@ -191,7 +191,7 @@ function initParticleSystem() {
     
     const ctx = canvas.getContext('2d');
     const particles = [];
-    const PARTICLE_COUNT = 30;
+    const CONNECTION_THRESHOLD = 150;
     
     function resize() {
         canvas.width = window.innerWidth;
@@ -200,8 +200,12 @@ function initParticleSystem() {
     resize();
     window.addEventListener('resize', resize);
     
+    // 粒子数量按屏幕大小自适应（避免小屏性能问题）
+    const particleCount = Math.max(10, Math.min(50,
+        Math.floor(canvas.width * canvas.height / 50000)));
+    
     // 初始化粒子
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < particleCount; i++) {
         particles.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
@@ -243,8 +247,8 @@ function initParticleSystem() {
                 const dx = p.x - other.x;
                 const dy = p.y - other.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 150) {
-                    const lineAlpha = (1 - dist / 150) * 0.15 * (0.5 + 0.5 * Math.sin(t * 0.3));
+                if (dist < CONNECTION_THRESHOLD) {
+                    const lineAlpha = (1 - dist / CONNECTION_THRESHOLD) * 0.15 * (0.5 + 0.5 * Math.sin(t * 0.3));
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(other.x, other.y);

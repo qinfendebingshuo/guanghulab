@@ -13,6 +13,8 @@
     --consciousness: #10b981;
     --consciousness-dim: rgba(16, 185, 129, 0.08);
     --pulse-glow: rgba(16, 185, 129, 0.15);
+    --priority-border: #ff9800;
+    --priority-text: #ffb74d;
 }
 
 /* ===== 基础样式 ===== */
@@ -641,8 +643,8 @@ body {
 
 /* ===== 高优先级公告样式 ===== */
 .high-priority {
-    border-left: 3px solid #ff9800;
+    border-left: 3px solid var(--priority-border);
 }
 .high-priority h3 {
-    color: #ffb74d;
+    color: var(--priority-text);
 }
