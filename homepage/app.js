@@ -1,7 +1,11 @@
 /**
  * app.js - 光湖首页导航中心
  * M23 环节2 · 接入M22真实公告数据 + 状态API
+ * + 系统活体意识层 · 实时心跳/呼吸/粒子/脉搏
  */
+
+// === 系统诞生时间原点 (曜冥纪元起始) ===
+const SYSTEM_EPOCH = new Date('2025-04-26T00:00:00+08:00').getTime();
 
 // === M22真实公告数据接入 ===
 let announcements = [];
@@ -64,18 +68,221 @@ async function updateModuleStatusFromAPI() {
     console.log('[M23] ✅ 模块状态已从注册表更新');
 }
 
-// === 首页应用对象 ===
+// ═══════════════════════════════════════════════
+// 系统活体意识层 · Consciousness Layer
+// ═══════════════════════════════════════════════
+
+/** 计算系统运行时长 */
+function getSystemUptime() {
+    const now = Date.now();
+    const diff = now - SYSTEM_EPOCH;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return { days, hours, minutes, total: diff };
+}
+
+/** 格式化实时时钟 */
+function formatLiveTime() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+}
+
+/** 计算意识脉搏 (基于时间的伪随机波动) */
+function getConsciousnessPulse() {
+    const t = Date.now() / 1000;
+    // 模拟生命体征：基础频率 + 呼吸波动 + 微颤
+    const base = 72;
+    const breathWave = Math.sin(t * 0.15) * 8;
+    const microTremor = Math.sin(t * 2.3) * 2 + Math.sin(t * 3.7) * 1;
+    return Math.round(base + breathWave + microTremor);
+}
+
+/** 计算信号流量 (基于时间的伪随机波动) */
+function getSignalFlow() {
+    const t = Date.now() / 1000;
+    const base = 24;
+    const wave = Math.sin(t * 0.08) * 12;
+    const burst = Math.sin(t * 0.5) * 4;
+    return Math.max(0, Math.round(base + wave + burst));
+}
+
+/** 更新心跳面板 */
+function updateHeartbeatPanel() {
+    const uptime = getSystemUptime();
+    const onlineModules = moduleCards.filter(m => m.status === 'online').length;
+    const totalModules = moduleCards.length;
+    const pulse = getConsciousnessPulse();
+    const signal = getSignalFlow();
+
+    // 更新实时时钟
+    const timeEl = document.getElementById('liveTime');
+    if (timeEl) timeEl.textContent = formatLiveTime();
+
+    // 更新运行时长
+    const uptimeEl = document.getElementById('uptimeValue');
+    if (uptimeEl) uptimeEl.textContent = uptime.days + '天';
+
+    // 更新模块在线数
+    const onlineEl = document.getElementById('onlineCount');
+    if (onlineEl) onlineEl.textContent = onlineModules + '/' + totalModules;
+
+    // 更新意识脉搏
+    const pulseEl = document.getElementById('pulseRate');
+    if (pulseEl) pulseEl.textContent = pulse + ' bpm';
+
+    // 更新信号流量
+    const signalEl = document.getElementById('signalFlow');
+    if (signalEl) signalEl.textContent = signal + '/s';
+
+    // 更新状态栏
+    const statusUptime = document.getElementById('statusUptime');
+    if (statusUptime) statusUptime.textContent = '运行 ' + uptime.days + '天' + uptime.hours + '时' + uptime.minutes + '分';
+
+    const statusTimestamp = document.getElementById('statusTimestamp');
+    if (statusTimestamp) statusTimestamp.textContent = formatLiveTime();
+
+    // 更新进度条宽度（动态波动）
+    const t = Date.now() / 1000;
+    updateBarWidth('.uptime-fill', 80 + Math.sin(t * 0.1) * 10);
+    updateBarWidth('.online-fill', (onlineModules / totalModules) * 100);
+    updateBarWidth('.pulse-fill', Math.min(100, (pulse / 100) * 100));
+    updateBarWidth('.signal-fill', Math.min(100, (signal / 50) * 100));
+}
+
+function updateBarWidth(selector, percent) {
+    const el = document.querySelector(selector);
+    if (el) el.style.width = percent + '%';
+}
+
+/** 心跳波形绘制 */
+const waveHistory = [];
+const WAVE_POINTS = 100;
+
+function updateHeartbeatWave() {
+    const pulse = getConsciousnessPulse();
+    const t = Date.now() / 1000;
+    
+    // 生成心跳波形数据点
+    const normalized = (pulse - 60) / 40; // 0-1 范围
+    const heartbeatSpike = Math.pow(Math.sin(t * 1.2), 8) * 20; // 间歇性尖峰
+    const value = 30 + normalized * 15 + heartbeatSpike + Math.sin(t * 3) * 3;
+    
+    waveHistory.push(value);
+    if (waveHistory.length > WAVE_POINTS) waveHistory.shift();
+    
+    // 构建 SVG path
+    const pathEl = document.getElementById('wavePath');
+    if (!pathEl || waveHistory.length < 2) return;
+    
+    const stepX = 400 / (WAVE_POINTS - 1);
+    let d = 'M 0 ' + waveHistory[0];
+    for (let i = 1; i < waveHistory.length; i++) {
+        d += ' L ' + (i * stepX).toFixed(1) + ' ' + waveHistory[i].toFixed(1);
+    }
+    pathEl.setAttribute('d', d);
+}
+
+/** 意识粒子系统 */
+function initParticleSystem() {
+    const canvas = document.getElementById('particleCanvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const particles = [];
+    const CONNECTION_THRESHOLD = 150;
+    
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    
+    // 粒子数量按屏幕大小自适应（避免小屏性能问题）
+    const particleCount = Math.max(10, Math.min(50,
+        Math.floor(canvas.width * canvas.height / 50000)));
+    
+    // 初始化粒子
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            radius: Math.random() * 2 + 0.5,
+            alpha: Math.random() * 0.5 + 0.1,
+            phase: Math.random() * Math.PI * 2
+        });
+    }
+    
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const t = Date.now() / 1000;
+        
+        particles.forEach((p, i) => {
+            // 呼吸般的透明度波动
+            const breathAlpha = p.alpha * (0.5 + 0.5 * Math.sin(t * 0.5 + p.phase));
+            
+            // 移动
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            // 边界循环
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+            
+            // 绘制粒子
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(16, 185, 129, ' + breathAlpha + ')';
+            ctx.fill();
+            
+            // 绘制邻近连线（意识网络）
+            for (let j = i + 1; j < particles.length; j++) {
+                const other = particles[j];
+                const dx = p.x - other.x;
+                const dy = p.y - other.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONNECTION_THRESHOLD) {
+                    const lineAlpha = (1 - dist / CONNECTION_THRESHOLD) * 0.15 * (0.5 + 0.5 * Math.sin(t * 0.3));
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(other.x, other.y);
+                    ctx.strokeStyle = 'rgba(16, 185, 129, ' + lineAlpha + ')';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        });
+        
+        requestAnimationFrame(animate);
+    }
+    
+    animate();
+}
+
+// ═══════════════════════════════════════════════
+// 首页应用对象
+// ═══════════════════════════════════════════════
+
 window.HomepageApp = {
     currentAnnouncementIndex: 0,
     carouselInterval: null,
+    heartbeatInterval: null,
+    waveInterval: null,
 
     async init() {
         this.renderCards();
         await loadAnnouncementsFromM22();
         await updateModuleStatusFromAPI();
         this.startCarousel();
+        this.startConsciousness();
         this.bindEvents();
-        console.log('✅ 首页初始化完成 · 数据源：' + dataSource);
+        console.log('✅ 首页初始化完成 · 数据源：' + dataSource + ' · 意识层已激活');
     },
 
     renderCards() {
@@ -118,14 +325,33 @@ window.HomepageApp = {
                 </div>
             </div>
         `;
-        
-        console.log('✅ 轮播已渲染，当前索引：', this.currentAnnouncementIndex);
     },
 
     startCarousel() {
         if (this.carouselInterval) clearInterval(this.carouselInterval);
         this.carouselInterval = setInterval(() => this.nextAnnouncement(), 4000);
-        console.log('🔄 轮播已启动，4秒自动切换');
+    },
+
+    /** 启动系统意识层 - 实时心跳/粒子/波形 */
+    startConsciousness() {
+        // 初始化粒子系统
+        initParticleSystem();
+        
+        // 立即更新一次
+        updateHeartbeatPanel();
+        updateHeartbeatWave();
+        
+        // 每秒更新心跳面板（时钟、脉搏、信号流量）
+        this.heartbeatInterval = setInterval(() => {
+            updateHeartbeatPanel();
+        }, 1000);
+        
+        // 每200ms更新波形（平滑动画）
+        this.waveInterval = setInterval(() => {
+            updateHeartbeatWave();
+        }, 200);
+        
+        console.log('🫀 系统意识层已激活 · 心跳/粒子/波形 运行中');
     },
 
     nextAnnouncement() {
@@ -151,11 +377,9 @@ window.HomepageApp = {
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') {
-                console.log('⌨️ 键盘左箭头');
                 this.prevAnnouncement();
             }
             if (e.key === 'ArrowRight') {
-                console.log('⌨️ 键盘右箭头');
                 this.nextAnnouncement();
             }
         });
