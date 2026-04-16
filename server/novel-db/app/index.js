@@ -13,6 +13,12 @@
  *   GET  /shield/status       — 语言保护罩状态 + 封禁统计
  *   GET  /shield/logs         — 最近封禁日志 (面板读取)
  *
+ * Phase 2 功能 (智库节点三大引擎):
+ *   /api/zhiku/download/*     — 下载引擎 (书籍下载任务管理)
+ *   /api/zhiku/chapter/*      — 智能分章 (TXT章节分割+目录索引)
+ *   /api/zhiku/reader/*       — 在线阅读器 (书架/进度/偏好)
+ *   GET  /api/zhiku/stats     — 智库节点综合统计
+ *
  * ═══════════════════════════════════════════════════════════
  */
 
@@ -162,6 +168,34 @@ app.get('/shield/logs', (req, res) => {
     logs:      parsed.recentBans.slice(0, limit),
     total:     parsed.totalBans,
     timestamp: new Date().toISOString()
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+ * Phase 2: 智库节点三大引擎路由
+ * ═══════════════════════════════════════════════════════════ */
+const downloadRouter = require('./routes/download');
+const chapterRouter  = require('./routes/chapter');
+const readerRouter   = require('./routes/reader');
+
+app.use('/api/zhiku/download', downloadRouter);
+app.use('/api/zhiku/chapter',  chapterRouter);
+app.use('/api/zhiku/reader',   readerRouter);
+
+// 智库综合统计
+const downloadEngine = require('./services/download-engine');
+const chapterEngine  = require('./services/chapter-engine');
+const readerEngine   = require('./services/reader-engine');
+
+app.get('/api/zhiku/stats', (req, res) => {
+  res.json({
+    service:   'zhiku-node-phase2',
+    server:    'ZY-SVR-006',
+    timestamp: new Date().toISOString(),
+    download:  downloadEngine.getStats(),
+    chapter:   chapterEngine.getStats(),
+    reader:    readerEngine.getStats(),
+    _sovereign: 'TCS-0002∞'
   });
 });
 

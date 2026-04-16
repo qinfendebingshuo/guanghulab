@@ -40,7 +40,7 @@ try {
 
 module.exports = {
   apps: [
-    /* ─── Phase 1: API 服务 ─── */
+    /* ─── Phase 1+2: 智库节点 API 服务 ─── */
     {
       name: 'novel-api',
       script: 'app/index.js',
@@ -59,6 +59,8 @@ module.exports = {
         PORT: 4000,
         BAN_LOG_PATH: '/var/log/novel-shield-bans.log',
         NGINX_LOG: '/var/log/nginx/novel-access.log',
+        BOOKS_DIR: '/opt/novel-db/data/books',
+        CHAPTERS_DIR: '/opt/novel-db/data/chapters',
         ...envOverrides
       }
     }
