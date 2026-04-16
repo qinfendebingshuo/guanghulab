@@ -19,6 +19,13 @@
  *   /api/zhiku/reader/*       — 在线阅读器 (书架/进度/偏好)
  *   GET  /api/zhiku/stats     — 智库节点综合统计
  *
+ * Phase 3 功能 (团队书库+成员Agent):
+ *   /api/zhiku/library/*      — 团队书库 (男频/女频分区+去重)
+ *   /api/zhiku/agent/*        — 成员Agent (永久记忆+对话+笔记)
+ *
+ * ZY-PROJ-004 智能小说系统:
+ *   /api/novel/*              — 小说/章节/人物卡/大纲/AI辅助
+ *
  * ═══════════════════════════════════════════════════════════
  */
 
@@ -182,19 +189,41 @@ app.use('/api/zhiku/download', downloadRouter);
 app.use('/api/zhiku/chapter',  chapterRouter);
 app.use('/api/zhiku/reader',   readerRouter);
 
+/* ═══════════════════════════════════════════════════════════
+ * Phase 3: 团队书库 + 成员Agent
+ * ═══════════════════════════════════════════════════════════ */
+const libraryRouter     = require('./routes/library');
+const memberAgentRouter = require('./routes/member-agent');
+
+app.use('/api/zhiku/library', libraryRouter);
+app.use('/api/zhiku/agent',   memberAgentRouter);
+
+/* ═══════════════════════════════════════════════════════════
+ * ZY-PROJ-004: 智能小说系统
+ * ═══════════════════════════════════════════════════════════ */
+const novelRouter = require('./routes/novel');
+
+app.use('/api/novel', novelRouter);
+
 // 智库综合统计
 const downloadEngine = require('./services/download-engine');
 const chapterEngine  = require('./services/chapter-engine');
 const readerEngine   = require('./services/reader-engine');
+const libraryEngine  = require('./services/library-engine');
+const agentEngine    = require('./services/member-agent-engine');
+const novelEngine    = require('./services/novel-engine');
 
 app.get('/api/zhiku/stats', (req, res) => {
   res.json({
-    service:   'zhiku-node-phase2',
+    service:   'zhiku-node-full',
     server:    'ZY-SVR-006',
     timestamp: new Date().toISOString(),
     download:  downloadEngine.getStats(),
     chapter:   chapterEngine.getStats(),
     reader:    readerEngine.getStats(),
+    library:   libraryEngine.getStats(),
+    agent:     agentEngine.getStats(),
+    novel:     novelEngine.getStats(),
     _sovereign: 'TCS-0002∞'
   });
 });

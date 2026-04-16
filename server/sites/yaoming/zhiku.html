@@ -354,17 +354,58 @@ a:hover{color:var(--purple)}
         <div class="mod-icon">📦</div>
         <div class="mod-name">COS 团队书库</div>
         <div class="mod-desc">男频/女频分区，同一本书只存一份，去重存储。成员书库用引用，不重复占空间。</div>
-        <div class="mod-status"><span class="mod-dot plan"></span><span style="color:var(--muted)">规划中 · Phase 3</span></div>
+        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">已上线 · Phase 3</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">🤝</div>
         <div class="mod-name">成员 Agent</div>
         <div class="mod-desc">每成员独立Agent，永久记忆。接DeepSeek/Kimi，协助拆文/大纲/摘要。</div>
-        <div class="mod-status"><span class="mod-dot plan"></span><span style="color:var(--muted)">规划中 · Phase 3</span></div>
+        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">已上线 · Phase 3</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">✍️</div>
+        <div class="mod-name">智能小说系统</div>
+        <div class="mod-desc">小说创作工作台。大纲/人物卡/章节管理。AI续写/改写/情节建议（预留DeepSeek接入）。</div>
+        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">已上线 · ZY-PROJ-004</span></div>
       </div>
     </div>
 
-  </main>
+    <!-- Team Library Section -->
+    <div class="section-title" style="margin-top:20px">📦 团队书库</div>
+    <div id="librarySection" style="margin-bottom:28px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="search-btn" onclick="loadLibrary()" style="font-size:11px">全部</button>
+        <button class="search-btn" onclick="loadLibrary('男频')" style="font-size:11px">男频</button>
+        <button class="search-btn" onclick="loadLibrary('女频')" style="font-size:11px">女频</button>
+        <button class="search-btn" onclick="loadLibrary('无CP')" style="font-size:11px">无CP</button>
+        <button class="search-btn" onclick="loadLibrary('百合')" style="font-size:11px">百合</button>
+        <button class="search-btn" onclick="loadLibrary('耽美')" style="font-size:11px">耽美</button>
+        <button class="search-btn" onclick="loadLibrary('其他')" style="font-size:11px">其他</button>
+      </div>
+      <div class="book-grid" id="libraryGrid"></div>
+      <div id="libraryEmpty" class="empty-state" style="padding:30px">
+        <div class="empty-icon">📦</div>
+        <div class="empty-title">团队书库为空</div>
+        <div class="empty-desc">下载的书籍会自动进入团队书库，也可以手动添加。</div>
+      </div>
+    </div>
+
+    <!-- Agent Chat Section -->
+    <div class="section-title">🤝 我的Agent</div>
+    <div id="agentSection" style="margin-bottom:28px">
+      <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:20px;backdrop-filter:blur(8px)">
+        <div id="agentChatBox" style="height:240px;overflow-y:auto;margin-bottom:12px;padding:12px;border-radius:10px;background:rgba(5,8,16,0.6);border:1px solid var(--border);font-size:13px;line-height:1.8"></div>
+        <div style="display:flex;gap:8px">
+          <input class="search-input" id="agentInput" type="text" placeholder="和你的Agent对话..." style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(5,8,16,0.4)">
+          <button class="search-btn" onclick="sendAgentChat()">发送</button>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="back-btn" onclick="sendAgentChat('帮助')" style="font-size:10px">💡 帮助</button>
+          <button class="back-btn" onclick="sendAgentChat('记忆')" style="font-size:10px">🧠 我的记忆</button>
+          <button class="back-btn" onclick="window.open('/novel.html','_blank')" style="font-size:10px">✍️ 打开创作台</button>
+        </div>
+      </div>
+    </div>
 
   <!-- Footer -->
   <footer class="footer">
@@ -605,10 +646,68 @@ function toggleReaderTheme(){
   }
 }
 
+/* ═══ Team Library ═══ */
+function loadLibrary(category){
+  var url='/api/zhiku/library';
+  if(category)url+='?category='+encodeURIComponent(category);
+  api('GET',url).then(function(d){
+    var grid=document.getElementById('libraryGrid');
+    var empty=document.getElementById('libraryEmpty');
+    if(d.error||!d.data||d.data.length===0){
+      grid.style.display='none';empty.style.display='';return;
+    }
+    grid.style.display='';empty.style.display='none';
+    grid.innerHTML='';
+    var platformNames={qimao:'七猫',fanqie:'番茄',yuewen:'阅文',jjwxc:'晋江'};
+    d.data.forEach(function(book){
+      var card=document.createElement('div');card.className='book-card';
+      var stars='';for(var i=0;i<5;i++)stars+=i<Math.round(book.rating)?'★':'☆';
+      card.innerHTML='<div class="book-title">'+escHtml(book.book_name)+'</div>'
+        +'<div class="book-author">'+escHtml(book.author)+'</div>'
+        +'<div class="book-meta">'
+        +'<span class="book-tag">'+escHtml(book.category)+'</span>'
+        +(book.tags||[]).map(function(t){return '<span class="book-tag">'+escHtml(t)+'</span>'}).join('')
+        +'<span class="book-tag" style="color:var(--warn)">'+stars+' '+book.rating+'</span>'
+        +'<span class="book-tag">引用 '+book.ref_count+'</span>'
+        +'</div>';
+      grid.appendChild(card);
+    });
+  });
+}
+
+/* ═══ Agent Chat ═══ */
+var agentReady=false;
+function initAgent(){
+  api('POST','/api/zhiku/agent/'+MEMBER_ID,{nickname:'成员'}).then(function(d){
+    agentReady=true;
+    appendChat('assistant','🤖 Agent已就绪，有什么我可以帮你的？');
+  });
+}
+function appendChat(role,text){
+  var box=document.getElementById('agentChatBox');
+  var color=role==='user'?'var(--cyan)':'var(--purple)';
+  var label=role==='user'?'你':'Agent';
+  box.innerHTML+='<div style="margin-bottom:8px"><span style="color:'+color+';font-weight:600;font-size:11px">'+label+':</span> '+escHtml(text)+'</div>';
+  box.scrollTop=box.scrollHeight;
+}
+function sendAgentChat(preset){
+  var msg=preset||document.getElementById('agentInput').value.trim();
+  if(!msg)return;
+  if(!preset)document.getElementById('agentInput').value='';
+  appendChat('user',msg);
+  api('POST','/api/zhiku/agent/'+MEMBER_ID+'/chat',{message:msg}).then(function(d){
+    if(d.error){appendChat('assistant','⚠️ '+d.message);return;}
+    appendChat('assistant',d.data.reply);
+  });
+}
+
 /* ═══ Init ═══ */
 document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')searchBooks();});
+document.getElementById('agentInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendAgentChat();});
 loadStats();
 loadBooks();
+loadLibrary();
+initAgent();
 </script>
 
 </body>
