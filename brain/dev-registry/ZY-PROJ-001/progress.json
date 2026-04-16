@@ -60,8 +60,9 @@
     {
       "id": "ZY-PROJ-001-PHASE-4",
       "name": "系统面板UI大改版 + 聊天界面专业化",
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-04-16",
+      "completed_at": "2026-04-16",
       "content": [
         "全局字体增大(基础16px·正文14-15px·标题18-20px)",
         "颜色体系调亮(text #eaf0ff·dim #94a7d0)",
@@ -74,7 +75,29 @@
         "prefers-reduced-motion无障碍支持",
         "聊天气泡/元数据/系统步骤字体增大+间距加宽"
       ],
-      "next_step": "合并PR触发deploy-to-zhuyuan-server.yml自动部署·冰朔访问guanghuyaoming.com验证新UI效果"
+      "verified": "UI改版已部署·但冰朔反馈呼吸感仍不够强"
+    },
+    {
+      "id": "ZY-PROJ-001-PHASE-5",
+      "name": "系统呼吸感深度强化 · 参考guanghutcs.top风格",
+      "status": "in_progress",
+      "started_at": "2026-04-16",
+      "content": [
+        "卡片呼吸光晕动画(cardBreathe 7s border glow + 7个错开延迟避免同步)",
+        "OpenClaw紫色专属呼吸动画(cardBreatheAlt)",
+        "全局间距大幅增大(dashboard 36px·grid gap 24px·card padding 28px+)",
+        "卡片顶部渐变条常显(opacity .4 → hover .8)",
+        "悬停效果强化(40px cyan glow + 80px ambient + translateY(-2px))",
+        "MODULE 01-07 编号标签(所有section标题)",
+        "星云增强(3个nebula层+漂移动画nebulaDrift+opacity .07)",
+        "湖面反射增强(22vh+双层afterglow+底部光晕)",
+        "Headline区域放大(glyph 60px·title 26px·环境光晕240px)",
+        "服务器卡片名19px·Agent名17px·section 13px·metric 18px",
+        "侧边栏导航15px/padding 12px 22px",
+        "移动端呼吸适配(@media 768px/480px)",
+        "prefers-reduced-motion完整适配(含nebula/lake/card)"
+      ],
+      "next_step": "合并PR触发deploy-to-zhuyuan-server.yml自动部署→冰朔访问guanghuyaoming.com验证呼吸感"
     }
   ],
   "fixes": [

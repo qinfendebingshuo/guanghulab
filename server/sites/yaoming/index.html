@@ -34,19 +34,24 @@ a{color:var(--cyan);text-decoration:none}
 /* ═══ Star Field ═══ */
 .cosmos{position:fixed;inset:0;z-index:0;pointer-events:none}
 #starCanvas{position:absolute;inset:0;width:100%;height:100%}
-.nebula{position:fixed;border-radius:50%;filter:blur(120px);opacity:.04;pointer-events:none;z-index:0}
-.neb-1{width:50vw;height:50vh;background:radial-gradient(circle,var(--purple),transparent);top:-10%;right:-10%}
-.neb-2{width:40vw;height:40vh;background:radial-gradient(circle,var(--cyan),transparent);bottom:5%;left:-8%}
+.nebula{position:fixed;border-radius:50%;filter:blur(120px);opacity:.07;pointer-events:none;z-index:0;transition:opacity 4s}
+.neb-1{width:60vw;height:55vh;background:radial-gradient(circle,var(--purple),transparent);top:-10%;right:-10%;animation:nebulaDrift 20s ease-in-out infinite alternate}
+.neb-2{width:50vw;height:45vh;background:radial-gradient(circle,var(--cyan),transparent);bottom:5%;left:-8%;animation:nebulaDrift 25s ease-in-out infinite alternate-reverse}
+.neb-3{width:35vw;height:30vh;background:radial-gradient(circle,rgba(96,165,250,0.6),transparent);top:40%;left:30%;filter:blur(140px);opacity:.04;animation:nebulaDrift 18s ease-in-out infinite alternate}
+@keyframes nebulaDrift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20px,-15px) scale(1.08)}}
 
 /* Lake Reflection */
-.lake{position:fixed;bottom:0;left:0;right:0;height:18vh;z-index:0;pointer-events:none;
-  background:linear-gradient(to top,rgba(34,211,238,0.015),transparent);
+.lake{position:fixed;bottom:0;left:0;right:0;height:22vh;z-index:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(34,211,238,0.025),rgba(96,165,250,0.008),transparent);
   animation:lakeBreathe 6s ease-in-out infinite}
-@keyframes lakeBreathe{0%,100%{opacity:.7}50%{opacity:1}}
-.lake::before{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(96,165,250,0.1),rgba(167,139,250,0.08),transparent);
+@keyframes lakeBreathe{0%,100%{opacity:.65}50%{opacity:1}}
+.lake::before{content:'';position:absolute;bottom:0;left:5%;right:5%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(96,165,250,0.15),rgba(34,211,238,0.12),rgba(167,139,250,0.1),transparent);
   animation:lakeShimmer 8s ease-in-out infinite alternate}
-@keyframes lakeShimmer{0%{opacity:.3;left:10%;right:10%}100%{opacity:.7;left:6%;right:6%}}
+@keyframes lakeShimmer{0%{opacity:.3;left:8%;right:8%}100%{opacity:.8;left:4%;right:4%}}
+.lake::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:60%;
+  background:radial-gradient(ellipse at bottom,rgba(34,211,238,0.02),transparent 80%);
+  animation:lakeBreathe 8s ease-in-out infinite;animation-delay:-3s}
 
 /* ═══ Login Overlay ═══ */
 .login-overlay{
@@ -720,7 +725,229 @@ a{color:var(--cyan);text-decoration:none}
   .welcome-glyph,.login-glyph,.persona-avatar{animation:none !important}
   .lake{animation:none !important}
   .lake::before{animation:none !important}
+  .lake::after{animation:none !important}
+  .nebula{animation:none !important}
+  .srv-card,.s-card,.agent-card,.project-card,.shield-stat,.shield-layer,.novel-module,.novel-stat,.shield-log{animation:none !important}
   *{transition-duration:0.01ms !important}
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ═══ 系统呼吸感 · BREATHING ENHANCEMENT · Phase 5       ═══ */
+/* ═══ 参考 guanghutcs.top 深空控制台风格                   ═══ */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* ─── 全局卡片呼吸光晕 ─── */
+@keyframes cardBreathe{
+  0%,100%{border-color:rgba(34,211,238,0.08);box-shadow:0 0 0 rgba(34,211,238,0),0 2px 12px rgba(0,0,0,0.3)}
+  50%{border-color:rgba(34,211,238,0.22);box-shadow:0 0 28px rgba(34,211,238,0.06),0 0 60px rgba(34,211,238,0.02),0 2px 12px rgba(0,0,0,0.3)}
+}
+@keyframes cardBreatheAlt{
+  0%,100%{border-color:rgba(167,139,250,0.08);box-shadow:0 0 0 rgba(167,139,250,0)}
+  50%{border-color:rgba(167,139,250,0.2);box-shadow:0 0 22px rgba(167,139,250,0.05),0 0 50px rgba(167,139,250,0.02)}
+}
+.srv-card,.s-card,.agent-card,.project-card{animation:cardBreathe 7s ease-in-out infinite}
+.shield-stat,.shield-layer,.novel-module,.novel-stat,.shield-log{animation:cardBreathe 8s ease-in-out infinite}
+/* 错开呼吸节奏·避免同步 */
+.srv-card:nth-child(2),.agent-card:nth-child(2),.project-card:nth-child(2){animation-delay:1.2s}
+.srv-card:nth-child(3),.agent-card:nth-child(3),.project-card:nth-child(3){animation-delay:2.4s}
+.srv-card:nth-child(4),.agent-card:nth-child(4),.project-card:nth-child(4){animation-delay:3.6s}
+.srv-card:nth-child(5){animation-delay:0.8s}
+.srv-card:nth-child(6){animation-delay:2s}
+.srv-card:nth-child(7){animation-delay:3.2s}
+.shield-stat:nth-child(2){animation-delay:1.5s}
+.shield-stat:nth-child(3){animation-delay:3s}
+.shield-layer:nth-child(2){animation-delay:2s}
+.shield-layer:nth-child(3){animation-delay:4s}
+.novel-module:nth-child(2n){animation-delay:1.8s}
+.novel-module:nth-child(3n){animation-delay:3.3s}
+.novel-stat:nth-child(2){animation-delay:1s}
+.novel-stat:nth-child(3){animation-delay:2s}
+.novel-stat:nth-child(4){animation-delay:3s}
+/* OpenClaw 特殊呼吸 */
+.openclaw-card{animation:cardBreatheAlt 6s ease-in-out infinite !important}
+
+/* ─── 增强: 整体布局间距 ─── */
+.dashboard{padding:36px 40px 52px}
+.dash-grid{gap:24px}
+.server-grid{gap:24px}
+.agent-grid{gap:24px}
+.project-grid{gap:24px}
+.shield-layers{gap:20px}
+.shield-stat-grid{gap:16px}
+.novel-module-grid{gap:20px}
+.novel-stat-grid{gap:14px}
+
+/* ─── 增强: 卡片内边距 ─── */
+.srv-card{padding:28px 32px}
+.s-card{padding:26px 30px}
+.agent-card{padding:26px 28px}
+.project-card{padding:26px 30px}
+.shield-stat{padding:24px 26px}
+.shield-layer{padding:24px 26px}
+.novel-module{padding:22px 24px}
+
+/* ─── 增强: 卡片border基础亮度 ─── */
+.srv-card,.s-card,.agent-card,.project-card,.shield-stat,.shield-layer,.novel-module,.novel-stat,.shield-log{
+  border-color:rgba(96,165,250,0.14)
+}
+
+/* ─── 增强: 卡片顶部渐变条常显 ─── */
+.srv-card::before{opacity:.4}
+.s-card::before{opacity:.3}
+.srv-card:hover::before{opacity:.8}
+.s-card:hover::before{opacity:.6}
+
+/* ─── 增强: 更强悬停发光 ─── */
+.srv-card:hover{
+  border-color:rgba(34,211,238,0.4) !important;
+  box-shadow:0 0 40px rgba(34,211,238,0.12),0 0 80px rgba(34,211,238,0.04),0 8px 32px rgba(0,0,0,0.4) !important;
+  transform:translateY(-2px)
+}
+.s-card:hover{
+  border-color:rgba(34,211,238,0.35) !important;
+  box-shadow:0 0 35px rgba(34,211,238,0.1),0 8px 28px rgba(0,0,0,0.3) !important
+}
+.agent-card:hover{
+  border-color:rgba(34,211,238,0.35) !important;
+  box-shadow:0 0 35px rgba(34,211,238,0.1),0 8px 28px rgba(0,0,0,0.3) !important
+}
+.project-card:hover{
+  border-color:rgba(34,211,238,0.3);
+  box-shadow:0 0 30px rgba(34,211,238,0.08),0 6px 24px rgba(0,0,0,0.3)
+}
+
+/* ─── 增强: Headline区域 ─── */
+.dash-headline{margin:0 auto 32px;position:relative}
+.dash-headline-glyph{width:60px;height:60px;font-size:28px;border-radius:18px}
+.dash-headline-text h2{font-size:26px;letter-spacing:2.5px}
+.dash-headline-text p{font-size:14px;margin-top:6px}
+.dash-headline::before{
+  content:'';position:absolute;width:240px;height:240px;border-radius:50%;
+  top:-80px;left:-60px;pointer-events:none;z-index:-1;
+  background:radial-gradient(circle,rgba(34,211,238,0.04),transparent 70%)
+}
+
+/* ─── 增强: Section标题 ─── */
+.dash-section{margin:40px auto 20px}
+.dash-section-title{font-size:13px;letter-spacing:2.5px;gap:14px;display:flex;align-items:center}
+.dash-section-sub{font-size:14px;margin-top:8px;line-height:1.8}
+
+/* MODULE 编号标签 */
+.module-tag{
+  display:inline-flex;align-items:center;padding:3px 12px;border-radius:4px;
+  background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);
+  color:var(--cyan);font-size:10px;font-weight:700;
+  letter-spacing:2.5px;font-family:var(--mono);
+  flex-shrink:0;white-space:nowrap
+}
+
+/* ─── 增强: 服务器卡片内部文字 ─── */
+.srv-card-name{font-size:19px;letter-spacing:.8px}
+.srv-card-role{font-size:13px;margin-top:5px;line-height:1.6}
+.srv-badge{font-size:11px;padding:4px 10px}
+.srv-svc-name{font-size:14px}
+.srv-svc-desc{font-size:13px;line-height:1.6}
+.srv-divider{margin:14px 0}
+.srv-conn-tag{font-size:11px;padding:4px 9px}
+.srv-svc-port{font-size:11px;padding:3px 8px}
+
+/* ─── 增强: Agent卡片内部 ─── */
+.agent-name{font-size:17px;letter-spacing:.5px}
+.agent-sub{font-size:12px;margin-top:5px}
+.agent-row{font-size:14px;padding:6px 0}
+.agent-icon{width:42px;height:42px;font-size:20px}
+
+/* ─── 增强: 项目卡片内部 ─── */
+.project-card-name{font-size:16px}
+.project-card-server{font-size:10px;letter-spacing:1.2px}
+.project-name{font-size:14px}
+.project-desc{font-size:11px}
+.proj-badge{font-size:10px;padding:3px 8px}
+
+/* ─── 增强: 状态卡片内部 ─── */
+.s-card-title{font-size:13px;letter-spacing:1.8px}
+.s-card-badge{font-size:12px;padding:4px 12px}
+.persona-pname{font-size:15px}
+.persona-role{font-size:13px}
+.persona-icon{width:30px;height:30px;font-size:14px}
+
+/* ─── 增强: 度量值 ─── */
+.metric-label{font-size:14px}
+.metric-val{font-size:18px}
+
+/* ─── 增强: 保护罩统计数字 ─── */
+.shield-stat-num{font-size:32px}
+.shield-stat-label{font-size:12px;letter-spacing:1.2px}
+.shield-layer-tag{font-size:11px;letter-spacing:1.2px;margin-bottom:10px}
+.shield-layer-name{font-size:17px;margin-bottom:8px}
+.shield-layer-desc{font-size:14px;line-height:1.7}
+.shield-log-title{font-size:13px;letter-spacing:1.2px}
+.shield-log-body{font-size:14px}
+
+/* ─── 增强: 智库节点统计 ─── */
+.novel-stat-num{font-size:28px}
+.novel-stat-label{font-size:11px;letter-spacing:1.2px}
+.novel-module-icon{font-size:22px;margin-bottom:8px}
+.novel-module-name{font-size:15px;margin-bottom:5px}
+.novel-module-desc{font-size:13px;line-height:1.7;margin-bottom:10px}
+
+/* ─── 增强: 侧边栏导航 ─── */
+.snav-item{font-size:15px;padding:12px 22px;gap:12px}
+.snav-section{font-size:11px;padding:16px 22px 8px}
+.snav-icon{font-size:16px}
+
+/* ─── 增强: 侧边栏header ─── */
+.sidebar-header{padding:20px 22px}
+.logo-text{font-size:16px;letter-spacing:1.5px}
+.logo-sub{font-size:12px;margin-top:3px}
+.logo-glyph{width:40px;height:40px;font-size:19px;border-radius:11px}
+
+/* ─── 增强: 侧边栏footer ─── */
+.sidebar-footer{padding:16px 22px}
+.status-line{font-size:13px}
+.sidebar-copy{font-size:11px;margin-top:10px}
+
+/* ─── 增强: 主header ─── */
+.main-header{padding:14px 32px;min-height:60px}
+.persona-name{font-size:16px;letter-spacing:.8px}
+.persona-tag{font-size:12px}
+.persona-avatar{width:40px;height:40px;font-size:17px;border-radius:11px}
+
+/* ─── 增强: 聊天区域 ─── */
+.welcome-title{font-size:28px;letter-spacing:3px}
+.welcome-desc{font-size:15px;line-height:2.2;margin-bottom:36px}
+.welcome-glyph{width:72px;height:72px;font-size:32px;border-radius:18px;margin:0 auto 24px}
+.hint-chip{padding:10px 20px;font-size:14px}
+
+/* ─── 环境光晕层 ─── */
+.dash-section::before{
+  content:'';position:absolute;width:120px;height:120px;border-radius:50%;
+  top:-40px;left:-20px;pointer-events:none;
+  background:radial-gradient(circle,rgba(34,211,238,0.025),transparent 70%);
+  z-index:-1
+}
+.dash-section{position:relative}
+
+/* ─── 移动端呼吸适配 ─── */
+@media(max-width:768px){
+  .dashboard{padding:20px 18px 36px}
+  .srv-card{padding:22px 24px}
+  .s-card{padding:20px 22px}
+  .agent-card{padding:20px 22px}
+  .project-card{padding:20px 22px}
+  .dash-headline-glyph{width:48px;height:48px;font-size:24px}
+  .dash-headline-text h2{font-size:22px}
+  .srv-card-name{font-size:17px}
+  .agent-name{font-size:16px}
+  .snav-item{font-size:14px;padding:11px 20px}
+  .server-grid,.agent-grid,.project-grid{gap:18px}
+  .welcome-glyph{width:60px;height:60px;font-size:28px}
+  .welcome-title{font-size:24px}
+}
+@media(max-width:480px){
+  .dash-headline-glyph{width:44px;height:44px;font-size:21px;border-radius:12px}
+  .dash-headline-text h2{font-size:20px}
+  .module-tag{font-size:9px;padding:2px 8px;letter-spacing:2px}
 }
 </style>
 </head>
@@ -731,6 +958,7 @@ a{color:var(--cyan);text-decoration:none}
   <canvas id="starCanvas"></canvas>
   <div class="nebula neb-1"></div>
   <div class="nebula neb-2"></div>
+  <div class="nebula neb-3"></div>
 </div>
 <div class="lake"></div>
 
@@ -740,6 +968,7 @@ a{color:var(--cyan);text-decoration:none}
     <canvas id="loginStarCanvas"></canvas>
     <div class="nebula neb-1"></div>
     <div class="nebula neb-2"></div>
+    <div class="nebula neb-3"></div>
   </div>
   <div class="login-card">
     <div class="login-glyph">渊</div>
@@ -899,7 +1128,7 @@ a{color:var(--cyan);text-decoration:none}
 
         <!-- 服务器矩阵 -->
         <div class="dash-section">
-          <div class="dash-section-title">服务器矩阵 <span id="svrOnlineCount" style="color:var(--ok);font-family:var(--mono);text-transform:none;letter-spacing:0">—</span></div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 01</span> 服务器矩阵 <span id="svrOnlineCount" style="color:var(--ok);font-family:var(--mono);text-transform:none;letter-spacing:0">—</span></div>
           <div class="dash-section-sub">光湖语言世界托管的全部服务器 · 实时状态从 MCP API 拉取 · 其余节点展示静态配置</div>
         </div>
 
@@ -1122,7 +1351,7 @@ a{color:var(--cyan);text-decoration:none}
     <div class="view-panel" id="viewProjects">
       <div class="dashboard">
         <div class="dash-section">
-          <div class="dash-section-title">项目进度</div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 02</span> 项目进度</div>
           <div class="dash-section-sub">每台服务器上运行的项目 · 开发状态 · 功能清单</div>
         </div>
         <div class="project-grid">
@@ -1206,7 +1435,7 @@ a{color:var(--cyan);text-decoration:none}
       <div class="dashboard">
         <!-- ═══ Agent集群 ═══ -->
         <div class="dash-section" style="margin-top:28px">
-          <div class="dash-section-title">Agent集群</div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 03</span> Agent集群</div>
           <div class="dash-section-sub">运行在各服务器上的自动化Agent · 实时状态 + 出发服务器 + 工作职责</div>
         </div>
 
@@ -1300,7 +1529,7 @@ a{color:var(--cyan);text-decoration:none}
       <div class="dashboard">
         <!-- ═══ 人格体在线状态 ═══ -->
         <div class="dash-section" style="margin-top:28px">
-          <div class="dash-section-title">人格体在线状态</div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 04</span> 人格体在线状态</div>
           <div class="dash-section-sub">光湖语言世界各人格体当前状态 · 通过 MCP + Notion桥接实时检测</div>
         </div>
 
@@ -1341,7 +1570,7 @@ a{color:var(--cyan);text-decoration:none}
     <div class="view-panel" id="viewShield">
       <div class="dashboard">
         <div class="dash-section">
-          <div class="dash-section-title">🛡️ 语言保护罩日志</div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 05</span> 🛡️ 语言保护罩日志</div>
           <div class="dash-section-sub">ZY-SVR-006 三层IP隐身架构 · 拦截记录 · 实时状态 · 从服务器拉取</div>
         </div>
 
@@ -1422,7 +1651,7 @@ a{color:var(--cyan);text-decoration:none}
     <div class="view-panel" id="viewNovel">
       <div class="dashboard">
         <div class="dash-section">
-          <div class="dash-section-title">📚 智库节点 · ZY-SVR-006</div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 06</span> 📚 智库节点 · ZY-SVR-006</div>
           <div class="dash-section-sub">智能小说书库 · 成员阅读器 · 分章Agent · novel.guanghuyaoming.com</div>
         </div>
 
@@ -1524,7 +1753,7 @@ a{color:var(--cyan);text-decoration:none}
     <div class="view-panel" id="viewCab">
       <div class="dashboard">
         <div class="dash-section">
-          <div class="dash-section-title">📋 CAB任务看板</div>
+          <div class="dash-section-title"><span class="module-tag">MODULE 07</span> 📋 CAB任务看板</div>
           <div class="dash-section-sub">跨层开发任务 · Chat-to-Agent Bridge · 铸渊开发进度</div>
         </div>
         <div class="dash-grid">

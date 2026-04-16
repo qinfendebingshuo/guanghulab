@@ -94,9 +94,17 @@
       "fix": "删除蜜罐块中的重复ACME location·只保留novel.guanghuyaoming.com块中的定义(root /var/www/certbot)·因为certbot只对指定域名验证",
       "files_changed": ["server/nginx/novel-mirror-shield.conf"],
       "result": "implemented"
+    },
+    {
+      "id": "ZY-PROJ-002-FIX-4",
+      "date": "2026-04-16",
+      "problem": "setup-ssl job 运行 certbot 时 nginx -t 失败·/etc/letsencrypt/options-ssl-nginx.conf 不存在",
+      "root_cause": "setup-ssl job 安装了 python3-certbot-nginx 后 certbot 自动尝试 nginx 插件验证·触发 nginx -t·但 SSL 占位文件只在 deploy job 中创建·setup-ssl 单独运行时无占位文件。deploy job 从未成功执行(push 触发时 paths 不匹配·workflow_dispatch 只选了 setup-ssl)。",
+      "fix": "1) setup-ssl job 增加与 deploy job 相同的 SSL 占位文件创建逻辑 2) 改为只安装 certbot 不安装 python3-certbot-nginx 避免 nginx 插件干扰 3) 添加 --preferred-challenges http 强制 HTTP-01 验证 4) deploy job 的 certbot 步骤同样添加 --preferred-challenges http 5) setup-ssl 添加自动续期 cron",
+      "files_changed": [".github/workflows/deploy-novel-mirror-shield.yml"],
+      "result": "implemented"
     }
   ],
-  "modules_used": [
     "server/nginx/novel-mirror-shield.conf",
     "server/novel-db/security/fail2ban-novel.conf",
     "server/novel-db/security/fail2ban-filter-novel-scan.conf",
@@ -104,7 +112,7 @@
     "server/novel-db/security/fail2ban-action-ban-log.conf",
     ".github/workflows/deploy-novel-mirror-shield.yml"
   ],
-  "next_step": "合并PR触发自动部署·或冰朔在Actions页面手动触发deploy-novel-mirror-shield.yml(action=deploy)→部署成功后触发health动作验证三层防护→成功即可进入PHASE-3验证",
+  "next_step": "合并PR后→冰朔在GitHub Actions页面手动触发 deploy-novel-mirror-shield.yml(action=deploy)→部署完成后再触发setup-ssl→最后触发health验证。注意：合并PR不会自动触发deploy(paths不匹配)，必须手动workflow_dispatch",
   "status": "in_progress",
   "current_phase": "ZY-PROJ-002-PHASE-2"
 }
