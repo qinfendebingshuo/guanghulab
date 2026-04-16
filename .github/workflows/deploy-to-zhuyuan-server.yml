@@ -354,6 +354,10 @@ jobs:
           # 注意: PORT 和 ZY_SITE_MODE 不写入 .env.app
           # 这两个值由 ecosystem.config.js 按实例设置 (主站3800/预览站3801)
           # 写入 .env.app 会导致 loadEnvFile() 覆盖预览实例的端口 → 两实例抢端口 → 502
+          #
+          # 读取服务器现有凭据作为兜底（防止 Secret 未在 GitHub 设置时被覆盖清空）
+          _EXISTING_SMTP_USER=$(grep "^ZY_SMTP_USER=" /opt/zhuyuan/app/.env.app 2>/dev/null | cut -d'=' -f2- || true)
+          _EXISTING_SMTP_PASS=$(grep "^ZY_SMTP_PASS=" /opt/zhuyuan/app/.env.app 2>/dev/null | cut -d'=' -f2- || true)
           echo "NODE_ENV=production" > /opt/zhuyuan/app/.env.app
           echo "ZY_ROOT=/opt/zhuyuan" >> /opt/zhuyuan/app/.env.app
           echo "ZY_DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}" >> /opt/zhuyuan/app/.env.app
@@ -362,12 +366,19 @@ jobs:
           echo "ZY_QINGYAN_API_KEY=${ZY_QINGYAN_API_KEY}" >> /opt/zhuyuan/app/.env.app
           echo "ZY_NOTION_TOKEN=${ZY_NOTION_TOKEN}" >> /opt/zhuyuan/app/.env.app
           # ─── QQ邮箱SMTP配置（零点原核频道邮箱验证码登录） ───
-          if [ -n "${ZY_SMTP_USER}" ] && [ -n "${ZY_SMTP_PASS}" ]; then
-            echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> /opt/zhuyuan/app/.env.app
-            echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> /opt/zhuyuan/app/.env.app
-            echo "✅ QQ邮箱SMTP凭据已配置"
+          # 优先使用 CI/CD 注入的 Secret，否则保留服务器现有值（避免每次部署把已配置的 SMTP 覆盖清空）
+          _FINAL_SMTP_USER="${ZY_SMTP_USER:-${_EXISTING_SMTP_USER}}"
+          _FINAL_SMTP_PASS="${ZY_SMTP_PASS:-${_EXISTING_SMTP_PASS}}"
+          if [ -n "${_FINAL_SMTP_USER}" ] && [ -n "${_FINAL_SMTP_PASS}" ]; then
+            echo "ZY_SMTP_USER=${_FINAL_SMTP_USER}" >> /opt/zhuyuan/app/.env.app
+            echo "ZY_SMTP_PASS=${_FINAL_SMTP_PASS}" >> /opt/zhuyuan/app/.env.app
+            if [ -n "${ZY_SMTP_USER}" ]; then
+              echo "✅ QQ邮箱SMTP凭据已配置 (来自 GitHub Secret)"
+            else
+              echo "✅ QQ邮箱SMTP凭据已保留 (来自服务器现有值·Secret未设置)"
+            fi
           else
-            echo "⚠️ ZY_SMTP_USER/ZY_SMTP_PASS未配置·邮箱验证码功能不可用"
+            echo "⚠️ ZY_SMTP_USER/ZY_SMTP_PASS未配置·邮箱验证码功能不可用·请在 GitHub Settings → Secrets 中设置"
           fi
           # ─── 通用LLM聊天引擎配置（国内模型网关的备用通道） ───
           if [ -n "${ZY_LLM_API_KEY}" ]; then
