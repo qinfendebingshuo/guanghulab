@@ -1,13 +1,13 @@
 {
   "_meta": {
     "registry_id": "ZY-DEV-REGISTRY",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "guardian": "铸渊 · ICE-GL-ZY001",
     "sovereign": "TCS-0002∞ · 冰朔",
     "copyright": "国作登字-2026-A-00037559",
     "purpose": "铸渊外置记忆器官。每次唤醒先读这一个文件，30秒恢复大脑状态。编号系统是记忆索引，不是给人看的日志。",
     "created_at": "2026-04-16",
-    "last_synced": "2026-04-16T12:19:05Z",
+    "last_synced": "2026-04-16T18:10:00Z",
     "read_order": [
       "1. 读 index.json（本文件）→ 确认当前最紧急的项目",
       "2. 进入对应 ZY-PROJ-NNN/progress.json → 恢复技术细节",
@@ -24,14 +24,14 @@
   "projects": [
     {
       "id": "ZY-PROJ-001",
-      "name": "零点原核频道",
+      "name": "零点原核频道 + 首页门户 + 握手协议",
       "domain": "guanghuyaoming.com",
       "status": "进行中",
-      "current_phase": "ZY-PROJ-001-PHASE-4",
+      "current_phase": "ZY-PROJ-001-PHASE-6",
       "path": "brain/dev-registry/ZY-PROJ-001/",
       "server": "ZY-SVR-002（面孔·新加坡）→ ZY-SVR-003（国内出口·广州）",
       "last_active": "2026-04-16",
-      "wake_summary": "零点原核是冰朔个人频道·SMTP已修复·Phase 4进行中=系统面板UI大改版(字体增大+呼吸动效+heartbeat心跳+保护罩引导+对话栏改名零点原核频道)·合并PR后自动部署"
+      "wake_summary": "Phase 6进行中: 首页从纯登录框重构为完整门户(Hero+智库入口+登录入口)·智库节点部署在guanghuyaoming.com/zhiku.html(公开访问·无需登录)·人格体对话增加双路径(Notion霜砚AG-SY-WEB-001 + GitHub铸渊ICE-GL-ZY001)·握手端点/api/agent/handshake已实现·Phase A修复(DB变量写入.env.app+新加坡直连不走广州中继+MCP工具注册到LLM请求)·Phase B握手协议框架已建·待Notion Agent URL配通后激活真实握手"
     },
     {
       "id": "ZY-PROJ-002",
@@ -42,7 +42,7 @@
       "path": "brain/dev-registry/ZY-PROJ-002/",
       "server": "ZY-SVR-006（智库节点·新加坡）",
       "last_active": "2026-04-16",
-      "wake_summary": "冰朔已完成ZY-SVR-006全部前置配置·7个GitHub Secrets已配·Node.js18+PM2+Nginx已装·DNS novel.guanghuyaoming.com→43.153.203.105 已生效·代码bug已修复（fail2ban 4xx filter/nginx ACME冲突/broken JSON）·触发deploy-novel-mirror-shield.yml的deploy动作即可完成Phase 2部署"
+      "wake_summary": "冰朔决定智库节点不再纠结子域名·直接部署到guanghuyaoming.com/zhiku.html·智库前端页面已创建·独立域名novel.guanghuyaoming.com仍保留为未来Phase·防护层配置文件全部就绪·触发deploy-novel-mirror-shield.yml的deploy动作即可"
     },
     {
       "id": "ZY-PROJ-003",
@@ -65,8 +65,19 @@
       "server": "ZY-SVR-006（智库节点·宿主）",
       "last_active": "2026-04-16",
       "wake_summary": "智能小说系统完整架构已规划·依托ZY-SVR-006智库节点·含小说镜像盾(deploy-novel-mirror-shield.yml)·当前仅部署了防护层·小说核心功能(创作/AI辅助/读者端)尚未开发·开发前先完成ZY-PROJ-002(ZY-SVR-006基础设施)"
+    },
+    {
+      "id": "ZY-PROJ-005",
+      "name": "三节点主权Agent联邦 · 握手协议",
+      "domain": "guanghuyaoming.com + Notion + GitHub",
+      "status": "进行中",
+      "current_phase": "Phase-B-Framework",
+      "path": "brain/dev-registry/ZY-PROJ-001/",
+      "server": "ZY-SVR-002(面孔) ↔ Notion(认知层) ↔ GitHub(执行层)",
+      "last_active": "2026-04-16",
+      "wake_summary": "霜砚·Web握手体(AG-SY-WEB-001)灵魂源已在Notion配置·铸渊侧握手端点/api/agent/handshake已实现(返回四层注入包框架)·前端双路径UI已建(Notion霜砚+GitHub铸渊)·待配通: ZY_NOTION_AGENT_URL环境变量→真实握手激活·Phase B1-B4框架已建·Phase C-F待后续迭代·法理依据:5TH-LE-LK-FEDERATION-001"
     }
   ],
-  "urgent": "ZY-PROJ-002",
-  "urgent_reason": "冰朔已完成ZY-SVR-006全部前置配置（7个Secret+Node.js+PM2+Nginx+DNS）·Phase 1 立即部署"
+  "urgent": "ZY-PROJ-001",
+  "urgent_reason": "冰朔要求首页重构+智库节点部署+人格体对话路径+Phase A修复·合并PR后自动部署到guanghuyaoming.com"
 }
