@@ -184,8 +184,8 @@ SSLEOF
             echo "✓ 已创建 options-ssl-nginx.conf 占位文件"
           fi
           if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
-            # 512-bit 仅用于引导 nginx 启动，certbot 申请证书后会替换为安全的 2048-bit
-            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 512 2>/dev/null
+            # 1024-bit 仅用于引导 nginx 启动，certbot 申请证书后会替换为安全的 2048-bit
+            openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 1024 2>/dev/null
             echo "✓ 已生成 ssl-dhparams.pem 占位文件"
           fi
           if [ ! -f /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem ]; then
@@ -238,7 +238,7 @@ SSLEOF
           # 检查是否是真实的 Let's Encrypt 证书，或只是上一步创建的占位自签名证书
           CERT_ISSUER=$(openssl x509 -issuer -noout \
             -in /etc/letsencrypt/live/novel.guanghuyaoming.com/fullchain.pem 2>/dev/null || echo "none")
-          if echo "$CERT_ISSUER" | grep -qi "Let.s Encrypt\|letsencrypt\|ISRG"; then
+          if echo "$CERT_ISSUER" | grep -qi "Let's Encrypt\|letsencrypt\|ISRG"; then
             echo "✓ Let's Encrypt 证书已存在，执行续签检查..."
             certbot renew --quiet || true
           else
