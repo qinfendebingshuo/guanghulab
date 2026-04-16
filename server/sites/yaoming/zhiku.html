@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
+<meta name="description" content="光湖智库 · 智能书库 · 团队成员阅读系统">
+<meta name="theme-color" content="#050810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>光湖智库 · 智能书库</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23a78bfa'/><stop offset='100%25' stop-color='%2322d3ee'/></linearGradient></defs><rect rx='20' width='100' height='100' fill='%23050810'/><text x='50' y='68' text-anchor='middle' font-size='48' font-weight='900' font-family='serif' fill='url(%23g)'>库</text></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050810;--panel:rgba(12,18,40,0.94);
+  --card:rgba(14,20,48,0.6);--card-border:rgba(167,139,250,0.12);
+  --card-hover:rgba(167,139,250,0.22);
+  --purple:#a78bfa;--violet:#c4b5fd;--cyan:#22d3ee;--blue:#60a5fa;
+  --ok:#34d399;--warn:#fbbf24;--err:#f87171;
+  --text:#eaf0ff;--dim:#94a7d0;--muted:rgba(120,150,200,0.4);
+  --border:rgba(167,139,250,0.1);
+  --font:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono','JetBrains Mono','Fira Code',monospace
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;line-height:1.7;
+  -webkit-font-smoothing:antialiased
+}
+a{color:var(--cyan);text-decoration:none;transition:color .3s}
+a:hover{color:var(--purple)}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:rgba(167,139,250,0.15);border-radius:3px}
+
+/* ═══ Background ═══ */
+.cosmos{position:fixed;inset:0;z-index:0;pointer-events:none}
+#starCanvas{position:absolute;inset:0;width:100%;height:100%}
+.nebula{position:fixed;border-radius:50%;filter:blur(120px);opacity:.06;pointer-events:none;z-index:0}
+.neb-1{width:55vw;height:50vh;background:radial-gradient(circle,var(--purple),transparent);top:-10%;right:-5%;animation:nebDrift 22s ease-in-out infinite alternate}
+.neb-2{width:45vw;height:40vh;background:radial-gradient(circle,var(--cyan),transparent);bottom:5%;left:-8%;animation:nebDrift 28s ease-in-out infinite alternate-reverse}
+@keyframes nebDrift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(15px,-10px) scale(1.05)}}
+
+.lake{position:fixed;bottom:0;left:0;right:0;height:18vh;z-index:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(167,139,250,0.02),transparent);
+  animation:lakeB 6s ease-in-out infinite alternate}
+.lake::before{content:'';position:absolute;bottom:0;left:8%;right:8%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(167,139,250,0.12),rgba(34,211,238,0.1),transparent)}
+@keyframes lakeB{0%{opacity:.5}100%{opacity:1}}
+
+/* ═══ Layout ═══ */
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ═══ Header ═══ */
+.header{
+  padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);backdrop-filter:blur(16px);
+  background:rgba(5,8,16,0.85)
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-glyph{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(167,139,250,0.12),rgba(34,211,238,0.08));
+  border:1px solid rgba(167,139,250,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:900;font-family:serif;color:var(--purple);
+  animation:glyphB 5s ease-in-out infinite
+}
+@keyframes glyphB{0%,100%{box-shadow:0 0 10px rgba(167,139,250,0.1)}50%{box-shadow:0 0 28px rgba(167,139,250,0.25)}}
+.header-title{font-size:16px;font-weight:700;letter-spacing:1px}
+.header-sub{font-size:11px;color:var(--dim);display:block;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:12px}
+.back-btn{
+  font-size:12px;color:var(--dim);display:flex;align-items:center;gap:5px;
+  padding:7px 14px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;cursor:pointer;transition:all .25s;font-family:var(--font)
+}
+.back-btn:hover{color:var(--cyan);border-color:rgba(34,211,238,0.25)}
+
+/* ═══ Content ═══ */
+.content{flex:1;padding:32px 28px 48px;max-width:1100px;margin:0 auto;width:100%}
+
+/* ═══ Hero ═══ */
+.hero{text-align:center;margin-bottom:40px;animation:heroIn 1s ease-out}
+@keyframes heroIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero-icon{
+  width:72px;height:72px;margin:0 auto 20px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(34,211,238,0.08));
+  border:1px solid rgba(167,139,250,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;font-weight:900;font-family:serif;color:var(--purple);
+  animation:glyphB 5s ease-in-out infinite
+}
+.hero h1{font-size:26px;font-weight:700;letter-spacing:2px;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--text),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:14px;color:var(--dim);line-height:1.8}
+
+/* ═══ Status Bar ═══ */
+.status-bar{
+  display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;
+  animation:fadeUp 1.2s ease-out
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.stat-card{
+  flex:1;min-width:140px;padding:18px 20px;border-radius:14px;
+  background:var(--card);border:1px solid var(--card-border);
+  backdrop-filter:blur(8px);transition:all .3s
+}
+.stat-card:hover{border-color:var(--card-hover);transform:translateY(-2px)}
+.stat-num{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--purple);margin-bottom:2px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+/* ═══ Section ═══ */
+.section-title{
+  font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;
+  letter-spacing:1.5px;font-family:var(--mono);margin-bottom:16px;
+  display:flex;align-items:center;gap:8px
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ═══ Module Cards ═══ */
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px}
+.mod-card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+  padding:22px 24px;backdrop-filter:blur(8px);transition:all .35s;
+  position:relative;overflow:hidden;cursor:default
+}
+.mod-card:hover{border-color:var(--card-hover);box-shadow:0 8px 40px rgba(167,139,250,0.06);transform:translateY(-3px)}
+.mod-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--purple),var(--cyan));opacity:.2;transition:opacity .3s}
+.mod-card:hover::before{opacity:.5}
+.mod-icon{font-size:22px;margin-bottom:10px}
+.mod-name{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.mod-desc{font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:12px}
+.mod-status{font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:6px}
+.mod-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mod-dot.ok{background:var(--ok);box-shadow:0 0 6px rgba(52,211,153,0.4)}
+.mod-dot.building{background:var(--warn);box-shadow:0 0 6px rgba(251,191,36,0.4);animation:pulse 1.5s infinite}
+.mod-dot.plan{background:var(--muted)}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* ═══ Search Bar ═══ */
+.search-wrap{margin-bottom:28px;animation:fadeUp 1.4s ease-out}
+.search-bar{
+  display:flex;gap:10px;padding:6px;border-radius:14px;
+  background:var(--card);border:1px solid var(--card-border);backdrop-filter:blur(8px)
+}
+.search-input{
+  flex:1;background:transparent;border:none;padding:12px 16px;
+  color:var(--text);font-size:14px;font-family:var(--font);outline:none
+}
+.search-input::placeholder{color:var(--muted)}
+.search-btn{
+  padding:10px 20px;border:1px solid rgba(167,139,250,0.2);border-radius:10px;
+  background:rgba(167,139,250,0.08);color:var(--purple);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .25s;font-family:var(--font);white-space:nowrap
+}
+.search-btn:hover{background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.35)}
+
+/* ═══ Book Grid ═══ */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:32px}
+.book-card{
+  background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+  padding:20px 22px;backdrop-filter:blur(8px);transition:all .35s;cursor:pointer
+}
+.book-card:hover{border-color:var(--card-hover);box-shadow:0 8px 32px rgba(167,139,250,0.06);transform:translateY(-2px)}
+.book-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.book-author{font-size:12px;color:var(--dim);margin-bottom:8px}
+.book-meta{display:flex;gap:6px;flex-wrap:wrap}
+.book-tag{font-size:10px;padding:2px 8px;border-radius:6px;font-family:var(--mono);
+  background:rgba(167,139,250,0.08);color:var(--purple);border:1px solid rgba(167,139,250,0.15)}
+
+/* ═══ Empty State ═══ */
+.empty-state{
+  text-align:center;padding:60px 24px;animation:fadeUp 1.6s ease-out
+}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.empty-title{font-size:18px;font-weight:600;color:var(--dim);margin-bottom:8px}
+.empty-desc{font-size:13px;color:var(--muted);line-height:1.8;max-width:400px;margin:0 auto}
+
+/* ═══ Footer ═══ */
+.footer{
+  text-align:center;padding:32px 24px;font-size:11px;color:var(--muted);
+  border-top:1px solid var(--border);letter-spacing:.5px
+}
+.footer-line{width:100px;height:1px;margin:0 auto 12px;
+  background:linear-gradient(90deg,transparent,rgba(167,139,250,0.12),transparent)}
+
+/* ═══ Responsive ═══ */
+@media(max-width:600px){
+  .content{padding:20px 16px 36px}
+  .hero h1{font-size:22px}
+  .module-grid,.book-grid{grid-template-columns:1fr}
+  .status-bar{flex-direction:column}
+  .header{padding:12px 16px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="cosmos">
+  <canvas id="starCanvas"></canvas>
+  <div class="nebula neb-1"></div>
+  <div class="nebula neb-2"></div>
+</div>
+<div class="lake"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-glyph">库</div>
+      <div>
+        <span class="header-title">光湖智库</span>
+        <span class="header-sub">智能书库 · 内部成员系统</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="back-btn" onclick="window.location.href='/'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回首页
+      </button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-icon">库</div>
+      <h1>光湖智库 · 智能书库</h1>
+      <p>
+        光湖语言世界 · 团队内部智能阅读系统<br>
+        书库搜索 · 智能分章 · 在线阅读 · Agent辅助
+      </p>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar" id="statusBar">
+      <div class="stat-card">
+        <div class="stat-num" id="statBooks">—</div>
+        <div class="stat-label">书库总量</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statMembers">—</div>
+        <div class="stat-label">团队成员</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statToday">—</div>
+        <div class="stat-label">今日活跃</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statChapters">—</div>
+        <div class="stat-label">已分章书籍</div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <div class="search-bar">
+        <input class="search-input" id="searchInput" type="text" placeholder="搜索书名、作者、标签...">
+        <button class="search-btn" onclick="searchBooks()">搜索</button>
+      </div>
+    </div>
+
+    <!-- Book Grid -->
+    <div class="section-title">📚 书库</div>
+    <div id="bookArea">
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">智库正在建设中</div>
+        <div class="empty-desc">
+          下载引擎与在线阅读器正在开发中。<br>
+          当前已完成：语言保护罩 + API 基础服务。<br>
+          即将上线：书库搜索 · 智能分章 · 在线阅读。
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules -->
+    <div class="section-title" style="margin-top:20px">🛠️ 系统模块</div>
+    <div class="module-grid">
+      <div class="mod-card">
+        <div class="mod-icon">🛡️</div>
+        <div class="mod-name">语言保护罩</div>
+        <div class="mod-desc">Nginx蜜罐(L2) + fail2ban自动封禁(L3)。服务器永远不暴露真实IP。入侵者看到的是自己的镜像。</div>
+        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">已激活</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">📥</div>
+        <div class="mod-name">下载引擎</div>
+        <div class="mod-desc">整合七猫/番茄/阅文/晋江开源下载器。输入书名+作者+平台，自动下载TXT并入桶。</div>
+        <div class="mod-status"><span class="mod-dot building"></span><span style="color:var(--warn)">开发中 · Phase 2</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">✂️</div>
+        <div class="mod-name">智能分章 Agent</div>
+        <div class="mod-desc">AI识别章节规律，无章节标识时按内容结构分段。输出整齐TXT + 目录索引。</div>
+        <div class="mod-status"><span class="mod-dot building"></span><span style="color:var(--warn)">开发中 · Phase 2</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">📖</div>
+        <div class="mod-name">在线阅读器</div>
+        <div class="mod-desc">单章翻页、字体调节、深/亮色模式。阅读进度自动存档到成员Agent记忆。</div>
+        <div class="mod-status"><span class="mod-dot building"></span><span style="color:var(--warn)">开发中 · Phase 2</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">📦</div>
+        <div class="mod-name">COS 团队书库</div>
+        <div class="mod-desc">男频/女频分区，同一本书只存一份，去重存储。成员书库用引用，不重复占空间。</div>
+        <div class="mod-status"><span class="mod-dot plan"></span><span style="color:var(--muted)">规划中 · Phase 3</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">🤝</div>
+        <div class="mod-name">成员 Agent</div>
+        <div class="mod-desc">每成员独立Agent，永久记忆。接DeepSeek/Kimi，协助拆文/大纲/摘要。</div>
+        <div class="mod-status"><span class="mod-dot plan"></span><span style="color:var(--muted)">规划中 · Phase 3</span></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-line"></div>
+    光湖智库 · 光湖语言世界 · 内部成员系统<br>
+    版权所有 © 冰朔 · TCS-0002∞ · 国作登字-2026-A-00037559
+  </footer>
+
+</div>
+
+<script>
+/* ═══ Star Field ═══ */
+(function(){
+  var c=document.getElementById('starCanvas');
+  if(!c)return;
+  var ctx=c.getContext('2d'),stars=[],w,h;
+  function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;init();}
+  function init(){
+    stars=[];
+    var n=Math.min(Math.floor(w*h/4000),200);
+    for(var i=0;i<n;i++)stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.1+0.2,a:Math.random()*0.5+0.2,speed:Math.random()*0.0008+0.0002,phase:Math.random()*Math.PI*2});
+  }
+  function draw(t){
+    ctx.clearRect(0,0,w,h);
+    for(var i=0;i<stars.length;i++){var s=stars[i];var alpha=s.a*(0.5+0.5*Math.sin(t*s.speed+s.phase));ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='rgba(200,210,240,'+alpha+')';ctx.fill();}
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize);resize();requestAnimationFrame(draw);
+})();
+
+/* ═══ Search (placeholder) ═══ */
+function searchBooks(){
+  var q=document.getElementById('searchInput').value.trim();
+  if(!q)return;
+  /* Future: call /api/zhiku/search?q=... */
+  alert('搜索功能即将上线。关键词：' + q);
+}
+document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')searchBooks();});
+</script>
+
+</body>
+</html>

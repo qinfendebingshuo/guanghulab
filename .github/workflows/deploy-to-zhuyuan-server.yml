@@ -401,6 +401,17 @@ jobs:
           else
             echo "ℹ️ 广州CN中继未配置·国内API走直连"
           fi
+
+          # ─── 服务器区域标识（Phase A3·决定中继路由策略） ───
+          echo "ZY_SERVER_REGION=sg" >> /opt/zhuyuan/app/.env.app
+
+          # ─── 数据库连接配置（Phase A2·记忆桥接需要） ───
+          echo "ZY_DB_HOST=${ZY_DB_HOST:-127.0.0.1}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_DB_USER=${ZY_DB_USER:-zy_admin}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_DB_PASS=${ZY_DB_PASS}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_DB_NAME=${ZY_DB_NAME:-age_os}" >> /opt/zhuyuan/app/.env.app
+          echo "ZY_DB_PORT=${ZY_DB_PORT:-5432}" >> /opt/zhuyuan/app/.env.app
+
           chmod 600 /opt/zhuyuan/app/.env.app
 
           # 复制Nginx配置

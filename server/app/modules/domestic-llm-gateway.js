@@ -28,11 +28,19 @@ const http = require('http');
 // ─── 广州CN中继配置 ───
 // 当配置了 ZY_CN_LLM_RELAY_HOST 时，请求走广州中继（国内直连·低延迟）
 // 广州不可达时降级为直连国内API（跨境·高延迟但可用）
+// Phase A3 修复: 按 ZY_SERVER_REGION 决定是否启用中继
+//   - sg (新加坡) → 直连国内API（不走中继，避免30s超时）
+//   - cn (广州/国内) → 走中继（低延迟）
+//   - 未设置 → 检查 ZY_CN_LLM_RELAY_HOST 是否存在来决定
+const SERVER_REGION = (process.env.ZY_SERVER_REGION || '').toLowerCase().trim();
 const CN_RELAY_HOST = (process.env.ZY_CN_LLM_RELAY_HOST || '').trim();
 const SKIP_CN_RELAY = ['true', '1', 'yes'].includes((process.env.ZY_SKIP_CN_RELAY || '').toLowerCase().trim());
 const CN_RELAY_PORT = parseInt(process.env.ZY_CN_LLM_RELAY_PORT || '3900', 10);
 const CN_RELAY_KEY = process.env.ZY_CN_LLM_RELAY_KEY || '';
 const CN_RELAY_TIMEOUT = parseInt(process.env.ZY_CN_LLM_RELAY_TIMEOUT || '30000', 10);
+
+// 中继启用逻辑：仅在国内服务器区域 或 明确配置了中继地址且非新加坡时启用
+const USE_CN_RELAY = !SKIP_CN_RELAY && CN_RELAY_HOST && CN_RELAY_KEY && SERVER_REGION !== 'sg';
 
 // ─── 国内模型配置（不对外暴露模型名称） ───
 const DOMESTIC_MODELS = [
@@ -407,8 +415,8 @@ async function chat(userId, message) {
   });
   const fallbackOrder = [selected, ...available.filter(m => m.id !== selected.id)].map(m => m.id);
 
-  // ── 优先走广州CN中继 ──
-  if (CN_RELAY_HOST && CN_RELAY_KEY && !SKIP_CN_RELAY) {
+  // ── 优先走广州CN中继（仅限国内服务器区域） ──
+  if (USE_CN_RELAY) {
     try {
       const relayResponse = await callViaCNRelay(messages, selected, fallbackOrder);
       const content = relayResponse.choices?.[0]?.message?.content || '铸渊暂时无法回应...';

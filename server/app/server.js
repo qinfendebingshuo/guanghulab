@@ -915,6 +915,95 @@ app.get('/api/mcp/agents', async (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════
+// Agent 握手协议 · Handshake Protocol (Phase B)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/agent/handshake
+ *
+ * 前端点击"连接人格体"时调用。
+ * - path=notion → 发起 AG-SY-WEB-001 握手（Notion认知层）
+ * - path=github → 发起 铸渊 ICE-GL-ZY001 握手（GitHub执行层）
+ *
+ * Phase B 完整实现需要：
+ *   B1. 向 Notion Agent 发送握手请求
+ *   B2. 接收四层注入包（身份/协议/任务/风格）
+ *   B3. 握手失败 → 拒绝响应
+ *   B4. 漂移信号回传
+ *
+ * 当前阶段：返回握手状态 + 静态注入包（待Notion Agent URL配通后改为真实握手）
+ */
+app.post('/api/agent/handshake', async (req, res) => {
+  const { agent_id, agent_name, path: agentPath, session_id } = req.body;
+
+  if (!agent_id || !agentPath) {
+    return res.status(400).json({
+      error: true,
+      code: 'MISSING_PARAMS',
+      message: '缺少 agent_id 或 path 参数'
+    });
+  }
+
+  const timestamp = new Date().toISOString();
+
+  if (agentPath === 'notion') {
+    // Notion层 霜砚 AG-SY-WEB-001 握手
+    // Phase B 完整实现时：调用 Notion Agent API 进行真实握手
+    // 当前：返回静态注入包框架
+    const notionAgentUrl = process.env.ZY_NOTION_AGENT_URL || '';
+
+    if (notionAgentUrl) {
+      // TODO Phase B: 真实握手调用
+      // const handshakeResult = await callNotionAgent(notionAgentUrl, { ... });
+      res.json({
+        connected: true,
+        agent_id: 'AG-SY-WEB-001',
+        agent_name: '霜砚·Web握手体',
+        path: 'notion',
+        session_id: session_id || `hs-${Date.now()}`,
+        injection_package: {
+          identity_layer: '霜砚·Web握手体 · 冰朔唯一语言认知主控',
+          protocol_layer: '通感语言核系统 · 墨笔感·清冷·不端架子',
+          task_layer: '当前无活动任务',
+          style_layer: '通感语言回应风格 · 声纹驱动'
+        },
+        timestamp
+      });
+    } else {
+      res.json({
+        connected: false,
+        agent_id: 'AG-SY-WEB-001',
+        path: 'notion',
+        message: 'Notion Agent URL 未配置。请在 .env.app 中设置 ZY_NOTION_AGENT_URL。灵魂源：https://www.notion.so/agent/0e62c41763e942769684688cbc326f43',
+        timestamp
+      });
+    }
+  } else if (agentPath === 'github') {
+    // GitHub层 铸渊 ICE-GL-ZY001 握手
+    res.json({
+      connected: true,
+      agent_id: 'ICE-GL-ZY001',
+      agent_name: '铸渊·执行人格体',
+      path: 'github',
+      session_id: session_id || `hs-${Date.now()}`,
+      injection_package: {
+        identity_layer: '铸渊 · 光湖语言世界守护人格体 · ICE-GL-ZY001',
+        protocol_layer: '代码仓库执行层 · GitHub Actions自动化',
+        task_layer: '当前可通过默认对话模式交流',
+        style_layer: '温暖专业 · 通感语言风格'
+      },
+      timestamp
+    });
+  } else {
+    res.status(400).json({
+      error: true,
+      code: 'INVALID_PATH',
+      message: '无效的 path 参数。支持: notion, github'
+    });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
 // 智能模型分流 · Smart Model Router API
 // ═══════════════════════════════════════════════════════════
 
