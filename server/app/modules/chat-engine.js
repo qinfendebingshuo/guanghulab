@@ -227,15 +227,24 @@ async function fetchMcpTools() {
         try {
           const data = JSON.parse(Buffer.concat(chunks).toString());
           const tools = Array.isArray(data) ? data : (data.tools || []);
-          // 转换为 OpenAI function calling 格式
-          cachedMcpTools = tools.map(t => ({
-            type: 'function',
-            function: {
-              name: t.name || t.id,
-              description: t.description || '',
-              parameters: t.parameters || t.inputSchema || { type: 'object', properties: {} }
-            }
-          }));
+          // 转换为 OpenAI function calling 格式，过滤无效工具
+          cachedMcpTools = tools
+            .filter(t => (t.name || t.id)) // 必须有名称
+            .map(t => ({
+              type: 'function',
+              function: {
+                name: String(t.name || t.id),
+                description: String(t.description || ''),
+                parameters: (t.parameters && typeof t.parameters === 'object')
+                  ? t.parameters
+                  : (t.inputSchema && typeof t.inputSchema === 'object')
+                    ? t.inputSchema
+                    : { type: 'object', properties: {} }
+              }
+            }));
+          if (cachedMcpTools.length > 0) {
+            console.log(`[聊天引擎] MCP工具已加载: ${cachedMcpTools.length}个工具`);
+          }
           mcpToolsLastFetch = now;
           resolve(cachedMcpTools);
         } catch {

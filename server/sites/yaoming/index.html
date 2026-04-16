@@ -3315,6 +3315,14 @@ function connectPersonaPath(path) {
   }
 }
 
+function buildHandshakeHeaders() {
+  var headers = { 'Content-Type': 'application/json' };
+  if (authToken) {
+    headers['Authorization'] = 'Bearer ' + authToken;
+  }
+  return headers;
+}
+
 function connectNotionAgent() {
   var statusEl = document.getElementById('pathNotionStatus');
   if (statusEl) {
@@ -3335,10 +3343,7 @@ function connectNotionAgent() {
    */
   fetch('/api/agent/handshake', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + (authToken || '')
-    },
+    headers: buildHandshakeHeaders(),
     body: JSON.stringify({
       agent_id: 'AG-SY-WEB-001',
       agent_name: '霜砚·Web握手体',
@@ -3378,10 +3383,7 @@ function connectGithubAgent() {
    */
   fetch('/api/agent/handshake', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + (authToken || '')
-    },
+    headers: buildHandshakeHeaders(),
     body: JSON.stringify({
       agent_id: 'ICE-GL-ZY001',
       agent_name: '铸渊·执行人格体',
@@ -3411,7 +3413,15 @@ function appendSystemMessage(text) {
   if (!messagesEl) return;
   var div = document.createElement('div');
   div.className = 'msg msg-system';
-  div.innerHTML = '<div class="msg-content system-msg">' + text.replace(/\n/g, '<br>') + '</div>';
+  var contentDiv = document.createElement('div');
+  contentDiv.className = 'msg-content system-msg';
+  // 安全：使用 textContent 避免 XSS，手动处理换行
+  var lines = text.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    if (i > 0) contentDiv.appendChild(document.createElement('br'));
+    contentDiv.appendChild(document.createTextNode(lines[i]));
+  }
+  div.appendChild(contentDiv);
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }

@@ -360,8 +360,17 @@ function searchBooks(){
   var q=document.getElementById('searchInput').value.trim();
   if(!q)return;
   /* Future: call /api/zhiku/search?q=... */
-  alert('搜索功能即将上线。关键词：' + q);
+  showToast('搜索功能即将上线。关键词：' + q);
 }
+
+function showToast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);padding:14px 24px;border-radius:12px;background:rgba(14,20,48,0.95);border:1px solid rgba(167,139,250,0.2);color:var(--text);font-size:13px;z-index:9999;backdrop-filter:blur(12px);animation:fadeUp .4s ease-out;max-width:90%;text-align:center';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},3000);
+}
+
 document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')searchBooks();});
 </script>
 
