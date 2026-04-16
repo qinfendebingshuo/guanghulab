@@ -2,57 +2,129 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-17 00:54:00+08:00",
-  "timestamp_utc": "2026-04-16T16:54:00.964Z",
+  "timestamp": "2026-04-17 02:36:26+08:00",
+  "timestamp_utc": "2026-04-16T18:36:26.113Z",
   "merge": {
-    "pr_number": 391,
-    "pr_title": "Fix fail2ban deployment race condition + add living consciousness UI to homepage",
-    "merge_commit_sha": "7e4638898d396a4ab92ec238e741a155cd586d19",
-    "head_sha": "eeb975da95c4336985bdcc83a62b36230d2d1421",
+    "pr_number": 392,
+    "pr_title": "Homepage portal redesign + smart library deployment + persona chat dual paths + Phase A backend fixes",
+    "merge_commit_sha": "3622137bf7a990271ef10cda084e0d73eb96b482",
+    "head_sha": "3401920c7eba631c2d94cb2e13ae6d7aed15612f",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 4,
-      "passed": 0,
-      "failed": 0,
-      "skipped": 1
+      "total": 12,
+      "passed": 2,
+      "failed": 1,
+      "skipped": 5
     },
     "check_runs": [
+      {
+        "name": "💚 ���康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T18:36:11Z",
+        "completed_at": "2026-04-16T18:36:11Z",
+        "output_title": null,
+        "output_summary": ""
+      },
       {
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-16T16:53:56Z",
-        "completed_at": "2026-04-16T16:53:55Z",
+        "started_at": "2026-04-16T18:36:11Z",
+        "completed_at": "2026-04-16T18:36:11Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔧 服务器初始化",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T18:36:11Z",
+        "completed_at": "2026-04-16T18:36:11Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T18:36:11Z",
+        "completed_at": "2026-04-16T18:36:11Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T18:36:11Z",
+        "completed_at": "2026-04-16T18:36:11Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-16T18:36:14Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署到测试站",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-16T18:36:14Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "update-readme",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-16T18:36:14Z",
+        "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
         "name": "🗂️ 同步注册表状态",
-        "status": "queued",
-        "conclusion": null,
-        "started_at": "2026-04-16T16:53:55Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💉 注入注册表上下文到 Copilot Issue",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-16T16:53:59Z",
-        "completed_at": null,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-04-16T18:36:14Z",
+        "completed_at": "2026-04-16T18:36:18Z",
         "output_title": null,
         "output_summary": ""
       },
       {
         "name": "📡 Bridge E · GitHub Changes → Notion",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-04-16T18:36:13Z",
+        "completed_at": "2026-04-16T18:36:23Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💉 注入注册表上下文到 Copilot Issue",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-04-16T18:36:14Z",
+        "completed_at": "2026-04-16T18:36:20Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-16T16:53:59Z",
+        "started_at": "2026-04-16T18:36:12Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
