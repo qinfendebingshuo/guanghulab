@@ -40,16 +40,16 @@
     {
       "id": "ZY-PROJ-002-PHASE-2",
       "name": "服务器实际部署 + SSL证书",
-      "status": "blocked",
-      "blocked_reason": "SSL证书鸡蛋问题·certbot --nginx在nginx配置已引用letsencrypt文件时失败",
+      "status": "ready_to_deploy",
+      "blocked_reason": null,
       "started_at": "2026-04-16",
       "content": [
         "服务器基础环境: nginx + fail2ban + certbot",
-        "nginx防护配置上线",
+        "nginx防护配置上线（SSL鸡蛋问题已修复：创建占位文件引导→certonly --webroot申请真实证书）",
         "fail2ban jail启动",
-        "SSL证书申请（Let's Encrypt）"
+        "SSL证书申请（Let's Encrypt · webroot方式）"
       ],
-      "next_step": "修改deploy-novel-mirror-shield.yml的setup-ssl动作·改用certonly --webroot方案解决鸡蛋问题"
+      "next_step": "触发 deploy-novel-mirror-shield.yml 的 deploy 动作，观察 '🔗 启用 Nginx 站点 + SSL 占位引导' 和 '🔐 申请/续签 Let's Encrypt SSL 证书' 两个步骤"
     },
     {
       "id": "ZY-PROJ-002-PHASE-3",
@@ -69,9 +69,9 @@
       "date": "2026-04-16",
       "problem": "certbot --nginx申请证书失败·全新服务器上/etc/letsencrypt/options-ssl-nginx.conf不存在",
       "root_cause": "novel-mirror-shield.conf在ssl server块中引用了letsencrypt的nginx配置文件·这些文件只有certbot成功运行一次后才存在·但certbot运行前需要nginx配置有效·循环依赖",
-      "fix": "待实现：1)部署临时HTTP-only nginx配置(不引用letsencrypt) 2)certbot certonly --webroot申请证书 3)切换到完整HTTPS配置 4)nginx reload",
+      "fix": "已实现：1)在启用站点步骤中·检查letsencrypt文件是否存在·若不存在则创建临时占位文件(options-ssl-nginx.conf + ssl-dhparams.pem + 自签名证书)让nginx -t通过并启动nginx 2)certbot申请步骤改用certonly --webroot方式·不依赖nginx插件·不触发nginx -t 3)certbot申请成功后真实证书替换占位文件·nginx reload激活 4)setup-ssl独立动作同样改为certonly --webroot",
       "files_changed": [".github/workflows/deploy-novel-mirror-shield.yml"],
-      "result": "pending"
+      "result": "implemented"
     }
   ],
   "modules_used": [
@@ -81,7 +81,7 @@
     "server/novel-db/security/fail2ban-action-ban-log.conf",
     ".github/workflows/deploy-novel-mirror-shield.yml"
   ],
-  "next_step": "修改deploy-novel-mirror-shield.yml的setup-ssl步骤·将certbot --nginx改为certonly --webroot·先Bootstrap占位证书让nginx启动·再用certbot替换真实证书",
+  "next_step": "触发 deploy-novel-mirror-shield.yml deploy 动作→观察 SSL 占位引导和 certbot webroot 步骤是否成功→成功后触发 health 动作验证三层防护",
   "status": "in_progress",
   "current_phase": "ZY-PROJ-002-PHASE-2"
 }
