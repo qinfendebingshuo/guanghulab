@@ -39,15 +39,21 @@
     },
     {
       "id": "ZY-PROJ-002-PHASE-2",
-      "name": "服务器实际部署 + SSL证书",
-      "status": "ready_to_deploy",
+      "name": "服务器实际部署 + SSL证书 + Phase 2 三大引擎",
+      "status": "code_complete",
       "blocked_reason": null,
       "started_at": "2026-04-16",
       "content": [
         "服务器基础环境: nginx + fail2ban + certbot",
         "nginx防护配置上线（SSL鸡蛋问题已修复：创建占位文件引导→certonly --webroot申请真实证书）",
         "fail2ban jail启动（4个jail: nginx-limit-req/path-scan/sshd/4xx）",
-        "SSL证书申请（Let's Encrypt · webroot方式）"
+        "SSL证书申请（Let's Encrypt · webroot方式）",
+        "Phase 2 三大引擎后端 API 已完成:",
+        "  - 下载引擎: /api/zhiku/download/* (5端点·任务创建/列表/状态/书籍/统计)",
+        "  - 智能分章: /api/zhiku/chapter/* (5端点·分章/列表/详情/章节内容/统计)",
+        "  - 在线阅读器: /api/zhiku/reader/* (9端点·书架/进度/偏好/统计)",
+        "  - 综合统计: /api/zhiku/stats",
+        "前端 zhiku.html 已联动全部 API (搜索/下载/自动分章/在线阅读/进度存储)"
       ],
       "next_step": "合并PR后触发 deploy-novel-mirror-shield.yml 的 deploy 动作·冰朔也可在 Actions 页面手动触发 workflow_dispatch → action=deploy"
     },
