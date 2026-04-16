@@ -56,6 +56,25 @@
         "系统处理步骤追踪"
       ],
       "next_step": "确认ZY_SMTP_USER/ZY_SMTP_PASS已写入GitHub Secrets·如未配置提醒冰朔·然后触发一次完整部署验证SMTP保护逻辑"
+    },
+    {
+      "id": "ZY-PROJ-001-PHASE-4",
+      "name": "系统面板UI大改版 + 聊天界面专业化",
+      "status": "in_progress",
+      "started_at": "2026-04-16",
+      "content": [
+        "全局字体增大(基础16px·正文14-15px·标题18-20px)",
+        "颜色体系调亮(text #eaf0ff·dim #94a7d0)",
+        "呼吸动效系统(heartbeat心跳·dotPulse脉搏·glyphBreathe渊字呼吸·ambient glow环境光)",
+        "服务器卡片增加环境光晕hover效果",
+        "侧边栏导航14px+Agent存活指示灯(navServersDot/navAgentsDot等)",
+        "对话栏改名'零点原核频道'",
+        "保护罩日志空状态改为引导说明",
+        "主header新增heartbeat心跳指示器",
+        "prefers-reduced-motion无障碍支持",
+        "聊天气泡/元数据/系统步骤字体增大+间距加宽"
+      ],
+      "next_step": "合并PR触发deploy-to-zhuyuan-server.yml自动部署·冰朔访问guanghuyaoming.com验证新UI效果"
     }
   ],
   "fixes": [
@@ -96,6 +115,15 @@
       "fix": "在sendCode和verifyCode双层加OWNER_EMAIL校验·纵深防御",
       "files_changed": ["server/app/modules/email-auth.js"],
       "result": "success"
+    },
+    {
+      "id": "ZY-PROJ-001-FIX-6",
+      "date": "2026-04-16",
+      "problem": "系统面板UI字体密集看不清·排版暗沉·感觉像死的静态看板·不像活着的AGE OS",
+      "root_cause": "全局字体10-12px过小·card padding 16px过紧·text颜色#e2eaf8不够亮·缺少呼吸动效·保护罩日志空白无引导·侧边栏nav 12px太小·聊天元数据不够专业",
+      "fix": "全面UI改版: 字体增大(基础16px·正文14-15px·标题18-20px)·颜色调亮(text #eaf0ff·dim #94a7d0)·增加heartbeat心跳+dotPulse脉搏+ambient glow环境光+prefers-reduced-motion无障碍·保护罩增加引导空状态·侧边栏nav 14px+Agent存活指示灯·对话栏改名零点原核频道·主header新增heartbeat指示器",
+      "files_changed": ["server/sites/yaoming/index.html"],
+      "result": "implemented"
     }
   ],
   "modules_used": [
@@ -104,9 +132,10 @@
     "server/app/modules/persona-context-pipeline.js",
     "server/app/modules/chat-engine.js",
     "server/nginx/zhuyuan-sovereign.conf",
-    ".github/workflows/deploy-to-zhuyuan-server.yml"
+    ".github/workflows/deploy-to-zhuyuan-server.yml",
+    "server/sites/yaoming/index.html"
   ],
-  "next_step": "冰朔在 GitHub Settings → Secrets 中设置 ZY_SMTP_USER=565183519@qq.com 和 ZY_SMTP_PASS=QQ邮箱授权码→触发 deploy-to-zhuyuan-server.yml→访问guanghuyaoming.com测试邮件验证码",
+  "next_step": "合并UI改版PR触发deploy-to-zhuyuan-server.yml自动部署→冰朔访问guanghuyaoming.com验证新UI效果",
   "status": "in_progress",
-  "current_phase": "ZY-PROJ-001-PHASE-3"
+  "current_phase": "ZY-PROJ-001-PHASE-4"
 }
