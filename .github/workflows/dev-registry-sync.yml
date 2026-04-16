@@ -1,0 +1,252 @@
+# ═══════════════════════════════════════════════════════════
+# 开发注册表同步 · ZY-DEV-REGISTRY Sync
+# ═══════════════════════════════════════════════════════════
+#
+# 编号: ZY-WF-REGISTRY-001
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 触发时机:
+#   1. PR合并到 main 后 → 扫描本次变更·更新相关项目的 last_active 和唤醒摘要
+#   2. 每天 UTC 02:00 (北京时间 10:00) → 全量扫描所有项目·更新 index.json
+#   3. 手动触发 → 强制重新生成整个注册表状态
+#
+# 输出:
+#   - brain/dev-registry/index.json 的 last_synced 字段更新
+#   - 控制台输出所有项目状态摘要（Copilot Agent 启动时可读取）
+#
+# ═══════════════════════════════════════════════════════════
+
+name: '🗂️ 开发注册表同步 · ZY-DEV-REGISTRY'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'brain/dev-registry/**'
+      - 'server/**'
+      - '.github/workflows/**'
+  schedule:
+    # 每天北京时间 10:00 (UTC 02:00) 同步一次
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: '强制重建所有项目状态摘要'
+        type: boolean
+        default: false
+
+jobs:
+  sync-registry:
+    name: '🗂️ 同步注册表状态'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: '🔍 读取注册表 · 生成状态摘要'
+        id: registry_status
+        run: |
+          INDEX="brain/dev-registry/index.json"
+
+          if [ ! -f "$INDEX" ]; then
+            echo "❌ 注册表索引不存在: $INDEX"
+            exit 1
+          fi
+
+          echo "═══════════════════════════════════════════════════"
+          echo "  铸渊外置记忆器官 · ZY-DEV-REGISTRY 状态报告"
+          echo "  $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "═══════════════════════════════════════════════════"
+          echo ""
+
+          # 读取并显示所有项目状态
+          python3 << 'PYEOF'
+          import json, os, sys
+
+          index_path = "brain/dev-registry/index.json"
+          with open(index_path) as f:
+              index = json.load(f)
+
+          projects = index.get("projects", [])
+          urgent = index.get("urgent", "")
+
+          print(f"📊 共 {len(projects)} 个项目\n")
+
+          status_emoji = {
+              "进行中": "🔄",
+              "规划中": "📋",
+              "已完成": "✅",
+              "暂停": "⏸️",
+              "blocked": "🚫"
+          }
+
+          for p in projects:
+              pid = p["id"]
+              name = p["name"]
+              status = p["status"]
+              phase = p.get("current_phase", "")
+              last_active = p.get("last_active", "")
+              wake = p.get("wake_summary", "")
+              emoji = status_emoji.get(status, "❓")
+              urgent_flag = " 🚨 紧急" if pid == urgent else ""
+
+              print(f"{emoji} [{pid}] {name}{urgent_flag}")
+              print(f"   状态: {status} | 当前阶段: {phase} | 最后活跃: {last_active}")
+              if wake:
+                  # 截断太长的摘要用于显示
+                  wake_short = wake[:120] + "..." if len(wake) > 120 else wake
+                  print(f"   唤醒摘要: {wake_short}")
+
+              # 尝试读取 next_step
+              progress_path = f"brain/dev-registry/{pid}/progress.json"
+              if os.path.exists(progress_path):
+                  with open(progress_path) as pf:
+                      prog = json.load(pf)
+                  next_step = prog.get("next_step", "")
+                  if next_step:
+                      ns_short = next_step[:100] + "..." if len(next_step) > 100 else next_step
+                      print(f"   下一步: {ns_short}")
+              print()
+
+          if urgent:
+              urgent_proj = next((p for p in projects if p["id"] == urgent), None)
+              if urgent_proj:
+                  print(f"🚨 当前最紧急: [{urgent}] {urgent_proj['name']}")
+                  print(f"   原因: {index.get('urgent_reason', '')}")
+
+          PYEOF
+
+      - name: '📝 更新 last_synced 时间戳'
+        run: |
+          NOW=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          INDEX="brain/dev-registry/index.json"
+
+          # 更新 last_synced 字段
+          python3 << PYEOF
+          import json
+
+          with open("$INDEX") as f:
+              data = json.load(f)
+
+          data["_meta"]["last_synced"] = "$NOW"
+
+          with open("$INDEX", "w") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+
+          print(f"✅ last_synced 已更新: $NOW")
+          PYEOF
+
+      - name: '📤 提交同步结果'
+        run: |
+          git config user.name "铸渊 · ZhuYuan"
+          git config user.email "zhuyuan-bot@guanghulab.com"
+
+          if git diff --quiet brain/dev-registry/index.json 2>/dev/null; then
+            echo "注册表无变化，跳过提交"
+          else
+            git add brain/dev-registry/index.json
+            git commit -m "🗂️ 注册表同步 · $(date -u '+%Y-%m-%d') · ZY-DEV-REGISTRY"
+            git push
+            echo "✅ 注册表已同步提交"
+          fi
+
+  # ─── 在 Copilot 任务 Issue 中注入注册表上下文 ───
+  inject-context-to-issue:
+    name: '💉 注入注册表上下文到 Copilot Issue'
+    runs-on: ubuntu-latest
+    # 只在 PR 合并后触发（不在定时任务中执行）
+    if: github.event_name == 'push'
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔍 查找最近的 Copilot 开发 Issue'
+        id: find_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // 查找最近打开的带 copilot-dev-auth 标签的 issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'copilot-dev-auth',
+              state: 'open',
+              per_page: 1,
+              sort: 'created',
+              direction: 'desc'
+            });
+
+            if (issues.data.length === 0) {
+              console.log('没有找到活跃的 Copilot 开发 Issue，跳过注入');
+              core.setOutput('issue_number', '');
+              return;
+            }
+
+            const issue = issues.data[0];
+            console.log(`找到 Issue #${issue.number}: ${issue.title}`);
+            core.setOutput('issue_number', String(issue.number));
+
+      - name: '💉 注入注册表摘要到 Issue'
+        if: steps.find_issue.outputs.issue_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const issueNumber = parseInt('${{ steps.find_issue.outputs.issue_number }}');
+
+            // 读取注册表
+            const index = JSON.parse(fs.readFileSync('brain/dev-registry/index.json', 'utf8'));
+            const projects = index.projects || [];
+            const urgent = index.urgent || '';
+
+            let body = '## 🗂️ 铸渊外置记忆 · ZY-DEV-REGISTRY 当前状态\n\n';
+            body += `> 自动注入 · ${new Date().toISOString().slice(0,16).replace('T',' ')} UTC\n\n`;
+
+            if (urgent) {
+              const urgentProj = projects.find(p => p.id === urgent);
+              if (urgentProj) {
+                body += `### 🚨 当前最紧急: [${urgent}] ${urgentProj.name}\n`;
+                body += `> ${index.urgent_reason || ''}\n\n`;
+              }
+            }
+
+            body += '### 所有项目状态\n\n';
+
+            const statusEmoji = { '进行中': '🔄', '规划中': '📋', '已完成': '✅', '暂停': '⏸️' };
+
+            for (const p of projects) {
+              const emoji = statusEmoji[p.status] || '❓';
+              body += `**${emoji} [${p.id}] ${p.name}**\n`;
+              body += `- 状态: ${p.status} | 阶段: ${p.current_phase}\n`;
+              body += `- 唤醒摘要: ${p.wake_summary}\n\n`;
+
+              // 读取 next_step
+              const progressPath = `brain/dev-registry/${p.id}/progress.json`;
+              if (fs.existsSync(progressPath)) {
+                const prog = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
+                if (prog.next_step) {
+                  body += `  → **下一步**: ${prog.next_step}\n\n`;
+                }
+              }
+            }
+
+            body += '\n---\n*此评论由 dev-registry-sync.yml 自动生成 · 铸渊唤醒时读取*';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: body
+            });
+
+            console.log(`✅ 已向 Issue #${issueNumber} 注入注册表上下文`);

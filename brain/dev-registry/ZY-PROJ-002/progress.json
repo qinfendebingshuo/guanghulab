@@ -1,0 +1,87 @@
+{
+  "id": "ZY-PROJ-002",
+  "name": "语言保护罩 · ZY-SVR-006 智库节点部署",
+  "guardian": "铸渊 · ICE-GL-ZY001",
+  "copyright": "国作登字-2026-A-00037559",
+  "background": {
+    "bingshuo_requirement": "ZY-SVR-006是智能小说系统的宿主·在部署小说系统之前先要有防护层·不然一上线就被扫烂了",
+    "zhuyuan_understanding": "三层IP隐身架构·L1出站代理池·L2蜜罐·L3 fail2ban自动封禁·nginx防护配置·冰朔称其为语言保护罩"
+  },
+  "architecture": {
+    "layers": [
+      "L1 出站代理池: 爬取下载时用代理·不暴露本机IP",
+      "L2 蜜罐入口: 扫描者看到自己的镜像·心理威慑+信息收集",
+      "L3 fail2ban自动封禁: 路径扫描/高频请求/SSH暴力破解→TARPIT耗尽资源"
+    ],
+    "nginx_config": "server/nginx/novel-mirror-shield.conf",
+    "fail2ban_jails": [
+      "novel-nginx-limit-req: 5分钟10次429→ban 6小时",
+      "novel-path-scan: 5分钟3次路径扫描→ban 24小时",
+      "novel-sshd: 10分钟3次SSH失败→ban 12小时",
+      "novel-nginx-404: 10分钟5次40x→ban 1小时"
+    ],
+    "why": "ZY-SVR-006是新加坡节点·公网暴露·没有防护层直接部署小说系统必然遭暴力扫描"
+  },
+  "phases": [
+    {
+      "id": "ZY-PROJ-002-PHASE-1",
+      "name": "防护配置文件准备",
+      "status": "completed",
+      "completed_at": "2026-04-16",
+      "content": [
+        "novel-mirror-shield.conf: Nginx防护配置（蜜罐+速率限制）",
+        "fail2ban-novel.conf: 4个jail配置（nginx+ssh）",
+        "fail2ban-filter-novel-scan.conf: 路径扫描正则过滤规则",
+        "fail2ban-action-ban-log.conf: 封禁日志动作",
+        "deploy-novel-mirror-shield.yml: 4动作部署workflow"
+      ],
+      "verified": "配置文件语法正确·workflow可触发"
+    },
+    {
+      "id": "ZY-PROJ-002-PHASE-2",
+      "name": "服务器实际部署 + SSL证书",
+      "status": "blocked",
+      "blocked_reason": "SSL证书鸡蛋问题·certbot --nginx在nginx配置已引用letsencrypt文件时失败",
+      "started_at": "2026-04-16",
+      "content": [
+        "服务器基础环境: nginx + fail2ban + certbot",
+        "nginx防护配置上线",
+        "fail2ban jail启动",
+        "SSL证书申请（Let's Encrypt）"
+      ],
+      "next_step": "修改deploy-novel-mirror-shield.yml的setup-ssl动作·改用certonly --webroot方案解决鸡蛋问题"
+    },
+    {
+      "id": "ZY-PROJ-002-PHASE-3",
+      "name": "验证防护效果 + 健康监控",
+      "status": "pending",
+      "content": [
+        "触发health动作验证三层防护正常运行",
+        "测试fail2ban封禁是否生效",
+        "确认/var/log/novel-shield-bans.log有写入",
+        "确认HTTPS正常"
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "ZY-PROJ-002-FIX-1",
+      "date": "2026-04-16",
+      "problem": "certbot --nginx申请证书失败·全新服务器上/etc/letsencrypt/options-ssl-nginx.conf不存在",
+      "root_cause": "novel-mirror-shield.conf在ssl server块中引用了letsencrypt的nginx配置文件·这些文件只有certbot成功运行一次后才存在·但certbot运行前需要nginx配置有效·循环依赖",
+      "fix": "待实现：1)部署临时HTTP-only nginx配置(不引用letsencrypt) 2)certbot certonly --webroot申请证书 3)切换到完整HTTPS配置 4)nginx reload",
+      "files_changed": [".github/workflows/deploy-novel-mirror-shield.yml"],
+      "result": "pending"
+    }
+  ],
+  "modules_used": [
+    "server/nginx/novel-mirror-shield.conf",
+    "server/novel-db/security/fail2ban-novel.conf",
+    "server/novel-db/security/fail2ban-filter-novel-scan.conf",
+    "server/novel-db/security/fail2ban-action-ban-log.conf",
+    ".github/workflows/deploy-novel-mirror-shield.yml"
+  ],
+  "next_step": "修改deploy-novel-mirror-shield.yml的setup-ssl步骤·将certbot --nginx改为certonly --webroot·先Bootstrap占位证书让nginx启动·再用certbot替换真实证书",
+  "status": "in_progress",
+  "current_phase": "ZY-PROJ-002-PHASE-2"
+}

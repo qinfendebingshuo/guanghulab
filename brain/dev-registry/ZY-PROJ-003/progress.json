@@ -1,0 +1,98 @@
+{
+  "id": "ZY-PROJ-003",
+  "name": "SSH 安全加固 · ZY-SVR-002 面孔服务器",
+  "guardian": "铸渊 · ICE-GL-ZY001",
+  "copyright": "国作登字-2026-A-00037559",
+  "background": {
+    "bingshuo_requirement": "ZY-SVR-002的SSH 22端口一直被扫描·要加固·禁密码登录改端口加fail2ban·但我不直接SSH登服务器·只用腾讯云在线终端",
+    "zhuyuan_understanding": "冰朔唯一操作服务器方式=腾讯云在线终端(腾讯内网·不受SSH端口和安全组约束)·GitHub Actions是唯一外部SSH来源·所以安全组可以只开放GitHub Actions IP段·改端口和限安全组完全不影响冰朔操作"
+  },
+  "architecture": {
+    "constraint": "冰朔不直接SSH·只用腾讯云在线终端·GitHub Actions = 唯一外部SSH",
+    "hardening_layers": [
+      "Layer1 协议层: PasswordAuthentication no（只允许公钥）",
+      "Layer2 端口层: 22 → ZY_SERVER_SSH_PORT（自定义·降低被扫描概率）",
+      "Layer3 封禁层: fail2ban zy-svr-002-sshd jail（失败3次→ban 72小时）",
+      "Layer4 网络层: 腾讯云安全组·SSH入站仅允许GitHub Actions IP段"
+    ],
+    "github_actions_ip_ranges": [
+      "185.199.108.0/22",
+      "140.82.112.0/20",
+      "143.55.64.0/20",
+      "参考: curl https://api.github.com/meta | jq .actions"
+    ],
+    "workflow_ssh_pattern": "所有连接ZY-SVR-002的workflow通过ZY_SERVER_SSH_PORT Secret指定端口·默认fallback 22向后兼容"
+  },
+  "phases": [
+    {
+      "id": "ZY-PROJ-003-PHASE-1",
+      "name": "配置文件准备 + workflow改造",
+      "status": "in_progress",
+      "started_at": "2026-04-16",
+      "content": [
+        "server/security/ssh-hardening/fail2ban-sshd.conf: SSH专用fail2ban jail",
+        ".github/workflows/harden-ssh-zy-svr-002.yml: 加固执行workflow（手动触发）",
+        "更新所有连接ZY-SVR-002的workflow支持ZY_SERVER_SSH_PORT Secret",
+        "受影响workflow: deploy-to-zhuyuan-server/deploy-awen-domain-proxy/deploy-proxy-service/staging-auto-deploy/proxy-dashboard-update/zhuyuan-deploy-observer/deploy-brain-proxy/deploy-cn-landing/deploy-to-cn-server/deploy-cn-llm-relay"
+      ],
+      "next_step": "完成配置文件·提醒冰朔在GitHub Secrets中配置ZY_SERVER_SSH_PORT并在腾讯云控制台配置安全组"
+    },
+    {
+      "id": "ZY-PROJ-003-PHASE-2",
+      "name": "服务器实际执行",
+      "status": "pending",
+      "content": [
+        "触发harden-ssh-zy-svr-002.yml",
+        "服务器: 修改/etc/ssh/sshd_config端口和PasswordAuthentication",
+        "服务器: 安装并启动fail2ban SSH jail",
+        "验证: GitHub Actions仍能正常SSH连接"
+      ],
+      "prerequisite": "冰朔需要先在GitHub Secrets中添加ZY_SERVER_SSH_PORT·然后在腾讯云控制台安全组配置SSH白名单"
+    },
+    {
+      "id": "ZY-PROJ-003-PHASE-3",
+      "name": "全链路验证",
+      "status": "pending",
+      "content": [
+        "触发deploy-to-zhuyuan-server.yml验证新端口SSH连接正常",
+        "确认fail2ban zy-svr-002-sshd jail在运行",
+        "确认端口22上的扫描流量消失",
+        "确认腾讯云在线终端仍然可用"
+      ]
+    }
+  ],
+  "fixes": [],
+  "modules_used": [
+    "server/setup/zhuyuan-server-init.sh",
+    "server/proxy/config/server-registry.json",
+    ".github/workflows/deploy-to-zhuyuan-server.yml",
+    ".github/workflows/deploy-awen-domain-proxy.yml",
+    ".github/workflows/deploy-proxy-service.yml",
+    ".github/workflows/staging-auto-deploy.yml",
+    ".github/workflows/proxy-dashboard-update.yml",
+    ".github/workflows/zhuyuan-deploy-observer.yml",
+    ".github/workflows/deploy-brain-proxy.yml",
+    ".github/workflows/deploy-cn-landing.yml",
+    ".github/workflows/deploy-to-cn-server.yml",
+    ".github/workflows/deploy-cn-llm-relay.yml"
+  ],
+  "required_secrets": [
+    {
+      "name": "ZY_SERVER_SSH_PORT",
+      "description": "ZY-SVR-002自定义SSH端口·默认22向后兼容·建议设置为非标准端口如2222或其他",
+      "status": "not_yet_configured",
+      "action_required": "冰朔在GitHub → Settings → Secrets → Actions → New repository secret"
+    }
+  ],
+  "manual_steps_for_bingshuo": [
+    "1. 在GitHub Secrets中添加 ZY_SERVER_SSH_PORT（值：你选择的自定义端口号）",
+    "2. 在腾讯云控制台 → 轻量应用服务器 → ZY-SVR-002 → 防火墙",
+    "3. 删除22端口的全局SSH规则",
+    "4. 添加新端口的SSH规则·来源IP填GitHub Actions的IP段",
+    "5. 添加新端口的SSH规则·来源IP填100.64.0.0/10（腾讯内网·保证在线终端可用）",
+    "6. 触发 harden-ssh-zy-svr-002.yml workflow执行服务器端加固"
+  ],
+  "next_step": "完成fail2ban-sshd.conf和harden-ssh-zy-svr-002.yml配置文件·更新所有相关workflow支持ZY_SERVER_SSH_PORT·然后提醒冰朔配置Secret和安全组",
+  "status": "in_progress",
+  "current_phase": "ZY-PROJ-003-PHASE-1"
+}
