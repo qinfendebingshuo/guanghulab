@@ -2049,7 +2049,9 @@ function fetchDashboard(){
   });
 
   // ─── OpenClaw status (static JSON written by workflow) ───
-  fetch('/openclaw-status.json?_t='+Date.now())
+  // Cache bust every 30 minutes to reduce unnecessary requests (OpenClaw runs 4x/day)
+  var cacheBust = Math.floor(Date.now() / 1800000);
+  fetch('/openclaw-status.json?_v='+cacheBust)
   .then(function(r){if(!r.ok)throw new Error('404');return r.json()})
   .then(function(d){
     updateOpenClawUI(d);
@@ -2073,11 +2075,7 @@ function updateOpenClawUI(d){
   var phaseNames=['wake','inspect','judge','generate','commit'];
   phaseEls.forEach(function(el,i){
     var ph = phaseNames[i]||'';
-    if(phases.indexOf(ph)>=0||phases.indexOf('generate')>=0){
-      el.className='oc-phase done';
-    }else{
-      el.className='oc-phase idle';
-    }
+    el.className='oc-phase '+(phases.indexOf(ph)>=0?'done':'idle');
   });
 }
 
