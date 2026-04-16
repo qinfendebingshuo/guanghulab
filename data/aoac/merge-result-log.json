@@ -2,57 +2,111 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-16 21:08:24+08:00",
-  "timestamp_utc": "2026-04-16T13:08:24.959Z",
+  "timestamp": "2026-04-16 21:54:04+08:00",
+  "timestamp_utc": "2026-04-16T13:54:04.409Z",
   "merge": {
-    "pr_number": 387,
-    "pr_title": "fix: SMTP heredoc expansion bug + SSL bootstrap deadlock on ZY-SVR-006",
-    "merge_commit_sha": "b51b24bfa987fdcffb29d084a217b275dee11d9c",
-    "head_sha": "5625c1961c5736e2f2eb90a7312a372d50c36c61",
+    "pr_number": 388,
+    "pr_title": "fix: ZY-SVR-006 Phase 1 部署阻塞 bug 修复",
+    "merge_commit_sha": "356ea0836dce813766a9d783176f157e6c8ab5e1",
+    "head_sha": "822f8fe2dc5c3fb8ee429d839e615c00c32ce75b",
     "base_branch": "main"
   },
   "ci": {
-    "combined_status": "failure",
-    "overall_result": "failure",
+    "combined_status": "pending",
+    "overall_result": "pending",
     "summary": {
-      "total": 5,
+      "total": 11,
       "passed": 0,
       "failed": 0,
-      "skipped": 1
+      "skipped": 5
     },
     "check_runs": [
       {
-        "name": "gate-guard",
+        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "status": "queued",
+        "conclusion": null,
+        "started_at": "2026-04-16T13:54:03Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署到测试站",
+        "status": "queued",
+        "conclusion": null,
+        "started_at": "2026-04-16T13:54:02Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-16T13:08:16Z",
-        "completed_at": "2026-04-16T13:08:16Z",
+        "started_at": "2026-04-16T13:54:02Z",
+        "completed_at": "2026-04-16T13:54:02Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T13:54:02Z",
+        "completed_at": "2026-04-16T13:54:02Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T13:54:02Z",
+        "completed_at": "2026-04-16T13:54:02Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T13:54:02Z",
+        "completed_at": "2026-04-16T13:54:02Z",
         "output_title": null,
         "output_summary": ""
       },
       {
         "name": "💉 注入注册表上下文到 Copilot Issue",
-        "status": "in_progress",
+        "status": "queued",
         "conclusion": null,
-        "started_at": "2026-04-16T13:08:19Z",
+        "started_at": "2026-04-16T13:54:02Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
         "name": "🗂️ 同步注册表状态",
-        "status": "in_progress",
+        "status": "queued",
         "conclusion": null,
-        "started_at": "2026-04-16T13:08:20Z",
+        "started_at": "2026-04-16T13:54:02Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "📡 Bridge E · GitHub Changes → Notion",
-        "status": "in_progress",
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-16T13:54:02Z",
+        "completed_at": "2026-04-16T13:54:02Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
+        "status": "queued",
         "conclusion": null,
-        "started_at": "2026-04-16T13:08:19Z",
+        "started_at": "2026-04-16T13:54:02Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -61,7 +115,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-16T13:08:19Z",
+        "started_at": "2026-04-16T13:53:58Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
