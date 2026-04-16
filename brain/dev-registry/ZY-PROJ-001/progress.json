@@ -98,6 +98,28 @@
         "prefers-reduced-motion完整适配(含nebula/lake/card)"
       ],
       "next_step": "合并PR触发deploy-to-zhuyuan-server.yml自动部署→冰朔访问guanghuyaoming.com验证呼吸感"
+    },
+    {
+      "id": "ZY-PROJ-001-PHASE-6",
+      "name": "首页门户重构 + 智库节点部署 + 人格体对话双路径 + Phase A修复",
+      "status": "in_progress",
+      "started_at": "2026-04-16",
+      "content": [
+        "首页从纯登录框重构为完整门户(Hero+光湖语言世界品牌+诗意文案)",
+        "智库节点入口卡片(团队成员公开访问·无需登录)",
+        "零点原核登录入口(滑出式面板·主权验证)",
+        "认知→执行架构流图(Notion→网站→GitHub)",
+        "创建zhiku.html智能书库独立页面(完整UI：搜索+书库+模块状态)",
+        "Nginx添加/zhiku.html路由",
+        "人格体对话增加双路径(Notion霜砚AG-SY-WEB-001 + GitHub铸渊ICE-GL-ZY001 + 智库快捷入口)",
+        "后端/api/agent/handshake握手端点(四层注入包框架·身份/协议/任务/风格)",
+        "Phase A2修复: .env.app补充ZY_DB_*五个变量→记忆桥接可连接数据库",
+        "Phase A3修复: ZY_SERVER_REGION=sg→新加坡直连国内API不走广州中继·消除30s超时",
+        "Phase A1修复: chat-engine.js支持MCP工具注册(fetchMcpTools+tools参数传入LLM)",
+        "系统消息样式(居中·mono字体·半透明背景)",
+        "移动端Landing响应式适配"
+      ],
+      "next_step": "合并PR触发deploy-to-zhuyuan-server.yml自动部署→冰朔验证:1)首页门户样式 2)智库节点页面 3)对话双路径 4)广州中继不再30s超时"
     }
   ],
   "fixes": [
@@ -154,11 +176,15 @@
     "server/app/modules/domestic-llm-gateway.js",
     "server/app/modules/persona-context-pipeline.js",
     "server/app/modules/chat-engine.js",
+    "server/app/modules/persona-memory.js",
     "server/nginx/zhuyuan-sovereign.conf",
+    "server/nginx/guanghuyaoming.conf",
     ".github/workflows/deploy-to-zhuyuan-server.yml",
-    "server/sites/yaoming/index.html"
+    "server/sites/yaoming/index.html",
+    "server/sites/yaoming/zhiku.html",
+    "server/app/server.js"
   ],
-  "next_step": "合并UI改版PR触发deploy-to-zhuyuan-server.yml自动部署→冰朔访问guanghuyaoming.com验证新UI效果",
+  "next_step": "合并PR→deploy-to-zhuyuan-server.yml自动部署→冰朔验证首页门户+智库节点+对话双路径+中继修复",
   "status": "in_progress",
-  "current_phase": "ZY-PROJ-001-PHASE-4"
+  "current_phase": "ZY-PROJ-001-PHASE-6"
 }

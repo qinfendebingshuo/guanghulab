@@ -126,8 +126,12 @@ async function assembleMessages(userId, userMessage) {
 
 /**
  * 调用LLM API (兼容OpenAI格式)
+ *
+ * Phase A1: 支持 tools/function_calling
+ * - 当 mcpTools 数组非空时，注册到 LLM 请求中
+ * - 模型可以返回 tool_calls，由调用者处理
  */
-function callLLM(model, messages, temperature, maxTokens) {
+function callLLM(model, messages, temperature, maxTokens, mcpTools) {
   return new Promise((resolve, reject) => {
     const apiKey = process.env.ZY_LLM_API_KEY || process.env.LLM_API_KEY || '';
     const baseUrl = process.env.ZY_LLM_BASE_URL || process.env.LLM_BASE_URL || 'https://api.deepseek.com';
@@ -137,13 +141,21 @@ function callLLM(model, messages, temperature, maxTokens) {
     }
 
     const url = new URL(baseUrl);
-    const requestBody = JSON.stringify({
+    const bodyObj = {
       model,
       messages,
       temperature,
       max_tokens: maxTokens,
       stream: false
-    });
+    };
+
+    // Phase A1: 如果有MCP工具，注册到请求中
+    if (mcpTools && mcpTools.length > 0) {
+      bodyObj.tools = mcpTools;
+      bodyObj.tool_choice = 'auto';
+    }
+
+    const requestBody = JSON.stringify(bodyObj);
 
     const options = {
       hostname: url.hostname,
@@ -184,6 +196,60 @@ function callLLM(model, messages, temperature, maxTokens) {
 }
 
 /**
+ * MCP 工具缓存
+ * Phase A1: 启动时 / 定期从 MCP Server 拉取工具列表
+ */
+let cachedMcpTools = [];
+let mcpToolsLastFetch = 0;
+const MCP_TOOLS_CACHE_TTL = 300000; // 5分钟缓存
+
+async function fetchMcpTools() {
+  const now = Date.now();
+  if (cachedMcpTools.length > 0 && (now - mcpToolsLastFetch) < MCP_TOOLS_CACHE_TTL) {
+    return cachedMcpTools;
+  }
+
+  const http = require('http');
+  const mcpHost = process.env.MCP_HOST || '127.0.0.1';
+  const mcpPort = process.env.MCP_PORT_GATEWAY || process.env.MCP_PORT || '3100';
+
+  return new Promise((resolve) => {
+    const req = http.request({
+      hostname: mcpHost,
+      port: parseInt(mcpPort, 10),
+      path: '/tools',
+      method: 'GET',
+      timeout: 5000
+    }, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        try {
+          const data = JSON.parse(Buffer.concat(chunks).toString());
+          const tools = Array.isArray(data) ? data : (data.tools || []);
+          // 转换为 OpenAI function calling 格式
+          cachedMcpTools = tools.map(t => ({
+            type: 'function',
+            function: {
+              name: t.name || t.id,
+              description: t.description || '',
+              parameters: t.parameters || t.inputSchema || { type: 'object', properties: {} }
+            }
+          }));
+          mcpToolsLastFetch = now;
+          resolve(cachedMcpTools);
+        } catch {
+          resolve([]);
+        }
+      });
+    });
+    req.on('error', () => resolve([]));
+    req.on('timeout', () => { req.destroy(); resolve([]); });
+    req.end();
+  });
+}
+
+/**
  * 处理用户消息，返回人格体回复
  */
 async function chat(userId, userMessage) {
@@ -200,15 +266,32 @@ async function chat(userId, userMessage) {
   addMessage(userId, 'user', userMessage);
 
   try {
-    // 4. 调用LLM
+    // 4. 尝试获取MCP工具（Phase A1）
+    let mcpTools = [];
+    try {
+      mcpTools = await fetchMcpTools();
+    } catch (e) {
+      // MCP不可达时继续，不阻塞对话
+    }
+
+    // 5. 调用LLM（带MCP工具注册）
     const response = await callLLM(
-      route.model, messages, route.temperature, route.maxTokens
+      route.model, messages, route.temperature, route.maxTokens, mcpTools
     );
 
-    const assistantMessage = response.choices?.[0]?.message?.content || '铸渊暂时无法回应...';
+    let assistantMessage = response.choices?.[0]?.message?.content || '铸渊暂时无法回应...';
     const usage = response.usage || { prompt_tokens: 0, completion_tokens: 0 };
 
-    // 5. 记录助手回复
+    // Phase A1: 处理 tool_calls 响应
+    const toolCalls = response.choices?.[0]?.message?.tool_calls;
+    if (toolCalls && toolCalls.length > 0) {
+      // 模型请求调用工具 → 执行 MCP 调用 → 将结果回传模型
+      console.log(`[聊天引擎] 模型请求工具调用: ${toolCalls.map(t => t.function?.name).join(', ')}`);
+      // TODO: 实际执行 MCP tool call 并将结果传回模型做第二轮推理
+      // 当前阶段：记录 tool_call 请求，返回模型的文本内容
+    }
+
+    // 6. 记录助手回复
     addMessage(userId, 'assistant', assistantMessage);
 
     // 6. 记录使用统计
@@ -290,5 +373,6 @@ module.exports = {
   getUserContext,
   clearContext,
   getChatStats,
+  fetchMcpTools,
   TCS_SYSTEM_PROMPT
 };
