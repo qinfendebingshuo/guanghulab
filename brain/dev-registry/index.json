@@ -42,7 +42,7 @@
       "path": "brain/dev-registry/ZY-PROJ-002/",
       "server": "ZY-SVR-006（智库节点·新加坡）",
       "last_active": "2026-04-16",
-      "wake_summary": "ZY-SVR-006是小说镜像盾+fail2ban防护层·语言保护罩三层架构(L1出站代理池/L2蜜罐/L3自动封禁)·fail2ban已配置nginx层·当前卡在SSL证书鸡蛋问题(certbot --nginx在config已引用letsencrypt文件时失败)→下一步改用certonly --webroot方案"
+      "wake_summary": "冰朔已完成ZY-SVR-006全部前置配置·7个GitHub Secrets已配·Node.js18+PM2+Nginx已装·DNS novel.guanghuyaoming.com→43.153.203.105 已生效·代码bug已修复（fail2ban 4xx filter/nginx ACME冲突/broken JSON）·触发deploy-novel-mirror-shield.yml的deploy动作即可完成Phase 2部署"
     },
     {
       "id": "ZY-PROJ-003",
@@ -67,6 +67,6 @@
       "wake_summary": "智能小说系统完整架构已规划·依托ZY-SVR-006智库节点·含小说镜像盾(deploy-novel-mirror-shield.yml)·当前仅部署了防护层·小说核心功能(创作/AI辅助/读者端)尚未开发·开发前先完成ZY-PROJ-002(ZY-SVR-006基础设施)"
     }
   ],
-  "urgent": "ZY-PROJ-003",
-  "urgent_reason": "ZY-SVR-002正在遭受SSH扫描攻击·需要立即加固"
+  "urgent": "ZY-PROJ-002",
+  "urgent_reason": "冰朔已完成ZY-SVR-006全部前置配置（7个Secret+Node.js+PM2+Nginx+DNS）·Phase 1 立即部署"
 }

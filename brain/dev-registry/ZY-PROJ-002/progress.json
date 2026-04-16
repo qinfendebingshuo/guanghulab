@@ -46,10 +46,10 @@
       "content": [
         "服务器基础环境: nginx + fail2ban + certbot",
         "nginx防护配置上线（SSL鸡蛋问题已修复：创建占位文件引导→certonly --webroot申请真实证书）",
-        "fail2ban jail启动",
+        "fail2ban jail启动（4个jail: nginx-limit-req/path-scan/sshd/4xx）",
         "SSL证书申请（Let's Encrypt · webroot方式）"
       ],
-      "next_step": "触发 deploy-novel-mirror-shield.yml 的 deploy 动作，观察 '🔗 启用 Nginx 站点 + SSL 占位引导' 和 '🔐 申请/续签 Let's Encrypt SSL 证书' 两个步骤"
+      "next_step": "合并PR后触发 deploy-novel-mirror-shield.yml 的 deploy 动作·冰朔也可在 Actions 页面手动触发 workflow_dispatch → action=deploy"
     },
     {
       "id": "ZY-PROJ-002-PHASE-3",
@@ -72,16 +72,39 @@
       "fix": "已实现：1)在启用站点步骤中·检查letsencrypt文件是否存在·若不存在则创建临时占位文件(options-ssl-nginx.conf + ssl-dhparams.pem + 自签名证书)让nginx -t通过并启动nginx 2)certbot申请步骤改用certonly --webroot方式·不依赖nginx插件·不触发nginx -t 3)certbot申请成功后真实证书替换占位文件·nginx reload激活 4)setup-ssl独立动作同样改为certonly --webroot",
       "files_changed": [".github/workflows/deploy-novel-mirror-shield.yml"],
       "result": "implemented"
+    },
+    {
+      "id": "ZY-PROJ-002-FIX-2",
+      "date": "2026-04-16",
+      "problem": "fail2ban novel-nginx-404 jail使用了错误的filter·nginx-http-auth只匹配401认证失败·不匹配400/403/404",
+      "root_cause": "Sonnet开发时直接引用了内置filter名nginx-http-auth·该filter的failregex只匹配HTTP Basic Auth失败(401)·不匹配通用40x状态码",
+      "fix": "新建fail2ban-filter-novel-4xx.conf·匹配400/403/404/405状态码·同时忽略favicon和robots正常请求·jail名改为novel-nginx-4xx·部署workflow添加上传该filter文件的scp步骤",
+      "files_changed": [
+        "server/novel-db/security/fail2ban-filter-novel-4xx.conf",
+        "server/novel-db/security/fail2ban-novel.conf",
+        ".github/workflows/deploy-novel-mirror-shield.yml"
+      ],
+      "result": "implemented"
+    },
+    {
+      "id": "ZY-PROJ-002-FIX-3",
+      "date": "2026-04-16",
+      "problem": "nginx蜜罐块重复定义ACME challenge路径·root路径不一致(/var/www/html vs /var/www/certbot)",
+      "root_cause": "蜜罐server块(default_server)和novel.guanghuyaoming.com server块都定义了/.well-known/acme-challenge/·root路径不同·如果蜜罐块先被匹配则certbot验证失败",
+      "fix": "删除蜜罐块中的重复ACME location·只保留novel.guanghuyaoming.com块中的定义(root /var/www/certbot)·因为certbot只对指定域名验证",
+      "files_changed": ["server/nginx/novel-mirror-shield.conf"],
+      "result": "implemented"
     }
   ],
   "modules_used": [
     "server/nginx/novel-mirror-shield.conf",
     "server/novel-db/security/fail2ban-novel.conf",
     "server/novel-db/security/fail2ban-filter-novel-scan.conf",
+    "server/novel-db/security/fail2ban-filter-novel-4xx.conf",
     "server/novel-db/security/fail2ban-action-ban-log.conf",
     ".github/workflows/deploy-novel-mirror-shield.yml"
   ],
-  "next_step": "触发 deploy-novel-mirror-shield.yml deploy 动作→观察 SSL 占位引导和 certbot webroot 步骤是否成功→成功后触发 health 动作验证三层防护",
+  "next_step": "合并PR触发自动部署·或冰朔在Actions页面手动触发deploy-novel-mirror-shield.yml(action=deploy)→部署成功后触发health动作验证三层防护→成功即可进入PHASE-3验证",
   "status": "in_progress",
   "current_phase": "ZY-PROJ-002-PHASE-2"
 }

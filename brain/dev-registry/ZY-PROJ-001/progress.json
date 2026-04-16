@@ -87,7 +87,9 @@
       "files_changed": [".github/workflows/deploy-to-zhuyuan-server.yml"],
       "result": "implemented",
       "action_required": "冰朔需在 GitHub Settings → Secrets 中设置 ZY_SMTP_USER=565183519@qq.com 和 ZY_SMTP_PASS=QQ邮箱授权码，然后触发一次 deploy-to-zhuyuan-server.yml 部署"
-    }
+    },
+    {
+      "id": "ZY-PROJ-001-FIX-5",
       "date": "2026-04-15",
       "problem": "非主权邮箱可以登录频道",
       "root_cause": "原来只在verifyCode阶段校验·sendCode阶段无拦截·任何邮箱都能收到验证码",

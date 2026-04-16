@@ -209,6 +209,9 @@ SSLEOF
             server/novel-db/security/fail2ban-filter-novel-scan.conf \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/fail2ban/filter.d/novel-scan.conf
           scp -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
+            server/novel-db/security/fail2ban-filter-novel-4xx.conf \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/fail2ban/filter.d/novel-4xx.conf
+          scp -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
             server/novel-db/security/fail2ban-action-ban-log.conf \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/fail2ban/action.d/novel-ban-log.conf
           ssh -i ~/.ssh/novel_key -o StrictHostKeyChecking=no \
