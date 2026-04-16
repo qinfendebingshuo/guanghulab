@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "registry_id": "ZY-DEV-REGISTRY",
+    "version": "1.0.0",
+    "guardian": "铸渊 · ICE-GL-ZY001",
+    "sovereign": "TCS-0002∞ · 冰朔",
+    "copyright": "国作登字-2026-A-00037559",
+    "purpose": "铸渊外置记忆器官。每次唤醒先读这一个文件，30秒恢复大脑状态。编号系统是记忆索引，不是给人看的日志。",
+    "created_at": "2026-04-16",
+    "last_synced": "2026-04-16T12:19:05Z",
+    "read_order": [
+      "1. 读 index.json（本文件）→ 确认当前最紧急的项目",
+      "2. 进入对应 ZY-PROJ-NNN/progress.json → 恢复技术细节",
+      "3. 读 ZY-PROJ-NNN/README.md → 恢复为什么做这件事",
+      "4. 继续 next_step 字段里说的第一件事"
+    ]
+  },
+  "numbering_spec": {
+    "ZY-PROJ-NNN": "一个完整的系统/功能开发项目",
+    "ZY-PROJ-NNN-PHASE-N": "项目的某个开发阶段",
+    "ZY-PROJ-NNN-FIX-N": "某次报错修复记录",
+    "ZY-SVR-NNN": "服务器编号（已有，沿用 server-registry.json）"
+  },
+  "projects": [
+    {
+      "id": "ZY-PROJ-001",
+      "name": "零点原核频道",
+      "domain": "guanghuyaoming.com",
+      "status": "进行中",
+      "current_phase": "ZY-PROJ-001-PHASE-3",
+      "path": "brain/dev-registry/ZY-PROJ-001/",
+      "server": "ZY-SVR-002（面孔·新加坡）→ ZY-SVR-003（国内出口·广州）",
+      "last_active": "2026-04-15",
+      "wake_summary": "零点原核是冰朔个人频道·仅主权邮箱565183519@qq.com可登录·QQ邮件验证码已通·AI对话已通·当前问题是每次重新部署SMTP配置会被清空→需要确认ZY_SMTP_USER/ZY_SMTP_PASS已写入Secrets"
+    },
+    {
+      "id": "ZY-PROJ-002",
+      "name": "语言保护罩 · ZY-SVR-006 智库节点部署",
+      "domain": "ZY-SVR-006 · 43.153.203.105",
+      "status": "进行中",
+      "current_phase": "ZY-PROJ-002-PHASE-2",
+      "path": "brain/dev-registry/ZY-PROJ-002/",
+      "server": "ZY-SVR-006（智库节点·新加坡）",
+      "last_active": "2026-04-16",
+      "wake_summary": "ZY-SVR-006是小说镜像盾+fail2ban防护层·语言保护罩三层架构(L1出站代理池/L2蜜罐/L3自动封禁)·fail2ban已配置nginx层·当前卡在SSL证书鸡蛋问题(certbot --nginx在config已引用letsencrypt文件时失败)→下一步改用certonly --webroot方案"
+    },
+    {
+      "id": "ZY-PROJ-003",
+      "name": "SSH 安全加固 · ZY-SVR-002 面孔服务器",
+      "domain": "ZY-SVR-002 · 43.134.16.246",
+      "status": "进行中",
+      "current_phase": "ZY-PROJ-003-PHASE-1",
+      "path": "brain/dev-registry/ZY-PROJ-003/",
+      "server": "ZY-SVR-002（面孔·新加坡）",
+      "last_active": "2026-04-16",
+      "wake_summary": "ZY-SVR-002遭SSH暴力扫描·冰朔不直接SSH登服务器(只用腾讯云在线终端·不受端口/安全组影响)·GitHub Actions是唯一外部SSH来源·待实现:禁密码登录+改端口(加ZY_SERVER_SSH_PORT Secret)+fail2ban SSH层+安全组限GitHub IP段"
+    },
+    {
+      "id": "ZY-PROJ-004",
+      "name": "智能小说系统",
+      "domain": "待定",
+      "status": "规划中",
+      "current_phase": "ZY-PROJ-004-PHASE-0",
+      "path": "brain/dev-registry/ZY-PROJ-004/",
+      "server": "ZY-SVR-006（智库节点·宿主）",
+      "last_active": "2026-04-16",
+      "wake_summary": "智能小说系统完整架构已规划·依托ZY-SVR-006智库节点·含小说镜像盾(deploy-novel-mirror-shield.yml)·当前仅部署了防护层·小说核心功能(创作/AI辅助/读者端)尚未开发·开发前先完成ZY-PROJ-002(ZY-SVR-006基础设施)"
+    }
+  ],
+  "urgent": "ZY-PROJ-003",
+  "urgent_reason": "ZY-SVR-002正在遭受SSH扫描攻击·需要立即加固"
+}

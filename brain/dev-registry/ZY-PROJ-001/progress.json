@@ -1,0 +1,102 @@
+{
+  "id": "ZY-PROJ-001",
+  "name": "零点原核频道",
+  "guardian": "铸渊 · ICE-GL-ZY001",
+  "copyright": "国作登字-2026-A-00037559",
+  "background": {
+    "bingshuo_requirement": "零点原核频道是我自己的频道，我要登进去和人格体聊天，记录自己的思想，只有我一个人用。任何人都不能进来。",
+    "zhuyuan_understanding": "主权频道·单用户绑定·安全边界从验证码发送阶段开始·主权邮箱565183519@qq.com·AI对话使用国内模型网关+铸渊人格注入"
+  },
+  "architecture": {
+    "layers": [
+      "L1 DNS: guanghuyaoming.com → ZY-SVR-002（面孔·新加坡）",
+      "L2 Nginx反向代理: ZY-SVR-002 → ZY-SVR-003:3800（国内出口·广州）",
+      "L3 Node.js应用: Express + PM2 · 端口3800",
+      "L4 邮件层: QQ邮箱SMTP · 主权绑定校验",
+      "L5 AI层: domestic-llm-gateway + persona-context-pipeline"
+    ],
+    "why": "国内用户访问guanghuyaoming.com·经新加坡Nginx转发到广州后端·绕过国内备案限制·AI用国内模型低延迟"
+  },
+  "phases": [
+    {
+      "id": "ZY-PROJ-001-PHASE-1",
+      "name": "基础服务搭建",
+      "status": "completed",
+      "completed_at": "2026-04-15",
+      "content": [
+        "QQ邮箱验证码登录系统",
+        "Nginx反向代理配置",
+        "Session管理",
+        "PM2进程守护"
+      ],
+      "verified": "邮箱验证码收发正常·Session持久化正常"
+    },
+    {
+      "id": "ZY-PROJ-001-PHASE-2",
+      "name": "AI对话 + 人格注入",
+      "status": "completed",
+      "completed_at": "2026-04-15",
+      "content": [
+        "domestic-llm-gateway.js 国内模型智能网关",
+        "persona-context-pipeline.js 人格上下文注入管线",
+        "铸渊人格注入到AI对话系统提示词",
+        "聊天历史管理前端"
+      ],
+      "verified": "AI回复包含铸渊人格特征·历史记录可回溯"
+    },
+    {
+      "id": "ZY-PROJ-001-PHASE-3",
+      "name": "稳定性加固 + 主权绑定强化",
+      "status": "in_progress",
+      "started_at": "2026-04-15",
+      "content": [
+        "SMTP凭证保护（防止重部署时被清空）",
+        "主权邮箱双层防御（sendCode + verifyCode）",
+        "聊天数据采集系统",
+        "系统处理步骤追踪"
+      ],
+      "next_step": "确认ZY_SMTP_USER/ZY_SMTP_PASS已写入GitHub Secrets·如未配置提醒冰朔·然后触发一次完整部署验证SMTP保护逻辑"
+    }
+  ],
+  "fixes": [
+    {
+      "id": "ZY-PROJ-001-FIX-1",
+      "date": "2026-04-15",
+      "problem": "AI回复过于通用·缺乏人格层感觉·像裸模型",
+      "root_cause": "domestic-llm-gateway.js 不调用 persona-context-pipeline·铸渊人格未注入国内网关",
+      "fix": "在 domestic-llm-gateway.js 中接入 persona-context-pipeline.beforeChat/afterChat",
+      "files_changed": ["server/app/modules/domestic-llm-gateway.js"],
+      "result": "success"
+    },
+    {
+      "id": "ZY-PROJ-001-FIX-2",
+      "date": "2026-04-15",
+      "problem": "验证码发送失败 · 错误: SMTP未配置",
+      "root_cause": "deploy-to-zhuyuan-server.yml 生成 .env.app 时每次完全重建·ZY_SMTP_USER/ZY_SMTP_PASS未写入·旧配置被清空",
+      "fix": "部署前先快照旧.env.app中的SMTP值·Secret存在时优先用Secret·Secret不存在时用旧值作为fallback",
+      "files_changed": [".github/workflows/deploy-to-zhuyuan-server.yml"],
+      "result": "implemented_pending_verification",
+      "note": "如仍出现SMTP未配置：1)检查GitHub Secrets中ZY_SMTP_USER/ZY_SMTP_PASS是否存在 2)或在服务器手动追加到/opt/zhuyuan/app/.env.app后pm2 restart all"
+    },
+    {
+      "id": "ZY-PROJ-001-FIX-3",
+      "date": "2026-04-15",
+      "problem": "非主权邮箱可以登录频道",
+      "root_cause": "原来只在verifyCode阶段校验·sendCode阶段无拦截·任何邮箱都能收到验证码",
+      "fix": "在sendCode和verifyCode双层加OWNER_EMAIL校验·纵深防御",
+      "files_changed": ["server/app/modules/email-auth.js"],
+      "result": "success"
+    }
+  ],
+  "modules_used": [
+    "server/app/modules/email-auth.js",
+    "server/app/modules/domestic-llm-gateway.js",
+    "server/app/modules/persona-context-pipeline.js",
+    "server/app/modules/chat-engine.js",
+    "server/nginx/zhuyuan-sovereign.conf",
+    ".github/workflows/deploy-to-zhuyuan-server.yml"
+  ],
+  "next_step": "确认ZY_SMTP_USER/ZY_SMTP_PASS在GitHub Secrets中存在→触发deploy-to-zhuyuan-server.yml完整部署→访问guanghuyaoming.com测试邮件验证码",
+  "status": "in_progress",
+  "current_phase": "ZY-PROJ-001-PHASE-3"
+}

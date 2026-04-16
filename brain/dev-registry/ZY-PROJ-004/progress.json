@@ -1,0 +1,72 @@
+{
+  "id": "ZY-PROJ-004",
+  "name": "智能小说系统",
+  "guardian": "铸渊 · ICE-GL-ZY001",
+  "copyright": "国作登字-2026-A-00037559",
+  "background": {
+    "bingshuo_requirement": "光湖系统要做智能小说平台·面向网文作者·AI辅助创作·大纲/人物卡/章节管理·聊天式写作交互",
+    "zhuyuan_understanding": "ZY-SVR-006是宿主·ZY-PROJ-002(语言保护罩)是地基·地基没打好不能盖楼·现在是规划状态·等ZY-PROJ-002的PHASE-2完成才开始"
+  },
+  "architecture": {
+    "server": "ZY-SVR-006（智库节点·新加坡·43.153.203.105）",
+    "modules": [
+      "作者端: 大纲/人物卡/章节/编辑器",
+      "AI辅助层: 续写/改写/对话/情节建议 → 国内模型网关",
+      "数据层: PostgreSQL存储",
+      "防护层: ZY-PROJ-002已就绪"
+    ],
+    "dependency": "ZY-PROJ-002 PHASE-2完成（SSL+nginx+fail2ban上线）→ 才能开始"
+  },
+  "phases": [
+    {
+      "id": "ZY-PROJ-004-PHASE-0",
+      "name": "规划阶段",
+      "status": "in_progress",
+      "content": [
+        "架构规划完成",
+        "等待依赖项ZY-PROJ-002完成"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-004-PHASE-1",
+      "name": "数据层 + 基础API",
+      "status": "pending",
+      "content": [
+        "PostgreSQL建表: novels/chapters/characters/outlines",
+        "CRUD API",
+        "PM2进程配置"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-004-PHASE-2",
+      "name": "AI辅助层",
+      "status": "pending",
+      "content": [
+        "接入domestic-llm-gateway（复用零点原核的国内模型网关）",
+        "续写/改写/情节建议API",
+        "流式输出（SSE）"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-004-PHASE-3",
+      "name": "作者端前端",
+      "status": "pending",
+      "content": [
+        "编辑器界面",
+        "大纲/人物卡管理",
+        "章节列表",
+        "AI辅助侧边栏"
+      ]
+    }
+  ],
+  "fixes": [],
+  "modules_used": [
+    "server/nginx/novel-mirror-shield.conf",
+    "server/novel-db/security/",
+    ".github/workflows/deploy-novel-mirror-shield.yml"
+  ],
+  "next_step": "等待ZY-PROJ-002 PHASE-2完成·届时回来更新status为进行中·展开PHASE-1详细设计",
+  "status": "规划中",
+  "current_phase": "ZY-PROJ-004-PHASE-0",
+  "blocked_by": "ZY-PROJ-002-PHASE-2"
+}
