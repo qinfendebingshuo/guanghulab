@@ -25,9 +25,9 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const PROGRESS_FILE  = path.join(DATA_DIR, 'reading-progress.json');
 const BOOKSHELF_FILE = path.join(DATA_DIR, 'bookshelves.json');
 
-// 内存缓存
-let progressData  = {};
-let bookshelfData = {};
+// 内存缓存 (使用 null-prototype 对象防止原型链污染)
+let progressData  = Object.create(null);
+let bookshelfData = Object.create(null);
 
 // ─── 初始化 ───
 function init() {
@@ -41,10 +41,16 @@ function init() {
 function loadProgress() {
   try {
     if (fs.existsSync(PROGRESS_FILE)) {
-      progressData = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
+      const raw = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
+      progressData = Object.create(null);
+      for (const key of Object.keys(raw)) {
+        if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+          progressData[key] = raw[key];
+        }
+      }
     }
   } catch {
-    progressData = {};
+    progressData = Object.create(null);
   }
 }
 
@@ -59,10 +65,16 @@ function saveProgress() {
 function loadBookshelves() {
   try {
     if (fs.existsSync(BOOKSHELF_FILE)) {
-      bookshelfData = JSON.parse(fs.readFileSync(BOOKSHELF_FILE, 'utf8'));
+      const raw = JSON.parse(fs.readFileSync(BOOKSHELF_FILE, 'utf8'));
+      bookshelfData = Object.create(null);
+      for (const key of Object.keys(raw)) {
+        if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+          bookshelfData[key] = raw[key];
+        }
+      }
     }
   } catch {
-    bookshelfData = {};
+    bookshelfData = Object.create(null);
   }
 }
 

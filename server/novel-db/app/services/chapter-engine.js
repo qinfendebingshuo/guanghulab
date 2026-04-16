@@ -138,24 +138,27 @@ function splitChapters(filename) {
 
   // 保存到 chapters 目录
   const chapterDir = path.join(CHAPTERS_DIR, bookId);
+  const resolvedChapterDir = path.resolve(chapterDir);
+  const resolvedChaptersBase = path.resolve(CHAPTERS_DIR);
+  if (!resolvedChapterDir.startsWith(resolvedChaptersBase)) {
+    throw new Error('非法路径');
+  }
   if (!fs.existsSync(chapterDir)) {
     fs.mkdirSync(chapterDir, { recursive: true });
   }
 
   // 保存索引
+  const indexFilePath = path.join(chapterDir, 'index.json');
   fs.writeFileSync(
-    path.join(chapterDir, 'index.json'),
+    indexFilePath,
     JSON.stringify({ ...result, chapters: undefined }, null, 2),
     'utf8'
   );
 
   // 保存每章内容
   for (let i = 0; i < chapters.length; i++) {
-    fs.writeFileSync(
-      path.join(chapterDir, `chapter-${String(i).padStart(4, '0')}.txt`),
-      chapters[i].content,
-      'utf8'
-    );
+    const chFilePath = path.join(chapterDir, `chapter-${String(i).padStart(4, '0')}.txt`);
+    fs.writeFileSync(chFilePath, chapters[i].content, 'utf8');
   }
 
   return result;
@@ -342,6 +345,9 @@ function listChapteredBooks() {
 function getBookChapters(bookId) {
   if (!sanitizeId(bookId)) return null;
   const indexPath = path.join(CHAPTERS_DIR, bookId, 'index.json');
+  const resolvedPath = path.resolve(indexPath);
+  const resolvedBase = path.resolve(CHAPTERS_DIR);
+  if (!resolvedPath.startsWith(resolvedBase)) return null;
   if (!fs.existsSync(indexPath)) return null;
 
   try {
