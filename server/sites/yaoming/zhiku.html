@@ -458,7 +458,7 @@ function loadBooks(){
   });
 }
 
-function escHtml(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+function escHtml(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#x27;').replace(/"/g,'&quot;'):''}
 
 /* ═══ Search ═══ */
 function searchBooks(){

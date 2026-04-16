@@ -56,11 +56,27 @@ function init() {
 }
 
 /**
+ * 验证 ID 安全性（防止路径遍历和原型链污染）
+ */
+function sanitizeId(id) {
+  if (!id || typeof id !== 'string') return null;
+  // 禁止原型链污染
+  if (id === '__proto__' || id === 'constructor' || id === 'prototype') return null;
+  // 禁止路径遍历字符
+  if (id.includes('..') || id.includes('/') || id.includes('\\')) return null;
+  return id;
+}
+
+/**
  * 对一本书进行分章
  * @param {string} filename - 书籍文件名 (在 data/books/ 下)
  * @returns {object} { book_id, title, total_chapters, chapters: [...], toc: [...] }
  */
 function splitChapters(filename) {
+  if (!sanitizeId(filename)) {
+    throw new Error('非法文件名');
+  }
+
   const filePath = path.join(BOOKS_DIR, filename);
 
   // 防止路径遍历
@@ -324,6 +340,7 @@ function listChapteredBooks() {
  * 获取某本书的分章详情
  */
 function getBookChapters(bookId) {
+  if (!sanitizeId(bookId)) return null;
   const indexPath = path.join(CHAPTERS_DIR, bookId, 'index.json');
   if (!fs.existsSync(indexPath)) return null;
 
@@ -338,6 +355,7 @@ function getBookChapters(bookId) {
  * 获取某章内容
  */
 function getChapterContent(bookId, chapterIndex) {
+  if (!sanitizeId(bookId)) return null;
   const chapterPath = path.join(
     CHAPTERS_DIR,
     bookId,

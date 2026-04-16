@@ -75,17 +75,26 @@ function saveBookshelves() {
 }
 
 /**
+ * 验证 ID 安全性（防止原型链污染）
+ */
+function sanitizeId(id) {
+  if (!id || typeof id !== 'string') return null;
+  if (id === '__proto__' || id === 'constructor' || id === 'prototype') return null;
+  return id;
+}
+
+/**
  * 保存阅读进度
  * @param {string} memberId - 成员ID
  * @param {string} bookId   - 书籍ID
  * @param {object} progress - { chapter_index, scroll_position, percent }
  */
 function saveReadingProgress(memberId, bookId, progress) {
-  if (!memberId || !bookId) {
-    throw new Error('memberId 和 bookId 为必填项');
+  if (!sanitizeId(memberId) || !sanitizeId(bookId)) {
+    throw new Error('memberId 和 bookId 为必填项且不能包含非法字符');
   }
 
-  if (!progressData[memberId]) {
+  if (!Object.prototype.hasOwnProperty.call(progressData, memberId)) {
     progressData[memberId] = {};
   }
 
@@ -105,8 +114,12 @@ function saveReadingProgress(memberId, bookId, progress) {
  * 获取阅读进度
  */
 function getReadingProgress(memberId, bookId) {
-  if (!progressData[memberId]) return null;
-  if (bookId) return progressData[memberId][bookId] || null;
+  if (!sanitizeId(memberId)) return null;
+  if (!Object.prototype.hasOwnProperty.call(progressData, memberId)) return null;
+  if (bookId) {
+    if (!sanitizeId(bookId)) return null;
+    return progressData[memberId][bookId] || null;
+  }
   return progressData[memberId];
 }
 
@@ -114,11 +127,11 @@ function getReadingProgress(memberId, bookId) {
  * 添加书籍到书架
  */
 function addToBookshelf(memberId, bookId, bookMeta) {
-  if (!memberId || !bookId) {
-    throw new Error('memberId 和 bookId 为必填项');
+  if (!sanitizeId(memberId) || !sanitizeId(bookId)) {
+    throw new Error('memberId 和 bookId 为必填项且不能包含非法字符');
   }
 
-  if (!bookshelfData[memberId]) {
+  if (!Object.prototype.hasOwnProperty.call(bookshelfData, memberId)) {
     bookshelfData[memberId] = [];
   }
 
@@ -144,7 +157,8 @@ function addToBookshelf(memberId, bookId, bookMeta) {
  * 从书架移除
  */
 function removeFromBookshelf(memberId, bookId) {
-  if (!bookshelfData[memberId]) return { removed: false };
+  if (!sanitizeId(memberId) || !sanitizeId(bookId)) return { removed: false };
+  if (!Object.prototype.hasOwnProperty.call(bookshelfData, memberId)) return { removed: false };
 
   const before = bookshelfData[memberId].length;
   bookshelfData[memberId] = bookshelfData[memberId].filter(b => b.book_id !== bookId);
@@ -161,7 +175,8 @@ function removeFromBookshelf(memberId, bookId) {
  * 获取成员书架
  */
 function getBookshelf(memberId) {
-  const shelf = bookshelfData[memberId] || [];
+  if (!sanitizeId(memberId)) return [];
+  const shelf = (Object.prototype.hasOwnProperty.call(bookshelfData, memberId) ? bookshelfData[memberId] : []) || [];
   // 附加阅读进度
   return shelf.map(book => ({
     ...book,
@@ -173,7 +188,11 @@ function getBookshelf(memberId) {
  * 保存阅读偏好
  */
 function savePreferences(memberId, prefs) {
-  if (!progressData[memberId]) {
+  if (!sanitizeId(memberId)) {
+    throw new Error('memberId 不能为空或包含非法字符');
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(progressData, memberId)) {
     progressData[memberId] = {};
   }
 
@@ -194,7 +213,15 @@ function savePreferences(memberId, prefs) {
  * 获取阅读偏好
  */
 function getPreferences(memberId) {
-  if (!progressData[memberId] || !progressData[memberId].__preferences) {
+  if (!sanitizeId(memberId)) {
+    return {
+      font_size:   16,
+      font_family: 'default',
+      theme:       'dark',
+      line_height: 1.8
+    };
+  }
+  if (!Object.prototype.hasOwnProperty.call(progressData, memberId) || !progressData[memberId].__preferences) {
     return {
       font_size:   16,
       font_family: 'default',
