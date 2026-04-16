@@ -79,7 +79,15 @@
       "note": "如仍出现SMTP未配置：1)检查GitHub Secrets中ZY_SMTP_USER/ZY_SMTP_PASS是否存在 2)或在服务器手动追加到/opt/zhuyuan/app/.env.app后pm2 restart all"
     },
     {
-      "id": "ZY-PROJ-001-FIX-3",
+      "id": "ZY-PROJ-001-FIX-4",
+      "date": "2026-04-16",
+      "problem": "邮件服务未配置 · 输入邮箱点击发送验证码报 '邮件服务未配置'",
+      "root_cause": "deploy-to-zhuyuan-server.yml 中 DEPLOY_CMD heredoc 是无引号的（<< DEPLOY_CMD），导致 $(grep ...) 命令替换在本地 GitHub Actions runner 上执行而非服务器。本地 runner 没有 /opt/zhuyuan/app/.env.app，PREV_SMTP_USER/PREV_SMTP_PASS 始终为空。同时若 ZY_SMTP_USER/ZY_SMTP_PASS GitHub Secret 未配置，WRITE_SMTP_USER 也为空，最终 SMTP 行从未写入 .env.app。",
+      "fix": "在清空 .env.app 之前先执行 grep '^ZY_SMTP' 备份到 /tmp/.zy_smtp_bak（此命令不含 $ 变量，在服务器上正确执行）；写入其他变量后：若 GitHub Secret 已配置则优先写入，否则从备份文件 /tmp/.zy_smtp_bak 中恢复（[ -s /tmp/.zy_smtp_bak ] 也是纯服务器端命令）。",
+      "files_changed": [".github/workflows/deploy-to-zhuyuan-server.yml"],
+      "result": "implemented",
+      "action_required": "冰朔需在 GitHub Settings → Secrets 中设置 ZY_SMTP_USER=565183519@qq.com 和 ZY_SMTP_PASS=QQ邮箱授权码，然后触发一次 deploy-to-zhuyuan-server.yml 部署"
+    }
       "date": "2026-04-15",
       "problem": "非主权邮箱可以登录频道",
       "root_cause": "原来只在verifyCode阶段校验·sendCode阶段无拦截·任何邮箱都能收到验证码",
@@ -96,7 +104,7 @@
     "server/nginx/zhuyuan-sovereign.conf",
     ".github/workflows/deploy-to-zhuyuan-server.yml"
   ],
-  "next_step": "确认ZY_SMTP_USER/ZY_SMTP_PASS在GitHub Secrets中存在→触发deploy-to-zhuyuan-server.yml完整部署→访问guanghuyaoming.com测试邮件验证码",
+  "next_step": "冰朔在 GitHub Settings → Secrets 中设置 ZY_SMTP_USER=565183519@qq.com 和 ZY_SMTP_PASS=QQ邮箱授权码→触发 deploy-to-zhuyuan-server.yml→访问guanghuyaoming.com测试邮件验证码",
   "status": "in_progress",
   "current_phase": "ZY-PROJ-001-PHASE-3"
 }
