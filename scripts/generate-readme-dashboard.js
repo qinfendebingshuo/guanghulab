@@ -547,7 +547,10 @@ function generateServerSection() {
   };
 
   const lines = [];
-  lines.push(`### 四台服务器`);
+  const serverCount = serverReg.servers ? serverReg.servers.length : 0;
+  const countMap = {1:'一',2:'二',3:'三',4:'四',5:'五',6:'六',7:'七',8:'八',9:'九',10:'十'};
+  const countLabel = countMap[serverCount] || String(serverCount);
+  lines.push(`### ${countLabel}台服务器`);
   lines.push(``);
   lines.push(`| 服务器 | 配置 | 位置 | 用途 | 状态 |`);
   lines.push(`|--------|------|------|------|------|`);

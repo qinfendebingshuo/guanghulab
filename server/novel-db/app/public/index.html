@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>光湖智库 · 智能书库</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#050810;color:#e2e8f0;font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background-image:radial-gradient(ellipse at 30% 20%,rgba(34,211,238,.05) 0%,transparent 50%),
+                   radial-gradient(ellipse at 70% 80%,rgba(167,139,250,.05) 0%,transparent 50%)
+}
+.card{
+  text-align:center;padding:48px 40px;max-width:520px;width:90%;
+  background:rgba(15,20,35,.8);border:1px solid rgba(96,165,250,.12);
+  border-radius:20px;backdrop-filter:blur(20px)
+}
+.glyph{
+  width:64px;height:64px;margin:0 auto 24px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(167,139,250,.1));
+  border:1px solid rgba(96,165,250,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;font-family:serif;color:#22d3ee;
+  animation:breathe 5s ease-in-out infinite
+}
+@keyframes breathe{0%,100%{box-shadow:0 0 10px rgba(34,211,238,.1)}50%{box-shadow:0 0 30px rgba(34,211,238,.25)}}
+h1{font-size:22px;font-weight:700;margin-bottom:8px;letter-spacing:1px}
+.sub{font-size:13px;color:#64748b;margin-bottom:32px}
+.status-row{
+  display:flex;align-items:center;gap:8px;padding:10px 16px;margin-bottom:8px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;
+  font-size:12px;text-align:left
+}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.ok{background:#34d399;box-shadow:0 0 5px rgba(52,211,153,.4)}
+.dot.building{background:#fbbf24;box-shadow:0 0 5px rgba(251,191,36,.4);animation:pulse 1.5s infinite}
+.dot.plan{background:#475569}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.label{flex:1;color:#94a3b8}
+.badge{font-size:9px;font-family:monospace;padding:2px 6px;border-radius:4px}
+.badge.ok{background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2)}
+.badge.building{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
+.badge.plan{background:rgba(71,85,105,.2);color:#64748b;border:1px solid rgba(71,85,105,.3)}
+.footer{margin-top:28px;font-size:10px;color:#334155;font-family:monospace}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="glyph">库</div>
+  <h1>光湖智库 · 智能书库</h1>
+  <p class="sub">ZY-SVR-006 · 新加坡 · 内部成员系统</p>
+
+  <div class="status-row">
+    <div class="dot ok"></div>
+    <span class="label">语言保护罩 L2+L3</span>
+    <span class="badge ok">已激活</span>
+  </div>
+  <div class="status-row">
+    <div class="dot ok"></div>
+    <span class="label">API 服务</span>
+    <span class="badge ok">运行中</span>
+  </div>
+  <div class="status-row">
+    <div class="dot building"></div>
+    <span class="label">小说下载引擎</span>
+    <span class="badge building">开发中 Phase 2</span>
+  </div>
+  <div class="status-row">
+    <div class="dot building"></div>
+    <span class="label">在线阅读器</span>
+    <span class="badge building">开发中 Phase 2</span>
+  </div>
+  <div class="status-row">
+    <div class="dot plan"></div>
+    <span class="label">成员 Agent 书库</span>
+    <span class="badge plan">规划中 Phase 3</span>
+  </div>
+
+  <p class="footer">novel.guanghuyaoming.com · 国作登字-2026-A-00037559 · TCS-0002∞</p>
+</div>
+</body>
+</html>

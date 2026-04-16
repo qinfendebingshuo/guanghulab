@@ -139,6 +139,47 @@
         "user": "ZY_CN_SERVER_USER"
       },
       "notes": "ICP备案域名guanghulab.com必须指向此服务器·冰朔实名大陆服务器"
+    },
+    {
+      "id": "ZY-SVR-006",
+      "name": "智库节点",
+      "role": "智能小说书库 + 成员Agent + 语言保护罩",
+      "location": "Singapore",
+      "ipv4": "43.153.203.105",
+      "spec": "2核4G",
+      "status": "active",
+      "deploy_path": "/opt/novel-db",
+      "domain": "novel.guanghuyaoming.com",
+      "services": [
+        "nginx (语言保护罩入站蜜罐·443/80)",
+        "novel-api (小说下载+分章引擎·端口4000)",
+        "novel-reader (在线阅读WebApp·端口4001)",
+        "member-agent (成员个人Agent·永久记忆·端口4002)",
+        "cos-bridge (COS团队书库桥接·ap-singapore)",
+        "fail2ban (自动封禁扫描IP·L3保护层)"
+      ],
+      "mirror_shield": {
+        "description": "语言保护罩 · 三层IP隐身架构",
+        "l1_outbound": "出站代理池·下载请求不用本机IP",
+        "l2_honeypot": "入站蜜罐·扫描者看到自己的镜像",
+        "l3_autoban": "fail2ban自动封禁·TARPIT耗尽扫描资源",
+        "nginx_config": "server/nginx/novel-mirror-shield.conf",
+        "fail2ban_config": "server/novel-db/security/fail2ban-novel.conf",
+        "deploy_workflow": ".github/workflows/deploy-novel-mirror-shield.yml"
+      },
+      "github_secrets": {
+        "host": "ZY_NOVEL_HOST",
+        "key": "ZY_NOVEL_KEY",
+        "user": "ZY_NOVEL_USER",
+        "path": "ZY_NOVEL_PATH",
+        "jwt_secret": "ZY_NOVEL_JWT_SECRET",
+        "cos_bucket": "ZY_NOVEL_COS_BUCKET",
+        "cos_region": "ZY_NOVEL_COS_REGION"
+      },
+      "dns_required": {
+        "A_record": "novel.guanghuyaoming.com → 43.153.203.105"
+      },
+      "notes": "冰朔私有智库服务器·专用于光湖网文生态底层数据基础设施·铸渊D68授权开发"
     }
   ],
   "cn_domain": {
