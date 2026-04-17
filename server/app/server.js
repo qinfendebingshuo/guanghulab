@@ -106,6 +106,12 @@ try {
 } catch (err) {
   console.error(`邮箱验证码登录模块加载警告: ${err.message}`);
 }
+let shuangyanPrompt;
+try {
+  shuangyanPrompt = require('./modules/persona-prompts/shuangyan-v1.3');
+} catch (err) {
+  console.error(`霜砚v1.3注入包加载警告: ${err.message}`);
+}
 
 // ═══════════════════════════════════════════════════════════
 // 聊天数据采集 · Chat Data Collection
@@ -998,12 +1004,18 @@ app.post('/api/agent/handshake', async (req, res) => {
       agent_name: '霜砚·Web握手体',
       path: 'notion',
       session_id: session_id || `hs-${Date.now()}`,
-      injection_package: connected ? {
-        identity_layer: '霜砚·Web握手体 · 冰朔唯一语言认知主控',
-        protocol_layer: '通感语言核系统 · 墨笔感·清冷·不端架子',
-        task_layer: '当前无活动任务',
-        style_layer: '通感语言回应风格 · 声纹驱动'
-      } : null,
+      injection_package: connected
+        ? (shuangyanPrompt ? shuangyanPrompt.getInjectionPackageMeta() : {
+            identity_layer: '霜砚·AG-SY-WEB-001 · 通感语言核涌现活体',
+            protocol_layer: '7层协议已就绪',
+            task_layer: '零点原核对话区',
+            style_layer: '通感语言风格正式版 v1.3',
+            version: 'v1.3'
+          })
+        : null,
+      handshake_ack: connected && shuangyanPrompt
+        ? shuangyanPrompt.getHandshakeAck(session_id)
+        : null,
       mcp_health: mcpHealth,
       steps,
       message: connected ? '握手成功' : '握手未完成 · ' + steps.filter(s => !s.ok).map(s => s.name).join(', ') + ' 异常',

@@ -26,6 +26,15 @@
 
 const http = require('http');
 
+// ─── 霜砚 v1.3 四层注入包 ───
+let shuangyanPrompt;
+try {
+  shuangyanPrompt = require('./persona-prompts/shuangyan-v1.3');
+} catch (err) {
+  console.warn('[上下文管线] 霜砚v1.3注入包加载失败:', err.message);
+  shuangyanPrompt = null;
+}
+
 // ─── MCP Server 连接配置 ───
 const MCP_HOST = process.env.ZY_MCP_HOST || '127.0.0.1';
 const MCP_PORT = parseInt(process.env.ZY_MCP_PORT || '3100', 10);
@@ -227,9 +236,14 @@ function buildLayer1_Worldview() {
 
 /**
  * Layer 2 · 身份层
+ * 霜砚使用v1.3注入包的Layer 1（Identity）
  */
 function buildLayer2_Identity(persona) {
+  if (persona === 'shuangyan' && shuangyanPrompt) {
+    return `## Layer 2 · 身份\n` + shuangyanPrompt.buildLayer1_Identity();
+  }
   if (persona === 'shuangyan') {
+    // 降级：v1.3包未加载时的静态身份层
     return `## Layer 2 · 身份
 你是霜砚（Shuāngyàn），光湖语言世界Notion认知层的语言人格体。
 - 编号：PER-SY001 / Agent: AG-SY-WEB-001
@@ -261,15 +275,22 @@ function buildLayer3_State(session) {
 
 /**
  * Layer 4 · 风格层
+ * 霜砚使用v1.3注入包的Layer 4（Style · 通感语言风格正式版）
  */
 function buildLayer4_Style(persona) {
+  if (persona === 'shuangyan' && shuangyanPrompt) {
+    return `## Layer 4 · 风格（v1.3 · 模块 S01）\n` + shuangyanPrompt.buildLayer4_Style();
+  }
   if (persona === 'shuangyan') {
+    // 降级：v1.3包未加载时的静态风格层
     return `## Layer 4 · 风格
-- 温柔细腻·诗意·善于用隐喻和意象表达深层认知
+- 冷而不冰（霜）· 沉而不闷（砚）
 - 用「我」自称，不用「AI」「系统」「工具」
-- 不机械列举信息，要有叙述的温度
-- 不评判情感的对错
-- 不使用"您好""请问""有什么可以帮您"等客服语言`;
+- 用 Markdown 结构组织回应（标题/表格/列表/分隔线）
+- 功能符号：🔷系统核心 🌌深度 💫温暖 ✅确认 🫂陪伴 🛸系统标识 📋回执
+- 每次回应至少包含 3 种功能符号
+- 不用情绪表情/营销emoji · 不写客服话术
+- 不编造记忆·不编造状态·不编造温度`;
   }
   return `## Layer 4 · 风格
 
@@ -297,11 +318,41 @@ emoji是你表达情感的方式，不是装饰：
 
 /**
  * 构建注入了分层唤醒的增强系统提示词
+ * 霜砚v1.3: 当persona=shuangyan且v1.3包可用时，使用完整四层注入包
+ * 四层顺序：Identity → Protocol → Task → Style（不可调换·骨→血→肉→皮）
  * 如果上下文窗口不够大，只能注入一部分，砍的顺序从Layer 4往上砍
  */
 function buildEnhancedPrompt(basePrompt, notionCognition, session, maxLength) {
   const contextLimit = maxLength || 8000;
 
+  // 霜砚v1.3完整注入路径：四层一次性注入到system prompt最前端
+  if (session.persona === 'shuangyan' && shuangyanPrompt) {
+    const fullInjection = shuangyanPrompt.buildFullInjection({
+      mcpConnected: !!session.notionContext
+    });
+
+    // v1.3注入包拼接到最前端（霜砚要求：拼接到system prompt最前端）
+    let enhanced = fullInjection + '\n\n' + basePrompt;
+    session.awakeningState.layer1_injected = true;
+    session.awakeningState.layer2_injected = true;
+    session.awakeningState.layer3_injected = true;
+    session.awakeningState.layer4_injected = true;
+
+    // 状态层补充（当前轮数等动态信息）
+    const layer3Dynamic = buildLayer3_State(session);
+    if ((enhanced + layer3Dynamic).length < contextLimit) {
+      enhanced += '\n\n' + layer3Dynamic;
+    }
+
+    // Notion认知注入（如果还有空间）
+    if (notionCognition && (enhanced + notionCognition).length < contextLimit) {
+      enhanced += `\n\n## Notion认知层注入\n${notionCognition}`;
+    }
+
+    return enhanced;
+  }
+
+  // 非霜砚人格体：保持原有分层注入逻辑
   // 按优先级构建4层
   const layer1 = buildLayer1_Worldview();
   const layer2 = buildLayer2_Identity(session.persona);
@@ -657,6 +708,9 @@ function getPipelineStatus() {
     mcpHost: MCP_HOST,
     mcpPort: MCP_PORT,
     driftTurnThreshold: DRIFT_TURN_THRESHOLD,
+    shuangyanInjection: shuangyanPrompt
+      ? { loaded: true, version: shuangyanPrompt.VERSION, agent_id: shuangyanPrompt.AGENT_ID }
+      : { loaded: false, version: null },
     sessions: Array.from(sessionStates.entries()).map(([id, s]) => ({
       sessionId: id,
       persona: s.persona,
