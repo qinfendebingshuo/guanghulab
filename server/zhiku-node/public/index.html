@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="光湖智库 · 智能书库 · 模块借阅协议 · guanghu.online">
+<meta name="description" content="光湖智库 · 智能书库 · 搜索下载 · AI图书管理员 · guanghu.online">
 <meta name="theme-color" content="#050810">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,8 +22,30 @@
 </div>
 <div class="lake"></div>
 
+<!-- ═══ 登录弹窗 ═══ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-panel">
+    <div class="login-glyph">📚</div>
+    <h2 class="login-title">光湖智库 · 智能书库</h2>
+    <p class="login-sub">QQ邮箱登录 · 一人一数据 · 专属图书管理员</p>
+    <div class="login-form">
+      <input class="login-input" id="loginEmail" type="email" placeholder="QQ邮箱地址" autocomplete="email">
+      <div class="login-code-row" id="loginCodeRow" style="display:none">
+        <input class="login-input login-code-input" id="loginCode" type="text" placeholder="6位验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        <button class="login-send-btn" id="loginSendBtn2" onclick="loginSendCode()" disabled>重新发送</button>
+      </div>
+      <button class="login-btn" id="loginSendBtn" onclick="loginSendCode()">发送验证码</button>
+      <button class="login-btn login-verify-btn" id="loginVerifyBtn" onclick="loginVerify()" style="display:none">验证登录</button>
+    </div>
+    <div class="login-msg" id="loginMsg"></div>
+    <div class="login-footer">
+      <span>铸渊 · ICE-GL-ZY001 · 国作登字-2026-A-00037559</span>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ 主页面 ═══ -->
-<div class="page">
+<div class="page" id="mainPage" style="display:none">
 
   <!-- Header -->
   <header class="header" id="header">
@@ -31,12 +53,15 @@
       <div class="header-glyph">库</div>
       <div>
         <div class="header-title">光湖智库</div>
-        <span class="header-sub">guanghu.online · 模块借阅协议</span>
+        <span class="header-sub">guanghu.online · 智能书库 v2.0</span>
       </div>
     </div>
     <div class="header-right">
       <span class="api-status" id="apiStatus">● 检测中...</span>
-      <a href="https://guanghuyaoming.com" class="back-btn" target="_blank">← 零点原核</a>
+      <div class="user-bar" id="userBar">
+        <span id="userBarEmail">—</span>
+        <button class="user-logout-btn" onclick="doLogout()">退出</button>
+      </div>
     </div>
   </header>
 
@@ -47,7 +72,7 @@
     <div class="hero">
       <div class="hero-icon">📚</div>
       <h1>光湖智库 · 智能书库</h1>
-      <p>团队内部智能阅读系统 · 书库搜索 · 在线阅读 · 模块借阅协议 v1.0</p>
+      <p>搜索 · 下载 · 阅读 · AI图书管理员 · 番茄小说 · 七猫小说 · COS存储</p>
     </div>
 
     <!-- 状态栏 -->
@@ -61,8 +86,8 @@
         <div class="stat-label">在线时长</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="statTokens">-</div>
-        <div class="stat-label">活跃借阅</div>
+        <div class="stat-num" id="statSources">-</div>
+        <div class="stat-label">数据源</div>
       </div>
       <div class="stat-card">
         <div class="stat-num" id="statCos">-</div>
@@ -72,21 +97,43 @@
 
     <!-- 搜索栏 -->
     <div class="search-wrap">
-      <div class="section-title">📖 书库搜索</div>
+      <div class="section-title">📖 书库搜索 · 支持番茄小说+七猫小说+本地书库</div>
       <div class="search-bar">
-        <input class="search-input" id="searchInput" type="text" placeholder="输入书名、作者或关键词搜索..." autocomplete="off">
+        <input class="search-input" id="searchInput" type="text" placeholder="输入书名或作者名搜索..." autocomplete="off">
         <button class="search-btn" id="searchBtn" onclick="doSearch()">🔍 搜索</button>
       </div>
       <div class="search-results" id="searchResults"></div>
     </div>
 
+    <!-- AI图书管理员Agent -->
+    <div class="section-title" style="margin-top:32px">🤖 专属图书管理员 · AI Agent</div>
+    <div class="agent-panel" id="agentPanel">
+      <div class="agent-header">
+        <div class="agent-avatar">📚</div>
+        <div class="agent-info">
+          <div class="agent-name">光湖图书管理员</div>
+          <div class="agent-desc">你的专属AI书库助手 · 搜索 · 推荐 · 下载 · 永久记忆</div>
+        </div>
+        <span class="agent-status" id="agentStatus">● 在线</span>
+      </div>
+      <div class="agent-messages" id="agentMessages">
+        <div class="agent-msg agent-msg-bot">
+          <div class="agent-msg-content">你好！我是你的专属图书管理员 📚<br><br>我可以帮你：<br>• 🔍 搜索书籍（番茄小说、七猫小说）<br>• ⬇️ 下载小说到智库<br>• 📖 管理你的阅读列表<br><br>直接告诉我你想找什么书吧！</div>
+        </div>
+      </div>
+      <div class="agent-input-wrap">
+        <input class="agent-input" id="agentInput" type="text" placeholder="跟你的图书管理员说话..." autocomplete="off">
+        <button class="agent-send-btn" id="agentSendBtn" onclick="agentSend()">发送</button>
+      </div>
+    </div>
+
     <!-- 6 模块网格 -->
-    <div class="section-title">📦 智库模块</div>
+    <div class="section-title" style="margin-top:32px">📦 智库模块</div>
     <div class="module-grid" id="moduleGrid">
       <div class="module-card" data-module="download">
         <div class="module-icon">⬇️</div>
         <div class="module-name">下载引擎</div>
-        <div class="module-desc">书籍下载任务管理</div>
+        <div class="module-desc">番茄+七猫 · 真实下载到COS桶</div>
         <div class="module-status"><span class="dot ok"></span>运行中</div>
       </div>
       <div class="module-card" data-module="chapter">
@@ -109,9 +156,9 @@
       </div>
       <div class="module-card" data-module="agent">
         <div class="module-icon">🤖</div>
-        <div class="module-name">成员 Agent</div>
-        <div class="module-desc">永久记忆 · 对话 · 笔记</div>
-        <div class="module-status"><span class="dot warn"></span>内测中</div>
+        <div class="module-name">AI图书管理员</div>
+        <div class="module-desc">永久记忆 · 对话 · 自动检索</div>
+        <div class="module-status"><span class="dot ok"></span>已连接</div>
       </div>
       <div class="module-card" data-module="ai">
         <div class="module-icon">✨</div>
@@ -121,30 +168,9 @@
       </div>
     </div>
 
-    <!-- 借阅协议面板 -->
-    <div class="section-title" style="margin-top:32px">🔑 模块借阅协议</div>
-    <div class="checkout-panel">
-      <div class="checkout-info">
-        <p>模块借阅协议 (Module Checkout Protocol) · 首次落地</p>
-        <p class="checkout-desc">个人频道 Agent 通过 <code>/api/checkout</code> 借阅智库模块，获取限时 Token，使用完毕后 <code>/api/return</code> 归还。Token 有效期 10 分钟。</p>
-      </div>
-      <div class="checkout-form">
-        <input class="checkout-input" id="personaInput" type="text" placeholder="persona_id (如 TCS-0002)" value="TCS-0002">
-        <select class="checkout-select" id="scopeSelect">
-          <option value="search">search (搜索)</option>
-          <option value="read">read (阅读)</option>
-          <option value="download">download (下载)</option>
-          <option value="full">full (全权限)</option>
-        </select>
-        <button class="checkout-btn" id="checkoutBtn" onclick="doCheckout()">📋 借阅</button>
-        <button class="checkout-btn return-btn" id="returnBtn" onclick="doReturn()" disabled>🔄 归还</button>
-      </div>
-      <div class="checkout-result" id="checkoutResult"></div>
-    </div>
-
     <!-- Footer -->
     <div class="footer">
-      <div class="footer-line">光湖智库 · guanghu.online · ZY-SVR-006 · ZY-PROJ-006</div>
+      <div class="footer-line">光湖智库 · guanghu.online · ZY-SVR-006 · ZY-PROJ-006 · v2.0</div>
       <div class="footer-line">守护: 铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559</div>
       <div class="footer-line">主权: TCS-0002∞ · 冰朔</div>
     </div>

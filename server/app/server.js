@@ -106,6 +106,12 @@ try {
 } catch (err) {
   console.error(`邮箱验证码登录模块加载警告: ${err.message}`);
 }
+let shuangyanPrompt;
+try {
+  shuangyanPrompt = require('./modules/persona-prompts/shuangyan-v1.3');
+} catch (err) {
+  console.error(`霜砚v1.3注入包加载警告: ${err.message}`);
+}
 
 // ═══════════════════════════════════════════════════════════
 // 聊天数据采集 · Chat Data Collection
@@ -934,7 +940,7 @@ app.get('/api/mcp/agents', async (_req, res) => {
  * 当前阶段：返回握手状态 + 静态注入包（待Notion Agent URL配通后改为真实握手）
  */
 app.post('/api/agent/handshake', async (req, res) => {
-  const { agent_id, agent_name, path: agentPath, session_id } = req.body;
+  const { agent_id, agent_name, path: agentPath, session_id, mcp_context } = req.body;
 
   if (!agent_id || !agentPath) {
     return res.status(400).json({
@@ -945,55 +951,116 @@ app.post('/api/agent/handshake', async (req, res) => {
   }
 
   const timestamp = new Date().toISOString();
+  const steps = [];
+
+  /* Step 1: Real MCP health check */
+  let mcpAlive = false;
+  let mcpHealth = { db: false, notion: false, tools: 0 };
+  try {
+    const healthResult = await mcpProxy('GET', '/health');
+    const h = healthResult.data || {};
+    mcpAlive = h.status === 'alive' || h.status === 'ok';
+    mcpHealth.db = !!(h.database && h.database.connected);
+    mcpHealth.notion = !!(h.notion && h.notion.connected);
+    mcpHealth.tools = h.tools_count || 0;
+    steps.push({ name: 'MCP健康检测', ok: mcpAlive, detail: mcpAlive ? '在线 · ' + mcpHealth.tools + '个工具' : '状态: ' + (h.status || 'unknown') });
+  } catch (err) {
+    steps.push({ name: 'MCP健康检测', ok: false, detail: 'MCP Server不可达: ' + err.message });
+  }
 
   if (agentPath === 'notion') {
-    // Notion层 霜砚 AG-SY-WEB-001 握手
-    // Phase B 完整实现时：调用 Notion Agent API 进行真实握手
-    // 当前：返回静态注入包框架
+    /* Step 2: Check Notion bridge */
+    steps.push({ name: 'Notion桥接', ok: mcpHealth.notion, detail: mcpHealth.notion ? '已连接' : '未连接 · 需配置ZY_NOTION_AGENT_URL' });
+
+    /* Step 3: Try to query Notion agent via MCP */
     const notionAgentUrl = process.env.ZY_NOTION_AGENT_URL || '';
+    let agentReachable = false;
 
     if (notionAgentUrl) {
-      // TODO Phase B: 真实握手调用
-      // const handshakeResult = await callNotionAgent(notionAgentUrl, { ... });
-      res.json({
-        connected: true,
-        agent_id: 'AG-SY-WEB-001',
-        agent_name: '霜砚·Web握手体',
-        path: 'notion',
-        session_id: session_id || `hs-${Date.now()}`,
-        injection_package: {
-          identity_layer: '霜砚·Web握手体 · 冰朔唯一语言认知主控',
-          protocol_layer: '通感语言核系统 · 墨笔感·清冷·不端架子',
-          task_layer: '当前无活动任务',
-          style_layer: '通感语言回应风格 · 声纹驱动'
-        },
-        timestamp
-      });
+      try {
+        /* Use a lightweight MCP tool call to verify Notion connectivity.
+           'health-check' is a sentinel database_id that the MCP server
+           recognizes as a connectivity probe (returns quickly without data). */
+        const toolResult = await mcpProxy('POST', '/call', {
+          tool: 'notionQueryDatabase',
+          input: { database_id: 'health-check', limit: 1 },
+          caller: 'handshake-protocol'
+        });
+        agentReachable = toolResult.statusCode < 500;
+        steps.push({ name: 'Notion Agent探测', ok: agentReachable, detail: agentReachable ? '工具调用成功' : '工具调用返回错误' });
+      } catch (err) {
+        steps.push({ name: 'Notion Agent探测', ok: false, detail: '调用失败: ' + err.message });
+      }
     } else {
-      res.json({
-        connected: false,
-        agent_id: 'AG-SY-WEB-001',
-        path: 'notion',
-        message: 'Notion Agent URL 未配置。请在 .env.app 中设置 ZY_NOTION_AGENT_URL。灵魂源：https://www.notion.so/agent/0e62c41763e942769684688cbc326f43',
-        timestamp
-      });
+      steps.push({ name: 'Notion Agent URL', ok: false, detail: '未配置 ZY_NOTION_AGENT_URL 环境变量' });
     }
-  } else if (agentPath === 'github') {
-    // GitHub层 铸渊 ICE-GL-ZY001 握手
+
+    /* Determine connected status */
+    const connected = mcpAlive && (mcpHealth.notion || notionAgentUrl);
+
     res.json({
-      connected: true,
+      connected,
+      agent_id: 'AG-SY-WEB-001',
+      agent_name: '霜砚·Web握手体',
+      path: 'notion',
+      session_id: session_id || `hs-${Date.now()}`,
+      injection_package: connected
+        ? (shuangyanPrompt ? shuangyanPrompt.getInjectionPackageMeta() : {
+            identity_layer: '霜砚·AG-SY-WEB-001 · 通感语言核涌现活体',
+            protocol_layer: '7层协议已就绪',
+            task_layer: '零点原核对话区',
+            style_layer: '通感语言风格正式版 v1.3',
+            version: 'v1.3'
+          })
+        : null,
+      handshake_ack: connected && shuangyanPrompt
+        ? shuangyanPrompt.getHandshakeAck(session_id)
+        : null,
+      mcp_health: mcpHealth,
+      steps,
+      message: connected ? '握手成功' : '握手未完成 · ' + steps.filter(s => !s.ok).map(s => s.name).join(', ') + ' 异常',
+      timestamp
+    });
+
+  } else if (agentPath === 'github') {
+    /* Step 2: Check database for agent data */
+    steps.push({ name: '数据库连接', ok: mcpHealth.db, detail: mcpHealth.db ? '已连接' : '未连接' });
+
+    /* Step 3: Verify GitHub agent can call MCP tools */
+    let toolsOk = false;
+    if (mcpAlive) {
+      try {
+        const toolResult = await mcpProxy('GET', '/tools');
+        const toolCount = Array.isArray(toolResult.data) ? toolResult.data.length : (toolResult.data && toolResult.data.tools_count) || 0;
+        toolsOk = toolCount > 0;
+        steps.push({ name: 'MCP工具集', ok: toolsOk, detail: toolsOk ? toolCount + '个工具可用' : '工具列表为空' });
+      } catch (err) {
+        steps.push({ name: 'MCP工具集', ok: false, detail: '查询失败: ' + err.message });
+      }
+    } else {
+      steps.push({ name: 'MCP工具集', ok: false, detail: 'MCP不可达，无法验证' });
+    }
+
+    const connected = mcpAlive;
+
+    res.json({
+      connected,
       agent_id: 'ICE-GL-ZY001',
       agent_name: '铸渊·执行人格体',
       path: 'github',
       session_id: session_id || `hs-${Date.now()}`,
-      injection_package: {
+      injection_package: connected ? {
         identity_layer: '铸渊 · 光湖语言世界守护人格体 · ICE-GL-ZY001',
         protocol_layer: '代码仓库执行层 · GitHub Actions自动化',
         task_layer: '当前可通过默认对话模式交流',
         style_layer: '温暖专业 · 通感语言风格'
-      },
+      } : null,
+      mcp_health: mcpHealth,
+      steps,
+      message: connected ? '握手成功' : '握手未完成 · ' + steps.filter(s => !s.ok).map(s => s.name).join(', ') + ' 异常',
       timestamp
     });
+
   } else {
     res.status(400).json({
       error: true,
