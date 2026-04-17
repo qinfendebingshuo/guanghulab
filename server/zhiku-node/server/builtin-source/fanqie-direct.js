@@ -193,33 +193,31 @@ async function getChapterContent(itemId) {
 
 /**
  * 清理HTML内容为纯文本
- * 使用循环确保嵌套/残留标签被完全清除
+ * 安全策略：先移除所有标签，最后才解码实体（防止编码绕过）
  */
 function cleanHtmlContent(html) {
   if (!html || typeof html !== 'string') return '';
 
   let text = html;
 
-  // 先解码HTML实体（在移除标签之前，避免双重解码）
-  text = text
-    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
-
-  // 转换段落和换行标签
+  // 1. 转换段落和换行标签为换行符（在删除标签之前保留语义）
   text = text
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<\/div>/gi, '\n');
 
-  // 循环移除所有HTML标签直到没有残留（防止嵌套标签绕过）
+  // 2. 循环移除所有HTML标签直到没有残留（防止嵌套/编码标签绕过）
   let prevText;
   do {
     prevText = text;
     text = text.replace(/<[^>]*>/g, '');
   } while (text !== prevText);
 
-  // 最后解码基本HTML实体
+  // 3. 最后才解码HTML实体（标签全部移除后解码是安全的）
+  // &amp; 必须最后解码，防止 &amp;lt; → &lt; → < 的双重解码链
   text = text
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
     .replace(/&nbsp;/g, ' ')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -227,7 +225,7 @@ function cleanHtmlContent(html) {
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&');
 
-  // 清理多余空行
+  // 4. 清理多余空行
   text = text.replace(/\n{3,}/g, '\n\n').trim();
 
   return text;
