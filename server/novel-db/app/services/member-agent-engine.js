@@ -188,9 +188,8 @@ function getNotes(memberId, { book_id, limit } = {}) {
 }
 
 /**
- * 对话（Agent记录对话历史 · 预留AI接入）
- * Phase 3 MVP: echo 回复 + 基础指令解析
- * Phase 4: 接入 DeepSeek/Kimi API
+ * 对话（Agent记录对话历史 · Phase 4: 接入真实AI）
+ * 优先使用 DeepSeek/Kimi/通义千问，无 API Key 时降级为本地回复
  */
 function chat(memberId, message) {
   const agent = getOrCreateAgent(memberId);
@@ -203,12 +202,25 @@ function chat(memberId, message) {
 
   agent.chat_history.push(userMsg);
 
-  // MVP: 基础指令解析
-  const reply = generateReply(agent, message);
+  // 先尝试同步本地回复（快速指令）
+  const quickReply = tryQuickReply(agent, message);
+  if (quickReply) {
+    const assistantMsg = {
+      role:       'assistant',
+      content:    quickReply,
+      timestamp:  new Date().toISOString()
+    };
+    agent.chat_history.push(assistantMsg);
+    if (agent.chat_history.length > 200) agent.chat_history = agent.chat_history.slice(-200);
+    save();
+    return { reply: quickReply, history_length: agent.chat_history.length, model: 'local' };
+  }
 
+  // 异步AI回复 → 先返回占位，通过 chatAsync 获取真实回复
+  const fallbackReply = generateReply(agent, message);
   const assistantMsg = {
     role:       'assistant',
-    content:    reply,
+    content:    fallbackReply,
     timestamp:  new Date().toISOString()
   };
 
@@ -217,9 +229,93 @@ function chat(memberId, message) {
   save();
 
   return {
-    reply,
-    history_length: agent.chat_history.length
+    reply: fallbackReply,
+    history_length: agent.chat_history.length,
+    model: 'local'
   };
+}
+
+/**
+ * 异步AI对话（接入真实大模型）
+ */
+async function chatAsync(memberId, message) {
+  const agent = getOrCreateAgent(memberId);
+
+  const userMsg = {
+    role:       'user',
+    content:    (message || '').slice(0, 2000),
+    timestamp:  new Date().toISOString()
+  };
+
+  agent.chat_history.push(userMsg);
+
+  let reply;
+  let model = 'local';
+
+  try {
+    const aiBridge = require('./ai-bridge');
+    const systemPrompt = aiBridge.buildAgentSystemPrompt(agent);
+
+    // 构建消息列表（含最近对话历史）
+    const recentHistory = (agent.chat_history || [])
+      .slice(-10)
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({ role: m.role, content: m.content }));
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...recentHistory.slice(0, -1), // 不包括刚推入的这条
+      { role: 'user', content: (message || '').slice(0, 2000) }
+    ];
+
+    const result = await aiBridge.callAI(messages, {
+      temperature: 0.7,
+      maxTokens:   1500,
+      timeout:     30000
+    });
+
+    reply = result.content;
+    model = result.provider || result.model || 'ai';
+  } catch (err) {
+    console.error('[MemberAgent] AI调用失败，降级为本地回复:', err.message);
+    reply = generateReply(agent, message);
+  }
+
+  const assistantMsg = {
+    role:       'assistant',
+    content:    reply,
+    timestamp:  new Date().toISOString(),
+    model:      model
+  };
+
+  agent.chat_history.push(assistantMsg);
+  if (agent.chat_history.length > 200) agent.chat_history = agent.chat_history.slice(-200);
+  save();
+
+  return {
+    reply,
+    history_length: agent.chat_history.length,
+    model
+  };
+}
+
+/**
+ * 快速指令（无需AI，本地快速回复）
+ */
+function tryQuickReply(agent, message) {
+  const msg = (message || '').trim().toLowerCase();
+
+  if (msg === '记忆' || msg === '我的记忆') {
+    const memCount = agent.memory ? agent.memory.length : 0;
+    const noteCount = agent.notes ? agent.notes.length : 0;
+    return `📝 你的记忆档案：\n- 记忆条目: ${memCount}\n- 阅读笔记: ${noteCount}\n- 对话轮次: ${agent.chat_history.length}`;
+  }
+
+  if (msg === '帮助' || msg === 'help') {
+    return `🤖 Agent 功能一览：\n\n1. 💬 对话 — 和AI对话，支持 DeepSeek/Kimi/通义千问\n2. 📖 阅读辅助 — 分析小说内容、解读人物\n3. ✂️ 拆文整理 — 分析结构、提取大纲\n4. 📝 笔记 — 记录阅读感想\n5. 🧠 记忆 — 我会记住你的偏好\n6. 📋 摘要 — AI辅助总结章节内容\n\n直接和我聊天即可，AI会自动回复！`;
+  }
+
+  return null; // 非快速指令，需要AI处理
 }
 
 /**
@@ -284,6 +380,6 @@ module.exports = {
   getOrCreateAgent, getAgent, listAgents,
   addMemory, getMemories,
   addNote, getNotes,
-  chat, getChatHistory,
+  chat, chatAsync, getChatHistory,
   getStats
 };
