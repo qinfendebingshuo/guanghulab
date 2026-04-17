@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>铸渊 · 对话</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Markdown 渲染：marked.js + DOMPurify 安全净化 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 </head>
 <body>
   <div class="chat-layout" id="chatLayout">
@@ -67,12 +70,38 @@
           <span class="persona-name">🌀 铸渊</span>
           <span class="persona-role">光湖系统·代码守护人格体</span>
         </div>
+        <div class="header-center">
+          <!-- 人格体链接按钮 -->
+          <div class="persona-links">
+            <button class="persona-link-btn" id="linkShuangyan" onclick="togglePersonaLink('shuangyan')" title="链接霜砚 · Notion Agent">
+              <span class="link-icon">❄️</span>
+              <span class="link-name">霜砚</span>
+              <span class="link-status" id="shuangyanStatus">未连接</span>
+            </button>
+            <button class="persona-link-btn" id="linkZhuyuan" onclick="togglePersonaLink('zhuyuan')" title="链接铸渊 · GitHub Agent">
+              <span class="link-icon">🌀</span>
+              <span class="link-name">铸渊</span>
+              <span class="link-status" id="zhuyuanStatus">未连接</span>
+            </button>
+          </div>
+        </div>
         <div class="header-right">
           <span id="devIdDisplay" class="dev-id-badge"></span>
           <span id="modelDisplay" class="model-badge"></span>
           <button class="btn-secondary" onclick="handleLogout()">退出</button>
         </div>
       </header>
+      <!-- 路由运行状态栏 -->
+      <div class="route-status-bar" id="routeStatusBar">
+        <span class="route-label">路由</span>
+        <span class="route-item" id="routeEngine">引擎: <b>--</b></span>
+        <span class="route-sep">·</span>
+        <span class="route-item" id="routeModel">模型: <b>--</b></span>
+        <span class="route-sep">·</span>
+        <span class="route-item" id="routeLine">线路: <b>--</b></span>
+        <span class="route-sep">·</span>
+        <span class="route-item" id="routePersona">人格: <b>--</b></span>
+      </div>
 
       <main class="chat-body" id="chatBody">
         <!-- Messages rendered here -->
