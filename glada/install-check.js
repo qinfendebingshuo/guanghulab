@@ -125,7 +125,7 @@ async function main() {
   const baseUrl = process.env.ZY_LLM_BASE_URL || process.env.LLM_BASE_URL || '';
 
   if (apiKey && apiKey.length > 5) {
-    pass('ZY_LLM_API_KEY', `已配置 (${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)})`);
+    pass('ZY_LLM_API_KEY', `已配置 (${apiKey.length}字符 · ***已脱敏***)`);
   } else {
     fail('ZY_LLM_API_KEY', '未配置或无效');
   }

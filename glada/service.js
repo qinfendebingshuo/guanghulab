@@ -230,11 +230,11 @@ function startService() {
   const app = express();
   app.use(express.json());
 
-  // 全局速率限制：每分钟 60 次请求
-  app.use('/api/glada/', rateLimit(60 * 1000, 60));
+  // 速率限制实例：每分钟 60 次请求
+  const apiLimiter = rateLimit(60 * 1000, 60);
 
-  // 健康检查（不需要额外限制，已被全局限制覆盖）
-  app.get('/api/glada/health', (req, res) => {
+  // 健康检查
+  app.get('/api/glada/health', apiLimiter, (req, res) => {
     res.json({
       status: 'ok',
       service: 'glada',
@@ -245,7 +245,7 @@ function startService() {
   });
 
   // 查看队列状态
-  app.get('/api/glada/status', (req, res) => {
+  app.get('/api/glada/status', apiLimiter, (req, res) => {
     const pendingTasks = taskReceiver.scanPendingTasks();
     const localQueue = taskReceiver.scanLocalQueue();
 
@@ -272,8 +272,9 @@ function startService() {
     });
   });
 
-  // 提交新任务（API）
-  app.post('/api/glada/submit', (req, res) => {
+  // 提交新任务（API）· 更严格限制（每分钟 10 次）
+  const submitLimiter = rateLimit(60 * 1000, 10);
+  app.post('/api/glada/submit', submitLimiter, (req, res) => {
     try {
       const spec = req.body;
       if (!spec || !spec.task_id) {
@@ -312,7 +313,7 @@ function startService() {
   });
 
   // 查看特定任务
-  app.get('/api/glada/task/:taskId', (req, res) => {
+  app.get('/api/glada/task/:taskId', apiLimiter, (req, res) => {
     const taskId = req.params.taskId;
 
     // 验证 taskId 格式，防止路径注入
@@ -338,7 +339,7 @@ function startService() {
   });
 
   // 查看开发回执
-  app.get('/api/glada/receipt/:taskId', (req, res) => {
+  app.get('/api/glada/receipt/:taskId', apiLimiter, (req, res) => {
     const taskId = req.params.taskId;
 
     // 验证 taskId 格式，防止路径注入
