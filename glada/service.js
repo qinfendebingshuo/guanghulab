@@ -178,11 +178,62 @@ function submitTask() {
 
 // ── HTTP 服务 + 执行循环 ─────────────────────────
 
+/**
+ * 简易速率限制中间件（内存存储，不需要额外依赖）
+ * @param {number} windowMs - 时间窗口（毫秒）
+ * @param {number} maxRequests - 窗口内最大请求数
+ */
+function rateLimit(windowMs, maxRequests) {
+  const hits = new Map();
+
+  // 定期清理过期记录
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, data] of hits) {
+      if (now - data.windowStart > windowMs) {
+        hits.delete(ip);
+      }
+    }
+  }, windowMs).unref();
+
+  return (req, res, next) => {
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+
+    if (!hits.has(ip)) {
+      hits.set(ip, { windowStart: now, count: 1 });
+      return next();
+    }
+
+    const data = hits.get(ip);
+
+    // 窗口过期，重置
+    if (now - data.windowStart > windowMs) {
+      data.windowStart = now;
+      data.count = 1;
+      return next();
+    }
+
+    data.count++;
+    if (data.count > maxRequests) {
+      return res.status(429).json({
+        error: '请求过于频繁，请稍后再试',
+        retry_after_ms: windowMs - (now - data.windowStart)
+      });
+    }
+
+    next();
+  };
+}
+
 function startService() {
   const app = express();
   app.use(express.json());
 
-  // 健康检查
+  // 全局速率限制：每分钟 60 次请求
+  app.use('/api/glada/', rateLimit(60 * 1000, 60));
+
+  // 健康检查（不需要额外限制，已被全局限制覆盖）
   app.get('/api/glada/health', (req, res) => {
     res.json({
       status: 'ok',

@@ -36,6 +36,12 @@ function assert(condition, message) {
 
 console.log('🧪 GLADA 冒烟测试\n');
 
+// ── 预加载模块（E2E测试需要）──
+const taskReceiver = require('../task-receiver');
+const contextBuilder = require('../context-builder');
+const stepExecutor = require('../step-executor');
+const notifier = require('../notifier');
+
 // ── 1. 模块加载测试 ──
 
 console.log('📦 模块加载:');
@@ -286,6 +292,122 @@ test('execution-loop 集成中央任务队列', () => {
   assert(content.includes('core/task-queue'), '缺少 core/task-queue 集成');
   assert(content.includes('dequeueFromCentralQueue'), '缺少 dequeueFromCentralQueue 函数');
   assert(content.includes('glada-task'), '缺少 glada-task 类型检查');
+});
+
+// ── E2E 集成测试 ──
+
+test('E2E: CAB任务提交→转换→入队→状态查询完整链路', () => {
+  const cabSpec = {
+    cab_version: '1.0',
+    task_id: 'CAB-20260417-999',
+    created_at: new Date().toISOString(),
+    created_by: 'TCS-0002∞',
+    status: 'pending',
+    authorization: {
+      sovereign: '冰朔 · TCS-0002∞',
+      authorized_agent: 'copilot-agent',
+      scope: 'full-auto-development'
+    },
+    architecture: {
+      summary: 'E2E 测试任务',
+      target_files: ['glada/README.md'],
+      target_modules: ['glada']
+    },
+    development_plan: {
+      title: 'E2E 集成测试任务',
+      description: '验证完整链路',
+      steps: ['步骤1: 检查文件', '步骤2: 修改文件'],
+      priority: 'normal'
+    },
+    execution_plan: {
+      executor: 'glada',
+      model_preference: 'deepseek-chat',
+      retry_policy: { max_retries: 2, backoff_ms: 1000 }
+    },
+    constraints: {
+      no_touch_files: ['.github/brain/'],
+      required_tests: false,
+      max_files_changed: 5
+    }
+  };
+
+  // 1. 验证任务规格
+  const validation = taskReceiver.validateTaskSpec(cabSpec);
+  assert(validation.valid, `验证失败: ${validation.errors.join(', ')}`);
+
+  // 2. 转换为 GLADA 任务
+  const gladaTask = taskReceiver.convertToGladaTask(cabSpec);
+  assert(gladaTask.glada_task_id === 'GLADA-CAB-20260417-999', 'ID 转换错误');
+  assert(gladaTask.plan.steps.length === 2, '步骤数应为 2');
+  assert(gladaTask.plan.steps[0].status === 'pending', '步骤状态应为 pending');
+  assert(gladaTask.constraints.no_touch_files.length === 1, '约束丢失');
+
+  // 3. 保存到临时队列并读回
+  const tmpQueueDir = '/tmp/glada-e2e-test-queue';
+  fs.mkdirSync(tmpQueueDir, { recursive: true });
+  const queueFile = path.join(tmpQueueDir, `${gladaTask.glada_task_id}.json`);
+  fs.writeFileSync(queueFile, JSON.stringify(gladaTask, null, 2), 'utf-8');
+
+  const readBack = JSON.parse(fs.readFileSync(queueFile, 'utf-8'));
+  assert(readBack.glada_task_id === gladaTask.glada_task_id, '队列读回不一致');
+  assert(readBack.plan.title === 'E2E 集成测试任务', '标题不一致');
+
+  // 4. 构建上下文
+  const context = contextBuilder.buildContext(gladaTask);
+  assert(context.sections.identity, '上下文缺少 identity');
+  assert(context.sections.task, '上下文缺少 task');
+
+  const systemPrompt = contextBuilder.contextToSystemPrompt(context);
+  assert(systemPrompt.length > 100, '系统提示词过短');
+  assert(systemPrompt.includes('铸渊'), '提示词应包含铸渊身份');
+
+  // 5. 构建步骤提示词
+  const stepPrompt = stepExecutor.buildStepPrompt(gladaTask.plan.steps[0], gladaTask);
+  assert(stepPrompt.includes('步骤 1'), '步骤提示词应包含步骤编号');
+  assert(stepPrompt.includes('JSON'), '步骤提示词应要求 JSON 输出');
+
+  // 6. 验证通知构建
+  gladaTask.status = 'completed';
+  gladaTask.completion = {
+    total_files_changed: ['test.js'],
+    git_branch: 'glada/test',
+    git_commits: ['abc123']
+  };
+  const notification = notifier.buildNotification(gladaTask, 'completed');
+  assert(notification.subject.includes('GLADA'), '通知标题应包含 GLADA');
+  assert(notification.body.includes('test.js'), '通知正文应包含变更文件');
+
+  // 清理
+  fs.unlinkSync(queueFile);
+  try { fs.rmdirSync(tmpQueueDir); } catch { /* ok */ }
+});
+
+test('step-executor 支持 LLM 重试配置', () => {
+  const content = fs.readFileSync(path.join(ROOT, 'glada', 'step-executor.js'), 'utf-8');
+  assert(content.includes('maxRetries'), '缺少 maxRetries 参数');
+  assert(content.includes('backoffMs'), '缺少 backoffMs 参数');
+  assert(content.includes('execution_plan'), '缺少 execution_plan 集成');
+  assert(content.includes('retry_policy'), '缺少 retry_policy 读取');
+});
+
+test('service.js 包含速率限制', () => {
+  const content = fs.readFileSync(path.join(ROOT, 'glada', 'service.js'), 'utf-8');
+  assert(content.includes('rateLimit'), '缺少速率限制函数');
+  assert(content.includes('429'), '缺少 429 状态码');
+});
+
+test('package.json 包含 express 依赖', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'glada', 'package.json'), 'utf-8'));
+  assert(pkg.dependencies && pkg.dependencies.express, '缺少 express 依赖');
+});
+
+test('install-check.js 预飞检查工具存在', () => {
+  const checkPath = path.join(ROOT, 'glada', 'install-check.js');
+  assert(fs.existsSync(checkPath), 'install-check.js 不存在');
+  const content = fs.readFileSync(checkPath, 'utf-8');
+  assert(content.includes('ZY_LLM_API_KEY'), '预飞检查应检查 API Key');
+  assert(content.includes('ZY_LLM_BASE_URL'), '预飞检查应检查 Base URL');
+  assert(content.includes('testLLMConnection'), '预飞检查应测试 LLM 连通性');
 });
 
 // ── 结果 ──

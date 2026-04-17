@@ -70,7 +70,7 @@ function httpRequest(url, options, body) {
 }
 
 /**
- * 调用 LLM API
+ * 调用 LLM API（带重试和指数退避）
  * @param {string} systemPrompt - 系统提示词
  * @param {string} userMessage - 用户消息
  * @param {Object} [options] - 选项
@@ -80,6 +80,8 @@ async function callLLM(systemPrompt, userMessage, options = {}) {
   const config = getLLMConfig();
   const model = options.model || 'deepseek-chat';
   const maxTokens = options.maxTokens || 8192;
+  const maxRetries = options.maxRetries || 3;
+  const backoffMs = options.backoffMs || 5000;
 
   if (!config.apiKey || !config.baseUrl) {
     throw new Error('LLM API 未配置：请设置 ZY_LLM_API_KEY 和 ZY_LLM_BASE_URL');
@@ -95,21 +97,48 @@ async function callLLM(systemPrompt, userMessage, options = {}) {
     ]
   });
 
-  const response = await httpRequest(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.apiKey}`
-    },
-    timeout: 180000
-  }, body);
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await httpRequest(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`
+        },
+        timeout: 180000
+      }, body);
 
-  if (response.status !== 200) {
-    throw new Error(`LLM API 错误: ${response.status} - ${String(response.body || '').substring(0, 500)}`);
+      if (response.status !== 200) {
+        const errBody = String(response.body || '').substring(0, 500);
+        // 429 (Rate limit) or 5xx are retryable
+        if ((response.status === 429 || response.status >= 500) && attempt < maxRetries) {
+          const wait = backoffMs * Math.pow(2, attempt - 1);
+          console.warn(`[GLADA-LLM] ⚠️ API返回 ${response.status}，${wait / 1000}s 后重试 (${attempt}/${maxRetries})`);
+          await new Promise(r => setTimeout(r, wait));
+          lastError = new Error(`LLM API 错误: ${response.status} - ${errBody}`);
+          continue;
+        }
+        throw new Error(`LLM API 错误: ${response.status} - ${errBody}`);
+      }
+
+      const result = JSON.parse(response.body);
+      return result.choices?.[0]?.message?.content || '';
+
+    } catch (err) {
+      lastError = err;
+      // Network errors are retryable
+      if (attempt < maxRetries && (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || err.message === 'Request timeout')) {
+        const wait = backoffMs * Math.pow(2, attempt - 1);
+        console.warn(`[GLADA-LLM] ⚠️ 网络错误: ${err.message}，${wait / 1000}s 后重试 (${attempt}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, wait));
+        continue;
+      }
+      throw err;
+    }
   }
 
-  const result = JSON.parse(response.body);
-  return result.choices?.[0]?.message?.content || '';
+  throw lastError || new Error('LLM API 调用失败：已达最大重试次数');
 }
 
 /**
@@ -313,6 +342,11 @@ function runTests(testCommand = 'npm run test:smoke') {
  */
 async function executeStep(step, systemPrompt, gladaTask, options = {}) {
   const startTime = Date.now();
+
+  // 从 execution_plan 读取配置（如果存在），优先级：options > execution_plan > defaults
+  const execPlan = gladaTask.execution_plan || {};
+  const retryPolicy = execPlan.retry_policy || {};
+
   const result = {
     step_id: step.step_id,
     status: 'pending',
@@ -331,11 +365,13 @@ async function executeStep(step, systemPrompt, gladaTask, options = {}) {
     // 1. 构建步骤执行指令
     const userMessage = buildStepPrompt(step, gladaTask);
 
-    // 2. 调用 LLM
+    // 2. 调用 LLM（使用 execution_plan 中的模型偏好和重试策略）
     console.log(`[GLADA-Executor] 🤖 调用 LLM...`);
     const llmResponse = await callLLM(systemPrompt, userMessage, {
-      model: options.model || 'deepseek-chat',
-      maxTokens: options.maxTokens || 8192
+      model: options.model || execPlan.model_preference || 'deepseek-chat',
+      maxTokens: options.maxTokens || 8192,
+      maxRetries: retryPolicy.max_retries || 3,
+      backoffMs: retryPolicy.backoff_ms || 5000
     });
 
     // 3. 解析文件变更

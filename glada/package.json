@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node service.js",
     "status": "node service.js --status",
+    "preflight": "node install-check.js",
     "test": "node tests/glada-smoke.test.js"
   },
   "keywords": ["glada", "autonomous-agent", "guanghu", "age-os"],
@@ -13,5 +14,8 @@
   "private": true,
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
   }
 }

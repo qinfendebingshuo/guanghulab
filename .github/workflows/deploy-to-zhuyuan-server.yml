@@ -550,6 +550,10 @@ jobs:
           echo "═══ GLADA 自主开发Agent 部署 ═══"
           mkdir -p /opt/glada/queue /opt/glada/logs/executions /opt/glada/logs/notifications /opt/glada/receipts /var/log/glada
 
+          # 安装 GLADA 依赖
+          cd /opt/glada
+          npm install --production 2>&1
+
           # 写入 GLADA 环境变量
           echo "NODE_ENV=production" > /opt/glada/.env.glada
           echo "GLADA_PORT=3900" >> /opt/glada/.env.glada
@@ -563,6 +567,9 @@ jobs:
             echo "ZY_LLM_BASE_URL=${ZY_LLM_BASE_URL}" >> /opt/glada/.env.glada
           fi
           chmod 600 /opt/glada/.env.glada
+
+          # 预飞检查
+          cd /opt/glada && node install-check.js || echo "⚠️ GLADA 预飞检查有警告（非致命·仍尝试启动）"
 
           # PM2 重启 GLADA Agent
           pm2 delete glada-agent 2>/dev/null || true
