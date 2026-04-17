@@ -308,6 +308,10 @@ body {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    /* 统一卡片高度 */
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .card::before {
@@ -403,7 +407,8 @@ body {
 
 .card-link {
     display: inline-block;
-    margin-top: 1rem;
+    margin-top: auto;
+    padding-top: 0.8rem;
     color: var(--accent);
     text-decoration: none;
     font-size: 0.9rem;
@@ -411,6 +416,49 @@ body {
 
 .card-link:hover {
     text-decoration: underline;
+}
+
+/* 卡片状态滚动区域 · 每次展示3条 */
+.card-status-scroll {
+    flex: 1;
+    max-height: 80px;
+    overflow-y: auto;
+    margin: 0.5rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(16, 185, 129, 0.3) transparent;
+}
+
+.card-status-scroll::-webkit-scrollbar {
+    width: 3px;
+}
+
+.card-status-scroll::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 2px;
+}
+
+.card-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.2rem 0;
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(42, 49, 66, 0.5);
+}
+
+.card-status-item:last-child {
+    border-bottom: none;
+}
+
+.csi-label {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+}
+
+.csi-value {
+    color: var(--consciousness);
+    font-size: 0.7rem;
+    font-weight: 500;
 }
 
 /* 卡片动画延迟 */

@@ -289,16 +289,29 @@ window.HomepageApp = {
         const grid = document.getElementById('moduleGrid');
         if (!grid) return;
 
-        grid.innerHTML = moduleCards.map(card => `
-            <div class="card" data-module-id="${card.id}" data-module-path="${card.path}">
-                <div class="card-header">
-                    <div class="card-icon">${card.icon}</div>
-                    <span class="card-name">${card.name}</span>
-                    <span class="card-status ${card.status}">${card.status === 'online' ? '在线' : '建设中'}</span>
-                </div>
-                <span class="card-link">进入模块 →</span>
-            </div>
-        `).join('');
+        grid.innerHTML = moduleCards.map(card => {
+            // Build status items for scrolling display (3 visible at a time)
+            var statusItems = [
+                { label: '状态', value: card.status === 'online' ? '✅ 在线运行' : '🔧 建设中' },
+                { label: '模块', value: card.id },
+                { label: '类型', value: '核心模块' },
+                { label: '版本', value: 'v1.0' },
+                { label: '更新', value: new Date().toLocaleDateString('zh-CN') }
+            ];
+            var statusHtml = statusItems.map(function(item) {
+                return '<div class="card-status-item"><span class="csi-label">' + item.label + '</span><span class="csi-value">' + item.value + '</span></div>';
+            }).join('');
+
+            return '<div class="card" data-module-id="' + card.id + '" data-module-path="' + card.path + '">' +
+                '<div class="card-header">' +
+                    '<div class="card-icon">' + card.icon + '</div>' +
+                    '<span class="card-name">' + card.name + '</span>' +
+                    '<span class="card-status ' + card.status + '">' + (card.status === 'online' ? '在线' : '建设中') + '</span>' +
+                '</div>' +
+                '<div class="card-status-scroll">' + statusHtml + '</div>' +
+                '<span class="card-link">进入模块 →</span>' +
+            '</div>';
+        }).join('');
     },
 
     // 轮播渲染（带高优先级橙色边框）
