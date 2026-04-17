@@ -476,7 +476,8 @@ async function doSearch() {
                 ? `<button class="result-btn result-btn-read" onclick="readBook('${escapeHtml(book.id)}')">📖 阅读</button>
                    <button class="result-btn result-btn-dl" onclick="downloadLocal('${escapeHtml(book.id)}')">⬇️ 下载</button>`
                 : (book.source_book_id
-                    ? `<button class="result-btn result-btn-dl" onclick="startDownload('${escapeHtml(book.source)}','${escapeHtml(book.source_book_id)}','${escapeHtml(book.title)}','${escapeHtml(book.author || '')}')" ${downloadAttr}>⬇️ 下载到智库</button>`
+                    ? `<button class="result-btn result-btn-read" onclick="readBook('${escapeHtml(book.id)}')">📖 在线阅读</button>
+                       <button class="result-btn result-btn-dl" onclick="startDownload('${escapeHtml(book.source)}','${escapeHtml(book.source_book_id)}','${escapeHtml(book.title)}','${escapeHtml(book.author || '')}')" ${downloadAttr}>⬇️ 下载到智库</button>`
                     : '')
               }
             </div>
@@ -578,12 +579,40 @@ function showDownloadProgress(taskId, title) {
 async function downloadLocal(bookId) {
   if (!currentToken) return;
   try {
-    const res = await fetch(`${API_BASE}/download/${bookId}`, {
+    // 优先尝试本地下载（不依赖COS）
+    const res = await fetch(`${API_BASE}/download/local/${encodeURIComponent(bookId)}`, {
       headers: { 'Authorization': `Bearer ${currentToken}` }
     });
+
+    // 如果返回的是文件流（text/plain），直接触发下载
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('text/plain')) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const disposition = res.headers.get('content-disposition') || '';
+      const filenameMatch = disposition.match(/filename\*=UTF-8''(.+)/);
+      a.href = url;
+      a.download = filenameMatch ? decodeURIComponent(filenameMatch[1]) : 'book.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
     const data = await res.json();
     if (data.error) {
-      alert(data.message);
+      // 回退到旧版COS下载
+      const res2 = await fetch(`${API_BASE}/download/${encodeURIComponent(bookId)}`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const data2 = await res2.json();
+      if (data2.error) {
+        alert(data2.message);
+      } else if (data2.download_url) {
+        window.open(data2.download_url, '_blank');
+      }
     } else if (data.download_url) {
       window.open(data.download_url, '_blank');
     }
@@ -592,10 +621,216 @@ async function downloadLocal(bookId) {
   }
 }
 
-/** 在线阅读（简单版 — 跳转阅读页） */
-function readBook(bookId) {
-  alert('在线阅读功能开发中，敬请期待 📖');
+/* ═══════════════════════════════════════════
+ * 在线阅读器 · Online Reader
+ * ═══════════════════════════════════════════ */
+
+let readerState = {
+  bookId: '',
+  source: '',
+  sourceBookId: '',
+  title: '',
+  chapters: [],
+  currentChapter: 0,
+  fontSize: 18,
+  theme: 'dark'  // 'dark' | 'light'
+};
+
+/** 打开在线阅读器 */
+async function readBook(bookId) {
+  if (!currentToken) {
+    alert('请先登录后再阅读');
+    return;
+  }
+
+  // 解析 bookId 获取 source 和 source_book_id
+  // bookId 格式: "fq-123456" 或 "qm-789" 或 "fanqie-123456"
+  let source = '';
+  let sourceBookId = '';
+
+  if (bookId.startsWith('fq-')) {
+    source = 'fanqie';
+    sourceBookId = bookId.replace('fq-', '');
+  } else if (bookId.startsWith('qm-')) {
+    source = 'qimao';
+    sourceBookId = bookId.replace('qm-', '');
+  } else if (bookId.includes('-')) {
+    const parts = bookId.split('-');
+    source = parts[0];
+    sourceBookId = parts.slice(1).join('-');
+  } else {
+    source = 'fanqie';
+    sourceBookId = bookId;
+  }
+
+  readerState.bookId = bookId;
+  readerState.source = source;
+  readerState.sourceBookId = sourceBookId;
+  readerState.currentChapter = 0;
+
+  // 显示阅读器
+  document.getElementById('readerOverlay').style.display = 'flex';
+  document.getElementById('readerContent').innerHTML = '<div class="reader-loading">📖 正在获取目录...</div>';
+  document.getElementById('readerChapterList').innerHTML = '<div class="reader-loading">加载中...</div>';
+  document.getElementById('readerNav').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API_BASE}/reader/catalog/${encodeURIComponent(source)}/${encodeURIComponent(sourceBookId)}`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('readerContent').innerHTML = `<div class="reader-error">⚠️ ${escapeHtml(data.message)}</div>`;
+      return;
+    }
+
+    readerState.chapters = data.chapters || [];
+    readerState.title = (data.book && data.book.title) || '未知书名';
+
+    document.getElementById('readerBookTitle').textContent = readerState.title;
+
+    if (readerState.chapters.length === 0) {
+      document.getElementById('readerContent').innerHTML = '<div class="reader-error">📭 未找到章节目录</div>';
+      document.getElementById('readerChapterList').innerHTML = '<div class="reader-empty">暂无章节</div>';
+      return;
+    }
+
+    // 渲染章节列表
+    renderChapterList();
+
+    // 加载第一章
+    loadChapter(0);
+
+  } catch (err) {
+    document.getElementById('readerContent').innerHTML = `<div class="reader-error">加载失败: ${escapeHtml(err.message)}</div>`;
+  }
 }
+
+/** 渲染章节侧边栏 */
+function renderChapterList() {
+  const list = document.getElementById('readerChapterList');
+  list.innerHTML = readerState.chapters.map((ch, i) =>
+    `<div class="reader-chapter-item${i === readerState.currentChapter ? ' active' : ''}" data-index="${i}" onclick="loadChapter(${i})">
+      <span class="ch-index">${i + 1}</span>
+      <span class="ch-title">${escapeHtml(ch.title || '第' + (i + 1) + '章')}</span>
+    </div>`
+  ).join('');
+}
+
+/** 加载指定章节 */
+async function loadChapter(index) {
+  if (index < 0 || index >= readerState.chapters.length) return;
+
+  readerState.currentChapter = index;
+  const ch = readerState.chapters[index];
+
+  // 更新UI状态
+  document.getElementById('readerContent').innerHTML = '<div class="reader-loading">📖 加载章节中...</div>';
+  document.getElementById('readerNav').style.display = 'flex';
+  document.getElementById('readerNavInfo').textContent = `${index + 1} / ${readerState.chapters.length}`;
+  document.getElementById('readerPrevBtn').disabled = index === 0;
+  document.getElementById('readerNextBtn').disabled = index === readerState.chapters.length - 1;
+
+  // 更新章节列表高亮
+  const items = document.querySelectorAll('.reader-chapter-item');
+  items.forEach(el => el.classList.toggle('active', parseInt(el.dataset.index) === index));
+
+  // 滚动章节列表到可见位置
+  const activeItem = document.querySelector('.reader-chapter-item.active');
+  if (activeItem) activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  try {
+    const params = new URLSearchParams({
+      source: ch.source || readerState.source,
+      item_id: ch.item_id || '',
+      book_id: readerState.bookId
+    });
+
+    const res = await fetch(`${API_BASE}/reader/chapter?${params}`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('readerContent').innerHTML = `<div class="reader-error">⚠️ ${escapeHtml(data.message)}</div>`;
+      return;
+    }
+
+    const content = data.content || '(空白章节)';
+    const title = ch.title || `第${index + 1}章`;
+
+    document.getElementById('readerContent').innerHTML =
+      `<h2 class="reader-chapter-title">${escapeHtml(title)}</h2>` +
+      `<div class="reader-text" style="font-size:${readerState.fontSize}px">${formatReaderText(content)}</div>`;
+
+    // 滚动到顶部
+    document.getElementById('readerBody').scrollTop = 0;
+
+  } catch (err) {
+    document.getElementById('readerContent').innerHTML = `<div class="reader-error">加载失败: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function readerPrevChapter() {
+  if (readerState.currentChapter > 0) loadChapter(readerState.currentChapter - 1);
+}
+
+function readerNextChapter() {
+  if (readerState.currentChapter < readerState.chapters.length - 1) loadChapter(readerState.currentChapter + 1);
+}
+
+function closeReader() {
+  document.getElementById('readerOverlay').style.display = 'none';
+}
+
+function readerFontSmaller() {
+  readerState.fontSize = Math.max(12, readerState.fontSize - 2);
+  const textEl = document.querySelector('.reader-text');
+  if (textEl) textEl.style.fontSize = readerState.fontSize + 'px';
+}
+
+function readerFontLarger() {
+  readerState.fontSize = Math.min(32, readerState.fontSize + 2);
+  const textEl = document.querySelector('.reader-text');
+  if (textEl) textEl.style.fontSize = readerState.fontSize + 'px';
+}
+
+function toggleReaderTheme() {
+  const container = document.querySelector('.reader-container');
+  const btn = document.getElementById('readerThemeBtn');
+  if (readerState.theme === 'dark') {
+    readerState.theme = 'light';
+    container.classList.add('reader-light');
+    btn.textContent = '🌞';
+  } else {
+    readerState.theme = 'dark';
+    container.classList.remove('reader-light');
+    btn.textContent = '🌙';
+  }
+}
+
+function formatReaderText(text) {
+  // 将纯文本格式化为适合阅读的HTML
+  return text
+    .split('\n')
+    .map(line => {
+      line = line.trim();
+      if (!line) return '';
+      return `<p class="reader-para">${escapeHtml(line)}</p>`;
+    })
+    .filter(Boolean)
+    .join('');
+}
+
+/* 阅读器键盘快捷键 */
+document.addEventListener('keydown', (e) => {
+  const overlay = document.getElementById('readerOverlay');
+  if (!overlay || overlay.style.display === 'none') return;
+  if (e.key === 'Escape') closeReader();
+  if (e.key === 'ArrowLeft') readerPrevChapter();
+  if (e.key === 'ArrowRight') readerNextChapter();
+});
 
 /* ═══════════════════════════════════════════
  * AI图书管理员Agent · 对话交互

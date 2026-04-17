@@ -521,3 +521,185 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
 
 /* ─── 健康状态栏警告色 ─── */
 .api-status.warn{color:var(--warn)}
+
+/* ═══════════════════════════════════════════
+ * 在线阅读器 · Online Reader
+ * ═══════════════════════════════════════════ */
+
+.reader-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;
+  background:var(--bg);
+  display:flex;justify-content:center;align-items:stretch;
+  animation:fadeIn .3s ease
+}
+
+.reader-container{
+  width:100%;max-width:100%;height:100vh;
+  display:flex;flex-direction:column;
+  background:var(--bg);color:var(--text)
+}
+
+/* 阅读器头部 */
+.reader-header{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 20px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:10
+}
+.reader-back-btn{
+  background:none;border:1px solid var(--border);
+  color:var(--cyan);padding:6px 14px;border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .3s
+}
+.reader-back-btn:hover{background:rgba(34,211,238,0.1);border-color:var(--cyan)}
+.reader-book-title{
+  flex:1;font-size:16px;font-weight:600;color:var(--violet);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.reader-controls{display:flex;gap:6px}
+.reader-ctrl-btn{
+  background:none;border:1px solid var(--border);
+  color:var(--dim);padding:6px 10px;border-radius:8px;
+  cursor:pointer;font-size:13px;transition:all .3s
+}
+.reader-ctrl-btn:hover{background:rgba(167,139,250,0.1);color:var(--purple);border-color:var(--purple)}
+
+/* 阅读器主体布局 */
+.reader-container{display:flex;flex-direction:column}
+.reader-container > :nth-child(2){display:flex;flex:1;overflow:hidden}
+/* 让sidebar和body并排 */
+.reader-overlay .reader-container{
+  display:grid;
+  grid-template-rows:auto 1fr;
+  grid-template-columns:240px 1fr;
+  height:100vh
+}
+.reader-header{grid-column:1/3}
+
+/* 章节侧边栏 */
+.reader-sidebar{
+  grid-column:1;grid-row:2;
+  background:rgba(8,12,30,0.98);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  display:flex;flex-direction:column
+}
+.reader-sidebar-title{
+  padding:14px 16px 10px;font-size:14px;font-weight:600;
+  color:var(--purple);border-bottom:1px solid var(--border);
+  flex-shrink:0
+}
+.reader-chapter-list{flex:1;overflow-y:auto;padding:4px 0}
+.reader-chapter-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;cursor:pointer;
+  transition:background .2s;
+  font-size:13px;color:var(--dim);
+  border-left:3px solid transparent
+}
+.reader-chapter-item:hover{background:rgba(167,139,250,0.06);color:var(--text)}
+.reader-chapter-item.active{
+  background:rgba(167,139,250,0.1);
+  color:var(--cyan);font-weight:600;
+  border-left-color:var(--cyan)
+}
+.reader-chapter-item .ch-index{
+  min-width:28px;text-align:right;font-size:11px;
+  color:var(--muted);font-family:var(--mono)
+}
+.reader-chapter-item .ch-title{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+
+/* 正文区 */
+.reader-body{
+  grid-column:2;grid-row:2;
+  overflow-y:auto;padding:0;
+  display:flex;flex-direction:column
+}
+.reader-content{
+  flex:1;max-width:800px;margin:0 auto;
+  padding:32px 40px 80px;width:100%
+}
+.reader-chapter-title{
+  font-size:22px;font-weight:700;
+  color:var(--violet);margin:0 0 24px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--border)
+}
+.reader-text{
+  font-size:18px;line-height:2;color:var(--text)
+}
+.reader-para{
+  text-indent:2em;margin:0 0 8px;
+  word-break:break-all
+}
+
+/* 章节导航 */
+.reader-nav{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  padding:16px;border-top:1px solid var(--border);
+  background:var(--panel);flex-shrink:0
+}
+.reader-nav-btn{
+  background:none;border:1px solid var(--border);
+  color:var(--cyan);padding:8px 20px;border-radius:10px;
+  cursor:pointer;font-size:14px;transition:all .3s
+}
+.reader-nav-btn:hover:not(:disabled){background:rgba(34,211,238,0.1);border-color:var(--cyan)}
+.reader-nav-btn:disabled{color:var(--muted);cursor:not-allowed;border-color:transparent}
+.reader-nav-info{font-size:13px;color:var(--dim);min-width:80px;text-align:center}
+
+/* 阅读器加载/错误状态 */
+.reader-loading{
+  text-align:center;padding:60px 20px;
+  color:var(--dim);font-size:16px
+}
+.reader-error{
+  text-align:center;padding:60px 20px;
+  color:var(--warn);font-size:15px
+}
+.reader-empty{
+  text-align:center;padding:40px 20px;
+  color:var(--muted);font-size:13px
+}
+
+/* 亮色主题 */
+.reader-light{
+  background:#faf9f6 !important;color:#2c2c2c !important
+}
+.reader-light .reader-header{
+  background:#f0ede6;border-bottom-color:#d8d4cc
+}
+.reader-light .reader-back-btn{color:#4a7a8a;border-color:#d8d4cc}
+.reader-light .reader-back-btn:hover{background:rgba(74,122,138,0.08)}
+.reader-light .reader-book-title{color:#6b4c9a}
+.reader-light .reader-ctrl-btn{color:#666;border-color:#d8d4cc}
+.reader-light .reader-ctrl-btn:hover{color:#6b4c9a;border-color:#6b4c9a;background:rgba(107,76,154,0.06)}
+.reader-light .reader-sidebar{background:#f5f2ec;border-right-color:#d8d4cc}
+.reader-light .reader-sidebar-title{color:#6b4c9a;border-bottom-color:#d8d4cc}
+.reader-light .reader-chapter-item{color:#777}
+.reader-light .reader-chapter-item:hover{background:rgba(107,76,154,0.05);color:#333}
+.reader-light .reader-chapter-item.active{background:rgba(107,76,154,0.08);color:#4a7a8a;border-left-color:#4a7a8a}
+.reader-light .reader-chapter-item .ch-index{color:#aaa}
+.reader-light .reader-body{background:#faf9f6}
+.reader-light .reader-chapter-title{color:#6b4c9a;border-bottom-color:#e0ddd6}
+.reader-light .reader-text{color:#333}
+.reader-light .reader-nav{background:#f0ede6;border-top-color:#d8d4cc}
+.reader-light .reader-nav-btn{color:#4a7a8a;border-color:#d8d4cc}
+.reader-light .reader-nav-btn:hover:not(:disabled){background:rgba(74,122,138,0.08)}
+.reader-light .reader-nav-info{color:#999}
+.reader-light .reader-loading,.reader-light .reader-error{color:#888}
+
+/* 响应式 · 移动端隐藏侧边栏 */
+@media(max-width:768px){
+  .reader-overlay .reader-container{
+    grid-template-columns:1fr;
+  }
+  .reader-sidebar{display:none}
+  .reader-body{grid-column:1}
+  .reader-header{grid-column:1}
+  .reader-content{padding:20px 16px 60px}
+  .reader-chapter-title{font-size:18px}
+}
