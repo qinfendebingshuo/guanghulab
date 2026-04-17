@@ -1444,23 +1444,30 @@ document.getElementById('agentInput').addEventListener('keydown',function(e){
 /* ═══ Init with retry ═══ */
 var statsRetryCount=0;
 var statsRetryMax=3;
+var statsLoading=false;
 function loadStatsWithRetry(){
+  if(statsLoading)return;
+  statsLoading=true;
+  var origCb=systemStatus.api;
   loadStats();
-  // 如果API不可达，自动重试（最多3次，间隔递增）
-  setTimeout(function(){
+  // loadStats是异步的，通过轮询检测结果
+  setTimeout(function checkResult(){
+    statsLoading=false;
     if(!systemStatus.api && statsRetryCount<statsRetryMax){
       statsRetryCount++;
       console.log('[智库] API重试 '+statsRetryCount+'/'+statsRetryMax);
-      loadStatsWithRetry();
+      setTimeout(loadStatsWithRetry,(statsRetryCount)*5000);
+    } else if(systemStatus.api){
+      statsRetryCount=0;
     }
-  },(statsRetryCount+1)*5000);
+  },3000);
 }
 loadStatsWithRetry();
 loadBooks();
 loadLibrary();
 initAgent();
 // 定期刷新状态（每60秒）
-setInterval(function(){ loadStats(); },60000);
+(function scheduleRefresh(){setTimeout(function(){loadStats();scheduleRefresh();},60000)})();
 </script>
 
 </body>

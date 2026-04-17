@@ -35,6 +35,8 @@ const express = require('express');
 const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+// fallback: also try cwd/.env (PM2 cwd 设为 /opt/zhuyuan/novel-db)
 require('dotenv').config();
 
 const app  = express();

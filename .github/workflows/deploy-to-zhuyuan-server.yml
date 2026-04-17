@@ -249,6 +249,21 @@ jobs:
             echo "✅ 零点原核频道已部署到 /opt/zhuyuan/sites/yaoming/"
           fi
 
+          # 同步智库节点 novel-db (server/novel-db/) 到服务器
+          # 与主站同服务器部署 · PM2 管理 · 端口 4000
+          if [ -d "server/novel-db" ]; then
+            ssh -i ~/.ssh/zy_key \
+              ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
+              "mkdir -p /opt/zhuyuan/novel-db/app /opt/zhuyuan/novel-db/data/books /opt/zhuyuan/novel-db/data/chapters"
+            rsync -avz \
+              -e "ssh -i ~/.ssh/zy_key" \
+              --exclude='node_modules' \
+              --exclude='.env' \
+              server/novel-db/ \
+              ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/zhuyuan/novel-db/
+            echo "✅ 智库节点 novel-db 已同步到 /opt/zhuyuan/novel-db/"
+          fi
+
       - name: 📦 同步配置文件
         env:
           ZY_DOMAIN_MAIN: ${{ secrets.ZY_DOMAIN_MAIN }}
@@ -431,9 +446,38 @@ jobs:
 
           sudo nginx -t && sudo systemctl reload nginx
 
-          # PM2 重启 · 主应用 + 预览进程 (两个都要清理·否则残留errored进程导致502)
+          # PM2 重启 · 主应用 + 预览进程 + 智库节点 (全部清理·否则残留errored进程导致502)
           pm2 delete zhuyuan-server 2>/dev/null || true
           pm2 delete zhuyuan-preview 2>/dev/null || true
+          pm2 delete novel-api 2>/dev/null || true
+
+          # ─── 智库节点 novel-db 依赖安装 + 环境变量 ───
+          if [ -d "/opt/zhuyuan/novel-db/app" ]; then
+            cd /opt/zhuyuan/novel-db/app
+            npm install --production 2>&1
+            # 写入 novel-db 环境变量（复用主站 LLM API 密钥）
+            echo "NODE_ENV=production" > /opt/zhuyuan/novel-db/.env
+            echo "PORT=4000" >> /opt/zhuyuan/novel-db/.env
+            echo "BOOKS_DIR=/opt/zhuyuan/novel-db/data/books" >> /opt/zhuyuan/novel-db/.env
+            echo "CHAPTERS_DIR=/opt/zhuyuan/novel-db/data/chapters" >> /opt/zhuyuan/novel-db/.env
+            # AI 模型密钥（智库 Agent 对话 + AI 辅助写作）
+            echo "DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            echo "ZY_DEEPSEEK_API_KEY=${ZY_DEEPSEEK_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            echo "KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            echo "ZY_KIMI_API_KEY=${ZY_KIMI_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            echo "DASHSCOPE_API_KEY=${ZY_QIANWEN_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            echo "ZY_QIANWEN_API_KEY=${ZY_QIANWEN_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            if [ -n "${ZY_LLM_API_KEY}" ]; then
+              echo "LLM_API_KEY=${ZY_LLM_API_KEY}" >> /opt/zhuyuan/novel-db/.env
+            fi
+            if [ -n "${ZY_LLM_BASE_URL}" ]; then
+              echo "LLM_BASE_URL=${ZY_LLM_BASE_URL}" >> /opt/zhuyuan/novel-db/.env
+            fi
+            chmod 600 /opt/zhuyuan/novel-db/.env
+            echo "✅ 智库节点 novel-db 依赖已安装 + 环境变量已写入"
+          fi
+
+          cd /opt/zhuyuan/app
           pm2 start /opt/zhuyuan/config/pm2/ecosystem.config.js
           pm2 save
 
@@ -490,15 +534,17 @@ jobs:
           cd /opt/age-os && pm2 start ecosystem.config.js
           pm2 save
 
-          # 健康检查 · 主应用(3800) + 预览进程(3801) + MCP(3100)
+          # 健康检查 · 主应用(3800) + 预览进程(3801) + MCP(3100) + 智库节点(4000)
           sleep 3
           curl -sf http://localhost:3800/api/health || echo "⚠️ 主应用健康检查失败，等待更长时间..."
           curl -sf http://localhost:3801/api/health || echo "⚠️ 预览进程健康检查失败，等待更长时间..."
           curl -sf http://localhost:3100/health || echo "⚠️ MCP Server健康检查失败，等待更长时间..."
+          curl -sf http://localhost:4000/api/health || echo "⚠️ 智库节点健康检查失败，等待更长时间..."
           sleep 5
           curl -sf http://localhost:3800/api/health && echo "✅ 主应用已上线 (3800)" || echo "❌ 主应用启动失败 (3800)"
           curl -sf http://localhost:3801/api/health && echo "✅ 预览进程已上线 (3801)" || echo "❌ 预览进程启动失败 (3801) · 若 ZY_DOMAIN_PREVIEW 域名指向此端口则该域名可能502"
           curl -sf http://localhost:3100/health && echo "✅ MCP Server已上线 (3100)" || echo "❌ MCP Server启动失败 (3100)"
+          curl -sf http://localhost:4000/api/health && echo "✅ 智库节点已上线 (4000)" || echo "❌ 智库节点启动失败 (4000) · zhiku.html API将不可用"
 
           # DNS 诊断 · 检查域名是否指向本服务器
           echo ""
