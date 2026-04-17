@@ -101,4 +101,30 @@ router.get('/stats', (req, res) => {
   });
 });
 
+/* ─── GET /sources — 获取已注册的开源数据源列表 ─── */
+router.get('/sources', (req, res) => {
+  res.json({
+    error: false,
+    data:  engine.getRegisteredSources()
+  });
+});
+
+/* ─── GET /search — 搜索开源数据库匹配 ─── */
+router.get('/search', (req, res) => {
+  const { book_name, author } = req.query;
+  if (!book_name) {
+    return res.status(400).json({
+      error:   true,
+      code:    'MISSING_BOOK_NAME',
+      message: 'book_name 参数为必填项'
+    });
+  }
+
+  const result = engine.searchOpenSources(book_name, author);
+  res.json({
+    error: false,
+    data:  result
+  });
+});
+
 module.exports = router;

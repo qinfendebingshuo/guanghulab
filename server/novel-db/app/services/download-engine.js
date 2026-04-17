@@ -12,12 +12,20 @@
  *   - 任务队列管理（排队/执行/完成/失败）
  *   - TXT 文件存储到本地 data/books/
  *   - 下载完成后自动触发分章引擎
+ *   - 开源小说下载器数据库匹配（优先本地库匹配）
  *
  * 支持平台:
  *   - qimao   (七猫)
  *   - fanqie  (番茄)
  *   - yuewen  (阅文)
  *   - jjwxc   (晋江)
+ *
+ * 开源数据源:
+ *   - novel-downloader (GitHub: 404)
+ *   - FreeNovel (GitHub: cnbattle/novel)
+ *   - NovelHarvester (GitHub: unclezs/NovelHarvester)
+ *   - biqugen / zxcs (知轩藏书)
+ *   - 69shu / 笔趣阁系列
  *
  * ═══════════════════════════════════════════════════════════
  */
@@ -30,8 +38,224 @@ const crypto = require('crypto');
 
 const BOOKS_DIR = process.env.BOOKS_DIR || path.join(__dirname, '..', 'data', 'books');
 const TASKS_FILE = path.join(__dirname, '..', 'data', 'download-tasks.json');
+const SOURCES_FILE = path.join(__dirname, '..', 'data', 'book-sources.json');
 
 const SUPPORTED_PLATFORMS = ['qimao', 'fanqie', 'yuewen', 'jjwxc'];
+
+// ═══════════════════════════════════════════════════════════
+// 开源小说下载器数据库注册表
+// ═══════════════════════════════════════════════════════════
+const OPEN_SOURCE_REGISTRIES = [
+  {
+    id: 'novel-downloader',
+    name: 'novel-downloader',
+    description: '全平台小说下载工具 · 支持多源聚合',
+    url: 'https://github.com/search?q=novel+downloader&type=repositories',
+    type: 'downloader',
+    platforms: ['qimao', 'fanqie', 'yuewen', 'jjwxc', 'qidian'],
+    status: 'registered',
+    book_count_estimate: 0,
+    last_checked: null
+  },
+  {
+    id: 'novel-harvester',
+    name: 'NovelHarvester (uncle小说)',
+    description: 'Java桌面端小说下载器 · 全平台采集',
+    url: 'https://github.com/unclezs/NovelHarvester',
+    type: 'downloader',
+    platforms: ['qimao', 'fanqie', 'yuewen', 'qidian', 'biquge'],
+    status: 'registered',
+    book_count_estimate: 0,
+    last_checked: null
+  },
+  {
+    id: 'free-novel',
+    name: 'FreeNovel (cnbattle)',
+    description: 'Go语言小说聚合 · 多源搜索下载',
+    url: 'https://github.com/cnbattle/novel',
+    type: 'aggregator',
+    platforms: ['biquge', '69shu', 'shuquge', 'xbiquge'],
+    status: 'registered',
+    book_count_estimate: 0,
+    last_checked: null
+  },
+  {
+    id: 'zxcs-archive',
+    name: '知轩藏书数据库',
+    description: '精校TXT小说归档 · 含大量完本',
+    url: 'https://zxcs.info',
+    type: 'archive',
+    platforms: ['zxcs'],
+    status: 'registered',
+    book_count_estimate: 0,
+    last_checked: null
+  },
+  {
+    id: 'biquge-series',
+    name: '笔趣阁系列源',
+    description: '笔趣阁及镜像站 · 免费小说资源',
+    url: 'https://www.biquge.com',
+    type: 'source',
+    platforms: ['biquge', 'xbiquge', 'ibiquge'],
+    status: 'registered',
+    book_count_estimate: 0,
+    last_checked: null
+  },
+  {
+    id: '69shu-archive',
+    name: '69书吧数据库',
+    description: '69书吧 · 大量TXT小说资源',
+    url: 'https://www.69shu.com',
+    type: 'source',
+    platforms: ['69shu'],
+    status: 'registered',
+    book_count_estimate: 0,
+    last_checked: null
+  }
+];
+
+// 本地书源索引 (缓存已知可匹配的书籍列表)
+let bookSourceIndex = Object.create(null);
+
+function loadBookSources() {
+  try {
+    if (fs.existsSync(SOURCES_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(SOURCES_FILE, 'utf8'));
+      bookSourceIndex = Object.create(null);
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        for (const key of Object.keys(raw)) {
+          if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+            bookSourceIndex[key] = raw[key];
+          }
+        }
+      }
+    }
+  } catch {
+    bookSourceIndex = Object.create(null);
+  }
+}
+
+function saveBookSources() {
+  try {
+    const dir = path.dirname(SOURCES_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SOURCES_FILE, JSON.stringify(bookSourceIndex, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[DownloadEngine] 保存书源索引失败:', err.message);
+  }
+}
+
+/**
+ * 搜索开源数据库匹配
+ * @param {string} bookName - 书名
+ * @param {string} author - 作者
+ * @returns {object} 匹配结果
+ */
+function searchOpenSources(bookName, author) {
+  const query = (bookName || '').trim().toLowerCase();
+  const authorQuery = (author || '').trim().toLowerCase();
+  const matches = [];
+
+  // 1. 搜索本地书源索引（已缓存的书籍）
+  for (const key of Object.keys(bookSourceIndex)) {
+    const entry = bookSourceIndex[key];
+    if (!entry || typeof entry !== 'object') continue;
+    const name = (entry.book_name || '').toLowerCase();
+    const auth = (entry.author || '').toLowerCase();
+
+    if (name.includes(query) || query.includes(name)) {
+      if (!authorQuery || auth.includes(authorQuery) || authorQuery.includes(auth)) {
+        matches.push({
+          source_id: entry.source_id || 'local',
+          source_name: entry.source_name || '本地缓存',
+          book_name: entry.book_name,
+          author: entry.author,
+          match_type: name === query ? 'exact' : 'partial',
+          available: true,
+          file_path: entry.file_path || null
+        });
+      }
+    }
+  }
+
+  // 2. 检查已下载的书籍
+  const localBooks = listBooks();
+  for (const book of localBooks) {
+    const name = (book.book_name || '').toLowerCase();
+    if (name.includes(query) || query.includes(name)) {
+      if (!authorQuery || (book.author || '').toLowerCase().includes(authorQuery)) {
+        const alreadyMatched = matches.some(m => m.book_name === book.book_name && m.source_id === 'local-downloaded');
+        if (!alreadyMatched) {
+          matches.push({
+            source_id: 'local-downloaded',
+            source_name: '本地已下载',
+            book_name: book.book_name,
+            author: book.author,
+            match_type: name === query ? 'exact' : 'partial',
+            available: true,
+            file_path: book.filename
+          });
+        }
+      }
+    }
+  }
+
+  // 3. 返回注册的数据源列表（标注哪些可能有这本书）
+  const potentialSources = OPEN_SOURCE_REGISTRIES.map(reg => ({
+    source_id: reg.id,
+    source_name: reg.name,
+    type: reg.type,
+    status: reg.status,
+    platforms: reg.platforms,
+    url: reg.url,
+    can_search: reg.status === 'connected',
+    description: reg.description
+  }));
+
+  return {
+    query: { book_name: bookName, author: author || '' },
+    local_matches: matches,
+    local_match_count: matches.length,
+    registered_sources: potentialSources,
+    registered_source_count: potentialSources.length,
+    recommendation: matches.length > 0
+      ? '本地已有匹配，建议直接使用'
+      : '本地无匹配，将尝试从平台下载'
+  };
+}
+
+/**
+ * 获取所有注册数据源信息
+ */
+function getRegisteredSources() {
+  return OPEN_SOURCE_REGISTRIES.map(reg => ({
+    id: reg.id,
+    name: reg.name,
+    description: reg.description,
+    type: reg.type,
+    url: reg.url,
+    platforms: reg.platforms,
+    status: reg.status,
+    book_count_estimate: reg.book_count_estimate,
+    last_checked: reg.last_checked
+  }));
+}
+
+/**
+ * 添加书源记录到本地索引
+ */
+function addBookSource(bookName, author, sourceId, sourceName, filePath) {
+  const key = `${(bookName || '').trim()}_${(author || '').trim()}`.toLowerCase();
+  bookSourceIndex[key] = {
+    book_name: (bookName || '').trim(),
+    author: (author || '').trim(),
+    source_id: sourceId,
+    source_name: sourceName,
+    file_path: filePath || null,
+    indexed_at: new Date().toISOString()
+  };
+  saveBookSources();
+}
 
 // 内存任务队列
 let tasks = [];
@@ -162,6 +386,9 @@ async function processTask(taskId) {
     task.file_path = filename;
     task.file_size = stats.size;
     task.updated_at = new Date().toISOString();
+
+    // 自动将下载的书籍加入书源索引
+    addBookSource(task.book_name, task.author, 'platform-' + task.platform, task.platform, filename);
   } catch (err) {
     task.status  = 'failed';
     task.error   = err.message;
@@ -250,12 +477,15 @@ function getStats() {
     completed_tasks:  allTasks.filter(t => t.status === 'completed').length,
     failed_tasks:     allTasks.filter(t => t.status === 'failed').length,
     total_size_bytes: books.reduce((sum, b) => sum + b.size, 0),
-    supported_platforms: SUPPORTED_PLATFORMS
+    supported_platforms: SUPPORTED_PLATFORMS,
+    registered_sources: OPEN_SOURCE_REGISTRIES.length,
+    local_index_count: Object.keys(bookSourceIndex).length
   };
 }
 
 // 初始化
 init();
+loadBookSources();
 
 module.exports = {
   createTask,
@@ -264,5 +494,8 @@ module.exports = {
   listBooks,
   getBookContent,
   getStats,
+  searchOpenSources,
+  getRegisteredSources,
+  addBookSource,
   SUPPORTED_PLATFORMS
 };
