@@ -339,15 +339,27 @@ async function checkHealth() {
     const res = await fetch(`${API_BASE}/health`);
     const data = await res.json();
     if (data.status === 'ok') {
-      el.textContent = `● API 在线 · ${data.uptime_human || ''}`;
+      // 计算数据源在线状态
+      const sources = data.data_sources || [];
+      const onlineSources = sources.filter(s => s.reachable);
+      const sourceSummary = onlineSources.length + '/' + sources.length;
+      el.textContent = `● API 在线 · ${data.uptime_human || ''} · 数据源 ${sourceSummary}`;
       el.className = 'api-status ok';
+
+      // 如果有数据源离线，改为警告色
+      if (onlineSources.length < sources.length) {
+        el.className = 'api-status warn';
+        const offlineSources = sources.filter(s => !s.reachable).map(s => s.name).join(', ');
+        el.title = `离线数据源: ${offlineSources}`;
+      }
+
       const statBooks = document.getElementById('statBooks');
       const statUptime = document.getElementById('statUptime');
       const statSources = document.getElementById('statSources');
       const statCos = document.getElementById('statCos');
       if (statBooks) statBooks.textContent = data.books_count || 0;
       if (statUptime) statUptime.textContent = data.uptime_human || '-';
-      if (statSources) statSources.textContent = (data.data_sources || []).length || '-';
+      if (statSources) statSources.textContent = sourceSummary;
       if (statCos) statCos.textContent = data.cos_configured ? '已连接' : '未配置';
     } else {
       throw new Error('not ok');
@@ -365,6 +377,24 @@ setInterval(checkHealth, 30000);
 /* ═══════════════════════════════════════════
  * 搜索功能 · 真实数据源搜索
  * ═══════════════════════════════════════════ */
+
+/** 构建数据源状态提示 HTML */
+function buildSourceStatusHtml(sourceStatus) {
+  if (!sourceStatus || !sourceStatus.length) return '';
+  const errorSources = sourceStatus.filter(s => s.status === 'error');
+  if (errorSources.length === 0) return '';
+  const tips = errorSources.map(s => {
+    const name = escapeHtml(s.name);
+    const err = s.error || '';
+    const errMsg = err.includes('timeout') ? '连接超时' :
+                   err.includes('ECONNREFUSED') ? '服务未启动' :
+                   err.includes('ENOTFOUND') ? 'DNS解析失败' :
+                   err.includes('ECONNRESET') ? '连接被重置' :
+                   '不可达';
+    return `<span class="source-err-tag">${name}: ${errMsg}</span>`;
+  }).join(' ');
+  return `<div class="source-status-bar">⚠️ 部分数据源离线: ${tips} · 仅本地书库可用</div>`;
+}
 
 async function doSearch() {
   const q = document.getElementById('searchInput').value.trim();
@@ -389,7 +419,14 @@ async function doSearch() {
     const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(q)}`, {
       headers: { 'Authorization': `Bearer ${currentToken}` }
     });
-    const data = await res.json();
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      resultDiv.innerHTML = '<div class="no-results">⚠️ 服务器响应异常，请稍后重试</div>';
+      return;
+    }
 
     if (data.error) {
       if (data.code === 'TOKEN_EXPIRED' || data.code === 'TOKEN_INVALID' || data.code === 'NO_TOKEN') {
@@ -399,10 +436,20 @@ async function doSearch() {
       }
       resultDiv.innerHTML = '<div class="no-results">⚠️ ' + escapeHtml(data.message) + '</div>';
     } else if (!data.results || data.results.length === 0) {
-      resultDiv.innerHTML = '<div class="no-results">未找到匹配书籍 · 可尝试其他关键词</div>';
+      // 空结果时展示数据源状态，让用户知道为什么搜不到
+      const statusHtml = buildSourceStatusHtml(data.source_status);
+      const localInfo = (data.source_status || []).find(s => s.id === 'local');
+      const localTotal = localInfo ? localInfo.books_total || 0 : 0;
+      resultDiv.innerHTML = statusHtml +
+        '<div class="no-results">' +
+        (statusHtml ? '数据源离线时只能搜索本地书库（当前收录 ' + localTotal + ' 本）' :
+        '未找到匹配书籍 · 可尝试其他关键词') +
+        '</div>';
     } else {
+      const statusHtml = buildSourceStatusHtml(data.source_status);
       const sourceColors = { local: '#34d399', fanqie: '#fbbf24', qimao: '#a78bfa' };
-      resultDiv.innerHTML = '<div class="search-summary">找到 ' + data.total + ' 个结果 · 来源: ' + (data.sources_queried || []).join(', ') + '</div>' +
+      resultDiv.innerHTML = statusHtml +
+        '<div class="search-summary">找到 ' + data.total + ' 个结果 · 来源: ' + (data.sources_queried || []).join(', ') + '</div>' +
         data.results.map(book => {
           const sourceColor = sourceColors[book.source] || '#94a7d0';
           const sourceName = book.source_name || book.source;

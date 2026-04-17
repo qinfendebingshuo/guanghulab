@@ -248,10 +248,10 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
 .agent-desc{font-size:11px;color:var(--dim)}
 .agent-status{font-size:11px;color:var(--ok);font-family:var(--mono)}
 .agent-messages{
-  padding:16px 20px;height:320px;overflow-y:auto;
+  padding:16px 20px;height:520px;overflow-y:auto;
   display:flex;flex-direction:column;gap:12px
 }
-.agent-msg{display:flex;gap:10px;max-width:85%;animation:msgIn .3s ease-out}
+.agent-msg{display:flex;gap:10px;max-width:92%;animation:msgIn .3s ease-out}
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .agent-msg-bot{align-self:flex-start}
 .agent-msg-user{align-self:flex-end;flex-direction:row-reverse}
@@ -383,7 +383,7 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
   .module-grid{grid-template-columns:1fr 1fr}
   .search-bar{flex-direction:column}
   .search-btn{width:100%}
-  .agent-messages{height:260px}
+  .agent-messages{height:400px}
   .login-panel{padding:28px 20px}
   .shulan-book-card{flex-direction:column;align-items:flex-start}
   .shulan-book-actions{width:100%;justify-content:flex-start;margin-top:6px}
@@ -502,3 +502,22 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
 @keyframes shulanDots{
   0%{opacity:.3}50%{opacity:1}100%{opacity:.3}
 }
+
+/* ═══════════════════════════════════════════
+ * 数据源状态栏样式 v2.1.1
+ * ═══════════════════════════════════════════ */
+
+/* ─── 搜索结果顶部的数据源离线提示 ─── */
+.source-status-bar{
+  padding:10px 14px;margin-bottom:10px;border-radius:10px;
+  background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);
+  color:var(--warn);font-size:12px;line-height:1.8
+}
+.source-err-tag{
+  display:inline-block;padding:2px 8px;margin:2px 4px;border-radius:6px;
+  background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.12);
+  color:var(--err);font-size:11px;font-family:var(--mono)
+}
+
+/* ─── 健康状态栏警告色 ─── */
+.api-status.warn{color:var(--warn)}
