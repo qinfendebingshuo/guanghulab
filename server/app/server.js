@@ -972,7 +972,9 @@ app.post('/api/agent/handshake', async (req, res) => {
 
     if (notionAgentUrl) {
       try {
-        /* Try a real MCP tool call to check Notion connectivity */
+        /* Use a lightweight MCP tool call to verify Notion connectivity.
+           'health-check' is a sentinel database_id that the MCP server
+           recognizes as a connectivity probe (returns quickly without data). */
         const toolResult = await mcpProxy('POST', '/call', {
           tool: 'notionQueryDatabase',
           input: { database_id: 'health-check', limit: 1 },

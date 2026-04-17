@@ -3686,8 +3686,12 @@ function srvPageGo(dir) {
   srvPageRender(cards, totalPages);
 }
 
-/* Init pagination after DOM ready */
-setTimeout(srvPageInit, 100);
+/* Init pagination when DOM is ready */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', srvPageInit);
+} else {
+  srvPageInit();
+}
 
 /* ═══ Init ═══ */
 fetchDashboard();
