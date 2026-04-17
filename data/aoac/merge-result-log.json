@@ -2,76 +2,31 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-17 09:54:57+08:00",
-  "timestamp_utc": "2026-04-17T01:54:57.235Z",
+  "timestamp": "2026-04-17 10:23:57+08:00",
+  "timestamp_utc": "2026-04-17T02:23:57.394Z",
   "merge": {
-    "pr_number": 396,
-    "pr_title": "fix: deploy novel-db API to guanghuyaoming.com server — zhiku API connection failure",
-    "merge_commit_sha": "781e6c965cdb02f7e68db3d5861a5e6fac50ce90",
-    "head_sha": "b9f17c6950189744b9804e54e5e51f582a394116",
+    "pr_number": 397,
+    "pr_title": "fix: use relative API paths in zhiku/novel frontends to fix \"Load failed\"",
+    "merge_commit_sha": "295d4ccd64b776d2548ff350978db83ffd1bfc87",
+    "head_sha": "9ec44f14e17ebfdeda640f57ea840d03f5767c1a",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 15,
+      "total": 10,
       "passed": 0,
       "failed": 0,
-      "skipped": 8
+      "skipped": 5
     },
     "check_runs": [
       {
-        "name": "🔍 ��护罩健康检查",
+        "name": "🔒 SSL证书配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:51Z",
-        "completed_at": "2026-04-17T01:54:50Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔧 服务器初始化",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:51Z",
-        "completed_at": "2026-04-17T01:54:50Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "⏪ 回滚配置",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:51Z",
-        "completed_at": "2026-04-17T01:54:50Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔐 申请 SSL 证书",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:51Z",
-        "completed_at": "2026-04-17T01:54:50Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "gate-guard",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:51Z",
-        "completed_at": "2026-04-17T01:54:50Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💚 健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:51Z",
-        "completed_at": "2026-04-17T01:54:50Z",
+        "started_at": "2026-04-17T02:23:52Z",
+        "completed_at": "2026-04-17T02:23:52Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -79,17 +34,35 @@
         "name": "🚀 预览站→主站 一键推送",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:50Z",
-        "completed_at": "2026-04-17T01:54:50Z",
+        "started_at": "2026-04-17T02:23:52Z",
+        "completed_at": "2026-04-17T02:23:52Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🔒 SSL证书配置",
+        "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T01:54:50Z",
-        "completed_at": "2026-04-17T01:54:50Z",
+        "started_at": "2026-04-17T02:23:52Z",
+        "completed_at": "2026-04-17T02:23:52Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T02:23:52Z",
+        "completed_at": "2026-04-17T02:23:52Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T02:23:52Z",
+        "completed_at": "2026-04-17T02:23:52Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -97,43 +70,7 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T01:54:53Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 Phase 1 完整部署",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T01:54:54Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 部署到测试站",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T01:54:55Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "📡 Bridge E · GitHub Changes → Notion",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T01:54:53Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🗂️ 同步注册表状态",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T01:54:53Z",
+        "started_at": "2026-04-17T02:23:54Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -142,7 +79,25 @@
         "name": "💉 注入注册表上下文到 Copilot Issue",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T01:54:53Z",
+        "started_at": "2026-04-17T02:23:54Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🗂️ 同步注册表状态",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-17T02:23:55Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-17T02:23:54Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -151,7 +106,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T01:54:52Z",
+        "started_at": "2026-04-17T02:23:54Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
