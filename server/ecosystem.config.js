@@ -94,7 +94,7 @@ module.exports = {
       time: true
     },
     /* ─── 智库节点 · novel-db API (端口 4000) ─── */
-    /* 与零点原核主站同服务器部署 · Nginx /novel-api/ → 127.0.0.1:4000 */
+    /* 与零点原核主站同服务器部署 · Nginx /api/zhiku/ + /api/novel/ → 127.0.0.1:4000 */
     {
       name: 'novel-api',
       script: '/opt/zhuyuan/novel-db/app/index.js',
