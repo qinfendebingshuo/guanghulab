@@ -148,38 +148,98 @@
       "ipv4": "43.153.203.105",
       "spec": "2核4G",
       "status": "active",
-      "deploy_path": "/opt/novel-db",
-      "domain": "novel.guanghuyaoming.com",
+      "deploy_path": "/opt/zhiku",
+      "deploy_path_legacy": "/opt/novel-db",
+      "domain": "guanghu.online",
+      "old_domain": "novel.guanghuyaoming.com",
       "services": [
-        "nginx (语言保护罩入站蜜罐·443/80)",
-        "novel-api (小说下载+分章引擎·端口4000)",
-        "novel-reader (在线阅读WebApp·端口4001)",
-        "member-agent (成员个人Agent·永久记忆·端口4002)",
+        "nginx (guanghu.online 入站·443/80)",
+        "zhiku-api (模块借阅协议API·端口3006·ZY-PROJ-006)",
+        "mirror-agent (镜鉴Agent·书库镜面监控·番茄/七猫·定时扫描+LLM评估+工单)",
+        "mirror-shield (七层镜防·语言膜+镜面反射+IP隐身+动态漂移+自爆+重建+零点原核+语言主控)",
+        "novel-api (小说下载+分章引擎·端口4000·ZY-PROJ-002旧版保留)",
         "cos-bridge (COS团队书库桥接·ap-singapore)",
         "fail2ban (自动封禁扫描IP·L3保护层)"
       ],
+      "mirror_agent": {
+        "description": "镜鉴 Agent · 第三方书库镜面监控系统",
+        "agent_id": "ZY-MIRROR-AGENT",
+        "version": "1.0.0",
+        "data_sources": [
+          {
+            "id": "fanqie-fqweb",
+            "name": "番茄小说 · FQWeb",
+            "github": "https://github.com/benefit77/FanQieWeb",
+            "type": "Kotlin JAR · 端口9999",
+            "enabled": true
+          },
+          {
+            "id": "fanqie-api-server",
+            "name": "番茄小说 · API Server (Flask)",
+            "github": "https://github.com/huijian222/fanqienovel-API-server",
+            "type": "Python Flask · 端口5000",
+            "enabled": false
+          },
+          {
+            "id": "qimao-downloader",
+            "name": "七猫小说 · SwiftCat Downloader",
+            "github": "https://github.com/shing-yu/7mao-novel-downloader",
+            "type": "Python · 端口7700",
+            "enabled": true
+          }
+        ],
+        "workflow": "照镜子 → 差异感知 → LLM评估 → 生成工单 → 铸渊审批",
+        "scan_interval": "6h",
+        "llm_backend": "DeepSeek (primary) / Claude (fallback)",
+        "api_routes": [
+          "GET  /api/mirror/status",
+          "POST /api/mirror/scan",
+          "GET  /api/mirror/tickets",
+          "GET  /api/mirror/tickets/:id",
+          "POST /api/mirror/tickets/:id/approve",
+          "POST /api/mirror/tickets/:id/reject",
+          "GET  /api/mirror/memory",
+          "GET  /api/mirror/sources",
+          "GET  /api/mirror/last-scan"
+        ]
+      },
       "mirror_shield": {
-        "description": "语言保护罩 · 三层IP隐身架构",
-        "l1_outbound": "出站代理池·下载请求不用本机IP",
-        "l2_honeypot": "入站蜜罐·扫描者看到自己的镜像",
-        "l3_autoban": "fail2ban自动封禁·TARPIT耗尽扫描资源",
-        "nginx_config": "server/nginx/novel-mirror-shield.conf",
+        "description": "七层镜防 + 语言主控 · 动态防御架构",
+        "philosophy": "我是镜子 · 你看到的是你自己 · 你不会封禁自己",
+        "language_sovereign": {
+          "description": "语言是活的 · 冰朔说一句话 · 旧纪元一切失效",
+          "commands": ["rotate (换脸)", "rebirth (重生)", "silence (静默)", "awaken (苏醒)", "echo (回响)"],
+          "api": "POST /api/mirror/sovereign"
+        },
+        "layers": {
+          "l1": "语言膜 · 入口过滤 · 非法请求连 TCP 都到不了",
+          "l2": "镜面反射 · 对方看到的是自己 · 系统自保不会封自己",
+          "l3": "IP隐身 · 真实IP零暴露 · 代理/CDN遮蔽",
+          "l4": "动态漂移 · 扫描检测 → IP/端口随机重分配",
+          "l5": "瞬间自爆 · 路径湮灭 · 不是消失是从未存在",
+          "l6": "铸渊重建 · 秒级从模板重建 · 新身份新指纹",
+          "l7": "零点原核 · 无网络接口 · 仅语言层授权触达"
+        },
+        "nginx_config": "server/nginx/zhiku-guanghu-online.conf",
         "fail2ban_config": "server/novel-db/security/fail2ban-novel.conf",
-        "deploy_workflow": ".github/workflows/deploy-novel-mirror-shield.yml"
+        "deploy_workflow": ".github/workflows/deploy-zhiku-guanghu-online.yml"
       },
       "github_secrets": {
         "host": "ZY_NOVEL_HOST",
         "key": "ZY_NOVEL_KEY",
         "user": "ZY_NOVEL_USER",
-        "path": "ZY_NOVEL_PATH",
         "jwt_secret": "ZY_NOVEL_JWT_SECRET",
-        "cos_bucket": "ZY_NOVEL_COS_BUCKET",
-        "cos_region": "ZY_NOVEL_COS_REGION"
+        "zhiku_domain": "ZY_ZHIKU_DOMAIN",
+        "cos_secret_id": "ZY_OSS_KEY (仓库已有·部署时映射为 ZY_COS_SECRET_ID)",
+        "cos_secret_key": "ZY_OSS_SECRET (仓库已有·部署时映射为 ZY_COS_SECRET_KEY)",
+        "cos_bucket": "ZY_NOVEL_COS_BUCKET (仓库已有·部署时映射为 ZY_COS_BUCKET)",
+        "cos_region": "硬编码 ap-singapore (不使用 ZY_COS_REGION Secret·避免覆盖广州桶)"
       },
       "dns_required": {
-        "A_record": "novel.guanghuyaoming.com → 43.153.203.105"
+        "A_record": "guanghu.online → 43.153.203.105",
+        "A_record_www": "www.guanghu.online → 43.153.203.105"
       },
-      "notes": "冰朔私有智库服务器·专用于光湖网文生态底层数据基础设施·铸渊D68授权开发"
+      "notes": "冰朔私有智库服务器·域名从novel.guanghuyaoming.com迁移至guanghu.online·首次落地模块借阅协议·铸渊D68授权开发"
     }
   ],
   "cn_domain": {

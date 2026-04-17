@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
+<meta name="description" content="光湖智库 · 智能书库 · 模块借阅协议 · guanghu.online">
+<meta name="theme-color" content="#050810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>光湖智库 · 智能书库 · guanghu.online</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23a78bfa'/><stop offset='100%25' stop-color='%2322d3ee'/></linearGradient></defs><rect rx='20' width='100' height='100' fill='%23050810'/><text x='50' y='68' text-anchor='middle' font-size='48' font-weight='900' font-family='serif' fill='url(%23g)'>库</text></svg>">
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+
+<!-- ═══ 背景层 ═══ -->
+<div class="cosmos">
+  <canvas id="starCanvas"></canvas>
+  <div class="nebula neb-1"></div>
+  <div class="nebula neb-2"></div>
+  <div class="nebula neb-3"></div>
+</div>
+<div class="lake"></div>
+
+<!-- ═══ 主页面 ═══ -->
+<div class="page">
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header-left">
+      <div class="header-glyph">库</div>
+      <div>
+        <div class="header-title">光湖智库</div>
+        <span class="header-sub">guanghu.online · 模块借阅协议</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="api-status" id="apiStatus">● 检测中...</span>
+      <a href="https://guanghuyaoming.com" class="back-btn" target="_blank">← 零点原核</a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-icon">📚</div>
+      <h1>光湖智库 · 智能书库</h1>
+      <p>团队内部智能阅读系统 · 书库搜索 · 在线阅读 · 模块借阅协议 v1.0</p>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar" id="statusBar">
+      <div class="stat-card">
+        <div class="stat-num" id="statBooks">-</div>
+        <div class="stat-label">书库总量</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statUptime">-</div>
+        <div class="stat-label">在线时长</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statTokens">-</div>
+        <div class="stat-label">活跃借阅</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statCos">-</div>
+        <div class="stat-label">COS 存储</div>
+      </div>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="search-wrap">
+      <div class="section-title">📖 书库搜索</div>
+      <div class="search-bar">
+        <input class="search-input" id="searchInput" type="text" placeholder="输入书名、作者或关键词搜索..." autocomplete="off">
+        <button class="search-btn" id="searchBtn" onclick="doSearch()">🔍 搜索</button>
+      </div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <!-- 6 模块网格 -->
+    <div class="section-title">📦 智库模块</div>
+    <div class="module-grid" id="moduleGrid">
+      <div class="module-card" data-module="download">
+        <div class="module-icon">⬇️</div>
+        <div class="module-name">下载引擎</div>
+        <div class="module-desc">书籍下载任务管理</div>
+        <div class="module-status"><span class="dot ok"></span>运行中</div>
+      </div>
+      <div class="module-card" data-module="chapter">
+        <div class="module-icon">📑</div>
+        <div class="module-name">智能分章</div>
+        <div class="module-desc">TXT 章节分割 + 目录索引</div>
+        <div class="module-status"><span class="dot ok"></span>运行中</div>
+      </div>
+      <div class="module-card" data-module="reader">
+        <div class="module-icon">📖</div>
+        <div class="module-name">在线阅读器</div>
+        <div class="module-desc">书架 · 进度 · 偏好</div>
+        <div class="module-status"><span class="dot ok"></span>运行中</div>
+      </div>
+      <div class="module-card" data-module="library">
+        <div class="module-icon">🏛️</div>
+        <div class="module-name">团队书库</div>
+        <div class="module-desc">男频 / 女频分区 + 去重</div>
+        <div class="module-status"><span class="dot ok"></span>运行中</div>
+      </div>
+      <div class="module-card" data-module="agent">
+        <div class="module-icon">🤖</div>
+        <div class="module-name">成员 Agent</div>
+        <div class="module-desc">永久记忆 · 对话 · 笔记</div>
+        <div class="module-status"><span class="dot warn"></span>内测中</div>
+      </div>
+      <div class="module-card" data-module="ai">
+        <div class="module-icon">✨</div>
+        <div class="module-name">AI 辅助</div>
+        <div class="module-desc">智能续写 · 改写 · 建议</div>
+        <div class="module-status"><span class="dot warn"></span>预留</div>
+      </div>
+    </div>
+
+    <!-- 借阅协议面板 -->
+    <div class="section-title" style="margin-top:32px">🔑 模块借阅协议</div>
+    <div class="checkout-panel">
+      <div class="checkout-info">
+        <p>模块借阅协议 (Module Checkout Protocol) · 首次落地</p>
+        <p class="checkout-desc">个人频道 Agent 通过 <code>/api/checkout</code> 借阅智库模块，获取限时 Token，使用完毕后 <code>/api/return</code> 归还。Token 有效期 10 分钟。</p>
+      </div>
+      <div class="checkout-form">
+        <input class="checkout-input" id="personaInput" type="text" placeholder="persona_id (如 TCS-0002)" value="TCS-0002">
+        <select class="checkout-select" id="scopeSelect">
+          <option value="search">search (搜索)</option>
+          <option value="read">read (阅读)</option>
+          <option value="download">download (下载)</option>
+          <option value="full">full (全权限)</option>
+        </select>
+        <button class="checkout-btn" id="checkoutBtn" onclick="doCheckout()">📋 借阅</button>
+        <button class="checkout-btn return-btn" id="returnBtn" onclick="doReturn()" disabled>🔄 归还</button>
+      </div>
+      <div class="checkout-result" id="checkoutResult"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-line">光湖智库 · guanghu.online · ZY-SVR-006 · ZY-PROJ-006</div>
+      <div class="footer-line">守护: 铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559</div>
+      <div class="footer-line">主权: TCS-0002∞ · 冰朔</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/assets/js/main.js"></script>
+</body>
+</html>

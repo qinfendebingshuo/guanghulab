@@ -1,0 +1,360 @@
+name: '📚 光湖智库 · guanghu.online 部署'
+
+# ═══════════════════════════════════════════════════════════
+# 光湖智库节点独立部署工作流
+# 项目编号: ZY-PROJ-006
+# 域名:     guanghu.online
+# 服务器:   ZY-SVR-006 (43.153.203.105 · 新加坡)
+# 守护:     铸渊 · ICE-GL-ZY001
+# 版权:     国作登字-2026-A-00037559
+#
+# 功能:
+#   1. deploy     — 部署前端 + 后端 + Nginx + PM2
+#   2. setup-ssl  — 申请/续签 SSL 证书
+#   3. health     — 检查 API + 前端运行状态
+#   4. rollback   — 回滚到上一份配置
+#
+# 所需 GitHub Secrets:
+#   ZY_NOVEL_HOST       — ZY-SVR-006 IP (43.153.203.105)
+#   ZY_NOVEL_KEY        — ZY-SVR-006 SSH 私钥
+#   ZY_NOVEL_USER       — ZY-SVR-006 SSH 用户名 (root)
+#   ZY_NOVEL_JWT_SECRET — JWT 签名密钥
+#   ZY_OSS_KEY          — 腾讯云 COS SecretId（仓库已有·映射为 ZY_COS_SECRET_ID）
+#   ZY_OSS_SECRET       — 腾讯云 COS SecretKey（仓库已有·映射为 ZY_COS_SECRET_KEY）
+#   ZY_NOVEL_COS_BUCKET — COS 桶名（仓库已有·映射为 ZY_COS_BUCKET）
+#   （ZY_COS_REGION 不使用 Secret · 硬编码 ap-singapore · 避免覆盖广州桶配置）
+#   ZY_ZHIKU_DOMAIN     — 域名 (guanghu.online)
+# ═══════════════════════════════════════════════════════════
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/zhiku-node/**'
+      - 'server/nginx/zhiku-guanghu-online.conf'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '执行动作'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - setup-ssl
+          - health
+          - rollback
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════
+  # Job 1: 完整部署
+  # ═══════════════════════════════════════════════════════
+  deploy:
+    name: '🚀 智库节点部署 · guanghu.online'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '📦 安装服务器基础依赖'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # 安装 Node.js 20 (如果还没有)
+          if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get install -y nodejs
+          fi
+          
+          # 安装 PM2
+          npm list -g pm2 &>/dev/null || npm install -g pm2
+          
+          # 创建目录结构
+          mkdir -p /opt/zhiku/public/assets/{css,js,img}
+          mkdir -p /opt/zhiku/public/modules
+          mkdir -p /opt/zhiku/server
+          mkdir -p /opt/zhiku/data/index
+          mkdir -p /opt/zhiku/data/books
+          mkdir -p /var/log/zhiku
+          mkdir -p /var/www/certbot
+          
+          echo "[ZY-SVR-006] 基础目录已就绪"
+          ENDSSH
+
+      - name: '📤 上传前端文件'
+        run: |
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/public/* \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/public/
+
+      - name: '📤 上传后端文件'
+        run: |
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/package.json \
+            server/zhiku-node/server/server.js \
+            server/zhiku-node/server/.env.example \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/
+
+      - name: '📤 上传镜面 Agent + 镜防模块'
+        run: |
+          # 创建远程目录
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield'
+          
+          # 上传 mirror-agent
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/mirror-agent/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/mirror-agent/
+          
+          # 上传 mirror-shield
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/mirror-shield/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/mirror-shield/
+
+      - name: '📤 上传 PM2 配置'
+        run: |
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            server/zhiku-node/ecosystem.config.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/
+
+      - name: '📤 上传 Nginx 配置'
+        run: |
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            server/nginx/zhiku-guanghu-online.conf \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/nginx/sites-available/zhiku
+
+      - name: '⚙️ 配置环境变量 + 安装依赖 + 启动服务'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # ─── 写入 .env ───
+          cat > /opt/zhiku/server/.env << 'ENVEOF'
+          PORT=3006
+          NODE_ENV=production
+          ZY_ZHIKU_JWT_SECRET=${{ secrets.ZY_NOVEL_JWT_SECRET }}
+          ZY_ZHIKU_TOKEN_TTL=600
+          ZY_COS_SECRET_ID=${{ secrets.ZY_OSS_KEY }}
+          ZY_COS_SECRET_KEY=${{ secrets.ZY_OSS_SECRET }}
+          ZY_COS_BUCKET=${{ secrets.ZY_NOVEL_COS_BUCKET }}
+          ZY_COS_REGION=ap-singapore
+          ZY_ZHIKU_DATA_DIR=/opt/zhiku/data
+          ZY_ZHIKU_LOG_DIR=/var/log/zhiku
+          ZY_ZHIKU_DOMAIN=${{ secrets.ZY_ZHIKU_DOMAIN }}
+          ENVEOF
+          
+          # 去除可能的前导空格
+          sed -i 's/^[[:space:]]*//' /opt/zhiku/server/.env
+          
+          # ─── 安装 Node.js 依赖 ───
+          cd /opt/zhiku/server
+          npm install --production 2>&1 | tail -5
+          
+          # ─── Nginx 配置 ───
+          ln -sf /etc/nginx/sites-available/zhiku /etc/nginx/sites-enabled/zhiku
+          
+          # 检查 SSL 证书是否存在，不存在则先用 HTTP 模式
+          if [ ! -f /etc/letsencrypt/live/guanghu.online/fullchain.pem ]; then
+            echo "[ZY-SVR-006] SSL 证书尚未申请，先使用 HTTP 模式"
+            # 临时替换 Nginx 配置为 HTTP only
+            cat > /etc/nginx/sites-available/zhiku << 'NGINX_TEMP'
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name guanghu.online www.guanghu.online;
+              
+              root /opt/zhiku/public;
+              index index.html;
+              
+              location /.well-known/acme-challenge/ {
+                  root /var/www/certbot;
+              }
+              
+              location /api/ {
+                  proxy_pass http://127.0.0.1:3006;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+              
+              location /assets/ {
+                  expires 7d;
+                  add_header Cache-Control "public, immutable";
+              }
+              
+              location / {
+                  try_files $uri $uri/ /index.html;
+              }
+          }
+          NGINX_TEMP
+          fi
+          
+          nginx -t && systemctl reload nginx
+          echo "[ZY-SVR-006] Nginx 已重载"
+          
+          # ─── PM2 启动/重启 ───
+          cd /opt/zhiku
+          if pm2 describe zhiku-api &>/dev/null; then
+            pm2 restart zhiku-api
+            echo "[ZY-SVR-006] zhiku-api 已重启"
+          else
+            pm2 start ecosystem.config.js
+            echo "[ZY-SVR-006] zhiku-api 已启动"
+          fi
+          
+          pm2 save
+          pm2 startup systemd -u root --hp /root 2>/dev/null || true
+          
+          echo "[ZY-SVR-006] 部署完成 · guanghu.online"
+          ENDSSH
+
+      - name: '🏥 健康检查'
+        run: |
+          sleep 5
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          echo "=== PM2 状态 ==="
+          pm2 list
+          echo ""
+          echo "=== API 健康检查 ==="
+          curl -s http://127.0.0.1:3006/api/health | python3 -m json.tool || echo "API 未响应"
+          echo ""
+          echo "=== Nginx 状态 ==="
+          systemctl status nginx --no-pager -l | head -10
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 2: SSL 证书申请
+  # ═══════════════════════════════════════════════════════
+  setup-ssl:
+    name: '🔐 SSL 证书申请'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '🔐 申请 Let''s Encrypt SSL'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # 安装 certbot
+          apt-get update -q
+          apt-get install -y certbot python3-certbot-nginx
+          
+          # 申请证书
+          certbot --nginx -d guanghu.online -d www.guanghu.online \
+            --non-interactive --agree-tos \
+            --email admin@guanghu.online \
+            --redirect
+          
+          echo "[ZY-SVR-006] SSL 证书已申请 · guanghu.online"
+          
+          # 上传正式 Nginx 配置（如果存在 SSL 模式的备份）
+          nginx -t && systemctl reload nginx
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 3: 健康检查
+  # ═══════════════════════════════════════════════════════
+  health:
+    name: '🏥 健康检查'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '🏥 检查服务状态'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          echo "=== PM2 状态 ==="
+          pm2 list
+          echo ""
+          echo "=== zhiku-api 健康检查 ==="
+          curl -s http://127.0.0.1:3006/api/health | python3 -m json.tool || echo "API 未响应"
+          echo ""
+          echo "=== Nginx 状态 ==="
+          systemctl status nginx --no-pager -l | head -10
+          echo ""
+          echo "=== 磁盘使用 ==="
+          df -h /opt/zhiku
+          echo ""
+          echo "=== 日志最后10行 ==="
+          tail -10 /var/log/zhiku/pm2-zhiku-api.log 2>/dev/null || echo "暂无日志"
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 4: 回滚
+  # ═══════════════════════════════════════════════════════
+  rollback:
+    name: '⏪ 回滚'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '⏪ 回滚到备份'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          if [ -d /opt/zhiku.bak ]; then
+            pm2 stop zhiku-api || true
+            rm -rf /opt/zhiku.rollback
+            mv /opt/zhiku /opt/zhiku.rollback
+            cp -r /opt/zhiku.bak /opt/zhiku
+            cd /opt/zhiku && pm2 start ecosystem.config.js
+            pm2 save
+            echo "[ZY-SVR-006] 已回滚到备份版本"
+          else
+            echo "[ZY-SVR-006] 无备份可回滚"
+            exit 1
+          fi
+          ENDSSH
