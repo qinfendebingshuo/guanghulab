@@ -41,7 +41,7 @@ function createGuardianState() {
       role: '隐形守护者 · 不与用户接触',
       capabilities: [
         'monitor_conversation_quality',
-        'adjust_prompt_injection',
+        'adjust_prompt_enhancement',
         'collect_anomaly_data',
         'self_repair',
         'self_optimize'
@@ -267,13 +267,13 @@ function auditReply(reply, userMessage) {
   }
 
   // 检测好的表现
-  if (/想.*什么.*故事|什么.*类型|你想看/i.test(reply)) {
+  if (/想[^]{0,10}什么[^]{0,10}故事|什么[^]{0,5}类型|你想看/i.test(reply)) {
     state.quality_metrics.good_patterns.story_first_approach++;
   }
   if (/🏮|📖|🌙|✨|🫖|📜|🪩/.test(reply)) {
     state.quality_metrics.good_patterns.proper_symbols++;
   }
-  if (/不知道|不确定|暂时.*没/i.test(reply) && !/编|造|猜/.test(reply)) {
+  if (/不知道|不确定|暂时没/.test(reply) && !/编|造|猜/.test(reply)) {
     state.quality_metrics.good_patterns.honest_unknowing++;
   }
 
@@ -369,11 +369,18 @@ function getLearnedCorrections(state) {
   const corrections = [];
 
   // 从未应用的规则中提取纠正内容
+  let modified = false;
   for (const rule of state.learned_rules) {
     if (!rule.applied) {
       corrections.push(rule.action);
       rule.applied = true;
+      modified = true;
     }
+  }
+
+  // 持久化应用状态
+  if (modified) {
+    saveGuardianState(state);
   }
 
   return corrections.join('\n');

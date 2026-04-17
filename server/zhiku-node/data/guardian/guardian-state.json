@@ -15,14 +15,14 @@
     ]
   },
   "quality_metrics": {
-    "total_conversations": 1,
+    "total_conversations": 2,
     "total_interventions": 0,
     "anomalies": {
-      "ai_self_denial": 1,
-      "customer_service_tone": 0,
+      "ai_self_denial": 2,
+      "customer_service_tone": 1,
       "excessive_enthusiasm": 0,
       "fabricated_books": 0,
-      "formal_you": 1,
+      "formal_you": 2,
       "generic_platform_words": 0,
       "marketing_emoji": 0,
       "servant_tone": 0
@@ -45,6 +45,17 @@
       ],
       "user_msg_preview": "你好",
       "reply_preview": "作为AI我无法帮您"
+    },
+    {
+      "timestamp": "2026-04-17T16:23:01.044Z",
+      "score": 60,
+      "anomalies": [
+        "ai_self_denial",
+        "customer_service_tone",
+        "formal_you"
+      ],
+      "user_msg_preview": "找书",
+      "reply_preview": "您好！作为AI我来帮您查询"
     }
   ],
   "active_notes": [
@@ -53,10 +64,16 @@
       "action": "reinforce",
       "note": "这是客人的第一句话。记住你的开场方式：不说「您好」、不说「有什么可以帮到您」。先问故事的形状。保持书岚的安静与温度。",
       "trigger": "你好"
+    },
+    {
+      "timestamp": "2026-04-17T16:23:01.041Z",
+      "action": "reinforce",
+      "note": "这是客人的第一句话。记住你的开场方式：不说「您好」、不说「有什么可以帮到您」。先问故事的形状。保持书岚的安静与温度。",
+      "trigger": "你好"
     }
   ],
   "learned_rules": [],
-  "last_self_check": "2026-04-17T16:19:34.453Z",
+  "last_self_check": "2026-04-17T16:23:01.044Z",
   "upgrade_log": [],
-  "updated_at": "2026-04-17T16:19:34.453Z"
+  "updated_at": "2026-04-17T16:23:01.044Z"
 }

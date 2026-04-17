@@ -913,13 +913,13 @@ async function agentProcessMessage(userId, userMessage, userEmail) {
   }
 
   // 处理 [REMEMBER:xxx] 标记
-  const rememberMatch = assistantReply.match(/\[REMEMBER:([^\]]+)\]/);
+  const rememberMatch = assistantReply.match(/\[REMEMBER:([^\[\]]+)\]/);
   if (rememberMatch) {
     const tag = rememberMatch[1].trim();
     if (tag && !memory.preferences.favorite_genres.includes(tag)) {
       memory.preferences.favorite_genres.push(tag);
     }
-    assistantReply = assistantReply.replace(/\[REMEMBER:[^\]]+\]/, '');
+    assistantReply = assistantReply.replace(/\[REMEMBER:[^\[\]]+\]/, '');
   }
 
   // 保存对话到记忆（含质量分）

@@ -665,8 +665,8 @@ function formatAgentText(text) {
   // 行内代码
   html = html.replace(/`(.+?)`/g, '<code>$1</code>');
 
-  // 书名号高亮
-  html = html.replace(/《(.+?)》/g, '<span class="shulan-book-title">《$1》</span>');
+  // 书名号高亮（限制匹配长度避免性能问题）
+  html = html.replace(/《([^》]{1,100})》/g, '<span class="shulan-book-title">《$1》</span>');
 
   // 换行
   html = html.replace(/\n/g, '<br>');

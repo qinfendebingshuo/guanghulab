@@ -19,11 +19,6 @@ const { assembleShulanPrompt, shulanFallbackReply } = require('./shulan-prompt')
 const guardian = require('./prompt-guardian');
 const { getToolkitDescription } = require('./chat-toolkit');
 
-// 冰朔邮箱列表（用于识别妈妈）
-const SOVEREIGN_EMAILS = [
-  // 在生产环境中通过环境变量或配置文件加载
-];
-
 /**
  * 判断用户角色
  * @param {string} userEmail - 用户邮箱
@@ -33,10 +28,9 @@ const SOVEREIGN_EMAILS = [
 function detectUserRole(userEmail, memory) {
   if (!userEmail) return 'guest';
 
-  // 环境变量中的主权邮箱
+  // 从环境变量加载主权邮箱
   const sovereignEmail = process.env.ZY_SOVEREIGN_EMAIL || '';
-  if (sovereignEmail && userEmail === sovereignEmail) return 'sovereign';
-  if (SOVEREIGN_EMAILS.includes(userEmail)) return 'sovereign';
+  if (sovereignEmail && userEmail.toLowerCase() === sovereignEmail.toLowerCase()) return 'sovereign';
 
   // 有历史对话记录的是常客
   if (memory && memory.conversation_history && memory.conversation_history.length > 0) {

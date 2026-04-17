@@ -297,7 +297,7 @@ function shulanFallbackReply(message, booksCount) {
   const msg = (message || '').toLowerCase();
 
   if (msg.includes('搜') || msg.includes('找') || msg.includes('search') || msg.includes('想看')) {
-    const keyword = message.replace(/.*(?:搜|找|search|搜索|查找|帮我找|想看|想读)\s*/i, '').trim();
+    const keyword = message.replace(/^.*?(?:搜索?|查?找|帮我找|想看|想读)\s*/i, '').trim();
     if (keyword) {
       return `📖 去两个山谷找找「${keyword}」。\n\n[SEARCH:${keyword}]`;
     }
