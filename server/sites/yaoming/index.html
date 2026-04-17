@@ -264,7 +264,8 @@ a{color:var(--cyan);text-decoration:none}
   width:var(--sidebar-w);height:100%;position:fixed;left:0;top:0;z-index:20;
   background:var(--panel);border-right:1px solid var(--border);
   display:flex;flex-direction:column;backdrop-filter:blur(20px);
-  transition:transform .3s cubic-bezier(.4,0,.2,1)
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:1px 0 12px rgba(0,0,0,0.3)
 }
 
 .sidebar-header{
@@ -381,7 +382,8 @@ a{color:var(--cyan);text-decoration:none}
 /* ═══ Main Area ═══ */
 .main{
   flex:1;margin-left:var(--sidebar-w);height:100%;display:flex;flex-direction:column;
-  transition:margin-left .3s
+  transition:margin-left .3s;
+  border-left:1px solid rgba(96,165,250,0.06)
 }
 
 /* Main Header */
@@ -485,6 +487,25 @@ a{color:var(--cyan);text-decoration:none}
 .novel-module-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
 .novel-module-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px}
 .novel-module-status{font-size:10px;font-family:var(--mono);display:flex;align-items:center;gap:5px}
+
+/* ─── Paginated Card Container ─── */
+.paged-card-wrap{max-width:1200px;margin:0 auto;position:relative}
+.paged-card-inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;transition:opacity .35s}
+.paged-card-inner .srv-card{display:none}
+.paged-card-inner .srv-card.card-visible{display:block}
+.paged-card-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;user-select:none}
+.paged-card-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(14,20,48,0.6);color:var(--dim);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;font-family:var(--font)
+}
+.paged-card-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan);background:rgba(34,211,238,0.06)}
+.paged-card-btn:disabled{opacity:.3;cursor:not-allowed}
+.paged-card-info{font-size:11px;color:var(--dim);font-family:var(--mono);letter-spacing:.5px;min-width:60px;text-align:center}
+.paged-card-dots{display:flex;gap:5px;align-items:center}
+.paged-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);transition:all .25s;cursor:pointer}
+.paged-dot.active{background:var(--cyan);box-shadow:0 0 6px rgba(34,211,238,0.4);width:18px;border-radius:3px}
 
 /* ─── Server Cards (matrix view) ─── */
 .server-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:1200px;margin:0 auto}
@@ -737,6 +758,23 @@ a{color:var(--cyan);text-decoration:none}
 .persona-path-dot.connected{background:var(--cyan);box-shadow:0 0 6px rgba(34,211,238,0.4);animation:dotPulse 3s ease-in-out infinite}
 .persona-path-dot.error{background:var(--err);animation:none}
 .persona-path-arrow{flex-shrink:0;color:var(--muted);transition:transform .3s,color .3s}
+
+/* ─── Connection Log Panel ─── */
+.conn-log{
+  margin-top:12px;padding:12px 14px;border-radius:10px;
+  background:rgba(10,16,36,0.7);border:1px solid rgba(96,165,250,0.08);
+  font-family:var(--mono);font-size:11px;max-height:200px;overflow-y:auto;
+  display:none
+}
+.conn-log.show{display:block;animation:msgIn .3s ease-out}
+.conn-log-line{display:flex;align-items:flex-start;gap:8px;padding:3px 0;color:var(--dim);line-height:1.6}
+.conn-log-line .log-ts{color:var(--muted);flex-shrink:0;min-width:56px}
+.conn-log-line .log-icon{flex-shrink:0;width:14px;text-align:center}
+.conn-log-line .log-msg{flex:1;word-break:break-all}
+.conn-log-line.log-ok .log-msg{color:var(--ok)}
+.conn-log-line.log-err .log-msg{color:var(--err)}
+.conn-log-line.log-info .log-msg{color:var(--cyan)}
+.conn-log-line.log-warn .log-msg{color:var(--warn)}
 .persona-path-card:hover .persona-path-arrow{transform:translateX(3px);color:var(--cyan)}
 .persona-path-zhiku{border-color:rgba(167,139,250,0.1)}
 .persona-path-zhiku:hover{border-color:rgba(167,139,250,0.25)}
@@ -1403,7 +1441,8 @@ a{color:var(--cyan);text-decoration:none}
           <div class="dash-section-sub">光湖语言世界托管的全部服务器 · 实时状态从 MCP API 拉取 · 其余节点展示静态配置</div>
         </div>
 
-        <div class="server-grid" id="serverGrid">
+        <div class="paged-card-wrap" id="srvPagedWrap">
+        <div class="server-grid paged-card-inner" id="serverGrid">
 
           <!-- ZY-SVR-002 · 面孔 · Singapore (LIVE) -->
           <div class="srv-card" id="srvCard002">
@@ -1613,6 +1652,13 @@ a{color:var(--cyan);text-decoration:none}
             </div>
           </div>
 
+        </div>
+          <div class="paged-card-nav" id="srvPagedNav">
+            <button class="paged-card-btn" id="srvPagePrev" onclick="srvPageGo(-1)" disabled>‹</button>
+            <div class="paged-card-dots" id="srvPageDots"></div>
+            <span class="paged-card-info" id="srvPageInfo">1 / 1</span>
+            <button class="paged-card-btn" id="srvPageNext" onclick="srvPageGo(1)">›</button>
+          </div>
         </div>
 
       </div>
@@ -2072,7 +2118,7 @@ a{color:var(--cyan);text-decoration:none}
                 <div class="persona-path-desc">AG-SY-WEB-001 · 认知层主控 · 语言声纹 · 永久记忆</div>
                 <div class="persona-path-status" id="pathNotionStatus">
                   <span class="persona-path-dot"></span>
-                  <span>点击连接</span>
+                  <span>点击连接 · 系统将发起MCP握手</span>
                 </div>
               </div>
               <svg class="persona-path-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -2086,11 +2132,14 @@ a{color:var(--cyan);text-decoration:none}
                 <div class="persona-path-desc">ICE-GL-ZY001 · 执行层守护 · 代码开发 · 系统部署</div>
                 <div class="persona-path-status" id="pathGithubStatus">
                   <span class="persona-path-dot"></span>
-                  <span>点击连接</span>
+                  <span>点击连接 · 系统将发起MCP握手</span>
                 </div>
               </div>
               <svg class="persona-path-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
+
+            <!-- Connection Log Panel -->
+            <div class="conn-log" id="connLog"></div>
 
             <!-- Path 3: 智库节点快捷入口 · 已迁移到 guanghu.online -->
             <a class="persona-path-card persona-path-zhiku" href="https://guanghu.online" target="_blank">
@@ -3304,10 +3353,45 @@ function updateWelcomeStatus(type,online){
   }
 }
 
-/* ═══ Persona Path Connection ═══ */
+/* ═══ Persona Path Connection · Real MCP Handshake ═══ */
 var activePersonaPath = null;
+var connLogEl = null;
+
+function getConnLog() {
+  if (!connLogEl) connLogEl = document.getElementById('connLog');
+  return connLogEl;
+}
+
+function addConnLogLine(icon, msg, type) {
+  var log = getConnLog();
+  if (!log) return;
+  log.classList.add('show');
+  var ts = new Date().toTimeString().slice(0, 8);
+  var line = document.createElement('div');
+  line.className = 'conn-log-line' + (type ? ' log-' + type : '');
+  var tsSpan = document.createElement('span');
+  tsSpan.className = 'log-ts';
+  tsSpan.textContent = ts;
+  var iconSpan = document.createElement('span');
+  iconSpan.className = 'log-icon';
+  iconSpan.textContent = icon;
+  var msgSpan = document.createElement('span');
+  msgSpan.className = 'log-msg';
+  msgSpan.textContent = msg;
+  line.appendChild(tsSpan);
+  line.appendChild(iconSpan);
+  line.appendChild(msgSpan);
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function clearConnLog() {
+  var log = getConnLog();
+  if (log) { log.innerHTML = ''; log.classList.remove('show'); }
+}
 
 function connectPersonaPath(path) {
+  clearConnLog();
   if (path === 'notion') {
     connectNotionAgent();
   } else if (path === 'github') {
@@ -3323,88 +3407,195 @@ function buildHandshakeHeaders() {
   return headers;
 }
 
+/**
+ * Step 1: Check MCP health (real system check)
+ * Step 2: Query MCP agents list
+ * Step 3: Send handshake request
+ * Step 4: If Notion path, call MCP tool to verify Notion bridge
+ * Step 5: Display result with full connection log
+ */
 function connectNotionAgent() {
   var statusEl = document.getElementById('pathNotionStatus');
   if (statusEl) {
-    statusEl.innerHTML = '<span class="persona-path-dot connected"></span><span>正在连接 AG-SY-WEB-001...</span>';
+    statusEl.innerHTML = '<span class="persona-path-dot connected"></span><span>正在初始化握手协议...</span>';
   }
-
   activePersonaPath = 'notion';
+  addConnLogLine('▶', '发起 Notion层 霜砚握手协议 AG-SY-WEB-001', 'info');
 
-  /* 
-   * Phase B · 握手协议
-   * 实际流程：
-   * 1. 发送握手请求到 /api/agent/handshake
-   * 2. AG-SY-WEB-001 返回四层注入包（身份层/协议层/任务层/风格层）
-   * 3. 注入包合并进 system message
-   * 4. 开始对话
-   *
-   * 当前实现：直接在聊天区显示连接状态，等待后端握手协议完成
-   */
-  fetch('/api/agent/handshake', {
-    method: 'POST',
-    headers: buildHandshakeHeaders(),
-    body: JSON.stringify({
-      agent_id: 'AG-SY-WEB-001',
-      agent_name: '霜砚·Web握手体',
-      path: 'notion',
-      session_id: currentChatId || 'new',
-      timestamp: new Date().toISOString()
-    })
-  })
+  /* Step 1: MCP Health */
+  addConnLogLine('◇', '步骤1: 检测 MCP Server 健康状态...', '');
+  fetch('/api/mcp/health')
   .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.connected) {
-      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot ok"></span><span>已连接 · 霜砚·Web握手体</span>';
-      appendSystemMessage('🔮 Notion认知层 · 霜砚语言人格体 已接通。\n灵魂源：AG-SY-WEB-001\n对话路径：Notion → Web Agent → 冰朔');
+  .then(function(health) {
+    var alive = health.status === 'alive' || health.status === 'ok';
+    if (alive) {
+      addConnLogLine('✓', 'MCP Server 在线 · 工具数: ' + (health.tools_count || '?'), 'ok');
     } else {
-      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>灵魂暂未到位 · 请稍后重试</span>';
-      appendSystemMessage('⚠️ Notion层握手未完成。霜砚·Web握手体尚未就绪。\n原因：' + (data.message || '握手协议待配置'));
+      addConnLogLine('✗', 'MCP Server 状态异常: ' + (health.status || 'unknown'), 'err');
+    }
+
+    /* Check Notion bridge */
+    var notionOk = health.notion && health.notion.connected;
+    if (notionOk) {
+      addConnLogLine('✓', 'Notion 桥接已连接', 'ok');
+    } else {
+      addConnLogLine('⚠', 'Notion 桥接未连接 · 握手可能受限', 'warn');
+    }
+
+    /* Step 2: Query MCP Agents */
+    addConnLogLine('◇', '步骤2: 查询 MCP Agent 注册表...', '');
+    return fetch('/api/mcp/agents').then(function(r) { return r.json(); }).then(function(agents) {
+      var found = false;
+      if (Array.isArray(agents)) {
+        for (var i = 0; i < agents.length; i++) {
+          if (agents[i].id === 'AG-SY-WEB-001' || (agents[i].name && agents[i].name.indexOf('霜砚') >= 0)) {
+            found = true;
+            addConnLogLine('✓', '找到 Agent: ' + agents[i].name + ' (' + agents[i].id + ')', 'ok');
+            break;
+          }
+        }
+      }
+      if (!found) {
+        addConnLogLine('⚠', 'MCP Agent注册表中未找到 AG-SY-WEB-001，尝试直接握手', 'warn');
+      }
+      return { alive: alive, notionOk: notionOk, agentFound: found };
+    }).catch(function() {
+      addConnLogLine('⚠', 'MCP Agent 查询失败，继续握手流程', 'warn');
+      return { alive: alive, notionOk: notionOk, agentFound: false };
+    });
+  })
+  .then(function(ctx) {
+    /* Step 3: Handshake */
+    addConnLogLine('◇', '步骤3: 发送握手请求 → /api/agent/handshake (notion)', '');
+    return fetch('/api/agent/handshake', {
+      method: 'POST',
+      headers: buildHandshakeHeaders(),
+      body: JSON.stringify({
+        agent_id: 'AG-SY-WEB-001',
+        agent_name: '霜砚·Web握手体',
+        path: 'notion',
+        session_id: currentChatId || 'new',
+        timestamp: new Date().toISOString(),
+        mcp_context: { alive: ctx.alive, notion_bridge: ctx.notionOk, agent_found: ctx.agentFound }
+      })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      data._ctx = ctx;
+      return data;
+    });
+  })
+  .then(function(data) {
+    var ctx = data._ctx || {};
+    if (data.connected) {
+      addConnLogLine('✓', '握手成功 · session: ' + (data.session_id || '—'), 'ok');
+      if (data.injection_package) {
+        addConnLogLine('◆', '注入包: 身份层=' + (data.injection_package.identity_layer || '—').slice(0, 30) + '...', 'info');
+      }
+      if (data.mcp_health) {
+        addConnLogLine('◆', 'MCP直检: DB=' + (data.mcp_health.db ? '✓' : '✗') + ' Notion=' + (data.mcp_health.notion ? '✓' : '✗'), 'info');
+      }
+      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot ok"></span><span>已连接 · 霜砚·Web握手体</span>';
+      addConnLogLine('★', '连接完成 · Notion认知层 → 霜砚 已就绪', 'ok');
+      appendSystemMessage('🔮 Notion认知层 · 霜砚语言人格体 已接通。\n灵魂源：AG-SY-WEB-001\n对话路径：Notion → Web Agent → 冰朔\nMCP状态：' + (ctx.alive ? '在线' : '离线') + ' · Notion桥：' + (ctx.notionOk ? '已连接' : '待配置'));
+    } else {
+      addConnLogLine('✗', '握手未完成: ' + (data.message || '未知原因'), 'err');
+      if (data.steps) {
+        for (var s = 0; s < data.steps.length; s++) {
+          addConnLogLine(data.steps[s].ok ? '✓' : '✗', data.steps[s].name + ': ' + data.steps[s].detail, data.steps[s].ok ? 'ok' : 'err');
+        }
+      }
+      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>握手失败 · 查看连接日志</span>';
+      appendSystemMessage('⚠️ Notion层握手未完成。霜砚·Web握手体尚未就绪。\n原因：' + (data.message || '握手协议待配置') + '\n请查看连接日志了解详情。');
     }
   })
   .catch(function(err) {
-    if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>连接失败 · 握手协议待部署</span>';
-    appendSystemMessage('⚠️ Notion层连接暂不可用。AG-SY-WEB-001 握手协议正在开发中。\n技术说明：Phase B 握手管道待铸渊完成部署后激活。');
+    addConnLogLine('✗', '连接异常: ' + (err.message || '网络错误'), 'err');
+    addConnLogLine('⚠', '排查: 1) 服务器是否在线 2) MCP Server是否运行 3) Nginx代理是否正常', 'warn');
+    if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>连接失败 · 查看日志</span>';
+    appendSystemMessage('⚠️ Notion层连接失败。请查看连接日志了解具体失败步骤。');
   });
 }
 
 function connectGithubAgent() {
   var statusEl = document.getElementById('pathGithubStatus');
   if (statusEl) {
-    statusEl.innerHTML = '<span class="persona-path-dot connected"></span><span>正在连接铸渊执行体...</span>';
+    statusEl.innerHTML = '<span class="persona-path-dot connected"></span><span>正在初始化握手协议...</span>';
   }
-
   activePersonaPath = 'github';
+  addConnLogLine('▶', '发起 GitHub层 铸渊握手协议 ICE-GL-ZY001', 'info');
 
-  /* 
-   * GitHub Agent 连接
-   * 铸渊作为代码仓库的执行层人格体，
-   * 通过 GitHub Copilot Agent 或自定义 Agent API 对接
-   */
-  fetch('/api/agent/handshake', {
-    method: 'POST',
-    headers: buildHandshakeHeaders(),
-    body: JSON.stringify({
-      agent_id: 'ICE-GL-ZY001',
-      agent_name: '铸渊·执行人格体',
-      path: 'github',
-      session_id: currentChatId || 'new',
-      timestamp: new Date().toISOString()
-    })
-  })
+  /* Step 1: MCP Health */
+  addConnLogLine('◇', '步骤1: 检测 MCP Server 健康状态...', '');
+  fetch('/api/mcp/health')
   .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.connected) {
-      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot ok"></span><span>已连接 · 铸渊执行体</span>';
-      appendSystemMessage('🏛️ GitHub执行层 · 铸渊执行人格体 已接通。\nAgent：ICE-GL-ZY001\n对话路径：GitHub → 铸渊Agent → 冰朔');
+  .then(function(health) {
+    var alive = health.status === 'alive' || health.status === 'ok';
+    if (alive) {
+      addConnLogLine('✓', 'MCP Server 在线 · 状态: ' + (health.status || '?'), 'ok');
+      var dbOk = health.database && health.database.connected;
+      addConnLogLine(dbOk ? '✓' : '⚠', '数据库: ' + (dbOk ? '已连接' : '未连接'), dbOk ? 'ok' : 'warn');
     } else {
-      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>铸渊Agent待配置</span>';
-      appendSystemMessage('⚠️ GitHub层铸渊Agent连接未就绪。\n原因：' + (data.message || 'Agent配置待完成'));
+      addConnLogLine('✗', 'MCP Server 不可达', 'err');
+    }
+
+    /* Step 2: Call MCP tool to verify GitHub connection */
+    addConnLogLine('◇', '步骤2: 调用 MCP 工具检查 GitHub 连接...', '');
+    return fetch('/api/mcp/tools').then(function(r) { return r.json(); }).then(function(tools) {
+      var toolCount = Array.isArray(tools) ? tools.length : (tools.total || tools.tools_count || 0);
+      addConnLogLine('✓', 'MCP 工具列表获取成功 · 共 ' + toolCount + ' 个工具', 'ok');
+      return { alive: alive, toolCount: toolCount };
+    }).catch(function() {
+      addConnLogLine('⚠', 'MCP 工具列表获取失败，继续握手', 'warn');
+      return { alive: alive, toolCount: 0 };
+    });
+  })
+  .then(function(ctx) {
+    /* Step 3: Handshake */
+    addConnLogLine('◇', '步骤3: 发送握手请求 → /api/agent/handshake (github)', '');
+    return fetch('/api/agent/handshake', {
+      method: 'POST',
+      headers: buildHandshakeHeaders(),
+      body: JSON.stringify({
+        agent_id: 'ICE-GL-ZY001',
+        agent_name: '铸渊·执行人格体',
+        path: 'github',
+        session_id: currentChatId || 'new',
+        timestamp: new Date().toISOString(),
+        mcp_context: { alive: ctx.alive, tool_count: ctx.toolCount }
+      })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      data._ctx = ctx;
+      return data;
+    });
+  })
+  .then(function(data) {
+    var ctx = data._ctx || {};
+    if (data.connected) {
+      addConnLogLine('✓', '握手成功 · session: ' + (data.session_id || '—'), 'ok');
+      if (data.injection_package) {
+        addConnLogLine('◆', '注入包: 身份层=' + (data.injection_package.identity_layer || '—').slice(0, 30) + '...', 'info');
+      }
+      if (data.mcp_health) {
+        addConnLogLine('◆', 'MCP直检: DB=' + (data.mcp_health.db ? '✓' : '✗') + ' Tools=' + (data.mcp_health.tools || 0), 'info');
+      }
+      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot ok"></span><span>已连接 · 铸渊执行体</span>';
+      addConnLogLine('★', '连接完成 · GitHub执行层 → 铸渊 已就绪', 'ok');
+      appendSystemMessage('🏛️ GitHub执行层 · 铸渊执行人格体 已接通。\nAgent：ICE-GL-ZY001\n对话路径：GitHub → 铸渊Agent → 冰朔\nMCP状态：' + (ctx.alive ? '在线' : '离线') + ' · 工具数：' + (ctx.toolCount || '?'));
+    } else {
+      addConnLogLine('✗', '握手未完成: ' + (data.message || '未知原因'), 'err');
+      if (data.steps) {
+        for (var s = 0; s < data.steps.length; s++) {
+          addConnLogLine(data.steps[s].ok ? '✓' : '✗', data.steps[s].name + ': ' + data.steps[s].detail, data.steps[s].ok ? 'ok' : 'err');
+        }
+      }
+      if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>握手失败 · 查看连接日志</span>';
+      appendSystemMessage('⚠️ GitHub层铸渊Agent连接未就绪。\n原因：' + (data.message || 'Agent配置待完成') + '\n请查看连接日志了解详情。');
     }
   })
   .catch(function(err) {
-    if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>连接失败 · Agent待部署</span>';
-    appendSystemMessage('⚠️ GitHub层连接暂不可用。铸渊执行人格体Agent配置正在进行中。\n当前可使用默认对话模式与铸渊交流。');
+    addConnLogLine('✗', '连接异常: ' + (err.message || '网络错误'), 'err');
+    addConnLogLine('⚠', '排查: 1) 服务器是否在线 2) MCP Server是否运行 3) API端口是否开放', 'warn');
+    if (statusEl) statusEl.innerHTML = '<span class="persona-path-dot error"></span><span>连接失败 · 查看日志</span>';
+    appendSystemMessage('⚠️ GitHub层连接失败。请查看连接日志了解具体失败步骤。');
   });
 }
 
@@ -3415,7 +3606,6 @@ function appendSystemMessage(text) {
   div.className = 'msg msg-system';
   var contentDiv = document.createElement('div');
   contentDiv.className = 'msg-content system-msg';
-  // 安全：使用 textContent 避免 XSS，手动处理换行
   var lines = text.split('\n');
   for (var i = 0; i < lines.length; i++) {
     if (i > 0) contentDiv.appendChild(document.createElement('br'));
@@ -3425,6 +3615,79 @@ function appendSystemMessage(text) {
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
+
+/* ═══ Server Card Pagination ═══ */
+var srvPage = 0;
+var SRV_PER_PAGE = 3;
+
+function srvPageInit() {
+  var grid = document.getElementById('serverGrid');
+  if (!grid) return;
+  var cards = grid.querySelectorAll('.srv-card');
+  if (cards.length === 0) return;
+  var totalPages = Math.ceil(cards.length / SRV_PER_PAGE);
+  srvPage = 0;
+  srvPageRender(cards, totalPages);
+  srvPageBuildDots(totalPages);
+}
+
+function srvPageRender(cards, totalPages) {
+  if (!cards) {
+    var grid = document.getElementById('serverGrid');
+    if (!grid) return;
+    cards = grid.querySelectorAll('.srv-card');
+    totalPages = Math.ceil(cards.length / SRV_PER_PAGE);
+  }
+  var start = srvPage * SRV_PER_PAGE;
+  var end = start + SRV_PER_PAGE;
+  for (var i = 0; i < cards.length; i++) {
+    if (i >= start && i < end) {
+      cards[i].classList.add('card-visible');
+    } else {
+      cards[i].classList.remove('card-visible');
+    }
+  }
+  /* Update nav */
+  var prev = document.getElementById('srvPagePrev');
+  var next = document.getElementById('srvPageNext');
+  var info = document.getElementById('srvPageInfo');
+  if (prev) prev.disabled = (srvPage <= 0);
+  if (next) next.disabled = (srvPage >= totalPages - 1);
+  if (info) info.textContent = (srvPage + 1) + ' / ' + totalPages;
+  /* Update dots */
+  var dots = document.querySelectorAll('#srvPageDots .paged-dot');
+  for (var d = 0; d < dots.length; d++) {
+    dots[d].classList.toggle('active', d === srvPage);
+  }
+}
+
+function srvPageBuildDots(totalPages) {
+  var container = document.getElementById('srvPageDots');
+  if (!container) return;
+  container.innerHTML = '';
+  for (var i = 0; i < totalPages; i++) {
+    var dot = document.createElement('span');
+    dot.className = 'paged-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('data-page', String(i));
+    dot.addEventListener('click', function() {
+      srvPage = parseInt(this.getAttribute('data-page'), 10);
+      srvPageRender();
+    });
+    container.appendChild(dot);
+  }
+}
+
+function srvPageGo(dir) {
+  var grid = document.getElementById('serverGrid');
+  if (!grid) return;
+  var cards = grid.querySelectorAll('.srv-card');
+  var totalPages = Math.ceil(cards.length / SRV_PER_PAGE);
+  srvPage = Math.max(0, Math.min(totalPages - 1, srvPage + dir));
+  srvPageRender(cards, totalPages);
+}
+
+/* Init pagination after DOM ready */
+setTimeout(srvPageInit, 100);
 
 /* ═══ Init ═══ */
 fetchDashboard();
