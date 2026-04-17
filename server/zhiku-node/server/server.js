@@ -92,8 +92,9 @@ const MAIN_API_URL = process.env.ZY_MAIN_API_URL || 'http://127.0.0.1:3800';
  * QQ邮箱→smtp.qq.com, 163邮箱→smtp.163.com, 其他→空
  */
 function autoDetectSmtpHost(email) {
-  if (!email) return '';
-  const domain = email.split('@')[1] || '';
+  if (!email || typeof email !== 'string' || !email.includes('@')) return '';
+  const domain = (email.split('@')[1] || '').toLowerCase();
+  if (!domain) return '';
   if (domain === 'qq.com' || domain === 'foxmail.com') return 'smtp.qq.com';
   if (domain === '163.com') return 'smtp.163.com';
   if (domain === '126.com') return 'smtp.126.com';
@@ -1371,7 +1372,8 @@ app.use((err, req, res, _next) => {
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`[ZY-SVR-006] zhiku-api v2.0.0 · 运行在 127.0.0.1:${PORT}`);
   console.log(`[ZY-SVR-006] 域名: ${DOMAIN} · 邮箱登录 + 真实搜索下载 + Agent对话`);
-  console.log(`[ZY-SVR-006] COS: ${cosClient ? '已连接' : '未配置'} · LLM: ${DEEPSEEK_API_KEY ? '已配置' : '未配置'} · SMTP: ${(SMTP_USER && SMTP_PASS) ? '已配置(' + (SMTP_HOST || autoDetectSmtpHost(SMTP_USER)) + ')' : '未配置'}`);
+  const smtpStatus = (SMTP_USER && SMTP_PASS) ? `已配置(${SMTP_HOST || autoDetectSmtpHost(SMTP_USER)})` : '未配置';
+  console.log(`[ZY-SVR-006] COS: ${cosClient ? '已连接' : '未配置'} · LLM: ${DEEPSEEK_API_KEY ? '已配置' : '未配置'} · SMTP: ${smtpStatus}`);
   console.log(`[ZY-SVR-006] 数据源: ${getEnabledSources().map(s => s.name).join(', ')}`);
   console.log(`[ZY-SVR-006] 守护: 铸渊 · ICE-GL-ZY001 · TCS-0002∞`);
 });
