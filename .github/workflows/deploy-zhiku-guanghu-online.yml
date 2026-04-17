@@ -233,6 +233,8 @@ jobs:
   setup-ssl:
     name: '🔐 SSL 证书申请'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
 
     steps:
@@ -271,6 +273,8 @@ jobs:
   health:
     name: '🏥 健康检查'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
 
     steps:
@@ -307,6 +311,8 @@ jobs:
   rollback:
     name: '⏪ 回滚'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
 
     steps:

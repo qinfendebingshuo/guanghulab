@@ -103,7 +103,9 @@ async function doSearch() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(q)}&token=${encodeURIComponent(currentToken)}`);
+    const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(q)}`, {
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
     const data = await res.json();
 
     if (data.error) {

@@ -39,7 +39,15 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3006;
-const JWT_SECRET = process.env.ZY_ZHIKU_JWT_SECRET || crypto.randomBytes(32).toString('hex');
+const JWT_SECRET = process.env.ZY_ZHIKU_JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('[ZY-SVR-006] ⚠️ 严重: ZY_ZHIKU_JWT_SECRET 未配置。生产环境必须设置此变量。');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[ZY-SVR-006] 生产环境缺少 JWT 密钥，拒绝启动。');
+    process.exit(1);
+  }
+}
+const JWT_SECRET_FINAL = JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const TOKEN_TTL = parseInt(process.env.ZY_ZHIKU_TOKEN_TTL, 10) || 600;
 const DATA_DIR = process.env.ZY_ZHIKU_DATA_DIR || path.join(__dirname, '..', 'data');
 const LOG_DIR = process.env.ZY_ZHIKU_LOG_DIR || '/var/log/zhiku';
@@ -132,7 +140,7 @@ function issueToken(personaId, scope) {
     iat: Math.floor(Date.now() / 1000),
     exp
   };
-  const token = jwt.sign(payload, JWT_SECRET);
+  const token = jwt.sign(payload, JWT_SECRET_FINAL);
 
   // 记录活跃 token
   if (!activeTokens.has(personaId)) activeTokens.set(personaId, new Map());
@@ -153,7 +161,7 @@ function verifyToken(req, res, next) {
     return res.status(401).json({ error: true, code: 'TOKEN_REVOKED', message: '借阅凭证已归还（失效）' });
   }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET_FINAL);
     req.persona = decoded;
     req.token = token;
     next();
@@ -289,7 +297,7 @@ app.post('/api/checkout', (req, res) => {
   }
 
   // 检查是否为合法命名空间
-  if (!/^(TCS|ICE|AG|SY|DEV|PER)-/.test(persona_id)) {
+  if (!/^(TCS|ICE|AG|SY|DEV|PER)-[A-Za-z0-9_-]+$/.test(persona_id)) {
     return res.status(403).json({
       error: true,
       code: 'INVALID_NAMESPACE',
