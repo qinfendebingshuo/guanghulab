@@ -94,6 +94,7 @@ jobs:
           mkdir -p /opt/zhiku/server
           mkdir -p /opt/zhiku/data/index
           mkdir -p /opt/zhiku/data/books
+          mkdir -p /opt/zhiku/data/guardian
           mkdir -p /var/log/zhiku
           mkdir -p /var/www/certbot
           
@@ -114,12 +115,12 @@ jobs:
             server/zhiku-node/server/.env.example \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/
 
-      - name: '📤 上传镜面 Agent + 镜防模块'
+      - name: '📤 上传镜面 Agent + 镜防模块 + 书岚 Agent'
         run: |
           # 创建远程目录
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield'
+            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield /opt/zhiku/server/shulan-agent /opt/zhiku/data/guardian'
           
           # 上传 mirror-agent
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
@@ -130,6 +131,11 @@ jobs:
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
             server/zhiku-node/server/mirror-shield/*.js \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/mirror-shield/
+          
+          # 上传 shulan-agent（书岚人格体系统）
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/shulan-agent/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/shulan-agent/
 
       - name: '📤 上传 PM2 配置'
         run: |

@@ -518,10 +518,30 @@ function uploadToCos(key, body) {
  * ═══════════════════════════════════════════════════════════ */
 
 /**
+ * 快速探测数据源是否可达（TCP连接 + 简单HTTP请求）
+ */
+async function probeSource(src) {
+  const url = src.base_url;
+  if (!url) return { reachable: false, error: '未配置 base_url' };
+  try {
+    // 尝试访问 /version 或根路径做健康检查（3秒超时）
+    const versionUrl = src.version_url
+      ? src.version_url.replace('{base_url}', url)
+      : url;
+    await httpGet(versionUrl, 3000);
+    return { reachable: true };
+  } catch (err) {
+    return { reachable: false, error: err.message };
+  }
+}
+
+/**
  * 搜索所有启用的数据源 + 本地书库
+ * 返回 { results, source_status } — source_status 记录每个源的连通状态
  */
 async function searchAllSources(query) {
   const results = [];
+  const sourceStatus = [];
   const sources = getEnabledSources();
 
   // 1. 本地书库搜索
@@ -541,8 +561,15 @@ async function searchAllSources(query) {
     chapters: book.chapters || 0
   }));
   results.push(...localResults);
+  sourceStatus.push({
+    id: 'local',
+    name: '本地书库',
+    status: 'ok',
+    count: localResults.length,
+    books_total: index.books.length
+  });
 
-  // 2. 番茄小说搜索（FQWeb API）
+  // 2. 远程数据源搜索（番茄/七猫）
   for (const src of sources) {
     if (src.id === 'fanqie-fqweb') {
       try {
@@ -566,9 +593,13 @@ async function searchAllSources(query) {
               has_file: false
             });
           }
+          sourceStatus.push({ id: src.id, name: src.name, status: 'ok', count: books.length });
+        } else {
+          sourceStatus.push({ id: src.id, name: src.name, status: 'empty', count: 0, error: '数据源返回空结果' });
         }
       } catch (err) {
         console.error('[ZY-SVR-006] 番茄搜索失败:', err.message);
+        sourceStatus.push({ id: src.id, name: src.name, status: 'error', count: 0, error: err.message });
       }
     }
 
@@ -593,14 +624,18 @@ async function searchAllSources(query) {
               has_file: false
             });
           }
+          sourceStatus.push({ id: src.id, name: src.name, status: 'ok', count: books.length });
+        } else {
+          sourceStatus.push({ id: src.id, name: src.name, status: 'empty', count: 0, error: '数据源返回空结果' });
         }
       } catch (err) {
         console.error('[ZY-SVR-006] 七猫搜索失败:', err.message);
+        sourceStatus.push({ id: src.id, name: src.name, status: 'error', count: 0, error: err.message });
       }
     }
   }
 
-  return results;
+  return { results, source_status: sourceStatus };
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -888,7 +923,7 @@ async function agentProcessMessage(userId, userMessage, userEmail) {
   const searchMatch = assistantReply.match(/\[SEARCH:([^\]]+)\]/);
   if (searchMatch) {
     try {
-      const searchResults = await searchAllSources(searchMatch[1]);
+      const { results: searchResults } = await searchAllSources(searchMatch[1]);
       toolResults.push({ type: 'search', query: searchMatch[1], results: searchResults.slice(0, 10) });
       memory.stats.total_searches++;
     } catch {}
@@ -950,14 +985,31 @@ function generateFallbackReply(message, bookIndex, memory) {
  * ═══════════════════════════════════════════════════════════ */
 
 // ─── GET /api/health ───
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   const uptime = Math.floor((Date.now() - START_TIME) / 1000);
   const sources = getEnabledSources();
   const agentStatus = shulanAgent.getSystemStatus();
+
+  // 异步探测数据源连通性（带3秒总超时保护）
+  let sourceChecks = [];
+  try {
+    sourceChecks = await Promise.race([
+      Promise.all(sources.map(async (src) => {
+        const probe = await probeSource(src);
+        return { id: src.id, name: src.name, enabled: src.enabled, reachable: probe.reachable, error: probe.error || null };
+      })),
+      new Promise(resolve => setTimeout(() => resolve(sources.map(s => ({
+        id: s.id, name: s.name, enabled: s.enabled, reachable: false, error: 'health check timeout'
+      }))), 4000))
+    ]);
+  } catch {
+    sourceChecks = sources.map(s => ({ id: s.id, name: s.name, enabled: s.enabled, reachable: false, error: 'check failed' }));
+  }
+
   res.json({
     status: 'ok',
     service: 'zhiku-api',
-    version: '2.1.0',
+    version: '2.1.1',
     project: 'ZY-PROJ-006',
     server: 'ZY-SVR-006',
     domain: DOMAIN,
@@ -967,7 +1019,7 @@ app.get('/api/health', (req, res) => {
     llm_configured: !!DEEPSEEK_API_KEY,
     smtp_configured: !!(SMTP_USER && SMTP_PASS && (SMTP_HOST || autoDetectSmtpHost(SMTP_USER))),
     smtp_host: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未配置',
-    data_sources: sources.map(s => ({ id: s.id, name: s.name, enabled: s.enabled })),
+    data_sources: sourceChecks,
     shulan_agent: agentStatus,
     mirror_agent: mirrorAgent.getStatus ? {
       active: true,
@@ -1127,18 +1179,48 @@ app.get('/api/search', verifyToken, async (req, res) => {
   }
 
   try {
-    const results = await searchAllSources(q);
+    const { results, source_status } = await searchAllSources(q);
     res.json({
       error: false,
       query: q,
       total: results.length,
       results,
+      source_status,
       sources_queried: getEnabledSources().map(s => s.name),
       timestamp: new Date().toISOString()
     });
   } catch (err) {
     res.status(500).json({ error: true, code: 'SEARCH_ERROR', message: '搜索失败: ' + err.message });
   }
+});
+
+// ─── GET /api/sources/check ── 数据源连通性检测 ───
+app.get('/api/sources/check', verifyToken, async (req, res) => {
+  const sources = getEnabledSources();
+  const checks = await Promise.all(sources.map(async (src) => {
+    const probe = await probeSource(src);
+    return {
+      id: src.id,
+      name: src.name,
+      base_url: src.base_url,
+      ...probe
+    };
+  }));
+
+  // 也检查本地书库
+  const index = loadBookIndex();
+  checks.unshift({
+    id: 'local',
+    name: '本地书库',
+    reachable: true,
+    books_count: index.books.length
+  });
+
+  res.json({
+    error: false,
+    sources: checks,
+    timestamp: new Date().toISOString()
+  });
 });
 
 /* ═══════════════════════════════════════════════════════════
@@ -1345,7 +1427,7 @@ app.use((req, res) => {
     error: true, code: 'NOT_FOUND', message: 'API endpoint not found',
     available: [
       '/api/health', '/api/auth/send-code', '/api/auth/verify', '/api/auth/session', '/api/auth/logout',
-      '/api/search', '/api/download/start', '/api/download/status/:taskId',
+      '/api/search', '/api/sources/check', '/api/download/start', '/api/download/status/:taskId',
       '/api/agent/chat', '/api/agent/memory', '/api/agent/status',
       '/api/checkout', '/api/return', '/api/book/:id', '/api/download/:id', '/api/read/:id',
       '/api/mirror/*'
@@ -1363,7 +1445,7 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[ZY-SVR-006] zhiku-api v2.1.0 · 运行在 127.0.0.1:${PORT}`);
+  console.log(`[ZY-SVR-006] zhiku-api v2.1.1 · 运行在 127.0.0.1:${PORT}`);
   console.log(`[ZY-SVR-006] 域名: ${DOMAIN} · 书岚(AG-SL-WEB-001) + 守护Agent(AG-SL-GUARDIAN-001)`);
   const smtpStatus = (SMTP_USER && SMTP_PASS) ? `已配置(${SMTP_HOST || autoDetectSmtpHost(SMTP_USER)})` : '未配置';
   console.log(`[ZY-SVR-006] COS: ${cosClient ? '已连接' : '未配置'} · LLM: ${DEEPSEEK_API_KEY ? '已配置' : '未配置'} · SMTP: ${smtpStatus}`);

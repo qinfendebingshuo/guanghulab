@@ -502,3 +502,22 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
 @keyframes shulanDots{
   0%{opacity:.3}50%{opacity:1}100%{opacity:.3}
 }
+
+/* ═══════════════════════════════════════════
+ * 数据源状态栏样式 v2.1.1
+ * ═══════════════════════════════════════════ */
+
+/* ─── 搜索结果顶部的数据源离线提示 ─── */
+.source-status-bar{
+  padding:10px 14px;margin-bottom:10px;border-radius:10px;
+  background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);
+  color:var(--warn);font-size:12px;line-height:1.8
+}
+.source-err-tag{
+  display:inline-block;padding:2px 8px;margin:2px 4px;border-radius:6px;
+  background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.12);
+  color:var(--err);font-size:11px;font-family:var(--mono)
+}
+
+/* ─── 健康状态栏警告色 ─── */
+.api-status.warn{color:var(--warn)}
