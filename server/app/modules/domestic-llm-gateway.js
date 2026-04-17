@@ -165,7 +165,7 @@ function callDomesticLLM(modelConfig, messages) {
   return new Promise((resolve, reject) => {
     const apiKey = process.env[modelConfig.envKey] || '';
     if (!apiKey) {
-      return reject(new Error('模型API密钥未配置'));
+      return reject(new Error(`[${modelConfig.id}] 模型API密钥未配置(${modelConfig.envKey})`));
     }
 
     const url = new URL(modelConfig.endpoint);
@@ -186,7 +186,8 @@ function callDomesticLLM(modelConfig, messages) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
         'Content-Length': Buffer.byteLength(requestBody)
-      }
+      },
+      timeout: 30000 // connection timeout
     };
 
     const req = https.request(options, (res) => {
@@ -203,13 +204,14 @@ function callDomesticLLM(modelConfig, messages) {
             resolve(body);
           }
         } catch (e) {
-          reject(new Error(`[${modelConfig.id}] 响应解析失败(HTTP ${res.statusCode})`));
+          reject(new Error(`[${modelConfig.id}] 响应解析失败(HTTP ${res.statusCode}): ${rawBody.slice(0, 200)}`));
         }
       });
     });
 
-    req.setTimeout(60000, () => { req.destroy(); reject(new Error('请求超时(60s)')); });
-    req.on('error', reject);
+    // Separate socket idle timeout (for slow responses after connection established)
+    req.setTimeout(60000, () => { req.destroy(); reject(new Error(`[${modelConfig.id}] 请求超时(60s)`)); });
+    req.on('error', (err) => reject(new Error(`[${modelConfig.id}] 连接失败: ${err.message}`)));
     req.write(requestBody);
     req.end();
   });
@@ -453,7 +455,7 @@ async function chat(userId, message) {
       return {
         success: true,
         message: content,
-        model: '智能路由', // 不暴露具体模型名称
+        model: selected.name, // 显示实际使用的模型名
         tier: 'economy',
         reason: selected.reason,
         relay: 'cn-relay',
@@ -472,6 +474,7 @@ async function chat(userId, message) {
   // ── 降级: 直连国内API (从新加坡跨境调用) ──
   let lastError = null;
   const tried = [selected, ...available.filter(m => m.id !== selected.id)];
+  const triedLog = [];
 
   for (const model of tried) {
     try {
@@ -511,7 +514,7 @@ async function chat(userId, message) {
       return {
         success: true,
         message: content,
-        model: '智能路由', // 不暴露具体模型名称
+        model: model.name, // 显示实际使用的模型名
         tier: model.tier,
         reason: selected.reason,
         relay: 'direct',
@@ -523,6 +526,7 @@ async function chat(userId, message) {
       };
     } catch (err) {
       lastError = err;
+      triedLog.push(`${model.id}: ${err.message}`);
       console.error(`[国内网关] ${model.id} 调用失败: ${err.message}`);
       continue;
     }
@@ -531,13 +535,14 @@ async function chat(userId, message) {
   // 所有模型都失败
   gatewayState.totalCalls++;
   gatewayState.failedCalls++;
-  gatewayState.lastError = { time: new Date().toISOString(), message: lastError?.message };
+  gatewayState.lastError = { time: new Date().toISOString(), message: lastError?.message, triedModels: triedLog };
 
   return {
     success: false,
-    message: '⚠️ 铸渊暂时无法回应，所有模型通道繁忙。请稍后重试。',
+    message: `⚠️ 铸渊暂时无法回应。已尝试 ${tried.length} 个模型均失败。\n\n请检查 /api/chat/diagnostics 查看详情。\n\n最后错误: ${lastError?.message || '未知'}`,
     model: 'fallback',
-    error: lastError?.message
+    error: lastError?.message,
+    triedModels: triedLog
   };
 }
 
