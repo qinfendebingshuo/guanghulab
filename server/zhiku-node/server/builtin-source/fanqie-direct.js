@@ -20,7 +20,7 @@
 
 const https = require('https');
 
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
 const FANQIE_HOST = 'fanqienovel.com';
 
 /**
@@ -193,25 +193,44 @@ async function getChapterContent(itemId) {
 
 /**
  * 清理HTML内容为纯文本
+ * 使用循环确保嵌套/残留标签被完全清除
  */
 function cleanHtmlContent(html) {
   if (!html || typeof html !== 'string') return '';
 
-  return html
+  let text = html;
+
+  // 先解码HTML实体（在移除标签之前，避免双重解码）
+  text = text
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+
+  // 转换段落和换行标签
+  text = text
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<p[^>]*>/gi, '')
     .replace(/<\/p>/gi, '\n')
-    .replace(/<div[^>]*>/gi, '')
-    .replace(/<\/div>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<\/div>/gi, '\n');
+
+  // 循环移除所有HTML标签直到没有残留（防止嵌套标签绕过）
+  let prevText;
+  do {
+    prevText = text;
+    text = text.replace(/<[^>]*>/g, '');
+  } while (text !== prevText);
+
+  // 最后解码基本HTML实体
+  text = text
     .replace(/&nbsp;/g, ' ')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/&amp;/g, '&');
+
+  // 清理多余空行
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+
+  return text;
 }
 
 /**
@@ -240,8 +259,8 @@ async function downloadBook(bookId, title, author, onProgress) {
       if (text) {
         contents.push(`${ch.title}\n\n${text}`);
       }
-    } catch {
-      // 单章失败不中断整本下载
+    } catch (chErr) {
+      console.warn(`[fanqie-direct] 章节 ${i + 1} 下载失败: ${chErr.message}`);
     }
 
     if (onProgress) {
