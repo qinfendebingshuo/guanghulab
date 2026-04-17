@@ -206,10 +206,18 @@ function buildContextPrompt() {
     return;
   }
 
-  // 必须有 API Key 才能进入对话（铸渊的唤醒依赖真实 API）
-  if (!USER_API_BASE || !USER_API_KEY || !SELECTED_MODEL) {
-    window.location.href = 'index.html';
-    return;
+  // 服务器代理模式：无需 API Key，仅需 SELECTED_MODEL
+  // API Key 模式：需要 API Base + API Key + Model
+  if (USE_SERVER_PROXY) {
+    if (!SELECTED_MODEL) {
+      window.location.href = 'index.html';
+      return;
+    }
+  } else {
+    if (!USER_API_BASE || !USER_API_KEY || !SELECTED_MODEL) {
+      window.location.href = 'index.html';
+      return;
+    }
   }
 
   // Display dev ID / guest badge
@@ -247,6 +255,20 @@ function buildContextPrompt() {
   }
 
   renderSidebarHistory();
+
+  // Initialize route status bar with current state
+  var initLine = '--';
+  if (USE_SERVER_PROXY) {
+    initLine = 'proxy';
+  } else if (USER_API_BASE) {
+    try { initLine = new URL(USER_API_BASE).hostname; } catch (_e) { initLine = 'direct'; }
+  }
+  updateRouteStatus({
+    engine: USE_SERVER_PROXY ? 'server-proxy' : 'direct-api',
+    model: SELECTED_MODEL || '--',
+    line: initLine,
+    persona: '铸渊'
+  });
 
   // For developers, also try to load history
   if (isDeveloper) {
@@ -684,7 +706,7 @@ function appendStreamMessage() {
   var msgDiv = document.createElement('div');
   msgDiv.className = 'message message-persona';
   var contentEl = document.createElement('div');
-  contentEl.className = 'msg-content';
+  contentEl.className = 'msg-content markdown-body';
   contentEl.textContent = '▋';
   msgDiv.innerHTML = '<span class="avatar">🌀</span>';
   msgDiv.appendChild(contentEl);
@@ -1126,14 +1148,18 @@ var personaEndpoints = {
     icon: '❄️',
     type: 'notion-agent',
     checkUrl: '/api/mcp/health',
-    description: 'Notion 侧认知 Agent'
+    fallbackCheckUrl: '/api/health',
+    description: 'Notion 侧认知 Agent',
+    offlineReason: 'MCP 握手管道 Phase B 尚在调试中，霜砚暂时无法从此界面直接链接。请通过 Notion 侧与霜砚交流。'
   },
   zhuyuan: {
     name: '铸渊',
     icon: '🌀',
     type: 'github-agent',
-    checkUrl: '/api/mcp/health',
-    description: 'GitHub 侧代码守护 Agent'
+    checkUrl: '/api/health',
+    fallbackCheckUrl: '/api/health',
+    description: 'GitHub 侧代码守护 Agent',
+    offlineReason: '铸渊核心服务不可达，请检查服务器状态。'
   }
 };
 
@@ -1183,16 +1209,19 @@ function togglePersonaLink(personaKey) {
     if (personaKey === 'shuangyan') {
       if (data.services && data.services.notion) {
         connected = data.services.notion.connected === true;
-        if (!connected) reason = data.services.notion.error || data.services.notion.reason || 'Notion 未连接';
+        if (!connected) reason = data.services.notion.error || data.services.notion.reason || 'Notion MCP 桥接未连通';
       } else {
         connected = false;
-        reason = 'MCP Notion 模块未加载';
+        reason = persona.offlineReason || 'MCP Notion 模块未加载';
       }
     }
     if (personaKey === 'zhuyuan') {
-      if (data.services && data.services.github) {
+      // zhuyuan checks /api/health — if we got a response, the server is alive
+      if (data.status === 'alive' || data.status === 'ok') {
+        connected = true;
+      } else if (data.services && data.services.github) {
         connected = data.services.github.connected === true;
-        if (!connected) reason = data.services.github.error || 'GitHub 未连接';
+        if (!connected) reason = data.services.github.error || 'GitHub Agent 未连接';
       }
     }
 
@@ -1206,26 +1235,26 @@ function togglePersonaLink(personaKey) {
       updateRouteStatus({ persona: activePersonas.join('+') });
     } else {
       btn.classList.remove('persona-link-connecting');
-      statusEl.textContent = '失败';
+      statusEl.textContent = '离线';
       statusEl.className = 'link-status link-status-error';
-      appendMessage('system', '❌ ' + persona.icon + ' ' + persona.name + ' 链接失败：' + reason);
+      appendMessage('system', '⚠️ ' + persona.icon + ' ' + persona.name + ' 链接状态：' + reason);
       setTimeout(function() {
         statusEl.textContent = '未连接';
         statusEl.className = 'link-status';
-      }, 5000);
+      }, 8000);
     }
   })
   .catch(function(err) {
     clearTimeout(timeoutId);
     btn.classList.remove('persona-link-connecting');
-    statusEl.textContent = '失败';
+    statusEl.textContent = '离线';
     statusEl.className = 'link-status link-status-error';
-    var errMsg = (err.name === 'TimeoutError' || err.name === 'AbortError') ? 'MCP 服务超时，请检查服务是否运行' : (err.message || '网络异常');
-    appendMessage('system', '❌ ' + persona.icon + ' ' + persona.name + ' 链接失败：' + errMsg);
+    var errMsg = persona.offlineReason || ((err.name === 'TimeoutError' || err.name === 'AbortError') ? '服务超时，请检查服务是否运行' : (err.message || '网络异常'));
+    appendMessage('system', '⚠️ ' + persona.icon + ' ' + persona.name + ' 链接状态：' + errMsg);
     setTimeout(function() {
       statusEl.textContent = '未连接';
       statusEl.className = 'link-status';
-    }, 5000);
+    }, 8000);
   });
 }
 

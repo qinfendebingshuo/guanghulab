@@ -538,7 +538,7 @@ a{color:var(--cyan);text-decoration:none}
 .srv-status-dot.unknown{background:var(--dim)}
 .srv-status-dot.config{background:var(--blue);box-shadow:0 0 8px rgba(96,165,250,0.4);animation:dotPulse 4s ease-in-out infinite}
 .srv-divider{height:1px;background:rgba(96,165,250,0.06);margin:12px 0}
-.srv-services{display:flex;flex-direction:column;gap:5px}
+.srv-services{display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(96,165,250,0.15) transparent}
 .srv-svc{display:flex;align-items:flex-start;gap:10px;padding:5px 8px;border-radius:6px;transition:background .2s}
 .srv-svc:hover{background:rgba(96,165,250,0.04)}
 .srv-svc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
@@ -2860,6 +2860,13 @@ function parseMarkdown(text) {
   s = s.replace(/⊢/g, '<span style="color:var(--purple)">⊢</span>');
   s = s.replace(/△/g, '<span style="color:var(--warn)">△</span>');
 
+  /* Persona markers and checkboxes */
+  s = s.replace(/◆/g, '<span style="color:var(--cyan);font-weight:700">◆</span>');
+  s = s.replace(/◇/g, '<span style="color:var(--dim)">◇</span>');
+  s = s.replace(/☑/g, '<span style="color:var(--ok)">☑</span>');
+  s = s.replace(/☐/g, '<span style="color:var(--dim)">☐</span>');
+  s = s.replace(/◈/g, '<span style="color:var(--purple)">◈</span>');
+
   /* Emoji glyph enhancement */
   s = s.replace(/🌟|⭐|✨/g, '<span style="color:var(--warn)">$&</span>');
   s = s.replace(/🟢/g, '<span style="color:var(--ok)">●</span>');
@@ -2943,7 +2950,8 @@ function callChatAPI(userMessage){
       model:data.model||'unknown',
       reason:data.reason||'',
       tier:data.tier||'',
-      tokens:data.tokens||data.usage||null,
+      tokens:data.tokens||
+        (data.usage ? {input:data.usage.prompt_tokens||0, output:data.usage.completion_tokens||0} : null),
       relay:data.relay||(data._system&&data._system.cnRelay)||'',
       pipeline:(data._system&&data._system.pipeline)||(data.pipeline)||null,
       latency:latency

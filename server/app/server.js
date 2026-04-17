@@ -605,6 +605,51 @@ app.get('/api/chat/domestic/stats', (_req, res) => {
   }
 });
 
+// ─── LLM 诊断 · API密钥 + 模块加载 + 连接状态 ───
+// 冰朔可从浏览器访问 /api/chat/diagnostics 查看完整引擎状态
+app.get('/api/chat/diagnostics', (_req, res) => {
+  const diag = {
+    server: 'ZY-SVR-002',
+    timestamp: new Date().toISOString(),
+    modules: {
+      domesticGateway: !!domesticGateway,
+      chatEngine: !!chatEngine,
+      smartRouter: !!smartRouter,
+      personaMemory: !!personaMemory,
+      contextPipeline: !!contextPipeline,
+      portalChatAgent: !!portalChatAgent,
+      emailAuth: !!emailAuth
+    },
+    apiKeys: {
+      ZY_DEEPSEEK_API_KEY: maskKey(process.env.ZY_DEEPSEEK_API_KEY),
+      ZY_QIANWEN_API_KEY: maskKey(process.env.ZY_QIANWEN_API_KEY),
+      ZY_KIMI_API_KEY: maskKey(process.env.ZY_KIMI_API_KEY),
+      ZY_QINGYAN_API_KEY: maskKey(process.env.ZY_QINGYAN_API_KEY),
+      ZY_LLM_API_KEY: maskKey(process.env.ZY_LLM_API_KEY),
+      LLM_API_KEY: maskKey(process.env.LLM_API_KEY)
+    },
+    envConfig: {
+      ZY_LLM_BASE_URL: process.env.ZY_LLM_BASE_URL || '(default: api.deepseek.com)',
+      ZY_LLM_MODEL: process.env.ZY_LLM_MODEL || '(default: deepseek-chat)',
+      ZY_SERVER_REGION: process.env.ZY_SERVER_REGION || '(not set)',
+      ZY_CN_LLM_RELAY_HOST: process.env.ZY_CN_LLM_RELAY_HOST ? '已配置' : '(not set)',
+      ZY_SKIP_CN_RELAY: process.env.ZY_SKIP_CN_RELAY || '(not set)',
+      NODE_ENV: process.env.NODE_ENV || '(not set)',
+      ZY_ROOT: process.env.ZY_ROOT || '(not set)',
+      ZY_SITE_MODE: process.env.ZY_SITE_MODE || '(not set)'
+    },
+    gatewayStats: domesticGateway ? domesticGateway.getGatewayStats() : null,
+    chatEngineStats: chatEngine ? chatEngine.getChatStats() : null
+  };
+  res.json(diag);
+});
+
+function maskKey(key) {
+  if (!key) return '❌ 未配置';
+  if (key.length <= 8) return '⚠️ 过短(' + key.length + '字符)';
+  return '✅ ' + key.slice(0, 4) + '***' + key.slice(-4) + ' (' + key.length + '字符)';
+}
+
 // ═══════════════════════════════════════════════════════════
 // 邮箱验证码登录 · Email Auth API
 // ═══════════════════════════════════════════════════════════
