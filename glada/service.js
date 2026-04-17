@@ -191,11 +191,23 @@ function startService() {
         return res.status(400).json({ error: '缺少 task_id' });
       }
 
+      // 验证 task_id 格式，防止路径注入
+      if (!/^CAB-\d{8}-\d{3}$/.test(spec.task_id)) {
+        return res.status(400).json({ error: 'task_id 格式无效，应为 CAB-YYYYMMDD-NNN' });
+      }
+
       const gladaTask = taskReceiver.convertToGladaTask(spec);
       const queueDir = taskReceiver.GLADA_QUEUE_DIR;
       fs.mkdirSync(queueDir, { recursive: true });
+
+      // 再次验证生成的 ID 安全性
+      const safeId = gladaTask.glada_task_id.replace(/[^A-Za-z0-9_-]/g, '');
+      if (safeId !== gladaTask.glada_task_id) {
+        return res.status(400).json({ error: '任务ID包含非法字符' });
+      }
+
       fs.writeFileSync(
-        path.join(queueDir, `${gladaTask.glada_task_id}.json`),
+        path.join(queueDir, `${safeId}.json`),
         JSON.stringify(gladaTask, null, 2),
         'utf-8'
       );
@@ -213,9 +225,13 @@ function startService() {
   // 查看特定任务
   app.get('/api/glada/task/:taskId', (req, res) => {
     const taskId = req.params.taskId;
-    const filePath = path.join(taskReceiver.GLADA_QUEUE_DIR, `${taskId}.json`);
 
-    // 也查看已完成
+    // 验证 taskId 格式，防止路径注入
+    if (!/^GLADA-CAB-\d{8}-\d{3}$/.test(taskId)) {
+      return res.status(400).json({ error: '任务ID格式无效' });
+    }
+
+    const filePath = path.join(taskReceiver.GLADA_QUEUE_DIR, `${taskId}.json`);
     const completedPath = path.join(taskReceiver.GLADA_QUEUE_DIR, 'completed', `${taskId}.json`);
 
     for (const fp of [filePath, completedPath]) {
@@ -234,7 +250,14 @@ function startService() {
 
   // 查看开发回执
   app.get('/api/glada/receipt/:taskId', (req, res) => {
-    const receiptPath = path.join(ROOT, 'glada', 'receipts', `${req.params.taskId}.json`);
+    const taskId = req.params.taskId;
+
+    // 验证 taskId 格式，防止路径注入
+    if (!/^GLADA-CAB-\d{8}-\d{3}$/.test(taskId)) {
+      return res.status(400).json({ error: '任务ID格式无效' });
+    }
+
+    const receiptPath = path.join(ROOT, 'glada', 'receipts', `${taskId}.json`);
     if (fs.existsSync(receiptPath)) {
       try {
         res.json(JSON.parse(fs.readFileSync(receiptPath, 'utf-8')));

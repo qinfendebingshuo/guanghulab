@@ -109,10 +109,21 @@ function commitStep(taskId, stepId, summary, files) {
     gitExec('add -A');
   }
 
-  // 构建 commit message
-  const message = `[GLADA] ${taskId} · 步骤${stepId} · ${summary}`;
+  // 构建 commit message（sanitize shell-sensitive chars）
+  const sanitized = String(summary || '')
+    .replace(/[`$\\!"'\n\r]/g, '_')
+    .substring(0, 200);
+  const message = `[GLADA] ${String(taskId).replace(/[^A-Za-z0-9_-]/g, '_')} step${stepId} ${sanitized}`;
 
-  gitExec(`commit -m "${message.replace(/"/g, '\\"')}"`);
+  // Use --message flag with env var to avoid shell injection
+  const { execSync: execSyncLocal } = require('child_process');
+  execSyncLocal('git commit -m "$GLADA_COMMIT_MSG"', {
+    cwd: ROOT,
+    encoding: 'utf-8',
+    timeout: 30000,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: { ...process.env, GLADA_COMMIT_MSG: message }
+  });
   const hash = gitExec('rev-parse --short HEAD');
 
   console.log(`[GLADA-Git] ✅ 提交: ${hash} - ${message}`);

@@ -105,7 +105,7 @@ async function callLLM(systemPrompt, userMessage, options = {}) {
   }, body);
 
   if (response.status !== 200) {
-    throw new Error(`LLM API 错误: ${response.status} - ${response.body.substring(0, 500)}`);
+    throw new Error(`LLM API 错误: ${response.status} - ${String(response.body || '').substring(0, 500)}`);
   }
 
   const result = JSON.parse(response.body);
