@@ -81,13 +81,27 @@ router.post('/:memberId', (req, res) => {
 });
 
 /* ─── POST /:memberId/chat — 对话 ─── */
-router.post('/:memberId/chat', (req, res) => {
+router.post('/:memberId/chat', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, use_ai } = req.body;
     if (!message || !message.trim()) {
       return res.status(400).json({ error: true, code: 'EMPTY_MESSAGE', message: '消息不能为空' });
     }
-    const result = engine.chat(req.params.memberId, message);
+
+    // 默认使用AI，use_ai=false 时使用本地快速回复
+    let result;
+    if (use_ai === false) {
+      result = engine.chat(req.params.memberId, message);
+    } else {
+      // 优先尝试异步AI对话
+      try {
+        result = await engine.chatAsync(req.params.memberId, message);
+      } catch {
+        // AI失败时降级为本地回复
+        result = engine.chat(req.params.memberId, message);
+      }
+    }
+
     res.json({ error: false, data: result });
   } catch (err) {
     res.status(400).json({ error: true, code: 'CHAT_FAILED', message: err.message });

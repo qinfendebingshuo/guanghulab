@@ -199,6 +199,21 @@ app.use('/api/zhiku/library', libraryRouter);
 app.use('/api/zhiku/agent',   memberAgentRouter);
 
 /* ═══════════════════════════════════════════════════════════
+ * Phase 4: 文件上传 + AI桥接
+ * ═══════════════════════════════════════════════════════════ */
+const uploadRouter = require('./routes/upload');
+app.use('/api/zhiku/upload', uploadRouter);
+
+// AI 健康检查
+const aiBridge = require('./services/ai-bridge');
+app.get('/api/zhiku/ai/health', (req, res) => {
+  res.json({
+    error: false,
+    data:  aiBridge.healthCheck()
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
  * ZY-PROJ-004: 智能小说系统
  * ═══════════════════════════════════════════════════════════ */
 const novelRouter = require('./routes/novel');
@@ -212,6 +227,7 @@ const readerEngine   = require('./services/reader-engine');
 const libraryEngine  = require('./services/library-engine');
 const agentEngine    = require('./services/member-agent-engine');
 const novelEngine    = require('./services/novel-engine');
+const uploadEngine   = require('./services/upload-engine');
 
 app.get('/api/zhiku/stats', (req, res) => {
   res.json({
@@ -224,6 +240,8 @@ app.get('/api/zhiku/stats', (req, res) => {
     library:   libraryEngine.getStats(),
     agent:     agentEngine.getStats(),
     novel:     novelEngine.getStats(),
+    upload:    uploadEngine.getStats(),
+    ai:        aiBridge.healthCheck(),
     _sovereign: 'TCS-0002∞'
   });
 });
