@@ -111,6 +111,23 @@ jobs:
             server/zhiku-node/server/.env.example \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/
 
+      - name: '📤 上传镜面 Agent + 镜防模块'
+        run: |
+          # 创建远程目录
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield'
+          
+          # 上传 mirror-agent
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/mirror-agent/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/mirror-agent/
+          
+          # 上传 mirror-shield
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/mirror-shield/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/mirror-shield/
+
       - name: '📤 上传 PM2 配置'
         run: |
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \

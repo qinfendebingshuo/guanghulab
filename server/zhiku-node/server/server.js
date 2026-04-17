@@ -11,7 +11,7 @@
  * 守护:     铸渊 · ICE-GL-ZY001
  * 版权:     国作登字-2026-A-00037559
  *
- * 接口清单 (v1.0):
+ * 接口清单 (v1.1):
  *   GET  /api/health          — 健康检查
  *   POST /api/checkout        — 借阅入口（签发 token）
  *   POST /api/return          — 归还入口（销毁 token）
@@ -19,6 +19,20 @@
  *   GET  /api/book/:id        — 书籍详情
  *   GET  /api/download/:id    — COS 临时签名 URL
  *   GET  /api/read/:id        — 在线阅读内容（分页）
+ *
+ * 镜面 Agent (v1.0):
+ *   GET  /api/mirror/status        — Agent 状态
+ *   POST /api/mirror/scan          — 手动触发扫描
+ *   GET  /api/mirror/tickets       — 列出工单
+ *   GET  /api/mirror/tickets/:id   — 工单详情
+ *   POST /api/mirror/tickets/:id/approve  — 审批工单
+ *   POST /api/mirror/tickets/:id/reject   — 驳回工单
+ *   GET  /api/mirror/memory        — Agent 记忆
+ *   GET  /api/mirror/sources       — 数据源列表
+ *   GET  /api/mirror/last-scan     — 最近扫描结果
+ *   GET  /api/mirror/shield        — 七层镜防状态
+ *   POST /api/mirror/sovereign     — 语言主控指令（换脸/重生/静默/苏醒/回响）
+ *   GET  /api/mirror/epoch         — 当前语言纪元
  *
  * 架构法理: 5TH-LE-LK-ZHIKU-ARCH-001
  * ═══════════════════════════════════════════════════════════
@@ -36,6 +50,10 @@ const rateLimit = require('express-rate-limit');
 
 // ─── 加载环境变量 ───
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// ─── 七层镜防 + 镜面 Agent ───
+const { registerShield, registerShieldRoutes } = require('./mirror-shield');
+const mirrorAgent = require('./mirror-agent');
 
 const app = express();
 const PORT = process.env.PORT || 3006;
@@ -61,6 +79,9 @@ const START_TIME = Date.now();
 
 // ─── 信任 Nginx 反代 ───
 app.set('trust proxy', 'loopback');
+
+// ─── 七层镜防 · 最先注册（最外层防御） ───
+registerShield(app);
 
 // ─── CORS: 仅允许 guanghu.* 系域名 ───
 const ALLOWED_ORIGINS = [
@@ -273,13 +294,18 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'zhiku-api',
-    version: '1.0.0',
+    version: '1.1.0',
     project: 'ZY-PROJ-006',
     server: 'ZY-SVR-006',
     domain: DOMAIN,
     uptime: `${uptime}s`,
     uptime_human: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`,
     cos_configured: !!cosClient,
+    mirror_agent: mirrorAgent.getStatus ? {
+      active: true,
+      scheduler: !!mirrorAgent.getStatus().scheduler_active,
+      sources: mirrorAgent.getStatus().enabled_sources?.length || 0
+    } : { active: false },
     books_count: loadBookIndex().books.length,
     active_tokens: Array.from(activeTokens.values()).reduce((sum, m) => sum + m.size, 0),
     timestamp: new Date().toISOString(),
@@ -475,6 +501,17 @@ app.get('/api/read/:id', verifyToken, (req, res) => {
 });
 
 /* ═══════════════════════════════════════════════════════════
+ * 镜面 Agent + 镜防状态路由
+ * ═══════════════════════════════════════════════════════════ */
+mirrorAgent.registerRoutes(app, verifyToken);
+registerShieldRoutes(app, verifyToken);
+
+// 启动镜面 Agent 定时扫描（生产环境自动开启）
+if (process.env.NODE_ENV === 'production') {
+  mirrorAgent.startScheduler();
+}
+
+/* ═══════════════════════════════════════════════════════════
  * 404 Fallback
  * ═══════════════════════════════════════════════════════════ */
 app.use((req, res) => {
@@ -482,7 +519,7 @@ app.use((req, res) => {
     error: true,
     code: 'NOT_FOUND',
     message: 'API endpoint not found',
-    available: ['/api/health', '/api/checkout', '/api/return', '/api/search', '/api/book/:id', '/api/download/:id', '/api/read/:id']
+    available: ['/api/health', '/api/checkout', '/api/return', '/api/search', '/api/book/:id', '/api/download/:id', '/api/read/:id', '/api/mirror/status', '/api/mirror/scan', '/api/mirror/tickets', '/api/mirror/shield']
   });
 });
 
