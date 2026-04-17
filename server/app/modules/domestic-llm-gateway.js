@@ -187,7 +187,7 @@ function callDomesticLLM(modelConfig, messages) {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Length': Buffer.byteLength(requestBody)
       },
-      timeout: 30000 // connection timeout
+      timeout: 30000 // socket idle timeout (covers DNS + TCP + TLS if still idle after 30s)
     };
 
     const req = https.request(options, (res) => {
