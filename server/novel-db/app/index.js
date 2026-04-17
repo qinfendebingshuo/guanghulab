@@ -35,9 +35,12 @@ const express = require('express');
 const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-// fallback: also try cwd/.env (PM2 cwd 设为 /opt/zhuyuan/novel-db)
-require('dotenv').config();
+// 加载环境变量 · 优先从上级目录 .env 读取（PM2 cwd=/opt/zhuyuan/novel-db）
+// 再 fallback 到 cwd/.env（兼容独立启动场景）
+const dotenvResult = require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+if (dotenvResult.error) {
+  require('dotenv').config();
+}
 
 const app  = express();
 const PORT = process.env.PORT || 4000;

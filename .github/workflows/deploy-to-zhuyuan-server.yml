@@ -454,7 +454,7 @@ jobs:
           # ─── 智库节点 novel-db 依赖安装 + 环境变量 ───
           if [ -d "/opt/zhuyuan/novel-db/app" ]; then
             cd /opt/zhuyuan/novel-db/app
-            npm install --production 2>&1
+            npm install --production
             # 写入 novel-db 环境变量（复用主站 LLM API 密钥）
             echo "NODE_ENV=production" > /opt/zhuyuan/novel-db/.env
             echo "PORT=4000" >> /opt/zhuyuan/novel-db/.env
