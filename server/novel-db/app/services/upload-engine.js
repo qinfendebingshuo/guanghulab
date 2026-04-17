@@ -100,33 +100,56 @@ function detectFormat(filename, mimeType) {
 }
 
 /**
- * 将 HTML 内容转为纯文本
+ * 将 HTML 内容转为纯文本（安全剥离所有标签）
  */
 function htmlToText(html) {
-  return html
-    // 移除 script 和 style 标签及内容
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    // 段落和换行
+  let text = html;
+  // 移除 script 和 style 标签及内容（使用 split/join 避免 ReDoS）
+  text = removeTagWithContent(text, 'script');
+  text = removeTagWithContent(text, 'style');
+  // 段落和换行
+  text = text
     .replace(/<\/p>/gi, '\n\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/div>/gi, '\n')
     .replace(/<\/h[1-6]>/gi, '\n\n')
-    // 标题标记
-    .replace(/<h[1-6][^>]*>/gi, '\n')
-    // 移除所有 HTML 标签
-    .replace(/<[^>]+>/g, '')
-    // 解码 HTML 实体
+    .replace(/<h[1-6][^>]*>/gi, '\n');
+  // 移除所有 HTML 标签
+  text = text.replace(/<[^>]+>/g, '');
+  // 解码 HTML 实体
+  text = text
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'")
-    // 清理多余空行
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/&#x27;/g, "'");
+  // 清理多余空行
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+  return text;
+}
+
+/**
+ * 安全移除指定标签及其内容（避免正则 ReDoS）
+ */
+function removeTagWithContent(html, tagName) {
+  const openTag = '<' + tagName;
+  const closeTag = '</' + tagName + '>';
+  let result = html;
+  let maxIterations = 100;
+  while (maxIterations-- > 0) {
+    const openIdx = result.toLowerCase().indexOf(openTag);
+    if (openIdx === -1) break;
+    const closeIdx = result.toLowerCase().indexOf(closeTag, openIdx);
+    if (closeIdx === -1) {
+      // No close tag, remove from open tag to end of string
+      result = result.slice(0, openIdx);
+      break;
+    }
+    result = result.slice(0, openIdx) + result.slice(closeIdx + closeTag.length);
+  }
+  return result;
 }
 
 /**
@@ -158,40 +181,51 @@ function markdownToText(md) {
 }
 
 /**
- * 提取 EPUB 文本内容（简易版：解析 ZIP 中的 XHTML）
+ * 提取 EPUB 文本内容（简易版）
  *
  * EPUB 本质上是 ZIP 文件，内部包含 XHTML 文件
- * 此简易版提取所有文本内容，不依赖 ZIP 库
+ * 注意: 此简易实现通过字符扫描提取文本，不解压 ZIP
+ * 对于复杂 EPUB，建议转为 TXT 后重新上传
  */
 function extractEpubText(buffer) {
-  // EPUB 是 ZIP 格式，查找 XHTML/HTML 内容
+  // Convert buffer to string, ignoring non-UTF8 bytes
   const content = buffer.toString('utf8');
 
-  // 尝试直接作为文本提取（二进制 ZIP 中的文本片段）
-  // 更好的做法是用 ZIP 库，但为避免额外依赖，用简易方式
+  // Extract text between <body> and </body> tags using indexOf (safe from ReDoS)
   const textParts = [];
+  let searchStart = 0;
+  const maxParts = 200;
 
-  // 查找 XML/HTML 文本块
-  const htmlBlocks = content.match(/<body[^>]*>[\s\S]*?<\/body>/gi) || [];
-  for (const block of htmlBlocks) {
-    const text = htmlToText(block);
+  while (textParts.length < maxParts) {
+    const bodyOpen = content.toLowerCase().indexOf('<body', searchStart);
+    if (bodyOpen === -1) break;
+    const bodyTagEnd = content.indexOf('>', bodyOpen);
+    if (bodyTagEnd === -1) break;
+    const bodyClose = content.toLowerCase().indexOf('</body>', bodyTagEnd);
+    if (bodyClose === -1) break;
+
+    const bodyContent = content.slice(bodyTagEnd + 1, bodyClose);
+    const text = htmlToText(bodyContent);
     if (text.length > 20) {
       textParts.push(text);
     }
+    searchStart = bodyClose + 7;
   }
 
   if (textParts.length > 0) {
     return textParts.join('\n\n');
   }
 
-  // 降级: 提取可见文本
-  const readable = content.replace(/[\x00-\x08\x0E-\x1F\x80-\xFF]/g, '');
-  const lines = readable.split('\n').filter(line => {
+  // 降级: 提取可见纯文本行
+  const lines = content.split('\n').filter(line => {
     const trimmed = line.trim();
-    return trimmed.length > 10 && !trimmed.startsWith('<') && !trimmed.startsWith('PK');
+    return trimmed.length > 10
+      && !trimmed.startsWith('<')
+      && !trimmed.startsWith('PK')
+      && !/[\x00-\x08]/.test(trimmed);
   });
 
-  return lines.join('\n') || '（EPUB解析失败，建议转为TXT后重新上传）';
+  return lines.join('\n') || '（EPUB解析受限，建议转为TXT后重新上传）';
 }
 
 /**

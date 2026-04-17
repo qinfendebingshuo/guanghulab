@@ -91,7 +91,7 @@ function getAvailableModels() {
  */
 function httpPost(url, body, headers, timeoutMs) {
   return new Promise((resolve, reject) => {
-    if (!url || url.includes('undefined')) {
+    if (!url) {
       return reject(new Error('无效的 API endpoint'));
     }
     const parsed = new URL(url);

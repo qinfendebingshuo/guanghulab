@@ -805,8 +805,9 @@ function renderBookGrid(){
       +'<div class="book-author">'+escHtml(book.author)+'</div>'
       +'<div class="book-meta">'+tagsHtml+'</div>'
       +'<div class="book-actions-hover">'
-      +'<button class="action-btn read" onclick="event.stopPropagation();openBook(\''+escHtml(book.filename).replace(/'/g,"\\'")+'\')">📖 阅读</button>'
+      +'<button class="action-btn read" data-filename="'+escHtml(book.filename)+'">📖 阅读</button>'
       +'</div>';
+    card.querySelector('.action-btn.read').addEventListener('click',function(e){e.stopPropagation();openBook(book.filename);});
     grid.appendChild(card);
   });
 }
@@ -881,7 +882,7 @@ function renderSearchResults(results,query){
 
     var actionsHtml='';
     if(book.filename){
-      actionsHtml+='<button class="action-btn read" onclick="openBook(\''+escHtml(book.filename).replace(/'/g,"\\'")+'\')">📖 阅读</button>';
+      actionsHtml+='<button class="action-btn read" data-filename="'+escHtml(book.filename)+'">📖 阅读</button>';
     }
 
     card.innerHTML='<div class="result-info">'
@@ -889,6 +890,9 @@ function renderSearchResults(results,query){
       +'<div class="result-meta">'+escHtml(book.author)+' · '+escHtml(metaStr)+'</div>'
       +'</div>'
       +'<div class="result-actions">'+actionsHtml+'</div>';
+    if(book.filename){
+      card.querySelector('.action-btn.read').addEventListener('click',function(){openBook(book.filename);});
+    }
     div.appendChild(card);
   });
 }
@@ -1060,23 +1064,18 @@ function loadChapter(bookId,idx){
 
 /**
  * 自动检测内容格式并渲染
- * 支持: 纯文本、HTML片段、Markdown-like
+ * 安全: 所有内容先 escape，再应用安全格式化
+ * 支持: 纯文本、Markdown-like
  */
 function autoRenderContent(content){
   if(!content)return '';
 
-  // Check if content contains HTML tags
-  if(/<[a-z][\s\S]*>/i.test(content)){
-    return content
-      .replace(/<script[\s\S]*?<\/script>/gi,'')
-      .replace(/<style[\s\S]*?<\/style>/gi,'')
-      .replace(/on\w+="[^"]*"/gi,'')
-      .replace(/on\w+='[^']*'/gi,'');
-  }
+  // SECURITY: Always escape HTML first, then apply safe formatting
+  var escaped=escHtml(content);
 
-  // Check if content looks like Markdown
+  // Check if original content looks like Markdown (headers, bold, etc.)
   if(/^#{1,3}\s/m.test(content)||/\*\*[^*]+\*\*/m.test(content)){
-    var html=escHtml(content)
+    var html=escaped
       .replace(/^### (.+)$/gm,'<h3 style="font-size:1.1em;margin:16px 0 8px;color:var(--purple)">$1</h3>')
       .replace(/^## (.+)$/gm,'<h2 style="font-size:1.2em;margin:20px 0 10px;color:var(--purple)">$1</h2>')
       .replace(/^# (.+)$/gm,'<h1 style="font-size:1.3em;margin:24px 0 12px;color:var(--purple)">$1</h1>')
@@ -1088,14 +1087,14 @@ function autoRenderContent(content){
   }
 
   // Plain text: format with indentation
-  var paragraphs=content.split(/\n\s*\n/).filter(function(p){return p.trim()});
+  var paragraphs=escaped.split(/\n\s*\n/).filter(function(p){return p.trim()});
   if(paragraphs.length>1){
     return paragraphs.map(function(p){
-      return '<p style="text-indent:2em;margin:0.8em 0;line-height:1.9">'+escHtml(p.trim()).replace(/\n/g,'<br>')+'</p>';
+      return '<p style="text-indent:2em;margin:0.8em 0;line-height:1.9">'+p.trim().replace(/\n/g,'<br>')+'</p>';
     }).join('');
   }
 
-  return '<div style="white-space:pre-wrap;text-indent:2em;line-height:1.9">'+escHtml(content)+'</div>';
+  return '<div style="white-space:pre-wrap;text-indent:2em;line-height:1.9">'+escaped+'</div>';
 }
 
 function prevChapter(){if(readerState.currentCh>0)loadChapter(readerState.bookId,readerState.currentCh-1);}
