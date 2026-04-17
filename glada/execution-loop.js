@@ -13,6 +13,10 @@
  *   5. Git 提交
  *   6. 开发记录
  *
+ * 任务来源（双通道）：
+ *   A. core/task-queue 中央任务队列（type: 'glada-task'）
+ *   B. CAB pending 目录 + GLADA 本地队列（兼容）
+ *
  * 版权：国作登字-2026-A-00037559
  * 签发：铸渊 · ICE-GL-ZY001
  */
@@ -30,6 +34,14 @@ const notifier = require('./notifier');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXECUTION_LOG_DIR = path.join(ROOT, 'glada', 'logs', 'executions');
+
+// 尝试加载中央任务队列（容错：如果不存在则跳过）
+let taskQueue = null;
+try {
+  taskQueue = require('../core/task-queue');
+} catch {
+  console.warn('[GLADA] ⚠️ core/task-queue 加载失败，仅使用本地队列');
+}
 
 /**
  * 执行单个 GLADA 任务（完整的步骤循环）
@@ -252,7 +264,73 @@ function writeExecutionLog(taskId, entry) {
 }
 
 /**
+ * 从中央任务队列获取 glada-task 类型的任务
+ * @returns {Object|null} GLADA 格式的任务，或 null
+ */
+function dequeueFromCentralQueue() {
+  if (!taskQueue) return null;
+
+  try {
+    taskQueue.loadQueue();
+    const queueTask = taskQueue.dequeue();
+
+    if (!queueTask || queueTask.type !== 'glada-task') {
+      return null;
+    }
+
+    // 标记为运行中
+    // 将中央队列任务转换为 GLADA 执行格式
+    console.log(`[GLADA] 📥 从中央任务队列取出: ${queueTask.task_id}`);
+
+    // 如果任务有 cab_spec，用它转换；否则构建最小执行任务
+    if (queueTask.cab_spec) {
+      return taskReceiver.convertToGladaTask(queueTask.cab_spec);
+    }
+
+    // 最小格式转换
+    return {
+      glada_task_id: `GLADA-${queueTask.task_id}`,
+      source_task_id: queueTask.task_id,
+      source: 'central-queue',
+      status: 'pending',
+      created_at: queueTask.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      plan: {
+        title: queueTask.description || queueTask.task_id,
+        description: queueTask.description || '',
+        steps: (queueTask.steps || [queueTask.description || 'Execute task']).map((step, i) => ({
+          step_id: i + 1,
+          description: typeof step === 'string' ? step : step.description || `步骤 ${i + 1}`,
+          status: 'pending',
+          started_at: null,
+          completed_at: null,
+          result: null,
+          files_changed: [],
+          reasoning: null
+        })),
+        priority: queueTask.priority || 'normal'
+      },
+      architecture: queueTask.architecture || {},
+      constraints: queueTask.constraints || { no_touch_files: [], required_tests: true },
+      reasoning_context: {},
+      execution_log: [],
+      completion: {
+        completed_at: null,
+        total_files_changed: [],
+        git_branch: null,
+        git_commits: [],
+        notification_sent: false
+      }
+    };
+  } catch (err) {
+    console.error(`[GLADA] ⚠️ 中央队列读取失败: ${err.message}`);
+    return null;
+  }
+}
+
+/**
  * 主循环：持续监听并执行任务
+ * 双通道获取任务：中央 task-queue → 本地 GLADA 队列
  * @param {Object} [options] - 循环选项
  * @param {number} [options.pollIntervalMs=30000] - 轮询间隔（毫秒）
  * @param {boolean} [options.singleRun=false] - 只执行一个任务就退出
@@ -262,13 +340,46 @@ async function startLoop(options = {}) {
   const singleRun = options.singleRun || false;
 
   console.log(`[GLADA] 🔄 执行循环已启动 (轮询间隔: ${pollInterval / 1000}s)`);
+  if (taskQueue) {
+    console.log(`[GLADA] 📡 已连接中央任务队列 (core/task-queue)`);
+  }
 
   const poll = async () => {
     try {
-      const task = taskReceiver.receiveNextTask();
+      // 双通道：先查中央队列，再查本地队列
+      let task = dequeueFromCentralQueue();
+
+      if (!task) {
+        task = taskReceiver.receiveNextTask();
+      }
 
       if (task) {
+        // 如果来自中央队列，同时保存到本地以便断点续传
+        if (task.source === 'central-queue') {
+          const queueDir = taskReceiver.GLADA_QUEUE_DIR;
+          fs.mkdirSync(queueDir, { recursive: true });
+          fs.writeFileSync(
+            path.join(queueDir, `${task.glada_task_id}.json`),
+            JSON.stringify(task, null, 2),
+            'utf-8'
+          );
+        }
+
         await executeTask(task, options);
+
+        // 中央队列完成回写
+        if (task.source === 'central-queue' && taskQueue) {
+          try {
+            const allCompleted = task.plan.steps.every(s => s.status === 'completed');
+            if (allCompleted) {
+              taskQueue.complete(task.source_task_id, { glada_task_id: task.glada_task_id });
+            } else {
+              taskQueue.fail(task.source_task_id, 'GLADA execution incomplete');
+            }
+          } catch {
+            // 回写失败不阻塞主流程
+          }
+        }
 
         if (singleRun) {
           console.log('[GLADA] 单次运行模式，退出');

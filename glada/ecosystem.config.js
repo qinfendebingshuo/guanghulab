@@ -7,6 +7,45 @@
  * 签发：铸渊 · ICE-GL-ZY001
  */
 
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * 加载 .env 文件（复用 cn-llm-relay 的成熟模式）
+ * 优先级：.env.glada → 仓库根 .env → 服务器部署 .env.app
+ */
+function loadEnvFile(filePath) {
+  const env = {};
+  try {
+    if (fs.existsSync(filePath)) {
+      const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx > 0) {
+          env[trimmed.substring(0, idx).trim()] = trimmed.substring(idx + 1).trim();
+        }
+      }
+    }
+  } catch (e) {
+    console.error(`[GLADA-PM2] 加载环境变量失败: ${e.message}`);
+  }
+  return env;
+}
+
+// 环境变量加载链（后面的覆盖前面的）
+const envChain = [
+  path.join(__dirname, '..', '.env'),           // 仓库根 .env
+  path.join(__dirname, '..', '.env.app'),        // 服务器部署 .env.app
+  path.join(__dirname, '.env.glada'),            // GLADA 专属 .env
+];
+
+let mergedEnv = {};
+for (const envFile of envChain) {
+  Object.assign(mergedEnv, loadEnvFile(envFile));
+}
+
 module.exports = {
   apps: [{
     name: 'glada-agent',
@@ -21,7 +60,9 @@ module.exports = {
       GLADA_PORT: 3900,
       GLADA_POLL_INTERVAL: 30000,
       GLADA_MODEL: 'deepseek-chat',
-      GLADA_STOP_ON_FAILURE: 'true'
+      GLADA_STOP_ON_FAILURE: 'true',
+      // 从 .env 文件链加载 LLM 密钥（部署时由 workflow 写入）
+      ...mergedEnv
     },
     max_memory_restart: '512M',
     log_date_format: 'YYYY-MM-DD HH:mm:ss',

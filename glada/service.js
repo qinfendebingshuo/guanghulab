@@ -25,9 +25,36 @@
 
 'use strict';
 
-const express = require('express');
 const fs = require('fs');
 const path = require('path');
+
+// 加载环境变量（独立运行时需要；PM2 由 ecosystem.config.js 加载）
+// 优先级：.env.glada → .env.app → .env
+const envFiles = [
+  path.join(__dirname, '..', '.env'),
+  path.join(__dirname, '..', '.env.app'),
+  path.join(__dirname, '.env.glada'),
+];
+for (const envFile of envFiles) {
+  if (fs.existsSync(envFile)) {
+    const lines = fs.readFileSync(envFile, 'utf-8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const idx = trimmed.indexOf('=');
+      if (idx > 0) {
+        const key = trimmed.substring(0, idx).trim();
+        const value = trimmed.substring(idx + 1).trim();
+        // 不覆盖已有的环境变量（PM2 设置的优先）
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+  }
+}
+
+const express = require('express');
 
 const taskReceiver = require('./task-receiver');
 const executionLoop = require('./execution-loop');

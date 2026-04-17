@@ -23,6 +23,22 @@
     "priority": "normal",
     "estimated_scope": "small"
   },
+  "execution_plan": {
+    "executor": "glada",
+    "execution_strategy": "sequential",
+    "rollback_on_failure": true,
+    "preserve_context": true,
+    "checkpoint_interval": "step",
+    "execution_timeout_ms": 3600000,
+    "retry_policy": {
+      "max_retries": 3,
+      "backoff_ms": 5000
+    },
+    "model_preference": "deepseek-chat",
+    "auto_test": true,
+    "auto_commit": true,
+    "auto_notify": true
+  },
   "constraints": {
     "no_touch_files": [],
     "required_tests": true,

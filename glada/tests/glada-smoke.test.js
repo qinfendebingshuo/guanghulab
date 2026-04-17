@@ -257,6 +257,37 @@ test('文件依赖扫描', () => {
   }
 });
 
+test('中央任务队列 glada-task 类型已注册', () => {
+  const taskQueuePath = path.join(ROOT, 'core', 'task-queue', 'index.js');
+  assert(fs.existsSync(taskQueuePath), 'core/task-queue/index.js 不存在');
+  const content = fs.readFileSync(taskQueuePath, 'utf-8');
+  assert(content.includes("'glada-task'"), 'glada-task 类型未注册到中央任务队列');
+});
+
+test('CAB 任务模板包含 execution_plan 字段', () => {
+  const templatePath = path.join(ROOT, 'bridge', 'chat-to-agent', 'task-template.json');
+  assert(fs.existsSync(templatePath), 'task-template.json 不存在');
+  const template = JSON.parse(fs.readFileSync(templatePath, 'utf-8'));
+  assert(template.execution_plan, '缺少 execution_plan 字段');
+  assert(template.execution_plan.executor === 'glada', 'executor 应为 glada');
+  assert(template.execution_plan.rollback_on_failure === true, 'rollback_on_failure 应为 true');
+});
+
+test('ecosystem.config.js 包含 env 加载逻辑', () => {
+  const ecosystemPath = path.join(ROOT, 'glada', 'ecosystem.config.js');
+  const content = fs.readFileSync(ecosystemPath, 'utf-8');
+  assert(content.includes('loadEnvFile'), 'ecosystem.config.js 缺少 loadEnvFile 函数');
+  assert(content.includes('.env.glada'), '缺少 .env.glada 加载');
+});
+
+test('execution-loop 集成中央任务队列', () => {
+  const loopPath = path.join(ROOT, 'glada', 'execution-loop.js');
+  const content = fs.readFileSync(loopPath, 'utf-8');
+  assert(content.includes('core/task-queue'), '缺少 core/task-queue 集成');
+  assert(content.includes('dequeueFromCentralQueue'), '缺少 dequeueFromCentralQueue 函数');
+  assert(content.includes('glada-task'), '缺少 glada-task 类型检查');
+});
+
 // ── 结果 ──
 
 console.log(`\n${'═'.repeat(40)}`);

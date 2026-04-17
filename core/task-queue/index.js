@@ -173,7 +173,8 @@ function status() {
       'system-task': tasks.filter(t => t.type === 'system-task').length,
       'dev-task': tasks.filter(t => t.type === 'dev-task').length,
       'maintenance-task': tasks.filter(t => t.type === 'maintenance-task').length,
-      'auto-task': tasks.filter(t => t.type === 'auto-task').length
+      'auto-task': tasks.filter(t => t.type === 'auto-task').length,
+      'glada-task': tasks.filter(t => t.type === 'glada-task').length
     }
   };
 
