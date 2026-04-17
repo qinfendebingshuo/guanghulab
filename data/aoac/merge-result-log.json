@@ -2,31 +2,40 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-17 10:23:57+08:00",
-  "timestamp_utc": "2026-04-17T02:23:57.394Z",
+  "timestamp": "2026-04-17 11:57:41+08:00",
+  "timestamp_utc": "2026-04-17T03:57:41.868Z",
   "merge": {
-    "pr_number": 397,
-    "pr_title": "fix: use relative API paths in zhiku/novel frontends to fix \"Load failed\"",
-    "merge_commit_sha": "295d4ccd64b776d2548ff350978db83ffd1bfc87",
-    "head_sha": "9ec44f14e17ebfdeda640f57ea840d03f5767c1a",
+    "pr_number": 398,
+    "pr_title": "fix: route zhiku/novel API directly through /api/ path instead of /novel-api prefix",
+    "merge_commit_sha": "d29c0bce356c76296ebac7a3daedea4c1867e61a",
+    "head_sha": "8c50792e113fd33c5056a0ff94ab6abd7140eaad",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 10,
+      "total": 11,
       "passed": 0,
-      "failed": 0,
+      "failed": 1,
       "skipped": 5
     },
     "check_runs": [
       {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T03:57:39Z",
+        "completed_at": "2026-04-17T03:57:34Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
         "name": "🔒 SSL证书配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T02:23:52Z",
-        "completed_at": "2026-04-17T02:23:52Z",
+        "started_at": "2026-04-17T03:57:34Z",
+        "completed_at": "2026-04-17T03:57:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -34,8 +43,8 @@
         "name": "🚀 预览站→主站 一键推送",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T02:23:52Z",
-        "completed_at": "2026-04-17T02:23:52Z",
+        "started_at": "2026-04-17T03:57:34Z",
+        "completed_at": "2026-04-17T03:57:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -43,17 +52,8 @@
         "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T02:23:52Z",
-        "completed_at": "2026-04-17T02:23:52Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💚 健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T02:23:52Z",
-        "completed_at": "2026-04-17T02:23:52Z",
+        "started_at": "2026-04-17T03:57:34Z",
+        "completed_at": "2026-04-17T03:57:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -61,8 +61,8 @@
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T02:23:52Z",
-        "completed_at": "2026-04-17T02:23:52Z",
+        "started_at": "2026-04-17T03:57:34Z",
+        "completed_at": "2026-04-17T03:57:34Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -70,8 +70,26 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T02:23:54Z",
+        "started_at": "2026-04-17T03:57:38Z",
         "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署到测试站",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-17T03:57:37Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🗂️ 同步注册表状态",
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-04-17T03:57:36Z",
+        "completed_at": "2026-04-17T03:57:40Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -79,16 +97,7 @@
         "name": "💉 注入注册表上下文到 Copilot Issue",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T02:23:54Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🗂️ 同步注册表状态",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T02:23:55Z",
+        "started_at": "2026-04-17T03:57:36Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -97,7 +106,7 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T02:23:54Z",
+        "started_at": "2026-04-17T03:57:36Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -106,7 +115,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T02:23:54Z",
+        "started_at": "2026-04-17T03:57:36Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
