@@ -1,0 +1,180 @@
+{
+  "_meta": {
+    "observer": "铸渊全链路部署观测系统 v1.0",
+    "copyright": "国作登字-2026-A-00037559",
+    "collected_at": "2026-04-17T01:55:34.589Z"
+  },
+  "run": {
+    "id": 24543710779,
+    "workflow_name": "🚀 铸渊智能运维 · 测试站自动部署",
+    "conclusion": "failure",
+    "status": "completed",
+    "html_url": "https://github.com/qinfendebingshuo/guanghulab/actions/runs/24543710779",
+    "head_sha": "781e6c965cdb02f7e68db3d5861a5e6fac50ce90",
+    "head_branch": "main",
+    "actor": "qinfendebingshuo",
+    "created_at": "2026-04-17T01:54:50Z",
+    "updated_at": "2026-04-17T01:55:23Z",
+    "run_started_at": "2026-04-17T01:54:50Z"
+  },
+  "jobs_summary": {
+    "total": 4,
+    "success": 0,
+    "failure": 1,
+    "skipped": 3,
+    "cancelled": 0
+  },
+  "failed_jobs": [
+    {
+      "job_id": 71754723167,
+      "job_name": "🚀 部署到测试站",
+      "conclusion": "failure",
+      "started_at": "2026-04-17T01:54:55Z",
+      "completed_at": "2026-04-17T01:55:22Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "📥 检出代码",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "🟢 配置 Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "📋 创建工单",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "📋 更新工单: 部署中",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "🔐 配置SSH",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "🔒 部署SSL证书 (如已配置)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "📦 同步代码到测试站",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8
+        },
+        {
+          "name": "📋 更新工单: 测试中",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9
+        },
+        {
+          "name": "📋 更新工单: 部署失败",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10
+        },
+        {
+          "name": "🧹 清理SSH密钥",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "💾 保存工单数据",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post 🟢 配置 Node.js",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 23
+        },
+        {
+          "name": "Post 📥 检出代码",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ],
+      "log_content": "﻿2026-04-17T01:54:56.0472904Z Current runner version: '2.333.1'\n2026-04-17T01:54:56.0498763Z ##[group]Runner Image Provisioner\n2026-04-17T01:54:56.0499749Z Hosted Compute Agent\n2026-04-17T01:54:56.0500463Z Version: 20260213.493\n2026-04-17T01:54:56.0501160Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3\n2026-04-17T01:54:56.0502077Z Build Date: 2026-02-13T00:28:41Z\n2026-04-17T01:54:56.0502838Z Worker ID: {9e617446-53f4-4f82-8bf5-474102e73c48}\n2026-04-17T01:54:56.0503688Z Azure Region: westus\n2026-04-17T01:54:56.0504316Z ##[endgroup]\n2026-04-17T01:54:56.0506205Z ##[group]Operating System\n2026-04-17T01:54:56.0506962Z Ubuntu\n2026-04-17T01:54:56.0507522Z 24.04.4\n2026-04-17T01:54:56.0508178Z LTS\n2026-04-17T01:54:56.0508730Z ##[endgroup]\n2026-04-17T01:54:56.0509453Z ##[group]Runner Image\n2026-04-17T01:54:56.0510113Z Image: ubuntu-24.04\n2026-04-17T01:54:56.0510805Z Version: 20260413.86.1\n2026-04-17T01:54:56.0512117Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md\n2026-04-17T01:54:56.0513817Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86\n2026-04-17T01:54:56.0514855Z ##[endgroup]\n2026-04-17T01:54:56.0516751Z ##[group]GITHUB_TOKEN Permissions\n2026-04-17T01:54:56.0519113Z Contents: write\n2026-04-17T01:54:56.0519845Z Metadata: read\n2026-04-17T01:54:56.0520475Z ##[endgroup]\n2026-04-17T01:54:56.0522685Z Secret source: Actions\n2026-04-17T01:54:56.0523568Z Prepare workflow directory\n2026-04-17T01:54:56.0868947Z Prepare all required actions\n2026-04-17T01:54:56.0909688Z Getting action download info\n2026-04-17T01:54:56.5344828Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)\n2026-04-17T01:54:56.6763353Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)\n2026-04-17T01:54:56.8599944Z Complete job name: 🚀 部署到测试站\n2026-04-17T01:54:56.9319020Z ##[group]Run actions/checkout@v4\n2026-04-17T01:54:56.9320055Z with:\n2026-04-17T01:54:56.9320560Z   repository: qinfendebingshuo/guanghulab\n2026-04-17T01:54:56.9321352Z   token: ***\n2026-04-17T01:54:56.9321819Z   ssh-strict: true\n2026-04-17T01:54:56.9322522Z   ssh-user: git\n2026-04-17T01:54:56.9323256Z   persist-credentials: true\n2026-04-17T01:54:56.9323789Z   clean: true\n2026-04-17T01:54:56.9324265Z   sparse-checkout-cone-mode: true\n2026-04-17T01:54:56.9324812Z   fetch-depth: 1\n2026-04-17T01:54:56.9325435Z   fetch-tags: false\n2026-04-17T01:54:56.9325918Z   show-progress: true\n2026-04-17T01:54:56.9326386Z   lfs: false\n2026-04-17T01:54:56.9326831Z   submodules: false\n2026-04-17T01:54:56.9327307Z   set-safe-directory: true\n2026-04-17T01:54:56.9328153Z ##[endgroup]\n2026-04-17T01:54:57.0430682Z Syncing repository: qinfendebingshuo/guanghulab\n2026-04-17T01:54:57.0432847Z ##[group]Getting Git version info\n2026-04-17T01:54:57.0433780Z Working directory is '/home/runner/work/guanghulab/guanghulab'\n2026-04-17T01:54:57.0434909Z [co\n\n... [截断 14661 字符] ...\n\n7T01:55:01.6075665Z \u001b[36;1m\u001b[0m\n2026-04-17T01:55:01.6075981Z \u001b[36;1mif curl -sf http://localhost:3801/api/health >/dev/null 2>&1; then\u001b[0m\n2026-04-17T01:55:01.6076374Z \u001b[36;1m  echo \"PREVIEW_OK\"\u001b[0m\n2026-04-17T01:55:01.6076617Z \u001b[36;1melse\u001b[0m\n2026-04-17T01:55:01.6076828Z \u001b[36;1m  echo \"PREVIEW_FAIL\"\u001b[0m\n2026-04-17T01:55:01.6077072Z \u001b[36;1mfi\u001b[0m\n2026-04-17T01:55:01.6077277Z \u001b[36;1mREMOTE_CMD\u001b[0m\n2026-04-17T01:55:01.6077490Z \u001b[36;1m)\u001b[0m\n2026-04-17T01:55:01.6077684Z \u001b[36;1m\u001b[0m\n2026-04-17T01:55:01.6077883Z \u001b[36;1mecho \"$DEPLOY_RESULT\"\u001b[0m\n2026-04-17T01:55:01.6078130Z \u001b[36;1m\u001b[0m\n2026-04-17T01:55:01.6078404Z \u001b[36;1mif echo \"$DEPLOY_RESULT\" | grep -q \"HEALTH_FAIL\"; then\u001b[0m\n2026-04-17T01:55:01.6078815Z \u001b[36;1m  echo \"deploy_success=false\" >> $GITHUB_OUTPUT\u001b[0m\n2026-04-17T01:55:01.6079181Z \u001b[36;1m  echo \"deploy_log=服务器健康检查失败\" >> $GITHUB_OUTPUT\u001b[0m\n2026-04-17T01:55:01.6079497Z \u001b[36;1melse\u001b[0m\n2026-04-17T01:55:01.6079747Z \u001b[36;1m  echo \"deploy_success=true\" >> $GITHUB_OUTPUT\u001b[0m\n2026-04-17T01:55:01.6080103Z \u001b[36;1m  echo \"deploy_log=部署成功\" >> $GITHUB_OUTPUT\u001b[0m\n2026-04-17T01:55:01.6080396Z \u001b[36;1mfi\u001b[0m\n2026-04-17T01:55:01.6100790Z shell: /usr/bin/bash -e {0}\n2026-04-17T01:55:01.6101070Z ##[endgroup]\n2026-04-17T01:55:01.6156176Z 📦 部署到测试站 · 目标: ***\n2026-04-17T01:55:06.4360335Z sending incremental file list\n2026-04-17T01:55:06.6056891Z ./\n2026-04-17T01:55:06.6057676Z package-lock.json\n2026-04-17T01:55:06.6059926Z package.json\n2026-04-17T01:55:06.6060700Z server.js\n2026-04-17T01:55:06.6078006Z modules/\n2026-04-17T01:55:06.6078474Z modules/chat-engine.js\n2026-04-17T01:55:06.6079012Z modules/cos-bridge.js\n2026-04-17T01:55:06.6079650Z modules/domestic-llm-gateway.js\n2026-04-17T01:55:06.6080221Z modules/email-auth.js\n2026-04-17T01:55:06.6080839Z modules/persona-context-pipeline.js\n2026-04-17T01:55:06.6081499Z modules/persona-memory.js\n2026-04-17T01:55:06.6082039Z modules/portal-chat-agent.js\n2026-04-17T01:55:06.6082585Z modules/smart-router.js\n2026-04-17T01:55:07.1520862Z \n2026-04-17T01:55:07.1521798Z sent 857 bytes  received 2,184 bytes  868.86 bytes/sec\n2026-04-17T01:55:07.1522562Z total size is 223,063  speedup is 73.35\n2026-04-17T01:55:07.1528847Z   ✅ 应用代码已同步\n2026-04-17T01:55:14.6680226Z Pseudo-terminal will not be allocated because stdin is not a terminal.\n2026-04-17T01:55:19.1733021Z ##[error]Process completed with exit code 1.\n2026-04-17T01:55:19.1793272Z ##[group]Run rm -f ~/.ssh/zy_key\n2026-04-17T01:55:19.1793599Z \u001b[36;1mrm -f ~/.ssh/zy_key\u001b[0m\n2026-04-17T01:55:19.1815303Z shell: /usr/bin/bash -e {0}\n2026-04-17T01:55:19.1815587Z ##[endgroup]\n2026-04-17T01:55:19.1893301Z ##[group]Run git config user.name \"zhuyuan-bot\"\n2026-04-17T01:55:19.1893702Z \u001b[36;1mgit config user.name \"zhuyuan-bot\"\u001b[0m\n2026-04-17T01:55:19.1894070Z \u001b[36;1mgit config user.email \"zhuyuan@guanghulab.com\"\u001b[0m\n2026-04-17T01:55:19.1894582Z \u001b[36;1mgit add data/work-orders/\u001b[0m\n2026-04-17T01:55:19.1894872Z \u001b[36;1mgit diff --cached --quiet || {\u001b[0m\n2026-04-17T01:55:19.1895515Z \u001b[36;1m  git commit -m \"📋 工单更新 · WO-20260417-0154 [skip ci]\"\u001b[0m\n2026-04-17T01:55:19.1895913Z \u001b[36;1m  git push || echo \"⚠️ 工单数据push失败\"\u001b[0m\n2026-04-17T01:55:19.1896200Z \u001b[36;1m}\u001b[0m\n2026-04-17T01:55:19.1915522Z shell: /usr/bin/bash -e {0}\n2026-04-17T01:55:19.1915803Z ##[endgroup]\n2026-04-17T01:55:19.3634322Z [main 7cb9c43] 📋 工单更新 · WO-20260417-0154 [skip ci]\n2026-04-17T01:55:19.3634819Z  1 file changed, 28 insertions(+)\n2026-04-17T01:55:19.7842401Z To https://github.com/qinfendebingshuo/guanghulab\n2026-04-17T01:55:19.7843306Z  ! [rejected]        main -> main (fetch first)\n2026-04-17T01:55:19.7852558Z error: failed to push some refs to 'https://github.com/qinfendebingshuo/guanghulab'\n2026-04-17T01:55:19.7853334Z hint: Updates were rejected because the remote contains work that you do not\n2026-04-17T01:55:19.7854046Z hint: have locally. This is usually caused by another repository pushing to\n2026-04-17T01:55:19.7854716Z hint: the same ref. If you want to integrate the remote changes, use\n2026-04-17T01:55:19.7855799Z hint: 'git pull' before pushing again.\n2026-04-17T01:55:19.7856563Z hint: See the 'Note about fast-forwards' in 'git push --help' for details.\n2026-04-17T01:55:19.7857310Z ⚠️ 工单数据push失败\n2026-04-17T01:55:19.7949191Z Post job cleanup.\n2026-04-17T01:55:19.8884240Z [command]/usr/bin/git version\n2026-04-17T01:55:19.8919570Z git version 2.53.0\n2026-04-17T01:55:19.8961697Z Temporarily overriding HOME='/home/runner/work/_temp/7c7715d3-c9e1-4301-a778-543ab674e881' before making global git config changes\n2026-04-17T01:55:19.8962667Z Adding repository directory to the temporary git global config as a safe directory\n2026-04-17T01:55:19.8974160Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/guanghulab/guanghulab\n2026-04-17T01:55:19.9008020Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand\n2026-04-17T01:55:19.9042546Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"\n2026-04-17T01:55:19.9291283Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader\n2026-04-17T01:55:19.9315388Z http.https://github.com/.extraheader\n2026-04-17T01:55:19.9333023Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader\n2026-04-17T01:55:19.9367697Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"\n2026-04-17T01:55:19.9611064Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:\n2026-04-17T01:55:19.9644343Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url\n2026-04-17T01:55:20.0006929Z Evaluate and set job outputs\n2026-04-17T01:55:20.0013020Z Set output 'order_id'\n2026-04-17T01:55:20.0014900Z Cleaning up orphan processes\n2026-04-17T01:55:20.0403611Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/\n"
+    }
+  ],
+  "all_jobs": [
+    {
+      "id": 71754723167,
+      "name": "🚀 部署到测试站",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-04-17T01:54:55Z",
+      "completed_at": "2026-04-17T01:55:22Z"
+    },
+    {
+      "id": 71754766754,
+      "name": "🔍 健康检查 + 智能分析",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-04-17T01:55:23Z",
+      "completed_at": "2026-04-17T01:55:23Z"
+    },
+    {
+      "id": 71754766762,
+      "name": "📦 归档成功工单",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-04-17T01:55:23Z",
+      "completed_at": "2026-04-17T01:55:23Z"
+    },
+    {
+      "id": 71754766956,
+      "name": "🆘 人工干预告警",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-04-17T01:55:23Z",
+      "completed_at": "2026-04-17T01:55:23Z"
+    }
+  ],
+  "analysis": {
+    "needs_repair": true,
+    "error_summary": "[high] 健康检查失败; [medium] 命令执行失败",
+    "matched_patterns": [
+      {
+        "name": "健康检查失败",
+        "fix": "检查应用是否正常启动",
+        "severity": "high"
+      },
+      {
+        "name": "命令执行失败",
+        "fix": "查看上方具体错误信息",
+        "severity": "medium"
+      }
+    ],
+    "recommendation": "副将可尝试自动修复: 检查应用是否正常启动 → 查看上方具体错误信息"
+  }
+}
