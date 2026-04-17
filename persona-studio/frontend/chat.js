@@ -477,7 +477,12 @@ async function streamServerProxyReply(text) {
       }
     }
 
-    streamEl.textContent = full || '（未收到有效回复）';
+    // Render final Markdown
+    if (typeof marked !== 'undefined' && full) {
+      try { streamEl.innerHTML = marked.parse(full); } catch (_e) { streamEl.textContent = full; }
+    } else {
+      streamEl.textContent = full || '（未收到有效回复）';
+    }
     if (full) {
       conversationHistory.push({ role: 'assistant', content: full });
 
@@ -486,9 +491,10 @@ async function streamServerProxyReply(text) {
         buildReady = true;
         document.getElementById('buildBtn').style.display = 'inline-flex';
       }
+
+      // Update route status bar
+      updateRouteStatus({ model: SELECTED_MODEL, line: 'proxy', persona: activePersonas.join('+') || '铸渊' });
     }
-  } catch (err) {
-    // 流式失败，降级到非流式代理
     try {
       var proxyRes = await fetch(API_BASE + '/api/ps/proxy/chat', {
         method: 'POST',
@@ -598,7 +604,12 @@ async function streamApiKeyReply(text) {
       }
     }
 
-    streamEl.textContent = full || '（未收到有效回复）';
+    // Render final Markdown
+    if (typeof marked !== 'undefined' && full) {
+      try { streamEl.innerHTML = marked.parse(full); } catch (_e) { streamEl.textContent = full; }
+    } else {
+      streamEl.textContent = full || '（未收到有效回复）';
+    }
     if (full) {
       conversationHistory.push({ role: 'assistant', content: full });
 
@@ -608,6 +619,9 @@ async function streamApiKeyReply(text) {
         buildReady = true;
         document.getElementById('buildBtn').style.display = 'inline-flex';
       }
+
+      // Update route status bar
+      updateRouteStatus({ model: SELECTED_MODEL, line: 'direct', persona: activePersonas.join('+') || '铸渊' });
     }
   } catch (err) {
     // 浏览器直连失败（CORS 或网络），降级到后端代理
@@ -685,7 +699,7 @@ function handleKeyDown(e) {
   }
 }
 
-/* ---- Render Message ---- */
+/* ---- Render Message (with Markdown support) ---- */
 function appendMessage(role, content) {
   var chatBody = document.getElementById('chatBody');
   var msgDiv = document.createElement('div');
@@ -696,7 +710,19 @@ function appendMessage(role, content) {
   else if (role === 'user') avatar = '<span class="avatar">👤</span>';
   else avatar = '<span class="avatar">⚙️</span>';
 
-  msgDiv.innerHTML = avatar + '<div class="msg-content">' + escapeHtml(content) + '</div>';
+  var renderedContent;
+  if (role === 'persona' && typeof marked !== 'undefined') {
+    // Render Markdown for persona (AI) messages
+    try {
+      renderedContent = marked.parse(content);
+    } catch (_e) {
+      renderedContent = escapeHtml(content);
+    }
+  } else {
+    renderedContent = escapeHtml(content);
+  }
+
+  msgDiv.innerHTML = avatar + '<div class="msg-content markdown-body">' + renderedContent + '</div>';
   chatBody.appendChild(msgDiv);
   chatBody.scrollTop = chatBody.scrollHeight;
 }
@@ -1067,3 +1093,151 @@ function autoResizeTextarea(el) {
 document.getElementById('msgInput').addEventListener('input', function () {
   autoResizeTextarea(this);
 });
+
+/* ============================================
+   人格体链接系统 · Persona Link System
+   ============================================ */
+
+var activePersonas = [];
+var personaEndpoints = {
+  shuangyan: {
+    name: '霜砚',
+    icon: '❄️',
+    type: 'notion-agent',
+    checkUrl: '/api/mcp/health',
+    description: 'Notion 侧认知 Agent'
+  },
+  zhuyuan: {
+    name: '铸渊',
+    icon: '🌀',
+    type: 'github-agent',
+    checkUrl: '/api/mcp/health',
+    description: 'GitHub 侧代码守护 Agent'
+  }
+};
+
+function togglePersonaLink(personaKey) {
+  var btn = document.getElementById('link' + personaKey.charAt(0).toUpperCase() + personaKey.slice(1));
+  var statusEl = document.getElementById(personaKey + 'Status');
+  var persona = personaEndpoints[personaKey];
+
+  if (!persona) return;
+
+  var isActive = activePersonas.indexOf(personaKey) >= 0;
+
+  if (isActive) {
+    // Disconnect
+    activePersonas = activePersonas.filter(function(p) { return p !== personaKey; });
+    btn.classList.remove('persona-link-active');
+    statusEl.textContent = '未连接';
+    statusEl.className = 'link-status';
+    appendMessage('system', persona.icon + ' ' + persona.name + ' 人格体链接已断开');
+    updateRouteStatus({ persona: activePersonas.join('+') || '无' });
+    return;
+  }
+
+  // Try connecting
+  statusEl.textContent = '连接中…';
+  statusEl.className = 'link-status link-status-connecting';
+  btn.classList.add('persona-link-connecting');
+
+  fetch(API_BASE + persona.checkUrl, {
+    method: 'GET',
+    headers: authHeaders(),
+    signal: AbortSignal.timeout(8000)
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(function(data) {
+    // Check Notion connection status for shuangyan
+    var connected = true;
+    var reason = '';
+    if (personaKey === 'shuangyan') {
+      if (data.services && data.services.notion) {
+        connected = data.services.notion.connected === true;
+        if (!connected) reason = data.services.notion.error || data.services.notion.reason || 'Notion 未连接';
+      } else {
+        connected = false;
+        reason = 'MCP Notion 模块未加载';
+      }
+    }
+    if (personaKey === 'zhuyuan') {
+      if (data.services && data.services.github) {
+        connected = data.services.github.connected === true;
+        if (!connected) reason = data.services.github.error || 'GitHub 未连接';
+      }
+    }
+
+    if (connected) {
+      activePersonas.push(personaKey);
+      btn.classList.remove('persona-link-connecting');
+      btn.classList.add('persona-link-active');
+      statusEl.textContent = '已连接';
+      statusEl.className = 'link-status link-status-connected';
+      appendMessage('system', '✅ ' + persona.icon + ' ' + persona.name + ' 人格体链接成功 · ' + persona.description);
+      updateRouteStatus({ persona: activePersonas.join('+') });
+    } else {
+      btn.classList.remove('persona-link-connecting');
+      statusEl.textContent = '失败';
+      statusEl.className = 'link-status link-status-error';
+      appendMessage('system', '❌ ' + persona.icon + ' ' + persona.name + ' 链接失败：' + reason);
+      setTimeout(function() {
+        statusEl.textContent = '未连接';
+        statusEl.className = 'link-status';
+      }, 5000);
+    }
+  })
+  .catch(function(err) {
+    btn.classList.remove('persona-link-connecting');
+    statusEl.textContent = '失败';
+    statusEl.className = 'link-status link-status-error';
+    var errMsg = err.name === 'TimeoutError' ? 'MCP 服务超时，请检查服务是否运行' : (err.message || '网络异常');
+    appendMessage('system', '❌ ' + persona.icon + ' ' + persona.name + ' 链接失败：' + errMsg);
+    setTimeout(function() {
+      statusEl.textContent = '未连接';
+      statusEl.className = 'link-status';
+    }, 5000);
+  });
+}
+
+/* ---- Route Status Bar ---- */
+function updateRouteStatus(info) {
+  if (info.engine) {
+    var engineEl = document.getElementById('routeEngine');
+    if (engineEl) engineEl.innerHTML = '引擎: <b>' + escapeHtml(info.engine) + '</b>';
+  }
+  if (info.model) {
+    var modelEl = document.getElementById('routeModel');
+    if (modelEl) modelEl.innerHTML = '模型: <b>' + escapeHtml(info.model) + '</b>';
+  }
+  if (info.line) {
+    var lineEl = document.getElementById('routeLine');
+    if (lineEl) lineEl.innerHTML = '线路: <b>' + escapeHtml(info.line) + '</b>';
+  }
+  if (info.persona) {
+    var personaEl = document.getElementById('routePersona');
+    if (personaEl) personaEl.innerHTML = '人格: <b>' + escapeHtml(info.persona) + '</b>';
+  }
+}
+
+// Initialize route status
+(function() {
+  updateRouteStatus({
+    engine: USE_SERVER_PROXY ? 'server-proxy' : 'api-key',
+    model: SELECTED_MODEL || '--',
+    line: USE_SERVER_PROXY ? 'proxy' : 'direct',
+    persona: '铸渊'
+  });
+})();
+
+/* ---- Configure marked.js for safe rendering ---- */
+(function() {
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
+  }
+})();
