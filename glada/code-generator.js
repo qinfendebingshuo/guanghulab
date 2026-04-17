@@ -31,7 +31,7 @@ function findDependents(targetRelPath) {
   // 使用 grep 搜索引用（sanitize 输入防止 shell 注入）
   try {
     const safeBasename = path.basename(normalizedTarget).replace(/[^A-Za-z0-9._-]/g, '');
-    if (!safeBasename) return deps;
+    if (!safeBasename) return dependents;
 
     const grepResult = execSync(
       `grep -rl "${safeBasename}" --include="*.js" "${ROOT}" 2>/dev/null || true`,
