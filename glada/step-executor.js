@@ -267,10 +267,26 @@ function applyFileChanges(files, constraints = {}) {
 
 /**
  * 运行测试
- * @param {string} testCommand - 测试命令
+ * @param {string} testCommand - 测试命令（仅允许白名单中的命令）
  * @returns {{ success: boolean, output: string }}
  */
+const ALLOWED_TEST_COMMANDS = [
+  'npm run test:smoke',
+  'npm run test:contract',
+  'npm run test',
+  'npm test',
+  'node glada/tests/glada-smoke.test.js'
+];
+
 function runTests(testCommand = 'npm run test:smoke') {
+  // 安全白名单校验，防止任意命令注入
+  if (!ALLOWED_TEST_COMMANDS.includes(testCommand)) {
+    return {
+      success: false,
+      output: `测试命令不在白名单中: ${testCommand}\n允许的命令: ${ALLOWED_TEST_COMMANDS.join(', ')}`
+    };
+  }
+
   try {
     const output = execSync(testCommand, {
       cwd: ROOT,

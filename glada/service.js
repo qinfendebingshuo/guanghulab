@@ -64,6 +64,17 @@ const notifier = require('./notifier');
 const ROOT = path.resolve(__dirname, '..');
 const PORT = parseInt(process.env.GLADA_PORT || process.env.PORT || '3900', 10);
 
+// ── 共用验证工具 ──────────────────────────────
+
+/**
+ * 验证 GLADA 任务ID格式，防止路径注入
+ * @param {string} taskId
+ * @returns {boolean}
+ */
+function isValidGladaTaskId(taskId) {
+  return /^GLADA-CAB-\d{8}-\d{3}$/.test(taskId);
+}
+
 // ── CLI 模式 ──────────────────────────────────
 
 const args = process.argv.slice(2);
