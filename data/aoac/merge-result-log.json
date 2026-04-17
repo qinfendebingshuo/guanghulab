@@ -2,13 +2,13 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-18 00:59:56+08:00",
-  "timestamp_utc": "2026-04-17T16:59:56.882Z",
+  "timestamp": "2026-04-18 01:49:01+08:00",
+  "timestamp_utc": "2026-04-17T17:49:01.950Z",
   "merge": {
-    "pr_number": 408,
-    "pr_title": "fix: Deploy missing shulan-agent module, add data source diagnostics, enlarge chat panel",
-    "merge_commit_sha": "db39bfdf4b6b5e2e4e7407b9804ec14969c5113a",
-    "head_sha": "4709239a0da44b9fc22a2f0339378da9941fb4cc",
+    "pr_number": 409,
+    "pr_title": "fix: unbreak zhiku search/download/reader — add builtin fanqie adapter, implement online reader",
+    "merge_commit_sha": "9f587f7bab3c6568d0b3f2aac0f97545019ef995",
+    "head_sha": "b8d7f67dc35d5d2885facba8ba99237ffa484dd8",
     "base_branch": "main"
   },
   "ci": {
@@ -22,29 +22,11 @@
     },
     "check_runs": [
       {
-        "name": "🚀 ���览站→主站 一键推送",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "⏪ 回滚",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
         "name": "🔒 SSL证书配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
+        "started_at": "2026-04-17T17:48:56Z",
+        "completed_at": "2026-04-17T17:48:55Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -52,35 +34,17 @@
         "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
+        "started_at": "2026-04-17T17:48:56Z",
+        "completed_at": "2026-04-17T17:48:55Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "gate-guard",
+        "name": "🚀 预览站→主站 一键推送",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💚 健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🏥 健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
+        "started_at": "2026-04-17T17:48:56Z",
+        "completed_at": "2026-04-17T17:48:55Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -88,8 +52,44 @@
         "name": "🔐 SSL 证书申请",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T16:59:49Z",
-        "completed_at": "2026-04-17T16:59:48Z",
+        "started_at": "2026-04-17T17:48:56Z",
+        "completed_at": "2026-04-17T17:48:55Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T17:48:56Z",
+        "completed_at": "2026-04-17T17:48:55Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "⏪ 回滚",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T17:48:56Z",
+        "completed_at": "2026-04-17T17:48:55Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T17:48:55Z",
+        "completed_at": "2026-04-17T17:48:55Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🏥 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T17:48:55Z",
+        "completed_at": "2026-04-17T17:48:55Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -97,25 +97,7 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T16:59:51Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "📡 Bridge E · GitHub Changes → Notion",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T16:59:52Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 智库节点部署 · guanghu.online",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T16:59:51Z",
+        "started_at": "2026-04-17T17:48:58Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -124,7 +106,7 @@
         "name": "💉 注入注册表上下文到 Copilot Issue",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T16:59:51Z",
+        "started_at": "2026-04-17T17:48:58Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -133,7 +115,25 @@
         "name": "🗂️ 同步注册表状态",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T16:59:52Z",
+        "started_at": "2026-04-17T17:48:58Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 智库节点部署 · guanghu.online",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-17T17:48:58Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-17T17:48:59Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -142,7 +142,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T16:59:50Z",
+        "started_at": "2026-04-17T17:48:57Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
