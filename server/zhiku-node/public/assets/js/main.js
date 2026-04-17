@@ -385,8 +385,11 @@ function buildSourceStatusHtml(sourceStatus) {
   if (errorSources.length === 0) return '';
   const tips = errorSources.map(s => {
     const name = escapeHtml(s.name);
-    const errMsg = s.error && s.error.includes('timeout') ? '连接超时' :
-                   s.error && s.error.includes('ECONNREFUSED') ? '服务未启动' :
+    const err = s.error || '';
+    const errMsg = err.includes('timeout') ? '连接超时' :
+                   err.includes('ECONNREFUSED') ? '服务未启动' :
+                   err.includes('ENOTFOUND') ? 'DNS解析失败' :
+                   err.includes('ECONNRESET') ? '连接被重置' :
                    '不可达';
     return `<span class="source-err-tag">${name}: ${errMsg}</span>`;
   }).join(' ');

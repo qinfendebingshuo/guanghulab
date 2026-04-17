@@ -990,7 +990,7 @@ app.get('/api/health', async (req, res) => {
   const sources = getEnabledSources();
   const agentStatus = shulanAgent.getSystemStatus();
 
-  // 异步探测数据源连通性（带3秒总超时保护）
+  // 异步探测数据源连通性（带3.5秒总超时保护，略大于3秒探测超时以防竞态）
   let sourceChecks = [];
   try {
     sourceChecks = await Promise.race([
@@ -1000,7 +1000,7 @@ app.get('/api/health', async (req, res) => {
       })),
       new Promise(resolve => setTimeout(() => resolve(sources.map(s => ({
         id: s.id, name: s.name, enabled: s.enabled, reachable: false, error: 'health check timeout'
-      }))), 4000))
+      }))), 3500))
     ]);
   } catch {
     sourceChecks = sources.map(s => ({ id: s.id, name: s.name, enabled: s.enabled, reachable: false, error: 'check failed' }));
