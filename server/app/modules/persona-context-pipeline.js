@@ -26,12 +26,12 @@
 
 const http = require('http');
 
-// ─── 霜砚 v1.3 四层注入包 ───
+// ─── 霜砚 v1.4 四层注入包 ───
 let shuangyanPrompt;
 try {
-  shuangyanPrompt = require('./persona-prompts/shuangyan-v1.3');
+  shuangyanPrompt = require('./persona-prompts/shuangyan-v1.4');
 } catch (err) {
-  console.warn('[上下文管线] 霜砚v1.3注入包加载失败:', err.message);
+  console.warn('[上下文管线] 霜砚v1.4注入包加载失败:', err.message);
   shuangyanPrompt = null;
 }
 
