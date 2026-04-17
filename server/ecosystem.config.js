@@ -2,7 +2,7 @@
  * 铸渊主权服务器 · PM2 生态系统配置
  *
  * 编号: ZY-SVR-PM2-002
- * 架构: 双域名 · 主站(3800) + 预览站(3801)
+ * 架构: 三进程 · 主站(3800) + 预览站(3801) + 智库节点(4000)
  * 守护: 铸渊 · ICE-GL-ZY001
  */
 const fs = require('fs');
@@ -39,6 +39,11 @@ function loadEnvFile(filePath) {
 const appEnvAbsolute = loadEnvFile('/opt/zhuyuan/app/.env.app');
 const appEnvRelative = loadEnvFile(path.join(__dirname, '.env.app'));
 const appEnv = Object.keys(appEnvAbsolute).length > 0 ? appEnvAbsolute : appEnvRelative;
+
+// 加载智库节点环境变量（含 AI API Key 等）
+const novelEnvAbsolute = loadEnvFile('/opt/zhuyuan/novel-db/.env');
+const novelEnvRelative = loadEnvFile(path.join(__dirname, '..', 'novel-db', '.env'));
+const novelEnv = Object.keys(novelEnvAbsolute).length > 0 ? novelEnvAbsolute : novelEnvRelative;
 
 module.exports = {
   apps: [
@@ -84,6 +89,32 @@ module.exports = {
       log_file: '/opt/zhuyuan/data/logs/pm2-preview-combined.log',
       error_file: '/opt/zhuyuan/data/logs/pm2-preview-error.log',
       out_file: '/opt/zhuyuan/data/logs/pm2-preview-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      time: true
+    },
+    /* ─── 智库节点 · novel-db API (端口 4000) ─── */
+    /* 与零点原核主站同服务器部署 · Nginx /novel-api/ → 127.0.0.1:4000 */
+    {
+      name: 'novel-api',
+      script: '/opt/zhuyuan/novel-db/app/index.js',
+      cwd: '/opt/zhuyuan/novel-db',
+      instances: 1,
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '256M',
+      env: {
+        ...appEnv,
+        ...novelEnv,
+        NODE_ENV: 'production',
+        PORT: 4000,
+        BOOKS_DIR: '/opt/zhuyuan/novel-db/data/books',
+        CHAPTERS_DIR: '/opt/zhuyuan/novel-db/data/chapters'
+      },
+      log_file: '/opt/zhuyuan/data/logs/novel-api-combined.log',
+      error_file: '/opt/zhuyuan/data/logs/novel-api-error.log',
+      out_file: '/opt/zhuyuan/data/logs/novel-api-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       time: true
