@@ -2,31 +2,49 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-17 22:21:06+08:00",
-  "timestamp_utc": "2026-04-17T14:21:06.745Z",
+  "timestamp": "2026-04-18 00:06:58+08:00",
+  "timestamp_utc": "2026-04-17T16:06:58.012Z",
   "merge": {
-    "pr_number": 405,
-    "pr_title": "fix: guanghu.online email verification silently fails — SMTP config missing from deploy, nodemailer not in deps",
-    "merge_commit_sha": "df44a8040efbef6d960d31bb8adfc90859973709",
-    "head_sha": "8871de1d76128c56f3bd1178dc7c0b25ff20987c",
+    "pr_number": 406,
+    "pr_title": "feat: persona selector, v1.4 prompt injection, guardian agent, model name resolution",
+    "merge_commit_sha": "fd4a01d50fec883e801eca8887f4b821f2d14b1b",
+    "head_sha": "54cac8604e9a684e3bbf4b929ce4e3a77d6ca612",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 12,
+      "total": 11,
       "passed": 0,
       "failed": 0,
-      "skipped": 6
+      "skipped": 5
     },
     "check_runs": [
+      {
+        "name": "build",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-17T16:06:56Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
       {
         "name": "🔒 SSL证书配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T14:21:01Z",
-        "completed_at": "2026-04-17T14:21:01Z",
+        "started_at": "2026-04-17T16:06:51Z",
+        "completed_at": "2026-04-17T16:06:51Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T16:06:51Z",
+        "completed_at": "2026-04-17T16:06:51Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -34,8 +52,17 @@
         "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T14:21:01Z",
-        "completed_at": "2026-04-17T14:21:01Z",
+        "started_at": "2026-04-17T16:06:51Z",
+        "completed_at": "2026-04-17T16:06:51Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-17T16:06:51Z",
+        "completed_at": "2026-04-17T16:06:51Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -43,7 +70,7 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T14:21:04Z",
+        "started_at": "2026-04-17T16:06:54Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -52,52 +79,16 @@
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-17T14:21:00Z",
-        "completed_at": "2026-04-17T14:21:00Z",
+        "started_at": "2026-04-17T16:06:51Z",
+        "completed_at": "2026-04-17T16:06:50Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "⏪ 回滚",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T14:21:00Z",
-        "completed_at": "2026-04-17T14:21:00Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🔐 SSL 证书申请",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T14:21:00Z",
-        "completed_at": "2026-04-17T14:21:00Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🏥 健康检查",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-04-17T14:21:00Z",
-        "completed_at": "2026-04-17T14:21:00Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "name": "💉 注入注册表上下文到 Copilot Issue",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T14:21:03Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🚀 智库节点部署 · guanghu.online",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-17T14:21:04Z",
+        "started_at": "2026-04-17T16:06:53Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -106,25 +97,25 @@
         "name": "🗂️ 同步注册表状态",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T14:21:04Z",
+        "started_at": "2026-04-17T16:06:53Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "💉 注入注册表上下文到 Copilot Issue",
+        "name": "🚀 部署到测试站",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T14:21:03Z",
+        "started_at": "2026-04-17T16:06:54Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "build",
+        "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-17T14:21:02Z",
+        "started_at": "2026-04-17T16:06:54Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
