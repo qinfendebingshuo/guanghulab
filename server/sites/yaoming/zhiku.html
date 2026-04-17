@@ -1054,6 +1054,8 @@ function downloadBook(){
       // 本地已有匹配
       var match = d.data.local_matches[0];
       showToast('✅ 书源匹配成功! 「'+match.book_name+'」已在 '+match.source_name+' 中找到','ok');
+      document.getElementById('dlBookName').value='';
+      document.getElementById('dlAuthor').value='';
       if(match.file_path){
         // 直接打开已有的书
         setTimeout(function(){ openBook(match.file_path); }, 800);

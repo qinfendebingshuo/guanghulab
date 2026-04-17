@@ -50,7 +50,7 @@ const OPEN_SOURCE_REGISTRIES = [
     id: 'novel-downloader',
     name: 'novel-downloader',
     description: '全平台小说下载工具 · 支持多源聚合',
-    url: 'https://github.com/404',
+    url: 'https://github.com/search?q=novel+downloader&type=repositories',
     type: 'downloader',
     platforms: ['qimao', 'fanqie', 'yuewen', 'jjwxc', 'qidian'],
     status: 'registered',
