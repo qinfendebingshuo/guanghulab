@@ -12,6 +12,7 @@
 'use strict';
 
 const API_BASE = '/api';
+const REQUEST_TIMEOUT_MS = 15000;
 let currentToken = localStorage.getItem('zhiku_token') || null;
 let currentEmail = localStorage.getItem('zhiku_email') || null;
 let codeCooldown = 0;
@@ -96,12 +97,33 @@ async function loginSendCode() {
   showLoginMsg('正在发送验证码...', 'info');
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     const res = await fetch(`${API_BASE}/auth/send-code`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email }),
+      signal: controller.signal
     });
-    const data = await res.json();
+    clearTimeout(timeout);
+
+    if (!res.ok && res.status >= 500) {
+      showLoginMsg('服务器暂时不可用，请稍后重试', 'err');
+      if (sendBtn) sendBtn.disabled = false;
+      if (sendBtn2) sendBtn2.disabled = false;
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      console.error('[zhiku] send-code JSON parse failed:', jsonErr);
+      showLoginMsg('服务器响应异常，请稍后重试', 'err');
+      if (sendBtn) sendBtn.disabled = false;
+      if (sendBtn2) sendBtn2.disabled = false;
+      return;
+    }
 
     if (data.error) {
       showLoginMsg(data.message || '发送失败', 'err');
@@ -144,7 +166,13 @@ async function loginSendCode() {
     document.getElementById('loginCode')?.focus();
 
   } catch (err) {
-    showLoginMsg('网络错误: ' + err.message, 'err');
+    let msg = '网络连接失败，请检查网络后重试';
+    if (err.name === 'AbortError') {
+      msg = '请求超时，请检查网络后重试';
+    } else if (err.message) {
+      msg = '连接失败: ' + err.message;
+    }
+    showLoginMsg(msg, 'err');
     if (sendBtn) sendBtn.disabled = false;
     if (sendBtn2) sendBtn2.disabled = false;
   }
@@ -170,12 +198,25 @@ async function loginVerify() {
   showLoginMsg('验证中...', 'info');
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     const res = await fetch(`${API_BASE}/auth/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code })
+      body: JSON.stringify({ email, code }),
+      signal: controller.signal
     });
-    const data = await res.json();
+    clearTimeout(timeout);
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      console.error('[zhiku] verify JSON parse failed:', jsonErr);
+      showLoginMsg('服务器响应异常，请稍后重试', 'err');
+      if (verifyBtn) verifyBtn.disabled = false;
+      return;
+    }
 
     if (data.error) {
       showLoginMsg(data.message || '验证失败', 'err');
@@ -197,7 +238,13 @@ async function loginVerify() {
     }, 600);
 
   } catch (err) {
-    showLoginMsg('网络错误: ' + err.message, 'err');
+    let msg = '网络连接失败，请检查网络后重试';
+    if (err.name === 'AbortError') {
+      msg = '请求超时，请检查网络后重试';
+    } else if (err.message) {
+      msg = '连接失败: ' + err.message;
+    }
+    showLoginMsg(msg, 'err');
     if (verifyBtn) verifyBtn.disabled = false;
   }
 }
