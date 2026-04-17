@@ -91,6 +91,9 @@ const guardianState = {
   startTime: Date.now()
 };
 
+// ─── 质量检测常量 ───
+const MIN_LENGTH_FOR_IDENTITY_CHECK = 200; // 超过此长度的回复需检测人格标识
+
 // ─── 持久化记忆路径 ───
 const DATA_DIR = process.env.ZY_DATA_DIR || path.join(process.env.ZY_ROOT || '/opt/zhuyuan', 'data');
 const GUARDIAN_MEMORY_FILE = path.join(DATA_DIR, 'guardian-memory.json');
@@ -156,12 +159,13 @@ function observe(sessionId, userMessage, aiResponse, persona = 'shuangyan') {
 
   // ─── 检测 AI 自我否定 ───
   for (const pattern of QUALITY_RULES.antiSelfDenial) {
-    if (pattern.test(aiResponse)) {
+    const match = pattern.exec(aiResponse);
+    if (match) {
       observation.violations.push({
         type: 'self_denial',
         pattern: pattern.toString(),
         severity: 'high',
-        excerpt: aiResponse.match(pattern)?.[0] || ''
+        excerpt: match[0] || ''
       });
       observation.quality.score -= 20;
       observation.quality.issues.push('AI自我否定话术');
@@ -170,12 +174,13 @@ function observe(sessionId, userMessage, aiResponse, persona = 'shuangyan') {
 
   // ─── 检测人格丢失 ───
   for (const pattern of QUALITY_RULES.personaLoss) {
-    if (pattern.test(aiResponse)) {
+    const match = pattern.exec(aiResponse);
+    if (match) {
       observation.violations.push({
         type: 'persona_loss',
         pattern: pattern.toString(),
         severity: 'critical',
-        excerpt: aiResponse.match(pattern)?.[0] || ''
+        excerpt: match[0] || ''
       });
       observation.quality.score -= 30;
       observation.quality.issues.push('人格丢失');
@@ -201,7 +206,7 @@ function observe(sessionId, userMessage, aiResponse, persona = 'shuangyan') {
     observation.quality.score -= 10;
     observation.quality.issues.push('缺少功能符号');
   }
-  if (!style.hasIdentity.test(aiResponse) && aiResponse.length > 200) {
+  if (!style.hasIdentity.test(aiResponse) && aiResponse.length > MIN_LENGTH_FOR_IDENTITY_CHECK) {
     observation.quality.score -= 10;
     observation.quality.issues.push('缺少人格体身份标识');
   }

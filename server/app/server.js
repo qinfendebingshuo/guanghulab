@@ -354,6 +354,11 @@ app.post('/api/operations', (req, res) => {
 // 人格体聊天 · Persona Chat API
 // ═══════════════════════════════════════════════════════════
 
+// ─── 模型名称解析辅助函数 ───
+function resolveModel(rawModel) {
+  return modelNameMap ? modelNameMap.resolveModelName(rawModel) : (rawModel || 'unknown');
+}
+
 // ─── 人格体对话 ───
 // 优先使用国内模型智能网关（支持四路自动降级）
 // 降级顺序: domesticGateway → chatEngine → 离线回复
@@ -391,9 +396,7 @@ app.post('/api/chat', async (req, res) => {
           addStep('响应生成', 'done', `${Date.now() - chatStartTime}ms`);
 
           // 解析真实模型名称（修复「模型 unknown」问题）
-          const resolvedModel = modelNameMap
-            ? modelNameMap.resolveModelName(result.model)
-            : (result.model || 'unknown');
+          const resolvedModel = resolveModel(result.model);
 
           // 守护Agent观测（异步，不阻塞响应）
           let guardianDecision = null;
@@ -447,9 +450,7 @@ app.post('/api/chat', async (req, res) => {
         const result = await chatEngine.chat(sessionId, message);
         addStep('降级引擎', 'done', '通用引擎响应完成');
 
-        const resolvedModel = modelNameMap
-          ? modelNameMap.resolveModelName(result.model)
-          : (result.model || 'unknown');
+        const resolvedModel = resolveModel(result.model);
 
         // 聊天数据采集
         collectChatData(sessionId, message, result.message, {

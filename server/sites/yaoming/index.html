@@ -2812,12 +2812,11 @@ function renderMessageBubble(role, name, content, meta, time) {
   div.className = 'msg' + (role === 'user' ? ' msg-user' : '');
 
   var avatarClass = role === 'ai' ? 'ai' : 'user';
-  var avatarText = role === 'ai' ? (personaAvatarMap[activePersona] || '渊') : '朔';
+  var avatarText = role === 'user' ? '朔' : '渊';
   /* Use name-based avatar for AI messages to handle persona switching in history */
   if (role === 'ai') {
     if (name === '霜砚') avatarText = '砚';
     else if (name === '双线') avatarText = '☯';
-    else avatarText = '渊';
   }
   var contentClass = role === 'ai' ? 'ai' : 'user';
   if (!time) time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
