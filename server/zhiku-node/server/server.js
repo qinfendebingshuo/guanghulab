@@ -87,6 +87,21 @@ const SMTP_PASS = process.env.ZY_SMTP_PASS || '';
 // 也支持通过主站3800转发邮件
 const MAIN_API_URL = process.env.ZY_MAIN_API_URL || 'http://127.0.0.1:3800';
 
+/**
+ * 根据邮箱地址自动检测 SMTP 主机
+ * QQ邮箱→smtp.qq.com, 163邮箱→smtp.163.com, 其他→空
+ */
+function autoDetectSmtpHost(email) {
+  if (!email) return '';
+  const domain = email.split('@')[1] || '';
+  if (domain === 'qq.com' || domain === 'foxmail.com') return 'smtp.qq.com';
+  if (domain === '163.com') return 'smtp.163.com';
+  if (domain === '126.com') return 'smtp.126.com';
+  if (domain === 'outlook.com' || domain === 'hotmail.com') return 'smtp-mail.outlook.com';
+  if (domain === 'gmail.com') return 'smtp.gmail.com';
+  return '';
+}
+
 // ─── 确保目录存在 ───
 [DATA_DIR, LOG_DIR, USERS_DIR, AGENTS_DIR, TASKS_DIR,
   path.join(DATA_DIR, 'books'), path.join(DATA_DIR, 'index')].forEach(dir => {
@@ -191,30 +206,22 @@ function generateCode() {
 }
 
 /**
- * 发送验证码邮件 — 通过主站3800的邮件接口转发
- * 如果主站不可达则尝试直接SMTP
+ * 发送验证码邮件 — 直接SMTP发送（首选），或通过主站3800转发
+ * 生产环境下不允许静默降级到DEV模式
  */
 async function sendVerificationEmail(email, code) {
-  // 方式1: 通过主站API发邮件（推荐，复用已配好的邮件服务）
-  try {
-    const result = await httpPost(`${MAIN_API_URL}/api/auth/send-code`, {
-      email,
-      _internal: true,
-      _source: 'zhiku-node',
-      _code_override: code
-    });
-    if (result && !result.error) return true;
-  } catch {}
-
-  // 方式2: 直接SMTP发送（如果配置了）
-  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+  // 方式1: 直接SMTP发送（首选 · 可靠）
+  const effectiveHost = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
+  if (effectiveHost && SMTP_USER && SMTP_PASS) {
     try {
       const nodemailer = require('nodemailer');
+      const port = parseInt(SMTP_PORT, 10) || 465;
       const transporter = nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: parseInt(SMTP_PORT, 10),
-        secure: parseInt(SMTP_PORT, 10) === 465,
-        auth: { user: SMTP_USER, pass: SMTP_PASS }
+        host: effectiveHost,
+        port,
+        secure: port === 465,
+        auth: { user: SMTP_USER, pass: SMTP_PASS },
+        tls: { rejectUnauthorized: true }
       });
       await transporter.sendMail({
         from: `"光湖智库" <${SMTP_USER}>`,
@@ -231,13 +238,40 @@ async function sendVerificationEmail(email, code) {
           </div>
         `
       });
+      console.log(`[ZY-SVR-006] ✅ 验证码邮件已发送: ${email} (SMTP直发 via ${effectiveHost})`);
       return true;
     } catch (err) {
-      console.error('[ZY-SVR-006] SMTP发送失败:', err.message);
+      console.error(`[ZY-SVR-006] ❌ SMTP发送失败: ${err.message}`);
+      // SMTP失败后继续尝试主站转发
     }
+  } else {
+    console.warn(`[ZY-SVR-006] ⚠️ SMTP未配置 (host=${effectiveHost}, user=${SMTP_USER ? '已设置' : '未设置'}, pass=${SMTP_PASS ? '已设置' : '未设置'})`);
   }
 
-  // 方式3: 开发模式 — 将验证码记录到日志（不实际发送）
+  // 方式2: 通过主站API转发邮件（备用）
+  try {
+    const result = await httpPost(`${MAIN_API_URL}/api/auth/send-code`, {
+      email,
+      _internal: true,
+      _source: 'zhiku-node',
+      _code_override: code
+    });
+    if (result && !result.error && result.success !== false) {
+      console.log(`[ZY-SVR-006] ✅ 验证码已通过主站API转发: ${email}`);
+      return true;
+    }
+    console.warn(`[ZY-SVR-006] ⚠️ 主站API转发失败: ${JSON.stringify(result)}`);
+  } catch (err) {
+    console.warn(`[ZY-SVR-006] ⚠️ 主站API不可达: ${err.message}`);
+  }
+
+  // 生产环境: 不允许静默降级 — 返回失败
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[ZY-SVR-006] ❌ 生产环境邮件发送失败: SMTP未配置且主站不可达');
+    return false;
+  }
+
+  // 开发环境: 将验证码记录到日志（不实际发送）
   console.log(`[ZY-SVR-006] [DEV] 验证码 ${email} → ${code}`);
   const logLine = `${new Date().toISOString()} DEV_CODE email=${email} code=${code}\n`;
   try { fs.appendFileSync(path.join(LOG_DIR, 'auth-codes.log'), logLine); } catch {}
@@ -948,6 +982,8 @@ app.get('/api/health', (req, res) => {
     uptime_human: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`,
     cos_configured: !!cosClient,
     llm_configured: !!DEEPSEEK_API_KEY,
+    smtp_configured: !!(SMTP_USER && SMTP_PASS && (SMTP_HOST || autoDetectSmtpHost(SMTP_USER))),
+    smtp_host: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未配置',
     data_sources: sources.map(s => ({ id: s.id, name: s.name, enabled: s.enabled })),
     mirror_agent: mirrorAgent.getStatus ? {
       active: true,
@@ -992,6 +1028,16 @@ app.post('/api/auth/send-code', authCodeLimiter, async (req, res) => {
 
   const logLine = `${new Date().toISOString()} AUTH_SEND email=${email} sent=${sent}\n`;
   try { fs.appendFileSync(path.join(LOG_DIR, 'auth.log'), logLine); } catch {}
+
+  if (!sent) {
+    // 邮件未实际发送成功 — 清理验证码并返回错误
+    verificationCodes.delete(email.toLowerCase());
+    return res.status(500).json({
+      error: true,
+      code: 'EMAIL_SEND_FAILED',
+      message: '邮件发送失败，请检查邮件服务配置或稍后重试'
+    });
+  }
 
   res.json({
     error: false,
