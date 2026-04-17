@@ -22,7 +22,12 @@ function loadEnvFile(filePath) {
         const idx = trimmed.indexOf('=');
         if (idx > 0) {
           const key = trimmed.substring(0, idx).trim();
-          const val = trimmed.substring(idx + 1).trim();
+          let val = trimmed.substring(idx + 1).trim();
+          // Strip surrounding quotes (single or double) — common .env format
+          if ((val.startsWith('"') && val.endsWith('"')) ||
+              (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
           env[key] = val;
         }
       }
