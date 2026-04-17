@@ -647,11 +647,31 @@ function removeAgentMessage(id) {
 }
 
 function formatAgentText(text) {
-  // 简单 Markdown 渲染
-  return escapeHtml(text)
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`(.+?)`/g, '<code>$1</code>');
+  // 增强 Markdown 渲染 · 书岚风格
+  let html = escapeHtml(text);
+
+  // 分隔线
+  html = html.replace(/^---$/gm, '<hr class="shulan-divider">');
+
+  // 引用块
+  html = html.replace(/^&gt;\s*(.+)$/gm, '<blockquote class="shulan-quote">$1</blockquote>');
+
+  // 粗体
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="shulan-bold">$1</strong>');
+
+  // 斜体
+  html = html.replace(/\*(.+?)\*/g, '<em class="shulan-italic">$1</em>');
+
+  // 行内代码
+  html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
+  // 书名号高亮
+  html = html.replace(/《(.+?)》/g, '<span class="shulan-book-title">《$1》</span>');
+
+  // 换行
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
 }
 
 function appendAgentSearchResults(results) {
@@ -661,16 +681,30 @@ function appendAgentSearchResults(results) {
   const div = document.createElement('div');
   div.className = 'agent-msg agent-msg-bot';
   div.innerHTML = `<div class="agent-msg-content agent-search-results">
-    <div class="agent-search-title">📚 搜索结果 (${results.length}本)</div>
+    <div class="agent-search-title">📜 找到 ${results.length} 本</div>
     ${results.slice(0, 8).map(book => {
       const sourceName = book.source_name || book.source;
-      const dlBtn = book.source_book_id && !book.has_file
-        ? `<button class="agent-dl-btn" onclick="startDownload('${escapeHtml(book.source)}','${escapeHtml(book.source_book_id)}','${escapeHtml(book.title)}','${escapeHtml(book.author || '')}')">⬇️</button>`
-        : (book.has_file ? '<span class="agent-local-tag">已收录</span>' : '');
-      return `<div class="agent-book-item">
-        <span class="agent-book-title">${escapeHtml(book.title)}</span>
-        <span class="agent-book-meta">${escapeHtml(book.author || '')} · ${sourceName}</span>
-        ${dlBtn}
+      const sourceClass = book.source === 'fanqie' ? 'fanqie' : (book.source === 'qimao' ? 'qimao' : 'local');
+      const hasFile = book.has_file;
+
+      // 操作按钮 · 搜到书后直接展示「在线阅读」和「下载」
+      let actionBtns = '';
+      if (hasFile) {
+        actionBtns = `
+          <button class="shulan-action-btn shulan-btn-read" onclick="readBook('${escapeHtml(book.id || '')}')">📖 在线阅读</button>
+          <button class="shulan-action-btn shulan-btn-dl" onclick="downloadLocal('${escapeHtml(book.id || '')}')">⬇️ 下载</button>
+          <span class="agent-local-tag">已收录</span>`;
+      } else if (book.source_book_id) {
+        actionBtns = `
+          <button class="shulan-action-btn shulan-btn-dl" onclick="startDownload('${escapeHtml(book.source)}','${escapeHtml(book.source_book_id)}','${escapeHtml(book.title)}','${escapeHtml(book.author || '')}')">⬇️ 下载到智库</button>`;
+      }
+
+      return `<div class="shulan-book-card">
+        <div class="shulan-book-info">
+          <span class="shulan-book-name">📖 ${escapeHtml(book.title)}</span>
+          <span class="shulan-book-meta">${escapeHtml(book.author || '')} · <span class="source-badge ${sourceClass}">${sourceName}</span>${book.word_count ? ' · ' + book.word_count : ''}</span>
+        </div>
+        <div class="shulan-book-actions">${actionBtns}</div>
       </div>`;
     }).join('')}
   </div>`;
