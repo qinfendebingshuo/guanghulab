@@ -275,6 +275,7 @@ input[type="file"]{display:none}
 .mod-status{font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:6px}
 .mod-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .mod-dot.ok{background:var(--ok);box-shadow:0 0 6px rgba(52,211,153,0.4)}
+.mod-dot.err{background:var(--err);box-shadow:0 0 6px rgba(248,113,113,0.4)}
 .mod-dot.building{background:var(--warn);box-shadow:0 0 6px rgba(251,191,36,0.4);animation:pulse 1.5s infinite}
 .mod-dot.plan{background:var(--muted)}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
@@ -478,6 +479,9 @@ input[type="file"]{display:none}
         <button class="quick-btn" onclick="toggleDownloadPanel()" style="font-size:11px">📥 从平台下载新书</button>
       </div>
       <div class="dl-panel" id="downloadPanel">
+        <div style="font-size:11px;color:var(--dim);margin-bottom:8px;line-height:1.6">
+          💡 系统会先匹配 <span id="dlSourceCount" style="color:var(--cyan)">--</span> 个开源书源数据库，找到则直接使用；未找到才从选定平台下载。
+        </div>
         <div class="dl-fields">
           <input class="dl-input" id="dlBookName" type="text" placeholder="书名" style="flex:2;min-width:120px">
           <input class="dl-input" id="dlAuthor" type="text" placeholder="作者（选填）" style="flex:1;min-width:100px">
@@ -487,7 +491,7 @@ input[type="file"]{display:none}
             <option value="yuewen">阅文</option>
             <option value="jjwxc">晋江</option>
           </select>
-          <button class="search-btn" onclick="downloadBook()">下载</button>
+          <button class="search-btn" onclick="downloadBook()">搜索并下载</button>
         </div>
       </div>
     </div>
@@ -577,7 +581,7 @@ input[type="file"]{display:none}
           <div class="agent-avatar">🤖</div>
           <div>
             <div class="agent-name">智库 Agent</div>
-            <div class="agent-status"><span class="agent-status-dot"></span> 在线</div>
+            <div class="agent-status" id="agentStatusWrap"><span class="agent-status-dot" id="agentStatusDot" style="background:var(--warn);animation:none"></span> <span id="agentStatusText">连接中...</span></div>
           </div>
         </div>
         <div id="agentModelBadge" class="agent-model-badge" style="display:none">AI</div>
@@ -605,43 +609,49 @@ input[type="file"]{display:none}
         <div class="mod-icon">🛡️</div>
         <div class="mod-name">语言保护罩</div>
         <div class="mod-desc">Nginx蜜罐(L2) + fail2ban自动封禁(L3)。服务器永远不暴露真实IP。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">已激活</span></div>
+        <div class="mod-status" id="modShield"><span class="mod-dot" id="modShieldDot"></span><span id="modShieldText" style="color:var(--dim)">检测中...</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">📥</div>
         <div class="mod-name">下载引擎</div>
-        <div class="mod-desc">整合七猫/番茄/阅文/晋江。输入书名+平台，自动下载并入桶。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">Phase 2</span></div>
+        <div class="mod-desc">整合开源数据库 + 七猫/番茄/阅文/晋江。优先匹配已有资源。</div>
+        <div class="mod-status" id="modDownload"><span class="mod-dot" id="modDownloadDot"></span><span id="modDownloadText" style="color:var(--dim)">检测中...</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">✂️</div>
         <div class="mod-name">智能分章 Agent</div>
         <div class="mod-desc">AI识别章节规律，无章节标识时按内容结构分段。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">Phase 2</span></div>
+        <div class="mod-status" id="modChapter"><span class="mod-dot" id="modChapterDot"></span><span id="modChapterText" style="color:var(--dim)">检测中...</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">📖</div>
         <div class="mod-name">在线阅读器</div>
         <div class="mod-desc">自动格式检测。翻页、字体、深/亮色。进度自动存档。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">Phase 4</span></div>
+        <div class="mod-status" id="modReader"><span class="mod-dot" id="modReaderDot"></span><span id="modReaderText" style="color:var(--dim)">检测中...</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">📤</div>
         <div class="mod-name">文稿上传</div>
         <div class="mod-desc">支持 TXT/EPUB/HTML/MD/DOCX，自动格式检测转换，拖拽上传。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">Phase 4</span></div>
+        <div class="mod-status" id="modUpload"><span class="mod-dot" id="modUploadDot"></span><span id="modUploadText" style="color:var(--dim)">检测中...</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">🤖</div>
         <div class="mod-name">AI 对话引擎</div>
         <div class="mod-desc">接入 DeepSeek/Kimi/通义千问 + 第三方 API。自动降级，多模型备用。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">Phase 4</span></div>
+        <div class="mod-status" id="modAI"><span class="mod-dot" id="modAIDot"></span><span id="modAIText" style="color:var(--dim)">检测中...</span></div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">🔗</div>
+        <div class="mod-name">开源书源</div>
+        <div class="mod-desc">已注册外部开源小说下载器数据库，优先匹配已有书源。</div>
+        <div class="mod-status" id="modSources"><span class="mod-dot" id="modSourcesDot"></span><span id="modSourcesText" style="color:var(--dim)">检测中...</span></div>
       </div>
       <div class="mod-card">
         <div class="mod-icon">✍️</div>
         <div class="mod-name">智能小说系统</div>
         <div class="mod-desc">小说创作工作台。大纲/人物卡/章节管理。AI续写/改写。</div>
-        <div class="mod-status"><span class="mod-dot ok"></span><span style="color:var(--ok)">ZY-PROJ-004</span></div>
+        <div class="mod-status" id="modNovel"><span class="mod-dot" id="modNovelDot"></span><span id="modNovelText" style="color:var(--dim)">检测中...</span></div>
       </div>
     </div>
 
@@ -660,9 +670,12 @@ input[type="file"]{display:none}
 /* ═══ API Base ═══ */
 var API = (location.hostname === 'guanghuyaoming.com')
   ? 'https://guanghuyaoming.com/novel-api'
-  : 'http://127.0.0.1:4000';
+  : (location.hostname === 'novel.guanghuyaoming.com')
+    ? 'https://novel.guanghuyaoming.com'
+    : 'http://127.0.0.1:4000';
 var MEMBER_ID = 'member-default';
 var currentBookTab = 'all';
+var systemStatus = { api: false, ai: false, agent: false, sources: 0 };
 
 /* ═══ Star Field ═══ */
 (function(){
@@ -732,7 +745,11 @@ function escHtml(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 /* ═══ Load Stats ═══ */
 function loadStats(){
   api('GET','/api/zhiku/stats').then(function(d){
-    if(d.error)return;
+    if(d.error){
+      // API不可达
+      updateSystemHealth(false, null);
+      return;
+    }
     document.getElementById('statBooks').textContent=(d.download?d.download.total_books:0)+(d.upload?d.upload.total_uploads:0);
     document.getElementById('statMembers').textContent=d.reader?d.reader.total_members:0;
     document.getElementById('statToday').textContent=d.download?d.download.completed_tasks:0;
@@ -742,7 +759,128 @@ function loadStats(){
       badge.textContent=d.ai.available_models[0].name;
       badge.style.display='';
     }
+    updateSystemHealth(true, d);
   });
+}
+
+/* ═══ System Health Check ═══ */
+function setModStatus(id, ok, text) {
+  var dot = document.getElementById(id + 'Dot');
+  var txt = document.getElementById(id + 'Text');
+  if (dot) {
+    dot.className = 'mod-dot ' + (ok === true ? 'ok' : ok === false ? 'err' : '');
+    dot.style.background = ok === true ? 'var(--ok)' : ok === false ? 'var(--err)' : 'var(--warn)';
+  }
+  if (txt) {
+    txt.style.color = ok === true ? 'var(--ok)' : ok === false ? 'var(--err)' : 'var(--warn)';
+    txt.textContent = text;
+  }
+}
+
+function updateSystemHealth(apiOk, statsData) {
+  systemStatus.api = apiOk;
+
+  if (!apiOk) {
+    // API不可达 - 全部标记为离线
+    setModStatus('modShield', false, '无法连接');
+    setModStatus('modDownload', false, '无法连接');
+    setModStatus('modChapter', false, '无法连接');
+    setModStatus('modReader', false, '无法连接');
+    setModStatus('modUpload', false, '无法连接');
+    setModStatus('modAI', false, '无法连接');
+    setModStatus('modSources', false, '无法连接');
+    setModStatus('modNovel', false, '无法连接');
+    updateAgentStatus(false, 'API离线');
+    return;
+  }
+
+  // API可达 — 根据各模块统计更新状态
+  setModStatus('modShield', true, '已激活');
+
+  // 下载引擎
+  if (statsData && statsData.download) {
+    var dl = statsData.download;
+    var srcCount = dl.registered_sources || 0;
+    setModStatus('modDownload', true, '在线 · ' + dl.total_books + ' 本');
+    setModStatus('modSources', true, srcCount + ' 个数据源 · 索引 ' + (dl.local_index_count || 0));
+    systemStatus.sources = srcCount;
+    // 更新下载面板的数据源数量显示
+    var dlSrcEl = document.getElementById('dlSourceCount');
+    if (dlSrcEl) dlSrcEl.textContent = srcCount;
+  } else {
+    setModStatus('modDownload', null, '未知');
+    setModStatus('modSources', null, '未知');
+  }
+
+  // 分章引擎
+  if (statsData && statsData.chapter) {
+    setModStatus('modChapter', true, '在线 · ' + statsData.chapter.total_chaptered_books + ' 已分章');
+  } else {
+    setModStatus('modChapter', null, '未知');
+  }
+
+  // 阅读器
+  if (statsData && statsData.reader) {
+    setModStatus('modReader', true, '在线 · ' + statsData.reader.total_members + ' 成员');
+  } else {
+    setModStatus('modReader', null, '未知');
+  }
+
+  // 上传
+  if (statsData && statsData.upload) {
+    setModStatus('modUpload', true, '在线 · ' + statsData.upload.total_uploads + ' 已上传');
+  } else {
+    setModStatus('modUpload', null, '未知');
+  }
+
+  // AI引擎
+  if (statsData && statsData.ai) {
+    var aiModels = statsData.ai.available_models || [];
+    systemStatus.ai = aiModels.length > 0;
+    if (aiModels.length > 0) {
+      setModStatus('modAI', true, '在线 · ' + aiModels.map(function(m){return m.name}).join(', '));
+    } else {
+      setModStatus('modAI', false, '无可用模型 · 需配置 API Key');
+    }
+  } else {
+    setModStatus('modAI', null, '未知');
+    systemStatus.ai = false;
+  }
+
+  // 小说系统
+  if (statsData && statsData.novel) {
+    setModStatus('modNovel', true, '在线 · ' + statsData.novel.total_novels + ' 部作品');
+  } else {
+    setModStatus('modNovel', null, '未知');
+  }
+
+  // Agent状态
+  if (systemStatus.api) {
+    if (systemStatus.ai) {
+      updateAgentStatus(true, 'AI在线');
+    } else {
+      updateAgentStatus('partial', '本地模式（无AI）');
+    }
+  }
+}
+
+function updateAgentStatus(ok, text) {
+  var dot = document.getElementById('agentStatusDot');
+  var txt = document.getElementById('agentStatusText');
+  systemStatus.agent = ok;
+  if (dot) {
+    if (ok === true) {
+      dot.style.background = 'var(--ok)';
+      dot.style.animation = 'pulse 2s infinite';
+    } else if (ok === 'partial') {
+      dot.style.background = 'var(--warn)';
+      dot.style.animation = 'pulse 3s infinite';
+    } else {
+      dot.style.background = 'var(--err)';
+      dot.style.animation = 'none';
+    }
+  }
+  if (txt) txt.textContent = text || (ok ? '在线' : '离线');
 }
 
 /* ═══ Load Books ═══ */
@@ -908,19 +1046,40 @@ function downloadBook(){
   var author=document.getElementById('dlAuthor').value.trim();
   var platform=document.getElementById('dlPlatform').value;
   if(!bookName){showToast('请输入书名','error');return;}
-  showToast('正在下载: '+bookName+'...');
-  api('POST','/api/zhiku/download',{book_name:bookName,author:author||'未知',platform:platform,requested_by:MEMBER_ID}).then(function(d){
-    if(d.error){showToast(d.message||'下载失败','error');return;}
-    showToast('下载任务已创建','ok');
-    document.getElementById('dlBookName').value='';
-    document.getElementById('dlAuthor').value='';
-    setTimeout(function(){
-      var filename=bookName.replace(/[<>:"/\\|?*]/g,'_')+'_'+(author||'未知').replace(/[<>:"/\\|?*]/g,'_')+'_'+platform+'.txt';
-      api('POST','/api/zhiku/chapter/split',{filename:filename}).then(function(r){
-        if(!r.error)showToast('自动分章完成: '+r.data.total_chapters+' 章','ok');
-        loadBooks();loadStats();
-      });
-    },1500);
+
+  // Step 1: 先搜索开源数据库匹配
+  showToast('正在匹配开源书源数据库...');
+  api('GET','/api/zhiku/download/search?book_name='+encodeURIComponent(bookName)+'&author='+encodeURIComponent(author)).then(function(d){
+    if(!d.error && d.data && d.data.local_match_count > 0){
+      // 本地已有匹配
+      var match = d.data.local_matches[0];
+      showToast('✅ 书源匹配成功! 「'+match.book_name+'」已在 '+match.source_name+' 中找到','ok');
+      if(match.file_path){
+        // 直接打开已有的书
+        setTimeout(function(){ openBook(match.file_path); }, 800);
+      }
+      loadBooks();
+      return;
+    }
+
+    // 本地无匹配，显示数据源信息后尝试平台下载
+    var srcCount = (d.data && d.data.registered_source_count) || 0;
+    showToast('📥 已搜索 '+srcCount+' 个书源数据库，未找到匹配。正在从 '+platform+' 下载...');
+
+    // Step 2: 无本地匹配，从平台下载
+    api('POST','/api/zhiku/download',{book_name:bookName,author:author||'未知',platform:platform,requested_by:MEMBER_ID}).then(function(dd){
+      if(dd.error){showToast(dd.message||'下载失败','error');return;}
+      showToast('下载任务已创建','ok');
+      document.getElementById('dlBookName').value='';
+      document.getElementById('dlAuthor').value='';
+      setTimeout(function(){
+        var filename=bookName.replace(/[<>:"/\\|?*]/g,'_')+'_'+(author||'未知').replace(/[<>:"/\\|?*]/g,'_')+'_'+platform+'.txt';
+        api('POST','/api/zhiku/chapter/split',{filename:filename}).then(function(r){
+          if(!r.error)showToast('自动分章完成: '+r.data.total_chapters+' 章','ok');
+          loadBooks();loadStats();
+        });
+      },1500);
+    });
   });
 }
 
@@ -1161,9 +1320,25 @@ var agentReady=false;
 var agentSending=false;
 
 function initAgent(){
+  // 先尝试注册Agent，如果失败说明API不可达
   api('POST','/api/zhiku/agent/'+MEMBER_ID,{nickname:'成员'}).then(function(d){
+    if(d.error){
+      agentReady=false;
+      updateAgentStatus(false, 'API连接失败');
+      appendChat('agent','⚠️ 无法连接到后端服务。请检查网络连接或联系管理员。\n\n错误: '+(d.message||'网络错误'));
+      return;
+    }
     agentReady=true;
-    appendChat('agent','🤖 AI Agent已就绪！我接入了 DeepSeek / Kimi / 通义千问 等大模型。\n\n📖 分析小说内容\n✂️ 拆文整理\n📝 生成摘要\n💡 创作建议\n\n直接聊天即可，有什么我可以帮你的？');
+    // 检查AI是否真正可用
+    api('GET','/api/zhiku/ai/health').then(function(aiData){
+      if(!aiData.error && aiData.data && aiData.data.available_models && aiData.data.available_models.length > 0){
+        updateAgentStatus(true, 'AI在线 · '+aiData.data.available_models[0].name);
+        appendChat('agent','🤖 AI Agent已就绪！当前使用: '+aiData.data.available_models.map(function(m){return m.name}).join(' / ')+'\n\n📖 分析小说内容\n✂️ 拆文整理\n📝 生成摘要\n💡 创作建议\n\n直接聊天即可，有什么我可以帮你的？');
+      } else {
+        updateAgentStatus('partial', '本地模式（无AI API）');
+        appendChat('agent','🤖 Agent已连接（本地模式）。AI大模型尚未配置 API Key。\n\n当前可用功能:\n💬 基础对话\n📝 记忆/笔记\n💡 帮助指令\n\n⚠️ 如需AI辅助（摘要/改写/续写），请配置 DeepSeek/Kimi/通义千问 API Key。');
+      }
+    });
   });
 }
 
@@ -1211,6 +1386,12 @@ function sendAgentChat(preset){
   if(!msg)return;
   if(!preset)document.getElementById('agentInput').value='';
 
+  if(!agentReady && !systemStatus.api){
+    appendChat('user',msg);
+    appendChat('agent','⚠️ 无法发送消息：后端服务未连接。\n\n请检查：\n1. 服务器是否运行中\n2. API地址是否正确\n3. 网络连接是否正常');
+    return;
+  }
+
   appendChat('user',msg);
   agentSending=true;
   document.getElementById('agentSendBtn').disabled=true;
@@ -1222,7 +1403,8 @@ function sendAgentChat(preset){
     document.getElementById('agentSendBtn').disabled=false;
 
     if(d.error){
-      appendChat('agent','⚠️ '+d.message);
+      appendChat('agent','⚠️ '+(d.message||'网络错误 · 无法连接到服务器'));
+      updateAgentStatus(false, '连接中断');
       return;
     }
     var model=d.data.model||'';
@@ -1232,6 +1414,7 @@ function sendAgentChat(preset){
       var badge=document.getElementById('agentModelBadge');
       badge.textContent=model;
       badge.style.display='';
+      updateAgentStatus(true, 'AI在线 · '+model);
     }
   });
 }
