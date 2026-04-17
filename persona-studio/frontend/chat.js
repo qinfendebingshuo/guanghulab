@@ -1091,7 +1091,13 @@ function renderMarkdownSafe(content) {
   try {
     var raw = marked.parse(content);
     if (typeof DOMPurify !== 'undefined') {
-      return DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
+      return DOMPurify.sanitize(raw, {
+        ALLOWED_TAGS: ['h1','h2','h3','h4','h5','h6','p','br','hr','ul','ol','li',
+          'strong','em','b','i','u','s','del','code','pre','blockquote',
+          'table','thead','tbody','tr','th','td','a','img','span','div','sup','sub'],
+        ALLOWED_ATTR: ['href','src','alt','title','class','target','rel'],
+        ALLOW_DATA_ATTR: false
+      });
     }
     return raw;
   } catch (_e) {
@@ -1210,6 +1216,7 @@ function togglePersonaLink(personaKey) {
     }
   })
   .catch(function(err) {
+    clearTimeout(timeoutId);
     btn.classList.remove('persona-link-connecting');
     statusEl.textContent = '失败';
     statusEl.className = 'link-status link-status-error';

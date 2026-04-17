@@ -296,7 +296,7 @@ window.HomepageApp = {
                 { label: '模块', value: card.id },
                 { label: '类型', value: '核心模块' },
                 { label: '版本', value: 'v1.0' },
-                { label: '更新', value: new Date().toLocaleDateString('zh-CN') }
+                { label: '更新', value: '--' }
             ];
             var statusHtml = statusItems.map(function(item) {
                 return '<div class="card-status-item"><span class="csi-label">' + item.label + '</span><span class="csi-value">' + item.value + '</span></div>';
