@@ -737,7 +737,11 @@ function showToast(msg,type){
 function api(method,path,body){
   var opts={method:method,headers:{'Content-Type':'application/json'}};
   if(body)opts.body=JSON.stringify(body);
-  return fetch(API+path,opts).then(function(r){return r.json()}).catch(function(){return{error:true,message:'网络错误'}});
+  return fetch(API+path,opts).then(function(r){
+    if(!r.ok&&r.status===502)return{error:true,message:'智库节点服务未响应(502)，请确认 novel-db 进程已启动'};
+    if(!r.ok&&r.status===504)return{error:true,message:'智库节点连接超时(504)，服务器间网络可能不通'};
+    return r.json();
+  }).catch(function(e){return{error:true,message:'网络错误: '+(e.message||'无法连接到服务器')}});
 }
 
 function escHtml(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#x27;').replace(/"/g,'&quot;'):'';}
@@ -1437,11 +1441,26 @@ document.getElementById('agentInput').addEventListener('keydown',function(e){
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAgentChat();}
 });
 
-/* ═══ Init ═══ */
-loadStats();
+/* ═══ Init with retry ═══ */
+var statsRetryCount=0;
+var statsRetryMax=3;
+function loadStatsWithRetry(){
+  loadStats();
+  // 如果API不可达，自动重试（最多3次，间隔递增）
+  setTimeout(function(){
+    if(!systemStatus.api && statsRetryCount<statsRetryMax){
+      statsRetryCount++;
+      console.log('[智库] API重试 '+statsRetryCount+'/'+statsRetryMax);
+      loadStatsWithRetry();
+    }
+  },(statsRetryCount+1)*5000);
+}
+loadStatsWithRetry();
 loadBooks();
 loadLibrary();
 initAgent();
+// 定期刷新状态（每60秒）
+setInterval(function(){ loadStats(); },60000);
 </script>
 
 </body>
