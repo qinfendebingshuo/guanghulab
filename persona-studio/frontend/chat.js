@@ -477,9 +477,9 @@ async function streamServerProxyReply(text) {
       }
     }
 
-    // Render final Markdown
+    // Render final Markdown (sanitized)
     if (typeof marked !== 'undefined' && full) {
-      try { streamEl.innerHTML = marked.parse(full); } catch (_e) { streamEl.textContent = full; }
+      streamEl.innerHTML = renderMarkdownSafe(full);
     } else {
       streamEl.textContent = full || '（未收到有效回复）';
     }
@@ -495,6 +495,8 @@ async function streamServerProxyReply(text) {
       // Update route status bar
       updateRouteStatus({ model: SELECTED_MODEL, line: 'proxy', persona: activePersonas.join('+') || '铸渊' });
     }
+  } catch (err) {
+    // 流式失败，降级到非流式代理
     try {
       var proxyRes = await fetch(API_BASE + '/api/ps/proxy/chat', {
         method: 'POST',
@@ -604,9 +606,9 @@ async function streamApiKeyReply(text) {
       }
     }
 
-    // Render final Markdown
+    // Render final Markdown (sanitized)
     if (typeof marked !== 'undefined' && full) {
-      try { streamEl.innerHTML = marked.parse(full); } catch (_e) { streamEl.textContent = full; }
+      streamEl.innerHTML = renderMarkdownSafe(full);
     } else {
       streamEl.textContent = full || '（未收到有效回复）';
     }
@@ -712,12 +714,8 @@ function appendMessage(role, content) {
 
   var renderedContent;
   if (role === 'persona' && typeof marked !== 'undefined') {
-    // Render Markdown for persona (AI) messages
-    try {
-      renderedContent = marked.parse(content);
-    } catch (_e) {
-      renderedContent = escapeHtml(content);
-    }
+    // Render Markdown for persona (AI) messages with DOMPurify sanitization
+    renderedContent = renderMarkdownSafe(content);
   } else {
     renderedContent = escapeHtml(content);
   }
@@ -1084,6 +1082,23 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/**
+ * Safely render Markdown: marked.parse → DOMPurify sanitize
+ * Falls back to escapeHtml if libraries are unavailable.
+ */
+function renderMarkdownSafe(content) {
+  if (typeof marked === 'undefined') return escapeHtml(content);
+  try {
+    var raw = marked.parse(content);
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
+    }
+    return raw;
+  } catch (_e) {
+    return escapeHtml(content);
+  }
+}
+
 function autoResizeTextarea(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
@@ -1141,12 +1156,17 @@ function togglePersonaLink(personaKey) {
   statusEl.className = 'link-status link-status-connecting';
   btn.classList.add('persona-link-connecting');
 
+  // Compatible timeout signal (AbortSignal.timeout may not be available in all browsers)
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+
   fetch(API_BASE + persona.checkUrl, {
     method: 'GET',
     headers: authHeaders(),
-    signal: AbortSignal.timeout(8000)
+    signal: controller.signal
   })
   .then(function(res) {
+    clearTimeout(timeoutId);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   })
@@ -1193,7 +1213,7 @@ function togglePersonaLink(personaKey) {
     btn.classList.remove('persona-link-connecting');
     statusEl.textContent = '失败';
     statusEl.className = 'link-status link-status-error';
-    var errMsg = err.name === 'TimeoutError' ? 'MCP 服务超时，请检查服务是否运行' : (err.message || '网络异常');
+    var errMsg = (err.name === 'TimeoutError' || err.name === 'AbortError') ? 'MCP 服务超时，请检查服务是否运行' : (err.message || '网络异常');
     appendMessage('system', '❌ ' + persona.icon + ' ' + persona.name + ' 链接失败：' + errMsg);
     setTimeout(function() {
       statusEl.textContent = '未连接';

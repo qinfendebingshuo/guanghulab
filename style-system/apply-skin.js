@@ -37,7 +37,7 @@ const FORBIDDEN_PATTERNS = [
   /javascript:/i,
   /on(click|load|error|mouseover|mouseout|focus|blur|submit|change|input)\s*=/i,
   /expression\s*\(/i,
-  /url\s*\(\s*['"]?(https?:|data:|javascript:)/i,
+  /url\s*\(\s*['"]?(https?:|data:|javascript:|ftp:)/i,
   /@import\s/i,
   /behavior\s*:/i,
   /-moz-binding/i
@@ -142,8 +142,17 @@ function generateTextScript(skin) {
   lines.push('  document.addEventListener("DOMContentLoaded", function() {');
   
   Object.keys(skin.text_overrides).forEach(function(sel) {
-    var text = skin.text_overrides[sel].replace(/'/g, "\\'").replace(/\n/g, '\\n');
-    lines.push('    var el = document.querySelector(\'' + sel + '\');');
+    // Validate selector: only allow CSS selector-safe characters
+    if (!/^[a-zA-Z0-9_.#\-\s>+~:[\]='"^$*|,()]+$/.test(sel)) {
+      return; // skip unsafe selectors
+    }
+    // Escape for safe JS string embedding: backslash first, then quotes and newlines
+    var text = skin.text_overrides[sel]
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r');
+    lines.push('    var el = document.querySelector(' + JSON.stringify(sel) + ');');
     lines.push('    if (el) el.textContent = \'' + text + '\';');
   });
 
