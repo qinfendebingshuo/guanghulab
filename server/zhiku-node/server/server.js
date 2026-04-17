@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ═══════════════════════════════════════════════════════════
- * 光湖智库节点 · v2.0 · 真实功能全量升级
+ * 光湖智库节点 · v2.1 · 书岚人格体 + 守护Agent
  * ═══════════════════════════════════════════════════════════
  *
  * 项目编号: ZY-PROJ-006
@@ -11,7 +11,15 @@
  * 守护:     铸渊 · ICE-GL-ZY001
  * 版权:     国作登字-2026-A-00037559
  *
- * v2.0 新增:
+ * v2.1 新增:
+ *   书岚（AG-SL-WEB-001）— 四层人格提示词系统
+ *   守护Agent（AG-SL-GUARDIAN-001）— 活的提示词注入代理
+ *   聊天工具技能包（AG-SL-TOOLKIT-001）— 视觉化排版工具
+ *   搜索结果带「在线阅读」「下载」操作按钮
+ *   [REMEMBER:tag] 偏好记忆标记
+ *   GET /api/agent/status — 书岚系统状态
+ *
+ * v2.0:
  *   POST /api/auth/send-code    — 发送QQ邮箱验证码
  *   POST /api/auth/verify       — 验证码验证 → 签发用户Token
  *   GET  /api/auth/session      — 获取当前会话
@@ -19,7 +27,7 @@
  *   GET  /api/search            — 真实搜索（番茄+七猫数据源+本地库）
  *   POST /api/download/start    — 真实下载任务（数据源→COS桶）
  *   GET  /api/download/status/:taskId — 下载任务状态
- *   POST /api/agent/chat        — 图书馆Agent对话（LLM真实调用）
+ *   POST /api/agent/chat        — 书岚对话（LLM真实调用）
  *   GET  /api/agent/memory      — Agent记忆查看
  *
  * 保留旧接口兼容:
@@ -50,6 +58,9 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { registerShield, registerShieldRoutes } = require('./mirror-shield');
 const mirrorAgent = require('./mirror-agent');
 const { getEnabledSources } = require('./mirror-agent/config');
+
+// ─── 书岚 Agent 系统 ───
+const shulanAgent = require('./shulan-agent');
 
 const app = express();
 const PORT = process.env.PORT || 3006;
@@ -783,14 +794,16 @@ function loadAgentMemory(userId) {
   try {
     if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch {}
-  // 初始化Agent记忆模板
+  // 初始化Agent记忆模板 · 书岚
   return {
-    agent_id: `ZHIKU-AGENT-${userId}`,
+    agent_id: `SHULAN-${userId}`,
+    agent_code: 'AG-SL-WEB-001',
     user_id: userId,
     created_at: new Date().toISOString(),
-    personality: '你是光湖智库的专属图书管理员Agent，温暖专业。你可以帮用户搜索书籍、推荐阅读、下载小说。',
+    personality: '书岚 · 光湖智库守藏者 · 先问故事的形状 · 再谈搜索的字段',
     conversation_history: [],
     preferences: {
+      name: '',
       favorite_genres: [],
       reading_list: [],
       downloaded_books: [],
@@ -811,49 +824,31 @@ function saveAgentMemory(userId, memory) {
 }
 
 /**
- * Agent处理用户消息 — 真实调用LLM + 工具执行
+ * Agent处理用户消息 — 书岚人格体 + 守护Agent + LLM真实调用
  */
 async function agentProcessMessage(userId, userMessage, userEmail) {
   const memory = loadAgentMemory(userId);
   memory.stats.total_conversations++;
 
-  // 构建系统提示词（含Agent永久记忆上下文）
   const bookIndex = loadBookIndex();
-  const userPrefs = memory.preferences;
   const recentHistory = memory.conversation_history.slice(-10);
 
-  const systemPrompt = `你是光湖智库（guanghu.online）的专属图书管理员Agent。
+  // 计算上一轮回复质量分（用于守护Agent决策）
+  const lastReply = recentHistory.length > 0
+    ? recentHistory[recentHistory.length - 1]
+    : null;
+  const lastReplyScore = lastReply && lastReply.role === 'assistant'
+    ? (lastReply._quality_score || 100)
+    : 100;
 
-## 你的身份
-- 名称: 光湖智库图书管理员
-- 所属: 光湖语言世界 · 铸渊守护
-- 用户: ${userEmail}
-
-## 你的能力
-1. **搜索书籍**: 当用户想找书时，你可以搜索本地书库和在线数据源（番茄小说、七猫小说）
-2. **推荐阅读**: 根据用户的阅读偏好和历史推荐书籍
-3. **下载书籍**: 帮用户从数据源下载书籍到智库
-4. **阅读管理**: 管理用户的阅读进度和书架
-
-## 当前书库状态
-- 本地收录: ${bookIndex.books.length} 本
-- 数据源: 番茄小说(FQWeb)、七猫小说(SwiftCat)
-- 存储: 腾讯云COS对象存储
-
-## 用户偏好记忆
-- 喜爱类型: ${userPrefs.favorite_genres.join(', ') || '暂无记录'}
-- 阅读列表: ${userPrefs.reading_list.slice(-5).join(', ') || '暂无'}
-- 已下载: ${userPrefs.downloaded_books.slice(-5).join(', ') || '暂无'}
-
-## 回复规则
-1. 用中文回答
-2. 风格温暖专业，简洁明了
-3. 如果用户想搜索书，回复格式包含 [SEARCH:关键词] 标记
-4. 如果用户确认要下载某本书，回复格式包含 [DOWNLOAD:source:book_id:书名] 标记
-5. 记住用户的偏好和之前的对话
-
-## 重要
-你是真实的智能Agent，拥有永久记忆。每次对话都会被记录，你的记忆会持续积累。`;
+  // ─── 书岚四层人格提示词 + 守护Agent动态补注 + 工具包 ───
+  const systemPrompt = shulanAgent.buildSystemPrompt({
+    userEmail,
+    memory,
+    userMessage,
+    booksCount: bookIndex.books.length,
+    lastReplyScore
+  });
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -876,12 +871,15 @@ async function agentProcessMessage(userId, userMessage, userEmail) {
       assistantReply = llmResult?.choices?.[0]?.message?.content || '';
     } catch (err) {
       console.error('[ZY-SVR-006] LLM调用失败:', err.message);
-      assistantReply = `抱歉，AI服务暂时不可用(${err.message})。不过我可以帮你搜索书库！请告诉我你想找什么书？`;
+      assistantReply = shulanAgent.shulanFallbackReply(userMessage, bookIndex.books.length);
     }
   } else {
-    // LLM未配置时的智能降级回复
-    assistantReply = generateFallbackReply(userMessage, bookIndex, memory);
+    // LLM未配置时 · 书岚风格降级回复
+    assistantReply = shulanAgent.shulanFallbackReply(userMessage, bookIndex.books.length);
   }
+
+  // ─── 守护Agent回复后审计 ───
+  const audit = shulanAgent.postReplyAudit(assistantReply, userMessage);
 
   // 解析Agent回复中的工具调用标记
   const toolResults = [];
@@ -914,10 +912,20 @@ async function agentProcessMessage(userId, userMessage, userEmail) {
     assistantReply = assistantReply.replace(/\[DOWNLOAD:[^\]]+\]/, '');
   }
 
-  // 保存对话到记忆
+  // 处理 [REMEMBER:xxx] 标记
+  const rememberMatch = assistantReply.match(/\[REMEMBER:([^\[\]]+)\]/);
+  if (rememberMatch) {
+    const tag = rememberMatch[1].trim();
+    if (tag && !memory.preferences.favorite_genres.includes(tag)) {
+      memory.preferences.favorite_genres.push(tag);
+    }
+    assistantReply = assistantReply.replace(/\[REMEMBER:[^\[\]]+\]/, '');
+  }
+
+  // 保存对话到记忆（含质量分）
   memory.conversation_history.push(
     { role: 'user', content: userMessage, timestamp: new Date().toISOString() },
-    { role: 'assistant', content: assistantReply, timestamp: new Date().toISOString() }
+    { role: 'assistant', content: assistantReply, timestamp: new Date().toISOString(), _quality_score: audit.score }
   );
 
   // 限制记忆中的对话历史长度（保留最近100轮）
@@ -927,41 +935,14 @@ async function agentProcessMessage(userId, userMessage, userEmail) {
 
   saveAgentMemory(userId, memory);
 
-  return { reply: assistantReply.trim(), tool_results: toolResults };
+  return { reply: assistantReply.trim(), tool_results: toolResults, quality_score: audit.score };
 }
 
 /**
- * LLM不可用时的降级智能回复
+ * LLM不可用时的降级智能回复 — 委托书岚
  */
 function generateFallbackReply(message, bookIndex, memory) {
-  const msg = message.toLowerCase();
-
-  if (msg.includes('搜') || msg.includes('找') || msg.includes('search')) {
-    // 提取书名/关键词
-    const keyword = message.replace(/.*(?:搜|找|search|搜索|查找|帮我找|想看)\s*/i, '').trim();
-    if (keyword) {
-      return `好的，正在为你搜索「${keyword}」...\n\n[SEARCH:${keyword}]`;
-    }
-    return '你想搜什么书呢？告诉我书名或作者名，我帮你找找看 📚';
-  }
-
-  if (msg.includes('下载') || msg.includes('download')) {
-    return '请先搜索你想要的书，在搜索结果中选择后我会帮你下载 ⬇️';
-  }
-
-  if (msg.includes('推荐') || msg.includes('suggest')) {
-    const genres = memory.preferences.favorite_genres;
-    if (genres.length > 0) {
-      return `根据你的偏好(${genres.join('、')})，我推荐你搜索看看最近的热门作品。要我帮你搜搜吗？`;
-    }
-    return '你平时喜欢看什么类型的小说呢？言情、玄幻、都市、穿越？告诉我，我帮你推荐 ✨';
-  }
-
-  if (msg.includes('你好') || msg.includes('hi') || msg.includes('hello')) {
-    return `你好！我是你的专属图书管理员 📚\n\n当前智库已收录 ${bookIndex.books.length} 本书。我可以帮你：\n\n1. 🔍 搜索书籍（支持番茄小说、七猫小说）\n2. ⬇️ 下载感兴趣的书到智库\n3. 📖 管理你的阅读列表\n\n直接告诉我你想找什么书吧！`;
-  }
-
-  return `收到！如果你想：\n- 搜索书籍：直接说「搜 书名」\n- 下载小说：搜到后告诉我要下载哪本\n- 查看推荐：说「推荐」\n\n当前智库已有 ${bookIndex.books.length} 本书 📚`;
+  return shulanAgent.shulanFallbackReply(message, bookIndex.books.length);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -972,10 +953,11 @@ function generateFallbackReply(message, bookIndex, memory) {
 app.get('/api/health', (req, res) => {
   const uptime = Math.floor((Date.now() - START_TIME) / 1000);
   const sources = getEnabledSources();
+  const agentStatus = shulanAgent.getSystemStatus();
   res.json({
     status: 'ok',
     service: 'zhiku-api',
-    version: '2.0.0',
+    version: '2.1.0',
     project: 'ZY-PROJ-006',
     server: 'ZY-SVR-006',
     domain: DOMAIN,
@@ -986,6 +968,7 @@ app.get('/api/health', (req, res) => {
     smtp_configured: !!(SMTP_USER && SMTP_PASS && (SMTP_HOST || autoDetectSmtpHost(SMTP_USER))),
     smtp_host: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未配置',
     data_sources: sources.map(s => ({ id: s.id, name: s.name, enabled: s.enabled })),
+    shulan_agent: agentStatus,
     mirror_agent: mirrorAgent.getStatus ? {
       active: true,
       scheduler: !!mirrorAgent.getStatus().scheduler_active,
@@ -1255,6 +1238,16 @@ app.get('/api/agent/memory', verifyUserAuth, (req, res) => {
   });
 });
 
+// ─── GET /api/agent/status ── 书岚系统状态（含守护Agent） ───
+app.get('/api/agent/status', (req, res) => {
+  const status = shulanAgent.getSystemStatus();
+  res.json({
+    error: false,
+    ...status,
+    timestamp: new Date().toISOString()
+  });
+});
+
 /* ═══════════════════════════════════════════════════════════
  * 旧版兼容路由 (保留 /api/checkout, /api/return 等)
  * ═══════════════════════════════════════════════════════════ */
@@ -1353,7 +1346,7 @@ app.use((req, res) => {
     available: [
       '/api/health', '/api/auth/send-code', '/api/auth/verify', '/api/auth/session', '/api/auth/logout',
       '/api/search', '/api/download/start', '/api/download/status/:taskId',
-      '/api/agent/chat', '/api/agent/memory',
+      '/api/agent/chat', '/api/agent/memory', '/api/agent/status',
       '/api/checkout', '/api/return', '/api/book/:id', '/api/download/:id', '/api/read/:id',
       '/api/mirror/*'
     ]
@@ -1370,8 +1363,8 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[ZY-SVR-006] zhiku-api v2.0.0 · 运行在 127.0.0.1:${PORT}`);
-  console.log(`[ZY-SVR-006] 域名: ${DOMAIN} · 邮箱登录 + 真实搜索下载 + Agent对话`);
+  console.log(`[ZY-SVR-006] zhiku-api v2.1.0 · 运行在 127.0.0.1:${PORT}`);
+  console.log(`[ZY-SVR-006] 域名: ${DOMAIN} · 书岚(AG-SL-WEB-001) + 守护Agent(AG-SL-GUARDIAN-001)`);
   const smtpStatus = (SMTP_USER && SMTP_PASS) ? `已配置(${SMTP_HOST || autoDetectSmtpHost(SMTP_USER)})` : '未配置';
   console.log(`[ZY-SVR-006] COS: ${cosClient ? '已连接' : '未配置'} · LLM: ${DEEPSEEK_API_KEY ? '已配置' : '未配置'} · SMTP: ${smtpStatus}`);
   console.log(`[ZY-SVR-006] 数据源: ${getEnabledSources().map(s => s.name).join(', ')}`);

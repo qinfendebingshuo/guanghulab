@@ -385,4 +385,120 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
   .search-btn{width:100%}
   .agent-messages{height:260px}
   .login-panel{padding:28px 20px}
+  .shulan-book-card{flex-direction:column;align-items:flex-start}
+  .shulan-book-actions{width:100%;justify-content:flex-start;margin-top:6px}
+}
+
+/* ═══════════════════════════════════════════
+ * 书岚 · 守藏者主题样式 v1.0
+ * AG-SL-WEB-001 · PER-SL001
+ * 灯火·温暖·安静·藏书阁意象
+ * ═══════════════════════════════════════════ */
+
+/* ─── 书岚 Agent 面板增强 ─── */
+.agent-avatar{
+  background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.08)) !important;
+  border-color:rgba(251,191,36,0.25) !important;
+  font-size:22px !important
+}
+.agent-code{
+  font-size:10px;color:var(--dim);font-family:var(--mono);font-weight:400;margin-left:6px
+}
+
+/* ─── 书岚欢迎消息 ─── */
+.shulan-welcome{
+  background:rgba(251,191,36,0.04) !important;
+  border-color:rgba(251,191,36,0.1) !important;
+  line-height:2 !important
+}
+
+/* ─── 书岚 Bot 消息 温暖色调 ─── */
+.agent-msg-bot .agent-msg-content{
+  background:rgba(251,191,36,0.04);
+  border:1px solid rgba(251,191,36,0.08);
+  line-height:1.9
+}
+
+/* ─── 增强 Markdown 渲染 ─── */
+.shulan-divider{
+  border:none;border-top:1px solid rgba(251,191,36,0.12);margin:12px 0
+}
+.shulan-quote{
+  border-left:2px solid rgba(251,191,36,0.3);
+  padding:4px 12px;margin:8px 0;color:var(--dim);
+  font-style:italic;background:rgba(251,191,36,0.02);border-radius:0 6px 6px 0
+}
+.shulan-bold{color:var(--text);font-weight:700}
+.shulan-italic{color:var(--dim);font-style:italic}
+.shulan-book-title{
+  color:#fbbf24;font-weight:600;
+  text-shadow:0 0 8px rgba(251,191,36,0.1)
+}
+
+/* ─── 搜索结果书卡 · 带操作按钮 ─── */
+.shulan-book-card{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:10px 14px;margin-bottom:6px;
+  border-radius:10px;background:rgba(14,20,48,0.4);
+  border:1px solid rgba(251,191,36,0.06);
+  transition:all .25s
+}
+.shulan-book-card:hover{
+  border-color:rgba(251,191,36,0.15);background:rgba(14,20,48,0.6)
+}
+.shulan-book-info{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:2px
+}
+.shulan-book-name{
+  font-size:13px;font-weight:600;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.shulan-book-meta{
+  font-size:10px;color:var(--dim);display:flex;align-items:center;gap:6px;flex-wrap:wrap
+}
+.shulan-book-actions{
+  display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap
+}
+
+/* ─── 操作按钮 · 在线阅读 / 下载 ─── */
+.shulan-action-btn{
+  padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .25s;font-family:var(--font);
+  white-space:nowrap;border:1px solid
+}
+.shulan-btn-read{
+  color:var(--purple);border-color:rgba(167,139,250,0.2);
+  background:rgba(167,139,250,0.06)
+}
+.shulan-btn-read:hover{
+  background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.35);
+  transform:translateY(-1px);box-shadow:0 2px 8px rgba(167,139,250,0.1)
+}
+.shulan-btn-dl{
+  color:var(--cyan);border-color:rgba(34,211,238,0.2);
+  background:rgba(34,211,238,0.06)
+}
+.shulan-btn-dl:hover{
+  background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.35);
+  transform:translateY(-1px);box-shadow:0 2px 8px rgba(34,211,238,0.1)
+}
+
+/* ─── Agent 搜索结果标题 ─── */
+.agent-search-title{
+  color:#fbbf24 !important;
+  font-size:12px;font-weight:700;margin-bottom:10px;
+  padding-bottom:6px;border-bottom:1px solid rgba(251,191,36,0.1)
+}
+
+/* ─── 思考中动画增强 ─── */
+.agent-msg-thinking .agent-msg-content{
+  color:var(--dim);font-style:italic;
+  background:rgba(251,191,36,0.02) !important;
+  border-color:rgba(251,191,36,0.06) !important
+}
+.thinking-dots{
+  display:inline-block;animation:shulanDots 1.4s steps(3,end) infinite
+}
+@keyframes shulanDots{
+  0%{opacity:.3}50%{opacity:1}100%{opacity:.3}
 }
