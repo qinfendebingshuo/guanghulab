@@ -60,8 +60,8 @@ function membraneMiddleware(req, res, next) {
   for (const pattern of BLOCKED_PATTERNS) {
     if (pattern.test(fullPath) || pattern.test(ua)) {
       // 静默丢弃 — 不返回有意义的错误信息
-      // 让对方看到的是"什么都没有"
-      res.status(444).end(); // 444 = Nginx 特殊状态码：无响应直接关闭连接
+      // 直接销毁 socket — 对方看到的是连接断开，什么都没有
+      req.socket.destroy();
       return;
     }
   }
@@ -69,7 +69,7 @@ function membraneMiddleware(req, res, next) {
   // 检查请求体大小（防止恶意大请求）
   const contentLength = parseInt(req.headers['content-length'], 10);
   if (contentLength > 5 * 1024 * 1024) { // 5MB
-    res.status(444).end();
+    req.socket.destroy();
     return;
   }
 

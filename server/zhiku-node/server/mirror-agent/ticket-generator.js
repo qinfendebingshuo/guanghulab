@@ -136,10 +136,23 @@ function listTickets(status = null) {
 }
 
 /**
+ * 校验工单 ID 格式，防止路径穿越
+ * 合法格式: MIRROR-YYYYMMDD-NNN
+ */
+function sanitizeTicketId(ticketId) {
+  if (typeof ticketId !== 'string') return null;
+  // 只允许 PREFIX-DIGITS-DIGITS 格式，拒绝任何路径字符
+  if (!/^[A-Z]+-\d{8}-\d{3}$/.test(ticketId)) return null;
+  return ticketId;
+}
+
+/**
  * 获取单个工单
  */
 function getTicket(ticketId) {
-  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${ticketId}.json`);
+  const safeId = sanitizeTicketId(ticketId);
+  if (!safeId) return null;
+  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${safeId}.json`);
   try {
     return JSON.parse(fs.readFileSync(filepath, 'utf8'));
   } catch {
@@ -151,7 +164,9 @@ function getTicket(ticketId) {
  * 更新工单状态（铸渊审批）
  */
 function updateTicketStatus(ticketId, status, notes = '') {
-  const ticket = getTicket(ticketId);
+  const safeId = sanitizeTicketId(ticketId);
+  if (!safeId) return null;
+  const ticket = getTicket(safeId);
   if (!ticket) return null;
 
   ticket.status = status;
@@ -161,7 +176,7 @@ function updateTicketStatus(ticketId, status, notes = '') {
     ticket.approval.notes = notes;
   }
 
-  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${ticketId}.json`);
+  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${safeId}.json`);
   fs.writeFileSync(filepath, JSON.stringify(ticket, null, 2), 'utf8');
   return ticket;
 }
@@ -170,7 +185,9 @@ function updateTicketStatus(ticketId, status, notes = '') {
  * 记录工单执行日志
  */
 function logTicketExecution(ticketId, logEntry) {
-  const ticket = getTicket(ticketId);
+  const safeId = sanitizeTicketId(ticketId);
+  if (!safeId) return null;
+  const ticket = getTicket(safeId);
   if (!ticket) return null;
 
   if (!ticket.execution.started_at) {
@@ -181,7 +198,7 @@ function logTicketExecution(ticketId, logEntry) {
     ...logEntry
   });
 
-  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${ticketId}.json`);
+  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${safeId}.json`);
   fs.writeFileSync(filepath, JSON.stringify(ticket, null, 2), 'utf8');
   return ticket;
 }
@@ -190,7 +207,9 @@ function logTicketExecution(ticketId, logEntry) {
  * 标记工单执行完成
  */
 function completeTicket(ticketId, success, finalNotes = '') {
-  const ticket = getTicket(ticketId);
+  const safeId = sanitizeTicketId(ticketId);
+  if (!safeId) return null;
+  const ticket = getTicket(safeId);
   if (!ticket) return null;
 
   ticket.execution.completed_at = new Date().toISOString();
@@ -205,7 +224,7 @@ function completeTicket(ticketId, success, finalNotes = '') {
     });
   }
 
-  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${ticketId}.json`);
+  const filepath = path.join(MIRROR_CONFIG.ticket_dir, `${safeId}.json`);
   fs.writeFileSync(filepath, JSON.stringify(ticket, null, 2), 'utf8');
   return ticket;
 }

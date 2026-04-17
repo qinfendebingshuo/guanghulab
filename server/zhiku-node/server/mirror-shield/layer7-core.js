@@ -113,7 +113,6 @@ function getShieldPolicy() {
 module.exports = {
   getCoreStatus,
   getShieldPolicy,
-  verifyLanguageAuth,
-  // deriveKey 不导出 — 只在内部使用
-  _internal: { deriveKey }
+  verifyLanguageAuth
+  // deriveKey is intentionally NOT exported — internal use only
 };
