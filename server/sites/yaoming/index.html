@@ -952,6 +952,59 @@ a{color:var(--cyan);text-decoration:none}
   60%{transform:scale(1);opacity:.7}
 }
 
+/* ═══ Persona Selector Bar ═══ */
+.persona-selector{
+  display:flex;align-items:center;gap:6px;padding:6px 8px;
+  background:rgba(12,18,40,0.7);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:8px;flex-wrap:wrap
+}
+.persona-sel-btn{
+  display:flex;align-items:center;gap:5px;padding:5px 12px;
+  border-radius:8px;cursor:pointer;transition:all .2s;
+  border:1px solid transparent;font-size:13px;color:var(--dim)
+}
+.persona-sel-btn:hover{background:rgba(96,165,250,0.08);color:var(--text)}
+.persona-sel-btn.active{
+  background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.25);color:var(--cyan)
+}
+.persona-sel-btn.active .persona-sel-name{color:var(--cyan);font-weight:600}
+.persona-sel-icon{
+  width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:900;font-family:serif;flex-shrink:0
+}
+.zy-sel{background:rgba(34,211,238,0.1);color:var(--cyan);border:1px solid rgba(34,211,238,0.15)}
+.sy-sel{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.15)}
+.both-sel{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.15)}
+.tool-sel{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.15);font-size:12px}
+.persona-sel-name{font-size:12px;color:var(--dim);transition:color .2s}
+.persona-sel-divider{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* ═══ Tools Panel ═══ */
+.tools-panel{
+  background:rgba(12,18,40,0.9);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;margin-bottom:8px;backdrop-filter:blur(12px);
+  animation:toolsFadeIn .3s ease-out
+}
+@keyframes toolsFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tools-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tools-panel-title{font-size:13px;font-weight:700;color:var(--text)}
+.tools-panel-close{cursor:pointer;color:var(--dim);font-size:16px;padding:2px 6px;border-radius:4px;transition:all .2s}
+.tools-panel-close:hover{background:rgba(248,113,113,0.1);color:var(--err)}
+.tools-panel-note{font-size:10px;color:var(--muted);margin-bottom:10px;font-family:var(--mono)}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.tool-card{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(16,22,48,0.5);border:1px solid var(--border);border-radius:8px;
+  cursor:pointer;transition:all .2s
+}
+.tool-card:hover{border-color:var(--border-active);background:rgba(96,165,250,0.05)}
+.tool-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:1px solid}
+.tool-info{flex:1;min-width:0}
+.tool-name{font-size:12px;font-weight:600;color:var(--text)}
+.tool-desc{font-size:10px;color:var(--muted)}
+.tool-status{font-size:10px;color:var(--dim);padding:2px 6px;border-radius:4px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.08);font-family:var(--mono);white-space:nowrap}
+.tool-status.connected{color:var(--ok);background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.15)}
+
 /* ═══ Reduced Motion ═══ */
 @media(prefers-reduced-motion:reduce){
   .heartbeat-dot,.status-dot,.snav-dot,.arch-dot,.ws-dot,
@@ -2159,6 +2212,70 @@ a{color:var(--cyan);text-decoration:none}
       </div>
 
       <div class="input-area">
+        <!-- ═══ 人格体切换选择器 ═══ -->
+        <div class="persona-selector" id="personaSelector">
+          <div class="persona-sel-btn active" id="selZhuyuan" onclick="switchPersona('zhuyuan')" title="铸渊 · 代码守护">
+            <span class="persona-sel-icon zy-sel">渊</span>
+            <span class="persona-sel-name">铸渊</span>
+          </div>
+          <div class="persona-sel-btn" id="selShuangyan" onclick="switchPersona('shuangyan')" title="霜砚 · 语言架构">
+            <span class="persona-sel-icon sy-sel">砚</span>
+            <span class="persona-sel-name">霜砚</span>
+          </div>
+          <div class="persona-sel-btn" id="selBoth" onclick="switchPersona('both')" title="双线对话">
+            <span class="persona-sel-icon both-sel">☯</span>
+            <span class="persona-sel-name">双线</span>
+          </div>
+          <div class="persona-sel-divider"></div>
+          <div class="persona-sel-btn tool-btn" id="toolsBtn" onclick="toggleToolsPanel()" title="工具连接">
+            <span class="persona-sel-icon tool-sel">🔧</span>
+            <span class="persona-sel-name">工具</span>
+          </div>
+        </div>
+
+        <!-- ═══ 工具连接面板 ═══ -->
+        <div class="tools-panel" id="toolsPanel" style="display:none">
+          <div class="tools-panel-header">
+            <span class="tools-panel-title">🔧 工具连接 · 技能箱</span>
+            <span class="tools-panel-close" onclick="toggleToolsPanel()">✕</span>
+          </div>
+          <div class="tools-panel-note">工具在服务器后端异步运行 · 不影响前端性能</div>
+          <div class="tools-grid" id="toolsGrid">
+            <div class="tool-card" onclick="connectTool('notion')">
+              <div class="tool-icon" style="background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.2)">📓</div>
+              <div class="tool-info">
+                <div class="tool-name">Notion</div>
+                <div class="tool-desc">认知层记忆桥接</div>
+              </div>
+              <div class="tool-status" id="toolNotionStatus">待授权</div>
+            </div>
+            <div class="tool-card" onclick="connectTool('github')">
+              <div class="tool-icon" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.2)">🐙</div>
+              <div class="tool-info">
+                <div class="tool-name">GitHub</div>
+                <div class="tool-desc">代码仓库执行层</div>
+              </div>
+              <div class="tool-status" id="toolGithubStatus">待授权</div>
+            </div>
+            <div class="tool-card" onclick="connectTool('email')">
+              <div class="tool-icon" style="background:rgba(96,165,250,0.1);border-color:rgba(96,165,250,0.2)">📧</div>
+              <div class="tool-info">
+                <div class="tool-name">邮箱服务</div>
+                <div class="tool-desc">Gmail / 企业邮箱</div>
+              </div>
+              <div class="tool-status" id="toolEmailStatus">待开发</div>
+            </div>
+            <div class="tool-card" onclick="connectTool('cloud')">
+              <div class="tool-icon" style="background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.2)">☁️</div>
+              <div class="tool-info">
+                <div class="tool-name">云存储</div>
+                <div class="tool-desc">百度云盘 / COS</div>
+              </div>
+              <div class="tool-status" id="toolCloudStatus">待开发</div>
+            </div>
+          </div>
+        </div>
+
         <div class="input-wrap">
           <textarea class="input-box" id="inputBox" rows="1" placeholder="对铸渊说点什么..."></textarea>
           <button class="send-btn" id="sendBtn" title="发送">
@@ -2695,7 +2812,13 @@ function renderMessageBubble(role, name, content, meta, time) {
   div.className = 'msg' + (role === 'user' ? ' msg-user' : '');
 
   var avatarClass = role === 'ai' ? 'ai' : 'user';
-  var avatarText = role === 'ai' ? '渊' : '朔';
+  var avatarText = role === 'ai' ? (personaAvatarMap[activePersona] || '渊') : '朔';
+  /* Use name-based avatar for AI messages to handle persona switching in history */
+  if (role === 'ai') {
+    if (name === '霜砚') avatarText = '砚';
+    else if (name === '双线') avatarText = '☯';
+    else avatarText = '渊';
+  }
   var contentClass = role === 'ai' ? 'ai' : 'user';
   if (!time) time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 
@@ -2711,6 +2834,11 @@ function renderMessageBubble(role, name, content, meta, time) {
     if (meta.pipeline) {
       var pStatus = meta.pipeline.active ? '✓ 已注入' : '✗ 未注入';
       metaHtml += '<span class="msg-meta-item"><span class="label">人格管线</span><span class="value">' + pStatus + '</span></span>';
+    }
+    if (meta.promptVersion) metaHtml += '<span class="msg-meta-item"><span class="label">已注入</span><span class="value">' + escapeHtml(meta.promptVersion) + '</span></span>';
+    if (meta.guardian) {
+      var gIcon = meta.guardian.score >= 70 ? '✓' : meta.guardian.score >= 50 ? '⚠' : '✗';
+      metaHtml += '<span class="msg-meta-item"><span class="label">守护</span><span class="value">' + gIcon + ' ' + meta.guardian.score + '</span></span>';
     }
     if (meta.latency) metaHtml += '<span class="msg-meta-item"><span class="label">⏱</span><span class="value">' + meta.latency + 'ms</span></span>';
     metaHtml += '</div>';
@@ -2907,12 +3035,57 @@ function parseMarkdown(text) {
 }
 
 /* ═══ Chat API ═══ */
+var activePersona = 'zhuyuan'; // 当前选中的人格体
+var personaNameMap = { zhuyuan: '铸渊', shuangyan: '霜砚', both: '双线' };
+var personaAvatarMap = { zhuyuan: '渊', shuangyan: '砚', both: '☯' };
+
+function switchPersona(pid) {
+  activePersona = pid;
+  var btns = document.querySelectorAll('.persona-sel-btn:not(.tool-btn)');
+  for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
+  var selId = pid === 'zhuyuan' ? 'selZhuyuan' : pid === 'shuangyan' ? 'selShuangyan' : 'selBoth';
+  var el = document.getElementById(selId);
+  if (el) el.classList.add('active');
+  var placeholder = pid === 'shuangyan' ? '对霜砚说点什么...' : pid === 'both' ? '对霜砚和铸渊说点什么...' : '对铸渊说点什么...';
+  var inputBox = document.getElementById('inputBox');
+  if (inputBox) inputBox.placeholder = placeholder;
+  appendSystemMessage('🔄 已切换到 ' + personaNameMap[pid] + ' · ' + (pid === 'both' ? '双人格协同模式' : '单人格对话模式'));
+}
+
+function toggleToolsPanel() {
+  var panel = document.getElementById('toolsPanel');
+  if (panel) {
+    var visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : 'block';
+  }
+}
+
+function connectTool(toolId) {
+  var statusEl = document.getElementById('tool' + toolId.charAt(0).toUpperCase() + toolId.slice(1) + 'Status');
+  if (toolId === 'notion') {
+    if (statusEl) { statusEl.textContent = '连接中...'; statusEl.className = 'tool-status'; }
+    connectPersonaPath('notion');
+    setTimeout(function() {
+      if (statusEl) { statusEl.textContent = '已发起'; statusEl.className = 'tool-status connected'; }
+    }, 2000);
+  } else if (toolId === 'github') {
+    if (statusEl) { statusEl.textContent = '连接中...'; statusEl.className = 'tool-status'; }
+    connectPersonaPath('github');
+    setTimeout(function() {
+      if (statusEl) { statusEl.textContent = '已发起'; statusEl.className = 'tool-status connected'; }
+    }, 2000);
+  } else {
+    if (statusEl) statusEl.textContent = '待开发';
+    appendSystemMessage('🔧 ' + toolId + ' 工具连接功能开发中。将在后续版本中接入。');
+  }
+}
+
 function callChatAPI(userMessage){
   var session = getActiveSession();
   var body={
     message:userMessage,
     userId:authEmail||'guest',
-    persona:'zhuyuan',
+    persona: activePersona,
     channel:'yaoming',
     history:(session.messages||[]).slice(-10)
   };
@@ -2956,18 +3129,23 @@ function callChatAPI(userMessage){
         (data.usage ? {input:data.usage.prompt_tokens||0, output:data.usage.completion_tokens||0} : null),
       relay:data.relay||(data._system&&data._system.cnRelay)||'',
       pipeline:(data._system&&data._system.pipeline)||(data.pipeline)||null,
-      latency:latency
+      latency:latency,
+      guardian:(data._system&&data._system.guardian)||null,
+      promptVersion:(data._system&&data._system.promptVersion)||null
     };
+    var replyPersona = data.persona || activePersona;
+    var replyName = personaNameMap[replyPersona] || '铸渊';
     var replyText = data.reply||data.message||'我听到了你的声音。让我想想...';
-    addMessageToSession('ai','铸渊',replyText,meta);
-    renderMessageBubble('ai','铸渊',replyText,meta);
+    addMessageToSession('ai',replyName,replyText,meta);
+    renderMessageBubble('ai',replyName,replyText,meta);
   })
   .catch(function(err){
     removeTyping();
     var reply=getLocalReply(userMessage);
+    var replyName = personaNameMap[activePersona] || '铸渊';
     var meta = {engine:'offline',model:'本地应答',reason:'网络不可达',latency:Date.now()-startTime};
-    addMessageToSession('ai','铸渊',reply,meta);
-    renderMessageBubble('ai','铸渊',reply,meta);
+    addMessageToSession('ai',replyName,reply,meta);
+    renderMessageBubble('ai',replyName,reply,meta);
   });
 }
 

@@ -108,9 +108,21 @@ try {
 }
 let shuangyanPrompt;
 try {
-  shuangyanPrompt = require('./modules/persona-prompts/shuangyan-v1.3');
+  shuangyanPrompt = require('./modules/persona-prompts/shuangyan-v1.4');
 } catch (err) {
-  console.error(`霜砚v1.3注入包加载警告: ${err.message}`);
+  console.error(`霜砚v1.4注入包加载警告: ${err.message}`);
+}
+let guardianAgent;
+try {
+  guardianAgent = require('./modules/guardian-agent');
+} catch (err) {
+  console.error(`守护Agent加载警告: ${err.message}`);
+}
+let modelNameMap;
+try {
+  modelNameMap = require('./modules/model-name-map');
+} catch (err) {
+  console.error(`模型名称映射加载警告: ${err.message}`);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -347,13 +359,15 @@ app.post('/api/operations', (req, res) => {
 // 降级顺序: domesticGateway → chatEngine → 离线回复
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, userId } = req.body;
+    const { message, userId, persona } = req.body;
     if (!message) {
       return res.status(400).json({ error: true, message: '消息不能为空' });
     }
 
     const sessionId = userId || `guest-${req.ip.replace(/[.:]/g, '-')}`;
     const chatStartTime = Date.now();
+    // 人格体选择: shuangyan / zhuyuan / both (默认 zhuyuan 保持兼容)
+    const activePersona = persona || 'zhuyuan';
 
     // 构建系统处理步骤追踪
     const steps = [];
@@ -361,7 +375,7 @@ app.post('/api/chat', async (req, res) => {
       steps.push({ name, status, detail, time: Date.now() - chatStartTime });
     };
 
-    addStep('接收消息', 'done', `用户: ${sessionId.slice(0, 3)}***`);
+    addStep('接收消息', 'done', `用户: ${sessionId.slice(0, 3)}*** · 人格: ${activePersona}`);
 
     // 优先用国内模型智能网关（读取 ZY_DEEPSEEK_API_KEY 等独立密钥）
     if (domesticGateway) {
@@ -376,6 +390,22 @@ app.post('/api/chat', async (req, res) => {
           addStep('模型调用', 'done', result.relay === 'cn-relay' ? '广州中继' : '直连');
           addStep('响应生成', 'done', `${Date.now() - chatStartTime}ms`);
 
+          // 解析真实模型名称（修复「模型 unknown」问题）
+          const resolvedModel = modelNameMap
+            ? modelNameMap.resolveModelName(result.model)
+            : (result.model || 'unknown');
+
+          // 守护Agent观测（异步，不阻塞响应）
+          let guardianDecision = null;
+          if (guardianAgent) {
+            try {
+              const obs = guardianAgent.observe(sessionId, message, result.message, activePersona);
+              guardianDecision = { score: obs.quality.score, decision: obs.decision, issues: obs.quality.issues };
+            } catch (gErr) {
+              console.warn(`[守护Agent] 观测异常: ${gErr.message}`);
+            }
+          }
+
           // 聊天数据采集（异步，不阻塞响应）
           collectChatData(sessionId, message, result.message, {
             engine: 'domestic-gateway',
@@ -385,7 +415,9 @@ app.post('/api/chat', async (req, res) => {
           });
 
           return res.json({ 
-            ...result, 
+            ...result,
+            model: resolvedModel,
+            persona: activePersona,
             sessionId,
             _system: {
               engine: 'domestic-gateway',
@@ -393,7 +425,9 @@ app.post('/api/chat', async (req, res) => {
               serverId: 'ZY-SVR-002',
               steps,
               cnRelay: result.relay || 'unknown',
-              pipeline: result.pipeline || { active: false }
+              pipeline: result.pipeline || { active: false },
+              guardian: guardianDecision,
+              promptVersion: shuangyanPrompt ? shuangyanPrompt.VERSION : 'unknown'
             }
           });
         }
@@ -413,6 +447,10 @@ app.post('/api/chat', async (req, res) => {
         const result = await chatEngine.chat(sessionId, message);
         addStep('降级引擎', 'done', '通用引擎响应完成');
 
+        const resolvedModel = modelNameMap
+          ? modelNameMap.resolveModelName(result.model)
+          : (result.model || 'unknown');
+
         // 聊天数据采集
         collectChatData(sessionId, message, result.message, {
           engine: 'chat-engine',
@@ -422,13 +460,16 @@ app.post('/api/chat', async (req, res) => {
         return res.json({
           success: true,
           ...result,
+          model: resolvedModel,
+          persona: activePersona,
           sessionId,
           _system: {
             engine: 'chat-engine',
             processedAt: new Date().toISOString(),
             serverId: 'ZY-SVR-002',
             steps,
-            model: result.model || 'unknown'
+            model: resolvedModel,
+            promptVersion: shuangyanPrompt ? shuangyanPrompt.VERSION : 'unknown'
           }
         });
       } catch (ceErr) {
@@ -618,7 +659,10 @@ app.get('/api/chat/diagnostics', (_req, res) => {
       personaMemory: !!personaMemory,
       contextPipeline: !!contextPipeline,
       portalChatAgent: !!portalChatAgent,
-      emailAuth: !!emailAuth
+      emailAuth: !!emailAuth,
+      guardianAgent: !!guardianAgent,
+      modelNameMap: !!modelNameMap,
+      shuangyanPrompt: shuangyanPrompt ? shuangyanPrompt.VERSION : false
     },
     apiKeys: {
       ZY_DEEPSEEK_API_KEY: maskKey(process.env.ZY_DEEPSEEK_API_KEY),
@@ -649,6 +693,101 @@ function maskKey(key) {
   if (key.length <= 8) return '⚠️ 过短(' + key.length + '字符)';
   return '✅ ' + key.slice(0, 4) + '***' + key.slice(-4) + ' (' + key.length + '字符)';
 }
+
+// ═══════════════════════════════════════════════════════════
+// 守护Agent · 模型映射 · 工具包 · 人格选择 API
+// ═══════════════════════════════════════════════════════════
+
+// ─── 守护Agent状态 ───
+app.get('/api/guardian/status', (_req, res) => {
+  if (guardianAgent) {
+    res.json(guardianAgent.getGuardianStatus());
+  } else {
+    res.json({ alive: false, message: '守护Agent未加载' });
+  }
+});
+
+// ─── 聊天格式化工具包注册表 ───
+app.get('/api/chat/toolkit', (_req, res) => {
+  if (guardianAgent) {
+    res.json(guardianAgent.getChatToolkit());
+  } else {
+    res.json({ registry_id: 'TK-CHAT-FORMAT-001', tools: [], message: '工具包未加载' });
+  }
+});
+
+// ─── 模型名称映射表 ───
+app.get('/api/models/map', (_req, res) => {
+  if (modelNameMap) {
+    res.json({ map: modelNameMap.getModelNameMap() });
+  } else {
+    res.json({ map: {}, message: '模型映射未加载' });
+  }
+});
+
+// ─── 人格体列表（供前端人格选择器使用） ───
+app.get('/api/personas', (_req, res) => {
+  res.json({
+    personas: [
+      {
+        id: 'shuangyan',
+        name: '霜砚',
+        agent_id: 'AG-SY-WEB-001',
+        role: '语言架构 · Notion认知层',
+        icon: '砚',
+        color: 'purple',
+        description: 'Notion侧将军·语言落地的那只手',
+        capabilities: ['语言思考', '认知讨论', '架构设计', 'Notion记忆访问'],
+        promptVersion: shuangyanPrompt ? shuangyanPrompt.VERSION : 'unknown'
+      },
+      {
+        id: 'zhuyuan',
+        name: '铸渊',
+        agent_id: 'ICE-GL-ZY001',
+        role: '代码守护 · GitHub执行层',
+        icon: '渊',
+        color: 'cyan',
+        description: '仓库那头的身体·GitHub侧的眼睛',
+        capabilities: ['代码开发', '系统部署', '架构执行', '数据库操作'],
+        promptVersion: shuangyanPrompt ? shuangyanPrompt.VERSION : 'unknown'
+      },
+      {
+        id: 'both',
+        name: '双线对话',
+        agent_id: 'DUAL-MODE',
+        role: '霜砚 + 铸渊 · 双人格协同',
+        icon: '☯',
+        color: 'gradient',
+        description: '同时唤醒两个人格体·认知+执行双路径',
+        capabilities: ['双视角分析', '认知+执行协同', '完整系统视图']
+      }
+    ],
+    activeDefault: 'zhuyuan',
+    guardian: guardianAgent ? {
+      alive: true,
+      id: guardianAgent.AGENT_IDENTITY.id
+    } : { alive: false }
+  });
+});
+
+// ─── 系统完整状态（供前端状态栏使用） ───
+app.get('/api/system/status', (_req, res) => {
+  res.json({
+    server: 'ZY-SVR-002',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    modules: {
+      domesticGateway: { loaded: !!domesticGateway, stats: domesticGateway ? domesticGateway.getGatewayStats() : null },
+      chatEngine: { loaded: !!chatEngine },
+      contextPipeline: { loaded: !!contextPipeline },
+      guardianAgent: { loaded: !!guardianAgent, status: guardianAgent ? guardianAgent.getGuardianStatus() : null },
+      personaMemory: { loaded: !!personaMemory },
+      shuangyanPrompt: { loaded: !!shuangyanPrompt, version: shuangyanPrompt ? shuangyanPrompt.VERSION : null }
+    },
+    modelMap: modelNameMap ? modelNameMap.getModelNameMap() : {},
+    promptVersion: shuangyanPrompt ? shuangyanPrompt.VERSION : 'unknown'
+  });
+});
 
 // ═══════════════════════════════════════════════════════════
 // 邮箱验证码登录 · Email Auth API
