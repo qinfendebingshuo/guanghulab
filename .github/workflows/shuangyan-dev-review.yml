@@ -21,6 +21,11 @@ on:
   issues:
     types: [opened, labeled]
 
+# 同一PR只保留最新一次审查，避免多次push产生重复审查
+concurrency:
+  group: zhuyuan-review-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -146,11 +151,14 @@ jobs:
           JS_CHANGED=$(echo "$CHANGED_FILES" | grep -E '\.(js|ts|mjs|cjs)$' || true)
           if [ -n "$JS_CHANGED" ]; then
             # 精确匹配独立eval()调用，排除evaluateXxx等函数名
-            if echo "$JS_CHANGED" | xargs grep -El '(^|[^a-zA-Z_])eval\s*\(' 2>/dev/null | head -1; then
-              REVIEW_NOTES="${REVIEW_NOTES}\n⚠️ 发现eval()调用，需人工审查"
+            # 注意：用变量捕获结果再判断非空，避免 head/tail 返回 exit 0 导致误报
+            EVAL_HITS=$(echo "$JS_CHANGED" | xargs grep -El '(^|[^a-zA-Z_])eval\s*\(' 2>/dev/null | head -1 || true)
+            if [ -n "$EVAL_HITS" ]; then
+              REVIEW_NOTES="${REVIEW_NOTES}\n⚠️ 发现eval()调用，需人工审查: ${EVAL_HITS}"
             fi
-            if echo "$JS_CHANGED" | xargs grep -l 'process\.env\.' 2>/dev/null | grep -v '\.config\.' | head -3; then
-              REVIEW_NOTES="${REVIEW_NOTES}\n📝 发现环境变量引用，确保无硬编码密钥"
+            ENV_HITS=$(echo "$JS_CHANGED" | xargs grep -l 'process\.env\.' 2>/dev/null | grep -v '\.config\.' | head -3 || true)
+            if [ -n "$ENV_HITS" ]; then
+              REVIEW_NOTES="${REVIEW_NOTES}\n📋 发现环境变量引用，确保无硬编码密钥"
             fi
           fi
 
@@ -210,12 +218,33 @@ jobs:
             body += `---\n`;
             body += `*铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559*`;
 
-            await github.rest.issues.createComment({
+            // 查找已有的铸渊审查评论，更新而非重复创建
+            const MARKER = '## 🏛️ 铸渊 · 代码审查报告';
+            const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body
+              per_page: 50
             });
+            const existing = comments.data.find(c =>
+              c.body && c.body.includes(MARKER) && c.user.login === 'github-actions[bot]'
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
 
   # ─── 阶段3: 通知霜砚审查结果 ───
   notify-shuangyan:
