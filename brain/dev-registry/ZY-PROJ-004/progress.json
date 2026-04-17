@@ -5,68 +5,97 @@
   "copyright": "国作登字-2026-A-00037559",
   "background": {
     "bingshuo_requirement": "光湖系统要做智能小说平台·面向网文作者·AI辅助创作·大纲/人物卡/章节管理·聊天式写作交互",
-    "zhuyuan_understanding": "ZY-SVR-006是宿主·ZY-PROJ-002(语言保护罩)是地基·地基没打好不能盖楼·现在是规划状态·等ZY-PROJ-002的PHASE-2完成才开始"
+    "zhuyuan_understanding": "ZY-SVR-006是宿主·三期全部完成·数据层+AI辅助层+作者前端·MVP原型已上线"
   },
   "architecture": {
     "server": "ZY-SVR-006（智库节点·新加坡·43.153.203.105）",
     "modules": [
-      "作者端: 大纲/人物卡/章节/编辑器",
-      "AI辅助层: 续写/改写/对话/情节建议 → 国内模型网关",
-      "数据层: PostgreSQL存储",
+      "作者端: novel.html (大纲/人物卡/章节/编辑器/AI侧边栏)",
+      "AI辅助层: 续写/改写/情节建议 (MVP占位·预留DeepSeek/Kimi接入)",
+      "数据层: JSON文件存储 (MVP阶段·Phase 4迁移PostgreSQL)",
       "防护层: ZY-PROJ-002已就绪"
     ],
-    "dependency": "ZY-PROJ-002 PHASE-2完成（SSL+nginx+fail2ban上线）→ 才能开始"
+    "api_routes": [
+      "GET    /api/novel              — 小说列表",
+      "POST   /api/novel              — 创建小说",
+      "GET    /api/novel/:id          — 小说详情",
+      "PUT    /api/novel/:id          — 更新小说",
+      "DELETE /api/novel/:id          — 删除小说",
+      "GET    /api/novel/:id/chapters — 章节列表",
+      "POST   /api/novel/:id/chapters — 添加章节",
+      "GET    /api/novel/:id/chapters/:cid — 章节详情",
+      "PUT    /api/novel/:id/chapters/:cid — 更新章节",
+      "DELETE /api/novel/:id/chapters/:cid — 删除章节",
+      "GET    /api/novel/:id/characters    — 人物列表",
+      "POST   /api/novel/:id/characters    — 添加人物",
+      "PUT    /api/novel/:id/characters/:id — 更新人物",
+      "GET    /api/novel/:id/outline        — 大纲树",
+      "POST   /api/novel/:id/outline        — 添加大纲节点",
+      "PUT    /api/novel/:id/outline/:id    — 更新大纲节点",
+      "POST   /api/novel/:id/ai/continue/:cid — AI续写",
+      "POST   /api/novel/:id/ai/rewrite/:cid  — AI改写",
+      "POST   /api/novel/:id/ai/suggest        — AI建议",
+      "GET    /api/novel/stats                 — 系统统计"
+    ]
   },
   "phases": [
     {
       "id": "ZY-PROJ-004-PHASE-0",
       "name": "规划阶段",
-      "status": "in_progress",
-      "content": [
-        "架构规划完成",
-        "等待依赖项ZY-PROJ-002完成"
-      ]
+      "status": "completed",
+      "completed_at": "2026-04-16"
     },
     {
       "id": "ZY-PROJ-004-PHASE-1",
       "name": "数据层 + 基础API",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-16",
       "content": [
-        "PostgreSQL建表: novels/chapters/characters/outlines",
-        "CRUD API",
-        "PM2进程配置"
+        "novel-engine.js: 小说/章节/人物卡/大纲全套CRUD",
+        "novel.js路由: 20个API端点",
+        "JSON文件持久化(novels.json)",
+        "null-prototype对象防原型链污染",
+        "sanitizeId()输入安全校验"
       ]
     },
     {
       "id": "ZY-PROJ-004-PHASE-2",
       "name": "AI辅助层",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-16",
       "content": [
-        "接入domestic-llm-gateway（复用零点原核的国内模型网关）",
-        "续写/改写/情节建议API",
-        "流式输出（SSE）"
-      ]
+        "aiContinue: 基于章节最后段落续写(MVP占位·预留DeepSeek)",
+        "aiRewrite: 选中文字风格改写(MVP占位)",
+        "aiSuggest: 基于小说类型/人物/章节数给出情节建议(MVP占位)",
+        "3个AI端点已上线"
+      ],
+      "next_phase": "Phase 4 接入 DeepSeek/Kimi API 实现真实AI生成"
     },
     {
       "id": "ZY-PROJ-004-PHASE-3",
       "name": "作者端前端",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-04-16",
       "content": [
-        "编辑器界面",
-        "大纲/人物卡管理",
-        "章节列表",
-        "AI辅助侧边栏"
+        "novel.html: 完整创作工作台",
+        "三栏布局: 左侧边栏(小说+章节+人物卡+大纲) | 中央编辑器 | 右侧AI面板",
+        "小说CRUD: 新建/选择/删除",
+        "章节编辑: 实时字数统计+3秒自动保存+Ctrl+S快捷保存",
+        "人物卡: 姓名/定位/简介/外貌/性格/关系",
+        "大纲: 层级树形展示+添加节点",
+        "AI面板: 续写/改写/建议一键触发",
+        "模态弹窗: 新建小说/章节/人物/大纲节点",
+        "深色主题·光湖设计语言"
       ]
     }
   ],
   "fixes": [],
   "modules_used": [
-    "server/nginx/novel-mirror-shield.conf",
-    "server/novel-db/security/",
-    ".github/workflows/deploy-novel-mirror-shield.yml"
+    "server/novel-db/app/services/novel-engine.js",
+    "server/novel-db/app/routes/novel.js",
+    "server/sites/yaoming/novel.html"
   ],
-  "next_step": "等待ZY-PROJ-002 PHASE-2完成·届时回来更新status为进行中·展开PHASE-1详细设计",
-  "status": "规划中",
-  "current_phase": "ZY-PROJ-004-PHASE-0",
-  "blocked_by": "ZY-PROJ-002-PHASE-2"
+  "next_step": "Phase 4: 接入DeepSeek/Kimi API实现真实AI辅助写作 → SSE流式输出",
+  "status": "已上线·MVP",
+  "current_phase": "ZY-PROJ-004-PHASE-3"
 }
