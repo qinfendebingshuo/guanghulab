@@ -52,6 +52,8 @@ app.set('trust proxy', 'loopback');
 const ALLOWED_ORIGINS = [
   'https://novel.guanghuyaoming.com',
   'https://guanghuyaoming.com',
+  'https://guanghu.online',
+  'https://www.guanghu.online',
   'http://localhost:3000',
   'http://127.0.0.1:3000'
 ];
