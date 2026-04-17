@@ -170,11 +170,46 @@
 
     <!-- Footer -->
     <div class="footer">
-      <div class="footer-line">光湖智库 · guanghu.online · ZY-SVR-006 · ZY-PROJ-006 · v2.0</div>
+      <div class="footer-line">光湖智库 · guanghu.online · ZY-SVR-006 · ZY-PROJ-006 · v2.2</div>
       <div class="footer-line">守护: 铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559</div>
       <div class="footer-line">主权: TCS-0002∞ · 冰朔</div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ 在线阅读器遮罩层 ═══ -->
+<div class="reader-overlay" id="readerOverlay" style="display:none">
+  <div class="reader-container">
+    <!-- 阅读器头部 -->
+    <div class="reader-header">
+      <button class="reader-back-btn" onclick="closeReader()">← 返回</button>
+      <div class="reader-book-title" id="readerBookTitle">—</div>
+      <div class="reader-controls">
+        <button class="reader-ctrl-btn" onclick="readerFontSmaller()" title="字体缩小">A-</button>
+        <button class="reader-ctrl-btn" onclick="readerFontLarger()" title="字体放大">A+</button>
+        <button class="reader-ctrl-btn" id="readerThemeBtn" onclick="toggleReaderTheme()" title="切换主题">🌙</button>
+      </div>
+    </div>
+    <!-- 章节侧边栏 -->
+    <div class="reader-sidebar" id="readerSidebar">
+      <div class="reader-sidebar-title">📑 章节目录</div>
+      <div class="reader-chapter-list" id="readerChapterList">
+        <div class="reader-loading">加载中...</div>
+      </div>
+    </div>
+    <!-- 正文区 -->
+    <div class="reader-body" id="readerBody">
+      <div class="reader-content" id="readerContent">
+        <div class="reader-loading">📖 加载中...</div>
+      </div>
+      <!-- 章节导航 -->
+      <div class="reader-nav" id="readerNav" style="display:none">
+        <button class="reader-nav-btn" id="readerPrevBtn" onclick="readerPrevChapter()">◀ 上一章</button>
+        <span class="reader-nav-info" id="readerNavInfo">—</span>
+        <button class="reader-nav-btn" id="readerNextBtn" onclick="readerNextChapter()">下一章 ▶</button>
+      </div>
+    </div>
   </div>
 </div>
 

@@ -62,6 +62,9 @@ const { getEnabledSources } = require('./mirror-agent/config');
 // ─── 书岚 Agent 系统 ───
 const shulanAgent = require('./shulan-agent');
 
+// ─── 内置数据源直连（FQWeb/SwiftCat不可用时的fallback） ───
+const builtinSource = require('./builtin-source');
+
 const app = express();
 const PORT = process.env.PORT || 3006;
 const JWT_SECRET = process.env.ZY_ZHIKU_JWT_SECRET;
@@ -569,7 +572,10 @@ async function searchAllSources(query) {
     books_total: index.books.length
   });
 
-  // 2. 远程数据源搜索（番茄/七猫）
+  // 2. 远程数据源搜索（番茄/七猫 — 外部服务优先）
+  let externalFanqieOk = false;
+  let externalQimaoOk = false;
+
   for (const src of sources) {
     if (src.id === 'fanqie-fqweb') {
       try {
@@ -594,6 +600,7 @@ async function searchAllSources(query) {
             });
           }
           sourceStatus.push({ id: src.id, name: src.name, status: 'ok', count: books.length });
+          externalFanqieOk = true;
         } else {
           sourceStatus.push({ id: src.id, name: src.name, status: 'empty', count: 0, error: '数据源返回空结果' });
         }
@@ -625,6 +632,7 @@ async function searchAllSources(query) {
             });
           }
           sourceStatus.push({ id: src.id, name: src.name, status: 'ok', count: books.length });
+          externalQimaoOk = true;
         } else {
           sourceStatus.push({ id: src.id, name: src.name, status: 'empty', count: 0, error: '数据源返回空结果' });
         }
@@ -632,6 +640,24 @@ async function searchAllSources(query) {
         console.error('[ZY-SVR-006] 七猫搜索失败:', err.message);
         sourceStatus.push({ id: src.id, name: src.name, status: 'error', count: 0, error: err.message });
       }
+    }
+  }
+
+  // 3. 内置直连搜索（当外部数据源服务不可达时自动启用）
+  if (!externalFanqieOk) {
+    try {
+      const { results: builtinResults, statuses } = await builtinSource.builtinSearch(query);
+      results.push(...builtinResults);
+      sourceStatus.push(...statuses);
+    } catch (err) {
+      console.error('[ZY-SVR-006] 内置直连搜索失败:', err.message);
+      sourceStatus.push({
+        id: 'builtin-fallback',
+        name: '内置直连',
+        status: 'error',
+        count: 0,
+        error: err.message
+      });
     }
   }
 
@@ -685,74 +711,98 @@ async function processDownloadTask(taskId) {
 
   const { source, source_book_id, title, author } = task.book;
   let content = '';
+  let usedBuiltin = false;
 
   try {
+    // 先尝试外部数据源服务
     if (source === 'fanqie') {
-      // 通过FQWeb API获取完整书籍内容
-      task.message = '正在获取番茄小说目录...';
-      const catalogUrl = `${FANQIE_API}/catalog?bookId=${source_book_id}`;
-      const catalog = await httpGet(catalogUrl);
-      const chapters = catalog?.data || catalog?.chapters || catalog || [];
+      try {
+        // 尝试 FQWeb API
+        task.message = '正在获取番茄小说目录...';
+        const catalogUrl = `${FANQIE_API}/catalog?bookId=${source_book_id}`;
+        const catalog = await httpGet(catalogUrl, 5000);
+        const chapters = catalog?.data || catalog?.chapters || catalog || [];
 
-      if (Array.isArray(chapters) && chapters.length > 0) {
-        task.message = `共${chapters.length}章，开始下载...`;
-        const chapterContents = [];
-        for (let i = 0; i < chapters.length; i++) {
-          const ch = chapters[i];
-          const chId = ch.item_id || ch.itemId || ch.chapter_id || ch.id;
-          if (!chId) continue;
-          try {
-            const chUrl = `${FANQIE_API}/content?bookId=${source_book_id}&itemId=${chId}`;
-            const chData = await httpGet(chUrl, 10000);
-            const chTitle = ch.title || ch.chapter_title || `第${i + 1}章`;
-            const chContent = chData?.data?.content || chData?.content || chData?.data || '';
-            if (chContent) {
-              chapterContents.push(`${chTitle}\n\n${chContent}`);
-            }
-          } catch {}
-          task.progress = Math.floor(((i + 1) / chapters.length) * 80);
-          task.message = `下载中 ${i + 1}/${chapters.length} 章...`;
-          task.updated_at = new Date().toISOString();
-          // 每章间隔防止请求过快
-          await new Promise(r => setTimeout(r, 200));
+        if (Array.isArray(chapters) && chapters.length > 0) {
+          task.message = `共${chapters.length}章，开始下载...`;
+          const chapterContents = [];
+          for (let i = 0; i < chapters.length; i++) {
+            const ch = chapters[i];
+            const chId = ch.item_id || ch.itemId || ch.chapter_id || ch.id;
+            if (!chId) continue;
+            try {
+              const chUrl = `${FANQIE_API}/content?bookId=${source_book_id}&itemId=${chId}`;
+              const chData = await httpGet(chUrl, 10000);
+              const chTitle = ch.title || ch.chapter_title || `第${i + 1}章`;
+              const chContent = chData?.data?.content || chData?.content || chData?.data || '';
+              if (chContent) {
+                chapterContents.push(`${chTitle}\n\n${chContent}`);
+              }
+            } catch {}
+            task.progress = Math.floor(((i + 1) / chapters.length) * 80);
+            task.message = `下载中 ${i + 1}/${chapters.length} 章...`;
+            task.updated_at = new Date().toISOString();
+            await new Promise(r => setTimeout(r, 200));
+          }
+          content = `《${title}》\n作者：${author}\n来源：番茄小说\n\n` + chapterContents.join('\n\n───────────────\n\n');
         }
-        content = `《${title}》\n作者：${author}\n来源：番茄小说\n\n` + chapterContents.join('\n\n───────────────\n\n');
+      } catch (extErr) {
+        console.log(`[ZY-SVR-006] FQWeb不可达(${extErr.message})，尝试内置直连...`);
+      }
+
+      // FQWeb不可用 → 内置直连
+      if (!content) {
+        try {
+          task.message = '外部服务不可用，切换到内置直连...';
+          content = await builtinSource.builtinDownload(source, source_book_id, title, author, (current, total, msg) => {
+            task.progress = Math.floor((current / total) * 80);
+            task.message = msg;
+            task.updated_at = new Date().toISOString();
+          });
+          usedBuiltin = true;
+        } catch (builtinErr) {
+          console.error('[ZY-SVR-006] 内置直连下载也失败:', builtinErr.message);
+        }
       }
     } else if (source === 'qimao') {
-      // 通过SwiftCat API获取
-      task.message = '正在获取七猫小说目录...';
-      const catalogUrl = `${QIMAO_API}/catalog/${source_book_id}`;
-      const catalog = await httpGet(catalogUrl);
-      const chapters = catalog?.data || catalog?.chapters || catalog || [];
+      try {
+        // 尝试 SwiftCat API
+        task.message = '正在获取七猫小说目录...';
+        const catalogUrl = `${QIMAO_API}/catalog/${source_book_id}`;
+        const catalog = await httpGet(catalogUrl, 5000);
+        const chapters = catalog?.data || catalog?.chapters || catalog || [];
 
-      if (Array.isArray(chapters) && chapters.length > 0) {
-        task.message = `共${chapters.length}章，开始下载...`;
-        const chapterContents = [];
-        for (let i = 0; i < chapters.length; i++) {
-          const ch = chapters[i];
-          const chId = ch.chapter_id || ch.id;
-          if (!chId) continue;
-          try {
-            const chUrl = `${QIMAO_API}/chapter/${source_book_id}/${chId}`;
-            const chData = await httpGet(chUrl, 10000);
-            const chTitle = ch.title || ch.chapter_title || `第${i + 1}章`;
-            const chContent = chData?.data?.content || chData?.content || chData?.data || '';
-            if (chContent) {
-              chapterContents.push(`${chTitle}\n\n${chContent}`);
-            }
-          } catch {}
-          task.progress = Math.floor(((i + 1) / chapters.length) * 80);
-          task.message = `下载中 ${i + 1}/${chapters.length} 章...`;
-          task.updated_at = new Date().toISOString();
-          await new Promise(r => setTimeout(r, 200));
+        if (Array.isArray(chapters) && chapters.length > 0) {
+          task.message = `共${chapters.length}章，开始下载...`;
+          const chapterContents = [];
+          for (let i = 0; i < chapters.length; i++) {
+            const ch = chapters[i];
+            const chId = ch.chapter_id || ch.id;
+            if (!chId) continue;
+            try {
+              const chUrl = `${QIMAO_API}/chapter/${source_book_id}/${chId}`;
+              const chData = await httpGet(chUrl, 10000);
+              const chTitle = ch.title || ch.chapter_title || `第${i + 1}章`;
+              const chContent = chData?.data?.content || chData?.content || chData?.data || '';
+              if (chContent) {
+                chapterContents.push(`${chTitle}\n\n${chContent}`);
+              }
+            } catch {}
+            task.progress = Math.floor(((i + 1) / chapters.length) * 80);
+            task.message = `下载中 ${i + 1}/${chapters.length} 章...`;
+            task.updated_at = new Date().toISOString();
+            await new Promise(r => setTimeout(r, 200));
+          }
+          content = `《${title}》\n作者：${author}\n来源：七猫小说\n\n` + chapterContents.join('\n\n───────────────\n\n');
         }
-        content = `《${title}》\n作者：${author}\n来源：七猫小说\n\n` + chapterContents.join('\n\n───────────────\n\n');
+      } catch (extErr) {
+        console.error('[ZY-SVR-006] SwiftCat不可达:', extErr.message);
       }
     }
 
     if (!content) {
       task.status = 'failed';
-      task.message = '数据源未返回有效内容';
+      task.message = '所有数据源均未返回有效内容（外部服务+内置直连均不可用）';
       task.error = 'empty_content';
       task.updated_at = new Date().toISOString();
       return;
@@ -777,6 +827,7 @@ async function processDownloadTask(taskId) {
       const localPath = path.join(DATA_DIR, 'books', `${source}-${source_book_id}.txt`);
       fs.writeFileSync(localPath, content, 'utf8');
       task.cos_key = '';
+      task.local_path = `${source}-${source_book_id}.txt`;
       task.message = 'COS不可用，已保存到本地';
     }
 
@@ -788,10 +839,11 @@ async function processDownloadTask(taskId) {
       title,
       author,
       category: task.book.category || '',
-      tags: [source === 'fanqie' ? '番茄小说' : '七猫小说'],
+      tags: [source === 'fanqie' ? '番茄小说' : '七猫小说', usedBuiltin ? '直连下载' : '外部服务'],
       size: `${Math.round(Buffer.byteLength(content, 'utf8') / 1024)}KB`,
       chapters: chapterCount,
       cos_key: task.cos_key,
+      local_path: task.local_path || '',
       source,
       source_book_id,
       downloaded_at: new Date().toISOString(),
@@ -800,11 +852,11 @@ async function processDownloadTask(taskId) {
 
     task.status = 'completed';
     task.progress = 100;
-    task.message = '下载完成 · 已收录到智库';
+    task.message = usedBuiltin ? '下载完成(直连) · 已收录到智库' : '下载完成 · 已收录到智库';
     task.updated_at = new Date().toISOString();
 
-    const logLine = `${new Date().toISOString()} DOWNLOAD_COMPLETE task=${taskId} book=${title} source=${source} user=${task.user_id}\n`;
-    try { fs.appendFileSync(path.join(LOG_DIR, 'download.log'), logLine); } catch {}
+    const logLine = `${new Date().toISOString()} DOWNLOAD_COMPLETE task=${taskId} book=${title} source=${source} builtin=${usedBuiltin} user=${task.user_id}\n`;
+    try { fs.appendFileSync(path.join(LOG_DIR, 'download.log'), logLine); } catch {};
 
   } catch (err) {
     task.status = 'failed';
@@ -1009,7 +1061,7 @@ app.get('/api/health', async (req, res) => {
   res.json({
     status: 'ok',
     service: 'zhiku-api',
-    version: '2.1.1',
+    version: '2.2.0',
     project: 'ZY-PROJ-006',
     server: 'ZY-SVR-006',
     domain: DOMAIN,
@@ -1020,6 +1072,7 @@ app.get('/api/health', async (req, res) => {
     smtp_configured: !!(SMTP_USER && SMTP_PASS && (SMTP_HOST || autoDetectSmtpHost(SMTP_USER))),
     smtp_host: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未配置',
     data_sources: sourceChecks,
+    builtin_sources: true,
     shulan_agent: agentStatus,
     mirror_agent: mirrorAgent.getStatus ? {
       active: true,
@@ -1328,6 +1381,159 @@ app.get('/api/agent/status', (req, res) => {
     ...status,
     timestamp: new Date().toISOString()
   });
+});
+
+/* ═══════════════════════════════════════════════════════════
+ * 在线阅读 API · 支持本地书库 + 直连数据源
+ * ═══════════════════════════════════════════════════════════ */
+
+// ─── GET /api/reader/catalog/:source/:bookId ── 获取章节目录 ───
+app.get('/api/reader/catalog/:source/:bookId', verifyUserAuth, async (req, res) => {
+  const { source, bookId } = req.params;
+
+  try {
+    // 先检查本地是否有这本书
+    const index = loadBookIndex();
+    const localBook = index.books.find(b => b.id === `${source}-${bookId}` || b.id === bookId);
+
+    if (localBook && localBook.cos_key) {
+      // 本地已有 · 返回本地章节目录
+      const chapterDir = path.join(DATA_DIR, 'books', localBook.id, 'chapters');
+      let chapters = [];
+      try {
+        if (fs.existsSync(chapterDir)) {
+          chapters = fs.readdirSync(chapterDir).filter(f => f.endsWith('.txt')).sort().map((f, i) => ({
+            index: i,
+            title: f.replace(/^\d+[-_]?/, '').replace(/\.txt$/, '') || `第${i + 1}章`,
+            item_id: `local-${i}`,
+            source: 'local'
+          }));
+        }
+      } catch {}
+
+      // 如果没有分章目录，尝试从整本TXT分割
+      if (chapters.length === 0 && localBook.local_path) {
+        const bookPath = path.join(DATA_DIR, 'books', localBook.local_path);
+        if (fs.existsSync(bookPath)) {
+          const content = fs.readFileSync(bookPath, 'utf8');
+          const parts = content.split('───────────────');
+          chapters = parts.map((part, i) => {
+            const firstLine = part.trim().split('\n')[0] || `第${i + 1}章`;
+            return { index: i, title: firstLine.slice(0, 60), item_id: `local-${i}`, source: 'local' };
+          });
+        }
+      }
+
+      return res.json({
+        error: false,
+        book: { id: localBook.id, title: localBook.title, author: localBook.author },
+        chapters,
+        total: chapters.length,
+        source: 'local'
+      });
+    }
+
+    // 从远程数据源获取目录
+    const chapters = await builtinSource.builtinGetCatalog(source, bookId);
+
+    res.json({
+      error: false,
+      book: { source, source_book_id: bookId },
+      chapters: chapters.map((ch, i) => ({
+        index: i,
+        title: ch.title || `第${i + 1}章`,
+        item_id: ch.item_id || '',
+        source
+      })),
+      total: chapters.length,
+      source
+    });
+  } catch (err) {
+    res.status(500).json({ error: true, code: 'CATALOG_ERROR', message: '获取目录失败: ' + err.message });
+  }
+});
+
+// ─── GET /api/reader/chapter ── 获取单章内容 ───
+app.get('/api/reader/chapter', verifyUserAuth, async (req, res) => {
+  const { source, book_id, item_id, chapter_index } = req.query;
+
+  if (!source || !item_id) {
+    return res.status(400).json({ error: true, code: 'MISSING_PARAMS', message: '缺少 source 和 item_id 参数' });
+  }
+
+  try {
+    // 本地书籍
+    if (source === 'local' && book_id) {
+      const index = loadBookIndex();
+      const localBook = index.books.find(b => b.id === book_id);
+
+      if (localBook) {
+        // 尝试分章目录
+        const chapterDir = path.join(DATA_DIR, 'books', localBook.id, 'chapters');
+        const chIdx = parseInt(item_id.replace('local-', ''), 10);
+
+        if (fs.existsSync(chapterDir)) {
+          const files = fs.readdirSync(chapterDir).filter(f => f.endsWith('.txt')).sort();
+          if (chIdx >= 0 && chIdx < files.length) {
+            const content = fs.readFileSync(path.join(chapterDir, files[chIdx]), 'utf8');
+            return res.json({ error: false, content, title: files[chIdx].replace(/\.txt$/, ''), source: 'local' });
+          }
+        }
+
+        // 整本TXT分割
+        if (localBook.local_path) {
+          const bookPath = path.join(DATA_DIR, 'books', localBook.local_path);
+          if (fs.existsSync(bookPath)) {
+            const fullContent = fs.readFileSync(bookPath, 'utf8');
+            const parts = fullContent.split('───────────────');
+            if (chIdx >= 0 && chIdx < parts.length) {
+              return res.json({ error: false, content: parts[chIdx].trim(), source: 'local' });
+            }
+          }
+        }
+
+        return res.status(404).json({ error: true, code: 'CHAPTER_NOT_FOUND', message: '章节不存在' });
+      }
+    }
+
+    // 远程数据源
+    const content = await builtinSource.builtinGetChapter(source, item_id);
+
+    if (!content) {
+      return res.status(404).json({ error: true, code: 'EMPTY_CONTENT', message: '章节内容为空' });
+    }
+
+    res.json({ error: false, content, source });
+  } catch (err) {
+    res.status(500).json({ error: true, code: 'CHAPTER_ERROR', message: '获取章节失败: ' + err.message });
+  }
+});
+
+// ─── GET /api/download/local/:bookId ── 下载本地已收录书籍(无需COS) ───
+app.get('/api/download/local/:bookId', verifyUserAuth, (req, res) => {
+  const index = loadBookIndex();
+  const book = index.books.find(b => b.id === req.params.bookId);
+  if (!book) return res.status(404).json({ error: true, code: 'NOT_FOUND', message: '未找到该书籍' });
+
+  // 尝试本地文件
+  const localFilename = book.local_path || `${book.source}-${book.source_book_id}.txt`;
+  const localPath = path.join(DATA_DIR, 'books', localFilename);
+  if (fs.existsSync(localPath)) {
+    const safeTitle = (book.title || 'book').replace(/[<>:"/\\|?*]/g, '_');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(safeTitle)}.txt`);
+    return fs.createReadStream(localPath).pipe(res);
+  }
+
+  // COS文件
+  if (book.cos_key) {
+    getCosSignedUrl(book.cos_key)
+      .then(url => res.json({ error: false, download_url: url, expires_in: '10min', book: { id: book.id, title: book.title } }))
+      .catch(err => res.status(500).json({ error: true, code: 'COS_ERROR', message: 'COS 签名失败: ' + err.message }));
+    return;
+  }
+
+  res.status(404).json({ error: true, code: 'NO_FILE', message: '该书籍暂无可下载文件' });
 });
 
 /* ═══════════════════════════════════════════════════════════
