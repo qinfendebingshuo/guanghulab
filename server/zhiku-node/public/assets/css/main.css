@@ -302,6 +302,74 @@ code{font-family:var(--mono);font-size:12px;padding:2px 6px;border-radius:4px;ba
 .dot.warn{background:var(--warn);box-shadow:0 0 8px rgba(251,191,36,0.4)}
 .dot.err{background:var(--err);box-shadow:0 0 8px rgba(248,113,113,0.4)}
 
+/* ═══ Search Result v2.0 ═══ */
+.search-summary{font-size:11px;color:var(--dim);margin-bottom:10px;padding:0 4px}
+.search-loading{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.search-result-card{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 18px;border-radius:12px;
+  background:rgba(14,20,48,0.5);border:1px solid var(--card-border);
+  transition:all .25s;margin-bottom:8px
+}
+.search-result-card:hover{border-color:var(--card-hover);background:rgba(14,20,48,0.7)}
+.result-info{flex:1;min-width:0}
+.result-title{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.result-meta{font-size:11px;color:var(--dim);margin-bottom:6px}
+.result-source{display:flex;gap:6px;flex-wrap:wrap}
+.source-badge{
+  font-size:10px;padding:2px 8px;border-radius:10px;
+  border:1px solid rgba(167,139,250,0.2);color:var(--dim);font-family:var(--mono)
+}
+.local-badge{color:var(--ok);border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.06)}
+.result-actions{display:flex;gap:6px;flex-shrink:0}
+.result-btn{
+  padding:8px 14px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(14,20,48,0.6);color:var(--text);font-size:12px;
+  cursor:pointer;transition:all .25s;font-family:var(--font);white-space:nowrap
+}
+.result-btn:hover{border-color:var(--purple);background:rgba(167,139,250,0.1)}
+.result-btn-dl{color:var(--cyan);border-color:rgba(34,211,238,0.2)}
+.result-btn-dl:hover{background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.4)}
+.result-btn-read{color:var(--purple);border-color:rgba(167,139,250,0.2)}
+.result-btn-read:hover{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.4)}
+
+/* ═══ Download Progress ═══ */
+.download-progress-card{
+  padding:16px 20px;border-radius:12px;margin-bottom:10px;
+  background:rgba(34,211,238,0.04);border:1px solid rgba(34,211,238,0.12);
+  animation:dlFadeIn .4s ease-out
+}
+@keyframes dlFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.download-progress-card.dl-done{border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.04)}
+.dl-title{font-size:13px;font-weight:600;margin-bottom:10px}
+.dl-bar-wrap{height:6px;border-radius:3px;background:rgba(96,165,250,0.08);overflow:hidden;margin-bottom:8px}
+.dl-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .5s ease-out}
+.dl-status{font-size:11px;color:var(--dim)}
+
+/* ═══ Agent v2.0 ═══ */
+.agent-msg-thinking .agent-msg-content{color:var(--dim);font-style:italic}
+.thinking-dots{animation:dots 1.2s steps(3,end) infinite}
+@keyframes dots{0%{content:'●'}33%{content:'●●'}67%{content:'●●●'}}
+
+.agent-search-results{padding:10px 14px !important}
+.agent-search-title{font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px}
+.agent-book-item{
+  display:flex;align-items:center;gap:8px;padding:6px 0;
+  border-bottom:1px solid rgba(167,139,250,0.06);font-size:12px
+}
+.agent-book-item:last-child{border-bottom:none}
+.agent-book-title{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-book-meta{color:var(--dim);font-size:10px;white-space:nowrap}
+.agent-dl-btn{
+  padding:4px 10px;border-radius:8px;border:1px solid rgba(34,211,238,0.2);
+  background:rgba(34,211,238,0.06);color:var(--cyan);font-size:11px;
+  cursor:pointer;transition:all .2s;flex-shrink:0
+}
+.agent-dl-btn:hover{background:rgba(34,211,238,0.15);border-color:rgba(34,211,238,0.4)}
+.agent-local-tag{font-size:10px;color:var(--ok);padding:2px 8px;border-radius:6px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15)}
+
 /* ═══ Footer ═══ */
 .footer{text-align:center;padding:32px 16px;margin-top:auto}
 .footer-line{font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
