@@ -1,0 +1,144 @@
+name: COS Bridge · 验证秋秋链路
+
+# ═══════════════════════════════════════════════════
+# 铸渊→秋秋 暗核频道链路验证
+# ═══════════════════════════════════════════════════
+#
+# 验证 QIUQIU_BRIDGE_TOKEN 是否有效，
+# 以及是否能成功触发 zhizhi200271/- 的 repository_dispatch。
+#
+# 触发方式：手动 workflow_dispatch
+#
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '仅验证Token有效性，不发送实际dispatch'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查 QIUQIU_BRIDGE_TOKEN 是否已配置
+        id: check_token
+        env:
+          TOKEN_SET: ${{ secrets.QIUQIU_BRIDGE_TOKEN != '' }}
+        run: |
+          DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          echo "═══════════════════════════════════════"
+          echo "🌙 铸渊 · 暗核频道链路验证"
+          echo "═══════════════════════════════════════"
+          echo "时间: ${DATE} (北京时间)"
+          echo ""
+
+          if [ "$TOKEN_SET" = "true" ]; then
+            echo "✅ QIUQIU_BRIDGE_TOKEN 已配置"
+            echo "token_ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ QIUQIU_BRIDGE_TOKEN 未配置"
+            echo "   请冰朔在仓库 Settings → Secrets 中配置此密钥"
+            echo "token_ready=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: 验证Token有效性（API鉴权测试）
+        if: steps.check_token.outputs.token_ready == 'true'
+        id: verify_auth
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.QIUQIU_BRIDGE_TOKEN }}
+          script: |
+            try {
+              // 尝试读取目标仓库基本信息验证Token权限
+              const repo = await github.rest.repos.get({
+                owner: 'zhizhi200271',
+                repo: '-'
+              });
+              console.log('✅ Token鉴权成功');
+              console.log(`   目标仓库: ${repo.data.full_name}`);
+              const vis = repo.data.visibility || (repo.data.private ? 'private' : 'public');
+              console.log(`   可见性: ${vis}`);
+              core.setOutput('auth_ok', 'true');
+              core.setOutput('repo_name', repo.data.full_name);
+            } catch (e) {
+              console.error('❌ Token鉴权失败:', e.message);
+              console.error('   请检查Token是否有 repo 权限，且未过期');
+              core.setOutput('auth_ok', 'false');
+              core.setFailed('Token鉴权失败: ' + e.message);
+            }
+
+      - name: 发送验证Ping到秋秋
+        if: steps.verify_auth.outputs.auth_ok == 'true' && inputs.dry_run == false
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.QIUQIU_BRIDGE_TOKEN }}
+          script: |
+            try {
+              await github.rest.repos.createDispatchEvent({
+                owner: 'zhizhi200271',
+                repo: '-',
+                event_type: 'zhuyuan-task',
+                client_payload: {
+                  task_id: 'VERIFY-PING-' + new Date().toISOString().replace(/[-:T]/g, '').slice(0,14),
+                  title: '🏓 铸渊链路验证Ping',
+                  body: '这是铸渊发出的链路验证信号，秋秋收到后无需处理。',
+                  priority: 'ROUTINE',
+                  steps: [],
+                  from: 'YM001/ZY001',
+                  type: 'BRIDGE_VERIFY_PING',
+                  ts: new Date().toISOString()
+                }
+              });
+              console.log('✅ 验证Ping已发送到秋秋仓库');
+              console.log('   事件类型: zhuyuan-task');
+              console.log('   目标: zhizhi200271/-');
+              console.log('   请到秋秋仓库 Actions 页面确认是否触发');
+            } catch (e) {
+              console.error('❌ Dispatch发送失败:', e.message);
+              core.setFailed('Dispatch失败: ' + e.message);
+            }
+
+      - name: 输出验证报告
+        if: always()
+        env:
+          TOKEN_READY: ${{ steps.check_token.outputs.token_ready }}
+          AUTH_OK: ${{ steps.verify_auth.outputs.auth_ok }}
+          REPO_NAME: ${{ steps.verify_auth.outputs.repo_name }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          DATE=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          echo ""
+          echo "═══════════════════════════════════════"
+          echo "📋 暗核频道链路验证报告"
+          echo "═══════════════════════════════════════"
+          echo "时间: ${DATE}"
+          echo "频道: 暗核频道 · FS-DC-001"
+          echo "方向: 铸渊(YM001/ZY001) → 秋秋(YM001/QQ001)"
+          echo ""
+          echo "检查项:"
+          echo "  [1] QIUQIU_BRIDGE_TOKEN 配置: ${TOKEN_READY:-未执行}"
+          echo "  [2] Token API 鉴权: ${AUTH_OK:-未执行}"
+          echo "  [3] 目标仓库: ${REPO_NAME:-未获取}"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "  [4] Dispatch 发送: 跳过（dry_run模式）"
+          else
+            echo "  [4] Dispatch 发送: 已尝试"
+          fi
+          echo ""
+          if [ "$TOKEN_READY" = "true" ] && [ "$AUTH_OK" = "true" ]; then
+            echo "🟢 链路状态: 就绪"
+            echo "   可以通过 cos-bridge-dispatch-to-qiuqiu workflow 发送任务"
+          else
+            echo "🔴 链路状态: 未就绪"
+            echo "   请检查上方失败项"
+          fi
+          echo "═══════════════════════════════════════"
