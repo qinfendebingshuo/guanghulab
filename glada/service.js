@@ -420,5 +420,9 @@ function startService() {
   });
   process.on('uncaughtException', (err) => {
     console.error('[GLADA] 未捕获异常:', err.message);
+    console.error('[GLADA] 堆栈:', err.stack);
+  });
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('[GLADA] 未处理的 Promise 拒绝（进程保活）:', reason);
   });
 }

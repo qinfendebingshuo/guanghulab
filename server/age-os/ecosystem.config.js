@@ -42,10 +42,16 @@ module.exports = {
       },
       instances: 1,
       autorestart: true,
+      watch: false,
       max_memory_restart: '256M',
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: '/opt/age-os/logs/mcp-error.log',
-      out_file: '/opt/age-os/logs/mcp-out.log'
+      out_file: '/opt/age-os/logs/mcp-out.log',
+      merge_logs: true,
+      // 重启策略：指数退避 + 限制重启次数，防止崩溃→重启死循环
+      exp_backoff_restart_delay: 100,
+      max_restarts: 15,
+      restart_delay: 3000
     },
     {
       name: 'age-os-agents',
@@ -57,10 +63,15 @@ module.exports = {
       },
       instances: 1,
       autorestart: true,
+      watch: false,
       max_memory_restart: '256M',
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: '/opt/age-os/logs/agents-error.log',
-      out_file: '/opt/age-os/logs/agents-out.log'
+      out_file: '/opt/age-os/logs/agents-out.log',
+      merge_logs: true,
+      exp_backoff_restart_delay: 100,
+      max_restarts: 15,
+      restart_delay: 3000
     }
   ]
 };
