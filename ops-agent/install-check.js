@@ -119,7 +119,7 @@ async function main() {
   const baseUrl = process.env.ZY_LLM_BASE_URL || '';
 
   if (apiKey && apiKey.length > 5) {
-    pass('LLM API密钥', `已配置 (${apiKey.length}字符 · ***已脱敏***)`);
+    pass('LLM API密钥', '已配置 (***已脱敏***)');
   } else {
     warn('LLM API密钥', '未配置（ZY_LLM_API_KEY/ZY_DEEPSEEK_API_KEY 缺失·对话功能仅限模式匹配）');
   }
