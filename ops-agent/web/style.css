@@ -1,0 +1,328 @@
+/**
+ * 铸渊运维守卫 · 样式
+ * 编号: ZY-OPS-WEB-001
+ * 版权: 国作登字-2026-A-00037559
+ */
+
+/* ── 基础 ─── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #050810;
+  --bg-card: #0a0f1a;
+  --bg-hover: #0e1425;
+  --border: #1a2332;
+  --text-primary: #e0e6ed;
+  --text-secondary: #8899aa;
+  --text-dim: #556677;
+  --accent: #22d3ee;
+  --accent-dim: #0e7490;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --critical: #dc2626;
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── 顶栏 ─── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #0a1628, #1a0a28);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-left .logo { font-size: 24px; }
+.header-left h1 { font-size: 16px; font-weight: 600; color: var(--accent); }
+.version { font-size: 11px; color: var(--text-dim); background: var(--bg-card); padding: 2px 8px; border-radius: 10px; }
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-dim);
+}
+.status-dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-dot.offline { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.status-text { font-size: 12px; color: var(--text-secondary); }
+
+/* ── 统计卡片 ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-value { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-warning .stat-value { color: var(--warning); }
+.stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* ── 主内容网格 ─── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+/* ── 面板公共 ─── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 { font-size: 14px; font-weight: 600; }
+
+/* ── 对话面板 ─── */
+.chat-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.chat-msg {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.chat-msg.system { background: #0c1525; color: var(--text-secondary); }
+.chat-msg.user { background: var(--accent-dim); color: var(--text-primary); margin-left: 40px; }
+.chat-msg.agent { background: #101828; border-left: 3px solid var(--accent); }
+.chat-msg.hint { background: #1a1a05; border-left: 3px solid var(--warning); color: var(--warning); font-size: 12px; }
+.chat-msg.error { background: #1a0505; border-left: 3px solid var(--danger); color: var(--danger); }
+
+.chat-msg p { margin: 0; }
+.chat-msg ul { margin: 5px 0; padding-left: 20px; }
+.chat-msg li { margin: 2px 0; }
+.chat-msg code { background: #1a2332; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.chat-msg strong { color: var(--accent); }
+
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input-area input {
+  flex: 1;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.chat-input-area input:focus { border-color: var(--accent); }
+
+/* ── 按钮 ─── */
+.btn-primary {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+.btn-primary:hover { background: var(--accent); color: #000; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-small {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-small:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-filter {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-filter.active { background: var(--accent-dim); color: var(--text-primary); border-color: var(--accent); }
+
+.btn-resolve {
+  background: transparent;
+  border: 1px solid var(--success);
+  color: var(--success);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn-resolve:hover { background: var(--success); color: #000; }
+
+/* ── 工单面板 ─── */
+.tickets-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket-filters { display: flex; gap: 6px; }
+
+.tickets-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px;
+  font-size: 13px;
+}
+
+.ticket-card {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.ticket-card.severity-critical { border-left: 3px solid var(--critical); }
+.ticket-card.severity-high { border-left: 3px solid var(--warning); }
+.ticket-card.severity-medium { border-left: 3px solid var(--accent); }
+.ticket-card.severity-low { border-left: 3px solid var(--text-dim); }
+
+.ticket-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.ticket-id { font-size: 11px; color: var(--accent); font-family: monospace; }
+.ticket-severity { font-size: 10px; padding: 1px 6px; border-radius: 3px; text-transform: uppercase; }
+
+.severity-critical .ticket-severity { background: #2a0505; color: var(--critical); }
+.severity-high .ticket-severity { background: #2a1a05; color: var(--warning); }
+.severity-medium .ticket-severity { background: #05202a; color: var(--accent); }
+
+.ticket-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.ticket-direction { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.ticket-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ── 操作栏 ─── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+}
+
+.btn-action {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.btn-action:hover { border-color: var(--accent); color: var(--accent); }
+.btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.last-check { font-size: 12px; color: var(--text-dim); margin-left: auto; }
+
+/* ── 事件流 ─── */
+.events-panel {
+  margin: 0 20px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.events-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.event-item {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  align-items: center;
+}
+
+.event-time { color: var(--text-dim); white-space: nowrap; font-family: monospace; min-width: 70px; }
+.event-title { font-weight: 600; white-space: nowrap; }
+.event-detail { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.event-success .event-title { color: var(--success); }
+.event-warning .event-title { color: var(--warning); }
+.event-error .event-title { color: var(--danger); }
+.event-info .event-title { color: var(--accent); }
+
+/* ── 滚动条 ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* ── 响应式 ─── */
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+  .chat-panel, .tickets-panel { height: 400px; }
+}

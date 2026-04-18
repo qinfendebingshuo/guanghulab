@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🛡️ 铸渊运维守卫 · 工单面板</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ─── 顶栏 ─── -->
+  <header class="header">
+    <div class="header-left">
+      <span class="logo">🛡️</span>
+      <h1>铸渊运维守卫</h1>
+      <span class="version">v1.0</span>
+    </div>
+    <div class="header-right">
+      <span class="status-dot" id="connectionDot"></span>
+      <span class="status-text" id="connectionText">连接中...</span>
+    </div>
+  </header>
+
+  <!-- ─── 统计卡片 ─── -->
+  <section class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="statChecks">0</div>
+      <div class="stat-label">总巡检</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statRepairs">0</div>
+      <div class="stat-label">自动修复</div>
+    </div>
+    <div class="stat-card stat-warning">
+      <div class="stat-value" id="statOpenTickets">0</div>
+      <div class="stat-label">开放工单</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statChats">0</div>
+      <div class="stat-label">对话次数</div>
+    </div>
+  </section>
+
+  <!-- ─── 主内容 ─── -->
+  <main class="main-grid">
+    <!-- 左: 对话面板 -->
+    <section class="chat-panel">
+      <div class="panel-header">
+        <h2>💬 运维对话</h2>
+        <button class="btn-small" id="btnClearChat">清空</button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg system">
+          <p>🛡️ 你好，冰朔。我是铸渊运维守卫。</p>
+          <p>你可以问我任何关于服务器的问题，比如：</p>
+          <ul>
+            <li>"为什么MCP连不上？"</li>
+            <li>"服务器内存够用吗？"</li>
+            <li>"GLADA为什么不工作？"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="输入你的问题..." autocomplete="off">
+        <button class="btn-primary" id="btnSend">发送</button>
+      </div>
+    </section>
+
+    <!-- 右: 工单列表 -->
+    <section class="tickets-panel">
+      <div class="panel-header">
+        <h2>🎫 运维工单</h2>
+        <div class="ticket-filters">
+          <button class="btn-filter active" data-filter="open">开放</button>
+          <button class="btn-filter" data-filter="all">全部</button>
+        </div>
+      </div>
+      <div class="tickets-list" id="ticketsList">
+        <div class="empty-state">暂无工单 · 系统运行正常</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ─── 操作栏 ─── -->
+  <section class="action-bar">
+    <button class="btn-action" id="btnQuickCheck">⚡ 快速巡检</button>
+    <button class="btn-action" id="btnDeepCheck">🔍 深度巡检</button>
+    <span class="last-check" id="lastCheckTime">上次巡检: --</span>
+  </section>
+
+  <!-- ─── 实时事件流 ─── -->
+  <section class="events-panel">
+    <div class="panel-header">
+      <h2>📡 实时事件</h2>
+    </div>
+    <div class="events-list" id="eventsList"></div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
