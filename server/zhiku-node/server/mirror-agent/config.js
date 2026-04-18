@@ -95,10 +95,20 @@ const DATA_SOURCES = [
     version_url: '{base_url}/version',
     base_url: process.env.ZY_FANQIE_API_URL || 'http://127.0.0.1:9999',
     github_repo: 'https://github.com/benefit77/FanQieWeb',
-    deploy_notes: 'Kotlin JAR 服务 · 默认端口 9999 · 需 JRE 17+',
+    deploy_notes: 'Kotlin JAR 服务 · 默认端口 9999 · 需 JDK 17+',
+    enabled: true,
+    priority: 2,
+    notes: '番茄小说外部Web服务 · 有内置直连(fanqie-direct)作为fallback'
+  },
+  {
+    id: 'fanqie-direct',
+    name: '番茄小说 · 内置直连',
+    type: 'builtin',
+    base_url: 'https://fanqienovel.com',
+    deploy_notes: '内置Node.js适配器 · 直连番茄Web API · 无需外部服务',
     enabled: true,
     priority: 1,
-    notes: '番茄小说 Web 服务 · 搜索/详情/目录/章节内容全接口'
+    notes: '番茄小说内置直连适配器 · 搜索/目录/章节/下载全链路'
   },
   {
     id: 'fanqie-api-server',
@@ -112,8 +122,18 @@ const DATA_SOURCES = [
     github_repo: 'https://github.com/huijian222/fanqienovel-API-server',
     deploy_notes: 'Python Flask · pip install · 默认端口 5000',
     enabled: false,
-    priority: 2,
+    priority: 3,
     notes: '番茄小说 Flask API 服务 · 备用源'
+  },
+  {
+    id: 'qimao-direct',
+    name: '七猫小说 · 内置直连',
+    type: 'builtin',
+    base_url: 'https://www.qimao.com',
+    deploy_notes: '内置Node.js适配器 · 直连七猫Web API/网页抓取 · 无需外部服务 · 支持AES解密',
+    enabled: true,
+    priority: 1,
+    notes: '七猫小说内置直连适配器 · 多策略(API+网页抓取) · 铸渊哨兵自动维护'
   },
   {
     id: 'qimao-downloader',
@@ -127,9 +147,19 @@ const DATA_SOURCES = [
     github_repo: 'https://github.com/shing-yu/7mao-novel-downloader',
     github_repo_new: 'https://github.com/shing-yu/swiftcat-downloader',
     deploy_notes: 'Python · pip install · 或 Flutter 桌面版',
+    enabled: false,
+    priority: 3,
+    notes: '七猫小说外部下载器 · 已有内置直连(qimao-direct)替代 · 禁用'
+  },
+  {
+    id: 'biquge-direct',
+    name: '笔趣阁聚合 · 内置直连',
+    type: 'builtin',
+    base_url: 'https://69shu.buzs.cc',
+    deploy_notes: '内置Node.js适配器 · 聚合多个免费小说站 · 海外IP友好',
     enabled: true,
     priority: 1,
-    notes: '七猫小说下载器 · 支持搜索/下载/导出 TXT/EPUB'
+    notes: '笔趣阁/69书吧聚合直连 · 海外IP可达 · 免费小说源'
   }
 ];
 

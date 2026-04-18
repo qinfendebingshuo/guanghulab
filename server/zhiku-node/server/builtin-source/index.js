@@ -8,11 +8,13 @@
  *
  * 内置源:
  *   1. fanqie-direct — 番茄小说 Web API 直连
- *   2. biquge-direct — 笔趣阁/69书吧聚合直连（海外IP友好）
+ *   2. qimao-direct  — 七猫小说 Web API / 网页抓取直连
+ *   3. biquge-direct — 笔趣阁/69书吧聚合直连（海外IP友好）
  *
  * 架构:
  *   searchAllSources() → 先尝试外部服务 → 失败 → 启用内置直连
  *   biquge-direct 始终参与搜索（不依赖外部服务状态）
+ *   qimao-direct 作为七猫小说的内置直连（SwiftCat不可用时自动启用）
  *
  * 守护: 铸渊 · ICE-GL-ZY001
  * 版权: 国作登字-2026-A-00037559
@@ -22,6 +24,12 @@
 'use strict';
 
 const fanqieDirect = require('./fanqie-direct');
+let qimaoDirect = null;
+try {
+  qimaoDirect = require('./qimao-direct');
+} catch (err) {
+  console.warn(`[builtin-source] ⚠️ qimao-direct 加载失败: ${err.message}`);
+}
 let biqugeDirect = null;
 try {
   biqugeDirect = require('./biquge-direct');
@@ -93,6 +101,32 @@ async function builtinSearch(query) {
     );
   }
 
+  // 七猫小说直连搜索
+  if (qimaoDirect) {
+    searches.push(
+      (async () => {
+        try {
+          const books = await qimaoDirect.search(query, 1);
+          results.push(...books);
+          statuses.push({
+            id: 'qimao-direct',
+            name: '七猫小说(直连)',
+            status: 'ok',
+            count: books.length
+          });
+        } catch (err) {
+          statuses.push({
+            id: 'qimao-direct',
+            name: '七猫小说(直连)',
+            status: 'error',
+            count: 0,
+            error: err.message
+          });
+        }
+      })()
+    );
+  }
+
   await Promise.allSettled(searches);
 
   return { results, statuses };
@@ -112,11 +146,15 @@ async function builtinDownload(source, bookId, title, author, onProgress) {
     return fanqieDirect.downloadBook(bookId, title, author, onProgress);
   }
 
+  if (source === 'qimao' && qimaoDirect) {
+    return qimaoDirect.downloadBook(bookId, title, author, onProgress);
+  }
+
   if (source === 'shu69' && biqugeDirect) {
     return biqugeDirect.downloadBook(bookId, title, author, onProgress);
   }
 
-  throw new Error(`内置直连暂不支持数据源: ${source}。当前支持: fanqie, shu69`);
+  throw new Error(`内置直连暂不支持数据源: ${source}。当前支持: fanqie, qimao, shu69`);
 }
 
 /**
@@ -125,6 +163,9 @@ async function builtinDownload(source, bookId, title, author, onProgress) {
 async function builtinGetCatalog(source, bookId) {
   if (source === 'fanqie') {
     return fanqieDirect.getCatalog(bookId);
+  }
+  if (source === 'qimao' && qimaoDirect) {
+    return qimaoDirect.getCatalog(bookId);
   }
   if (source === 'shu69' && biqugeDirect) {
     return biqugeDirect.getCatalog(bookId);
@@ -138,6 +179,9 @@ async function builtinGetCatalog(source, bookId) {
 async function builtinGetChapter(source, itemId, bookId) {
   if (source === 'fanqie') {
     return fanqieDirect.getChapterContent(itemId);
+  }
+  if (source === 'qimao' && qimaoDirect) {
+    return qimaoDirect.getChapterContent(bookId, itemId);
   }
   if (source === 'shu69' && biqugeDirect) {
     return biqugeDirect.getChapterContent(bookId, itemId);
@@ -167,6 +211,23 @@ async function healthCheckAll() {
     })()
   );
 
+  if (qimaoDirect) {
+    promises.push(
+      (async () => {
+        try {
+          checks.push(await qimaoDirect.healthCheck());
+        } catch (err) {
+          checks.push({
+            source: 'qimao-direct',
+            name: '七猫小说(直连)',
+            reachable: false,
+            error: err.message
+          });
+        }
+      })()
+    );
+  }
+
   if (biqugeDirect) {
     promises.push(
       (async () => {
@@ -195,5 +256,6 @@ module.exports = {
   builtinGetChapter,
   healthCheckAll,
   fanqieDirect,
+  qimaoDirect,
   biqugeDirect
 };
