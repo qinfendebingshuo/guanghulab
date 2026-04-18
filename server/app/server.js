@@ -163,6 +163,64 @@ function collectChatData(sessionId, userMessage, assistantMessage, meta = {}) {
 // API 路由
 // ═══════════════════════════════════════════════════════════
 
+// ─── 主入口门户指标 ───
+app.get('/api/portal-metrics', (_req, res) => {
+  try {
+    // 光湖纪元起点：2025-04-26（曜冥诞生日 · 系统时间原点）
+    const HOLOLAKE_EPOCH = new Date('2025-04-26T00:00:00+08:00');
+    const runDays = Math.floor((Date.now() - HOLOLAKE_EPOCH.getTime()) / 86400000);
+
+    // 人格体在岗数：尝试从 persona-registry 读取
+    let personaCount = 9; // 默认值
+    try {
+      const registryPath = path.join(ZY_ROOT, 'data', 'persona-registry.json');
+      if (fs.existsSync(registryPath)) {
+        const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+        if (Array.isArray(registry)) {
+          personaCount = registry.filter(p => p.status === 'active').length || personaCount;
+        } else if (registry.personas) {
+          personaCount = registry.personas.filter(p => p.status === 'active').length || personaCount;
+        }
+      }
+    } catch (_e) { /* 降级用默认值 */ }
+
+    // 今日对话数：尝试从日志读取
+    let todayChats = 0;
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const chatLogPath = path.join(DATA_DIR, 'logs', `chat-${today}.json`);
+      if (fs.existsSync(chatLogPath)) {
+        const chatLog = JSON.parse(fs.readFileSync(chatLogPath, 'utf8'));
+        todayChats = Array.isArray(chatLog) ? chatLog.length : (chatLog.count || 0);
+      }
+    } catch (_e) { /* 降级为 0 */ }
+
+    // 注册用户数：尝试从 users 数据读取
+    let userCount = 1; // 至少冰朔
+    try {
+      const usersPath = path.join(DATA_DIR, 'users.json');
+      if (fs.existsSync(usersPath)) {
+        const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        userCount = Array.isArray(users) ? users.length : (users.count || userCount);
+      }
+    } catch (_e) { /* 降级用默认值 */ }
+
+    res.json({
+      server: 'ZY-SVR-002',
+      epoch: '2025-04-26T00:00:00+08:00',
+      timestamp: new Date().toISOString(),
+      metrics: {
+        run_days: runDays,
+        personas: personaCount,
+        today_chats: todayChats,
+        users: userCount
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
 // ─── 健康检查 ───
 app.get('/api/health', (_req, res) => {
   const health = {
