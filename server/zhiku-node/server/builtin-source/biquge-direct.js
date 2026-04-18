@@ -442,6 +442,10 @@ async function downloadBook(bookId, title, author, onProgress) {
     throw new Error(`未能获取到任何章节内容 (尝试${chapters.length}章·全部失败)`);
   }
 
+  if (contents.length < chapters.length) {
+    console.warn(`[biquge-direct] 部分下载: ${contents.length}/${chapters.length} 章成功 (${failCount}章失败)`);
+  }
+
   return `《${title}》\n作者：${author || '未知'}\n来源：69书吧（直连聚合）\n` +
     `下载时间：${new Date().toISOString()}\n` +
     `成功章节：${contents.length}/${chapters.length}\n\n` +

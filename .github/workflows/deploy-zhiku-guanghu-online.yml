@@ -295,7 +295,7 @@ jobs:
 
           echo "[ZY-SVR-006] ─── 安装运行环境 ───"
 
-          # JRE 17 (FQWeb 需要)
+          # JRE 17+ (FQWeb 需要 · JRE 17 或更高版本均可)
           if ! java -version 2>&1 | grep -q '17\|21'; then
             echo "[ZY-SVR-006] 安装 JRE 17..."
             apt-get update -q
@@ -416,13 +416,14 @@ jobs:
           #!/bin/bash
           cd /opt/zhiku/datasources/swiftcat
           source venv/bin/activate 2>/dev/null || true
-          # 尝试常见入口
+          export PORT=7700
+          # 尝试常见入口（优先使用环境变量PORT，兼容--port参数）
           if [ -f "app.py" ]; then
-            exec python3 app.py --port 7700
+            exec python3 app.py --port ${PORT} 2>/dev/null || exec python3 app.py
           elif [ -f "main.py" ]; then
-            exec python3 main.py --port 7700
+            exec python3 main.py --port ${PORT} 2>/dev/null || exec python3 main.py
           elif [ -f "server.py" ]; then
-            exec python3 server.py --port 7700
+            exec python3 server.py --port ${PORT} 2>/dev/null || exec python3 server.py
           else
             echo "[SwiftCat] 未找到入口文件"
             ls -la
