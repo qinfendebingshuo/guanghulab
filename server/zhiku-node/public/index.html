@@ -297,12 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (si) {
     si.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
-        var res = document.getElementById('searchResults');
-        var chat = document.getElementById('agentPanel');
-        if (res) res.style.display = 'block';
-        if (chat) chat.style.display = 'none';
-        var navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(function(el, i) { el.classList.toggle('active', i === 1); });
+        handleSearchClick();
       }
     });
   }
