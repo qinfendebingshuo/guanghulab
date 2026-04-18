@@ -21,6 +21,19 @@ const http = require('http');
 const https = require('https');
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+const CHAPTER_DOWNLOAD_DELAY_MS = 500;
+
+/**
+ * 清洁化并验证数字ID
+ * @param {string} id - 原始ID
+ * @param {string} label - 用于错误消息的标签
+ * @returns {string} 纯数字ID
+ */
+function sanitizeNumericId(id, label) {
+  const safe = String(id || '').replace(/[^0-9]/g, '');
+  if (!safe) throw new Error(`Invalid ${label}: must be numeric`);
+  return safe;
+}
 
 // ─── 数据源配置（可动态扩展） ───
 const SOURCES = [
@@ -101,12 +114,14 @@ function cleanHtml(html) {
   text = text.replace(/<br\s*\/?>/gi, '\n');
   text = text.replace(/<\/p>/gi, '\n');
   text = text.replace(/<\/div>/gi, '\n');
-  // 循环移除标签
+  // 循环移除标签（最多10轮防DoS）
   let prev;
+  let rounds = 0;
   do {
     prev = text;
     text = text.replace(/<[^>]*>/g, '');
-  } while (text !== prev);
+    rounds++;
+  } while (text !== prev && rounds < 10);
   // 解码HTML实体（&amp; 最后）
   text = text
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
@@ -345,9 +360,7 @@ async function search(query) {
  * @returns {Promise<Array>} 章节列表
  */
 async function getCatalog(bookId) {
-  // 清洁化 bookId 确保是纯数字
-  const safeBookId = String(bookId).replace(/[^0-9]/g, '');
-  if (!safeBookId) throw new Error('Invalid book ID');
+  const safeBookId = sanitizeNumericId(bookId, 'book ID');
 
   const url = `https://69shu.buzs.cc/book/${safeBookId}/`;
   const { body } = await httpGetRaw(url, 15000);
@@ -362,9 +375,8 @@ async function getCatalog(bookId) {
  * @returns {Promise<string>} 章节纯文本内容
  */
 async function getChapterContent(bookId, chapterId) {
-  const safeBookId = String(bookId).replace(/[^0-9]/g, '');
-  const safeChapterId = String(chapterId).replace(/[^0-9]/g, '');
-  if (!safeBookId || !safeChapterId) throw new Error('Invalid book/chapter ID');
+  const safeBookId = sanitizeNumericId(bookId, 'book ID');
+  const safeChapterId = sanitizeNumericId(chapterId, 'chapter ID');
 
   const url = `https://69shu.buzs.cc/book/${safeBookId}/${safeChapterId}`;
   const { body } = await httpGetRaw(url, 15000);
@@ -422,8 +434,8 @@ async function downloadBook(bookId, title, author, onProgress) {
       onProgress(i + 1, chapters.length, `下载中 ${i + 1}/${chapters.length} 章...`);
     }
 
-    // 章间延迟 500ms，避免请求过快被封
-    await new Promise(r => setTimeout(r, 500));
+    // 章间延迟，避免请求过快被封
+    await new Promise(r => setTimeout(r, CHAPTER_DOWNLOAD_DELAY_MS));
   }
 
   if (contents.length === 0) {
