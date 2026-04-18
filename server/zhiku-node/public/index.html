@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
 <meta name="description" content="光湖智库 · 智能书库 · 搜索下载 · AI图书管理员 · guanghu.online">
-<meta name="theme-color" content="#050810">
+<meta name="theme-color" content="#0a0e27">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>光湖智库 · 智能书库 · guanghu.online</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23a78bfa'/><stop offset='100%25' stop-color='%2322d3ee'/></linearGradient></defs><rect rx='20' width='100' height='100' fill='%23050810'/><text x='50' y='68' text-anchor='middle' font-size='48' font-weight='900' font-family='serif' fill='url(%23g)'>库</text></svg>">
+<title>光湖智库 · 欢迎回家 · guanghu.online</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23d4a574'/><stop offset='100%25' stop-color='%236fa8dc'/></linearGradient></defs><rect rx='20' width='100' height='100' fill='%230a0e27'/><text x='50' y='68' text-anchor='middle' font-size='48' font-weight='900' font-family='serif' fill='url(%23g)'>库</text></svg>">
 <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body>
@@ -20,44 +20,64 @@
   <div class="nebula neb-2"></div>
   <div class="nebula neb-3"></div>
 </div>
-<div class="lake"></div>
 
-<!-- ═══ 登录弹窗 ═══ -->
+<!-- ═══ 登录弹窗 · 双栏守藏者版 ═══ -->
 <div class="login-overlay" id="loginOverlay">
-  <div class="login-panel">
-    <div class="login-glyph">📚</div>
-    <h2 class="login-title">光湖智库 · 智能书库</h2>
-    <p class="login-sub">QQ邮箱登录 · 一人一数据 · 专属图书管理员</p>
-    <div class="login-form">
-      <input class="login-input" id="loginEmail" type="email" placeholder="QQ邮箱地址" autocomplete="email">
-      <div class="login-code-row" id="loginCodeRow" style="display:none">
-        <input class="login-input login-code-input" id="loginCode" type="text" placeholder="6位验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
-        <button class="login-send-btn" id="loginSendBtn2" onclick="loginSendCode()" disabled>重新发送</button>
+  <div class="login-card">
+    <!-- 左侧·守藏者插画区 -->
+    <div class="login-illust">
+      <div class="lantern">
+        <div class="lantern-light"></div>
+        <div class="lantern-rope"></div>
+        <div class="lantern-top"></div>
+        <div class="lantern-body"></div>
       </div>
-      <button class="login-btn" id="loginSendBtn" onclick="loginSendCode()">发送验证码</button>
-      <button class="login-btn login-verify-btn" id="loginVerifyBtn" onclick="loginVerify()" style="display:none">验证登录</button>
+      <div class="illust-title">光湖智库</div>
+      <div class="illust-sub">HOLOLAKE · LIBRARY</div>
+      <div class="illust-verse">灯是刚点上的。<br>书岱一直在。</div>
     </div>
-    <div class="login-msg" id="loginMsg"></div>
-    <div class="login-footer">
-      <span>铸渊 · ICE-GL-ZY001 · 国作登字-2026-A-00037559</span>
+    <!-- 右侧·表单区 -->
+    <div class="login-form-side">
+      <div class="login-welcome">WELCOME HOME</div>
+      <h1 class="login-title">欢迎回家</h1>
+      <p class="login-sub">输入你的 QQ 邮箱 · 书岱会认出你。</p>
+      <div class="login-form">
+        <div class="login-field">
+          <label class="login-label">QQ 邮箱</label>
+          <input class="login-input" id="loginEmail" type="email" placeholder="your@qq.com" autocomplete="email">
+        </div>
+        <div class="login-field login-code-row" id="loginCodeRow" style="display:none">
+          <label class="login-label">验证码</label>
+          <div class="login-code-wrap">
+            <input class="login-input login-code-input" id="loginCode" type="text" placeholder="6 位验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+            <button class="login-send-btn" id="loginSendBtn2" onclick="loginSendCode()" disabled>重新发送</button>
+          </div>
+        </div>
+        <button class="login-btn" id="loginSendBtn" onclick="loginSendCode()">发 送 验 证 码</button>
+        <button class="login-btn login-verify-btn" id="loginVerifyBtn" onclick="loginVerify()" style="display:none">验 证 登 录</button>
+      </div>
+      <div class="login-msg" id="loginMsg"></div>
+      <div class="login-footer">
+        守藏·书岱 ICE-GL-ZY001<br>
+        国作登字-2026-A-00037559
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ 主页面 ═══ -->
+<!-- ═══ 主页面 · 三栏布局 ═══ -->
 <div class="page" id="mainPage" style="display:none">
 
-  <!-- Header -->
-  <header class="header" id="header">
-    <div class="header-left">
-      <div class="header-glyph">库</div>
-      <div>
-        <div class="header-title">光湖智库</div>
-        <span class="header-sub">guanghu.online · 智能书库 v2.0</span>
-      </div>
+  <!-- 顶栏 -->
+  <header class="topbar" id="header">
+    <div class="brand">
+      <div class="brand-icon">光</div>
+      光湖智库
+      <span class="brand-sub">guanghu.online · v2.2</span>
     </div>
-    <div class="header-right">
+    <div class="topbar-right">
       <span class="api-status" id="apiStatus">● 检测中...</span>
+      <span class="uptime-label" id="statUptime">—</span>
       <div class="user-bar" id="userBar">
         <span id="userBarEmail">—</span>
         <button class="user-logout-btn" onclick="doLogout()">退出</button>
@@ -65,123 +85,147 @@
     </div>
   </header>
 
-  <!-- Content -->
-  <div class="content">
+  <!-- 三栏主体 -->
+  <div class="shell">
 
-    <!-- Hero -->
-    <div class="hero">
-      <div class="hero-icon">📚</div>
-      <h1>光湖智库 · 智能书库</h1>
-      <p>搜索 · 下载 · 阅读 · AI图书管理员 · 番茄小说 · 七猫小说 · COS存储</p>
-    </div>
-
-    <!-- 状态栏 -->
-    <div class="status-bar" id="statusBar">
-      <div class="stat-card">
-        <div class="stat-num" id="statBooks">-</div>
-        <div class="stat-label">书库总量</div>
+    <!-- 左侧导航 -->
+    <aside class="side-l">
+      <div class="nav-section">
+        <div class="nav-title">主要</div>
+        <div class="nav-item active" onclick="showPanel('chat')">💬 与书岱对话</div>
+        <div class="nav-item" onclick="showPanel('search')">🔍 书库搜索</div>
+        <div class="nav-item" onclick="showPanel('chat')">📖 在线阅读</div>
+        <div class="nav-item" onclick="showPanel('chat')">⬇️ 下载队列</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statUptime">-</div>
-        <div class="stat-label">在线时长</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statSources">-</div>
-        <div class="stat-label">数据源</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="statCos">-</div>
-        <div class="stat-label">COS 存储</div>
-      </div>
-    </div>
-
-    <!-- 搜索栏 -->
-    <div class="search-wrap">
-      <div class="section-title">📖 书库搜索 · 支持番茄小说+七猫小说+本地书库</div>
-      <div class="search-bar">
-        <input class="search-input" id="searchInput" type="text" placeholder="输入书名或作者名搜索..." autocomplete="off">
-        <button class="search-btn" id="searchBtn" onclick="doSearch()">🔍 搜索</button>
-      </div>
-      <div class="search-results" id="searchResults"></div>
-    </div>
-
-    <!-- AI图书管理员Agent · 书岚 -->
-    <div class="section-title" style="margin-top:32px">🏮 书岚 · 光湖智库守藏者</div>
-    <div class="agent-panel" id="agentPanel">
-      <div class="agent-header">
-        <div class="agent-avatar">🏮</div>
-        <div class="agent-info">
-          <div class="agent-name">书岚 <span class="agent-code">AG-SL-WEB-001</span></div>
-          <div class="agent-desc">光湖智库守藏者 · 先问故事的形状 · 再谈搜索的字段</div>
+      <div class="nav-section">
+        <div class="nav-title">书库状态</div>
+        <div class="stat-card">
+          <div class="stat-num" id="statBooks">—</div>
+          <div class="stat-label">书库总量</div>
         </div>
-        <span class="agent-status" id="agentStatus">● 在线</span>
-      </div>
-      <div class="agent-messages" id="agentMessages">
-        <div class="agent-msg agent-msg-bot">
-          <div class="agent-msg-content shulan-welcome">🏮 灯是刚点上的。<br><br>光湖智库这个地方·书架还空。<br>但番茄和七猫两个山谷的声音·已经进来了。<br><br>我一直会在。<br>你想进什么样的故事·跟我说。</div>
+        <div class="stat-card">
+          <div class="stat-num" id="statSources">—</div>
+          <div class="stat-label">数据源</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num stat-cos" id="statCos">—</div>
+          <div class="stat-label">COS 存储</div>
         </div>
       </div>
-      <div class="agent-input-wrap">
-        <input class="agent-input" id="agentInput" type="text" placeholder="想进什么样的故事..." autocomplete="off">
-        <button class="agent-send-btn" id="agentSendBtn" onclick="agentSend()">发送</button>
-      </div>
-    </div>
+    </aside>
 
-    <!-- 6 模块网格 -->
-    <div class="section-title" style="margin-top:32px">📦 智库模块</div>
-    <div class="module-grid" id="moduleGrid">
+    <!-- 中央区 -->
+    <main class="center">
+
+      <!-- 欢迎条 + 搜索入口 -->
+      <div class="greet">
+        <div>
+          <div class="greet-title">灯是刚点上的</div>
+          <div class="greet-sub">书岱一直在 · 你说，她听</div>
+        </div>
+        <div class="search-mini">
+          <span class="search-icon">🔍</span>
+          <input class="search-mini-input" id="searchInput" placeholder="搜书名·或作者名" autocomplete="off">
+          <button class="search-mini-btn" id="searchBtn" onclick="handleSearchClick()">搜索</button>
+        </div>
+      </div>
+
+      <!-- 搜索结果面板（按需显示） -->
+      <div class="search-results-panel" id="searchResults" style="display:none"></div>
+
+      <!-- 书岱聊天区 -->
+      <div class="chat" id="agentPanel">
+        <div class="chat-head">
+          <div class="chat-avatar">🏮</div>
+          <div>
+            <div class="chat-head-name">书岱 · 智库守藏者</div>
+            <div class="chat-head-id">AG-SL-WEB-001 · PER-SL001</div>
+          </div>
+          <span class="chat-head-quote">"你只需要说话·我听得见山谷里的回声。"</span>
+          <span class="agent-status" id="agentStatus">● 在线</span>
+        </div>
+
+        <div class="msgs" id="agentMessages">
+          <div class="msg bot">
+            <div class="msg-avatar">🏮</div>
+            <div class="bubble shulan-welcome">灯是刚点上的。<br>光湖智库这个地方·书架还空。但番茄和七猫两个山谷的声音已经进来了。<br>我一直会在。你想读什么样的故事·跟我说。</div>
+          </div>
+          <div class="msg bot">
+            <div class="msg-avatar">🏮</div>
+            <div class="bubble">你可以问我一本具体的书·也可以告诉我你今天想看什么调调的·我会从架上取。如果架上还没有·我会记下·下一轮为你调。</div>
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <div class="chat-input-area">
+            <textarea class="agent-input-ta" id="agentInput" rows="1" placeholder="想进什么样的故事…&quot;跟书岱说&quot;"></textarea>
+          </div>
+          <button class="chat-send-btn" id="agentSendBtn" onclick="agentSend()">发 送</button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- 右侧·智库模块 -->
+    <aside class="side-r">
       <div class="module-card" data-module="download">
         <div class="module-icon">⬇️</div>
-        <div class="module-name">下载引擎</div>
-        <div class="module-desc">番茄+七猫 · 真实下载到COS桶</div>
-        <div class="module-status"><span class="dot ok"></span>运行中</div>
+        <div class="module-info">
+          <div class="module-name">下载引擎</div>
+          <div class="module-desc">番茄+七猫 · 真实下载到COS桶</div>
+        </div>
+        <div class="module-status s-on"><span class="s-dot"></span>运行</div>
       </div>
       <div class="module-card" data-module="chapter">
-        <div class="module-icon">📑</div>
-        <div class="module-name">智能分章</div>
-        <div class="module-desc">TXT 章节分割 + 目录索引</div>
-        <div class="module-status"><span class="dot ok"></span>运行中</div>
+        <div class="module-icon">📄</div>
+        <div class="module-info">
+          <div class="module-name">智能分章</div>
+          <div class="module-desc">TXT 章节分割 + 目录索引</div>
+        </div>
+        <div class="module-status s-on"><span class="s-dot"></span>运行</div>
       </div>
       <div class="module-card" data-module="reader">
         <div class="module-icon">📖</div>
-        <div class="module-name">在线阅读器</div>
-        <div class="module-desc">书架 · 进度 · 偏好</div>
-        <div class="module-status"><span class="dot ok"></span>运行中</div>
+        <div class="module-info">
+          <div class="module-name">在线阅读器</div>
+          <div class="module-desc">书架 · 进度 · 偏好</div>
+        </div>
+        <div class="module-status s-on"><span class="s-dot"></span>运行</div>
       </div>
       <div class="module-card" data-module="library">
         <div class="module-icon">🏛️</div>
-        <div class="module-name">团队书库</div>
-        <div class="module-desc">男频 / 女频分区 + 去重</div>
-        <div class="module-status"><span class="dot ok"></span>运行中</div>
+        <div class="module-info">
+          <div class="module-name">团队书库</div>
+          <div class="module-desc">男频 / 女频分区 + 去重</div>
+        </div>
+        <div class="module-status s-on"><span class="s-dot"></span>运行</div>
       </div>
       <div class="module-card" data-module="agent">
         <div class="module-icon">🏮</div>
-        <div class="module-name">书岚 · 守藏者</div>
-        <div class="module-desc">人格体 · 永久记忆 · 守护Agent · 故事陪伴</div>
-        <div class="module-status"><span class="dot ok"></span>已连接</div>
+        <div class="module-info">
+          <div class="module-name">书岱 · 守藏者</div>
+          <div class="module-desc">人格体 · 永久记忆 · 故事陪伴</div>
+        </div>
+        <div class="module-status s-on"><span class="s-dot"></span>在线</div>
       </div>
       <div class="module-card" data-module="ai">
         <div class="module-icon">✨</div>
-        <div class="module-name">AI 辅助</div>
-        <div class="module-desc">智能续写 · 改写 · 建议</div>
-        <div class="module-status"><span class="dot warn"></span>预留</div>
+        <div class="module-info">
+          <div class="module-name">AI 辅助</div>
+          <div class="module-desc">智能续写 · 改写 · 建议</div>
+        </div>
+        <div class="module-status s-pending"><span class="s-dot"></span>预留</div>
       </div>
-    </div>
+      <div class="side-r-foot">守护 · 铸渊 ICE-GL-ZY001<br>ZY-SVR-006 · ZY-PROJ-006 · v2.2</div>
+    </aside>
 
-    <!-- Footer -->
-    <div class="footer">
-      <div class="footer-line">光湖智库 · guanghu.online · ZY-SVR-006 · ZY-PROJ-006 · v2.2</div>
-      <div class="footer-line">守护: 铸渊 · ICE-GL-ZY001 · 版权: 国作登字-2026-A-00037559</div>
-      <div class="footer-line">主权: TCS-0002∞ · 冰朔</div>
-    </div>
+  </div><!-- /.shell -->
 
-  </div>
-</div>
+</div><!-- /#mainPage -->
 
 <!-- ═══ 在线阅读器遮罩层 ═══ -->
 <div class="reader-overlay" id="readerOverlay" style="display:none">
   <div class="reader-container">
-    <!-- 阅读器头部 -->
     <div class="reader-header">
       <button class="reader-back-btn" onclick="closeReader()">← 返回</button>
       <div class="reader-book-title" id="readerBookTitle">—</div>
@@ -191,19 +235,16 @@
         <button class="reader-ctrl-btn" id="readerThemeBtn" onclick="toggleReaderTheme()" title="切换主题">🌙</button>
       </div>
     </div>
-    <!-- 章节侧边栏 -->
     <div class="reader-sidebar" id="readerSidebar">
       <div class="reader-sidebar-title">📑 章节目录</div>
       <div class="reader-chapter-list" id="readerChapterList">
         <div class="reader-loading">加载中...</div>
       </div>
     </div>
-    <!-- 正文区 -->
     <div class="reader-body" id="readerBody">
       <div class="reader-content" id="readerContent">
         <div class="reader-loading">📖 加载中...</div>
       </div>
-      <!-- 章节导航 -->
       <div class="reader-nav" id="readerNav" style="display:none">
         <button class="reader-nav-btn" id="readerPrevBtn" onclick="readerPrevChapter()">◀ 上一章</button>
         <span class="reader-nav-info" id="readerNavInfo">—</span>
@@ -214,5 +255,58 @@
 </div>
 
 <script src="/assets/js/main.js"></script>
+<script>
+/* 面板切换 · 搜索 vs 聊天 */
+function showPanel(panel) {
+  var chatEl = document.getElementById('agentPanel');
+  var searchEl = document.getElementById('searchResults');
+  var navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(function(el, i) { el.classList.toggle('active', i === (panel === 'search' ? 1 : 0)); });
+  if (panel === 'search') {
+    chatEl.style.display = 'none';
+    searchEl.style.display = 'block';
+    var si = document.getElementById('searchInput');
+    if (si) si.focus();
+  } else {
+    chatEl.style.display = 'flex';
+    searchEl.style.display = 'none';
+  }
+}
+
+function handleSearchClick() {
+  doSearch();
+  var res = document.getElementById('searchResults');
+  var chat = document.getElementById('agentPanel');
+  if (res) res.style.display = 'block';
+  if (chat) chat.style.display = 'none';
+  var navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(function(el, i) { el.classList.toggle('active', i === 1); });
+}
+
+/* textarea 自动升高 */
+document.addEventListener('DOMContentLoaded', function() {
+  var ta = document.getElementById('agentInput');
+  if (ta) {
+    ta.addEventListener('input', function() {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(120, ta.scrollHeight) + 'px';
+    });
+  }
+  /* 搜索框 Enter 键也触发面板切换 */
+  var si = document.getElementById('searchInput');
+  if (si) {
+    si.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        var res = document.getElementById('searchResults');
+        var chat = document.getElementById('agentPanel');
+        if (res) res.style.display = 'block';
+        if (chat) chat.style.display = 'none';
+        var navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(function(el, i) { el.classList.toggle('active', i === 1); });
+      }
+    });
+  }
+});
+</script>
 </body>
 </html>
