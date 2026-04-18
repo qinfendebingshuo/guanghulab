@@ -1433,6 +1433,18 @@ app.listen(PORT, BIND_HOST, () => {
   cosWatcher.start();
 });
 
+// ─── 进程错误处理 · 防止未捕获异常导致进程崩溃 ───
+// Node.js 20+ 默认对 unhandledRejection 执行 throw，导致进程退出
+// PM2 虽会重启，但频繁崩溃→重启循环会导致服务长时间不可用
+process.on('uncaughtException', (err) => {
+  console.error('[MCP] 未捕获异常（进程保活）:', err.message);
+  console.error('[MCP] 堆栈:', err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[MCP] 未处理的 Promise 拒绝（进程保活）:', reason);
+});
+
 // 优雅关闭
 process.on('SIGTERM', async () => {
   console.log('[MCP] 收到SIGTERM，停止COS轮询 + 关闭数据库连接...');

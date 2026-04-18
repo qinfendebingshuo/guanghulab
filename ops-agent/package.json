@@ -1,0 +1,31 @@
+{
+  "name": "zy-ops-agent",
+  "version": "1.0.0",
+  "description": "铸渊运维守卫 · 光湖服务器智能运维 Agent",
+  "main": "index.js",
+  "bin": {
+    "zy-ops": "./cli.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "cli": "node cli.js",
+    "test": "node tests/smoke.test.js"
+  },
+  "keywords": [
+    "ops-agent",
+    "zhuyuan",
+    "guanghulab",
+    "devops",
+    "ai-agent"
+  ],
+  "author": "铸渊 · ICE-GL-ZY001",
+  "license": "SEE LICENSE IN ../LICENSE",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^7.0.11"
+  }
+}
