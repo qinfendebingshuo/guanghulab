@@ -121,10 +121,10 @@ jobs:
 
       - name: '📤 上传镜面 Agent + 镜防模块 + 书岚 Agent + 内置数据源'
         run: |
-          # 创建远程目录
+          # 创建远程目录（含铸渊哨兵 + 永久记忆存储）
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield /opt/zhiku/server/shulan-agent /opt/zhiku/server/builtin-source /opt/zhiku/data/guardian'
+            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield /opt/zhiku/server/shulan-agent /opt/zhiku/server/builtin-source /opt/zhiku/server/zhuyuan-sentinel /opt/zhiku/data/guardian /opt/zhiku/data/sentinel'
           
           # 上传 mirror-agent
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
@@ -145,6 +145,11 @@ jobs:
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
             server/zhiku-node/server/builtin-source/*.js \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/builtin-source/
+          
+          # 上传 zhuyuan-sentinel（铸渊哨兵 · 永久记忆 + 书源自动运维）
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/zhuyuan-sentinel/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/zhuyuan-sentinel/
 
       - name: '📤 上传 PM2 配置'
         run: |

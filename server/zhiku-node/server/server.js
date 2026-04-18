@@ -591,18 +591,45 @@ async function searchAllSources(query) {
     books_total: index.books.length
   });
 
-  // 2. 远程数据源搜索（番茄/七猫 — 外部服务优先）
-  let externalFanqieOk = false;
-  let externalQimaoOk = false;
+  // 2. 内置直连搜索（优先 · 不依赖外部服务）
+  // 番茄直连 + 七猫直连 + 笔趣阁聚合 全部并行搜索
+  let builtinFanqieOk = false;
+  let builtinQimaoOk = false;
 
+  if (builtinSource) {
+    try {
+      const { results: builtinResults, statuses } = await builtinSource.builtinSearch(query);
+      for (const br of builtinResults) {
+        results.push(br);
+        if (br.source === 'fanqie') builtinFanqieOk = true;
+        if (br.source === 'qimao') builtinQimaoOk = true;
+      }
+      for (const st of statuses) {
+        sourceStatus.push(st);
+        if (st.id === 'fanqie-direct' && st.status === 'ok' && st.count > 0) builtinFanqieOk = true;
+        if (st.id === 'qimao-direct' && st.status === 'ok' && st.count > 0) builtinQimaoOk = true;
+      }
+    } catch (err) {
+      console.error('[ZY-SVR-006] 内置直连搜索失败:', err.message);
+      sourceStatus.push({
+        id: 'builtin-fallback',
+        name: '内置直连',
+        status: 'error',
+        count: 0,
+        error: err.message
+      });
+    }
+  }
+
+  // 3. 外部数据源服务（仅在内置直连未覆盖时补充 · 避免死等不可达的外部服务）
   for (const src of sources) {
-    if (src.id === 'fanqie-fqweb') {
+    if (src.id === 'fanqie-fqweb' && !builtinFanqieOk) {
       try {
         const url = src.search_url
           .replace('{base_url}', src.base_url)
           .replace('{query}', encodeURIComponent(query))
           .replace('{page}', '1');
-        const data = await httpGet(url);
+        const data = await httpGet(url, 3000); // 3秒超时（外部服务不可达时快速失败）
         if (data && Array.isArray(data.data || data.books || data)) {
           const books = data.data || data.books || data;
           for (const b of books.slice(0, 20)) {
@@ -619,22 +646,21 @@ async function searchAllSources(query) {
             });
           }
           sourceStatus.push({ id: src.id, name: src.name, status: 'ok', count: books.length });
-          externalFanqieOk = true;
         } else {
           sourceStatus.push({ id: src.id, name: src.name, status: 'empty', count: 0, error: '数据源返回空结果' });
         }
       } catch (err) {
-        console.error('[ZY-SVR-006] 番茄搜索失败:', err.message);
+        // 外部服务不可达 — 静默跳过（内置直连已覆盖或不可用也无妨）
         sourceStatus.push({ id: src.id, name: src.name, status: 'error', count: 0, error: err.message });
       }
     }
 
-    if (src.id === 'qimao-downloader') {
+    if (src.id === 'qimao-downloader' && !builtinQimaoOk) {
       try {
         const url = src.search_url
           .replace('{base_url}', src.base_url)
           .replace('{query}', encodeURIComponent(query));
-        const data = await httpGet(url);
+        const data = await httpGet(url, 3000); // 3秒超时
         if (data && Array.isArray(data.data || data.books || data)) {
           const books = data.data || data.books || data;
           for (const b of books.slice(0, 20)) {
@@ -651,42 +677,12 @@ async function searchAllSources(query) {
             });
           }
           sourceStatus.push({ id: src.id, name: src.name, status: 'ok', count: books.length });
-          externalQimaoOk = true;
         } else {
           sourceStatus.push({ id: src.id, name: src.name, status: 'empty', count: 0, error: '数据源返回空结果' });
         }
       } catch (err) {
-        console.error('[ZY-SVR-006] 七猫搜索失败:', err.message);
         sourceStatus.push({ id: src.id, name: src.name, status: 'error', count: 0, error: err.message });
       }
-    }
-  }
-
-  // 3. 内置直连搜索（当外部数据源服务不可达时自动启用）
-  // biquge-direct 始终参与搜索（海外IP友好·不依赖外部服务状态）
-  if (builtinSource) {
-    try {
-      const { results: builtinResults, statuses } = await builtinSource.builtinSearch(query);
-      // 仅添加外部服务未覆盖的源（避免番茄/七猫重复）
-      for (const br of builtinResults) {
-        if (br.source === 'fanqie' && externalFanqieOk) continue;
-        if (br.source === 'qimao' && externalQimaoOk) continue;
-        results.push(br);
-      }
-      for (const st of statuses) {
-        if (st.id === 'fanqie-direct' && externalFanqieOk) continue;
-        if (st.id === 'qimao-direct' && externalQimaoOk) continue;
-        sourceStatus.push(st);
-      }
-    } catch (err) {
-      console.error('[ZY-SVR-006] 内置直连搜索失败:', err.message);
-      sourceStatus.push({
-        id: 'builtin-fallback',
-        name: '内置直连',
-        status: 'error',
-        count: 0,
-        error: err.message
-      });
     }
   }
 
