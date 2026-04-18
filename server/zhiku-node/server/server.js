@@ -62,8 +62,13 @@ const { getEnabledSources } = require('./mirror-agent/config');
 // ─── 书岚 Agent 系统 ───
 const shulanAgent = require('./shulan-agent');
 
-// ─── 内置数据源直连（FQWeb/SwiftCat不可用时的fallback） ───
-const builtinSource = require('./builtin-source');
+// ─── 内置数据源直连（FQWeb/SwiftCat不可用时的fallback · 可选模块） ───
+let builtinSource = null;
+try {
+  builtinSource = require('./builtin-source');
+} catch (err) {
+  console.warn(`[ZY-SVR-006] ⚠️ builtin-source 模块未找到 (${err.message})。内置直连搜索/下载将不可用，但核心认证/Agent功能不受影响。`);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3006;
@@ -644,7 +649,7 @@ async function searchAllSources(query) {
   }
 
   // 3. 内置直连搜索（当外部数据源服务不可达时自动启用）
-  if (!externalFanqieOk) {
+  if (!externalFanqieOk && builtinSource) {
     try {
       const { results: builtinResults, statuses } = await builtinSource.builtinSearch(query);
       results.push(...builtinResults);
@@ -751,7 +756,7 @@ async function processDownloadTask(taskId) {
       }
 
       // FQWeb不可用 → 内置直连
-      if (!content) {
+      if (!content && builtinSource) {
         try {
           task.message = '外部服务不可用，切换到内置直连...';
           content = await builtinSource.builtinDownload(source, source_book_id, title, author, (current, total, msg) => {
@@ -1072,7 +1077,7 @@ app.get('/api/health', async (req, res) => {
     smtp_configured: !!(SMTP_USER && SMTP_PASS && (SMTP_HOST || autoDetectSmtpHost(SMTP_USER))),
     smtp_host: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未配置',
     data_sources: sourceChecks,
-    builtin_sources: true,
+    builtin_sources: !!builtinSource,
     shulan_agent: agentStatus,
     mirror_agent: mirrorAgent.getStatus ? {
       active: true,
@@ -1434,6 +1439,9 @@ app.get('/api/reader/catalog/:source/:bookId', verifyUserAuth, async (req, res) 
     }
 
     // 从远程数据源获取目录
+    if (!builtinSource) {
+      return res.status(503).json({ error: true, code: 'SOURCE_UNAVAILABLE', message: '内置数据源模块未加载，远程目录获取不可用' });
+    }
     const chapters = await builtinSource.builtinGetCatalog(source, bookId);
 
     res.json({
@@ -1497,6 +1505,9 @@ app.get('/api/reader/chapter', verifyUserAuth, async (req, res) => {
     }
 
     // 远程数据源
+    if (!builtinSource) {
+      return res.status(503).json({ error: true, code: 'SOURCE_UNAVAILABLE', message: '内置数据源模块未加载，远程章节获取不可用' });
+    }
     const content = await builtinSource.builtinGetChapter(source, item_id);
 
     if (!content) {
