@@ -107,6 +107,7 @@ const START_TIME = Date.now();
 // 数据源API地址
 const FANQIE_API = process.env.ZY_FANQIE_API_URL || 'http://127.0.0.1:9999';
 const QIMAO_API = process.env.ZY_QIMAO_API_URL || 'http://127.0.0.1:7700';
+const EXTERNAL_SERVICE_TIMEOUT_MS = 3000; // 外部服务(FQWeb/SwiftCat)超时·内置直连已覆盖时无需等
 
 // LLM API配置
 const DEEPSEEK_API_URL = process.env.ZY_DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
@@ -629,7 +630,7 @@ async function searchAllSources(query) {
           .replace('{base_url}', src.base_url)
           .replace('{query}', encodeURIComponent(query))
           .replace('{page}', '1');
-        const data = await httpGet(url, 3000); // 3秒超时（外部服务不可达时快速失败）
+        const data = await httpGet(url, EXTERNAL_SERVICE_TIMEOUT_MS);
         if (data && Array.isArray(data.data || data.books || data)) {
           const books = data.data || data.books || data;
           for (const b of books.slice(0, 20)) {
@@ -660,7 +661,7 @@ async function searchAllSources(query) {
         const url = src.search_url
           .replace('{base_url}', src.base_url)
           .replace('{query}', encodeURIComponent(query));
-        const data = await httpGet(url, 3000); // 3秒超时
+        const data = await httpGet(url, EXTERNAL_SERVICE_TIMEOUT_MS);
         if (data && Array.isArray(data.data || data.books || data)) {
           const books = data.data || data.books || data;
           for (const b of books.slice(0, 20)) {
