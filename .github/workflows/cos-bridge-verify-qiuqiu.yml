@@ -65,7 +65,8 @@ jobs:
               });
               console.log('✅ Token鉴权成功');
               console.log(`   目标仓库: ${repo.data.full_name}`);
-              console.log(`   可见性: ${repo.data.visibility || repo.data.private ? 'private' : 'public'}`);
+              const vis = repo.data.visibility || (repo.data.private ? 'private' : 'public');
+              console.log(`   可见性: ${vis}`);
               core.setOutput('auth_ok', 'true');
               core.setOutput('repo_name', repo.data.full_name);
             } catch (e) {
