@@ -287,7 +287,7 @@ jobs:
           chmod 600 ~/.ssh/zhiku_key
           ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: '☕ 安装 JRE 17 + Python3 运行环境'
+      - name: '☕ 安装 JDK 17 + Python3 运行环境'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
@@ -295,13 +295,13 @@ jobs:
 
           echo "[ZY-SVR-006] ─── 安装运行环境 ───"
 
-          # JRE 17+ (FQWeb 需要 · JRE 17 或更高版本均可)
-          if ! java -version 2>&1 | grep -q '17\|21'; then
-            echo "[ZY-SVR-006] 安装 JRE 17..."
+          # JDK 17+ (FQWeb 运行需要 JRE · Gradle 构建需要完整 JDK)
+          if ! javac -version 2>&1 | grep -q '17\|21'; then
+            echo "[ZY-SVR-006] 安装 JDK 17..."
             apt-get update -q
-            apt-get install -y openjdk-17-jre-headless
+            apt-get install -y openjdk-17-jdk-headless
           else
-            echo "[ZY-SVR-006] JRE 已安装: $(java -version 2>&1 | head -1)"
+            echo "[ZY-SVR-006] JDK 已安装: $(javac -version 2>&1 | head -1)"
           fi
 
           # Python 3 + pip (SwiftCat 需要)
@@ -330,37 +330,60 @@ jobs:
           echo "[ZY-SVR-006] ─── 部署 FQWeb ───"
           cd /opt/zhiku/datasources/fqweb
 
-          # 从 GitHub Release 下载最新 JAR
-          # benefit77/FanQieWeb 的 Release 文件为 FanQieWeb-xxx.jar
+          # 检查已有 JAR
           FQWEB_JAR=$(ls -t *.jar 2>/dev/null | head -1)
 
           if [ -z "$FQWEB_JAR" ]; then
             echo "[ZY-SVR-006] 下载 FQWeb JAR..."
-            # 获取最新 release asset URL
-            RELEASE_URL=$(curl -s https://api.github.com/repos/benefit77/FanQieWeb/releases/latest \
-              | python3 -c "import sys,json; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if a['name'].endswith('.jar')), ''))" 2>/dev/null)
+            # 依次尝试: 上游 6DDUU6/FQWeb → fork benefit77/FanQieWeb
+            RELEASE_URL=""
+            for REPO in "6DDUU6/FQWeb" "benefit77/FanQieWeb"; do
+              echo "[ZY-SVR-006] 查询 ${REPO} Release..."
+              RELEASE_URL=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" \
+                | python3 -c "import sys,json; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if a['name'].endswith('.jar')), ''))" 2>/dev/null)
+              if [ -n "$RELEASE_URL" ]; then
+                echo "[ZY-SVR-006] 找到 Release: ${REPO}"
+                break
+              fi
+            done
 
             if [ -n "$RELEASE_URL" ]; then
               curl -L -o fqweb.jar "$RELEASE_URL"
               FQWEB_JAR="fqweb.jar"
               echo "[ZY-SVR-006] FQWeb JAR 已下载"
             else
-              echo "[ZY-SVR-006] ⚠️ 无法获取 FQWeb Release，尝试构建..."
-              # 备用：克隆并用 gradlew 构建
-              if [ ! -d "source" ]; then
-                git clone --depth 1 https://github.com/benefit77/FanQieWeb.git source
-              fi
-              cd source
-              if [ -f "gradlew" ]; then
-                chmod +x gradlew
-                ./gradlew build -x test 2>&1 | tail -5
-                BUILT_JAR=$(find build/libs -name "*.jar" -not -name "*plain*" | head -1)
-                if [ -n "$BUILT_JAR" ]; then
-                  cp "$BUILT_JAR" /opt/zhiku/datasources/fqweb/fqweb.jar
-                  FQWEB_JAR="fqweb.jar"
+              echo "[ZY-SVR-006] ⚠️ 无 Release 可用，尝试从源码构建..."
+              # 备用：克隆并用 gradlew 构建（需要 JDK）
+              rm -rf source 2>/dev/null
+              CLONE_OK=false
+              for REPO in "6DDUU6/FQWeb" "benefit77/FanQieWeb"; do
+                echo "[ZY-SVR-006] 尝试克隆 ${REPO}..."
+                if git clone --depth 1 "https://github.com/${REPO}.git" source 2>/dev/null; then
+                  CLONE_OK=true
+                  echo "[ZY-SVR-006] 已克隆 ${REPO}"
+                  break
                 fi
+              done
+
+              if [ "$CLONE_OK" = true ] && [ -d "source" ]; then
+                cd source
+                if [ -f "gradlew" ]; then
+                  chmod +x gradlew
+                  echo "[ZY-SVR-006] 开始 Gradle 构建（需要 JDK 17+）..."
+                  ./gradlew build -x test 2>&1 | tail -10
+                  BUILT_JAR=$(find build/libs -name "*.jar" -not -name "*plain*" 2>/dev/null | head -1)
+                  if [ -n "$BUILT_JAR" ]; then
+                    cp "$BUILT_JAR" /opt/zhiku/datasources/fqweb/fqweb.jar
+                    FQWEB_JAR="fqweb.jar"
+                    echo "[ZY-SVR-006] ✅ FQWeb 构建成功"
+                  else
+                    echo "[ZY-SVR-006] ⚠️ 构建产物未找到（build/libs 目录不存在或无 JAR）"
+                  fi
+                else
+                  echo "[ZY-SVR-006] ⚠️ 无 gradlew 文件，无法构建"
+                fi
+                cd /opt/zhiku/datasources/fqweb
               fi
-              cd /opt/zhiku/datasources/fqweb
             fi
           fi
 
@@ -388,36 +411,86 @@ jobs:
           echo "[ZY-SVR-006] ─── 部署 SwiftCat ───"
           cd /opt/zhiku/datasources/swiftcat
 
-          # 克隆或更新代码
-          if [ -d ".git" ]; then
+          SWIFTCAT_READY=false
+
+          # ─── 策略1: 已有可用代码（git pull 更新）───
+          if [ -d ".git" ] && { [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; }; then
+            echo "[ZY-SVR-006] 已有 SwiftCat 代码，尝试更新..."
             git pull --ff-only 2>/dev/null || true
+            SWIFTCAT_READY=true
           else
-            # 先尝试新仓库名 (swiftcat-downloader)，再尝试旧名 (7mao-novel-downloader)
-            git clone --depth 1 https://github.com/shing-yu/swiftcat-downloader.git . 2>/dev/null \
-              || git clone --depth 1 https://github.com/shing-yu/7mao-novel-downloader.git . 2>/dev/null \
-              || echo "[ZY-SVR-006] ⚠️ SwiftCat 仓库不可达"
-          fi
-
-          # 创建 Python 虚拟环境并安装依赖
-          if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
-            python3 -m venv venv 2>/dev/null || true
-            source venv/bin/activate 2>/dev/null || true
-
-            if [ -f "requirements.txt" ]; then
-              pip3 install -r requirements.txt 2>&1 | tail -3
-            elif [ -f "setup.py" ]; then
-              pip3 install -e . 2>&1 | tail -3
-            elif [ -f "pyproject.toml" ]; then
-              pip3 install . 2>&1 | tail -3
+            # 清理非 Python 源码的残留目录（如上次克隆了 binary-only 的 swiftcat-downloader）
+            if [ -d ".git" ] && ! { [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; }; then
+              echo "[ZY-SVR-006] 清理无效的旧克隆..."
+              cd /opt/zhiku/datasources
+              rm -rf swiftcat
+              mkdir -p swiftcat
+              cd swiftcat
             fi
 
-            # 写启动脚本
-            cat > start.sh << 'STARTEOF'
+            # ─── 策略2: 克隆有 Python 源码的仓库 ───
+            # 7mao-novel-downloader (已归档但仍可克隆·有 Python 源码)
+            echo "[ZY-SVR-006] 尝试克隆 7mao-novel-downloader (Python 源码)..."
+            if git clone --depth 1 https://github.com/shing-yu/7mao-novel-downloader.git . 2>/dev/null; then
+              if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+                echo "[ZY-SVR-006] ✅ 7mao-novel-downloader 克隆成功 (有 Python 依赖)"
+                SWIFTCAT_READY=true
+              else
+                echo "[ZY-SVR-006] 7mao-novel-downloader 无 Python 依赖文件"
+              fi
+            else
+              echo "[ZY-SVR-006] 7mao-novel-downloader 仓库不可达"
+            fi
+
+            # ─── 策略3: 如果源码不可用，下载 release 二进制 ───
+            if [ "$SWIFTCAT_READY" = false ]; then
+              echo "[ZY-SVR-006] 尝试下载 swiftcat-downloader release 二进制..."
+              # 清理可能的残留
+              rm -rf .git 2>/dev/null
+              BINARY_URL=$(curl -s "https://api.github.com/repos/shing-yu/swiftcat-downloader/releases/latest" \
+                | python3 -c "import sys,json; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if 'linux' in a['name'].lower()), ''))" 2>/dev/null)
+
+              if [ -n "$BINARY_URL" ]; then
+                curl -L -o swiftcat "$BINARY_URL"
+                chmod +x swiftcat
+                echo "[ZY-SVR-006] ✅ SwiftCat 二进制已下载"
+                # 为二进制创建启动脚本
+                cat > start.sh << 'STARTEOF'
+          #!/bin/bash
+          cd /opt/zhiku/datasources/swiftcat
+          export PORT=7700
+          if [ -f "swiftcat" ]; then
+            exec ./swiftcat --port ${PORT} 2>/dev/null || exec ./swiftcat
+          fi
+          STARTEOF
+                chmod +x start.sh
+                SWIFTCAT_READY=binary
+                echo "[ZY-SVR-006] SwiftCat 二进制部署完成"
+              else
+                echo "[ZY-SVR-006] ⚠️ SwiftCat release 也无 Linux 二进制"
+              fi
+            fi
+          fi
+
+          # ─── 为 Python 源码创建虚拟环境和启动脚本 ───
+          if [ "$SWIFTCAT_READY" = true ]; then
+            if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+              python3 -m venv venv 2>/dev/null || true
+              source venv/bin/activate 2>/dev/null || true
+
+              if [ -f "requirements.txt" ]; then
+                pip3 install -r requirements.txt 2>&1 | tail -3
+              elif [ -f "setup.py" ]; then
+                pip3 install -e . 2>&1 | tail -3
+              elif [ -f "pyproject.toml" ]; then
+                pip3 install . 2>&1 | tail -3
+              fi
+
+              cat > start.sh << 'STARTEOF'
           #!/bin/bash
           cd /opt/zhiku/datasources/swiftcat
           source venv/bin/activate 2>/dev/null || true
           export PORT=7700
-          # 尝试常见入口（优先使用环境变量PORT，兼容--port参数）
           if [ -f "app.py" ]; then
             exec python3 app.py --port ${PORT} 2>/dev/null || exec python3 app.py
           elif [ -f "main.py" ]; then
@@ -425,14 +498,17 @@ jobs:
           elif [ -f "server.py" ]; then
             exec python3 server.py --port ${PORT} 2>/dev/null || exec python3 server.py
           else
-            echo "[SwiftCat] 未找到入口文件"
-            ls -la
+            echo "[SwiftCat] 未找到入口文件 (app.py/main.py/server.py)"
+            ls -la *.py 2>/dev/null || echo "无 Python 文件"
           fi
           STARTEOF
-            chmod +x start.sh
-            echo "[ZY-SVR-006] SwiftCat 部署完成"
-          else
-            echo "[ZY-SVR-006] ⚠️ SwiftCat 依赖文件未找到"
+              chmod +x start.sh
+              echo "[ZY-SVR-006] SwiftCat Python 部署完成"
+            fi
+          elif [ "$SWIFTCAT_READY" = false ]; then
+            echo "[ZY-SVR-006] ⚠️ SwiftCat 所有部署策略均失败"
+            echo "[ZY-SVR-006] 说明: swiftcat-downloader 仅发布二进制(Python版不开源)，7mao-novel-downloader 已归档"
+            echo "[ZY-SVR-006] 建议: 智库系统将自动使用内置直连适配器作为 fallback"
           fi
           ENDSSH
 
