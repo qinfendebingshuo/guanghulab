@@ -496,7 +496,7 @@ function startService() {
                   return;
                 }
                 try { resolve({ status: resp.statusCode, data: JSON.parse(data) }); }
-                catch { reject(new Error(`LLM 响应解析失败 (HTTP ${resp.statusCode}, body前100字符: ${data.substring(0, 100)})`)); }
+                catch { reject(new Error(`LLM 响应解析失败 (HTTP ${resp.statusCode}, body prefix: ${data.substring(0, 100)})`)); }
               });
             });
             r.on('error', reject);

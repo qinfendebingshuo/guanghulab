@@ -175,7 +175,13 @@ async function tryFetchModels(url, apiKey) {
     return null;
   }
 
-  const result = JSON.parse(body);
+  let result;
+  try {
+    result = JSON.parse(body);
+  } catch (parseErr) {
+    console.log(`[GLADA-Router] ℹ️ ${url} 响应非 JSON 格式: ${parseErr.message}，跳过`);
+    return null;
+  }
 
   // OpenAI-compatible: { data: [{ id: "model-name", ... }] }
   // 也兼容直接返回数组的格式
