@@ -1416,6 +1416,10 @@ a{color:var(--cyan);text-decoration:none}
         <span class="snav-icon">📋</span>CAB任务看板
         <span class="snav-dot off" id="navCabDot"></span>
       </button>
+      <button class="snav-item" data-view="sysStatus" id="navSysStatus">
+        <span class="snav-icon">📡</span>系统状态
+        <span class="snav-dot off" id="navSysStatusDot"></span>
+      </button>
       <div class="snav-divider"></div>
       <button class="snav-item" data-view="chat" id="navChat">
         <span class="snav-icon">💬</span>零点原核频道
@@ -2146,6 +2150,116 @@ a{color:var(--cyan);text-decoration:none}
       </div>
     </div>
 
+    <!-- ═══ System Status View ═══ -->
+    <div class="view-panel" id="viewSysStatus">
+      <div class="dashboard" style="max-width:900px">
+
+        <div class="dash-section">
+          <div class="dash-section-title"><span class="module-tag">SYSTEM</span> 📡 系统状态 · 实时监控</div>
+          <div class="dash-section-sub">所有服务真实连接检测 · 每30秒自动刷新 · 连接状态实时显示</div>
+        </div>
+
+        <!-- 总览卡片 -->
+        <div class="s-card s-card-full" style="margin-bottom:20px">
+          <div class="s-card-head">
+            <span class="s-card-title">系统全局状态</span>
+            <span class="s-card-badge badge-warn" id="sysOverallBadge">检测中</span>
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">服务在线</span><span class="metric-val" id="sysOnlineCount">—</span></div>
+            <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">CPU 核心</span><span class="metric-val" id="sysCpuCores">—</span></div>
+            <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">内存使用</span><span class="metric-val" id="sysMemPct">—</span></div>
+            <div class="metric-row" style="flex:1;min-width:100px"><span class="metric-label">服务器运行</span><span class="metric-val" id="sysUptime">—</span></div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);font-family:var(--mono)" id="sysLastCheck">上次检测: —</div>
+        </div>
+
+        <!-- 服务状态卡片 -->
+        <div class="dash-section" style="margin-top:10px">
+          <div class="dash-section-title">🔌 服务连接状态</div>
+        </div>
+        <div id="sysServiceGrid" style="display:flex;flex-direction:column;gap:14px">
+
+          <!-- 铸渊主权服务器 -->
+          <div class="s-card" id="sysCard_main">
+            <div class="s-card-head">
+              <span class="s-card-title" style="display:flex;align-items:center;gap:8px">
+                <span class="srv-status-dot unknown" id="sysDot_main"></span>
+                🏛️ 铸渊主权服务器
+              </span>
+              <span class="s-card-badge badge-warn" id="sysBadge_main">检测中</span>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);font-family:var(--mono)">
+              <span>端口: 3800</span>
+              <span>延迟: <span id="sysLatency_main">—</span></span>
+              <span>PID: <span id="sysPid_main">—</span></span>
+            </div>
+            <div id="sysError_main" style="margin-top:8px;font-size:12px;color:var(--err);display:none"></div>
+          </div>
+
+          <!-- MCP 大脑服务器 -->
+          <div class="s-card" id="sysCard_mcp">
+            <div class="s-card-head">
+              <span class="s-card-title" style="display:flex;align-items:center;gap:8px">
+                <span class="srv-status-dot unknown" id="sysDot_mcp"></span>
+                🧠 MCP 大脑服务器
+              </span>
+              <span class="s-card-badge badge-warn" id="sysBadge_mcp">检测中</span>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);font-family:var(--mono)">
+              <span>端口: 3100</span>
+              <span>延迟: <span id="sysLatency_mcp">—</span></span>
+              <span>工具数: <span id="sysMcpTools">—</span></span>
+            </div>
+            <div id="sysError_mcp" style="margin-top:8px;font-size:12px;color:var(--err);display:none"></div>
+          </div>
+
+          <!-- GLADA Agent -->
+          <div class="s-card" id="sysCard_glada">
+            <div class="s-card-head">
+              <span class="s-card-title" style="display:flex;align-items:center;gap:8px">
+                <span class="srv-status-dot unknown" id="sysDot_glada"></span>
+                🤖 GLADA 自主开发Agent
+              </span>
+              <span class="s-card-badge badge-warn" id="sysBadge_glada">检测中</span>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);font-family:var(--mono)">
+              <span>端口: 3900</span>
+              <span>延迟: <span id="sysLatency_glada">—</span></span>
+              <span>版本: <span id="sysGladaVer">—</span></span>
+            </div>
+            <div id="sysError_glada" style="margin-top:8px;font-size:12px;color:var(--err);display:none"></div>
+          </div>
+        </div>
+
+        <!-- 后端模块加载状态 -->
+        <div class="dash-section" style="margin-top:24px">
+          <div class="dash-section-title">⚙️ 后端模块加载</div>
+        </div>
+        <div class="s-card" style="margin-bottom:20px">
+          <div id="sysModuleList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;font-size:12px;font-family:var(--mono)">
+            <span>检测中...</span>
+          </div>
+        </div>
+
+        <!-- GitHub Actions 最近运行 -->
+        <div class="dash-section" style="margin-top:24px">
+          <div class="dash-section-title">🔄 GitHub Actions · 最近工作流</div>
+          <div class="dash-section-sub">来自 GitHub API · 实时获取最近10条工作流运行记录</div>
+        </div>
+        <div class="s-card">
+          <div id="sysWorkflowList" style="font-size:12px;font-family:var(--mono)">
+            <span style="color:var(--muted)">正在获取 GitHub Actions 状态...</span>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;text-align:center;font-size:11px;color:var(--muted)">
+          📡 所有数据均为实时检测 · 连接失败时显示真实错误原因<br>
+          <span style="font-family:var(--mono)">TCS-0002∞ · 国作登字-2026-A-00037559</span>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ Chat View ═══ -->
     <div class="view-panel" id="viewChat">
       <div class="messages" id="messages">
@@ -2551,6 +2665,7 @@ var VIEW_PANELS = {
   shield:   document.getElementById('viewShield'),
   novel:    document.getElementById('viewNovel'),
   cab:      document.getElementById('viewCab'),
+  sysStatus: document.getElementById('viewSysStatus'),
   chat:     document.getElementById('viewChat')
 };
 var currentView = 'servers';
@@ -2588,6 +2703,16 @@ function switchView(view){
   if(view === 'cab'){
     syncCabPanel();
   }
+  // System Status view: trigger fetch on entry, clear timer on exit
+  if(view === 'sysStatus'){
+    fetchSystemStatus();
+  } else {
+    // Clear system status timer when leaving the view
+    if(typeof _sysStatusTimer !== 'undefined' && _sysStatusTimer) {
+      clearInterval(_sysStatusTimer);
+      _sysStatusTimer = null;
+    }
+  }
 }
 
 function syncCabPanel(){
@@ -2602,6 +2727,222 @@ function syncCabPanel(){
     dstB.textContent = srcB.textContent;
     dstB.className = srcB.className;
   }
+}
+
+/* ═══ System Status Panel · 真实连接检测 ═══ */
+var _sysStatusTimer = null;
+
+function fetchSystemStatus() {
+  var now = new Date().toISOString().replace('T',' ').slice(0,19);
+  setElText('sysLastCheck', '上次检测: ' + now);
+
+  // 1) 聚合状态 API
+  fetch('/api/system/full-status')
+  .then(function(r){ return r.json(); })
+  .then(function(d) {
+    // 服务状态渲染
+    var onlineCount = 0;
+    var totalCount = 0;
+    var services = d.services || {};
+
+    // 主权服务器
+    if (services.main_server) {
+      totalCount++;
+      var ms = services.main_server;
+      renderSysService('main', ms);
+      if (ms.status === 'online') {
+        onlineCount++;
+        var hd = ms.data || {};
+        setElText('sysPid_main', hd.pid || '—');
+      }
+    }
+
+    // MCP 大脑
+    if (services.mcp_brain) {
+      totalCount++;
+      var mb = services.mcp_brain;
+      renderSysService('mcp', mb);
+      if (mb.status === 'online') {
+        onlineCount++;
+        var md = mb.data || {};
+        setElText('sysMcpTools', (md.tools_count || md.tools && md.tools.length || '—'));
+      }
+    }
+
+    // GLADA Agent
+    if (services.glada_agent) {
+      totalCount++;
+      var ga = services.glada_agent;
+      renderSysService('glada', ga);
+      if (ga.status === 'online') {
+        onlineCount++;
+        var gd = ga.data || {};
+        setElText('sysGladaVer', gd.version || '—');
+      }
+    }
+
+    // 总览
+    setElText('sysOnlineCount', onlineCount + '/' + totalCount);
+    var overallBadge = document.getElementById('sysOverallBadge');
+    if (overallBadge) {
+      if (onlineCount === totalCount) {
+        overallBadge.textContent = '全部在线';
+        overallBadge.className = 's-card-badge badge-ok';
+      } else if (onlineCount > 0) {
+        overallBadge.textContent = '部分在线';
+        overallBadge.className = 's-card-badge badge-warn';
+      } else {
+        overallBadge.textContent = '全部离线';
+        overallBadge.className = 's-card-badge badge-err';
+      }
+    }
+
+    // 系统信息
+    var sys = d.system || {};
+    setElText('sysCpuCores', sys.cpus || '—');
+    var mem = sys.memory || {};
+    setElText('sysMemPct', (mem.usage_pct || '—') + '%');
+    setElText('sysUptime', formatUptime(sys.uptime_server || 0));
+
+    // 模块加载
+    var modules = d.modules || {};
+    renderSysModules(modules);
+
+    // 侧边栏导航点
+    setNavDot('navSysStatusDot', onlineCount === totalCount ? 'ok' : onlineCount > 0 ? 'warn' : 'off');
+  })
+  .catch(function(err) {
+    // 主服务器本身不可达 — 所有内部探测都无法进行
+    renderSysService('main', { status: 'offline', error: err.message || '主服务器不可达', latency: 0 });
+    renderSysService('mcp', { status: 'unknown', error: '无法通过主服务器探测', latency: 0 });
+    renderSysService('glada', { status: 'unknown', error: '无法通过主服务器探测', latency: 0 });
+    setElText('sysOnlineCount', '0/?');
+    var overallBadge = document.getElementById('sysOverallBadge');
+    if (overallBadge) {
+      overallBadge.textContent = '不可达';
+      overallBadge.className = 's-card-badge badge-err';
+    }
+    setElText('sysMemPct', '—');
+    setElText('sysCpuCores', '—');
+    setElText('sysUptime', '—');
+    renderSysModules({});
+    setNavDot('navSysStatusDot', 'off');
+  });
+
+  // 2) GitHub Actions (公开 API，直接从前端获取)
+  fetchGitHubWorkflows();
+
+  // 设置自动刷新（仅在 sysStatus 视图时刷新）
+  clearInterval(_sysStatusTimer);
+  _sysStatusTimer = setInterval(function() {
+    if (currentView === 'sysStatus') fetchSystemStatus();
+  }, 30000);
+}
+
+function renderSysService(key, svc) {
+  var dot = document.getElementById('sysDot_' + key);
+  var badge = document.getElementById('sysBadge_' + key);
+  var latency = document.getElementById('sysLatency_' + key);
+  var errEl = document.getElementById('sysError_' + key);
+
+  if (dot) {
+    if (svc.status === 'online') dot.className = 'srv-status-dot on';
+    else if (svc.status === 'timeout') dot.className = 'srv-status-dot pending';
+    else if (svc.status === 'unknown') dot.className = 'srv-status-dot unknown';
+    else dot.className = 'srv-status-dot off';
+  }
+  if (badge) {
+    var statusMap = { online: ['在线','badge-ok'], offline: ['离线','badge-err'], timeout: ['超时','badge-warn'], unknown: ['未知','badge-warn'] };
+    var m = statusMap[svc.status] || ['未知','badge-warn'];
+    badge.textContent = m[0];
+    badge.className = 's-card-badge ' + m[1];
+  }
+  if (latency) {
+    latency.textContent = svc.latency !== undefined ? svc.latency + 'ms' : '—';
+  }
+  if (errEl) {
+    if (svc.error) {
+      errEl.style.display = 'block';
+      errEl.textContent = '❌ 原因: ' + svc.error;
+    } else {
+      errEl.style.display = 'none';
+      errEl.textContent = '';
+    }
+  }
+}
+
+function renderSysModules(modules) {
+  var el = document.getElementById('sysModuleList');
+  if (!el) return;
+  var keys = Object.keys(modules);
+  if (keys.length === 0) {
+    el.innerHTML = '<span style="color:var(--muted)">无法获取模块信息</span>';
+    return;
+  }
+  var html = '';
+  var nameMap = {
+    domesticGateway: '🌐 国内模型网关',
+    chatEngine: '💬 对话引擎',
+    contextPipeline: '🧬 上下文管线',
+    guardianAgent: '🛡️ 守护Agent',
+    personaMemory: '🧠 人格记忆',
+    emailAuth: '📧 邮箱认证'
+  };
+  keys.forEach(function(k) {
+    var loaded = modules[k];
+    var name = nameMap[k] || k;
+    var dot = loaded ? '<span style="color:var(--ok)">●</span>' : '<span style="color:var(--err)">●</span>';
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0">' + dot + ' ' + name + ' <span style="color:var(--muted)">' + (loaded ? '已加载' : '未加载') + '</span></div>';
+  });
+  el.innerHTML = html;
+}
+
+function fetchGitHubWorkflows() {
+  var container = document.getElementById('sysWorkflowList');
+  if (!container) return;
+
+  fetch('https://api.github.com/repos/qinfendebingshuo/guanghulab/actions/runs?per_page=10')
+  .then(function(r) {
+    if (!r.ok) throw new Error('GitHub API ' + r.status);
+    return r.json();
+  })
+  .then(function(d) {
+    var runs = d.workflow_runs || [];
+    if (runs.length === 0) {
+      container.innerHTML = '<span style="color:var(--muted)">暂无工作流运行记录</span>';
+      return;
+    }
+    var html = '<div style="display:flex;flex-direction:column;gap:6px">';
+    runs.forEach(function(run) {
+      var statusIcon = '⏳';
+      var statusColor = 'var(--warn)';
+      if (run.status === 'completed') {
+        if (run.conclusion === 'success') { statusIcon = '✅'; statusColor = 'var(--ok)'; }
+        else if (run.conclusion === 'failure') { statusIcon = '❌'; statusColor = 'var(--err)'; }
+        else if (run.conclusion === 'cancelled') { statusIcon = '⛔'; statusColor = 'var(--muted)'; }
+        else if (run.conclusion === 'skipped') { statusIcon = '⏭️'; statusColor = 'var(--muted)'; }
+        else { statusIcon = '⚠️'; statusColor = 'var(--warn)'; }
+      } else if (run.status === 'in_progress') {
+        statusIcon = '🔄'; statusColor = 'var(--cyan)';
+      } else if (run.status === 'queued') {
+        statusIcon = '📋'; statusColor = 'var(--warn)';
+      }
+      var name = (run.name || run.display_title || '—').slice(0, 40);
+      var branch = (run.head_branch || '—').slice(0, 30);
+      var time = run.created_at ? fmtRelTime(run.created_at) : '—';
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">';
+      html += '<span style="font-size:14px;flex-shrink:0">' + statusIcon + '</span>';
+      html += '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:' + statusColor + '">' + name + '</span>';
+      html += '<span style="color:var(--muted);font-size:10px;flex-shrink:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + branch + '</span>';
+      html += '<span style="color:var(--muted);font-size:10px;flex-shrink:0">' + time + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  })
+  .catch(function(err) {
+    container.innerHTML = '<div style="color:var(--err)">❌ GitHub API 请求失败: ' + (err.message || '网络错误') + '</div><div style="color:var(--muted);margin-top:4px;font-size:11px">可能原因: 网络限制 / API 速率限制 / CORS 策略</div>';
+  });
 }
 
 /* ═══ Sidebar Toggle ═══ */
@@ -3883,6 +4224,8 @@ if (document.readyState === 'loading') {
 /* ═══ Init ═══ */
 fetchDashboard();
 setInterval(fetchDashboard,30000);
+/* 首次加载也触发系统状态检测（更新侧边栏导航点） */
+fetchSystemStatus();
 </script>
 <!-- UI 皮肤文字覆盖（壳-核分离·由 apply-skin.js 自动生成） -->
 <script src="skin-text-override.js" onerror=""></script>

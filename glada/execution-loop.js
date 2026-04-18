@@ -121,7 +121,7 @@ async function executeTask(gladaTask, options = {}) {
     step.started_at = new Date().toISOString();
 
     const stepResult = await stepExecutor.executeStep(step, systemPrompt, gladaTask, {
-      model: options.model || 'deepseek-chat',
+      model: options.model,  // null = let model-router auto-select
       maxTokens: options.maxTokens || 8192,
       skipTests: options.skipTests
     });

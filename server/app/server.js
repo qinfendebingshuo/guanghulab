@@ -790,6 +790,83 @@ app.get('/api/system/status', (_req, res) => {
   });
 });
 
+// ─── 聚合系统状态（真实连接检测·供前端系统状态面板使用） ───
+app.get('/api/system/full-status', async (_req, res) => {
+  const results = { timestamp: new Date().toISOString(), services: {} };
+
+  // Helper: 探测内部服务（使用已导入的 http 模块，见文件下方 line ~1005）
+  function probeService(name, port, pathStr, timeoutMs = 5000) {
+    return new Promise((resolve) => {
+      const start = Date.now();
+      const nodeHttp = require('http');
+      const probeReq = nodeHttp.get({ hostname: '127.0.0.1', port, path: pathStr, timeout: timeoutMs }, (resp) => {
+        let body = '';
+        resp.on('data', (c) => { body += c; });
+        resp.on('end', () => {
+          const latency = Date.now() - start;
+          try {
+            const data = JSON.parse(body);
+            resolve({ name, status: 'online', latency, code: resp.statusCode, data });
+          } catch {
+            resolve({ name, status: 'online', latency, code: resp.statusCode, raw: body.slice(0, 200) });
+          }
+        });
+      });
+      probeReq.on('error', (err) => {
+        resolve({ name, status: 'offline', latency: Date.now() - start, error: err.message });
+      });
+      probeReq.on('timeout', () => {
+        probeReq.destroy();
+        resolve({ name, status: 'timeout', latency: timeoutMs, error: '连接超时 (' + timeoutMs + 'ms)' });
+      });
+    });
+  }
+
+  try {
+    // 并行探测所有内部服务
+    const [mainServer, mcpBrain, gladaAgent] = await Promise.all([
+      probeService('铸渊主权服务器', 3800, '/api/health'),
+      probeService('MCP大脑服务器', 3100, '/health'),
+      probeService('GLADA自主开发Agent', 3900, '/api/glada/health'),
+    ]);
+
+    results.services.main_server = mainServer;
+    results.services.mcp_brain = mcpBrain;
+    results.services.glada_agent = gladaAgent;
+
+    // 本机系统信息
+    results.system = {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      cpus: os.cpus().length,
+      memory: {
+        total_mb: Math.floor(os.totalmem() / 1024 / 1024),
+        free_mb: Math.floor(os.freemem() / 1024 / 1024),
+        usage_pct: Math.floor((1 - os.freemem() / os.totalmem()) * 100)
+      },
+      load: os.loadavg(),
+      uptime_server: Math.floor(process.uptime()),
+      uptime_os: Math.floor(os.uptime()),
+      node_version: process.version,
+      pid: process.pid
+    };
+
+    // 模块加载状态
+    results.modules = {
+      domesticGateway: !!domesticGateway,
+      chatEngine: !!chatEngine,
+      contextPipeline: !!contextPipeline,
+      guardianAgent: !!guardianAgent,
+      personaMemory: !!personaMemory,
+      emailAuth: !!emailAuth
+    };
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message, timestamp: new Date().toISOString() });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════
 // 邮箱验证码登录 · Email Auth API
 // ═══════════════════════════════════════════════════════════

@@ -559,6 +559,8 @@ jobs:
           echo "GLADA_PORT=3900" >> /opt/glada/.env.glada
           echo "GLADA_POLL_INTERVAL=30000" >> /opt/glada/.env.glada
           echo "GLADA_MODEL=deepseek-chat" >> /opt/glada/.env.glada
+          echo "GLADA_MODEL_PREFERENCE=" >> /opt/glada/.env.glada
+          echo "GLADA_MODEL_REFRESH_MS=600000" >> /opt/glada/.env.glada
           echo "GLADA_STOP_ON_FAILURE=true" >> /opt/glada/.env.glada
           if [ -n "${ZY_LLM_API_KEY}" ]; then
             echo "ZY_LLM_API_KEY=${ZY_LLM_API_KEY}" >> /opt/glada/.env.glada

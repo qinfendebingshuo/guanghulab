@@ -59,15 +59,21 @@ glada/
 ├── git-operator.js         # 自动Git操作
 ├── notifier.js             # 多通道通知
 ├── execution-loop.js       # 主执行循环
+├── model-router.js         # 模型自动发现 + 智能路由
+├── reflector.js            # 自我反思器
+├── skill-distiller.js      # 经验蒸馏器
 ├── ecosystem.config.js     # PM2配置
+├── install-check.js        # 预飞检查
 ├── package.json
 ├── README.md
 ├── queue/                  # 本地任务队列
 │   └── completed/          # 已完成任务归档
 ├── logs/
 │   ├── executions/         # 执行日志
-│   └── notifications/      # 通知日志
+│   ├── notifications/      # 通知日志
+│   └── reflections/        # 反思日志
 ├── receipts/               # 开发回执
+├── skills/                 # 蒸馏出的技能模板
 └── tests/
     └── glada-smoke.test.js # 冒烟测试
 ```
@@ -116,7 +122,41 @@ curl -X POST http://localhost:3900/api/glada/submit \
 | `/api/glada/status` | GET | 队列状态 |
 | `/api/glada/submit` | POST | 提交新任务 |
 | `/api/glada/task/:id` | GET | 查看特定任务 |
+| `/api/glada/models` | GET | 模型路由状态 |
 | `/api/glada/receipt/:id` | GET | 查看开发回执 |
+
+## 模型自动路由
+
+GLADA 使用第三方代理 API（通过 `ZY_LLM_BASE_URL` 配置），支持多个模型。**不硬编码任何模型名称**——系统启动时自动发现可用模型并智能路由。
+
+### 工作原理
+
+```
+启动 → 查询代理 /models 端点 → 发现所有可用模型
+                                    ↓
+                              按能力自动分类
+                    ┌────────────────┼────────────────┐
+                    │                │                 │
+                  推理型           代码型             经济型
+              (o1/r1/opus)    (coder/codex)      (mini/flash)
+                    │                │                 │
+                    └────────┬───────┘                 │
+                             ↓                         │
+               任务步骤描述 → 自动匹配最佳模型 ←──────┘
+```
+
+- **推理型**（架构设计、安全审核、复杂分析）→ 优先选 o1/r1/opus
+- **代码型**（创建文件、修改模块、实现接口）→ 优先选 coder/codex
+- **经济型**（README、配置、日志分析）→ 优先选 mini/flash/turbo
+- **通用型**（其他任务）→ 选可用的最优模型
+
+### 降级策略
+
+```
+能力池首选 → 通用池 → 任意可用模型 → GLADA_MODEL 环境变量默认值
+```
+
+模型列表每 10 分钟自动刷新，支持代理动态增减模型。
 
 ## 环境变量
 
@@ -126,7 +166,9 @@ curl -X POST http://localhost:3900/api/glada/submit \
 | `ZY_LLM_BASE_URL` | LLM API 基础 URL | 必须配置 |
 | `GLADA_PORT` | HTTP 服务端口 | 3900 |
 | `GLADA_POLL_INTERVAL` | 任务轮询间隔（ms） | 30000 |
-| `GLADA_MODEL` | 默认使用的模型 | deepseek-chat |
+| `GLADA_MODEL` | 降级使用的默认模型 | deepseek-chat |
+| `GLADA_MODEL_PREFERENCE` | 模型偏好（空=自动选择） | 空 |
+| `GLADA_MODEL_REFRESH_MS` | 模型列表刷新间隔（ms） | 600000 |
 | `GLADA_STOP_ON_FAILURE` | 步骤失败是否停止 | true |
 | `ZY_SMTP_USER` | QQ邮箱账号（复用零点原核 SMTP） | 可选 |
 | `ZY_SMTP_PASS` | QQ邮箱授权码 | 可选 |

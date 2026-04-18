@@ -60,6 +60,7 @@ const taskReceiver = require('./task-receiver');
 const executionLoop = require('./execution-loop');
 const contextBuilder = require('./context-builder');
 const notifier = require('./notifier');
+const modelRouter = require('./model-router');
 
 const ROOT = path.resolve(__dirname, '..');
 const PORT = parseInt(process.env.GLADA_PORT || process.env.PORT || '3900', 10);
@@ -131,9 +132,11 @@ function showStatus() {
   // LLM 配置
   const hasApiKey = !!(process.env.ZY_LLM_API_KEY || process.env.LLM_API_KEY);
   const baseUrl = process.env.ZY_LLM_BASE_URL || process.env.LLM_BASE_URL || '未配置';
+  const modelPref = process.env.GLADA_MODEL_PREFERENCE || '(自动选择)';
   console.log(`\n🤖 LLM 配置:`);
   console.log(`  API Key: ${hasApiKey ? '✅ 已配置' : '❌ 未配置'}`);
   console.log(`  Base URL: ${baseUrl}`);
+  console.log(`  模型偏好: ${modelPref}`);
 
   console.log('');
 }
@@ -235,13 +238,24 @@ function startService() {
 
   // 健康检查
   app.get('/api/glada/health', apiLimiter, (req, res) => {
+    const routerStatus = modelRouter.getStatus();
     res.json({
       status: 'ok',
       service: 'glada',
       version: '1.0.0',
       uptime: process.uptime(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      model_router: {
+        initialized: routerStatus.initialized,
+        totalModels: routerStatus.totalModels || 0,
+        fallback: routerStatus.fallback || false
+      }
     });
+  });
+
+  // 模型路由器状态（查看已发现的模型和分类）
+  app.get('/api/glada/models', apiLimiter, (req, res) => {
+    res.json(modelRouter.getStatus());
   });
 
   // 查看队列状态
@@ -367,6 +381,7 @@ function startService() {
     console.log(`📡 HTTP API: http://0.0.0.0:${PORT}`);
     console.log(`📡 端点:`);
     console.log(`   GET  /api/glada/health    健康检查`);
+    console.log(`   GET  /api/glada/models    模型路由状态`);
     console.log(`   GET  /api/glada/status    队列状态`);
     console.log(`   POST /api/glada/submit    提交任务`);
     console.log(`   GET  /api/glada/task/:id  查看任务`);
@@ -375,21 +390,32 @@ function startService() {
     console.log('');
   });
 
-  // 启动执行循环
+  // 初始化模型路由器（自动发现代理上的可用模型）
+  modelRouter.initialize({
+    refreshIntervalMs: parseInt(process.env.GLADA_MODEL_REFRESH_MS || '600000', 10)
+  }).then(() => {
+    console.log('[GLADA] ✅ 模型路由器初始化完成');
+  }).catch(err => {
+    console.warn(`[GLADA] ⚠️ 模型路由器初始化失败（将使用默认模型）: ${err.message}`);
+  });
+
+  // 启动执行循环（模型由 model-router 自动选择，不再硬编码）
   const pollInterval = parseInt(process.env.GLADA_POLL_INTERVAL || '30000', 10);
   executionLoop.startLoop({
     pollIntervalMs: pollInterval,
-    model: process.env.GLADA_MODEL || 'deepseek-chat',
+    model: process.env.GLADA_MODEL_PREFERENCE || null,  // null = 让 model-router 自动选择
     stopOnFailure: process.env.GLADA_STOP_ON_FAILURE !== 'false'
   });
 
   // 优雅退出
   process.on('SIGINT', () => {
     console.log('\n[GLADA] 收到 SIGINT，正在关闭...');
+    modelRouter.shutdown();
     process.exit(0);
   });
   process.on('SIGTERM', () => {
     console.log('\n[GLADA] 收到 SIGTERM，正在关闭...');
+    modelRouter.shutdown();
     process.exit(0);
   });
   process.on('uncaughtException', (err) => {

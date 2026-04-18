@@ -108,7 +108,8 @@ async function main() {
   console.log('\n🤖 GLADA 模块:');
   const modules = [
     'task-receiver', 'context-builder', 'step-executor',
-    'code-generator', 'git-operator', 'notifier', 'execution-loop'
+    'code-generator', 'git-operator', 'notifier', 'execution-loop',
+    'model-router'
   ];
   for (const mod of modules) {
     try {
@@ -210,6 +211,41 @@ async function main() {
     }
   } else {
     fail('LLM API 连通', '跳过（密钥或URL未配置）');
+  }
+
+  // ── 6b. 模型自动发现 ──
+  console.log('\n🤖 模型自动发现:');
+  if (apiKey && baseUrl) {
+    try {
+      const modelRouter = require('./model-router');
+      const models = await modelRouter.discoverModels();
+      if (models.length > 0) {
+        pass('模型发现', `发现 ${models.length} 个可用模型`);
+        const classified = modelRouter.classifyModels(models);
+        if (classified.coding.length > 0) {
+          pass('代码型模型', classified.coding.slice(0, 3).join(', '));
+        } else {
+          warn('代码型模型', '无专用代码模型（将使用通用模型）');
+        }
+        if (classified.reasoning.length > 0) {
+          pass('推理型模型', classified.reasoning.slice(0, 3).join(', '));
+        } else {
+          warn('推理型模型', '无专用推理模型（将使用通用模型）');
+        }
+        if (classified.general.length > 0) {
+          pass('通用型模型', classified.general.slice(0, 3).join(', '));
+        }
+        if (classified.economy.length > 0) {
+          pass('经济型模型', classified.economy.slice(0, 3).join(', '));
+        }
+      } else {
+        warn('模型发现', `代理未返回模型列表（将使用默认模型: ${model}）`);
+      }
+    } catch (err) {
+      warn('模型发现', `发现失败: ${err.message}（将使用默认模型: ${model}）`);
+    }
+  } else {
+    warn('模型发现', '跳过（密钥或URL未配置）');
   }
 
   // ── 7. 端口检查 ──
