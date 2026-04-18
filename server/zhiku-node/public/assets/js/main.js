@@ -166,11 +166,15 @@ async function loginSendCode() {
     document.getElementById('loginCode')?.focus();
 
   } catch (err) {
+    console.error('[zhiku] send-code fetch error:', err.name, err.message);
     let msg = '网络连接失败，请检查网络后重试';
     if (err.name === 'AbortError') {
       msg = '请求超时，请检查网络后重试';
+    } else if (err.name === 'TypeError') {
+      // Safari/iOS 连接失败时抛出 TypeError，错误信息不友好
+      msg = '服务器连接失败，请稍后重试';
     } else if (err.message) {
-      msg = '连接失败: ' + err.message;
+      msg = '连接失败，请稍后重试';
     }
     showLoginMsg(msg, 'err');
     if (sendBtn) sendBtn.disabled = false;
@@ -238,11 +242,14 @@ async function loginVerify() {
     }, 600);
 
   } catch (err) {
+    console.error('[zhiku] verify fetch error:', err.name, err.message);
     let msg = '网络连接失败，请检查网络后重试';
     if (err.name === 'AbortError') {
       msg = '请求超时，请检查网络后重试';
+    } else if (err.name === 'TypeError') {
+      msg = '服务器连接失败，请稍后重试';
     } else if (err.message) {
-      msg = '连接失败: ' + err.message;
+      msg = '连接失败，请稍后重试';
     }
     showLoginMsg(msg, 'err');
     if (verifyBtn) verifyBtn.disabled = false;

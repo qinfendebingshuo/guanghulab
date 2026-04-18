@@ -111,16 +111,17 @@ jobs:
         run: |
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
             server/zhiku-node/server/package.json \
+            server/zhiku-node/server/package-lock.json \
             server/zhiku-node/server/server.js \
             server/zhiku-node/server/.env.example \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/
 
-      - name: '📤 上传镜面 Agent + 镜防模块 + 书岚 Agent'
+      - name: '📤 上传镜面 Agent + 镜防模块 + 书岚 Agent + 内置数据源'
         run: |
           # 创建远程目录
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield /opt/zhiku/server/shulan-agent /opt/zhiku/data/guardian'
+            'mkdir -p /opt/zhiku/server/mirror-agent/data/{snapshots,tickets,memory} /opt/zhiku/server/mirror-shield /opt/zhiku/server/shulan-agent /opt/zhiku/server/builtin-source /opt/zhiku/data/guardian'
           
           # 上传 mirror-agent
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
@@ -136,6 +137,11 @@ jobs:
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
             server/zhiku-node/server/shulan-agent/*.js \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/shulan-agent/
+          
+          # 上传 builtin-source（内置数据源直连 · 搜索下载fallback）
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
+            server/zhiku-node/server/builtin-source/*.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/builtin-source/
 
       - name: '📤 上传 PM2 配置'
         run: |
