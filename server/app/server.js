@@ -1185,6 +1185,136 @@ app.get('/api/mcp/agents', async (_req, res) => {
   }
 });
 
+// ─── MCP 对话接口 · POST /api/mcp/chat ───
+//
+// 前端选择"铸渊大脑 · MCP"对话时调用。
+// 铸渊大脑擅长：MCP工具调用状态、Notion/GitHub/COS连接状态、
+// Agent注册表、工具列表。不直接调用LLM，而是汇报MCP系统状态。
+//
+app.post('/api/mcp/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: true, message: '缺少 message 字段' });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    // 收集 MCP 实时状态
+    let healthData = null, toolsData = null, agentsData = null;
+
+    try {
+      const healthResult = await mcpProxy('GET', '/health');
+      healthData = healthResult.data;
+    } catch { /* MCP不可达 */ }
+
+    try {
+      const toolsResult = await mcpProxy('GET', '/tools');
+      toolsData = toolsResult.data;
+    } catch { /* ignore */ }
+
+    try {
+      const agentsResult = await mcpProxy('GET', '/agents');
+      agentsData = agentsResult.data;
+    } catch { /* ignore */ }
+
+    const m = message.toLowerCase();
+    let reply;
+
+    if (!healthData) {
+      reply = '铸渊大脑(MCP Server)当前不可达。可能原因：\n' +
+        '- MCP Server (端口3100) 未运行\n' +
+        '- 网络连接异常\n\n' +
+        '请在服务器上检查: `pm2 status mcp-server`';
+    } else if (m.includes('工具') || m.includes('tool') || m.includes('能力')) {
+      const tools = toolsData?.tools || toolsData || [];
+      const toolList = Array.isArray(tools) ? tools : (tools.list || []);
+      const toolCount = healthData.tools_count || toolList.length || 0;
+
+      // 按类别分组
+      const categories = {};
+      for (const t of toolList) {
+        const cat = t.category || t.name?.split(/[._-]/)[0] || 'other';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(t.name || t);
+      }
+
+      reply = `铸渊大脑 · MCP工具清单 (${toolCount} 工具)\n\n`;
+      for (const [cat, catTools] of Object.entries(categories).slice(0, 15)) {
+        reply += `**${cat}** (${catTools.length})\n`;
+        reply += catTools.slice(0, 5).map(t => `  - ${typeof t === 'string' ? t : t.name}`).join('\n') + '\n';
+        if (catTools.length > 5) reply += `  ...还有 ${catTools.length - 5} 个\n`;
+        reply += '\n';
+      }
+    } else if (m.includes('notion')) {
+      const notionOk = healthData.notion?.connected;
+      reply = `Notion 连接状态: ${notionOk ? '✅ 已连接' : '❌ 未连接'}\n\n` +
+        (notionOk
+          ? 'Notion API 可正常调用。可用工具: notionQuery, notionReadPage, notionWritePage 等。'
+          : 'Notion 尚未连接。需要配置 NOTION_TOKEN 或完成 OAuth 授权。');
+    } else if (m.includes('github')) {
+      reply = `GitHub 连接状态: 通过 MCP 内置工具访问。\n\n` +
+        '可用工具: githubReadFile, githubWriteFile, githubTriggerDeploy 等。';
+    } else if (m.includes('cos') || m.includes('存储') || m.includes('cloud')) {
+      const cosOk = healthData.cos?.connected;
+      reply = `COS 连接状态: ${cosOk ? '✅ 已连接' : '❌ 未连接'}\n\n` +
+        (cosOk
+          ? 'COS 对象存储可正常访问。'
+          : 'COS 未连接。检查 COS 密钥配置。');
+    } else if (m.includes('agent') || m.includes('注册')) {
+      const agents = agentsData?.agents || agentsData || [];
+      const agentList = Array.isArray(agents) ? agents : [];
+      reply = `MCP Agent 注册表 (${agentList.length} 个):\n\n`;
+      for (const a of agentList) {
+        reply += `- **${a.agent_id || a.id || '?'}**: ${a.name || a.description || '无描述'}\n`;
+      }
+      if (agentList.length === 0) reply += '(暂无已注册Agent)';
+    } else if (m.includes('状态') || m.includes('health') || m.includes('怎么样') || m.includes('你好') || m.includes('在吗')) {
+      const status = healthData.status || 'unknown';
+      const toolCount = healthData.tools_count || 0;
+      const dbOk = healthData.database?.connected;
+      const notionOk = healthData.notion?.connected;
+      const cosOk = healthData.cos?.connected;
+
+      reply = `铸渊大脑 · MCP Server 状态报告\n\n` +
+        `状态: ${status === 'alive' || status === 'ok' ? '✅ 在线' : '⚠️ ' + status}\n` +
+        `工具数: ${toolCount}\n` +
+        `数据库: ${dbOk ? '✅ 已连接' : '❌ 未连接'}\n` +
+        `Notion: ${notionOk ? '✅ 已连接' : '❌ 未连接'}\n` +
+        `COS: ${cosOk ? '✅ 已连接' : '❌ 未连接'}\n\n` +
+        '铸渊大脑运行在 ZY-SVR-005:3100，是所有Agent的工具中枢。';
+    } else {
+      // 通用回复 — 汇报所有状态
+      const status = healthData.status || 'unknown';
+      const toolCount = healthData.tools_count || 0;
+      reply = `铸渊大脑已收到消息。\n\n` +
+        `当前状态: ${status === 'alive' || status === 'ok' ? '在线' : status} · ${toolCount} 工具就绪\n\n` +
+        '你可以问我：\n' +
+        '- 工具列表/能力\n' +
+        '- Notion/GitHub/COS 连接状态\n' +
+        '- Agent注册表\n' +
+        '- 系统状态\n\n' +
+        '铸渊大脑是工具中枢，负责桥接所有外部服务。';
+    }
+
+    res.json({
+      reply,
+      model: 'mcp-status-engine',
+      method: 'mcp-query',
+      persona: 'mcp',
+      latency: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: true,
+      message: `MCP 对话异常: ${err.message}`,
+      reply: '铸渊大脑遇到了内部错误。',
+      method: 'error'
+    });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════
 // Agent 握手协议 · Handshake Protocol (Phase B)
 // ═══════════════════════════════════════════════════════════

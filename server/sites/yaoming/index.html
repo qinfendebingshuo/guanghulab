@@ -824,6 +824,18 @@ a{color:var(--cyan);text-decoration:none}
   background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));
   border:1px solid rgba(96,165,250,0.12);color:var(--cyan)
 }
+.msg-avatar.avatar-glada{
+  background:linear-gradient(135deg,rgba(251,191,36,0.12),rgba(245,158,11,0.06));
+  border-color:rgba(251,191,36,0.2);color:#fbbf24
+}
+.msg-avatar.avatar-ops{
+  background:linear-gradient(135deg,rgba(52,211,153,0.12),rgba(16,185,129,0.06));
+  border-color:rgba(52,211,153,0.2);color:#34d399
+}
+.msg-avatar.avatar-mcp{
+  background:linear-gradient(135deg,rgba(167,139,250,0.12),rgba(139,92,246,0.06));
+  border-color:rgba(167,139,250,0.2);color:#a78bfa
+}
 .msg-avatar.user{
   background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.1);
   color:var(--blue)
@@ -3288,10 +3300,13 @@ function renderMessageBubble(role, name, content, meta, time) {
 
   var avatarClass = role === 'ai' ? 'ai' : 'user';
   var avatarText = role === 'user' ? '朔' : '渊';
-  /* Use name-based avatar for AI messages to handle persona switching in history */
+  /* Use name-based avatar for AI messages to handle persona/agent switching in history */
   if (role === 'ai') {
     if (name === '霜砚') avatarText = '砚';
     else if (name === '双线') avatarText = '☯';
+    else if (name === '工官') avatarText = '官';
+    else if (name === '守卫') avatarText = '卫';
+    else if (name === '铸渊大脑') avatarText = '脑';
   }
   var contentClass = role === 'ai' ? 'ai' : 'user';
   if (!time) time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -3318,9 +3333,17 @@ function renderMessageBubble(role, name, content, meta, time) {
     metaHtml += '</div>';
   }
 
+  // Agent-specific avatar variant
+  var avatarAgent = '';
+  if (role === 'ai') {
+    if (name === '工官') avatarAgent = ' avatar-glada';
+    else if (name === '守卫') avatarAgent = ' avatar-ops';
+    else if (name === '铸渊大脑') avatarAgent = ' avatar-mcp';
+  }
+
   var contentHtml = role === 'ai' ? parseMarkdown(content) : escapeHtml(content);
 
-  div.innerHTML = '<div class="msg-avatar ' + avatarClass + '">' + avatarText + '</div>' +
+  div.innerHTML = '<div class="msg-avatar ' + avatarClass + avatarAgent + '">' + avatarText + '</div>' +
     '<div class="msg-body">' +
     '<div class="msg-name">' + escapeHtml(name) + '</div>' +
     '<div class="msg-content ' + contentClass + '">' + contentHtml + '</div>' +
@@ -3334,33 +3357,55 @@ function renderMessageBubble(role, name, content, meta, time) {
 
 function showTyping(){
   var msgs=document.getElementById('messages');
+  var target = _chatTarget || 'zhuyuan';
+  var agentNames = { zhuyuan: '铸渊', shuangyan: '霜砚', glada: '工官', ops: '守卫', mcp: '铸渊大脑' };
+  var agentAvatars = { zhuyuan: '渊', shuangyan: '砚', glada: '官', ops: '卫', mcp: '脑' };
+  var typingName = agentNames[target] || '铸渊';
+  var typingAvatar = agentAvatars[target] || '渊';
+
   var stepsDiv=document.createElement('div');
   stepsDiv.className='sys-steps';stepsDiv.id='sysSteps';
-  stepsDiv.innerHTML=
-    '<div class="sys-step" id="step-recv"><span class="dot done"></span>接收消息 · 已接收</div>'+
-    '<div class="sys-step" id="step-route"><span class="dot active"></span>智能路由 · 分析中...</div>'+
-    '<div class="sys-step" id="step-pipeline"><span class="dot pending"></span>人格注入 · 等待中</div>'+
-    '<div class="sys-step" id="step-llm"><span class="dot pending"></span>模型调用 · 等待中</div>'+
-    '<div class="sys-step" id="step-resp"><span class="dot pending"></span>响应生成 · 等待中</div>';
-  msgs.appendChild(stepsDiv);
-  /* 逐步动画 */
-  setTimeout(function(){
-    var s1=document.querySelector('#step-route .dot');if(s1)s1.className='dot done';
-    var t1=document.getElementById('step-route');if(t1)t1.childNodes[1].textContent='智能路由 · 已完成';
-    var s2=document.querySelector('#step-pipeline .dot');if(s2)s2.className='dot active';
-    var t2=document.getElementById('step-pipeline');if(t2)t2.childNodes[1].textContent='人格注入 · 注入中...';
-  },800);
-  setTimeout(function(){
-    var s2=document.querySelector('#step-pipeline .dot');if(s2)s2.className='dot done';
-    var t2=document.getElementById('step-pipeline');if(t2)t2.childNodes[1].textContent='人格注入 · 已完成';
-    var s3=document.querySelector('#step-llm .dot');if(s3)s3.className='dot active';
-    var t3=document.getElementById('step-llm');if(t3)t3.childNodes[1].textContent='模型调用 · 推理中...';
-  },1600);
+
+  // Agent-specific step descriptions
+  if (target === 'ops' || target === 'glada' || target === 'mcp') {
+    stepsDiv.innerHTML=
+      '<div class="sys-step" id="step-recv"><span class="dot done"></span>接收消息 · 已发送到' + typingName + '</div>'+
+      '<div class="sys-step" id="step-route"><span class="dot active"></span>' + typingName + '处理中...</div>'+
+      '<div class="sys-step" id="step-resp"><span class="dot pending"></span>响应生成 · 等待中</div>';
+    msgs.appendChild(stepsDiv);
+    setTimeout(function(){
+      var s1=document.querySelector('#step-route .dot');if(s1)s1.className='dot done';
+      var t1=document.getElementById('step-route');if(t1)t1.childNodes[1].textContent=typingName+'处理 · 完成';
+      var s2=document.querySelector('#step-resp .dot');if(s2)s2.className='dot active';
+      var t2=document.getElementById('step-resp');if(t2)t2.childNodes[1].textContent='响应生成 · 生成中...';
+    },1200);
+  } else {
+    stepsDiv.innerHTML=
+      '<div class="sys-step" id="step-recv"><span class="dot done"></span>接收消息 · 已接收</div>'+
+      '<div class="sys-step" id="step-route"><span class="dot active"></span>智能路由 · 分析中...</div>'+
+      '<div class="sys-step" id="step-pipeline"><span class="dot pending"></span>人格注入 · 等待中</div>'+
+      '<div class="sys-step" id="step-llm"><span class="dot pending"></span>模型调用 · 等待中</div>'+
+      '<div class="sys-step" id="step-resp"><span class="dot pending"></span>响应生成 · 等待中</div>';
+    msgs.appendChild(stepsDiv);
+    /* 逐步动画 */
+    setTimeout(function(){
+      var s1=document.querySelector('#step-route .dot');if(s1)s1.className='dot done';
+      var t1=document.getElementById('step-route');if(t1)t1.childNodes[1].textContent='智能路由 · 已完成';
+      var s2=document.querySelector('#step-pipeline .dot');if(s2)s2.className='dot active';
+      var t2=document.getElementById('step-pipeline');if(t2)t2.childNodes[1].textContent='人格注入 · 注入中...';
+    },800);
+    setTimeout(function(){
+      var s2=document.querySelector('#step-pipeline .dot');if(s2)s2.className='dot done';
+      var t2=document.getElementById('step-pipeline');if(t2)t2.childNodes[1].textContent='人格注入 · 已完成';
+      var s3=document.querySelector('#step-llm .dot');if(s3)s3.className='dot active';
+      var t3=document.getElementById('step-llm');if(t3)t3.childNodes[1].textContent='模型调用 · 推理中...';
+    },1600);
+  }
 
   var div=document.createElement('div');
   div.className='msg';div.id='typingIndicator';
-  div.innerHTML='<div class="msg-avatar ai">渊</div>'+
-    '<div class="msg-body"><div class="msg-name">铸渊</div>'+
+  div.innerHTML='<div class="msg-avatar ai">' + typingAvatar + '</div>'+
+    '<div class="msg-body"><div class="msg-name">' + typingName + '</div>'+
     '<div class="typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
   msgs.appendChild(div);
   msgs.scrollTop=msgs.scrollHeight;
@@ -3595,6 +3640,8 @@ function callChatAPI(userMessage){
   // 根据对话目标路由到不同Agent后端
   var chatUrl = '/api/chat';
   if (target === 'ops') chatUrl = '/api/ops/chat';
+  else if (target === 'glada') chatUrl = '/api/glada/chat';
+  else if (target === 'mcp') chatUrl = '/api/mcp/chat';
 
   fetch(chatUrl,{
     method:'POST',
@@ -3643,11 +3690,24 @@ function callChatAPI(userMessage){
   })
   .catch(function(err){
     removeTyping();
-    var reply=getLocalReply(userMessage);
-    var replyName = personaNameMap[activePersona] || '铸渊';
-    var meta = {engine:'offline',model:'本地应答',reason:'网络不可达',latency:Date.now()-startTime};
-    addMessageToSession('ai',replyName,reply,meta);
-    renderMessageBubble('ai',replyName,reply,meta);
+    var agentOfflineNames = { ops: '守卫', glada: '工官', mcp: '铸渊大脑' };
+    var offlineAgentName = agentOfflineNames[target];
+
+    if (offlineAgentName) {
+      // Agent-specific offline message
+      var offlineReply = offlineAgentName + '当前不可达（' + (err.message || '网络异常') + '）。\n\n' +
+        '可能原因：\n- 对应服务未运行\n- 网络连接异常\n\n' +
+        '建议在服务器上检查 PM2 进程状态。';
+      var meta = {engine:'offline',model:'本地应答',reason: offlineAgentName + '不可达',latency:Date.now()-startTime};
+      addMessageToSession('ai', offlineAgentName, offlineReply, meta);
+      renderMessageBubble('ai', offlineAgentName, offlineReply, meta);
+    } else {
+      var reply=getLocalReply(userMessage);
+      var replyName = personaNameMap[activePersona] || '铸渊';
+      var meta = {engine:'offline',model:'本地应答',reason:'网络不可达',latency:Date.now()-startTime};
+      addMessageToSession('ai',replyName,reply,meta);
+      renderMessageBubble('ai',replyName,reply,meta);
+    }
   });
 }
 
@@ -4508,6 +4568,11 @@ function agentTalkTo(target, name) {
   var sel = document.getElementById('chatTargetSelect');
   if (sel) sel.value = target;
   updateChatTargetDot();
+  updateChatPlaceholder();
+
+  // 聚焦输入框
+  var inputBox = document.getElementById('inputBox');
+  if (inputBox) inputBox.focus();
 
   // 在对话区添加系统提示
   var msgsEl = document.getElementById('messages');
@@ -4524,6 +4589,20 @@ function agentTalkTo(target, name) {
 function onChatTargetChange(val) {
   _chatTarget = val;
   updateChatTargetDot();
+  updateChatPlaceholder();
+}
+
+function updateChatPlaceholder() {
+  var input = document.getElementById('inputBox');
+  if (!input) return;
+  var placeholders = {
+    zhuyuan: '对铸渊说点什么...',
+    shuangyan: '对霜砚说点什么...',
+    glada: '对工官说点什么（任务/模型/回执）...',
+    ops: '对守卫说点什么（巡检/工单/修复）...',
+    mcp: '对铸渊大脑说点什么（工具/连接状态）...'
+  };
+  input.placeholder = placeholders[_chatTarget] || '说点什么...';
 }
 
 function updateChatTargetDot() {
