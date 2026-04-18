@@ -200,7 +200,11 @@ class SentinelMemory {
    * 更新书源状态
    */
   updateSource(sourceId, updates) {
-    if (!this.memory.sources[sourceId]) {
+    // 防止原型污染
+    if (!sourceId || sourceId === '__proto__' || sourceId === 'constructor' || sourceId === 'prototype') {
+      return;
+    }
+    if (!Object.prototype.hasOwnProperty.call(this.memory.sources, sourceId)) {
       this.memory.sources[sourceId] = {};
     }
     Object.assign(this.memory.sources[sourceId], updates);

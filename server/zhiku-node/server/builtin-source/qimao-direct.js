@@ -510,8 +510,9 @@ async function getChapterViaApi(bookId, chapterId) {
       if (data && data.data) {
         let content = data.data.content || data.data.chapter_content || data.data.chapterContent || '';
         if (typeof content === 'string' && content.length > 0) {
-          // 检查是否加密（Base64 编码通常全是 ASCII）
-          if (/^[A-Za-z0-9+/=\s]+$/.test(content.trim()) && content.length > 100) {
+          // 检查是否加密（Base64 编码通常全是 ASCII · 只检前500字符防性能问题）
+          const sampleForCheck = content.trim().substring(0, 500);
+          if (/^[A-Za-z0-9+/=\s]+$/.test(sampleForCheck) && content.length > 100) {
             const decrypted = decryptChapterContent(content.trim());
             if (decrypted && decrypted.length > content.length * 0.3) {
               content = decrypted;

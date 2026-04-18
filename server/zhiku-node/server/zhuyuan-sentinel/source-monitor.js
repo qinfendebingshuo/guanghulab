@@ -129,7 +129,7 @@ class SourceMonitor {
     if (checkResult.reachable) {
       updates.consecutive_failures = 0;
       if (checkResult.strategy) {
-        updates[`search_strategy`] = checkResult.strategy;
+        updates.search_strategy = checkResult.strategy;
       }
     } else {
       updates.consecutive_failures = (memState?.consecutive_failures || 0) + 1;
@@ -211,8 +211,10 @@ class SourceMonitor {
 
     // 策略1: 切换到备用主机
     const backupHosts = memState.backup_hosts || [];
+    const knowledge = this.memory.get().knowledge || {};
+    const deadHosts = knowledge.dead_hosts || [];
     for (const host of backupHosts) {
-      if (memState.knowledge_dead_hosts && memState.knowledge_dead_hosts.includes(host)) {
+      if (deadHosts.includes(host)) {
         continue; // 跳过已知失效的主机
       }
 
