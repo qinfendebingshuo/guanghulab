@@ -620,6 +620,18 @@ body::after {
   box-shadow: 0 8px 32px rgba(212, 165, 116, 0.08) !important;
 }
 
+/* Agent chat button */
+.agent-chat-btn {
+  background: rgba(212, 165, 116, 0.08) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+  color: var(--moon-gold) !important;
+}
+
+.agent-chat-btn:hover {
+  background: rgba(212, 165, 116, 0.15) !important;
+  border-color: rgba(212, 165, 116, 0.3) !important;
+}
+
 /* OpenClaw phases */
 .oc-phase.done {
   background: rgba(111, 195, 168, 0.1) !important;
@@ -1042,7 +1054,124 @@ body::after {
   body::after { animation: none !important; }
 }
 
-/* ─── 33. 移动端适配 ─── */
+/* ─── 33. 链接色 · 月光金 ─── */
+a {
+  color: var(--moon-gold);
+}
+
+a:hover {
+  color: #e8c49a;
+}
+
+/* 保留聊天内特殊链接 */
+.msg-content a {
+  color: var(--moon-gold);
+  text-decoration: underline;
+  text-decoration-color: rgba(212, 165, 116, 0.3);
+}
+
+/* ─── 34. 用户消息气泡 · 月光金调 ─── */
+.msg-content.user {
+  background: rgba(212, 165, 116, 0.07) !important;
+  border: 1px solid rgba(212, 165, 116, 0.1) !important;
+}
+
+.msg-avatar.user {
+  background: rgba(212, 165, 116, 0.06) !important;
+  border: 1px solid rgba(212, 165, 116, 0.12) !important;
+  color: var(--moon-gold) !important;
+}
+
+/* AI 消息保持紫色调以区分 */
+.msg-content.ai {
+  background: rgba(167, 139, 250, 0.05) !important;
+  border: 1px solid rgba(167, 139, 250, 0.08) !important;
+}
+
+.msg-avatar.ai {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.1), rgba(167, 139, 250, 0.08)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+  color: var(--moon-gold) !important;
+}
+
+/* ─── 35. 系统步骤点 · 统一色调 ─── */
+.sys-step .dot.pending {
+  background: var(--warn) !important;
+  box-shadow: 0 0 5px rgba(212, 165, 116, 0.4) !important;
+}
+
+.sys-step .dot.done {
+  background: var(--ok) !important;
+  box-shadow: 0 0 5px rgba(111, 195, 168, 0.4) !important;
+}
+
+.sys-step .dot.active {
+  background: var(--moon-gold) !important;
+  box-shadow: 0 0 7px rgba(212, 165, 116, 0.5) !important;
+}
+
+/* ─── 36. Welcome 状态点 ─── */
+.ws-dot.online {
+  background: var(--ok) !important;
+  box-shadow: 0 0 8px rgba(111, 195, 168, 0.4) !important;
+}
+
+.ws-dot.offline {
+  background: var(--err) !important;
+  box-shadow: 0 0 5px rgba(212, 122, 111, 0.3) !important;
+}
+
+/* ─── 37. Dashboard Headline 光晕 ─── */
+.dash-headline::before {
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.04), transparent 70%) !important;
+}
+
+.dash-section::before {
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.025), transparent 70%) !important;
+}
+
+/* ─── 38. 数据解释卡片 ─── */
+.s-card-explain {
+  background: rgba(212, 165, 116, 0.03) !important;
+  border: 1px solid rgba(212, 165, 116, 0.06) !important;
+}
+
+/* ─── 38b. 进度条 ─── */
+.prog-fill.ok {
+  background: linear-gradient(90deg, var(--ok), var(--moon-gold)) !important;
+}
+
+.prog-fill.warn {
+  background: linear-gradient(90deg, var(--warn), var(--err)) !important;
+}
+
+/* ─── 39. Nav Tabs (chat/dashboard) ─── */
+.nav-tab {
+  border-bottom: 2px solid transparent;
+}
+
+.nav-tab:hover {
+  color: var(--text-main) !important;
+}
+
+/* ─── 40. CAB 看板 · 待办状态色 ─── */
+.proj-badge.error {
+  background: rgba(212, 122, 111, 0.1) !important;
+  color: var(--err) !important;
+  border: 1px solid rgba(212, 122, 111, 0.2) !important;
+}
+
+/* ─── 41. Back link ─── */
+.back-link {
+  color: var(--text-soft) !important;
+}
+
+.back-link:hover {
+  color: var(--moon-gold) !important;
+  border-color: var(--glass-border) !important;
+}
+
+/* ─── 42. 移动端适配 ─── */
 @media (max-width: 768px) {
   .sky-sweep {
     display: none;
