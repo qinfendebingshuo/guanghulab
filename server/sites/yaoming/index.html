@@ -3635,7 +3635,8 @@ function callChatAPI(userMessage){
       promptVersion:(data._system&&data._system.promptVersion)||null
     };
     var replyPersona = data.persona || activePersona;
-    var replyName = target === 'ops' ? '守卫' : target === 'glada' ? '工官' : target === 'mcp' ? '铸渊大脑' : (personaNameMap[replyPersona] || '铸渊');
+    var agentDisplayNames = { ops: '守卫', glada: '工官', mcp: '铸渊大脑' };
+    var replyName = agentDisplayNames[target] || personaNameMap[replyPersona] || '铸渊';
     var replyText = data.reply||data.message||data.answer||'我听到了你的声音。让我想想...';
     addMessageToSession('ai',replyName,replyText,meta);
     renderMessageBubble('ai',replyName,replyText,meta);

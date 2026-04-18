@@ -20,6 +20,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const https = require('https');
 const { execSync } = require('child_process');
 
 // ─── 路径常量 ───
@@ -1782,8 +1783,6 @@ app.get('/api/auth/notion/callback', async (req, res) => {
     const redirectUri = NOTION_OAUTH_REDIRECT_URI || `https://guanghuyaoming.com/api/auth/notion/callback`;
     const basicAuth = Buffer.from(`${NOTION_OAUTH_CLIENT_ID}:${NOTION_OAUTH_CLIENT_SECRET}`).toString('base64');
 
-    // 用 code 换 access_token
-    const nodeHttps = require('https');
     const tokenResponse = await new Promise((resolve, reject) => {
       const postData = JSON.stringify({
         grant_type: 'authorization_code',
@@ -1791,7 +1790,7 @@ app.get('/api/auth/notion/callback', async (req, res) => {
         redirect_uri: redirectUri
       });
 
-      const tokenReq = nodeHttps.request({
+      const tokenReq = https.request({
         hostname: 'api.notion.com',
         path: '/v1/oauth/token',
         method: 'POST',
@@ -1829,16 +1828,29 @@ app.get('/api/auth/notion/callback', async (req, res) => {
     const { access_token, workspace_name, workspace_id, bot_id } = tokenResponse.data;
 
     // 安全存储 token（写入 brain 目录，不进代码仓库）
+    // 使用 temp-file + rename 模式保证原子性
     const notionTokenPath = path.join(BRAIN_DIR, 'notion-oauth.json');
-    fs.mkdirSync(BRAIN_DIR, { recursive: true });
-    fs.writeFileSync(notionTokenPath, JSON.stringify({
-      access_token,
-      workspace_name,
-      workspace_id,
-      bot_id,
-      connected_at: new Date().toISOString(),
-      connected_by: 'bingshuo-yaoming-channel'
-    }, null, 2));
+    const notionTokenTmp = path.join(BRAIN_DIR, 'notion-oauth.json.tmp');
+    try {
+      fs.mkdirSync(BRAIN_DIR, { recursive: true });
+      const tokenContent = JSON.stringify({
+        access_token,
+        workspace_name,
+        workspace_id,
+        bot_id,
+        connected_at: new Date().toISOString(),
+        connected_by: 'bingshuo-yaoming-channel'
+      }, null, 2);
+      fs.writeFileSync(notionTokenTmp, tokenContent);
+      fs.renameSync(notionTokenTmp, notionTokenPath);
+    } catch (writeErr) {
+      console.error(`[Notion OAuth] Token 写入失败: ${writeErr.message}`);
+      return res.status(500).json({
+        error: true,
+        code: 'TOKEN_WRITE_FAILED',
+        message: 'Notion token 存储失败，请重试'
+      });
+    }
 
     // 返回成功页面（简单HTML，让冰朔知道已连接）
     res.send(`<!DOCTYPE html>
@@ -1867,7 +1879,16 @@ app.get('/api/auth/notion/status', (_req, res) => {
   try {
     const notionTokenPath = path.join(BRAIN_DIR, 'notion-oauth.json');
     if (fs.existsSync(notionTokenPath)) {
-      const tokenData = JSON.parse(fs.readFileSync(notionTokenPath, 'utf8'));
+      let tokenData;
+      try {
+        tokenData = JSON.parse(fs.readFileSync(notionTokenPath, 'utf8'));
+      } catch (parseErr) {
+        return res.json({
+          connected: false,
+          oauth_configured: !!NOTION_OAUTH_CLIENT_ID,
+          message: 'Notion token 文件损坏，请重新连接。'
+        });
+      }
       res.json({
         connected: true,
         workspace_name: tokenData.workspace_name,
