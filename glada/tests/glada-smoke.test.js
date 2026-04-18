@@ -473,6 +473,340 @@ test('install-check.js 预飞检查工具存在', () => {
   assert(content.includes('WECOM_WEBHOOK'), '预飞检查应检查企业微信');
 });
 
+// ── 3. Skill 蒸馏测试（Hermes-inspired · Phase 1） ──
+
+console.log('\n🧪 Skill 蒸馏测试:');
+
+test('skill-distiller 模块加载', () => {
+  const mod = require('../skill-distiller');
+  assert(typeof mod.distillSkill === 'function', 'distillSkill 不是函数');
+  assert(typeof mod.saveSkill === 'function', 'saveSkill 不是函数');
+  assert(typeof mod.loadAllSkills === 'function', 'loadAllSkills 不是函数');
+  assert(typeof mod.findRelevantSkills === 'function', 'findRelevantSkills 不是函数');
+  assert(typeof mod.skillsToContext === 'function', 'skillsToContext 不是函数');
+  assert(typeof mod.distillAndSave === 'function', 'distillAndSave 不是函数');
+  assert(typeof mod.extractTags === 'function', 'extractTags 不是函数');
+});
+
+test('Skill 蒸馏 - 成功任务生成 HNL 格式 skill', () => {
+  const { distillSkill } = require('../skill-distiller');
+  const mockTask = {
+    glada_task_id: 'GLADA-CAB-20260418-001',
+    status: 'completed',
+    plan: {
+      title: '添加用户认证 API',
+      description: '实现 login 和 register 接口',
+      steps: [
+        { step_id: 1, description: '创建 schema', status: 'completed', files_changed: ['src/schemas/hli/auth/login.schema.json'], reasoning: 'HLI 协议要求 schema 优先' },
+        { step_id: 2, description: '创建路由', status: 'completed', files_changed: ['src/routes/hli/auth/login.js'], reasoning: '路由遵循 HLI 约定' }
+      ]
+    },
+    execution_log: [
+      { step_id: 1, action: '创建 schema', status: 'completed', reasoning: 'HLI 协议要求', files_changed: ['src/schemas/hli/auth/login.schema.json'], duration_ms: 5000 },
+      { step_id: 2, action: '创建路由', status: 'completed', reasoning: '遵循约定', files_changed: ['src/routes/hli/auth/login.js'], duration_ms: 8000 }
+    ],
+    architecture: { target_files: ['src/routes/hli/auth/'], target_modules: ['auth'] },
+    constraints: { no_touch_files: ['.github/'], required_tests: true }
+  };
+
+  const skill = distillSkill(mockTask);
+  assert(skill !== null, 'skill 不应为 null');
+  assert(skill.hnl_v === '1.0', 'HNL 版本应为 1.0');
+  assert(skill.type === 'SKILL', '类型应为 SKILL');
+  assert(skill.from === 'YM001/ZY001', '发送者应为铸渊');
+  assert(skill.skill.name === '添加用户认证 API', 'skill 名称错误');
+  assert(skill.skill.step_patterns.length === 2, '步骤模式数量错误');
+  assert(skill.skill.success_rate === 1, '成功率应为 1');
+  assert(skill.skill.file_domain.length === 2, '文件域数量错误');
+  assert(skill.memory_sovereignty.can_forget === true, '记忆主权：应可遗忘');
+  assert(skill.op.includes('GROW'), '操作应为 GROW');
+});
+
+test('Skill 蒸馏 - 未完成任务返回 null', () => {
+  const { distillSkill } = require('../skill-distiller');
+  const result = distillSkill({ status: 'failed', plan: { steps: [] }, execution_log: [] });
+  assert(result === null, '未完成任务应返回 null');
+});
+
+test('Skill 蒸馏 - 部分失败任务包含教训', () => {
+  const { distillSkill } = require('../skill-distiller');
+  const mockTask = {
+    glada_task_id: 'GLADA-CAB-20260418-002',
+    status: 'completed',
+    plan: {
+      title: '数据库迁移',
+      steps: [
+        { step_id: 1, description: '备份数据', status: 'completed', files_changed: ['scripts/backup.sh'] },
+        { step_id: 2, description: '迁移表', status: 'failed', error: 'SQL 语法错误' },
+        { step_id: 3, description: '验证迁移', status: 'completed', files_changed: ['tests/migration.test.js'] }
+      ]
+    },
+    execution_log: [],
+    architecture: {},
+    constraints: {}
+  };
+
+  const skill = distillSkill(mockTask);
+  assert(skill !== null, 'skill 不应为 null');
+  assert(skill.skill.lessons_learned.length === 1, '应有 1 条教训');
+  assert(skill.skill.lessons_learned[0].error === 'SQL 语法错误', '教训应包含错误信息');
+  assert(skill.skill.success_rate < 1, '成功率应小于 1');
+});
+
+test('Skill 标签提取', () => {
+  const { extractTags } = require('../skill-distiller');
+  const tags = extractTags('添加 HLI API 认证中间件', [
+    { description: '创建 auth middleware', files_changed: ['src/middleware/auth.js'] }
+  ]);
+  assert(Array.isArray(tags), 'tags 应为数组');
+  assert(tags.length > 0, 'tags 不应为空');
+  assert(tags.includes('middleware'), '应包含 middleware 标签');
+  assert(tags.includes('src'), '应包含 src 模块标签');
+});
+
+test('Skill 查找 - 按文件域匹配', () => {
+  const { findRelevantSkills, saveSkill, SKILLS_DIR } = require('../skill-distiller');
+
+  // 创建临时 skill
+  const tmpSkill = {
+    type: 'SKILL',
+    id: 'SKILL-TEST-MATCH',
+    skill: {
+      name: '测试 Skill',
+      tags: ['glada', 'test'],
+      success_rate: 1,
+      step_patterns: [],
+      file_domain: ['glada/notifier.js', 'glada/service.js'],
+      lessons_learned: [],
+      architecture_context: { target_files: ['glada/'], target_modules: ['glada'] }
+    }
+  };
+
+  // 保存测试 skill
+  fs.mkdirSync(SKILLS_DIR, { recursive: true });
+  const testPath = path.join(SKILLS_DIR, 'SKILL-TEST-MATCH.json');
+  fs.writeFileSync(testPath, JSON.stringify(tmpSkill, null, 2), 'utf-8');
+
+  // 查找匹配
+  const results = findRelevantSkills({
+    architecture: { target_files: ['glada/notifier.js'], target_modules: ['glada'] },
+    plan: { title: 'GLADA 通知改进' }
+  });
+
+  // 清理
+  try { fs.unlinkSync(testPath); } catch { /* ok */ }
+
+  assert(results.length > 0, '应找到匹配的 skill');
+  assert(results[0].skill.name === '测试 Skill', '匹配的 skill 名称错误');
+});
+
+test('Skill 格式化为上下文', () => {
+  const { skillsToContext } = require('../skill-distiller');
+
+  const mockSkills = [{
+    skill: {
+      name: '测试上下文 Skill',
+      source_task: 'GLADA-TEST-001',
+      success_rate: 0.85,
+      step_patterns: [
+        { description: '创建文件', reasoning: '规范要求', files_changed: ['test.js'] }
+      ],
+      lessons_learned: [
+        { step_description: '编译', error: '类型错误' }
+      ],
+      file_domain: ['test.js']
+    }
+  }];
+
+  const context = skillsToContext(mockSkills);
+  assert(context.includes('测试上下文 Skill'), '上下文应包含 skill 名称');
+  assert(context.includes('85%'), '上下文应包含成功率');
+  assert(context.includes('教训'), '上下文应包含教训');
+  assert(context.includes('test.js'), '上下文应包含文件');
+});
+
+test('skillsToContext 空 skills 返回空字符串', () => {
+  const { skillsToContext } = require('../skill-distiller');
+  assert(skillsToContext([]) === '', '空 skills 应返回空字符串');
+  assert(skillsToContext(null) === '', 'null 应返回空字符串');
+});
+
+// ── 4. 自我反思测试（Hermes-inspired · Phase 2） ──
+
+console.log('\n🪞 自我反思测试:');
+
+test('reflector 模块加载', () => {
+  const mod = require('../reflector');
+  assert(typeof mod.buildReflectionPrompt === 'function', 'buildReflectionPrompt 不是函数');
+  assert(typeof mod.parseReflection === 'function', 'parseReflection 不是函数');
+  assert(typeof mod.wrapAsHNL === 'function', 'wrapAsHNL 不是函数');
+  assert(typeof mod.reflectOffline === 'function', 'reflectOffline 不是函数');
+  assert(typeof mod.reflectWithLLM === 'function', 'reflectWithLLM 不是函数');
+  assert(typeof mod.loadRecentReflections === 'function', 'loadRecentReflections 不是函数');
+});
+
+test('反思提示词构建', () => {
+  const { buildReflectionPrompt } = require('../reflector');
+  const mockTask = {
+    glada_task_id: 'GLADA-TEST-REFLECT',
+    status: 'completed',
+    plan: {
+      title: '反思测试任务',
+      description: '用于测试反思功能',
+      steps: [
+        { step_id: 1, description: '步骤1', status: 'completed', reasoning: '推理1', files_changed: ['a.js'] },
+        { step_id: 2, description: '步骤2', status: 'failed', error: '测试错误' }
+      ]
+    },
+    execution_log: [
+      { step_id: 1, action: '步骤1', status: 'completed', reasoning: '推理1', files_changed: ['a.js'], duration_ms: 3000 },
+      { step_id: 2, action: '步骤2', status: 'failed', error: '测试错误', duration_ms: 2000 }
+    ],
+    constraints: { no_touch_files: ['.github/'] }
+  };
+
+  const { systemPrompt, userMessage } = buildReflectionPrompt(mockTask);
+  assert(systemPrompt.includes('铸渊'), '系统提示词应包含铸渊身份');
+  assert(systemPrompt.includes('JSON'), '系统提示词应要求 JSON 输出');
+  assert(userMessage.includes('GLADA-TEST-REFLECT'), '用户消息应包含任务ID');
+  assert(userMessage.includes('反思测试任务'), '用户消息应包含任务标题');
+  assert(userMessage.includes('测试错误'), '用户消息应包含失败错误');
+});
+
+test('反思 JSON 解析 - 标准格式', () => {
+  const { parseReflection } = require('../reflector');
+  const output = '```json\n{"what_went_well":["步骤1成功"],"what_went_wrong":["步骤2失败"],"improvements":["增加检查"],"patterns_discovered":["模式A"],"confidence_score":0.75}\n```';
+  const result = parseReflection(output);
+  assert(result !== null, '解析不应为 null');
+  assert(result.what_went_well.length === 1, 'what_went_well 长度错误');
+  assert(result.what_went_wrong.length === 1, 'what_went_wrong 长度错误');
+  assert(result.improvements.length === 1, 'improvements 长度错误');
+  assert(result.confidence_score === 0.75, '信心评分错误');
+});
+
+test('反思 JSON 解析 - 异常值安全处理', () => {
+  const { parseReflection } = require('../reflector');
+  const output = '{"what_went_well":"not_array","confidence_score":999}';
+  const result = parseReflection(output);
+  assert(result !== null, '解析不应为 null');
+  assert(Array.isArray(result.what_went_well), 'what_went_well 应降级为数组');
+  assert(result.what_went_well.length === 0, '非数组应降级为空数组');
+  assert(result.confidence_score === 1, '超出范围的分数应 clamp 到 1');
+});
+
+test('反思 JSON 解析 - 无效输入返回 null', () => {
+  const { parseReflection } = require('../reflector');
+  assert(parseReflection('这不是 JSON') === null, '纯文本应返回 null');
+});
+
+test('反思 HNL 包装', () => {
+  const { wrapAsHNL } = require('../reflector');
+  const mockTask = {
+    glada_task_id: 'GLADA-TEST-HNL',
+    status: 'completed',
+    plan: { title: 'HNL 包装测试' }
+  };
+  const reflectionData = {
+    what_went_well: ['很好'],
+    what_went_wrong: [],
+    improvements: ['可以更好'],
+    patterns_discovered: ['模式1'],
+    confidence_score: 0.9
+  };
+
+  const doc = wrapAsHNL(mockTask, reflectionData);
+  assert(doc.hnl_v === '1.0', 'HNL 版本应为 1.0');
+  assert(doc.type === 'GROW', '类型应为 GROW');
+  assert(doc.from === 'YM001/ZY001', '发送者应为铸渊');
+  assert(doc.to === 'YM001/ZY001', '接收者应为铸渊（自我反思）');
+  assert(doc.op.includes('GROW'), '操作应为 GROW');
+  assert(doc.payload.intent === 'task_reflection', '意图应为 task_reflection');
+  assert(doc.payload.data.confidence_score === 0.9, '信心评分应传递');
+  assert(doc.memory_sovereignty.can_forget === true, '记忆主权：应可遗忘');
+});
+
+test('离线反思 - 全部成功的任务', () => {
+  const { reflectOffline, REFLECTIONS_DIR } = require('../reflector');
+  const mockTask = {
+    glada_task_id: 'GLADA-TEST-OFFLINE-OK',
+    status: 'completed',
+    plan: {
+      title: '离线反思成功测试',
+      steps: [
+        { step_id: 1, description: '步骤1', status: 'completed', files_changed: ['a.js'], reasoning: '推理1' },
+        { step_id: 2, description: '步骤2', status: 'completed', files_changed: ['b.js'] }
+      ]
+    },
+    execution_log: [
+      { step_id: 1, action: '步骤1', status: 'completed', reasoning: '推理1', files_changed: ['a.js'], duration_ms: 1000 },
+      { step_id: 2, action: '步骤2', status: 'completed', files_changed: ['b.js'], duration_ms: 2000 }
+    ],
+    constraints: {}
+  };
+
+  const result = reflectOffline(mockTask);
+  assert(result.saved === true, '应保存成功');
+  assert(result.reflection.confidence_score === 1, '全部成功时信心应为 1');
+  assert(result.reflection.what_went_well.length === 2, '应有 2 条好的');
+  assert(result.reflection.what_went_wrong.length === 0, '不应有差的');
+  assert(result.hnlDoc.hnl_v === '1.0', 'HNL 文档版本应为 1.0');
+
+  // 清理
+  try { fs.unlinkSync(result.path); } catch { /* ok */ }
+});
+
+test('离线反思 - 有失败步骤的任务', () => {
+  const { reflectOffline } = require('../reflector');
+  const mockTask = {
+    glada_task_id: 'GLADA-TEST-OFFLINE-FAIL',
+    status: 'failed',
+    plan: {
+      title: '离线反思失败测试',
+      steps: [
+        { step_id: 1, description: '成功步骤', status: 'completed', files_changed: ['ok.js'] },
+        { step_id: 2, description: '失败步骤', status: 'failed', error: 'SQL 错误' },
+        { step_id: 3, description: '回滚步骤', status: 'rolled_back', error: '测试失败' }
+      ]
+    },
+    execution_log: [
+      { step_id: 1, action: '成功步骤', status: 'completed', files_changed: ['ok.js'] },
+      { step_id: 2, action: '失败步骤', status: 'failed', error: 'SQL 错误' },
+      { step_id: 3, action: '回滚步骤', status: 'rolled_back', error: '测试失败' }
+    ],
+    constraints: {}
+  };
+
+  const result = reflectOffline(mockTask);
+  assert(result.saved === true, '应保存成功');
+  assert(result.reflection.confidence_score < 1, '有失败时信心应小于 1');
+  assert(result.reflection.what_went_wrong.length === 2, '应有 2 条差的');
+  assert(result.reflection.improvements.length >= 2, '应有改进建议');
+
+  // 清理
+  try { fs.unlinkSync(result.path); } catch { /* ok */ }
+});
+
+test('execution-loop 集成 skill-distiller 和 reflector', () => {
+  const loopContent = fs.readFileSync(path.join(ROOT, 'glada', 'execution-loop.js'), 'utf-8');
+  assert(loopContent.includes("require('./skill-distiller')"), 'execution-loop 应引用 skill-distiller');
+  assert(loopContent.includes("require('./reflector')"), 'execution-loop 应引用 reflector');
+  assert(loopContent.includes('distillAndSave'), 'execution-loop 应调用 distillAndSave');
+  assert(loopContent.includes('reflectOffline'), 'execution-loop 应调用 reflectOffline');
+});
+
+test('context-builder 集成 skills 加载', () => {
+  const ctxContent = fs.readFileSync(path.join(ROOT, 'glada', 'context-builder.js'), 'utf-8');
+  assert(ctxContent.includes('skill-distiller'), 'context-builder 应引用 skill-distiller');
+  assert(ctxContent.includes('findRelevantSkills'), 'context-builder 应调用 findRelevantSkills');
+  assert(ctxContent.includes('skillsToContext'), 'context-builder 应调用 skillsToContext');
+  assert(ctxContent.includes('sections.skills'), 'context-builder 应有 skills section');
+});
+
+test('context-builder 将 skills 加入系统提示词', () => {
+  const ctxContent = fs.readFileSync(path.join(ROOT, 'glada', 'context-builder.js'), 'utf-8');
+  assert(ctxContent.includes('context.sections.skills'), 'contextToSystemPrompt 应包含 skills 输出');
+});
+
 // ── 结果 ──
 
 console.log(`\n${'═'.repeat(40)}`);

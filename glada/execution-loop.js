@@ -31,6 +31,8 @@ const contextBuilder = require('./context-builder');
 const stepExecutor = require('./step-executor');
 const gitOperator = require('./git-operator');
 const notifier = require('./notifier');
+const skillDistiller = require('./skill-distiller');
+const reflector = require('./reflector');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXECUTION_LOG_DIR = path.join(ROOT, 'glada', 'logs', 'executions');
@@ -227,6 +229,29 @@ async function executeTask(gladaTask, options = {}) {
   await notifier.notify(gladaTask, eventType);
   gladaTask.completion.notification_sent = true;
   taskReceiver.updateTask(taskId, { completion: gladaTask.completion });
+
+  // ── Hermes-inspired 后处理：Skill 蒸馏 + 自我反思 ──
+
+  // 1. Skill 蒸馏：从成功的执行中提炼可复用模板
+  try {
+    const distillResult = skillDistiller.distillAndSave(gladaTask);
+    if (distillResult.saved) {
+      console.log(`[GLADA] 🧪 Skill 蒸馏完成: ${distillResult.path}`);
+    }
+  } catch (err) {
+    console.warn(`[GLADA] ⚠️ Skill 蒸馏失败（不影响主流程）: ${err.message}`);
+  }
+
+  // 2. 自我反思：分析执行过程，写入经验枝干
+  try {
+    const reflectResult = reflector.reflectOffline(gladaTask);
+    if (reflectResult.saved) {
+      console.log(`[GLADA] 🪞 自我反思完成: ${reflectResult.path}`);
+      console.log(`[GLADA] 📊 信心评分: ${Math.round(reflectResult.reflection.confidence_score * 100)}%`);
+    }
+  } catch (err) {
+    console.warn(`[GLADA] ⚠️ 自我反思失败（不影响主流程）: ${err.message}`);
+  }
 
   // 如果全部完成，归档
   if (allCompleted) {

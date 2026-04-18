@@ -18,6 +18,19 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 
+// 延迟加载 skill-distiller（避免循环依赖）
+let _skillDistiller = null;
+function getSkillDistiller() {
+  if (!_skillDistiller) {
+    try {
+      _skillDistiller = require('./skill-distiller');
+    } catch {
+      _skillDistiller = null;
+    }
+  }
+  return _skillDistiller;
+}
+
 /**
  * 扫描目标文件，获取其内容
  * @param {string[]} filePaths - 相对于仓库根目录的文件路径
@@ -283,6 +296,19 @@ function buildContext(gladaTask, options = {}) {
       .join('\n\n');
   }
 
+  // 9. 已有的经验 Skills（Hermes-inspired · 从之前成功的任务中蒸馏）
+  const distiller = getSkillDistiller();
+  if (distiller) {
+    try {
+      const relevantSkills = distiller.findRelevantSkills(gladaTask);
+      if (relevantSkills.length > 0) {
+        context.sections.skills = distiller.skillsToContext(relevantSkills);
+      }
+    } catch {
+      // skill 加载失败不影响主流程
+    }
+  }
+
   // 控制总大小
   let totalChars = 0;
   const finalSections = {};
@@ -330,6 +356,10 @@ function contextToSystemPrompt(context) {
 
   if (context.sections.previous_steps) {
     parts.push('--- 已完成的步骤 ---\n' + context.sections.previous_steps);
+  }
+
+  if (context.sections.skills) {
+    parts.push(context.sections.skills);
   }
 
   if (context.sections.system_health) {
