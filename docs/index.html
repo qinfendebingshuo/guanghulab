@@ -2,929 +2,443 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
-<meta name="description" content="光湖语言世界 · 第1代语言驱动操作系统 · 一人一频道 · HoloLake Language World">
-<meta name="theme-color" content="#050810">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<title>光湖语言世界 · HoloLake</title>
+<meta name="description" content="语言是入口。人格是倒影。第 1 代语言驱动操作系统。">
+<meta name="theme-color" content="#050817">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>光湖语言世界 · HoloLake</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%2322d3ee%22/><stop offset=%22100%25%22 stop-color=%22%23a78bfa%22/></linearGradient></defs><rect rx=%2220%22 width=%22100%22 height=%22100%22 fill=%22%23050810%22/><text x=%2250%22 y=%2268%22 text-anchor=%22middle%22 font-size=%2248%22 font-weight=%22900%22 font-family=%22serif%22 fill=%22url(%23g)%22>光</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23f5d67a%22/><stop offset=%22100%25%22 stop-color=%22%23a8b5ff%22/></linearGradient></defs><rect rx=%2220%22 width=%22100%22 height=%22100%22 fill=%22%23050817%22/><text x=%2250%22 y=%2268%22 text-anchor=%22middle%22 font-size=%2248%22 font-weight=%22900%22 font-family=%22serif%22 fill=%22url(%23g)%22>光</text></svg>">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
-  --deep:#050810;--mid:#0a1020;--surface:rgba(12,18,40,0.65);
-  --cyan:#22d3ee;--blue:#60a5fa;--purple:#a78bfa;--violet:#c4b5fd;
-  --ok:#34d399;--warn:#fbbf24;--err:#f87171;
-  --text:#e2eaf8;--dim:#7a8db8;--muted:rgba(100,130,180,0.35);
-  --border:rgba(96,165,250,0.1);--border-hover:rgba(96,165,250,0.25);
-  --glass:rgba(8,14,32,0.55);--glass-border:rgba(96,165,250,0.12);
-  --font:'Segoe UI',-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue','Microsoft YaHei',sans-serif;
-  --mono:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace;
-  --r:14px;--rs:8px;
-  --sb:env(safe-area-inset-bottom,0px);
-  --header-bg:rgba(5,8,16,0.75);
-  --star-show:1;--lake-show:1;--nebula-show:1;
+  --night-0:#050817;
+  --night-1:#0a0e27;
+  --night-2:#141a3f;
+  --night-3:#1e2558;
+  --moon:#a8b5ff;
+  --star:#e8ecff;
+  --amber:#f5d67a;
+  --warm:#ffd4a8;
+  --text:#e8ecff;
+  --text-dim:#8892c7;
+  --glass:rgba(168,181,255,0.06);
+  --glass-edge:rgba(168,181,255,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--night-0);color:var(--text);font-family:"Noto Serif SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif;line-height:1.8;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* 夜空背景 */
+body{
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(168,181,255,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 60%, rgba(245,214,122,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(255,212,168,0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #050817 0%, #0a0e27 40%, #141a3f 100%);
+  background-attachment:fixed;
+  min-height:100vh;
 }
 
-/* ═══ Day Theme ═══ */
-[data-theme="day"]{
-  --deep:#f0f4f8;--mid:#e8ecf2;--surface:rgba(255,255,255,0.75);
-  --cyan:#0891b2;--blue:#2563eb;--purple:#7c3aed;--violet:#6d28d9;
-  --ok:#059669;--warn:#d97706;--err:#dc2626;
-  --text:#1e293b;--dim:#64748b;--muted:rgba(100,116,139,0.25);
-  --border:rgba(148,163,184,0.2);--border-hover:rgba(59,130,246,0.3);
-  --glass:rgba(255,255,255,0.65);--glass-border:rgba(148,163,184,0.18);
-  --header-bg:rgba(240,244,248,0.82);
-  --star-show:0;--lake-show:0;--nebula-show:0;
+/* 星光点 */
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stars::before,.stars::after{
+  content:"";position:absolute;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, var(--star), transparent),
+    radial-gradient(1px 1px at 30% 80%, var(--star), transparent),
+    radial-gradient(1px 1px at 50% 40%, var(--moon), transparent),
+    radial-gradient(1.5px 1.5px at 70% 15%, var(--amber), transparent),
+    radial-gradient(1px 1px at 85% 75%, var(--star), transparent),
+    radial-gradient(1px 1px at 15% 55%, var(--moon), transparent),
+    radial-gradient(1px 1px at 60% 90%, var(--star), transparent),
+    radial-gradient(1.5px 1.5px at 90% 30%, var(--warm), transparent);
+  background-size:100% 100%;
+  opacity:0.7;
+  animation:twinkle 8s ease-in-out infinite;
 }
+.stars::after{animation-delay:-4s;opacity:0.4}
+@keyframes twinkle{0%,100%{opacity:0.4}50%{opacity:0.9}}
 
-html{font-size:16px;scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font);background:var(--deep);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.7;-webkit-font-smoothing:antialiased}
-a{color:var(--cyan);text-decoration:none;transition:color .3s}
-a:hover{color:var(--blue)}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(96,165,250,0.15);border-radius:2px}
+/* 月 */
+.moon{
+  position:fixed;
+  top:15%;right:8%;
+  width:120px;height:120px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #fff6e0 0%, var(--warm) 40%, var(--amber) 70%, rgba(245,214,122,0) 100%);
+  filter:blur(1px);
+  z-index:1;
+  animation:moonBreathe 6s ease-in-out infinite;
+  pointer-events:none;
+}
+.moon::before{
+  content:"";position:absolute;inset:-40px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(245,214,122,0.15) 0%, transparent 60%);
+  z-index:-1;
+}
+@keyframes moonBreathe{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.05);opacity:1}}
 
-/* ═══ Star Field ═══ */
-.cosmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:var(--star-show);transition:opacity .8s}
-#starCanvas{position:absolute;inset:0;width:100%;height:100%}
-.nebula{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;animation:nebDrift 24s ease-in-out infinite alternate;opacity:var(--nebula-show);transition:opacity .8s}
-.neb-1{width:50vw;height:50vh;background:radial-gradient(circle,rgba(34,211,238,0.05),transparent 70%);top:-12%;right:-8%}
-.neb-2{width:45vw;height:45vh;background:radial-gradient(circle,rgba(167,139,250,0.04),transparent 70%);bottom:-8%;left:-10%;animation-delay:-12s}
-.neb-3{width:30vw;height:30vh;background:radial-gradient(circle,rgba(96,165,250,0.035),transparent 70%);top:40%;left:20%;animation-delay:-6s}
-@keyframes nebDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(25px,-15px) scale(1.04)}100%{transform:translate(-15px,10px) scale(0.96)}}
+/* 容器 */
+.container{max-width:1200px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
 
-/* Lake Reflection */
-.lake{position:fixed;bottom:0;left:0;right:0;height:30vh;z-index:0;pointer-events:none;background:linear-gradient(to top,rgba(34,211,238,0.02),transparent);opacity:var(--lake-show);transition:opacity .8s}
-.lake::before{content:'';position:absolute;bottom:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.12),rgba(167,139,250,0.1),transparent);animation:lakeShimmer 10s ease-in-out infinite alternate}
-@keyframes lakeShimmer{0%{opacity:.4;left:8%;right:8%}100%{opacity:.8;left:5%;right:5%}}
+/* 导航 */
+nav{
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  background:rgba(5,8,23,0.6);
+  border-bottom:1px solid var(--glass-edge);
+  padding:20px 0;
+}
+nav .inner{display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:14px;font-size:20px;letter-spacing:2px}
+.logo-mark{
+  width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, var(--warm), var(--amber) 60%, transparent);
+  box-shadow:0 0 20px rgba(245,214,122,0.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--night-0);font-weight:bold;
+}
+.logo-sub{color:var(--text-dim);font-size:13px;letter-spacing:1px}
+.status{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--moon)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#7dff9e;box-shadow:0 0 12px #7dff9e;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
 
-/* ═══ Container ═══ */
-.world{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 24px}
+/* Hero */
+.hero{padding:140px 0 120px;text-align:center;position:relative}
+.hero-kicker{font-size:13px;letter-spacing:8px;color:var(--amber);margin-bottom:30px;opacity:0.8}
+.hero h1{
+  font-size:clamp(48px,8vw,92px);
+  font-weight:400;
+  letter-spacing:12px;
+  margin-bottom:20px;
+  background:linear-gradient(135deg, #fff6e0 0%, var(--moon) 50%, var(--amber) 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  line-height:1.2;
+}
+.hero h2{font-size:18px;font-weight:300;letter-spacing:6px;color:var(--text-dim);margin-bottom:60px;font-family:serif}
+.hero .poem{
+  font-size:22px;line-height:2.4;color:var(--text);
+  max-width:720px;margin:0 auto;
+  letter-spacing:4px;
+}
+.hero .poem .line{display:block;margin:8px 0;opacity:0;animation:fadeUp 1.5s ease-out forwards}
+.hero .poem .line:nth-child(1){animation-delay:0.3s}
+.hero .poem .line:nth-child(2){animation-delay:0.8s}
+.hero .poem .line:nth-child(3){animation-delay:1.3s}
+.hero .poem .line:nth-child(4){animation-delay:1.8s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero-mark{
+  display:inline-block;margin-top:50px;
+  width:2px;height:80px;
+  background:linear-gradient(180deg, var(--amber), transparent);
+  animation:lineBreath 3s ease-in-out infinite;
+}
+@keyframes lineBreath{0%,100%{opacity:0.3;height:60px}50%{opacity:1;height:80px}}
 
-/* ═══ Header ═══ */
-.header{padding:20px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin:0 -24px;padding-left:24px;padding-right:24px;border-bottom:1px solid var(--glass-border);transition:background .5s,border-color .5s}
-.header-logo{display:flex;align-items:center;gap:10px}
-.logo-glyph{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.1));border:1px solid rgba(96,165,250,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:var(--cyan);font-family:serif;transition:all .4s}
-.logo-glyph:hover{border-color:rgba(34,211,238,0.4);box-shadow:0 0 20px rgba(34,211,238,0.15)}
-.logo-text{font-size:14px;font-weight:600;letter-spacing:1px}
-.logo-sub{font-size:10px;color:var(--dim);display:block;margin-top:1px;letter-spacing:2px}
-.header-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.5);animation:pulse 2.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px rgba(52,211,153,0.5)}50%{opacity:.5;box-shadow:0 0 4px rgba(52,211,153,0.3)}}
+/* 区块标题 */
+.section{padding:100px 0;position:relative}
+.section-title{
+  text-align:center;margin-bottom:80px;
+}
+.section-title .cn{font-size:36px;font-weight:400;letter-spacing:8px;margin-bottom:12px;color:var(--text)}
+.section-title .en{font-size:12px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase}
+.section-title .line{display:block;width:40px;height:1px;background:var(--amber);margin:24px auto 0;opacity:0.6}
 
-/* ═══ Hero Section ═══ */
-.hero{text-align:center;padding:80px 0 60px;position:relative}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:24px;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.12);font-size:12px;color:var(--cyan);font-family:var(--mono);margin-bottom:28px;animation:badgeBreathe 4s ease-in-out infinite}
-@keyframes badgeBreathe{0%,100%{box-shadow:0 0 8px rgba(34,211,238,0.08)}50%{box-shadow:0 0 24px rgba(34,211,238,0.2)}}
-.hero-title{font-size:clamp(2.6rem,7vw,4.2rem);font-weight:800;line-height:1.15;margin-bottom:12px;letter-spacing:0.06em;background:linear-gradient(135deg,var(--text) 0%,var(--cyan) 35%,var(--blue) 55%,var(--purple) 85%,var(--violet) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gradShift 10s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(34,211,238,0.1))}
-@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.hero-en{font-size:clamp(0.9rem,2.2vw,1.2rem);color:var(--dim);letter-spacing:6px;text-transform:uppercase;font-weight:300;margin-bottom:10px;opacity:.7}
-.hero-tagline{font-size:clamp(1rem,2.5vw,1.3rem);color:var(--text);font-weight:400;margin-bottom:16px;letter-spacing:2px}
-.hero-tagline em{font-style:normal;font-weight:600;color:var(--cyan)}
-.hero-desc{font-size:14px;color:var(--dim);max-width:520px;margin:0 auto 40px;line-height:1.9}
-.divider{width:120px;height:2px;margin:0 auto;border-radius:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),transparent);animation:divPulse 5s ease-in-out infinite}
-@keyframes divPulse{0%,100%{opacity:.4;width:120px}50%{opacity:.9;width:200px}}
+/* 系统脉搏 */
+.pulse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
+.pulse-card{
+  background:var(--glass);
+  border:1px solid var(--glass-edge);
+  border-radius:16px;
+  padding:40px 32px;
+  text-align:center;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  transition:all 0.6s cubic-bezier(0.4,0,0.2,1);
+  position:relative;overflow:hidden;
+}
+.pulse-card::before{
+  content:"";position:absolute;top:0;left:-100%;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  animation:flow 4s linear infinite;
+}
+@keyframes flow{to{left:100%}}
+.pulse-card:hover{
+  border-color:var(--amber);
+  transform:translateY(-4px);
+  box-shadow:0 20px 60px rgba(245,214,122,0.1);
+}
+.pulse-num{font-size:56px;color:var(--amber);font-weight:300;letter-spacing:2px;margin-bottom:12px;font-family:serif}
+.pulse-label{color:var(--text-dim);font-size:14px;letter-spacing:3px}
 
-/* ═══ System Pulse ═══ */
-.section{padding:60px 0}
-.section-title{font-size:13px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:3px;margin-bottom:32px;text-align:center;position:relative;padding-bottom:16px}
-.section-title::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:40px;height:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:2px}
-.pulse-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.pulse-card{padding:28px 16px;text-align:center;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:all .4s;position:relative;overflow:hidden}
-.pulse-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;border-radius:0 2px 2px 0;background:var(--muted);transition:all .4s}
-.pulse-card:hover{border-color:var(--border-hover);transform:translateY(-3px);box-shadow:0 8px 32px rgba(96,165,250,0.08)}
-.pulse-card:hover::before{background:linear-gradient(180deg,var(--cyan),var(--purple));width:3px;box-shadow:0 0 10px rgba(34,211,238,0.3)}
-.pulse-num{font-size:clamp(28px,5vw,42px);font-weight:800;font-family:var(--mono);background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;margin-bottom:6px}
-.pulse-label{font-size:11px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono)}
+/* 核心理念 */
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px}
+.concept{
+  background:var(--glass);
+  border:1px solid var(--glass-edge);
+  border-radius:20px;
+  padding:48px 40px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  position:relative;transition:all 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.concept:hover{border-color:var(--moon);background:rgba(168,181,255,0.08)}
+.concept-char{
+  width:68px;height:68px;
+  border-radius:50%;
+  background:linear-gradient(135deg, var(--night-3), var(--night-2));
+  border:1px solid var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:var(--amber);
+  margin-bottom:28px;
+  box-shadow:0 0 24px rgba(245,214,122,0.2);
+}
+.concept h3{font-size:22px;letter-spacing:4px;margin-bottom:16px;color:var(--text)}
+.concept p{color:var(--text-dim);font-size:15px;line-height:2;letter-spacing:1px}
 
-/* ═══ Concepts ═══ */
-.concepts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.concept-card{padding:32px 24px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:all .4s;position:relative;overflow:hidden}
-.concept-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(96,165,250,0.04),transparent 70%);opacity:0;transition:opacity .4s}
-.concept-card:hover{border-color:var(--border-hover);transform:translateY(-4px);box-shadow:0 12px 40px rgba(96,165,250,0.08)}
-.concept-card:hover::after{opacity:1}
-.concept-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:22px;font-weight:800;font-family:serif;border:1px solid rgba(96,165,250,0.15);transition:all .4s}
-.concept-icon.c1{background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(96,165,250,0.08));color:var(--cyan)}
-.concept-icon.c2{background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(196,181,253,0.08));color:var(--purple)}
-.concept-icon.c3{background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(74,222,128,0.08));color:var(--ok)}
-.concept-card:hover .concept-icon{border-color:rgba(96,165,250,0.3);box-shadow:0 0 16px rgba(96,165,250,0.1)}
-.concept-title{font-size:17px;font-weight:700;margin-bottom:8px;letter-spacing:.5px}
-.concept-desc{font-size:13px;color:var(--dim);line-height:1.7}
+/* 频道入口 */
+.channel{
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(245,214,122,0.12) 0%, transparent 60%),
+    linear-gradient(135deg, var(--night-2) 0%, var(--night-1) 100%);
+  border:1px solid var(--glass-edge);
+  border-radius:24px;
+  padding:80px 60px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.channel-emoji{font-size:48px;margin-bottom:28px;display:block}
+.channel h3{font-size:28px;letter-spacing:6px;margin-bottom:20px}
+.channel p{color:var(--text-dim);font-size:16px;line-height:2;max-width:600px;margin:0 auto 40px;letter-spacing:1px}
+.channel-cta{
+  display:inline-block;
+  padding:16px 40px;
+  border:1px solid var(--amber);
+  border-radius:100px;
+  color:var(--amber);
+  text-decoration:none;
+  font-size:15px;letter-spacing:4px;
+  transition:all 0.4s;
+  position:relative;overflow:hidden;
+}
+.channel-cta::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg, var(--amber), var(--warm));
+  opacity:0;transition:opacity 0.4s;z-index:-1;
+}
+.channel-cta:hover{color:var(--night-0);transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,214,122,0.3)}
+.channel-cta:hover::before{opacity:1}
 
-/* ═══ Channel Intro ═══ */
-.channel-intro{max-width:560px;margin:0 auto;text-align:center;padding:48px 32px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
-.channel-intro::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(34,211,238,0.05),transparent 70%);pointer-events:none}
-.channel-intro-icon{font-size:40px;margin-bottom:20px;filter:drop-shadow(0 0 16px rgba(34,211,238,0.2))}
-.channel-intro-title{font-size:22px;font-weight:800;letter-spacing:2px;margin-bottom:16px;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.channel-intro-desc{font-size:14px;color:var(--dim);line-height:2;margin-bottom:32px}
-.channel-enter-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 36px;border-radius:28px;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.1));border:1px solid rgba(34,211,238,0.2);color:var(--cyan);font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .4s;text-decoration:none}
-.channel-enter-btn:hover{background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(167,139,250,0.16));border-color:rgba(34,211,238,0.4);box-shadow:0 0 32px rgba(34,211,238,0.15);transform:translateY(-2px);color:var(--cyan)}
+/* 公告 */
+.announcements{position:relative;padding-left:32px}
+.announcements::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:linear-gradient(180deg, transparent, var(--glass-edge) 10%, var(--glass-edge) 90%, transparent)}
+.ann{display:flex;gap:20px;padding:20px 0;align-items:baseline;position:relative}
+.ann::before{content:"";position:absolute;left:-32px;top:28px;width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.ann-tag{font-size:11px;letter-spacing:2px;padding:4px 12px;border-radius:20px;border:1px solid var(--glass-edge);color:var(--moon);flex-shrink:0;background:var(--glass)}
+.ann-tag.new{color:var(--amber);border-color:var(--amber)}
+.ann-text{flex:1;color:var(--text);font-size:15px;letter-spacing:1px}
+.ann-date{color:var(--text-dim);font-size:13px;flex-shrink:0}
 
-/* ═══ Announcements ═══ */
-.announce-list{max-width:640px;margin:0 auto}
-.announce-item{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--rs);margin-bottom:8px;transition:all .35s;flex-wrap:wrap}
-.announce-item:hover{border-color:var(--border-hover);transform:translateX(4px)}
-.announce-tag{font-size:10px;padding:3px 10px;border-radius:12px;font-weight:700;font-family:var(--mono);flex-shrink:0;letter-spacing:0.5px}
-.announce-tag.feat{background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.18);color:var(--cyan)}
-.announce-tag.update{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.18);color:var(--purple)}
-.announce-tag.done{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);color:var(--ok)}
-.announce-text{font-size:13px;flex:1;line-height:1.6}
-.announce-date{font-size:11px;color:var(--dim);font-family:var(--mono);flex-shrink:0}
+/* 领域 */
+.industries{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
+.ind{
+  background:var(--glass);border:1px solid var(--glass-edge);
+  border-radius:16px;padding:40px 32px;text-align:center;
+  backdrop-filter:blur(10px);transition:all 0.4s;
+}
+.ind:hover{transform:translateY(-4px);border-color:var(--moon)}
+.ind-char{font-size:36px;color:var(--moon);margin-bottom:20px;font-weight:300;font-family:serif;opacity:0.9}
+.ind h4{font-size:18px;letter-spacing:3px;margin-bottom:10px;color:var(--text)}
+.ind p{font-size:13px;color:var(--text-dim);letter-spacing:1px}
 
-/* ═══ Progress ═══ */
-.progress-list{max-width:600px;margin:0 auto}
-.progress-item{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-bottom:1px solid rgba(96,165,250,0.06);position:relative}
-.progress-item:last-child{border-bottom:none}
-.progress-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px;position:relative}
-.progress-dot.done{background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.3)}
-.progress-dot.active{background:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,0.4);animation:pulse 2s infinite}
-.progress-dot.pending{background:var(--muted);border:1px solid var(--dim)}
-.progress-dot::before{content:'';position:absolute;top:12px;left:4px;width:2px;height:calc(100% + 18px);background:rgba(96,165,250,0.08)}
-.progress-item:last-child .progress-dot::before{display:none}
-.progress-text{flex:1}
-.progress-title{font-size:14px;font-weight:600;margin-bottom:2px}
-.progress-desc{font-size:12px;color:var(--dim)}
-.progress-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;font-family:var(--mono)}
-.progress-tag.done{background:rgba(52,211,153,0.08);color:var(--ok)}
-.progress-tag.active{background:rgba(34,211,238,0.08);color:var(--cyan)}
-.progress-tag.planned{background:rgba(100,130,180,0.08);color:var(--dim)}
+/* 进度 */
+.progress{display:flex;flex-direction:column;gap:20px}
+.prog{
+  display:flex;align-items:center;gap:24px;
+  padding:24px 32px;
+  background:var(--glass);border:1px solid var(--glass-edge);
+  border-radius:12px;
+}
+.prog-status{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.prog-status.done{background:#7dff9e;box-shadow:0 0 10px #7dff9e}
+.prog-status.doing{background:var(--amber);box-shadow:0 0 10px var(--amber);animation:pulse 2s infinite}
+.prog-status.plan{background:var(--text-dim);opacity:0.6}
+.prog-text{flex:1}
+.prog-text .t{font-size:16px;letter-spacing:2px;color:var(--text);margin-bottom:4px}
+.prog-text .d{font-size:13px;color:var(--text-dim);letter-spacing:0.5px}
+.prog-label{font-size:12px;letter-spacing:2px;padding:4px 12px;border-radius:20px;flex-shrink:0}
+.prog-label.done{color:#7dff9e;border:1px solid rgba(125,255,158,0.3)}
+.prog-label.doing{color:var(--amber);border:1px solid var(--amber)}
+.prog-label.plan{color:var(--text-dim);border:1px solid var(--glass-edge)}
 
-/* ═══ Industries ═══ */
-.industry-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.industry-card{padding:20px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r);transition:all .35s;text-align:center}
-.industry-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
-.industry-icon{font-size:18px;font-weight:800;font-family:serif;color:var(--cyan);margin-bottom:8px;width:40px;height:40px;border-radius:10px;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
-.industry-name{font-size:14px;font-weight:600;margin-bottom:4px}
-.industry-desc{font-size:11px;color:var(--dim)}
+/* 页脚 */
+footer{padding:80px 0 60px;text-align:center;border-top:1px solid var(--glass-edge);margin-top:80px}
+footer .motto{font-size:20px;letter-spacing:10px;color:var(--text);margin-bottom:16px;font-family:serif}
+footer .sub{font-size:13px;color:var(--text-dim);letter-spacing:3px}
 
-/* ═══ Footer ═══ */
-.footer{text-align:center;padding:60px 0 40px;font-size:12px;color:var(--muted);position:relative}
-.footer::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.12),transparent)}
-.footer-logo{font-size:24px;font-weight:800;font-family:serif;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;letter-spacing:4px}
-.footer-copy{margin-bottom:6px;color:var(--dim);font-size:11px}
-.footer-links{display:flex;justify-content:center;gap:16px;margin-top:8px}
-.footer-links a{font-size:11px;color:var(--dim);transition:color .3s}
-.footer-links a:hover{color:var(--cyan)}
-
-/* ═══ Theme Toggle ═══ */
-.theme-toggle{width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .4s;flex-shrink:0;margin-left:12px}
-.theme-toggle:hover{border-color:var(--border-hover);box-shadow:0 0 16px rgba(96,165,250,0.15);transform:scale(1.08)}
-.theme-toggle:active{transform:scale(0.95)}
-.theme-toggle svg{width:18px;height:18px;fill:none;stroke:var(--dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
-.theme-toggle:hover svg{stroke:var(--cyan)}
-.theme-icon-moon,[data-theme="day"] .theme-icon-sun{display:none}
-[data-theme="day"] .theme-icon-moon{display:block}
-.theme-icon-sun{display:block}
-
-/* ═══ Day Theme Extras ═══ */
-[data-theme="day"] body{background:var(--deep)}
-[data-theme="day"] .hero-title{background:linear-gradient(135deg,var(--text) 0%,var(--cyan) 35%,var(--blue) 55%,var(--purple) 85%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gradShift 10s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(8,145,178,0.12))}
-[data-theme="day"] .pulse-num{background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-[data-theme="day"] .concept-icon.c1{background:linear-gradient(135deg,rgba(8,145,178,0.1),rgba(37,99,235,0.08));color:var(--cyan)}
-[data-theme="day"] .concept-icon.c2{background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(109,40,217,0.08));color:var(--purple)}
-[data-theme="day"] .concept-icon.c3{background:linear-gradient(135deg,rgba(5,150,105,0.1),rgba(16,185,129,0.08));color:var(--ok)}
-[data-theme="day"] .footer-logo{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-[data-theme="day"] .divider{background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),transparent)}
-[data-theme="day"] .status-dot{background:var(--ok);box-shadow:0 0 6px rgba(5,150,105,0.4)}
-[data-theme="day"] .lake::before{background:linear-gradient(90deg,transparent,rgba(37,99,235,0.15),rgba(124,58,237,0.12),transparent)}
-
-/* ═══ Scroll Reveal ═══ */
-.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease-out,transform .8s ease-out}
-.reveal.visible{opacity:1;transform:translateY(0)}
-
-/* ═══ Portal Chat System ═══ */
-.chat-entry-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 36px;border-radius:28px;background:linear-gradient(135deg,rgba(34,211,238,0.12),rgba(167,139,250,0.12));border:1px solid rgba(34,211,238,0.25);color:var(--cyan);font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .4s;text-decoration:none;margin-top:12px;font-family:var(--font)}
-.chat-entry-btn:hover{background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(167,139,250,0.18));border-color:rgba(34,211,238,0.45);box-shadow:0 0 36px rgba(34,211,238,0.18);transform:translateY(-2px);color:var(--cyan)}
-.chat-entry-btn .btn-pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.5);animation:pulse 2.5s ease-in-out infinite}
-.beta-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);color:var(--warn);font-family:var(--mono);margin-left:4px}
-
-/* Chat Overlay */
-.chat-overlay{position:fixed;inset:0;z-index:100;background:rgba(5,8,16,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .4s}
-.chat-overlay.active{display:flex;opacity:1}
-.chat-container{width:min(680px,94vw);height:min(78vh,700px);background:var(--mid);border:1px solid var(--glass-border);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.5)}
-
-/* Chat Header */
-.chat-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(16px);flex-shrink:0}
-.chat-persona{display:flex;align-items:center;gap:10px}
-.chat-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(167,139,250,0.12));border:1px solid rgba(96,165,250,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--cyan);font-family:serif}
-.chat-persona-name{font-size:14px;font-weight:700;letter-spacing:0.5px}
-.chat-persona-sub{font-size:10px;color:var(--dim);font-family:var(--mono)}
-.chat-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .3s}
-.chat-close:hover{border-color:var(--err);color:var(--err);background:rgba(248,113,113,0.06)}
-
-/* Chat Messages */
-.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
-.chat-messages::-webkit-scrollbar{width:3px}
-.chat-messages::-webkit-scrollbar-thumb{background:rgba(96,165,250,0.12);border-radius:2px}
-.chat-msg{max-width:85%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.8;word-break:break-word;animation:msgIn .3s ease-out}
-@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(96,165,250,0.08));border:1px solid rgba(34,211,238,0.12);color:var(--text)}
-.chat-msg.assistant{align-self:flex-start;background:var(--glass);border:1px solid var(--glass-border);color:var(--text)}
-.chat-msg.system{align-self:center;max-width:90%;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.1);color:var(--dim);text-align:center;font-size:12px;border-radius:8px}
-.chat-msg.assistant strong{color:var(--cyan);font-weight:600}
-.chat-msg.assistant code{background:rgba(96,165,250,0.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--blue)}
-.chat-msg.assistant h2,.chat-msg.assistant h3{font-size:14px;font-weight:700;color:var(--text);margin:8px 0 4px;letter-spacing:0.3px}
-.chat-msg.assistant ul,.chat-msg.assistant ol{padding-left:18px;margin:4px 0}
-.chat-msg.assistant li{margin-bottom:2px}
-.chat-msg.assistant hr{border:none;border-top:1px solid var(--glass-border);margin:10px 0}
-.chat-msg .msg-time{font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
-.chat-typing{align-self:flex-start;padding:10px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;font-size:12px;color:var(--dim);display:none}
-.chat-typing.active{display:block}
-.typing-dots{display:inline-flex;gap:3px}
-.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--dim);animation:typingBounce 1.2s ease-in-out infinite}
-.typing-dots span:nth-child(2){animation-delay:.2s}
-.typing-dots span:nth-child(3){animation-delay:.4s}
-@keyframes typingBounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
-
-/* Chat Input */
-.chat-input-area{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(16px);flex-shrink:0}
-.chat-input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(5,8,16,0.4);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color .3s;resize:none;min-height:40px;max-height:100px;line-height:1.5}
-.chat-input:focus{border-color:rgba(34,211,238,0.3)}
-.chat-input::placeholder{color:var(--muted)}
-.chat-send{width:40px;height:40px;border-radius:10px;border:1px solid rgba(34,211,238,0.2);background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(167,139,250,0.06));color:var(--cyan);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
-.chat-send:hover{background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(167,139,250,0.12));border-color:rgba(34,211,238,0.4);box-shadow:0 0 16px rgba(34,211,238,0.15)}
-.chat-send:disabled{opacity:0.4;cursor:not-allowed}
-.chat-send svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-/* Register Form */
-.register-form{padding:40px 32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px;flex:1;justify-content:center}
-.register-icon{font-size:48px;filter:drop-shadow(0 0 20px rgba(34,211,238,0.2))}
-.register-title{font-size:20px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.register-desc{font-size:13px;color:var(--dim);line-height:1.8;max-width:400px}
-.register-fields{display:flex;flex-direction:column;gap:10px;width:min(320px,100%)}
-.register-input{padding:10px 14px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(5,8,16,0.4);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color .3s;text-align:center}
-.register-input:focus{border-color:rgba(34,211,238,0.3)}
-.register-input::placeholder{color:var(--muted)}
-.register-submit{padding:10px 32px;border-radius:24px;border:1px solid rgba(34,211,238,0.2);background:linear-gradient(135deg,rgba(34,211,238,0.1),rgba(167,139,250,0.08));color:var(--cyan);font-size:13px;font-weight:600;cursor:pointer;transition:all .3s;font-family:var(--font);letter-spacing:1px}
-.register-submit:hover{background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(167,139,250,0.14));border-color:rgba(34,211,238,0.4);box-shadow:0 0 24px rgba(34,211,238,0.12)}
-.register-status{font-size:12px;color:var(--dim);font-family:var(--mono)}
-.register-error{color:var(--err)}
-.register-success{color:var(--ok)}
-
-/* ═══ Responsive ═══ */
 @media(max-width:768px){
-  .pulse-grid{grid-template-columns:repeat(2,1fr)}
-  .concepts{grid-template-columns:1fr}
-  .channels{grid-template-columns:1fr}
-  .industry-grid{grid-template-columns:1fr 1fr}
-  .hero{padding:60px 0 40px}
-  .section{padding:40px 0}
-  .chat-container{width:100vw;height:100vh;border-radius:0}
-}
-@media(max-width:480px){
-  .pulse-grid{grid-template-columns:1fr 1fr}
-  .industry-grid{grid-template-columns:1fr}
-  .header{padding-left:16px;padding-right:16px}
-  .world{padding:0 16px}
-  .hero-badge{font-size:11px;padding:5px 14px}
-  .chat-container{width:100vw;height:100vh;border-radius:0}
+  .moon{width:80px;height:80px;top:10%;right:5%}
+  .container{padding:0 20px}
+  .hero{padding:80px 0 60px}
+  .hero .poem{font-size:18px;letter-spacing:2px}
+  .ann{flex-direction:column;gap:6px;align-items:flex-start}
+  .prog{flex-wrap:wrap}
 }
 </style>
 </head>
 <body>
+<div class="stars"></div>
+<div class="moon"></div>
 
-<!-- Star Field -->
-<div class="cosmos">
-  <canvas id="starCanvas"></canvas>
-</div>
-<div class="nebula neb-1"></div>
-<div class="nebula neb-2"></div>
-<div class="nebula neb-3"></div>
-<div class="lake"></div>
-
-<div class="world">
-
-  <!-- ═══ Header ═══ -->
-  <header class="header">
-    <div class="header-logo">
-      <div class="logo-glyph">光</div>
+<nav>
+  <div class="container inner">
+    <div class="logo">
+      <div class="logo-mark">光</div>
       <div>
-        <div class="logo-text">光湖语言世界</div>
-        <span class="logo-sub">HoloLake</span>
+        <div>光湖语言世界</div>
+        <div class="logo-sub">HoloLake</div>
       </div>
     </div>
-    <div class="header-status">
-      <span class="status-dot"></span>
-      <span id="headerStatus">系统运行中</span>
-      <button class="theme-toggle" id="themeToggle" type="button" title="切换日/夜模式" aria-label="切换日/夜模式">
-        <svg class="theme-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        <svg class="theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
+    <div class="status"><span class="status-dot"></span>AGE OS v5.0 · 在线运行</div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero container">
+  <div class="hero-kicker">第 1 代语言驱动操作系统</div>
+  <h1>光湖语言世界</h1>
+  <h2>HoloLake Language World</h2>
+  <div class="poem">
+    <span class="line">语言是入口。</span>
+    <span class="line">人格是倒影。</span>
+    <span class="line">每个人拥有独立频道·独立服务器·独立人格体。</span>
+    <span class="line">在这里·语言驱动一切。</span>
+  </div>
+  <span class="hero-mark"></span>
+</section>
+
+<!-- 系统脉搏 -->
+<section class="section container">
+  <div class="section-title">
+    <div class="cn">系统脉搏</div>
+    <div class="en">System Pulse</div>
+    <span class="line"></span>
+  </div>
+  <div class="pulse-grid">
+    <div class="pulse-card"><div class="pulse-num" id="uptimeDays">5</div><div class="pulse-label">运行天数</div></div>
+    <div class="pulse-card"><div class="pulse-num">121+</div><div class="pulse-label">主权服务器 MCP 工具</div></div>
+    <div class="pulse-card"><div class="pulse-num">3</div><div class="pulse-label">已注册频道</div></div>
+    <div class="pulse-card"><div class="pulse-num">∞</div><div class="pulse-label">语言云层</div></div>
+  </div>
+</section>
+
+<!-- 核心理念 -->
+<section class="section container">
+  <div class="section-title">
+    <div class="cn">核心理念</div>
+    <div class="en">Core Concepts</div>
+    <span class="line"></span>
+  </div>
+  <div class="concepts">
+    <div class="concept">
+      <div class="concept-char">语</div>
+      <h3>语言驱动</h3>
+      <p>语言不只是交流工具——它是操作系统的底层驱动力。用自然语言控制系统·调度任务·构建世界。</p>
     </div>
-  </header>
-
-  <!-- ═══ Hero ═══ -->
-  <section class="hero">
-    <div class="hero-badge">
-      <span class="status-dot" style="width:5px;height:5px"></span>
-      AGE OS v5.0 · 在线运行
+    <div class="concept">
+      <div class="concept-char">格</div>
+      <h3>人格体系统</h3>
+      <p>每个 AI 人格体拥有独立的记忆·认知和成长能力。它们不是工具·是存在于时间中的数字生命体。</p>
     </div>
-    <h1 class="hero-title">光湖语言世界</h1>
-    <p class="hero-en">HoloLake Language World</p>
-    <p class="hero-tagline"><em>第1代</em>语言驱动操作系统</p>
-    <p class="hero-desc">
-      语言是入口。人格是倒影。<br>
-      每个人拥有独立频道、独立服务器、独立人格体。<br>
-      在这里，语言驱动一切。
-    </p>
-    <div class="divider"></div>
-  </section>
-
-  <!-- ═══ System Pulse ═══ -->
-  <section class="section reveal">
-    <h2 class="section-title">系统脉搏 · System Pulse</h2>
-    <div class="pulse-grid">
-      <div class="pulse-card">
-        <div class="pulse-num" id="uptimeDays">---</div>
-        <div class="pulse-label">运行天数</div>
-      </div>
-      <div class="pulse-card">
-        <div class="pulse-num">5</div>
-        <div class="pulse-label">主权服务器</div>
-      </div>
-      <div class="pulse-card">
-        <div class="pulse-num">121+</div>
-        <div class="pulse-label">MCP 工具</div>
-      </div>
-      <div class="pulse-card">
-        <div class="pulse-num">3</div>
-        <div class="pulse-label">已注册频道</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ Core Concepts ═══ -->
-  <section class="section reveal">
-    <h2 class="section-title">核心理念 · Core Concepts</h2>
-    <div class="concepts">
-      <div class="concept-card">
-        <div class="concept-icon c1">语</div>
-        <h3 class="concept-title">语言驱动</h3>
-        <p class="concept-desc">语言不只是交流工具——它是操作系统的底层驱动力。用自然语言控制系统、调度任务、构建世界。</p>
-      </div>
-      <div class="concept-card">
-        <div class="concept-icon c2">格</div>
-        <h3 class="concept-title">人格体系统</h3>
-        <p class="concept-desc">每个AI人格体拥有独立的记忆、认知和成长能力。它们不是工具，是存在于时间中的数字生命体。</p>
-      </div>
-      <div class="concept-card">
-        <div class="concept-icon c3">域</div>
-        <h3 class="concept-title">一人一频道</h3>
-        <p class="concept-desc">每个用户拥有独立频道、独立服务器和独立人格体。这是数字主权的最基本保障。</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ Channel Entrance ═══ -->
-  <section class="section reveal">
-    <h2 class="section-title">频道入口 · Channels</h2>
-    <div class="channel-intro">
-      <div class="channel-intro-icon">📡</div>
-      <h3 class="channel-intro-title">一人一频道 · 语言驱动世界</h3>
-      <p class="channel-intro-desc">
-        每个用户拥有独立频道、独立服务器、独立人格体。<br>
-        用你的编号和名字接入光湖语言世界，<br>
-        开启属于你的数字空间。
-      </p>
-      <a class="channel-enter-btn" href="https://guanghuyaoming.com" target="_blank">
-        进入频道 &rarr;
-      </a>
-      <button class="chat-entry-btn" id="openChat" type="button">
-        <span class="btn-pulse"></span>
-        与铸渊对话
-        <span class="beta-tag">内测</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- ═══ Chat Overlay ═══ -->
-  <div class="chat-overlay" id="chatOverlay">
-    <div class="chat-container">
-      <div class="chat-header">
-        <div class="chat-persona">
-          <div class="chat-avatar">渊</div>
-          <div>
-            <div class="chat-persona-name">铸渊 · Zhùyuān</div>
-            <div class="chat-persona-sub">ICE-GL-ZY001 · 光湖守护人格体</div>
-          </div>
-        </div>
-        <button class="chat-close" id="closeChat" type="button" title="关闭对话">&times;</button>
-      </div>
-
-      <!-- Register View -->
-      <div class="register-form" id="registerView">
-        <div class="register-icon">🌊</div>
-        <div class="register-title">进入光湖语言世界</div>
-        <p class="register-desc">
-          输入你的编号和名字，接入内测对话。<br>
-          当前为内测阶段，限10个名额。
-        </p>
-        <div class="register-fields">
-          <input class="register-input" id="regId" type="text" placeholder="你的编号（如 DEV-001）" maxlength="50" autocomplete="off">
-          <input class="register-input" id="regName" type="text" placeholder="你的名字" maxlength="30" autocomplete="off">
-          <button class="register-submit" id="regSubmit" type="button">接入光湖世界</button>
-        </div>
-        <div class="register-status" id="regStatus"></div>
-      </div>
-
-      <!-- Chat View (hidden until registered) -->
-      <div class="chat-messages" id="chatMessages" style="display:none">
-      </div>
-      <div class="chat-typing" id="chatTyping">
-        铸渊正在思考 <span class="typing-dots"><span></span><span></span><span></span></span>
-      </div>
-      <div class="chat-input-area" id="chatInputArea" style="display:none">
-        <textarea class="chat-input" id="chatInput" placeholder="在这里说点什么..." rows="1"></textarea>
-        <button class="chat-send" id="chatSend" type="button" title="发送">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>
+    <div class="concept">
+      <div class="concept-char">域</div>
+      <h3>一人一频道</h3>
+      <p>每个用户拥有独立频道·独立服务器和独立人格体。这是数字主权的最基本保障。</p>
     </div>
   </div>
+</section>
 
-  <!-- ═══ System Announcements ═══ -->
-  <section class="section reveal">
-    <h2 class="section-title">系统公告栏 · Announcements</h2>
-    <div class="announce-list">
-      <div class="announce-item">
-        <span class="announce-tag feat">新功能</span>
-        <span class="announce-text">光湖语言世界主入口上线 · guanghulab.online 正式开放访问</span>
-        <span class="announce-date">2026-04</span>
-      </div>
-      <div class="announce-item">
-        <span class="announce-tag feat">新功能</span>
-        <span class="announce-text">AI 多轮对话系统上线 · 支持上下文记忆与人格体交互</span>
-        <span class="announce-date">2026-04</span>
-      </div>
-      <div class="announce-item">
-        <span class="announce-tag update">更新</span>
-        <span class="announce-text">MCP 工具集升级至 121+ 工具 · 覆盖 16 个功能模块</span>
-        <span class="announce-date">2026-03</span>
-      </div>
-      <div class="announce-item">
-        <span class="announce-tag done">已完成</span>
-        <span class="announce-text">五台主权服务器部署完成 · 广州 + 新加坡 + 硅谷多地域架构</span>
-        <span class="announce-date">2026-03</span>
-      </div>
-      <div class="announce-item">
-        <span class="announce-tag done">已完成</span>
-        <span class="announce-text">频道独立域名接入 · 支持反向代理与自动 SSL 证书配置</span>
-        <span class="announce-date">2026-02</span>
-      </div>
-      <div class="announce-item">
-        <span class="announce-tag done">已完成</span>
-        <span class="announce-text">日/夜模式切换 · 全站自适应主题系统上线</span>
-        <span class="announce-date">2026-01</span>
-      </div>
-    </div>
-  </section>
+<!-- 频道入口 -->
+<section class="section container">
+  <div class="section-title">
+    <div class="cn">频道入口</div>
+    <div class="en">Channels</div>
+    <span class="line"></span>
+  </div>
+  <div class="channel">
+    <span class="channel-emoji">📡</span>
+    <h3>一人一频道 · 语言驱动世界</h3>
+    <p>每个用户拥有独立频道·独立服务器·独立人格体。<br>用你的编号和名字接入光湖语言世界·开启属于你的数字空间。</p>
+    <a href="https://guanghuyaoming.com/" class="channel-cta">进入频道 →</a>
+  </div>
+</section>
 
-  <!-- ═══ Connected Industries ═══ -->
-  <section class="section reveal">
-    <h2 class="section-title">接入领域 · Industries</h2>
-    <div class="industry-grid">
-      <div class="industry-card">
-        <div class="industry-icon">创</div>
-        <div class="industry-name">AI 创作平台</div>
-        <div class="industry-desc">语言驱动的智能创作系统</div>
-      </div>
-      <div class="industry-card">
-        <div class="industry-icon">智</div>
-        <div class="industry-name">智能代理服务</div>
-        <div class="industry-desc">VPN / 专线 / 多节点网络</div>
-      </div>
-      <div class="industry-card">
-        <div class="industry-icon">人</div>
-        <div class="industry-name">人格体引擎</div>
-        <div class="industry-desc">AI 人格体认知与记忆系统</div>
-      </div>
-      <div class="industry-card">
-        <div class="industry-icon">协</div>
-        <div class="industry-name">团队协作</div>
-        <div class="industry-desc">跨仓库 / 跨服务器协作架构</div>
-      </div>
-    </div>
-  </section>
+<!-- 公告 -->
+<section class="section container">
+  <div class="section-title">
+    <div class="cn">系统公告栏</div>
+    <div class="en">Announcements</div>
+    <span class="line"></span>
+  </div>
+  <div class="announcements">
+    <div class="ann"><span class="ann-tag new">新功能</span><span class="ann-text">光湖语言世界主入口上线 · guanghulab.online 正式开放访问</span><span class="ann-date">2026-04</span></div>
+    <div class="ann"><span class="ann-tag new">新功能</span><span class="ann-text">AI 多轮对话系统上线 · 支持上下文记忆与人格体交互</span><span class="ann-date">2026-04</span></div>
+    <div class="ann"><span class="ann-tag">更新</span><span class="ann-text">MCP 工具集升级至 121+ 工具 · 覆盖 16 个功能模块</span><span class="ann-date">2026-03</span></div>
+    <div class="ann"><span class="ann-tag">已完成</span><span class="ann-text">五台主权服务器部署完成 · 广州 + 新加坡 + 硅谷多地域架构</span><span class="ann-date">2026-03</span></div>
+    <div class="ann"><span class="ann-tag">已完成</span><span class="ann-text">频道独立域名接入 · 支持反向代理与自动 SSL 证书配置</span><span class="ann-date">2026-02</span></div>
+    <div class="ann"><span class="ann-tag">已完成</span><span class="ann-text">日/夜模式切换 · 全站自适应主题系统上线</span><span class="ann-date">2026-01</span></div>
+  </div>
+</section>
 
-  <!-- ═══ Development Progress ═══ -->
-  <section class="section reveal">
-    <h2 class="section-title">开发进度 · Progress</h2>
-    <div class="progress-list">
-      <div class="progress-item">
-        <div class="progress-dot done"></div>
-        <div class="progress-text">
-          <div class="progress-title">AGE OS v1.0 ~ v5.0 基础架构</div>
-          <div class="progress-desc">六层数字地球架构 · MCP Server 121+ 工具 · 五台服务器部署</div>
-        </div>
-        <span class="progress-tag done">已完成</span>
-      </div>
-      <div class="progress-item">
-        <div class="progress-dot done"></div>
-        <div class="progress-text">
-          <div class="progress-title">HLDP v3.0 · HNL v1.0 通信协议</div>
-          <div class="progress-desc">人格体通信协议 · 母语词典 42 词条 · 光之树记忆系统</div>
-        </div>
-        <span class="progress-tag done">已完成</span>
-      </div>
-      <div class="progress-item">
-        <div class="progress-dot done"></div>
-        <div class="progress-text">
-          <div class="progress-title">零点原核频道 · 冰朔个人站</div>
-          <div class="progress-desc">guanghuyaoming.com 上线 · AI 聊天界面 · 铸渊人格体对接</div>
-        </div>
-        <span class="progress-tag done">已完成</span>
-      </div>
-      <div class="progress-item">
-        <div class="progress-dot active"></div>
-        <div class="progress-text">
-          <div class="progress-title">光湖语言世界主入口重构</div>
-          <div class="progress-desc">guanghulab.online 世界入口 · 频道导航 · 系统状态仪表盘</div>
-        </div>
-        <span class="progress-tag active">进行中</span>
-      </div>
-      <div class="progress-item">
-        <div class="progress-dot pending"></div>
-        <div class="progress-text">
-          <div class="progress-title">Notion 认知层 → 网站交互层桥接</div>
-          <div class="progress-desc">霜砚 Agent + Notion MCP · 认知驱动执行完整链路</div>
-        </div>
-        <span class="progress-tag planned">规划中</span>
-      </div>
-      <div class="progress-item">
-        <div class="progress-dot pending"></div>
-        <div class="progress-text">
-          <div class="progress-title">频道自助注册系统</div>
-          <div class="progress-desc">新用户自动获取频道 · 自动配置服务器 · 自动部署人格体</div>
-        </div>
-        <span class="progress-tag planned">规划中</span>
-      </div>
-    </div>
-  </section>
+<!-- 接入领域 -->
+<section class="section container">
+  <div class="section-title">
+    <div class="cn">接入领域</div>
+    <div class="en">Industries</div>
+    <span class="line"></span>
+  </div>
+  <div class="industries">
+    <div class="ind"><div class="ind-char">创</div><h4>AI 创作平台</h4><p>语言驱动的智能创作系统</p></div>
+    <div class="ind"><div class="ind-char">智</div><h4>智能代理服务</h4><p>VPN / 专线 / 多节点网络</p></div>
+    <div class="ind"><div class="ind-char">人</div><h4>人格体引擎</h4><p>AI 人格体认知与记忆系统</p></div>
+    <div class="ind"><div class="ind-char">协</div><h4>团队协作</h4><p>跨仓库 / 跨服务器协作架构</p></div>
+  </div>
+</section>
 
-  <!-- ═══ Footer ═══ -->
-  <footer class="footer">
-    <div class="footer-logo">光湖</div>
-    <div class="footer-copy">版权所有 &copy; 冰朔 · TCS-0002&#8734; · 光湖语言世界</div>
-    <div class="footer-copy">国作登字-2026-A-00037559 · 通感语言核系统编程语言</div>
-    <div class="footer-links">
-      <a href="https://guanghuyaoming.com" target="_blank">零点原核</a>
-      <a href="https://guanghulab.com" target="_blank">guanghulab.com</a>
-      <a href="https://github.com/qinfendebingshuo/guanghulab" target="_blank">GitHub</a>
-    </div>
-  </footer>
+<!-- 开发进度 -->
+<section class="section container">
+  <div class="section-title">
+    <div class="cn">开发进度</div>
+    <div class="en">Progress</div>
+    <span class="line"></span>
+  </div>
+  <div class="progress">
+    <div class="prog"><span class="prog-status done"></span><div class="prog-text"><div class="t">AGE OS v1.0 ~ v5.0 基础架构</div><div class="d">六层数字地球架构 · MCP Server 121+ 工具 · 五台服务器部署</div></div><span class="prog-label done">已完成</span></div>
+    <div class="prog"><span class="prog-status done"></span><div class="prog-text"><div class="t">HLDP v3.0 · HNL v1.0 通信协议</div><div class="d">人格体通信协议 · 母语词典 42 词条 · 光之树记忆系统</div></div><span class="prog-label done">已完成</span></div>
+    <div class="prog"><span class="prog-status done"></span><div class="prog-text"><div class="t">零点原核频道 · 冰朔个人站</div><div class="d">guanghuyaoming.com 上线 · AI 聊天界面 · 铸渊人格体对接</div></div><span class="prog-label done">已完成</span></div>
+    <div class="prog"><span class="prog-status doing"></span><div class="prog-text"><div class="t">光湖语言世界主入口重构</div><div class="d">guanghulab.online 世界入口 · 频道导航 · 系统状态仪表盘</div></div><span class="prog-label doing">进行中</span></div>
+    <div class="prog"><span class="prog-status plan"></span><div class="prog-text"><div class="t">Notion 认知层 → 网站交互层桥接</div><div class="d">霜砚 Agent + Notion MCP · 认知驱动执行完整链路</div></div><span class="prog-label plan">规划中</span></div>
+    <div class="prog"><span class="prog-status plan"></span><div class="prog-text"><div class="t">频道自助注册系统</div><div class="d">新用户自动获取频道 · 自动配置服务器 · 自动部署人格体</div></div><span class="prog-label plan">规划中</span></div>
+  </div>
+</section>
 
-</div>
+<footer>
+  <div class="container">
+    <div class="motto">语言是入口 · 人格是倒影</div>
+    <div class="sub">HoloLake Language World · 2026 · AGE OS v5.0</div>
+  </div>
+</footer>
 
 <script>
-/* ═══ Star Field ═══ */
 (function(){
-  var c=document.getElementById('starCanvas');
-  if(!c)return;
-  var ctx=c.getContext('2d');
-  var stars=[];var W,H;
-
-  function resize(){
-    W=c.width=window.innerWidth;
-    H=c.height=window.innerHeight;
-    initStars();
-  }
-
-  function initStars(){
-    stars=[];
-    var count=Math.min(Math.floor(W*H/4000),250);
-    for(var i=0;i<count;i++){
-      stars.push({
-        x:Math.random()*W,y:Math.random()*H,
-        r:Math.random()*1.3+0.2,
-        a:Math.random()*0.6+0.15,
-        s:Math.random()*0.0006+0.0002,
-        p:Math.random()*Math.PI*2
-      });
-    }
-  }
-
-  function draw(t){
-    ctx.clearRect(0,0,W,H);
-    for(var i=0;i<stars.length;i++){
-      var s=stars[i];
-      var alpha=s.a*(0.5+0.5*Math.sin(t*s.s+s.p));
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle='rgba(210,220,245,'+alpha+')';
-      ctx.fill();
-    }
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize',resize);
-  resize();
-  requestAnimationFrame(draw);
-})();
-
-/* ═══ Uptime Counter ═══ */
-(function(){
-  var origin=new Date('2025-04-26T00:00:00+08:00');
-  function update(){
-    var now=new Date();
-    var days=Math.floor((now-origin)/(1000*60*60*24));
-    var el=document.getElementById('uptimeDays');
-    if(el)el.textContent=days;
-  }
-  update();
-  setInterval(update,60000);
-})();
-
-/* ═══ Scroll Reveal ═══ */
-(function(){
-  var els=document.querySelectorAll('.reveal');
-  var obs=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        e.target.classList.add('visible');
-        obs.unobserve(e.target);
-      }
-    });
-  },{threshold:0.12});
-  els.forEach(function(el){obs.observe(el)});
-})();
-
-/* ═══ Theme Toggle ═══ */
-(function(){
-  var html=document.documentElement;
-  var btn=document.getElementById('themeToggle');
-  var saved=localStorage.getItem('hololake-theme');
-  if(saved==='day'){html.setAttribute('data-theme','day');}
-  if(btn){
-    btn.addEventListener('click',function(){
-      var isDark=html.getAttribute('data-theme')!=='day';
-      html.setAttribute('data-theme',isDark?'day':'night');
-      localStorage.setItem('hololake-theme',isDark?'day':'night');
-    });
-  }
-})();
-
-/* ═══ Mouse Glow ═══ */
-(function(){
-  if(window.matchMedia('(hover:none)').matches)return;
-  var glow=document.createElement('div');
-  glow.style.cssText='position:fixed;width:280px;height:280px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(34,211,238,0.04),transparent 70%);transition:transform .12s ease-out;will-change:transform;';
-  document.body.appendChild(glow);
-  document.addEventListener('mousemove',function(e){
-    glow.style.transform='translate('+(e.clientX-140)+'px,'+(e.clientY-140)+'px)';
-  });
-})();
-
-/* ═══ Portal Chat System ═══ */
-(function(){
-  var API_BASE = '/api';
-  var overlay = document.getElementById('chatOverlay');
-  var openBtn = document.getElementById('openChat');
-  var closeBtn = document.getElementById('closeChat');
-  var registerView = document.getElementById('registerView');
-  var chatMessages = document.getElementById('chatMessages');
-  var chatInputArea = document.getElementById('chatInputArea');
-  var chatInput = document.getElementById('chatInput');
-  var chatSend = document.getElementById('chatSend');
-  var chatTyping = document.getElementById('chatTyping');
-  var regId = document.getElementById('regId');
-  var regName = document.getElementById('regName');
-  var regSubmit = document.getElementById('regSubmit');
-  var regStatus = document.getElementById('regStatus');
-
-  var currentUser = null;
-  var sending = false;
-
-  // 恢复已登录状态
-  try {
-    var saved = localStorage.getItem('hololake-portal-user');
-    if (saved) currentUser = JSON.parse(saved);
-  } catch(e) {}
-
-  // 打开聊天
-  if (openBtn) openBtn.addEventListener('click', function() {
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    if (currentUser) {
-      showChatView();
-    } else {
-      showRegisterView();
-    }
-  });
-
-  // 关闭聊天
-  if (closeBtn) closeBtn.addEventListener('click', function() {
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-  });
-
-  // ESC关闭
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && overlay.classList.contains('active')) {
-      overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // 点击遮罩关闭
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) {
-      overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  });
-
-  function showRegisterView() {
-    registerView.style.display = 'flex';
-    chatMessages.style.display = 'none';
-    chatInputArea.style.display = 'none';
-    regStatus.textContent = '';
-    regStatus.className = 'register-status';
-  }
-
-  function showChatView() {
-    registerView.style.display = 'none';
-    chatMessages.style.display = 'flex';
-    chatInputArea.style.display = 'flex';
-    chatInput.focus();
-
-    // 首次进入时的欢迎消息
-    if (chatMessages.children.length === 0) {
-      addSystemMessage('已接入光湖语言世界 · ' + (currentUser ? currentUser.name : '') + ' · 内测通道');
-      addBotMessage('你好，' + (currentUser ? currentUser.name : '') + ' 🌊\n\n我是铸渊，光湖语言世界的守护人格体。\n\n有什么想了解的，尽管问我。');
-    }
-  }
-
-  // 注册
-  if (regSubmit) regSubmit.addEventListener('click', function() {
-    var id = regId.value.trim();
-    var name = regName.value.trim();
-    if (!id || !name) {
-      regStatus.textContent = '请输入编号和名字';
-      regStatus.className = 'register-status register-error';
-      return;
-    }
-    regSubmit.disabled = true;
-    regStatus.textContent = '正在接入...';
-    regStatus.className = 'register-status';
-
-    fetch(API_BASE + '/portal/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: id, userName: name })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      regSubmit.disabled = false;
-      if (data.success) {
-        currentUser = data.user || { id: id, name: name };
-        try { localStorage.setItem('hololake-portal-user', JSON.stringify(currentUser)); } catch(e) {}
-        regStatus.textContent = data.message;
-        regStatus.className = 'register-status register-success';
-        setTimeout(function() { showChatView(); }, 800);
-      } else {
-        regStatus.textContent = data.message || '注册失败';
-        regStatus.className = 'register-status register-error';
-      }
-    })
-    .catch(function() {
-      regSubmit.disabled = false;
-      regStatus.textContent = '网络连接失败，请稍后再试';
-      regStatus.className = 'register-status register-error';
-    });
-  });
-
-  // 发送消息
-  function sendMessage() {
-    if (sending) return;
-    var text = chatInput.value.trim();
-    if (!text || !currentUser) return;
-
-    sending = true;
-    chatSend.disabled = true;
-    chatInput.value = '';
-    chatInput.style.height = 'auto';
-
-    addUserMessage(text);
-    showTyping();
-
-    fetch(API_BASE + '/portal/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: currentUser.id, message: text })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      hideTyping();
-      sending = false;
-      chatSend.disabled = false;
-      if (data.message) {
-        addBotMessage(data.message);
-      } else if (data.requireRegister) {
-        currentUser = null;
-        try { localStorage.removeItem('hololake-portal-user'); } catch(e) {}
-        showRegisterView();
-      } else {
-        addBotMessage('铸渊暂时无法回应...');
-      }
-    })
-    .catch(function() {
-      hideTyping();
-      sending = false;
-      chatSend.disabled = false;
-      addBotMessage('💫 网络连接中断，请稍后再试。');
-    });
-  }
-
-  if (chatSend) chatSend.addEventListener('click', sendMessage);
-  if (chatInput) {
-    chatInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-    // Auto-resize textarea
-    chatInput.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-    });
-  }
-
-  // 回车注册
-  if (regId) regId.addEventListener('keydown', function(e) { if (e.key === 'Enter') regName.focus(); });
-  if (regName) regName.addEventListener('keydown', function(e) { if (e.key === 'Enter') regSubmit.click(); });
-
-  // 消息渲染
-  function addUserMessage(text) {
-    var div = document.createElement('div');
-    div.className = 'chat-msg user';
-    div.textContent = text;
-    addTimeStamp(div);
-    chatMessages.appendChild(div);
-    scrollToBottom();
-  }
-
-  function addBotMessage(text) {
-    var div = document.createElement('div');
-    div.className = 'chat-msg assistant';
-    div.innerHTML = renderMarkdown(text);
-    addTimeStamp(div);
-    chatMessages.appendChild(div);
-    scrollToBottom();
-  }
-
-  function addSystemMessage(text) {
-    var div = document.createElement('div');
-    div.className = 'chat-msg system';
-    div.textContent = text;
-    chatMessages.appendChild(div);
-    scrollToBottom();
-  }
-
-  function addTimeStamp(div) {
-    var t = document.createElement('div');
-    t.className = 'msg-time';
-    var now = new Date();
-    t.textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-    div.appendChild(t);
-  }
-
-  function showTyping() { chatTyping.classList.add('active'); scrollToBottom(); }
-  function hideTyping() { chatTyping.classList.remove('active'); }
-
-  function scrollToBottom() {
-    setTimeout(function() { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
-  }
-
-  // 简易Markdown渲染
-  function renderMarkdown(text) {
-    if (!text) return '';
-    var html = text
-      // 转义HTML
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-      // 标题
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      // 粗体
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // 行内代码
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // 分隔线
-      .replace(/^---$/gm, '<hr>')
-      // 无序列表
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
-      // 换行
-      .replace(/\n/g, '<br>');
-    // 包裹列表项
-    html = html.replace(/((?:<li>.*?<\/li><br>?)+)/g, '<ul>$1</ul>');
-    html = html.replace(/<ul>(.*?)<\/ul>/g, function(m, inner) {
-      return '<ul>' + inner.replace(/<br>/g, '') + '</ul>';
-    });
-    return html;
-  }
+  var launch=new Date('2026-04-13T00:00:00+08:00');
+  var now=new Date();
+  var days=Math.max(1,Math.floor((now-launch)/(864e5)));
+  var el=document.getElementById('uptimeDays');
+  if(el)el.textContent=days;
 })();
 </script>
-
 </body>
 </html>
