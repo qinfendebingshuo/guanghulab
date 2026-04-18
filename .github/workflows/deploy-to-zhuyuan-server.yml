@@ -144,7 +144,7 @@ jobs:
           # 确保目标目录存在
           ssh -i ~/.ssh/zy_key \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }} \
-            "mkdir -p ${TARGET_DIR} /opt/zhuyuan/app /opt/age-os/mcp-server /opt/age-os/agents /opt/age-os/schema /opt/age-os/scripts /opt/age-os/logs"
+            "mkdir -p ${TARGET_DIR} /opt/zhuyuan/app /opt/age-os/mcp-server /opt/age-os/agents /opt/age-os/schema /opt/age-os/scripts /opt/age-os/logs /opt/glada"
 
           # 同步后端应用代码
           rsync -avz --delete \
@@ -180,6 +180,17 @@ jobs:
           scp -i ~/.ssh/zy_key \
             server/age-os/package.json \
             ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/age-os/
+
+          # 同步 GLADA 自主开发Agent 代码
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/zy_key" \
+            --exclude='node_modules' \
+            --exclude='queue/*.json' \
+            --exclude='logs/' \
+            --exclude='receipts/' \
+            --exclude='.env.glada' \
+            glada/ \
+            ${{ secrets.ZY_SERVER_USER }}@${{ secrets.ZY_SERVER_HOST }}:/opt/glada/
 
       - name: 🔄 同步 docs → portal (单一数据源保障)
         run: |
@@ -534,17 +545,60 @@ jobs:
           cd /opt/age-os && pm2 start ecosystem.config.js
           pm2 save
 
-          # 健康检查 · 主应用(3800) + 预览进程(3801) + MCP(3100) + 智库节点(4000)
+          # ─── GLADA 自主开发Agent 部署 ───
+          echo ""
+          echo "═══ GLADA 自主开发Agent 部署 ═══"
+          mkdir -p /opt/glada/queue /opt/glada/logs/executions /opt/glada/logs/notifications /opt/glada/receipts /var/log/glada
+
+          # 安装 GLADA 依赖
+          cd /opt/glada
+          npm install --production 2>&1
+
+          # 写入 GLADA 环境变量
+          echo "NODE_ENV=production" > /opt/glada/.env.glada
+          echo "GLADA_PORT=3900" >> /opt/glada/.env.glada
+          echo "GLADA_POLL_INTERVAL=30000" >> /opt/glada/.env.glada
+          echo "GLADA_MODEL=deepseek-chat" >> /opt/glada/.env.glada
+          echo "GLADA_STOP_ON_FAILURE=true" >> /opt/glada/.env.glada
+          if [ -n "${ZY_LLM_API_KEY}" ]; then
+            echo "ZY_LLM_API_KEY=${ZY_LLM_API_KEY}" >> /opt/glada/.env.glada
+          fi
+          if [ -n "${ZY_LLM_BASE_URL}" ]; then
+            echo "ZY_LLM_BASE_URL=${ZY_LLM_BASE_URL}" >> /opt/glada/.env.glada
+          fi
+          # ─── GLADA 邮件通知（复用零点原核 QQ 邮箱 SMTP 凭据） ───
+          if [ -n "${ZY_SMTP_USER}" ] && [ -n "${ZY_SMTP_PASS}" ]; then
+            echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> /opt/glada/.env.glada
+            echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> /opt/glada/.env.glada
+            echo "✅ GLADA 邮件通知 SMTP 已配置"
+          else
+            echo "⚠️ GLADA 邮件通知未配置（ZY_SMTP_USER/ZY_SMTP_PASS 缺失）"
+          fi
+          chmod 600 /opt/glada/.env.glada
+
+          # 预飞检查
+          cd /opt/glada && node install-check.js || echo "⚠️ GLADA 预飞检查有警告（非致命·仍尝试启动）"
+
+          # PM2 重启 GLADA Agent
+          pm2 delete glada-agent 2>/dev/null || true
+          cd /opt/glada && pm2 start ecosystem.config.js
+          pm2 save
+          echo "═══════════════════"
+          echo ""
+
+          # 健康检查 · 主应用(3800) + 预览进程(3801) + MCP(3100) + 智库节点(4000) + GLADA(3900)
           sleep 3
           curl -sf http://localhost:3800/api/health || echo "⚠️ 主应用健康检查失败，等待更长时间..."
           curl -sf http://localhost:3801/api/health || echo "⚠️ 预览进程健康检查失败，等待更长时间..."
           curl -sf http://localhost:3100/health || echo "⚠️ MCP Server健康检查失败，等待更长时间..."
           curl -sf http://localhost:4000/api/health || echo "⚠️ 智库节点健康检查失败，等待更长时间..."
+          curl -sf http://localhost:3900/api/glada/health || echo "⚠️ GLADA Agent健康检查失败，等待更长时间..."
           sleep 5
           curl -sf http://localhost:3800/api/health && echo "✅ 主应用已上线 (3800)" || echo "❌ 主应用启动失败 (3800)"
           curl -sf http://localhost:3801/api/health && echo "✅ 预览进程已上线 (3801)" || echo "❌ 预览进程启动失败 (3801) · 若 ZY_DOMAIN_PREVIEW 域名指向此端口则该域名可能502"
           curl -sf http://localhost:3100/health && echo "✅ MCP Server已上线 (3100)" || echo "❌ MCP Server启动失败 (3100)"
           curl -sf http://localhost:4000/api/health && echo "✅ 智库节点已上线 (4000)" || echo "❌ 智库节点启动失败 (4000) · zhiku.html API将不可用"
+          curl -sf http://localhost:3900/api/glada/health && echo "✅ GLADA Agent已上线 (3900)" || echo "❌ GLADA Agent启动失败 (3900) · 自主开发Agent离线"
 
           # DNS 诊断 · 检查域名是否指向本服务器
           echo ""
