@@ -649,11 +649,19 @@ async function searchAllSources(query) {
   }
 
   // 3. 内置直连搜索（当外部数据源服务不可达时自动启用）
-  if (!externalFanqieOk && builtinSource) {
+  // biquge-direct 始终参与搜索（海外IP友好·不依赖外部服务状态）
+  if (builtinSource) {
     try {
       const { results: builtinResults, statuses } = await builtinSource.builtinSearch(query);
-      results.push(...builtinResults);
-      sourceStatus.push(...statuses);
+      // 仅添加外部服务未覆盖的源（避免番茄重复）
+      for (const br of builtinResults) {
+        if (br.source === 'fanqie' && externalFanqieOk) continue;
+        results.push(br);
+      }
+      for (const st of statuses) {
+        if (st.id === 'fanqie-direct' && externalFanqieOk) continue;
+        sourceStatus.push(st);
+      }
     } catch (err) {
       console.error('[ZY-SVR-006] 内置直连搜索失败:', err.message);
       sourceStatus.push({
@@ -769,6 +777,21 @@ async function processDownloadTask(taskId) {
           console.error('[ZY-SVR-006] 内置直连下载也失败:', builtinErr.message);
         }
       }
+    } else if (source === 'shu69') {
+      // 笔趣阁/69书吧 — 内置直连（海外IP可达）
+      if (builtinSource) {
+        try {
+          task.message = '正在从69书吧获取内容...';
+          content = await builtinSource.builtinDownload(source, source_book_id, title, author, (current, total, msg) => {
+            task.progress = Math.floor((current / total) * 80);
+            task.message = msg;
+            task.updated_at = new Date().toISOString();
+          });
+          usedBuiltin = true;
+        } catch (err) {
+          console.error('[ZY-SVR-006] 69书吧下载失败:', err.message);
+        }
+      }
     } else if (source === 'qimao') {
       try {
         // 尝试 SwiftCat API
@@ -844,7 +867,7 @@ async function processDownloadTask(taskId) {
       title,
       author,
       category: task.book.category || '',
-      tags: [source === 'fanqie' ? '番茄小说' : '七猫小说', usedBuiltin ? '直连下载' : '外部服务'],
+      tags: [{ fanqie: '番茄小说', qimao: '七猫小说', shu69: '69书吧' }[source] || source, usedBuiltin ? '直连下载' : '外部服务'],
       size: `${Math.round(Buffer.byteLength(content, 'utf8') / 1024)}KB`,
       chapters: chapterCount,
       cos_key: task.cos_key,
@@ -1293,8 +1316,8 @@ app.post('/api/download/start', verifyUserAuth, (req, res) => {
     return res.status(400).json({ error: true, code: 'MISSING_PARAMS', message: '缺少 source, source_book_id, title' });
   }
 
-  if (!['fanqie', 'qimao'].includes(source)) {
-    return res.status(400).json({ error: true, code: 'INVALID_SOURCE', message: '不支持的数据源。可选: fanqie, qimao' });
+  if (!['fanqie', 'qimao', 'shu69'].includes(source)) {
+    return res.status(400).json({ error: true, code: 'INVALID_SOURCE', message: '不支持的数据源。可选: fanqie, qimao, shu69' });
   }
 
   const userId = req.user.user_id || req.user.persona_id;
@@ -1508,7 +1531,7 @@ app.get('/api/reader/chapter', verifyUserAuth, async (req, res) => {
     if (!builtinSource) {
       return res.status(503).json({ error: true, code: 'SOURCE_UNAVAILABLE', message: '内置数据源模块未加载，远程章节获取不可用' });
     }
-    const content = await builtinSource.builtinGetChapter(source, item_id);
+    const content = await builtinSource.builtinGetChapter(source, item_id, book_id);
 
     if (!content) {
       return res.status(404).json({ error: true, code: 'EMPTY_CONTENT', message: '章节内容为空' });
@@ -1666,6 +1689,6 @@ app.listen(PORT, '127.0.0.1', () => {
   console.log(`[ZY-SVR-006] 域名: ${DOMAIN} · 书岚(AG-SL-WEB-001) + 守护Agent(AG-SL-GUARDIAN-001)`);
   const smtpStatus = (SMTP_USER && SMTP_PASS) ? `已配置(${SMTP_HOST || autoDetectSmtpHost(SMTP_USER)})` : '未配置';
   console.log(`[ZY-SVR-006] COS: ${cosClient ? '已连接' : '未配置'} · LLM: ${DEEPSEEK_API_KEY ? '已配置' : '未配置'} · SMTP: ${smtpStatus}`);
-  console.log(`[ZY-SVR-006] 数据源: ${getEnabledSources().map(s => s.name).join(', ')}`);
+  console.log(`[ZY-SVR-006] 数据源: ${getEnabledSources().map(s => s.name).join(', ')}${builtinSource ? ' + 内置直连(番茄+笔趣阁聚合)' : ''}`);
   console.log(`[ZY-SVR-006] 守护: 铸渊 · ICE-GL-ZY001 · TCS-0002∞`);
 });

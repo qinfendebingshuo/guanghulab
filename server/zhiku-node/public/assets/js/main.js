@@ -454,7 +454,7 @@ async function doSearch() {
         '</div>';
     } else {
       const statusHtml = buildSourceStatusHtml(data.source_status);
-      const sourceColors = { local: '#34d399', fanqie: '#fbbf24', qimao: '#a78bfa' };
+      const sourceColors = { local: '#34d399', fanqie: '#fbbf24', qimao: '#a78bfa', shu69: '#fb923c' };
       resultDiv.innerHTML = statusHtml +
         '<div class="search-summary">找到 ' + data.total + ' 个结果 · 来源: ' + (data.sources_queried || []).join(', ') + '</div>' +
         data.results.map(book => {
@@ -509,7 +509,8 @@ async function startDownload(source, sourceBookId, title, author) {
   if (!currentToken) { alert('请先登录'); return; }
 
   // 确认下载
-  if (!confirm(`确认下载「${title}」(${source === 'fanqie' ? '番茄小说' : '七猫小说'}) 到智库？`)) return;
+  const sourceNames = { fanqie: '番茄小说', qimao: '七猫小说', shu69: '69书吧' };
+  if (!confirm(`确认下载「${title}」(${sourceNames[source] || source}) 到智库？`)) return;
 
   try {
     const res = await fetch(`${API_BASE}/download/start`, {
