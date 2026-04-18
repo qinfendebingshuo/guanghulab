@@ -368,6 +368,7 @@ async function executeStep(step, systemPrompt, gladaTask, options = {}) {
     const userMessage = buildStepPrompt(step, gladaTask);
 
     // 2. 调用 LLM（使用模型路由器自动选择最佳模型）
+    // 模型选择优先级: options.model > execPlan.model_preference > model-router 自动选择
     const modelSelection = await modelRouter.selectModel(step.description, {
       model: options.model || execPlan.model_preference || null,
       taskType: options.taskType

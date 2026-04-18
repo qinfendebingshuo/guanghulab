@@ -260,8 +260,9 @@ async function refreshModelCache() {
       console.log(`  通用型: ${classified.general.slice(0, 3).join(', ') || '无'}`);
       console.log(`  经济型: ${classified.economy.slice(0, 3).join(', ') || '无'}`);
     } else if (!cachedModels) {
-      // 发现失败且没有缓存，用环境变量中的模型名作为降级
-      const fallbackModel = process.env.GLADA_MODEL || 'deepseek-chat';
+      // 发现失败且没有缓存，用环境变量中的模型名作为终极降级
+      // 注意：GLADA_MODEL 是用户在部署时显式配置的降级模型，不是硬编码
+      const fallbackModel = process.env.GLADA_MODEL || process.env.LLM_MODEL || 'deepseek-chat';
       cachedModels = {
         models: [fallbackModel],
         classified: {
@@ -305,7 +306,7 @@ async function initialize(options = {}) {
       console.warn(`[GLADA-Router] ⚠️ 定期刷新失败: ${err.message}`);
     });
   }, refreshMs);
-  refreshTimer.unref(); // 不阻止进程退出
+  refreshTimer.unref(); // Don't block process exit — allow PM2 graceful shutdown
 
   return cache;
 }
@@ -416,8 +417,8 @@ async function selectModel(stepDescription, options = {}) {
     };
   }
 
-  // 终极降级：用环境变量默认值
-  const defaultModel = process.env.GLADA_MODEL || 'deepseek-chat';
+  // 终极降级：用环境变量默认值（用户在部署时显式配置）
+  const defaultModel = process.env.GLADA_MODEL || process.env.LLM_MODEL || 'deepseek-chat';
   return {
     model: defaultModel,
     taskType,
