@@ -1,0 +1,1181 @@
+/* ═══════════════════════════════════════════════════════════ */
+/* ═══ 零点原核 · 内页风格包 v1.0                           ═══ */
+/* ═══ 深空主权控制台 · 与首页星空同源 · 霜砚设计            ═══ */
+/* ═══ 国作登字-2026-A-00037559                              ═══ */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* ─── 1. 核心变量覆盖 · 月光金色系 ─── */
+:root {
+  /* 深空背景 */
+  --bg: #0a0e27;
+  --bg-deep: #0a0e27;
+  --bg-purple: #1a1438;
+  --bg-panel: #0f1333;
+  --panel: rgba(15, 19, 51, 0.75);
+
+  /* 月光金 */
+  --moon-gold: #d4a574;
+  --moon-gold-soft: rgba(212, 165, 116, 0.4);
+  --moon-gold-faint: rgba(212, 165, 116, 0.12);
+
+  /* 玻璃面板 */
+  --glass-bg: rgba(20, 25, 60, 0.4);
+  --glass-border: rgba(212, 165, 116, 0.18);
+
+  /* 文字层级 */
+  --text: #e8eaf6;
+  --text-main: #e8eaf6;
+  --text-soft: #8892b0;
+  --text-faint: #4a5278;
+  --dim: #8892b0;
+  --muted: rgba(74, 82, 120, 0.8);
+
+  /* 功能色 */
+  --ok: #6fc3a8;
+  --warn: #d4a574;
+  --err: #d47a6f;
+  --idle: #8892b0;
+
+  /* 边框重映射 */
+  --border: rgba(212, 165, 116, 0.12);
+  --border-active: rgba(212, 165, 116, 0.3);
+  --card: var(--glass-bg);
+  --card-border: var(--glass-border);
+  --card-hover: var(--moon-gold-soft);
+
+  /* 字体 */
+  --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+}
+
+/* ─── 2. 全局背景 · 深空径向渐变 ─── */
+body {
+  background: var(--bg) !important;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background: radial-gradient(ellipse at 50% 0%, var(--bg-purple) 0%, var(--bg) 60%);
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 80% 60%, #d4a574, transparent),
+    radial-gradient(1px 1px at 50% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 10% 70%, #fff, transparent),
+    radial-gradient(1px 1px at 65% 20%, #d4a574, transparent),
+    radial-gradient(1px 1px at 90% 40%, #fff, transparent);
+  background-size: 400px 400px;
+  animation: consoleTwinkle 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes consoleTwinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+/* ─── 3. 水平光带 · Sky Sweep ─── */
+.sky-sweep {
+  position: fixed;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 165, 116, 0.4), transparent);
+  animation: skySweep 12s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes skySweep {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(50%); }
+}
+
+/* ─── 4. 星空背景降密度 ─── */
+.cosmos {
+  opacity: 0.3;
+}
+
+.nebula {
+  opacity: 0.04 !important;
+}
+
+.lake {
+  background: linear-gradient(to top, rgba(212, 165, 116, 0.02), rgba(212, 165, 116, 0.005), transparent) !important;
+}
+
+.lake::before {
+  background: linear-gradient(90deg, transparent, rgba(212, 165, 116, 0.12), rgba(212, 165, 116, 0.08), transparent) !important;
+}
+
+/* ─── 5. 侧栏 · 深空玻璃面板 ─── */
+.sidebar {
+  background: rgba(15, 19, 51, 0.6) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-right: 1px solid var(--glass-border) !important;
+  box-shadow: 1px 0 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.sidebar-header {
+  border-bottom-color: var(--glass-border) !important;
+}
+
+/* Logo 月光呼吸 */
+.logo-glyph {
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.15), rgba(212, 165, 116, 0.2) 60%, rgba(90, 60, 31, 0.15)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.3) !important;
+  color: var(--moon-gold) !important;
+  box-shadow: 0 0 16px var(--moon-gold-soft) !important;
+  animation: consoleBreathe 4s ease-in-out infinite !important;
+}
+
+@keyframes consoleBreathe {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow: 0 0 12px rgba(212, 165, 116, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.15);
+    box-shadow: 0 0 24px rgba(212, 165, 116, 0.4), 0 0 48px rgba(212, 165, 116, 0.15);
+  }
+}
+
+.logo-text {
+  font-family: var(--font-serif) !important;
+  letter-spacing: 0.15em !important;
+}
+
+/* 侧栏分组标题 */
+.snav-section {
+  color: var(--text-faint) !important;
+  letter-spacing: 0.3em !important;
+}
+
+/* 侧栏导航项 */
+.snav-item {
+  color: var(--text-soft) !important;
+  border-left: 2px solid transparent !important;
+  transition: all 0.3s !important;
+}
+
+.snav-item:hover {
+  background: var(--moon-gold-faint) !important;
+  color: var(--text-main) !important;
+}
+
+.snav-item.active {
+  background: rgba(212, 165, 116, 0.08) !important;
+  color: var(--moon-gold) !important;
+  border-left-color: var(--moon-gold) !important;
+}
+
+.snav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--moon-gold);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px var(--moon-gold-soft);
+}
+
+.snav-item {
+  position: relative;
+}
+
+/* 侧栏徽章 */
+.snav-badge {
+  color: var(--moon-gold) !important;
+  background: var(--moon-gold-faint) !important;
+}
+
+/* 侧栏分隔线 */
+.snav-divider {
+  background: var(--glass-border) !important;
+}
+
+/* Architecture Flow */
+.sidebar-arch {
+  border-top-color: var(--glass-border) !important;
+}
+
+.arch-dot.notion {
+  background: var(--moon-gold) !important;
+  box-shadow: 0 0 7px var(--moon-gold-soft) !important;
+}
+
+.arch-dot.web {
+  background: #6fc3a8 !important;
+  box-shadow: 0 0 7px rgba(111, 195, 168, 0.5) !important;
+}
+
+/* 侧栏底部 */
+.sidebar-footer {
+  border-top-color: var(--glass-border) !important;
+}
+
+.status-dot {
+  background: var(--ok) !important;
+  box-shadow: 0 0 8px rgba(111, 195, 168, 0.5) !important;
+}
+
+/* ─── 6. 顶部主Header · 玻璃模糊 ─── */
+.main-header {
+  background: rgba(10, 14, 39, 0.75) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.persona-avatar {
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.12), rgba(212, 165, 116, 0.2) 60%, rgba(90, 60, 31, 0.12)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.3) !important;
+  color: var(--moon-gold) !important;
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.2);
+  animation: consoleBreathe 4s ease-in-out infinite !important;
+}
+
+.persona-name {
+  font-family: var(--font-serif) !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* Heartbeat */
+.heartbeat {
+  background: rgba(111, 195, 168, 0.06) !important;
+  border: 1px solid rgba(111, 195, 168, 0.12) !important;
+}
+
+.heartbeat-dot {
+  background: var(--ok) !important;
+  box-shadow: 0 0 6px rgba(111, 195, 168, 0.5) !important;
+}
+
+/* ─── 7. 主区域 ─── */
+.main {
+  border-left: 1px solid var(--glass-border) !important;
+}
+
+.dashboard {
+  background: transparent;
+}
+
+/* ─── 8. 页面标题 · 宋体 + 金色辉光 ─── */
+.dash-headline-glyph {
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.12), rgba(212, 165, 116, 0.2) 60%, rgba(90, 60, 31, 0.15)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.3) !important;
+  color: var(--moon-gold) !important;
+  box-shadow: 0 0 16px rgba(212, 165, 116, 0.2) !important;
+  animation: consoleBreathe 4s ease-in-out infinite !important;
+}
+
+.dash-headline-text h2 {
+  font-family: var(--font-serif) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  text-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+  letter-spacing: 0.15em !important;
+}
+
+/* Section 标题 */
+.dash-section-title {
+  color: var(--text-soft) !important;
+}
+
+.dash-section-title::after {
+  background: var(--glass-border) !important;
+}
+
+/* MODULE 标签 · 月光金 */
+.module-tag {
+  background: var(--moon-gold-faint) !important;
+  border: 1px solid var(--moon-gold-soft) !important;
+  color: var(--moon-gold) !important;
+}
+
+/* Section 子标题 */
+.dash-section-sub {
+  color: var(--text-soft) !important;
+}
+
+/* ─── 9. 玻璃卡片 · 全局统一 ─── */
+.srv-card,
+.s-card,
+.agent-card,
+.project-card,
+.shield-stat,
+.shield-layer,
+.novel-module,
+.novel-stat,
+.shield-log {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 14px !important;
+  transition: all 0.4s !important;
+}
+
+/* 卡片顶部渐变线 → 月光金 */
+.srv-card::before {
+  background: linear-gradient(90deg, var(--moon-gold), rgba(212, 165, 116, 0.3)) !important;
+  opacity: 0.3 !important;
+}
+
+.s-card::before {
+  background: linear-gradient(90deg, transparent, var(--moon-gold), transparent) !important;
+}
+
+/* 卡片悬停 · translateY + 金边 + 发光 */
+.srv-card:hover,
+.s-card:hover,
+.agent-card:hover,
+.project-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--moon-gold-soft) !important;
+  box-shadow: 0 12px 32px rgba(212, 165, 116, 0.12), 0 0 60px rgba(212, 165, 116, 0.04) !important;
+}
+
+.srv-card:hover::before {
+  opacity: 0.6 !important;
+}
+
+.srv-card::after {
+  background: radial-gradient(ellipse, rgba(212, 165, 116, 0.03), transparent 70%) !important;
+}
+
+/* 卡片呼吸动画 · 月光金 */
+@keyframes consoleCardBreathe {
+  0%, 100% {
+    border-color: rgba(212, 165, 116, 0.12);
+    box-shadow: 0 0 0 rgba(212, 165, 116, 0), 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    border-color: rgba(212, 165, 116, 0.25);
+    box-shadow: 0 0 28px rgba(212, 165, 116, 0.06), 0 0 60px rgba(212, 165, 116, 0.02), 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.srv-card, .s-card, .agent-card, .project-card {
+  animation: consoleCardBreathe 7s ease-in-out infinite !important;
+  will-change: border-color, box-shadow;
+}
+
+.shield-stat, .shield-layer, .novel-module, .novel-stat, .shield-log {
+  animation: consoleCardBreathe 8s ease-in-out infinite !important;
+  will-change: border-color, box-shadow;
+}
+
+/* OpenClaw 特殊呼吸 */
+.openclaw-card {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.04), rgba(20, 25, 60, 0.4)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+}
+
+.openclaw-card:hover {
+  border-color: rgba(212, 165, 116, 0.35) !important;
+}
+
+/* ─── 10. 状态点 · 呼吸光晕 ─── */
+.srv-status-dot.on,
+.svr-dot.on,
+.snav-dot.ok {
+  background: var(--ok) !important;
+  box-shadow: 0 0 10px rgba(111, 195, 168, 0.5) !important;
+}
+
+.srv-status-dot.pending,
+.svr-dot.pending,
+.snav-dot.warn {
+  background: var(--warn) !important;
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.5) !important;
+}
+
+.srv-status-dot.off,
+.svr-dot.off {
+  background: var(--err) !important;
+  box-shadow: 0 0 6px rgba(212, 122, 111, 0.4) !important;
+}
+
+/* Agent 心跳点 */
+.agent-hb-dot.alive {
+  background: var(--ok) !important;
+  box-shadow: 0 0 8px rgba(111, 195, 168, 0.5) !important;
+}
+
+.agent-hb-dot.dead {
+  background: var(--err) !important;
+}
+
+/* ─── 11. 服务器卡片名称 · 宋体 ─── */
+.srv-card-name {
+  font-family: var(--font-serif) !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* 服务器徽章 */
+.srv-badge.loc {
+  background: var(--moon-gold-faint) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid var(--moon-gold-soft) !important;
+}
+
+.srv-badge.spec {
+  background: var(--moon-gold-faint) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid rgba(212, 165, 116, 0.2) !important;
+}
+
+.srv-badge.ok {
+  background: rgba(111, 195, 168, 0.08) !important;
+  color: var(--ok) !important;
+  border: 1px solid rgba(111, 195, 168, 0.15) !important;
+}
+
+.srv-badge.warn {
+  background: rgba(212, 165, 116, 0.08) !important;
+  color: var(--warn) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+}
+
+/* 分割线 */
+.srv-divider {
+  background: var(--glass-border) !important;
+}
+
+/* 服务点 */
+.srv-svc-dot.live {
+  background: var(--ok) !important;
+}
+
+.srv-svc-dot.mcp {
+  background: var(--moon-gold) !important;
+}
+
+.srv-svc-dot.db {
+  background: #a78bfa !important;
+}
+
+.srv-svc-dot.vpn {
+  background: var(--warn) !important;
+}
+
+.srv-svc-dot.relay {
+  background: var(--ok) !important;
+}
+
+/* 服务名 · 更柔和的标题 */
+.srv-svc-name {
+  color: var(--text-main) !important;
+}
+
+/* 服务端口标签 */
+.srv-svc-port {
+  background: rgba(212, 165, 116, 0.05) !important;
+  border: 1px solid rgba(212, 165, 116, 0.1) !important;
+  color: var(--text-faint) !important;
+}
+
+/* 连接标签 */
+.srv-conn-tag {
+  background: rgba(10, 14, 39, 0.4) !important;
+  border: 1px solid rgba(212, 165, 116, 0.08) !important;
+  color: var(--text-soft) !important;
+}
+
+/* ─── 12. 服务器分页 ─── */
+.paged-card-btn {
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg) !important;
+  color: var(--text-soft) !important;
+}
+
+.paged-card-btn:hover:not(:disabled) {
+  border-color: var(--moon-gold) !important;
+  color: var(--moon-gold) !important;
+  background: var(--moon-gold-faint) !important;
+}
+
+.paged-dot.active {
+  background: var(--moon-gold) !important;
+  box-shadow: 0 0 6px rgba(212, 165, 116, 0.4) !important;
+}
+
+/* ─── 13. 大数字 · 月光金 ─── */
+.metric-val,
+.shield-stat-num,
+.novel-stat-num {
+  font-family: var(--font-mono) !important;
+  color: var(--moon-gold) !important;
+}
+
+.bignum {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--moon-gold);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.bignum-label {
+  font-size: 10px;
+  color: var(--text-soft);
+  letter-spacing: 0.25em;
+  margin-top: 4px;
+}
+
+/* 在线计数 */
+#svrOnlineCount {
+  color: var(--moon-gold) !important;
+  font-size: 16px;
+}
+
+/* ─── 14. 项目卡片 ─── */
+.project-card-name {
+  font-family: var(--font-serif) !important;
+  letter-spacing: 0.05em !important;
+}
+
+.project-card-server {
+  color: var(--text-faint) !important;
+}
+
+.proj-badge.active {
+  background: rgba(212, 165, 116, 0.1) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid rgba(212, 165, 116, 0.2) !important;
+}
+
+.proj-badge.done {
+  background: rgba(111, 195, 168, 0.1) !important;
+  color: var(--ok) !important;
+  border: 1px solid rgba(111, 195, 168, 0.2) !important;
+}
+
+.proj-badge.enabled {
+  background: var(--moon-gold-faint) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid rgba(212, 165, 116, 0.18) !important;
+}
+
+.proj-badge.planned {
+  background: rgba(136, 146, 176, 0.08) !important;
+  color: var(--text-soft) !important;
+  border: 1px solid rgba(136, 146, 176, 0.15) !important;
+}
+
+.proj-badge.pending {
+  background: rgba(212, 165, 116, 0.08) !important;
+  color: var(--warn) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+}
+
+/* ─── 15. Agent 卡片 ─── */
+.agent-name {
+  font-family: var(--font-serif) !important;
+  letter-spacing: 0.05em !important;
+}
+
+.agent-icon.claw {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(212, 165, 116, 0.05)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.25) !important;
+  color: var(--moon-gold) !important;
+}
+
+.agent-icon.mcp {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.12), rgba(212, 165, 116, 0.06)) !important;
+  border: 1px solid rgba(167, 139, 250, 0.2) !important;
+}
+
+.agent-icon.gh {
+  background: linear-gradient(135deg, rgba(111, 195, 168, 0.12), rgba(212, 165, 116, 0.06)) !important;
+  border: 1px solid rgba(111, 195, 168, 0.2) !important;
+  color: var(--ok) !important;
+}
+
+.agent-heartbeat {
+  background: rgba(10, 14, 39, 0.4) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.agent-card[data-alive="true"]:hover {
+  box-shadow: 0 8px 32px rgba(212, 165, 116, 0.08) !important;
+}
+
+/* Agent chat button */
+.agent-chat-btn {
+  background: rgba(212, 165, 116, 0.08) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+  color: var(--moon-gold) !important;
+}
+
+.agent-chat-btn:hover {
+  background: rgba(212, 165, 116, 0.15) !important;
+  border-color: rgba(212, 165, 116, 0.3) !important;
+}
+
+/* OpenClaw phases */
+.oc-phase.done {
+  background: rgba(111, 195, 168, 0.1) !important;
+  color: var(--ok) !important;
+  border: 1px solid rgba(111, 195, 168, 0.15) !important;
+}
+
+.oc-phase.pending {
+  background: rgba(212, 165, 116, 0.08) !important;
+  color: var(--warn) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+}
+
+/* ─── 16. 人格体卡片 ─── */
+.persona-pname {
+  font-family: var(--font-serif) !important;
+}
+
+.persona-icon.zy {
+  background: rgba(212, 165, 116, 0.1) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid rgba(212, 165, 116, 0.2) !important;
+}
+
+.persona-icon.ym {
+  background: rgba(167, 139, 250, 0.1) !important;
+  color: #c4b5fd !important;
+  border: 1px solid rgba(167, 139, 250, 0.2) !important;
+}
+
+/* 人格体状态徽章 */
+.s-card-badge.badge-ok {
+  background: rgba(111, 195, 168, 0.1) !important;
+  color: var(--ok) !important;
+  border: 1px solid rgba(111, 195, 168, 0.15) !important;
+}
+
+.s-card-badge.badge-warn {
+  background: rgba(212, 165, 116, 0.1) !important;
+  color: var(--warn) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+}
+
+.s-card-badge.badge-err {
+  background: rgba(212, 122, 111, 0.1) !important;
+  color: var(--err) !important;
+  border: 1px solid rgba(212, 122, 111, 0.15) !important;
+}
+
+/* ─── 17. 保护罩日志 ─── */
+.shield-layer-tag {
+  color: var(--moon-gold) !important;
+}
+
+.shield-log-head {
+  border-bottom-color: var(--glass-border) !important;
+}
+
+.shield-log-title {
+  color: var(--text-soft) !important;
+}
+
+.shield-log-action.ban {
+  color: var(--err) !important;
+}
+
+.shield-log-action.unban {
+  color: var(--ok) !important;
+}
+
+.shield-log-ip {
+  color: var(--warn) !important;
+}
+
+/* ─── 18. 智库节点 ─── */
+.novel-module-name {
+  font-family: var(--font-serif) !important;
+}
+
+/* ─── 19. 系统状态面板 ─── */
+.s-card-title {
+  color: var(--text-soft) !important;
+}
+
+/* ─── 20. 聊天视图 · 月光金版本 ─── */
+.welcome-glyph {
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.1), rgba(212, 165, 116, 0.2) 60%, rgba(90, 60, 31, 0.12)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.3) !important;
+  color: var(--moon-gold) !important;
+  box-shadow: 0 0 16px rgba(212, 165, 116, 0.2) !important;
+}
+
+.welcome-title {
+  background: none !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  font-family: var(--font-serif) !important;
+  text-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+}
+
+/* 人格体路径卡片 */
+.persona-path-card {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.persona-path-card:hover {
+  border-color: var(--moon-gold-soft) !important;
+  box-shadow: 0 4px 24px rgba(212, 165, 116, 0.1) !important;
+}
+
+.persona-path-name {
+  font-family: var(--font-serif) !important;
+}
+
+.persona-path-icon.notion-icon {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(167, 139, 250, 0.08)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.25) !important;
+  color: var(--moon-gold) !important;
+}
+
+.persona-path-icon.github-icon {
+  background: linear-gradient(135deg, rgba(111, 195, 168, 0.12), rgba(212, 165, 116, 0.08)) !important;
+  border: 1px solid rgba(111, 195, 168, 0.2) !important;
+  color: var(--ok) !important;
+}
+
+.persona-path-dot.ok {
+  background: var(--ok) !important;
+  box-shadow: 0 0 6px rgba(111, 195, 168, 0.4) !important;
+}
+
+.persona-path-card:hover .persona-path-arrow {
+  color: var(--moon-gold) !important;
+}
+
+/* Chat hints */
+.hint-chip {
+  background: var(--moon-gold-faint) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+  color: var(--text-soft) !important;
+}
+
+.hint-chip:hover {
+  border-color: var(--moon-gold-soft) !important;
+  color: var(--text-main) !important;
+  background: rgba(212, 165, 116, 0.15) !important;
+}
+
+/* Chat input area */
+.input-area {
+  background: rgba(10, 14, 39, 0.9) !important;
+  border-top-color: var(--glass-border) !important;
+}
+
+.input-wrap {
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+}
+
+.input-wrap:focus-within {
+  border-color: var(--moon-gold-soft) !important;
+}
+
+.send-btn {
+  background: linear-gradient(135deg, var(--moon-gold), rgba(212, 165, 116, 0.6)) !important;
+}
+
+/* Persona selector */
+.persona-selector {
+  background: rgba(15, 19, 51, 0.7) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.persona-sel-btn.active {
+  background: var(--moon-gold-faint) !important;
+  border-color: rgba(212, 165, 116, 0.25) !important;
+  color: var(--moon-gold) !important;
+}
+
+.persona-sel-btn.active .persona-sel-name {
+  color: var(--moon-gold) !important;
+}
+
+.persona-sel-icon.zy-sel {
+  background: rgba(212, 165, 116, 0.1) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid rgba(212, 165, 116, 0.2) !important;
+}
+
+/* Chat target bar */
+.chat-target-bar {
+  background: rgba(15, 19, 51, 0.5) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.chat-target-select {
+  background: rgba(15, 19, 51, 0.8) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.chat-target-select:focus {
+  border-color: var(--moon-gold) !important;
+}
+
+/* ─── 21. 登录面板 · 与深空同源 ─── */
+.login-card {
+  background: rgba(15, 19, 51, 0.8) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}
+
+.login-glyph {
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.1), rgba(212, 165, 116, 0.2) 60%, rgba(90, 60, 31, 0.15)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.3) !important;
+  color: var(--moon-gold) !important;
+  box-shadow: 0 0 16px rgba(212, 165, 116, 0.2);
+  animation: consoleBreathe 4s ease-in-out infinite !important;
+}
+
+.login-input {
+  background: rgba(10, 14, 39, 0.6) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.login-input:focus {
+  border-color: var(--moon-gold) !important;
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.15);
+}
+
+.login-send-btn {
+  border: 1px solid rgba(212, 165, 116, 0.25) !important;
+  background: rgba(212, 165, 116, 0.08) !important;
+  color: var(--moon-gold) !important;
+}
+
+.login-send-btn:hover:not(:disabled) {
+  background: rgba(212, 165, 116, 0.15) !important;
+  border-color: rgba(212, 165, 116, 0.4) !important;
+}
+
+.login-submit {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.2), rgba(167, 139, 250, 0.12)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.25) !important;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.3), rgba(167, 139, 250, 0.2)) !important;
+  border-color: rgba(212, 165, 116, 0.5) !important;
+}
+
+.login-msg.ok {
+  color: var(--ok) !important;
+}
+
+.login-msg.err {
+  color: var(--err) !important;
+}
+
+.login-msg.info {
+  color: var(--moon-gold) !important;
+}
+
+/* 登录用户条 */
+.login-user-bar {
+  background: rgba(212, 165, 116, 0.06) !important;
+  border: 1px solid rgba(212, 165, 116, 0.1) !important;
+}
+
+.login-user-bar:hover {
+  border-color: rgba(212, 165, 116, 0.25) !important;
+}
+
+.login-user-dot {
+  background: var(--ok) !important;
+  box-shadow: 0 0 6px rgba(111, 195, 168, 0.5) !important;
+}
+
+/* ─── 22. 标签 chips ─── */
+.chip.gold,
+.data-src-tag.live {
+  background: var(--moon-gold-faint) !important;
+  color: var(--moon-gold) !important;
+  border: 1px solid var(--moon-gold-soft) !important;
+}
+
+.chip.soft {
+  background: rgba(136, 146, 176, 0.1) !important;
+  color: var(--text-soft) !important;
+  border: 1px solid rgba(136, 146, 176, 0.2) !important;
+}
+
+/* ─── 23. 滚动条 · 月光金 ─── */
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 165, 116, 0.15) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 165, 116, 0.25) !important;
+}
+
+/* ─── 24. 导航标签 ─── */
+.nav-tab.active {
+  color: var(--moon-gold) !important;
+  border-bottom-color: var(--moon-gold) !important;
+}
+
+/* ─── 25. New chat button ─── */
+.new-chat-btn {
+  border: 1px dashed var(--glass-border) !important;
+  background: var(--moon-gold-faint) !important;
+  color: var(--moon-gold) !important;
+}
+
+.new-chat-btn:hover {
+  background: rgba(212, 165, 116, 0.12) !important;
+  border-color: var(--moon-gold) !important;
+}
+
+/* ─── 26. Tools panel ─── */
+.tools-panel {
+  background: rgba(15, 19, 51, 0.9) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.tool-card {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.tool-card:hover {
+  border-color: var(--moon-gold-soft) !important;
+  background: var(--moon-gold-faint) !important;
+}
+
+.tool-status.connected {
+  color: var(--ok) !important;
+  background: rgba(111, 195, 168, 0.08) !important;
+  border-color: rgba(111, 195, 168, 0.15) !important;
+}
+
+/* ─── 27. System status dots · enhanced ─── */
+#sysDot_main.on, #sysDot_mcp.on, #sysDot_glada.on, #sysDot_ops.on,
+.srv-status-dot.on {
+  animation: consoleStatusPulse 2s ease-in-out infinite !important;
+}
+
+@keyframes consoleStatusPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* ─── 28. 认知链 · Cognitive Chain ─── */
+.cog-node.notion {
+  color: var(--moon-gold) !important;
+  border-color: rgba(212, 165, 116, 0.2) !important;
+  background: rgba(212, 165, 116, 0.05) !important;
+}
+
+.cog-node.web {
+  color: var(--ok) !important;
+  border-color: rgba(111, 195, 168, 0.2) !important;
+  background: rgba(111, 195, 168, 0.05) !important;
+}
+
+.cog-node.github {
+  color: var(--ok) !important;
+  border-color: rgba(111, 195, 168, 0.2) !important;
+  background: rgba(111, 195, 168, 0.05) !important;
+}
+
+/* ─── 29. 消息气泡 · subtle gold ─── */
+.msg-content.ai strong,
+.msg-content.ai b {
+  color: var(--moon-gold) !important;
+}
+
+.msg-content.ai h2 {
+  color: var(--moon-gold) !important;
+}
+
+.msg-meta {
+  background: rgba(212, 165, 116, 0.04) !important;
+  border: 1px solid rgba(212, 165, 116, 0.08) !important;
+}
+
+.msg-meta-item .value {
+  color: var(--moon-gold) !important;
+}
+
+/* ─── 30. Connection log ─── */
+.conn-log {
+  background: rgba(10, 14, 39, 0.7) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.conn-log-line.log-ok .log-msg {
+  color: var(--ok) !important;
+}
+
+.conn-log-line.log-info .log-msg {
+  color: var(--moon-gold) !important;
+}
+
+/* ─── 31. Data freshness tag ─── */
+.s-card-fresh {
+  animation: consoleFreshPulse 0.8s ease-out !important;
+}
+
+@keyframes consoleFreshPulse {
+  0% { border-color: rgba(212, 165, 116, 0.35); }
+  100% { border-color: var(--glass-border); }
+}
+
+/* ─── 32. Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .sky-sweep { animation: none !important; }
+  body::after { animation: none !important; }
+}
+
+/* ─── 33. 链接色 · 月光金 ─── */
+a {
+  color: var(--moon-gold);
+}
+
+a:hover {
+  color: #e8c49a;
+}
+
+/* 保留聊天内特殊链接 */
+.msg-content a {
+  color: var(--moon-gold);
+  text-decoration: underline;
+  text-decoration-color: rgba(212, 165, 116, 0.3);
+}
+
+/* ─── 34. 用户消息气泡 · 月光金调 ─── */
+.msg-content.user {
+  background: rgba(212, 165, 116, 0.07) !important;
+  border: 1px solid rgba(212, 165, 116, 0.1) !important;
+}
+
+.msg-avatar.user {
+  background: rgba(212, 165, 116, 0.06) !important;
+  border: 1px solid rgba(212, 165, 116, 0.12) !important;
+  color: var(--moon-gold) !important;
+}
+
+/* AI 消息保持紫色调以区分 */
+.msg-content.ai {
+  background: rgba(167, 139, 250, 0.05) !important;
+  border: 1px solid rgba(167, 139, 250, 0.08) !important;
+}
+
+.msg-avatar.ai {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.1), rgba(167, 139, 250, 0.08)) !important;
+  border: 1px solid rgba(212, 165, 116, 0.15) !important;
+  color: var(--moon-gold) !important;
+}
+
+/* ─── 35. 系统步骤点 · 统一色调 ─── */
+.sys-step .dot.pending {
+  background: var(--warn) !important;
+  box-shadow: 0 0 5px rgba(212, 165, 116, 0.4) !important;
+}
+
+.sys-step .dot.done {
+  background: var(--ok) !important;
+  box-shadow: 0 0 5px rgba(111, 195, 168, 0.4) !important;
+}
+
+.sys-step .dot.active {
+  background: var(--moon-gold) !important;
+  box-shadow: 0 0 7px rgba(212, 165, 116, 0.5) !important;
+}
+
+/* ─── 36. Welcome 状态点 ─── */
+.ws-dot.online {
+  background: var(--ok) !important;
+  box-shadow: 0 0 8px rgba(111, 195, 168, 0.4) !important;
+}
+
+.ws-dot.offline {
+  background: var(--err) !important;
+  box-shadow: 0 0 5px rgba(212, 122, 111, 0.3) !important;
+}
+
+/* ─── 37. Dashboard Headline 光晕 ─── */
+.dash-headline::before {
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.04), transparent 70%) !important;
+}
+
+.dash-section::before {
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.025), transparent 70%) !important;
+}
+
+/* ─── 38. 数据解释卡片 ─── */
+.s-card-explain {
+  background: rgba(212, 165, 116, 0.03) !important;
+  border: 1px solid rgba(212, 165, 116, 0.06) !important;
+}
+
+/* ─── 38b. 进度条 ─── */
+.prog-fill.ok {
+  background: linear-gradient(90deg, var(--ok), var(--moon-gold)) !important;
+}
+
+.prog-fill.warn {
+  background: linear-gradient(90deg, var(--warn), var(--err)) !important;
+}
+
+/* ─── 39. Nav Tabs (chat/dashboard) ─── */
+.nav-tab {
+  border-bottom: 2px solid transparent;
+}
+
+.nav-tab:hover {
+  color: var(--text-main) !important;
+}
+
+/* ─── 40. CAB 看板 · 待办状态色 ─── */
+.proj-badge.error {
+  background: rgba(212, 122, 111, 0.1) !important;
+  color: var(--err) !important;
+  border: 1px solid rgba(212, 122, 111, 0.2) !important;
+}
+
+/* ─── 41. Back link ─── */
+.back-link {
+  color: var(--text-soft) !important;
+}
+
+.back-link:hover {
+  color: var(--moon-gold) !important;
+  border-color: var(--glass-border) !important;
+}
+
+/* ─── 42. 移动端适配 ─── */
+@media (max-width: 768px) {
+  .sky-sweep {
+    display: none;
+  }
+}
