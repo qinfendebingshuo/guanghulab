@@ -19,6 +19,7 @@
 
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 
 // ── 已知错误模式（第一级：零成本诊断） ──────────
 
@@ -120,7 +121,7 @@ const SESSION_TTL_MS = 2 * 60 * 60 * 1000; // 2小时
 
 function getSession(sessionId) {
   if (!sessionId) {
-    sessionId = `s-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    sessionId = `s-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   }
 
   if (sessions.has(sessionId)) {

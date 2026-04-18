@@ -159,7 +159,7 @@ function guessProcessFromMessage(message) {
   if (/预览|preview|3801/.test(lower)) return 'zhuyuan-preview';
   if (/glada|3900/.test(lower)) return 'glada-agent';
   if (/novel|智库|4000/.test(lower)) return 'novel-api';
-  if (/agent.*调度|scheduler/.test(lower)) return 'age-os-agents';
+  if (/agent调度|scheduler/.test(lower)) return 'age-os-agents';
   return null;
 }
 

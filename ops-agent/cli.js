@@ -302,9 +302,6 @@ async function askQuestion(question) {
 
     const result = await apiRequest('POST', '/api/ops/chat', body);
 
-    clearInterval(spinner);
-    process.stdout.write('\r' + ' '.repeat(30) + '\r'); // 清除 spinner
-
     // 更新 sessionId
     if (result.sessionId) {
       currentSessionId = result.sessionId;
@@ -349,10 +346,11 @@ async function askQuestion(question) {
     console.log(colorize(`  [${result.method}${result.model ? ' · ' + result.model : ''}${result.intent ? ' · 意图:' + result.intent : ''}]`, C.dim));
     console.log('');
   } catch (err) {
-    clearInterval(spinner);
-    process.stdout.write('\r' + ' '.repeat(30) + '\r');
     console.log(colorize(`  ❌ 提问失败: ${err.message}`, C.red));
     console.log(colorize('  提示: 确保运维守卫已启动 (pm2 start ops-agent/ecosystem.config.js)', C.yellow));
+  } finally {
+    clearInterval(spinner);
+    process.stdout.write('\r' + ' '.repeat(30) + '\r');
   }
 }
 
