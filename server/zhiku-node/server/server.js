@@ -70,6 +70,20 @@ try {
   console.warn(`[ZY-SVR-006] ⚠️ builtin-source 模块未找到 (${err.message})。内置直连搜索/下载将不可用，但核心认证/Agent功能不受影响。`);
 }
 
+// ─── 铸渊哨兵 · 自动运维Agent（永久记忆 + 书源监测 + 自动修复） ───
+let sentinel = null;
+try {
+  const ZhuyuanSentinel = require('./zhuyuan-sentinel');
+  sentinel = new ZhuyuanSentinel({
+    dataDir: process.env.ZY_ZHIKU_DATA_DIR || path.join(__dirname, '..', 'data'),
+    builtinSource,
+    mirrorAgent
+  });
+  sentinel.init();
+} catch (err) {
+  console.warn(`[ZY-SVR-006] ⚠️ 铸渊哨兵加载失败 (${err.message})。自动运维功能不可用。`);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3006;
 const JWT_SECRET = process.env.ZY_ZHIKU_JWT_SECRET;
@@ -653,13 +667,15 @@ async function searchAllSources(query) {
   if (builtinSource) {
     try {
       const { results: builtinResults, statuses } = await builtinSource.builtinSearch(query);
-      // 仅添加外部服务未覆盖的源（避免番茄重复）
+      // 仅添加外部服务未覆盖的源（避免番茄/七猫重复）
       for (const br of builtinResults) {
         if (br.source === 'fanqie' && externalFanqieOk) continue;
+        if (br.source === 'qimao' && externalQimaoOk) continue;
         results.push(br);
       }
       for (const st of statuses) {
         if (st.id === 'fanqie-direct' && externalFanqieOk) continue;
+        if (st.id === 'qimao-direct' && externalQimaoOk) continue;
         sourceStatus.push(st);
       }
     } catch (err) {
@@ -824,7 +840,22 @@ async function processDownloadTask(taskId) {
           content = `《${title}》\n作者：${author}\n来源：七猫小说\n\n` + chapterContents.join('\n\n───────────────\n\n');
         }
       } catch (extErr) {
-        console.error('[ZY-SVR-006] SwiftCat不可达:', extErr.message);
+        console.log(`[ZY-SVR-006] SwiftCat不可达(${extErr.message})，尝试内置直连...`);
+      }
+
+      // SwiftCat不可用 → 内置直连
+      if (!content && builtinSource) {
+        try {
+          task.message = '外部服务不可用，切换到七猫内置直连...';
+          content = await builtinSource.builtinDownload(source, source_book_id, title, author, (current, total, msg) => {
+            task.progress = Math.floor((current / total) * 80);
+            task.message = msg;
+            task.updated_at = new Date().toISOString();
+          });
+          usedBuiltin = true;
+        } catch (builtinErr) {
+          console.error('[ZY-SVR-006] 七猫内置直连下载也失败:', builtinErr.message);
+        }
       }
     }
 
@@ -1101,6 +1132,12 @@ app.get('/api/health', async (req, res) => {
     smtp_host: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未配置',
     data_sources: sourceChecks,
     builtin_sources: !!builtinSource,
+    sentinel: sentinel ? {
+      active: true,
+      scheduler: sentinel.getStatus().scheduler_active,
+      sources: sentinel.getStatus().sources,
+      last_scan: sentinel.getStatus().stats.last_scan_at
+    } : { active: false },
     shulan_agent: agentStatus,
     mirror_agent: mirrorAgent.getStatus ? {
       active: true,
@@ -1654,8 +1691,16 @@ app.get('/api/read/:id', verifyToken, (req, res) => {
 mirrorAgent.registerRoutes(app, verifyToken);
 registerShieldRoutes(app, verifyToken);
 
+// ─── 铸渊哨兵路由 + 调度器 ───
+if (sentinel) {
+  sentinel.registerRoutes(app, verifyToken);
+}
+
 if (process.env.NODE_ENV === 'production') {
   mirrorAgent.startScheduler();
+  if (sentinel) {
+    sentinel.startScheduler();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1669,6 +1714,7 @@ app.use((req, res) => {
       '/api/health', '/api/auth/send-code', '/api/auth/verify', '/api/auth/session', '/api/auth/logout',
       '/api/search', '/api/sources/check', '/api/download/start', '/api/download/status/:taskId',
       '/api/agent/chat', '/api/agent/memory', '/api/agent/status',
+      '/api/sentinel/status', '/api/sentinel/memory', '/api/sentinel/scan',
       '/api/checkout', '/api/return', '/api/book/:id', '/api/download/:id', '/api/read/:id',
       '/api/mirror/*'
     ]
@@ -1685,10 +1731,17 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[ZY-SVR-006] zhiku-api v2.1.1 · 运行在 127.0.0.1:${PORT}`);
+  console.log(`[ZY-SVR-006] zhiku-api v2.2.0 · 运行在 127.0.0.1:${PORT}`);
   console.log(`[ZY-SVR-006] 域名: ${DOMAIN} · 书岚(AG-SL-WEB-001) + 守护Agent(AG-SL-GUARDIAN-001)`);
   const smtpStatus = (SMTP_USER && SMTP_PASS) ? `已配置(${SMTP_HOST || autoDetectSmtpHost(SMTP_USER)})` : '未配置';
   console.log(`[ZY-SVR-006] COS: ${cosClient ? '已连接' : '未配置'} · LLM: ${DEEPSEEK_API_KEY ? '已配置' : '未配置'} · SMTP: ${smtpStatus}`);
-  console.log(`[ZY-SVR-006] 数据源: ${getEnabledSources().map(s => s.name).join(', ')}${builtinSource ? ' + 内置直连(番茄+笔趣阁聚合)' : ''}`);
+  const builtinNames = [];
+  if (builtinSource) {
+    builtinNames.push('番茄直连');
+    if (builtinSource.qimaoDirect) builtinNames.push('七猫直连');
+    if (builtinSource.biqugeDirect) builtinNames.push('笔趣阁聚合');
+  }
+  console.log(`[ZY-SVR-006] 数据源: ${getEnabledSources().map(s => s.name).join(', ')}${builtinNames.length ? ' + 内置直连(' + builtinNames.join('+') + ')' : ''}`);
+  console.log(`[ZY-SVR-006] 铸渊哨兵: ${sentinel ? '✅ 已启动 (ZY-SENTINEL-001 · 永久记忆)' : '⚠️ 未加载'}`);
   console.log(`[ZY-SVR-006] 守护: 铸渊 · ICE-GL-ZY001 · TCS-0002∞`);
 });
