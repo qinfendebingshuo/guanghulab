@@ -42,7 +42,7 @@ permissions:
   contents: read
 
 env:
-  TARGET_REPO: zhizhi200271/guanghu-zhizhi
+  TARGET_REPO: zhizhi200271/-
 
 jobs:
   dispatch-task:
@@ -105,7 +105,7 @@ jobs:
             try {
               await github.rest.repos.createDispatchEvent({
                 owner: 'zhizhi200271',
-                repo: 'guanghu-zhizhi',
+                repo: '-',
                 event_type: 'zhuyuan-task',
                 client_payload: {
                   task_id: '${{ steps.task_id.outputs.id }}',
