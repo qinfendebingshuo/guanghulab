@@ -1,6 +1,6 @@
 /**
- * 铸渊运维守卫 · 样式
- * 编号: ZY-OPS-WEB-001
+ * 铸渊运维守卫 · 样式 v2.0
+ * 编号: ZY-OPS-WEB-002
  * 版权: 国作登字-2026-A-00037559
  */
 
@@ -107,7 +107,22 @@ body {
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  height: 500px;
+  height: 600px;
+}
+
+.chat-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.session-info {
+  font-size: 11px;
+  color: var(--accent);
+  padding: 2px 8px;
+  background: rgba(34, 211, 238, 0.1);
+  border-radius: 10px;
+  cursor: help;
 }
 
 .chat-messages {
@@ -129,12 +144,48 @@ body {
 .chat-msg.agent { background: #101828; border-left: 3px solid var(--accent); }
 .chat-msg.hint { background: #1a1a05; border-left: 3px solid var(--warning); color: var(--warning); font-size: 12px; }
 .chat-msg.error { background: #1a0505; border-left: 3px solid var(--danger); color: var(--danger); }
+.chat-msg.tool-info { background: #0a1520; border-left: 3px solid #6366f1; color: #818cf8; font-size: 11px; padding: 6px 14px; }
+.chat-msg.thinking { background: #0c1525; padding: 12px 14px; }
 
 .chat-msg p { margin: 0; }
 .chat-msg ul { margin: 5px 0; padding-left: 20px; }
 .chat-msg li { margin: 2px 0; }
 .chat-msg code { background: #1a2332; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.chat-msg pre { background: #0a0f1a; padding: 10px; border-radius: 4px; overflow-x: auto; margin: 8px 0; }
+.chat-msg pre code { background: transparent; padding: 0; }
 .chat-msg strong { color: var(--accent); }
+.chat-msg h2, .chat-msg h3, .chat-msg h4 { color: var(--accent); margin: 8px 0 4px; font-size: 14px; }
+
+/* ── 打字指示器 ─── */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 20px;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.thinking-text {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
 
 .chat-input-area {
   display: flex;
@@ -204,12 +255,19 @@ body {
 }
 .btn-resolve:hover { background: var(--success); color: #000; }
 
+/* ── 右侧面板 ─── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* ── 工单面板 ─── */
 .tickets-panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
-  height: 500px;
+  max-height: 350px;
   display: flex;
   flex-direction: column;
 }
@@ -258,6 +316,76 @@ body {
   font-size: 11px;
   color: var(--text-dim);
 }
+
+/* ── 系统信息面板 ─── */
+.system-info-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.sysinfo-content {
+  padding: 12px;
+}
+
+.sysinfo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.sysinfo-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 35px;
+}
+
+.sysinfo-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 120px;
+}
+
+.sysinfo-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.bar-ok { background: var(--success); }
+.bar-warning { background: var(--warning); }
+.bar-danger { background: var(--danger); }
+
+.sysinfo-value {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.sysinfo-pm2 {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.pm2-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 11px;
+}
+
+.pm2-name { flex: 1; color: var(--text-primary); }
+.pm2-status { min-width: 55px; }
+.pm2-mem { min-width: 40px; color: var(--text-dim); text-align: right; }
+
+.pm2-online .pm2-status { color: var(--success); }
+.pm2-errored .pm2-status { color: var(--danger); }
+.pm2-stopped .pm2-status { color: var(--warning); }
 
 /* ── 操作栏 ─── */
 .action-bar {
@@ -324,5 +452,6 @@ body {
 @media (max-width: 768px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .main-grid { grid-template-columns: 1fr; }
-  .chat-panel, .tickets-panel { height: 400px; }
+  .chat-panel { height: 400px; }
+  .tickets-panel { max-height: 300px; }
 }

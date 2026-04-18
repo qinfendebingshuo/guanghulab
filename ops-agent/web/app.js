@@ -1,7 +1,14 @@
 /**
- * 铸渊运维守卫 · 前端逻辑
- * 编号: ZY-OPS-WEB-001
+ * 铸渊运维守卫 · 前端逻辑 v2.0
+ * 编号: ZY-OPS-WEB-002
  * 版权: 国作登字-2026-A-00037559
+ *
+ * Phase 2 增强:
+ *   - 多轮对话（会话保持）
+ *   - 工具调用显示
+ *   - 系统信息面板
+ *   - Markdown 渲染增强
+ *   - 打字指示器
  */
 
 'use strict';
@@ -10,6 +17,11 @@
 
 const API_BASE = window.location.origin;
 const REFRESH_INTERVAL = 30000;
+const SYSINFO_INTERVAL = 60000;
+
+// ── 会话管理 ──────────────────────────────
+
+let currentSessionId = null;
 
 // ── DOM 引用 ──────────────────────────────
 
@@ -24,11 +36,15 @@ const el = {
   chatInput: document.getElementById('chatInput'),
   btnSend: document.getElementById('btnSend'),
   btnClearChat: document.getElementById('btnClearChat'),
+  btnNewSession: document.getElementById('btnNewSession'),
+  sessionInfo: document.getElementById('sessionInfo'),
   ticketsList: document.getElementById('ticketsList'),
   btnQuickCheck: document.getElementById('btnQuickCheck'),
   btnDeepCheck: document.getElementById('btnDeepCheck'),
   lastCheckTime: document.getElementById('lastCheckTime'),
-  eventsList: document.getElementById('eventsList')
+  eventsList: document.getElementById('eventsList'),
+  sysinfoContent: document.getElementById('sysinfoContent'),
+  btnRefreshSysInfo: document.getElementById('btnRefreshSysInfo')
 };
 
 // ── SSE 实时连接 ──────────────────────────
@@ -58,7 +74,6 @@ function connectSSE() {
     eventSource.onerror = () => {
       el.connectionDot.className = 'status-dot offline';
       el.connectionText.textContent = '连接断开';
-      // 自动重连
       setTimeout(connectSSE, 5000);
     };
   } catch {
@@ -104,7 +119,6 @@ function addEventLog(title, detail, level) {
   `;
   el.eventsList.prepend(div);
 
-  // 保留最近30条
   while (el.eventsList.children.length > 30) {
     el.eventsList.removeChild(el.eventsList.lastChild);
   }
@@ -136,7 +150,6 @@ async function loadStats() {
       el.lastCheckTime.textContent = `上次巡检: ${new Date(stats.lastQuickCheck).toLocaleString('zh-CN')}`;
     }
 
-    // 开放工单数
     const ticketResult = await api('GET', '/api/ops/tickets?status=open');
     el.statOpenTickets.textContent = ticketResult.total || 0;
   } catch {
@@ -175,7 +188,7 @@ function renderTickets(tickets) {
         <span>${escapeHtml(t.relatedService || '')}</span>
         <span>${new Date(t.createdAt).toLocaleString('zh-CN')}</span>
       </div>
-      ${t.status === 'open' ? `<button class="btn-resolve" onclick="resolveTicket('${t.id}')">标记解决</button>` : ''}
+      ${t.status === 'open' ? `<button class="btn-resolve" onclick="resolveTicket('${escapeHtml(t.id)}')">标记解决</button>` : ''}
     </div>
   `).join('');
 }
@@ -190,25 +203,96 @@ async function resolveTicket(ticketId) {
   }
 }
 
-// ── 对话功能 ──────────────────────────────
+// ── 系统信息 ──────────────────────────────
+
+async function loadSystemInfo() {
+  try {
+    const info = await api('GET', '/api/ops/system-info');
+    renderSystemInfo(info);
+  } catch {
+    el.sysinfoContent.innerHTML = '<div class="empty-state">无法加载系统信息</div>';
+  }
+}
+
+function renderSystemInfo(info) {
+  let html = '';
+
+  if (info.resources) {
+    const r = info.resources;
+    const memColor = r.memory.used_pct > 90 ? 'danger' : r.memory.used_pct > 70 ? 'warning' : 'ok';
+    const diskColor = r.disk.used_pct > 90 ? 'danger' : r.disk.used_pct > 70 ? 'warning' : 'ok';
+
+    html += `
+      <div class="sysinfo-row">
+        <span class="sysinfo-label">内存</span>
+        <div class="sysinfo-bar"><div class="sysinfo-bar-fill bar-${memColor}" style="width:${r.memory.used_pct}%"></div></div>
+        <span class="sysinfo-value">${r.memory.used_pct}% · ${r.memory.free_mb}MB空闲</span>
+      </div>
+      <div class="sysinfo-row">
+        <span class="sysinfo-label">磁盘</span>
+        <div class="sysinfo-bar"><div class="sysinfo-bar-fill bar-${diskColor}" style="width:${r.disk.used_pct}%"></div></div>
+        <span class="sysinfo-value">${r.disk.used_pct}% · ${r.disk.available_gb}GB可用</span>
+      </div>
+      <div class="sysinfo-row">
+        <span class="sysinfo-label">负载</span>
+        <span class="sysinfo-value">${r.load?.[0]?.toFixed(2) || '-'} / ${r.load?.[1]?.toFixed(2) || '-'} / ${r.load?.[2]?.toFixed(2) || '-'} · ${r.cpus}核</span>
+      </div>
+    `;
+  }
+
+  if (info.pm2 && info.pm2.length > 0) {
+    html += '<div class="sysinfo-pm2">';
+    for (const p of info.pm2) {
+      const statusClass = p.status === 'online' ? 'online' : p.status === 'errored' ? 'errored' : 'stopped';
+      html += `
+        <div class="pm2-item pm2-${statusClass}">
+          <span class="pm2-name">${escapeHtml(p.name)}</span>
+          <span class="pm2-status">${escapeHtml(p.status)}</span>
+          <span class="pm2-mem">${p.memory_mb}MB</span>
+        </div>
+      `;
+    }
+    html += '</div>';
+  }
+
+  el.sysinfoContent.innerHTML = html || '<div class="empty-state">无数据</div>';
+}
+
+// ── 对话功能 v2 ──────────────────────────
 
 async function sendMessage() {
   const message = el.chatInput.value.trim();
   if (!message) return;
 
-  // 显示用户消息
   appendChatMsg('user', message);
   el.chatInput.value = '';
   el.btnSend.disabled = true;
 
-  // 显示"正在思考"
-  const thinkingId = appendChatMsg('system', '🧠 正在思考...');
+  // 打字指示器
+  const thinkingId = appendChatMsg('thinking', '');
 
   try {
-    const result = await api('POST', '/api/ops/chat', { message });
+    const body = { message };
+    if (currentSessionId) {
+      body.sessionId = currentSessionId;
+    }
 
-    // 替换"正在思考"
+    const result = await api('POST', '/api/ops/chat', body);
+
+    // 保存 sessionId
+    if (result.sessionId) {
+      currentSessionId = result.sessionId;
+      el.sessionInfo.textContent = '🧠 对话中';
+      el.sessionInfo.title = `会话: ${currentSessionId}`;
+    }
+
     removeChatMsg(thinkingId);
+
+    // 显示工具调用信息
+    if (result.toolsUsed?.length > 0) {
+      appendChatMsg('tool-info', `🔧 自动执行了: ${result.toolsUsed.join(', ')}`);
+    }
+
     appendChatMsg('agent', result.answer || '无法回答');
 
     if (result.patternHints?.length > 0) {
@@ -233,7 +317,13 @@ function appendChatMsg(type, text) {
   const div = document.createElement('div');
   div.className = `chat-msg ${type}`;
   div.id = id;
-  div.innerHTML = formatMessage(text);
+
+  if (type === 'thinking') {
+    div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div><p class="thinking-text">正在检查并思考...</p>';
+  } else {
+    div.innerHTML = formatMessage(text);
+  }
+
   el.chatMessages.appendChild(div);
   el.chatMessages.scrollTop = el.chatMessages.scrollHeight;
   return id;
@@ -245,12 +335,25 @@ function removeChatMsg(id) {
 }
 
 function formatMessage(text) {
-  // 简单 Markdown: **bold**, 列表, 代码块
   let html = escapeHtml(text);
+  // **bold**
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/^(\d+)\.\s/gm, '<br>$1. ');
-  html = html.replace(/^[-·]\s/gm, '<br>· ');
+  // code blocks
+  html = html.replace(/```[\s\S]*?```/g, (match) => {
+    const code = match.replace(/```\w*\n?/g, '').replace(/```/g, '');
+    return `<pre><code>${code}</code></pre>`;
+  });
+  // inline code
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // headings
+  html = html.replace(/^### (.*?)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^## (.*?)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^# (.*?)$/gm, '<h2>$1</h2>');
+  // numbered list
+  html = html.replace(/^(\d+)\.\s/gm, '<br>$1. ');
+  // bullet list
+  html = html.replace(/^[-·•]\s/gm, '<br>· ');
+  // line breaks
   html = html.replace(/\n/g, '<br>');
   return `<p>${html}</p>`;
 }
@@ -306,10 +409,17 @@ el.chatInput.addEventListener('keydown', (e) => {
 });
 el.btnClearChat.addEventListener('click', () => {
   el.chatMessages.innerHTML = '';
-  appendChatMsg('system', '💬 对话已清空。有什么可以帮你？');
+  appendChatMsg('system', '💬 对话已清空。有什么可以帮你？（我还记得之前的上下文）');
+});
+el.btnNewSession.addEventListener('click', () => {
+  currentSessionId = null;
+  el.chatMessages.innerHTML = '';
+  el.sessionInfo.textContent = '🧠 多轮对话';
+  appendChatMsg('system', '🔄 已开始新对话。之前的上下文已清除。');
 });
 el.btnQuickCheck.addEventListener('click', () => runCheck('quick'));
 el.btnDeepCheck.addEventListener('click', () => runCheck('deep'));
+el.btnRefreshSysInfo.addEventListener('click', loadSystemInfo);
 
 document.querySelectorAll('.btn-filter').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -325,4 +435,6 @@ document.querySelectorAll('.btn-filter').forEach(btn => {
 connectSSE();
 loadStats();
 loadTickets();
+loadSystemInfo();
 setInterval(loadStats, REFRESH_INTERVAL);
+setInterval(loadSystemInfo, SYSINFO_INTERVAL);

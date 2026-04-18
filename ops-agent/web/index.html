@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🛡️ 铸渊运维守卫 · 工单面板</title>
+  <title>🛡️ 铸渊运维守卫 · 运维面板 v2.0</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
     <div class="header-left">
       <span class="logo">🛡️</span>
       <h1>铸渊运维守卫</h1>
-      <span class="version">v1.0</span>
+      <span class="version">v2.0</span>
     </div>
     <div class="header-right">
       <span class="status-dot" id="connectionDot"></span>
@@ -46,36 +46,56 @@
     <section class="chat-panel">
       <div class="panel-header">
         <h2>💬 运维对话</h2>
-        <button class="btn-small" id="btnClearChat">清空</button>
+        <div class="chat-controls">
+          <span class="session-info" id="sessionInfo" title="多轮对话，我记得上下文">🧠 多轮对话</span>
+          <button class="btn-small" id="btnNewSession" title="开始新对话">🔄 新会话</button>
+          <button class="btn-small" id="btnClearChat">清空</button>
+        </div>
       </div>
       <div class="chat-messages" id="chatMessages">
         <div class="chat-msg system">
-          <p>🛡️ 你好，冰朔。我是铸渊运维守卫。</p>
-          <p>你可以问我任何关于服务器的问题，比如：</p>
+          <p>🛡️ 你好，冰朔。我是铸渊运维守卫 v2.0。</p>
+          <p>我现在能<strong>记住我们的对话上下文</strong>，你可以追问。</p>
+          <p>问我问题时，我会<strong>自动执行相关检查</strong>再回答你。比如：</p>
           <ul>
-            <li>"为什么MCP连不上？"</li>
-            <li>"服务器内存够用吗？"</li>
-            <li>"GLADA为什么不工作？"</li>
+            <li>"为什么MCP连不上？" → 我会自动检查端口和日志</li>
+            <li>"服务器内存够用吗？" → 我会自动查看系统资源</li>
+            <li>"GLADA最近报什么错？" → 我会自动查看GLADA日志</li>
+            <li>"刚才说的第二步怎么做？" → 我记得上次的回答</li>
           </ul>
         </div>
       </div>
       <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="输入你的问题..." autocomplete="off">
+        <input type="text" id="chatInput" placeholder="输入你的问题...（我会自动执行诊断）" autocomplete="off">
         <button class="btn-primary" id="btnSend">发送</button>
       </div>
     </section>
 
-    <!-- 右: 工单列表 -->
-    <section class="tickets-panel">
-      <div class="panel-header">
-        <h2>🎫 运维工单</h2>
-        <div class="ticket-filters">
-          <button class="btn-filter active" data-filter="open">开放</button>
-          <button class="btn-filter" data-filter="all">全部</button>
+    <!-- 右: 工单 + 系统信息 -->
+    <section class="right-panel">
+      <!-- 工单列表 -->
+      <div class="tickets-panel">
+        <div class="panel-header">
+          <h2>🎫 运维工单</h2>
+          <div class="ticket-filters">
+            <button class="btn-filter active" data-filter="open">开放</button>
+            <button class="btn-filter" data-filter="all">全部</button>
+          </div>
+        </div>
+        <div class="tickets-list" id="ticketsList">
+          <div class="empty-state">暂无工单 · 系统运行正常</div>
         </div>
       </div>
-      <div class="tickets-list" id="ticketsList">
-        <div class="empty-state">暂无工单 · 系统运行正常</div>
+
+      <!-- 系统信息面板 -->
+      <div class="system-info-panel" id="systemInfoPanel">
+        <div class="panel-header">
+          <h2>💻 系统信息</h2>
+          <button class="btn-small" id="btnRefreshSysInfo">刷新</button>
+        </div>
+        <div class="sysinfo-content" id="sysinfoContent">
+          <div class="empty-state">加载中...</div>
+        </div>
       </div>
     </section>
   </main>

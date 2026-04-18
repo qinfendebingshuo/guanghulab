@@ -78,6 +78,135 @@ function broadcast(eventType, data) {
   }
 }
 
+// ── 工具执行（对话中自动诊断） ─────────────
+
+const { execSync } = require('child_process');
+
+/**
+ * 根据意图自动执行诊断工具，结果注入给 LLM
+ */
+async function executeTools(intent, action, message) {
+  const results = [];
+
+  try {
+    if (action === 'health_check' || action === 'pm2_status') {
+      const quick = await healthChecker.quickCheck();
+      let text = `## 服务状态\n${quick.summary}\n\n`;
+      for (const s of quick.services) {
+        text += `- ${s.name}(:${s.port}): ${s.status} ${s.latency ? s.latency + 'ms' : ''} ${s.error || ''}\n`;
+      }
+      results.push({ tool: '健康检查', result: text });
+    }
+
+    if (action === 'system_info') {
+      const resources = healthChecker.getSystemResources();
+      let text = `## 系统资源\n`;
+      text += `- 内存: ${resources.memory.used_pct}% (${resources.memory.free_mb}MB空闲/${resources.memory.total_mb}MB总量)\n`;
+      text += `- 磁盘: ${resources.disk.used_pct}% (${resources.disk.available_gb}GB可用)\n`;
+      text += `- CPU: ${resources.cpus}核 · 负载: ${resources.load?.[0]?.toFixed(2)}\n`;
+      text += `- 运行: ${resources.uptime_hours}小时\n`;
+      results.push({ tool: '系统资源', result: text });
+    }
+
+    if (action === 'pm2_logs') {
+      // 从消息中猜测进程名
+      const processName = guessProcessFromMessage(message);
+      if (processName) {
+        const logs = getPM2Logs(processName, 20);
+        if (logs.output) {
+          results.push({ tool: `PM2日志(${processName})`, result: logs.output.slice(-2000) });
+        }
+        if (logs.errorOutput) {
+          results.push({ tool: `PM2错误日志(${processName})`, result: logs.errorOutput.slice(-2000) });
+        }
+      }
+    }
+
+    if (action === 'nginx_status') {
+      const nginx = healthChecker.getNginxStatus();
+      results.push({
+        tool: 'Nginx状态',
+        result: `Nginx: ${nginx.status} · 配置${nginx.configOk ? '正常' : '异常'}`
+      });
+    }
+
+    if (action === 'list_tickets') {
+      const tickets = memory.getOpenTickets();
+      if (tickets.length === 0) {
+        results.push({ tool: '工单查询', result: '当前没有开放工单，系统运行正常。' });
+      } else {
+        let text = `当前有 ${tickets.length} 个开放工单:\n`;
+        for (const t of tickets) {
+          text += `- ${t.id}: ${t.title} [${t.severity}] — ${t.direction}\n`;
+        }
+        results.push({ tool: '工单查询', result: text });
+      }
+    }
+  } catch (err) {
+    console.error(`[OPS] 工具执行失败: ${err.message}`);
+  }
+
+  return results;
+}
+
+/**
+ * 从用户消息中猜测他在问哪个进程
+ */
+function guessProcessFromMessage(message) {
+  const lower = message.toLowerCase();
+  if (/mcp|大脑|brain/.test(lower)) return 'age-os-mcp';
+  if (/主站|server|3800/.test(lower)) return 'zhuyuan-server';
+  if (/预览|preview|3801/.test(lower)) return 'zhuyuan-preview';
+  if (/glada|3900/.test(lower)) return 'glada-agent';
+  if (/novel|智库|4000/.test(lower)) return 'novel-api';
+  if (/agent.*调度|scheduler/.test(lower)) return 'age-os-agents';
+  return null;
+}
+
+/**
+ * 获取 PM2 进程日志（最近 N 行）
+ */
+function getPM2Logs(processName, lines = 30) {
+  // 安全校验
+  const clean = processName.replace(/[^a-zA-Z0-9_-]/g, '');
+  const allowed = new Set([
+    'zhuyuan-server', 'zhuyuan-preview', 'novel-api',
+    'age-os-mcp', 'age-os-agents', 'glada-agent', 'ops-agent'
+  ]);
+  if (!allowed.has(clean)) {
+    throw new Error(`不允许查看进程 "${clean}" 的日志`);
+  }
+
+  let output = '';
+  let errorOutput = '';
+  try {
+    output = execSync(`pm2 logs ${clean} --lines ${lines} --nostream 2>/dev/null || echo "无法获取日志"`, {
+      encoding: 'utf-8',
+      timeout: 10000
+    }).trim();
+  } catch {
+    output = '(PM2日志获取失败)';
+  }
+
+  // 也尝试获取错误日志
+  try {
+    errorOutput = execSync(`pm2 logs ${clean} --err --lines ${lines} --nostream 2>/dev/null || echo ""`, {
+      encoding: 'utf-8',
+      timeout: 10000
+    }).trim();
+  } catch {
+    errorOutput = '';
+  }
+
+  return {
+    processName: clean,
+    lines,
+    output,
+    errorOutput,
+    timestamp: new Date().toISOString()
+  };
+}
+
 // ── API: 健康检查 ─────────────────────────
 
 app.get('/health', (_req, res) => {
@@ -138,33 +267,38 @@ app.patch('/api/ops/tickets/:id', (req, res) => {
   res.json({ ticket: updated });
 });
 
-// ── API: 对话 ──────────────────────────────
+// ── API: 对话 v2（多轮会话 + 工具调用） ──────
 
 app.post('/api/ops/chat', async (req, res) => {
-  const { message } = req.body;
+  const { message, sessionId: inputSessionId } = req.body;
   if (!message) {
     return res.status(400).json({ error: true, message: '缺少 message 字段' });
   }
 
   try {
-    // 构建上下文
+    // 构建系统上下文
     const memoryContext = memory.buildMemoryContext();
 
-    // 如果消息看起来像是在描述一个错误，先做快速巡检
-    let liveContext = '';
-    if (/连不上|离线|打不开|报错|崩溃|offline|error|crash|down/i.test(message)) {
-      const quick = await healthChecker.quickCheck();
-      liveContext = `\n\n## 实时巡检结果\n${quick.summary}\n`;
-      for (const s of quick.services) {
-        liveContext += `- ${s.name}(:${s.port}): ${s.status} ${s.latency ? s.latency + 'ms' : ''} ${s.error || ''}\n`;
-      }
-    }
+    // 意图识别 → 自动执行相关工具
+    const { intent, action } = llmClient.detectIntent(message);
+    const toolResults = await executeTools(intent, action, message);
 
-    const context = memoryContext + liveContext;
-    const result = await llmClient.chat(message, context);
+    // 构建实时上下文
+    const context = memoryContext;
+
+    // 多轮对话调用
+    const result = await llmClient.chat(message, context, {
+      sessionId: inputSessionId,
+      toolResults
+    });
 
     // 记录对话
-    memory.logEvent('chat', { question: message.slice(0, 200), method: result.method });
+    memory.logEvent('chat', {
+      question: message.slice(0, 200),
+      method: result.method,
+      intent: result.intent,
+      toolsUsed: result.toolsUsed
+    });
     memory.incrementStat('totalChats');
 
     res.json({
@@ -172,10 +306,63 @@ app.post('/api/ops/chat', async (req, res) => {
       patternHints: result.patternHints,
       method: result.method,
       model: result.model,
+      sessionId: result.sessionId,
+      intent: result.intent,
+      toolsUsed: result.toolsUsed,
       timestamp: new Date().toISOString()
     });
   } catch (err) {
     res.status(500).json({ error: true, message: `对话失败: ${err.message}` });
+  }
+});
+
+// ── API: 会话管理 ─────────────────────────
+
+app.get('/api/ops/sessions', (_req, res) => {
+  res.json({ sessions: llmClient.listSessions() });
+});
+
+app.get('/api/ops/sessions/:id/history', (req, res) => {
+  const history = llmClient.getSessionHistory(req.params.id);
+  res.json({ sessionId: req.params.id, history });
+});
+
+// ── API: PM2 日志查看 ─────────────────────
+
+app.get('/api/ops/pm2-logs/:name', (req, res) => {
+  const name = req.params.name;
+  const lines = parseInt(req.query.lines || '30', 10);
+  const clampedLines = Math.min(Math.max(lines, 1), 200);
+  try {
+    const result = getPM2Logs(name, clampedLines);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+});
+
+// ── API: 系统信息 ──────────────────────────
+
+app.get('/api/ops/system-info', async (_req, res) => {
+  try {
+    const resources = healthChecker.getSystemResources();
+    const pm2 = healthChecker.getPM2Status();
+    const nginx = healthChecker.getNginxStatus();
+    res.json({
+      resources,
+      pm2: pm2.map(p => ({
+        name: p.name,
+        status: p.status,
+        restarts: p.restarts,
+        memory_mb: Math.round((p.memory || 0) / 1024 / 1024),
+        cpu: p.cpu,
+        uptime_hours: Math.round((p.uptime || 0) / 3600000)
+      })),
+      nginx,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
   }
 });
 
