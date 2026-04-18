@@ -581,6 +581,32 @@ a{color:var(--cyan);text-decoration:none}
 .oc-phase.pending{background:rgba(251,191,36,0.08);color:var(--warn);border:1px solid rgba(251,191,36,0.12)}
 .oc-phase.idle{background:rgba(100,120,160,0.06);color:var(--muted);border:1px solid rgba(100,120,160,0.1)}
 
+/* ─── Agent Breathing Animation ─── */
+.agent-card[data-alive="true"]{cursor:pointer}
+.agent-card[data-alive="true"]:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(34,211,238,0.08)}
+.agent-heartbeat{display:flex;align-items:center;gap:6px;margin-top:10px;padding:6px 10px;border-radius:8px;background:rgba(10,16,40,0.4);border:1px solid rgba(96,165,250,0.06);font-size:11px;color:var(--dim);font-family:var(--mono)}
+.agent-hb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s,box-shadow .3s}
+.agent-hb-dot.alive{background:var(--ok);box-shadow:0 0 8px rgba(52,211,153,0.5);animation:agentBreathe 3s ease-in-out infinite}
+.agent-hb-dot.dead{background:var(--err);animation:none}
+.agent-hb-dot.unknown{background:var(--muted);animation:dotPulse 2s ease-in-out infinite}
+@keyframes agentBreathe{0%,100%{opacity:.6;box-shadow:0 0 4px rgba(52,211,153,0.3)}50%{opacity:1;box-shadow:0 0 12px rgba(52,211,153,0.6)}}
+.agent-hb-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-hb-time{color:var(--muted);font-size:10px}
+.agent-chat-btn{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 12px;border-radius:6px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.15);color:var(--cyan);font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .2s}
+.agent-chat-btn:hover{background:rgba(34,211,238,0.15);border-color:rgba(34,211,238,0.3)}
+.agent-icon.glada{background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(196,181,253,0.1));border:1px solid rgba(167,139,250,0.2);color:var(--purple)}
+.agent-icon.ops{background:linear-gradient(135deg,rgba(248,113,113,0.12),rgba(251,191,36,0.08));border:1px solid rgba(248,113,113,0.15);color:var(--err)}
+
+/* ─── Chat Target Selector ─── */
+.chat-target-bar{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(10,16,40,0.5);border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
+.chat-target-label{font-size:11px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
+.chat-target-select{background:rgba(14,20,48,0.8);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono);padding:4px 8px;outline:none;cursor:pointer;flex:1;max-width:220px}
+.chat-target-select:focus{border-color:var(--cyan)}
+.chat-target-select option{background:#0c1228;color:var(--text)}
+.chat-target-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chat-target-dot.on{background:var(--ok);box-shadow:0 0 6px rgba(52,211,153,0.4)}
+.chat-target-dot.off{background:var(--err)}
+
 /* Status Card */
 .s-card{
   background:var(--card);border:1px solid var(--card-border);border-radius:12px;
@@ -1812,13 +1838,13 @@ a{color:var(--cyan);text-decoration:none}
         <!-- ═══ Agent集群 ═══ -->
         <div class="dash-section" style="margin-top:28px">
           <div class="dash-section-title"><span class="module-tag">MODULE 03</span> Agent集群</div>
-          <div class="dash-section-sub">运行在各服务器上的自动化Agent · 实时状态 + 出发服务器 + 工作职责</div>
+          <div class="dash-section-sub">运行在各服务器上的自动化Agent · 实时心跳检测 · 点击卡片直接对话</div>
         </div>
 
         <div class="agent-grid">
 
           <!-- OpenClaw 铸渊唤醒闭环 -->
-          <div class="agent-card openclaw-card" id="agentOpenClaw">
+          <div class="agent-card openclaw-card" id="agentOpenClaw" data-alive="false" data-agent-target="zhuyuan" onclick="agentTalkTo('zhuyuan','铸渊闭环')">
             <div class="agent-card-head">
               <div class="agent-icon claw">🦞</div>
               <div>
@@ -1839,10 +1865,15 @@ a{color:var(--cyan);text-decoration:none}
               <span class="oc-phase idle">generate</span>
               <span class="oc-phase idle">commit</span>
             </div>
+            <div class="agent-heartbeat" id="hbOpenClaw">
+              <span class="agent-hb-dot unknown"></span>
+              <span class="agent-hb-text">等待心跳...</span>
+              <span class="agent-hb-time"></span>
+            </div>
           </div>
 
           <!-- MCP Server -->
-          <div class="agent-card" id="agentMcp">
+          <div class="agent-card" id="agentMcp" data-alive="false" data-agent-target="mcp" onclick="agentTalkTo('mcp','铸渊大脑')">
             <div class="agent-card-head">
               <div class="agent-icon mcp">🧠</div>
               <div>
@@ -1857,10 +1888,60 @@ a{color:var(--cyan);text-decoration:none}
               <div class="agent-row"><span class="agent-row-label">COS Watcher</span><span class="agent-row-val" id="mcpWatcherStatus">—</span></div>
               <div class="agent-row"><span class="agent-row-label">服务状态</span><span class="agent-row-val" id="mcpOverallStatus">—</span></div>
             </div>
+            <div class="agent-heartbeat" id="hbMcp">
+              <span class="agent-hb-dot unknown"></span>
+              <span class="agent-hb-text">等待心跳...</span>
+              <span class="agent-hb-time"></span>
+            </div>
+          </div>
+
+          <!-- GLADA · 工官 · 光湖自主开发Agent -->
+          <div class="agent-card" id="agentGlada" data-alive="false" data-agent-target="glada" onclick="agentTalkTo('glada','工官')">
+            <div class="agent-card-head">
+              <div class="agent-icon glada">🛠️</div>
+              <div>
+                <div class="agent-name">工官 · GLADA</div>
+                <div class="agent-sub">AG-GL-DEV-001 · 光湖自主开发Agent · :3900</div>
+              </div>
+            </div>
+            <div class="agent-rows">
+              <div class="agent-row"><span class="agent-row-label">版本</span><span class="agent-row-val" id="gladaVersion">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">模型路由</span><span class="agent-row-val" id="gladaModelRouter">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">待执行任务</span><span class="agent-row-val" id="gladaPendingTasks">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">开发回执</span><span class="agent-row-val" id="gladaReceipts">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">运行时间</span><span class="agent-row-val" id="gladaUptime">—</span></div>
+            </div>
+            <div class="agent-heartbeat" id="hbGlada">
+              <span class="agent-hb-dot unknown"></span>
+              <span class="agent-hb-text">等待心跳...</span>
+              <span class="agent-hb-time"></span>
+            </div>
+          </div>
+
+          <!-- 守卫 · ops-agent · 运维哨兵 -->
+          <div class="agent-card" id="agentOps" data-alive="false" data-agent-target="ops" onclick="agentTalkTo('ops','守卫')">
+            <div class="agent-card-head">
+              <div class="agent-icon ops">🛡️</div>
+              <div>
+                <div class="agent-name">守卫 · 运维哨兵</div>
+                <div class="agent-sub">AG-GL-OPS-001 · 巡检+自修+工单 · :3950</div>
+              </div>
+            </div>
+            <div class="agent-rows">
+              <div class="agent-row"><span class="agent-row-label">巡检次数</span><span class="agent-row-val" id="opsCheckCount">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">修复次数</span><span class="agent-row-val" id="opsRepairCount">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">开放工单</span><span class="agent-row-val" id="opsOpenTickets">—</span></div>
+              <div class="agent-row"><span class="agent-row-label">运行时间</span><span class="agent-row-val" id="opsUptime">—</span></div>
+            </div>
+            <div class="agent-heartbeat" id="hbOps">
+              <span class="agent-hb-dot unknown"></span>
+              <span class="agent-hb-text">等待心跳...</span>
+              <span class="agent-hb-time"></span>
+            </div>
           </div>
 
           <!-- GitHub Actions Workflows -->
-          <div class="agent-card" id="agentGH">
+          <div class="agent-card" id="agentGH" data-alive="true" data-agent-target="zhuyuan">
             <div class="agent-card-head">
               <div class="agent-icon gh">⚡</div>
               <div>
@@ -1875,10 +1956,14 @@ a{color:var(--cyan);text-decoration:none}
               <div class="agent-row"><span class="agent-row-label">主站部署</span><span class="agent-row-val">push main触发</span></div>
               <div class="agent-row"><span class="agent-row-label">README</span><span class="agent-row-val">merge自动更新</span></div>
             </div>
+            <div class="agent-heartbeat">
+              <span class="agent-hb-dot alive"></span>
+              <span class="agent-hb-text">GitHub Cloud · 常驻</span>
+            </div>
           </div>
 
           <!-- COS Bridge & Watcher -->
-          <div class="agent-card" id="agentCos">
+          <div class="agent-card" id="agentCos" data-alive="false" data-agent-target="mcp">
             <div class="agent-card-head">
               <div class="agent-icon cos">📦</div>
               <div>
@@ -1892,6 +1977,11 @@ a{color:var(--cyan);text-decoration:none}
               <div class="agent-row"><span class="agent-row-label">最近心跳</span><span class="agent-row-val" id="cosBridgeHB">—</span></div>
               <div class="agent-row"><span class="agent-row-label">监控路径</span><span class="agent-row-val">team桶+cold桶</span></div>
               <div class="agent-row"><span class="agent-row-label">扫描次数</span><span class="agent-row-val" id="cosScanCount">—</span></div>
+            </div>
+            <div class="agent-heartbeat" id="hbCos">
+              <span class="agent-hb-dot unknown"></span>
+              <span class="agent-hb-text">等待心跳...</span>
+              <span class="agent-hb-time"></span>
             </div>
           </div>
 
@@ -2230,6 +2320,23 @@ a{color:var(--cyan);text-decoration:none}
             </div>
             <div id="sysError_glada" style="margin-top:8px;font-size:12px;color:var(--err);display:none"></div>
           </div>
+
+          <!-- 运维守卫 ops-agent -->
+          <div class="s-card" id="sysCard_ops">
+            <div class="s-card-head">
+              <span class="s-card-title" style="display:flex;align-items:center;gap:8px">
+                <span class="srv-status-dot unknown" id="sysDot_ops"></span>
+                🛡️ 运维守卫Agent
+              </span>
+              <span class="s-card-badge badge-warn" id="sysBadge_ops">检测中</span>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);font-family:var(--mono)">
+              <span>端口: 3950</span>
+              <span>延迟: <span id="sysLatency_ops">—</span></span>
+              <span>巡检: <span id="sysOpsChecks">—</span></span>
+            </div>
+            <div id="sysError_ops" style="margin-top:8px;font-size:12px;color:var(--err);display:none"></div>
+          </div>
         </div>
 
         <!-- 后端模块加载状态 -->
@@ -2326,6 +2433,19 @@ a{color:var(--cyan);text-decoration:none}
       </div>
 
       <div class="input-area">
+        <!-- ═══ Agent对话目标选择器 ═══ -->
+        <div class="chat-target-bar" id="chatTargetBar">
+          <span class="chat-target-dot off" id="chatTargetDot"></span>
+          <span class="chat-target-label">对话目标:</span>
+          <select class="chat-target-select" id="chatTargetSelect" onchange="onChatTargetChange(this.value)">
+            <option value="zhuyuan" selected>铸渊 · 代码守护 (:3800)</option>
+            <option value="shuangyan">霜砚 · 语言架构 (Notion)</option>
+            <option value="glada">工官 · 自主开发 (:3900)</option>
+            <option value="ops">守卫 · 运维哨兵 (:3950)</option>
+            <option value="mcp">铸渊大脑 · MCP (:3100)</option>
+          </select>
+        </div>
+
         <!-- ═══ 人格体切换选择器 ═══ -->
         <div class="persona-selector" id="personaSelector">
           <div class="persona-sel-btn active" id="selZhuyuan" onclick="switchPersona('zhuyuan')" title="铸渊 · 代码守护">
@@ -2781,6 +2901,19 @@ function fetchSystemStatus() {
       }
     }
 
+    // 运维守卫 ops-agent
+    if (services.ops_agent) {
+      totalCount++;
+      var oa = services.ops_agent;
+      renderSysService('ops', oa);
+      if (oa.status === 'online') {
+        onlineCount++;
+        var od = oa.data || {};
+        var oStats = od.stats || {};
+        setElText('sysOpsChecks', oStats.totalChecks || '—');
+      }
+    }
+
     // 总览
     setElText('sysOnlineCount', onlineCount + '/' + totalCount);
     var overallBadge = document.getElementById('sysOverallBadge');
@@ -2816,6 +2949,7 @@ function fetchSystemStatus() {
     renderSysService('main', { status: 'offline', error: err.message || '主服务器不可达', latency: 0 });
     renderSysService('mcp', { status: 'unknown', error: '无法通过主服务器探测', latency: 0 });
     renderSysService('glada', { status: 'unknown', error: '无法通过主服务器探测', latency: 0 });
+    renderSysService('ops', { status: 'unknown', error: '无法通过主服务器探测', latency: 0 });
     setElText('sysOnlineCount', '0/?');
     var overallBadge = document.getElementById('sysOverallBadge');
     if (overallBadge) {
@@ -3403,11 +3537,32 @@ function toggleToolsPanel() {
 function connectTool(toolId) {
   var statusEl = document.getElementById('tool' + toolId.charAt(0).toUpperCase() + toolId.slice(1) + 'Status');
   if (toolId === 'notion') {
-    if (statusEl) { statusEl.textContent = '连接中...'; statusEl.className = 'tool-status'; }
-    connectPersonaPath('notion');
-    setTimeout(function() {
-      if (statusEl) { statusEl.textContent = '已发起'; statusEl.className = 'tool-status connected'; }
-    }, 2000);
+    if (statusEl) { statusEl.textContent = '检查中...'; statusEl.className = 'tool-status'; }
+    // 先检查 Notion OAuth 状态
+    fetch('/api/auth/notion/status')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.connected) {
+        if (statusEl) { statusEl.textContent = '✓ 已连接'; statusEl.className = 'tool-status connected'; }
+        appendSystemMessage('📓 Notion 已连接 · 工作区: ' + (d.workspace_name || 'unknown'));
+      } else if (d.oauth_configured) {
+        // OAuth 已配置，跳转授权
+        if (statusEl) { statusEl.textContent = '跳转授权...'; statusEl.className = 'tool-status'; }
+        window.open('/api/auth/notion', '_blank');
+      } else {
+        // OAuth 未配置，走旧握手流程
+        if (statusEl) { statusEl.textContent = '连接中...'; statusEl.className = 'tool-status'; }
+        connectPersonaPath('notion');
+        setTimeout(function() {
+          if (statusEl) { statusEl.textContent = '已发起'; statusEl.className = 'tool-status connected'; }
+        }, 2000);
+      }
+    })
+    .catch(function() {
+      // 服务器不可达，走旧流程
+      if (statusEl) { statusEl.textContent = '连接中...'; statusEl.className = 'tool-status'; }
+      connectPersonaPath('notion');
+    });
   } else if (toolId === 'github') {
     if (statusEl) { statusEl.textContent = '连接中...'; statusEl.className = 'tool-status'; }
     connectPersonaPath('github');
@@ -3422,11 +3577,13 @@ function connectTool(toolId) {
 
 function callChatAPI(userMessage){
   var session = getActiveSession();
+  var target = _chatTarget || 'zhuyuan';
   var body={
     message:userMessage,
     userId:authEmail||'guest',
     persona: activePersona,
     channel:'yaoming',
+    target: target,
     history:(session.messages||[]).slice(-10)
   };
 
@@ -3435,7 +3592,11 @@ function callChatAPI(userMessage){
   var headers = {'Content-Type':'application/json'};
   if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
 
-  fetch('/api/chat',{
+  // 根据对话目标路由到不同Agent后端
+  var chatUrl = '/api/chat';
+  if (target === 'ops') chatUrl = '/api/ops/chat';
+
+  fetch(chatUrl,{
     method:'POST',
     headers: headers,
     body:JSON.stringify(body)
@@ -3461,7 +3622,7 @@ function callChatAPI(userMessage){
 
     removeTyping();
     var meta={
-      engine:(data._system&&data._system.engine)||data.relay||'unknown',
+      engine:(data._system&&data._system.engine)||data.relay||data.method||'unknown',
       model:data.model||'unknown',
       reason:data.reason||'',
       tier:data.tier||'',
@@ -3474,8 +3635,8 @@ function callChatAPI(userMessage){
       promptVersion:(data._system&&data._system.promptVersion)||null
     };
     var replyPersona = data.persona || activePersona;
-    var replyName = personaNameMap[replyPersona] || '铸渊';
-    var replyText = data.reply||data.message||'我听到了你的声音。让我想想...';
+    var replyName = target === 'ops' ? '守卫' : target === 'glada' ? '工官' : target === 'mcp' ? '铸渊大脑' : (personaNameMap[replyPersona] || '铸渊');
+    var replyText = data.reply||data.message||data.answer||'我听到了你的声音。让我想想...';
     addMessageToSession('ai',replyName,replyText,meta);
     renderMessageBubble('ai',replyName,replyText,meta);
   })
@@ -4221,11 +4382,168 @@ if (document.readyState === 'loading') {
   srvPageInit();
 }
 
+/* ═══ Agent 心跳呼吸系统 · Heartbeat Breathing System ═══ */
+
+var _agentHeartbeats = {};
+
+/**
+ * 更新单个Agent心跳条的UI
+ * @param {string} hbId - heartbeat DOM容器id
+ * @param {boolean} alive - 是否存活
+ * @param {string} text - 状态文本
+ * @param {string} cardId - 对应的agent-card DOM id
+ */
+function updateAgentHB(hbId, alive, text, cardId) {
+  var hbEl = document.getElementById(hbId);
+  if (!hbEl) return;
+  var dot = hbEl.querySelector('.agent-hb-dot');
+  var txt = hbEl.querySelector('.agent-hb-text');
+  var timeEl = hbEl.querySelector('.agent-hb-time');
+  if (dot) dot.className = 'agent-hb-dot ' + (alive ? 'alive' : 'dead');
+  if (txt) txt.textContent = text;
+  if (timeEl) timeEl.textContent = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  var card = cardId ? document.getElementById(cardId) : null;
+  if (card) card.setAttribute('data-alive', String(alive));
+}
+
+/**
+ * Agent 心跳轮询
+ * 每30秒向所有Agent发心跳请求，更新卡片状态
+ */
+function pollAgentHeartbeats() {
+  // ── 铸渊主权服务器 :3800 (通过 /api/health) ──
+  fetch('/api/health')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var uptime = d.uptime ? formatUptime(d.uptime) : '—';
+    updateAgentHB('hbOpenClaw', true, '铸渊在线 · ' + uptime, 'agentOpenClaw');
+    _agentHeartbeats.zhuyuan = { alive: true, ts: Date.now() };
+  })
+  .catch(function() {
+    updateAgentHB('hbOpenClaw', false, '铸渊离线', 'agentOpenClaw');
+    _agentHeartbeats.zhuyuan = { alive: false, ts: Date.now() };
+  });
+
+  // ── MCP大脑 :3100 (通过 /api/mcp/health) ──
+  fetch('/api/mcp/health')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var alive = d.status === 'alive' || d.status === 'ok';
+    var tools = d.tools_count || (d.tools && d.tools.length) || 0;
+    updateAgentHB('hbMcp', alive, alive ? '在线 · ' + tools + '工具' : '降级', 'agentMcp');
+    // COS 心跳跟随 MCP
+    var cosOk = d.cos && d.cos.connected;
+    updateAgentHB('hbCos', !!cosOk, cosOk ? 'COS已连接' : 'COS未连接', 'agentCos');
+    _agentHeartbeats.mcp = { alive: alive, ts: Date.now() };
+  })
+  .catch(function() {
+    updateAgentHB('hbMcp', false, 'MCP离线', 'agentMcp');
+    updateAgentHB('hbCos', false, 'MCP离线', 'agentCos');
+    _agentHeartbeats.mcp = { alive: false, ts: Date.now() };
+  });
+
+  // ── GLADA 工官 :3900 (通过 /api/glada/health) ──
+  fetch('/api/glada/health')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var alive = d.status === 'ok';
+    setElText('gladaVersion', d.version || '—');
+    var mr = d.model_router || {};
+    setElText('gladaModelRouter', mr.initialized ? (mr.totalModels || 0) + '个模型' : '未初始化');
+    setElText('gladaUptime', d.uptime ? formatUptime(Math.floor(d.uptime)) : '—');
+    updateAgentHB('hbGlada', alive, alive ? '工官在线 · v' + (d.version || '?') : '工官离线', 'agentGlada');
+    _agentHeartbeats.glada = { alive: alive, ts: Date.now() };
+  })
+  .catch(function() {
+    updateAgentHB('hbGlada', false, '工官离线', 'agentGlada');
+    _agentHeartbeats.glada = { alive: false, ts: Date.now() };
+  });
+
+  // ── GLADA 状态详情 ──
+  fetch('/api/glada/status')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    setElText('gladaPendingTasks', (d.pending_cab_tasks || 0) + ' 个');
+    setElText('gladaReceipts', (d.recent_receipts || []).length + ' 条');
+  })
+  .catch(function() {
+    setElText('gladaPendingTasks', '—');
+    setElText('gladaReceipts', '—');
+  });
+
+  // ── 守卫 ops-agent :3950 (通过 /api/ops-health) ──
+  fetch('/api/ops-health')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var alive = d.status === 'ok';
+    var stats = d.stats || {};
+    setElText('opsCheckCount', stats.totalChecks || 0);
+    setElText('opsRepairCount', stats.totalRepairs || 0);
+    setElText('opsOpenTickets', stats.openTickets || 0);
+    setElText('opsUptime', d.uptime ? formatUptime(d.uptime) : '—');
+    updateAgentHB('hbOps', alive, alive ? '守卫在岗 · ' + (stats.openTickets || 0) + '工单' : '守卫离线', 'agentOps');
+    _agentHeartbeats.ops = { alive: alive, ts: Date.now() };
+  })
+  .catch(function() {
+    updateAgentHB('hbOps', false, '守卫离线', 'agentOps');
+    _agentHeartbeats.ops = { alive: false, ts: Date.now() };
+  });
+
+  // 更新对话目标选择器状态点
+  updateChatTargetDot();
+}
+
+/* ═══ Agent 点击进入对话 ═══ */
+
+var _chatTarget = 'zhuyuan';
+
+function agentTalkTo(target, name) {
+  // 切换到对话视图
+  var chatNav = document.getElementById('navChat');
+  if (chatNav) chatNav.click();
+
+  // 设置对话目标
+  _chatTarget = target;
+  var sel = document.getElementById('chatTargetSelect');
+  if (sel) sel.value = target;
+  updateChatTargetDot();
+
+  // 在对话区添加系统提示
+  var msgsEl = document.getElementById('messages');
+  if (msgsEl) {
+    var sysMsg = document.createElement('div');
+    sysMsg.className = 'msg msg-sys';
+    sysMsg.style.cssText = 'text-align:center;padding:8px 16px;font-size:11px;color:var(--dim);font-family:var(--mono)';
+    sysMsg.textContent = '─── 已切换对话目标: ' + name + ' (' + target + ') ───';
+    msgsEl.appendChild(sysMsg);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+}
+
+function onChatTargetChange(val) {
+  _chatTarget = val;
+  updateChatTargetDot();
+}
+
+function updateChatTargetDot() {
+  var dot = document.getElementById('chatTargetDot');
+  if (!dot) return;
+  var hb = _agentHeartbeats[_chatTarget];
+  if (hb && hb.alive) {
+    dot.className = 'chat-target-dot on';
+  } else {
+    dot.className = 'chat-target-dot off';
+  }
+}
+
 /* ═══ Init ═══ */
 fetchDashboard();
 setInterval(fetchDashboard,30000);
 /* 首次加载也触发系统状态检测（更新侧边栏导航点） */
 fetchSystemStatus();
+/* Agent心跳呼吸 · 首次立即执行 + 每30秒轮询 */
+pollAgentHeartbeats();
+setInterval(pollAgentHeartbeats, 30000);
 </script>
 <!-- UI 皮肤文字覆盖（壳-核分离·由 apply-skin.js 自动生成） -->
 <script src="skin-text-override.js" onerror=""></script>
