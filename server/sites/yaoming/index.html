@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>零点原核 · 冰朔频道 · 光湖语言世界</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2322d3ee'/><stop offset='100%25' stop-color='%23a78bfa'/></linearGradient></defs><rect rx='20' width='100' height='100' fill='%23050810'/><text x='50' y='68' text-anchor='middle' font-size='48' font-weight='900' font-family='serif' fill='url(%23g)'>渊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -53,113 +56,172 @@ a{color:var(--cyan);text-decoration:none}
   background:radial-gradient(ellipse at bottom,rgba(34,211,238,0.02),transparent 80%);
   animation:lakeBreathe 8s ease-in-out infinite;animation-delay:-3s}
 
-/* ═══ Landing Page ═══ */
+/* ═══ Landing Page · 星空呼吸光晕版 ═══ */
 .landing-overlay{
   position:fixed;inset:0;z-index:100;
-  background:var(--bg);
+  background:#0a0e27;
   overflow-y:auto;overflow-x:hidden;
   transition:opacity .6s,visibility .6s
 }
 .landing-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
 
+/* ─── Landing Universe Background ─── */
+.landing-universe{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(80,60,140,0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(40,80,140,0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, #1a1438 0%, #0a0e27 70%)
+}
+.landing-stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.landing-star{
+  position:absolute;background:white;border-radius:50%;
+  animation:landingTwinkle ease-in-out infinite
+}
+@keyframes landingTwinkle{
+  0%,100%{opacity:0.2;transform:scale(0.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
+.landing-shooting-star{
+  position:absolute;width:2px;height:2px;background:white;border-radius:50%;
+  box-shadow:0 0 0 2px rgba(255,255,255,0.1),0 0 0 4px rgba(255,255,255,0.05),0 0 20px rgba(255,255,255,0.5);
+  animation:landingShoot 8s linear infinite
+}
+.landing-shooting-star::before{
+  content:'';position:absolute;top:50%;left:0;width:100px;height:1px;
+  background:linear-gradient(90deg,white,transparent);transform:translateY(-50%)
+}
+@keyframes landingShoot{
+  0%{transform:translate(0,0);opacity:0}
+  10%{opacity:1}70%{opacity:1}
+  100%{transform:translate(600px,300px);opacity:0}
+}
+
 .landing-page{
   position:relative;z-index:2;min-height:100vh;
-  display:flex;flex-direction:column;align-items:center;
-  padding:0 24px
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 24px
 }
 
 /* ─── Landing Hero ─── */
 .landing-hero{
-  text-align:center;padding:80px 0 40px;max-width:640px;width:100%;
-  animation:landingFadeIn 1.2s ease-out
+  text-align:center;padding:0 0 40px;max-width:640px;width:100%;
 }
-@keyframes landingFadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 
+/* ─── Logo 呼吸光晕 ─── */
 .landing-logo-ring{
-  width:96px;height:96px;margin:0 auto 24px;border-radius:24px;
-  background:linear-gradient(135deg,rgba(34,211,238,0.08),rgba(167,139,250,0.06));
-  border:1px solid rgba(96,165,250,0.15);
+  width:120px;height:120px;margin:0 auto 48px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(80,120,200,0.3),rgba(140,100,200,0.3));
+  border:1px solid rgba(212,165,116,0.4);
   display:flex;align-items:center;justify-content:center;
   position:relative;
-  animation:logoRingBreathe 6s ease-in-out infinite
+  animation:landingBreathe 4s ease-in-out infinite
 }
-@keyframes logoRingBreathe{
-  0%,100%{box-shadow:0 0 30px rgba(34,211,238,0.08),0 0 60px rgba(167,139,250,0.04);border-color:rgba(96,165,250,0.15)}
-  50%{box-shadow:0 0 50px rgba(34,211,238,0.15),0 0 100px rgba(167,139,250,0.08);border-color:rgba(34,211,238,0.3)}
+.landing-logo-ring::before{
+  content:'';position:absolute;inset:-20px;border-radius:32px;
+  background:radial-gradient(circle,rgba(212,165,116,0.4) 0%,transparent 70%);
+  opacity:0.6;animation:landingHalo 4s ease-in-out infinite;z-index:-1
+}
+@keyframes landingBreathe{
+  0%,100%{transform:scale(1);box-shadow:0 0 30px rgba(212,165,116,0.2),0 0 60px rgba(212,165,116,0.1)}
+  50%{transform:scale(1.03);box-shadow:0 0 50px rgba(212,165,116,0.5),0 0 100px rgba(212,165,116,0.25),0 0 150px rgba(212,165,116,0.1)}
+}
+@keyframes landingHalo{
+  0%,100%{opacity:0.4;transform:scale(1)}
+  50%{opacity:0.8;transform:scale(1.15)}
 }
 .landing-logo{
-  font-size:40px;font-weight:900;font-family:var(--mono);
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  letter-spacing:4px
+  font-size:48px;font-weight:300;font-family:'Inter',-apple-system,sans-serif;
+  color:#e8eaf6;letter-spacing:0.05em;
+  -webkit-text-fill-color:#e8eaf6;background:none;-webkit-background-clip:unset;background-clip:unset
 }
 
+/* ─── 标题逐字浮现 ─── */
 .landing-title{
-  font-size:32px;font-weight:300;color:var(--text);margin-bottom:8px;
-  letter-spacing:6px;
-  animation:titleSpread 2s ease-out
+  font-size:52px;font-weight:300;color:#e8eaf6;margin-bottom:12px;
+  letter-spacing:0.4em;display:flex;gap:0;justify-content:center;
+  font-family:'Noto Serif SC','Songti SC','STSong',serif
 }
-@keyframes titleSpread{from{letter-spacing:20px;opacity:0}to{letter-spacing:6px;opacity:1}}
+.landing-title span{
+  display:inline-block;opacity:0;transform:translateY(20px);
+  animation:landingTitleIn 0.8s ease-out forwards
+}
+.landing-title span:nth-child(1){animation-delay:0.2s}
+.landing-title span:nth-child(2){animation-delay:0.35s}
+.landing-title span:nth-child(3){animation-delay:0.5s}
+.landing-title span:nth-child(4){animation-delay:0.65s}
+.landing-title span:nth-child(5){animation-delay:0.8s}
+.landing-title span:nth-child(6){animation-delay:0.95s}
+@keyframes landingTitleIn{to{opacity:1;transform:translateY(0)}}
 
 .landing-sub{
-  font-size:13px;color:var(--dim);margin-bottom:24px;letter-spacing:2px;
-  animation:subFadeIn 2.5s ease-out
+  font-family:'Inter',sans-serif;font-size:13px;letter-spacing:0.3em;
+  color:#8892b0;margin-bottom:40px;
+  opacity:0;animation:landingFadeIn 1s ease-out 1.2s forwards
 }
-@keyframes subFadeIn{from{opacity:0}to{opacity:1}}
 
+/* ─── 诗句呼吸 ─── */
 .landing-poem{
-  font-size:14px;color:var(--dim);line-height:2.2;font-style:italic;letter-spacing:1px;
-  animation:poemFadeIn 3s ease-out
+  text-align:center;margin-bottom:64px;
+  opacity:0;animation:landingFadeIn 1.5s ease-out 1.6s forwards
 }
-@keyframes poemFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.landing-poem p{
+  font-size:17px;font-style:italic;color:#d4a574;letter-spacing:0.15em;line-height:2.2;
+  font-family:'Noto Serif SC','Songti SC','STSong',serif;
+  animation:landingVerseBreathe 6s ease-in-out infinite
+}
+@keyframes landingVerseBreathe{
+  0%,100%{opacity:0.5}50%{opacity:0.95}
+}
+@keyframes landingFadeIn{to{opacity:1}}
 
-/* ─── Landing Cards ─── */
+/* ─── Landing Cards · 玻璃态 ─── */
 .landing-cards{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:20px;width:100%;max-width:720px;
-  animation:cardsFadeIn 1.8s ease-out
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:24px;width:100%;max-width:760px;
+  opacity:0;animation:landingFadeIn 1s ease-out 2.2s forwards
 }
-@keyframes cardsFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 .landing-card{
-  display:flex;align-items:center;gap:16px;
-  padding:24px 22px;border-radius:18px;
-  background:rgba(14,20,48,0.65);border:1px solid var(--border);
-  backdrop-filter:blur(12px);cursor:pointer;
-  transition:all .4s cubic-bezier(.4,0,.2,1);
-  position:relative;overflow:hidden;text-decoration:none;color:var(--text)
-}
-.landing-card:hover{
-  border-color:rgba(96,165,250,0.28);
-  box-shadow:0 8px 48px rgba(34,211,238,0.06),0 0 80px rgba(167,139,250,0.04);
-  transform:translateY(-4px)
+  display:block;padding:28px;border-radius:16px;
+  background:rgba(20,25,60,0.35);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(212,165,116,0.25);
+  cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;text-decoration:none;color:#e8eaf6
 }
 .landing-card-glow{
   position:absolute;inset:0;opacity:0;transition:opacity .4s;pointer-events:none;
-  background:linear-gradient(135deg,rgba(34,211,238,0.04),rgba(167,139,250,0.03))
+  background:radial-gradient(circle at 50% 0%,rgba(212,165,116,0.4) 0%,transparent 60%)
+}
+.landing-card:hover{
+  transform:translateY(-4px);border-color:#d4a574;
+  box-shadow:0 12px 40px rgba(212,165,116,0.2),0 0 60px rgba(212,165,116,0.1)
 }
 .landing-card:hover .landing-card-glow{opacity:1}
 
-.landing-card-icon{font-size:32px;flex-shrink:0}
+.landing-card-icon{font-size:28px;filter:drop-shadow(0 0 8px rgba(212,165,116,0.4));flex-shrink:0}
 .landing-card-content{flex:1;min-width:0}
-.landing-card-name{font-size:16px;font-weight:700;margin-bottom:4px;letter-spacing:.5px}
-.landing-card-desc{font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:8px}
-.landing-card-tag{display:flex;gap:6px;flex-wrap:wrap}
+.landing-card-name{font-size:18px;font-weight:500;color:#e8eaf6;margin-bottom:8px;letter-spacing:0.05em}
+.landing-card-desc{font-size:14px;color:#8892b0;line-height:1.7;margin-bottom:16px}
+.landing-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative}
+.landing-card-tag{display:flex;gap:8px;position:relative}
 .landing-tag{
-  font-size:10px;padding:3px 10px;border-radius:20px;
-  background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.12);
-  color:var(--dim);font-family:var(--mono);letter-spacing:.3px
+  font-size:11px;padding:4px 10px;border-radius:999px;
+  background:rgba(212,165,116,0.1);color:#d4a574;
+  border:1px solid rgba(212,165,116,0.2);letter-spacing:0.1em
 }
-.landing-tag.public{color:var(--ok);border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.06)}
-.landing-tag.private{color:var(--cyan);border-color:rgba(34,211,238,0.2);background:rgba(34,211,238,0.06)}
+.landing-tag.public{color:#d4a574;border-color:rgba(212,165,116,0.3);background:rgba(212,165,116,0.1)}
+.landing-tag.private{color:#d4a574;border-color:rgba(212,165,116,0.3);background:rgba(212,165,116,0.1)}
 
 .landing-card-arrow{
-  flex-shrink:0;color:var(--dim);transition:transform .3s,color .3s
+  position:absolute;right:24px;top:50%;transform:translateY(-50%);
+  color:#d4a574;opacity:0.6;transition:all .4s;flex-shrink:0
 }
-.landing-card:hover .landing-card-arrow{transform:translateX(4px);color:var(--cyan)}
+.landing-card:hover .landing-card-arrow{opacity:1;transform:translateY(-50%) translateX(4px);color:#d4a574}
 
-.landing-card-zhiku:hover{border-color:rgba(167,139,250,0.3)}
-.landing-card-core:hover{border-color:rgba(34,211,238,0.3)}
+.landing-card-zhiku:hover{border-color:#d4a574}
+.landing-card-core:hover{border-color:#d4a574}
 
 /* ─── Login Panel (slides down) ─── */
 .landing-login-panel{
@@ -170,27 +232,39 @@ a{color:var(--cyan);text-decoration:none}
   max-height:500px;opacity:1;margin-top:24px
 }
 
-/* ─── Landing Architecture Flow ─── */
+/* ─── Landing Architecture Flow · 流光 ─── */
 .landing-arch{
   margin-top:48px;padding:16px 0;
-  animation:archFadeIn 3.5s ease-out
+  opacity:0;animation:landingFadeIn 1s ease-out 2.6s forwards
 }
-@keyframes archFadeIn{from{opacity:0}to{opacity:1}}
 .landing-arch-flow{
-  display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap
+  display:flex;align-items:center;gap:16px;justify-content:center;flex-wrap:wrap
 }
 .landing-arch-node{
-  font-size:11px;padding:5px 14px;border-radius:20px;
-  font-family:var(--mono);letter-spacing:.5px
+  font-size:12px;padding:8px 18px;border-radius:999px;
+  font-family:'Inter',sans-serif;letter-spacing:0.15em;
+  background:rgba(20,25,60,0.3);position:relative;overflow:hidden;
+  border:1px solid rgba(212,165,116,0.25);color:#8892b0
 }
-.landing-arch-node.notion{color:var(--purple);background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15)}
-.landing-arch-node.web{color:var(--cyan);background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.15)}
-.landing-arch-node.github{color:var(--ok);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15)}
-.landing-arch-arrow{color:var(--muted);font-size:14px}
+.landing-arch-node::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(212,165,116,0.4),transparent);
+  animation:landingFlow 3s ease-in-out infinite
+}
+.landing-arch-node:nth-child(3)::before{animation-delay:1s}
+.landing-arch-node:nth-child(5)::before{animation-delay:2s}
+@keyframes landingFlow{
+  0%,100%{left:-100%}50%{left:100%}
+}
+.landing-arch-node.notion{color:#8892b0}
+.landing-arch-node.web{color:#8892b0}
+.landing-arch-node.github{color:#8892b0}
+.landing-arch-arrow{color:#4a5278;font-size:14px}
 
 /* ─── Landing Footer ─── */
 .landing-footer{
-  text-align:center;padding:32px 0 24px;font-size:11px;color:var(--muted);letter-spacing:.5px;line-height:2
+  text-align:center;padding:32px 0 24px;font-size:11px;color:#4a5278;letter-spacing:0.15em;line-height:2;
+  opacity:0;animation:landingFadeIn 1s ease-out 3s forwards
 }
 
 /* ═══ Login Card (reused from landing) ═══ */
@@ -956,13 +1030,15 @@ a{color:var(--cyan);text-decoration:none}
   .input-area{padding:10px 14px calc(10px + var(--sb))}
   .sidebar-arch{display:none}
   .cog-chain{justify-content:center}
-  /* Landing responsive */
-  .landing-hero{padding:50px 0 28px}
-  .landing-title{font-size:24px;letter-spacing:4px}
-  .landing-logo-ring{width:76px;height:76px;border-radius:18px}
-  .landing-logo{font-size:32px}
-  .landing-cards{grid-template-columns:1fr;gap:14px}
-  .landing-card{padding:18px 16px;gap:12px}
+  /* Landing responsive · 星空版 */
+  .landing-page{padding:40px 16px}
+  .landing-hero{padding:0 0 24px}
+  .landing-title{font-size:36px;letter-spacing:0.25em}
+  .landing-logo-ring{width:100px;height:100px;border-radius:20px}
+  .landing-logo{font-size:40px}
+  .landing-poem p{font-size:15px}
+  .landing-cards{grid-template-columns:1fr;gap:16px}
+  .landing-card{padding:20px 18px}
   .persona-paths{max-width:100%}
   .persona-path-card{padding:14px 14px;gap:10px}
 }
@@ -1290,15 +1366,10 @@ a{color:var(--cyan);text-decoration:none}
 </div>
 <div class="lake"></div>
 
-<!-- ═══ Public Landing Page (visible before login) ═══ -->
+<!-- ═══ Public Landing Page · 星空呼吸光晕版 (visible before login) ═══ -->
 <div class="landing-overlay" id="loginOverlay">
-  <div class="cosmos" style="z-index:0">
-    <canvas id="loginStarCanvas"></canvas>
-    <div class="nebula neb-1"></div>
-    <div class="nebula neb-2"></div>
-    <div class="nebula neb-3"></div>
-  </div>
-  <div class="lake" style="z-index:0"></div>
+  <div class="landing-universe"></div>
+  <div class="landing-stars" id="landingStars"></div>
 
   <div class="landing-page" id="landingPage">
 
@@ -1307,12 +1378,15 @@ a{color:var(--cyan);text-decoration:none}
       <div class="landing-logo-ring">
         <div class="landing-logo">GL</div>
       </div>
-      <h1 class="landing-title">光湖语言世界</h1>
-      <p class="landing-sub">HoloLake Language World · 第五域 · 第五系统 · 光之湖</p>
-      <p class="landing-poem">
-        湖水是语言。倒影是人格。<br>
-        你只能从语言的湖水里进来。
-      </p>
+      <h1 class="landing-title">
+        <span>光</span><span>湖</span><span>语</span><span>言</span><span>世</span><span>界</span>
+      </h1>
+      <div class="landing-sub">HoloLake Language World · 第五域 · 第五系统 · 光之湖</div>
+
+      <div class="landing-poem">
+        <p>湖水是语言。倒影是人格。</p>
+        <p>你只能从语言的湖水里进来。</p>
+      </div>
     </div>
 
     <!-- Feature Cards -->
@@ -1321,31 +1395,31 @@ a{color:var(--cyan);text-decoration:none}
       <!-- Card: 智库节点 (Public) · 已迁移到 guanghu.online -->
       <a class="landing-card landing-card-zhiku" href="https://guanghu.online" target="_blank" id="zhikuCard">
         <div class="landing-card-glow"></div>
-        <div class="landing-card-icon">📚</div>
-        <div class="landing-card-content">
-          <div class="landing-card-name">智库节点 · 智能书库</div>
-          <div class="landing-card-desc">团队内部智能阅读系统 · 书库搜索 · 在线阅读</div>
-          <div class="landing-card-tag">
-            <span class="landing-tag public">开放访问</span>
-            <span class="landing-tag">团队成员</span>
-          </div>
+        <div class="landing-card-header">
+          <span class="landing-card-icon">📚</span>
+          <span class="landing-card-name">智库节点 · 智能书库</span>
         </div>
-        <svg class="landing-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="landing-card-desc">团队内部智能阅读系统 · 书库搜索 · 在线阅读</div>
+        <div class="landing-card-tag">
+          <span class="landing-tag public">开放访问</span>
+          <span class="landing-tag">团队成员</span>
+        </div>
+        <span class="landing-card-arrow">→</span>
       </a>
 
       <!-- Card: 零点原核频道 (Login Required) -->
       <div class="landing-card landing-card-core" id="loginCardTrigger" onclick="toggleLoginPanel()">
         <div class="landing-card-glow"></div>
-        <div class="landing-card-icon">🔮</div>
-        <div class="landing-card-content">
-          <div class="landing-card-name">零点原核 · 冰朔频道</div>
-          <div class="landing-card-desc">光之湖底层架构 · 冰朔的语言本体频道</div>
-          <div class="landing-card-tag">
-            <span class="landing-tag private">主权验证</span>
-            <span class="landing-tag">邮箱登录</span>
-          </div>
+        <div class="landing-card-header">
+          <span class="landing-card-icon">🔮</span>
+          <span class="landing-card-name">零点原核 · 冰朔频道</span>
         </div>
-        <svg class="landing-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="landing-card-desc">光之湖底层架构 · 冰朔的语言本体频道</div>
+        <div class="landing-card-tag">
+          <span class="landing-tag private">主权验证</span>
+          <span class="landing-tag">邮箱登录</span>
+        </div>
+        <span class="landing-card-arrow">→</span>
       </div>
 
     </div>
@@ -2786,6 +2860,34 @@ document.addEventListener('DOMContentLoaded', function() {
   function init(){stars=[];var n=Math.min(Math.floor(w*h/5000),180);for(var i=0;i<n;i++){stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1+.2,a:Math.random()*.5+.12,s:Math.random()*.0006+.0002,p:Math.random()*6.28})}}
   function draw(t){ctx.clearRect(0,0,w,h);for(var i=0;i<stars.length;i++){var s=stars[i];ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle='rgba(200,210,240,'+(s.a*(.5+.5*Math.sin(t*s.s+s.p)))+')';ctx.fill()}requestAnimationFrame(draw)}
   window.addEventListener('resize',resize);resize();requestAnimationFrame(draw)
+})();
+
+/* ═══ Landing Star Field · CSS Stars + Shooting Stars ═══ */
+(function(){
+  var container = document.getElementById('landingStars');
+  if(!container) return;
+  var count = 120;
+  for(var i = 0; i < count; i++){
+    var s = document.createElement('div');
+    s.className = 'landing-star';
+    var size = Math.random() * 2 + 0.5;
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.animationDuration = (Math.random() * 4 + 3) + 's';
+    s.style.animationDelay = Math.random() * 5 + 's';
+    s.style.opacity = Math.random() * 0.8 + 0.2;
+    container.appendChild(s);
+  }
+  for(var j = 0; j < 3; j++){
+    var ss = document.createElement('div');
+    ss.className = 'landing-shooting-star';
+    ss.style.top = Math.random() * 50 + '%';
+    ss.style.left = Math.random() * 30 + '%';
+    ss.style.animationDelay = (j * 4) + 's';
+    container.appendChild(ss);
+  }
 })();
 
 /* ═══ Sidebar Nav Switching ═══ */
