@@ -90,6 +90,8 @@ test('notifier 加载', () => {
   const mod = require('../notifier');
   assert(typeof mod.notify === 'function', 'notify 不是函数');
   assert(typeof mod.buildNotification === 'function', 'buildNotification 不是函数');
+  assert(typeof mod.sendEmail === 'function', 'sendEmail 不是函数');
+  assert(typeof mod.sendWeCom === 'function', 'sendWeCom 不是函数');
 });
 
 test('execution-loop 加载', () => {
@@ -251,6 +253,10 @@ test('通知内容构建', () => {
   assert(notif.subject.includes('GLADA-TEST-001'), '主题缺少任务ID');
   assert(notif.body.includes('测试任务'), '正文缺少任务标题');
   assert(notif.body.includes('a.js'), '正文缺少变更文件');
+  assert(notif.html, '缺少 HTML 邮件内容');
+  assert(notif.html.includes('GLADA-TEST-001'), 'HTML 缺少任务ID');
+  assert(notif.html.includes('a.js'), 'HTML 缺少变更文件');
+  assert(notif.html.includes('铸渊'), 'HTML 缺少铸渊签名');
 });
 
 test('文件依赖扫描', () => {
@@ -401,6 +407,61 @@ test('package.json 包含 express 依赖', () => {
   assert(pkg.dependencies && pkg.dependencies.express, '缺少 express 依赖');
 });
 
+test('package.json 包含 nodemailer 依赖', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'glada', 'package.json'), 'utf-8'));
+  assert(pkg.dependencies && pkg.dependencies.nodemailer, '缺少 nodemailer 依赖');
+});
+
+test('notifier.js 已替换钉钉为邮箱+企业微信', () => {
+  const content = fs.readFileSync(path.join(ROOT, 'glada', 'notifier.js'), 'utf-8');
+  // 应包含邮箱通道
+  assert(content.includes('sendEmail'), '缺少 sendEmail 函数');
+  assert(content.includes('nodemailer'), '缺少 nodemailer 引用');
+  assert(content.includes('smtp.qq.com'), '缺少 QQ 邮箱 SMTP 配置');
+  assert(content.includes('ZY_SMTP_USER'), '缺少 ZY_SMTP_USER 环境变量');
+  // 应包含企业微信预留通道
+  assert(content.includes('sendWeCom'), '缺少 sendWeCom 函数');
+  assert(content.includes('WECOM_WEBHOOK'), '缺少 WECOM_WEBHOOK 环境变量');
+  // 不应包含钉钉
+  assert(!content.includes('sendDingTalk'), '仍包含已废弃的 sendDingTalk');
+  assert(!content.includes('DINGTALK_WEBHOOK'), '仍包含已废弃的 DINGTALK_WEBHOOK');
+});
+
+test('通知 HTML 邮件模板包含光湖视觉风格', () => {
+  const { buildNotification } = require('../notifier');
+  const mockTask = {
+    glada_task_id: 'GLADA-TEST-HTML',
+    plan: {
+      title: 'HTML模板测试',
+      steps: [
+        { step_id: 1, description: '步骤A', status: 'completed' },
+        { step_id: 2, description: '步骤B', status: 'failed', error: '测试错误' }
+      ]
+    },
+    completion: { total_files_changed: ['test.js'], git_branch: 'glada/html-test', git_commits: ['hash: msg'] }
+  };
+
+  // 测试 completed
+  const completed = buildNotification(mockTask, 'completed');
+  assert(completed.html.includes('<!DOCTYPE html>'), 'HTML 缺少 DOCTYPE');
+  assert(completed.html.includes('渊'), 'HTML 缺少铸渊标识');
+  assert(completed.html.includes('#050810'), 'HTML 缺少光湖暗色背景');
+
+  // 测试 failed
+  const failed = buildNotification(mockTask, 'failed');
+  assert(failed.html.includes('f87171'), 'failed HTML 应包含红色');
+  assert(failed.subject.includes('❌'), 'failed 主题应包含 ❌');
+
+  // 测试 started
+  const started = buildNotification(mockTask, 'started');
+  assert(started.html.includes('🚀'), 'started HTML 应包含 🚀');
+});
+
+test('deploy workflow 注入 SMTP 到 .env.glada', () => {
+  const content = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'deploy-to-zhuyuan-server.yml'), 'utf-8');
+  assert(content.includes('ZY_SMTP_USER') && content.includes('.env.glada'), '部署 workflow 缺少 SMTP 注入到 .env.glada');
+});
+
 test('install-check.js 预飞检查工具存在', () => {
   const checkPath = path.join(ROOT, 'glada', 'install-check.js');
   assert(fs.existsSync(checkPath), 'install-check.js 不存在');
@@ -408,6 +469,8 @@ test('install-check.js 预飞检查工具存在', () => {
   assert(content.includes('ZY_LLM_API_KEY'), '预飞检查应检查 API Key');
   assert(content.includes('ZY_LLM_BASE_URL'), '预飞检查应检查 Base URL');
   assert(content.includes('testLLMConnection'), '预飞检查应测试 LLM 连通性');
+  assert(content.includes('ZY_SMTP_USER'), '预飞检查应检查 SMTP');
+  assert(content.includes('WECOM_WEBHOOK'), '预飞检查应检查企业微信');
 });
 
 // ── 结果 ──

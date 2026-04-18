@@ -142,12 +142,22 @@ async function main() {
   const model = process.env.GLADA_MODEL || 'deepseek-chat';
   pass('GLADA_MODEL', model);
 
-  // DingTalk webhook (optional)
-  const dingWebhook = process.env.DINGTALK_WEBHOOK || process.env.GLADA_DINGTALK_WEBHOOK || '';
-  if (dingWebhook) {
-    pass('DINGTALK_WEBHOOK', '已配置');
+  // QQ邮箱 SMTP（主通知通道）
+  const smtpUser = process.env.ZY_SMTP_USER || '';
+  const smtpPass = process.env.ZY_SMTP_PASS || '';
+  if (smtpUser && smtpPass) {
+    pass('ZY_SMTP_USER', `已配置 (${smtpUser.substring(0, 3)}***)`);
+    pass('ZY_SMTP_PASS', '已配置 (***已脱敏***)');
   } else {
-    warn('DINGTALK_WEBHOOK', '未配置（可选·完成通知将仅写入本地日志）');
+    warn('邮件通知 SMTP', '未配置（ZY_SMTP_USER/ZY_SMTP_PASS 缺失·完成通知将仅写入本地日志）');
+  }
+
+  // 企业微信（预留通道）
+  const wecomWebhook = process.env.WECOM_WEBHOOK || process.env.GLADA_WECOM_WEBHOOK || '';
+  if (wecomWebhook) {
+    pass('WECOM_WEBHOOK', '已配置');
+  } else {
+    warn('WECOM_WEBHOOK', '未配置（可选·冰朔开通企业微信后接入）');
   }
 
   // ── 5. 目录检查 ──

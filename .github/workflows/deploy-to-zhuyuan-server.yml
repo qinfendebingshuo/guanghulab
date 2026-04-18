@@ -566,6 +566,14 @@ jobs:
           if [ -n "${ZY_LLM_BASE_URL}" ]; then
             echo "ZY_LLM_BASE_URL=${ZY_LLM_BASE_URL}" >> /opt/glada/.env.glada
           fi
+          # ─── GLADA 邮件通知（复用零点原核 QQ 邮箱 SMTP 凭据） ───
+          if [ -n "${ZY_SMTP_USER}" ] && [ -n "${ZY_SMTP_PASS}" ]; then
+            echo "ZY_SMTP_USER=${ZY_SMTP_USER}" >> /opt/glada/.env.glada
+            echo "ZY_SMTP_PASS=${ZY_SMTP_PASS}" >> /opt/glada/.env.glada
+            echo "✅ GLADA 邮件通知 SMTP 已配置"
+          else
+            echo "⚠️ GLADA 邮件通知未配置（ZY_SMTP_USER/ZY_SMTP_PASS 缺失）"
+          fi
           chmod 600 /opt/glada/.env.glada
 
           # 预飞检查

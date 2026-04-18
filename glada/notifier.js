@@ -2,9 +2,9 @@
  * GLADA · 通知器 · notifier.js
  *
  * 多通道通知系统：
- *   1. QQ邮箱 SMTP 通知
- *   2. 钉钉机器人通知
- *   3. 文件日志通知（本地记录）
+ *   1. QQ邮箱 SMTP 通知（主通道·已打通）
+ *   2. 企业微信推送（预留通道·冰朔开通后接入）
+ *   3. 文件日志通知（本地记录·始终启用）
  *
  * 通知内容包含：
  *   - 任务编号 + 标题
@@ -12,6 +12,12 @@
  *   - 变更文件清单
  *   - 测试结果
  *   - 开发回执（git branch + commits）
+ *
+ * 环境变量：
+ *   ZY_SMTP_USER        - QQ邮箱账号（同零点原核的SMTP）
+ *   ZY_SMTP_PASS        - QQ邮箱授权码
+ *   GLADA_NOTIFY_TO     - 通知接收邮箱（默认 = ZY_SMTP_USER）
+ *   WECOM_WEBHOOK       - 企业微信机器人 Webhook（可选·预留）
  *
  * 版权：国作登字-2026-A-00037559
  * 签发：铸渊 · ICE-GL-ZY001
@@ -23,12 +29,43 @@ const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const ROOT = path.resolve(__dirname, '..');
 const NOTIFICATION_LOG_DIR = path.join(ROOT, 'glada', 'logs', 'notifications');
 
+// ── SMTP 传输器（懒初始化，复用零点原核频道的 QQ 邮箱配置） ──
+
+let _transporter = null;
+
+function getSmtpTransporter() {
+  if (_transporter) return _transporter;
+
+  const smtpUser = process.env.ZY_SMTP_USER;
+  const smtpPass = process.env.ZY_SMTP_PASS;
+
+  if (!smtpUser || !smtpPass) {
+    return null;
+  }
+
+  _transporter = nodemailer.createTransport({
+    host: 'smtp.qq.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass
+    },
+    tls: {
+      rejectUnauthorized: true
+    }
+  });
+
+  return _transporter;
+}
+
 /**
- * HTTP 请求工具
+ * HTTP 请求工具（用于企业微信等 Webhook 通道）
  */
 function httpRequest(url, options, body) {
   return new Promise((resolve, reject) => {
@@ -63,7 +100,7 @@ function httpRequest(url, options, body) {
  * 构建通知内容
  * @param {Object} gladaTask - GLADA 任务
  * @param {string} eventType - 事件类型: completed | failed | step_completed | started
- * @returns {Object} { subject, body, markdown }
+ * @returns {Object} { subject, body, html }
  */
 function buildNotification(gladaTask, eventType) {
   const taskId = gladaTask.glada_task_id;
@@ -80,7 +117,6 @@ function buildNotification(gladaTask, eventType) {
 
   let subject = '';
   let body = '';
-  let markdown = '';
 
   switch (eventType) {
     case 'completed':
@@ -157,29 +193,133 @@ function buildNotification(gladaTask, eventType) {
       body = `任务 ${taskId} 状态更新: ${eventType}`;
   }
 
-  // Markdown 格式（用于钉钉等）
-  markdown = body.replace(/^/gm, '> ').replace(/^> $/, '>');
+  // 生成 HTML 邮件格式
+  const html = buildEmailHtml(subject, body, eventType, {
+    taskId, title, now, steps, completedSteps, failedSteps,
+    allFilesChanged, gitBranch, gitCommits
+  });
 
-  return { subject, body, markdown };
+  return { subject, body, html };
 }
 
 /**
- * 发送钉钉通知
- * @param {string} webhook - 钉钉 Webhook URL
+ * 构建 GLADA 通知邮件 HTML（光湖视觉风格）
+ */
+function buildEmailHtml(subject, plainBody, eventType, data) {
+  const statusColor = eventType === 'completed' ? '#22d3ee'
+    : eventType === 'failed' ? '#f87171'
+    : eventType === 'started' ? '#a78bfa'
+    : '#60a5fa';
+
+  const statusIcon = eventType === 'completed' ? '✅'
+    : eventType === 'failed' ? '❌'
+    : eventType === 'started' ? '🚀'
+    : '📋';
+
+  const filesHtml = (data.allFilesChanged || []).length > 0
+    ? `<div style="margin:16px 0"><strong style="color:#94a3b8">📁 变更文件:</strong><ul style="margin:8px 0;padding-left:20px;color:#cbd5e1">${data.allFilesChanged.map(f => `<li style="margin:2px 0;font-family:monospace;font-size:12px">${f}</li>`).join('')}</ul></div>`
+    : '';
+
+  const commitsHtml = (data.gitCommits || []).length > 0
+    ? `<div style="margin:16px 0"><strong style="color:#94a3b8">📝 提交记录:</strong><ul style="margin:8px 0;padding-left:20px;color:#cbd5e1">${data.gitCommits.map(c => `<li style="margin:2px 0;font-family:monospace;font-size:12px">${c}</li>`).join('')}</ul></div>`
+    : '';
+
+  const stepsHtml = (data.steps || []).length > 0
+    ? `<div style="margin:16px 0"><strong style="color:#94a3b8">📊 步骤:</strong><ul style="margin:8px 0;padding-left:20px;color:#cbd5e1">${data.steps.map(s => {
+        const icon = s.status === 'completed' ? '✅' : s.status === 'failed' || s.status === 'rolled_back' ? '❌' : '⏳';
+        return `<li style="margin:2px 0">${icon} ${s.description || '步骤' + s.step_id}</li>`;
+      }).join('')}</ul></div>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#050810;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif">
+<main style="max-width:560px;margin:0 auto;padding:40px 24px">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="display:inline-block;width:48px;height:48px;line-height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(34,211,238,0.15),rgba(167,139,250,0.12));border:1px solid rgba(96,165,250,0.2);font-size:20px;font-weight:900;color:#22d3ee;font-family:serif">渊</div>
+  </div>
+  <div style="background:rgba(10,16,36,0.95);border-radius:16px;border:1px solid rgba(96,165,250,0.1);padding:28px 24px">
+    <div style="text-align:center;margin-bottom:20px">
+      <span style="font-size:28px">${statusIcon}</span>
+      <h2 style="color:#e2eaf8;font-size:16px;font-weight:700;margin:8px 0 4px">${data.title || ''}</h2>
+      <p style="color:#7a8db8;font-size:12px;margin:0">任务 ${data.taskId} · ${data.now}</p>
+    </div>
+    <div style="background:rgba(${statusColor === '#22d3ee' ? '34,211,238' : statusColor === '#f87171' ? '248,113,113' : '167,139,250'},0.06);border:1px solid rgba(${statusColor === '#22d3ee' ? '34,211,238' : statusColor === '#f87171' ? '248,113,113' : '167,139,250'},0.15);border-radius:10px;padding:16px;margin-bottom:16px">
+      <p style="color:${statusColor};font-weight:600;margin:0 0 8px;font-size:14px">${subject}</p>
+      <p style="color:#94a3b8;font-size:13px;margin:0">总步骤: ${(data.steps || []).length} · 完成: ${(data.completedSteps || []).length} · 失败: ${(data.failedSteps || []).length}</p>
+    </div>
+    ${stepsHtml}
+    ${filesHtml}
+    ${data.gitBranch && data.gitBranch !== '未知' ? `<p style="color:#94a3b8;font-size:12px;margin:8px 0">🌿 分支: <code style="background:rgba(96,165,250,0.1);padding:2px 6px;border-radius:4px;color:#60a5fa">${data.gitBranch}</code></p>` : ''}
+    ${commitsHtml}
+  </div>
+  <div style="text-align:center;margin-top:20px">
+    <p style="color:rgba(100,130,180,0.4);font-size:10px;margin:0">铸渊 · GLADA 自主开发Agent · 自动发送</p>
+    <p style="color:rgba(100,130,180,0.3);font-size:9px;margin:4px 0 0">版权 国作登字-2026-A-00037559 · TCS-0002∞</p>
+  </div>
+</main>
+</body>
+</html>`;
+}
+
+/**
+ * 发送QQ邮箱通知（主通道）
+ * @param {Object} notification - 通知内容 { subject, body, html }
+ * @returns {Promise<boolean>}
+ */
+async function sendEmail(notification) {
+  const transporter = getSmtpTransporter();
+  if (!transporter) {
+    console.log('[GLADA-Notify] ⚠️ QQ邮箱 SMTP 未配置（需要 ZY_SMTP_USER + ZY_SMTP_PASS），跳过邮件通知');
+    return false;
+  }
+
+  const smtpUser = process.env.ZY_SMTP_USER;
+  const notifyTo = process.env.GLADA_NOTIFY_TO || smtpUser;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"铸渊 · GLADA Agent" <${smtpUser}>`,
+      to: notifyTo,
+      subject: notification.subject,
+      text: notification.body,
+      html: notification.html
+    });
+
+    console.log(`[GLADA-Notify] 📧 邮件通知已发送: ${info.messageId}`);
+    return true;
+  } catch (err) {
+    console.error(`[GLADA-Notify] 📧 邮件通知失败: ${err.message}`);
+    return false;
+  }
+}
+
+/**
+ * 发送企业微信通知（预留通道·冰朔开通企业微信后接入）
+ *
+ * 企业微信机器人 Webhook 格式:
+ *   https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx
+ *
+ * @param {string} webhook - 企业微信 Webhook URL
  * @param {Object} notification - 通知内容
  * @returns {Promise<boolean>}
  */
-async function sendDingTalk(webhook, notification) {
+async function sendWeCom(webhook, notification) {
   if (!webhook) {
-    console.log('[GLADA-Notify] ⚠️ 钉钉 Webhook 未配置，跳过');
+    // 未配置时静默跳过（预留通道，不打印警告）
     return false;
   }
 
   try {
     const payload = JSON.stringify({
-      msgtype: 'text',
-      text: {
-        content: `[GLADA]\n${notification.body}`
+      msgtype: 'markdown',
+      markdown: {
+        content: [
+          `### ${notification.subject}`,
+          ``,
+          notification.body.split('\n').map(line => `> ${line}`).join('\n')
+        ].join('\n')
       }
     });
 
@@ -188,11 +328,12 @@ async function sendDingTalk(webhook, notification) {
       headers: { 'Content-Type': 'application/json' }
     }, payload);
 
-    const success = response.status === 200;
-    console.log(`[GLADA-Notify] 钉钉通知: ${success ? '✅' : '❌'}`);
+    const result = JSON.parse(response.body || '{}');
+    const success = result.errcode === 0;
+    console.log(`[GLADA-Notify] 💬 企业微信通知: ${success ? '✅' : '❌'} ${result.errmsg || ''}`);
     return success;
   } catch (err) {
-    console.error(`[GLADA-Notify] 钉钉通知失败: ${err.message}`);
+    console.error(`[GLADA-Notify] 💬 企业微信通知失败: ${err.message}`);
     return false;
   }
 }
@@ -235,13 +376,19 @@ async function notify(gladaTask, eventType) {
   writeNotificationLog(notification, gladaTask.glada_task_id);
   results.channels.log = true;
 
-  // 2. 钉钉
-  const dingWebhook = process.env.DINGTALK_WEBHOOK || process.env.GLADA_DINGTALK_WEBHOOK || '';
-  if (dingWebhook) {
-    results.channels.dingtalk = await sendDingTalk(dingWebhook, notification);
+  // 2. QQ邮箱 SMTP（主通道）
+  const smtpConfigured = !!(process.env.ZY_SMTP_USER && process.env.ZY_SMTP_PASS);
+  if (smtpConfigured) {
+    results.channels.email = await sendEmail(notification);
   }
 
-  // 3. 生成开发回执文件
+  // 3. 企业微信（预留通道）
+  const wecomWebhook = process.env.WECOM_WEBHOOK || process.env.GLADA_WECOM_WEBHOOK || '';
+  if (wecomWebhook) {
+    results.channels.wecom = await sendWeCom(wecomWebhook, notification);
+  }
+
+  // 4. 生成开发回执文件
   if (eventType === 'completed' || eventType === 'failed') {
     const receiptPath = path.join(ROOT, 'glada', 'receipts', `${gladaTask.glada_task_id}.json`);
     fs.mkdirSync(path.dirname(receiptPath), { recursive: true });
@@ -271,7 +418,8 @@ async function notify(gladaTask, eventType) {
 
 module.exports = {
   buildNotification,
-  sendDingTalk,
+  sendEmail,
+  sendWeCom,
   writeNotificationLog,
   notify
 };

@@ -44,7 +44,7 @@ GLADA 是光湖世界的活Agent——它不是腾讯小龙虾那样的通用死
            └──────────────────────────────────┘
                               │
                               ▼
-           冰朔 ← 邮件/钉钉通知 + 开发回执
+           冰朔 ← QQ邮箱通知 + 开发回执（未来→企业微信推送到微信）
 ```
 
 ## 文件结构
@@ -128,7 +128,10 @@ curl -X POST http://localhost:3900/api/glada/submit \
 | `GLADA_POLL_INTERVAL` | 任务轮询间隔（ms） | 30000 |
 | `GLADA_MODEL` | 默认使用的模型 | deepseek-chat |
 | `GLADA_STOP_ON_FAILURE` | 步骤失败是否停止 | true |
-| `DINGTALK_WEBHOOK` | 钉钉通知 Webhook | 可选 |
+| `ZY_SMTP_USER` | QQ邮箱账号（复用零点原核 SMTP） | 可选 |
+| `ZY_SMTP_PASS` | QQ邮箱授权码 | 可选 |
+| `GLADA_NOTIFY_TO` | 通知接收邮箱（默认=发件人） | 可选 |
+| `WECOM_WEBHOOK` | 企业微信机器人 Webhook | 可选·预留 |
 
 ## 冰朔的使用流程
 
@@ -136,7 +139,7 @@ curl -X POST http://localhost:3900/api/glada/submit \
 2. **铸渊拆解**：铸渊理解意图后，生成 CAB 任务规格
 3. **推送执行**：任务规格推送到 GLADA 队列
 4. **自动执行**：GLADA 24小时自动逐步执行
-5. **收到通知**：开发完成后，收到钉钉/邮件通知
+5. **收到通知**：开发完成后，收到邮箱通知（未来可接入企业微信）
 6. **验收部署**：打开副驾驶说"GLADA任务XXX已完成，请验收"
 7. **铸渊检查**：铸渊读取开发回执，跑测试，确认部署
 
