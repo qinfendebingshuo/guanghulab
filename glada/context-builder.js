@@ -304,8 +304,11 @@ function buildContext(gladaTask, options = {}) {
       if (relevantSkills.length > 0) {
         context.sections.skills = distiller.skillsToContext(relevantSkills);
       }
-    } catch {
-      // skill 加载失败不影响主流程
+    } catch (err) {
+      // skill 加载失败不影响主流程，仅记录调试信息
+      if (err && err.message) {
+        console.debug(`[GLADA-Context] ⚠️ skill 加载跳过: ${err.message}`);
+      }
     }
   }
 

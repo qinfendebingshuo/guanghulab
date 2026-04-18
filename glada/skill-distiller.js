@@ -353,7 +353,7 @@ function extractTags(title, patterns) {
 /**
  * 将字符串转为安全的路径片段
  * @param {string} str - 输入字符串
- * @returns {string} 安全的路径片段
+ * @returns {string} 安全的路径片段（最长60字符，仅含 a-z0-9 中文和连字符）
  */
 function sanitizeForPath(str) {
   return (str || 'untitled')
