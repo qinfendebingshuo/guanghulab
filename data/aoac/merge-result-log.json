@@ -2,48 +2,75 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-04-18 13:59:23+08:00",
-  "timestamp_utc": "2026-04-18T05:59:23.667Z",
+  "timestamp": "2026-04-18 14:09:30+08:00",
+  "timestamp_utc": "2026-04-18T06:09:30.101Z",
   "merge": {
-    "pr_number": 413,
-    "pr_title": "Fix dark-channel bridge target repo to match Qiuqiu's config + add link verification workflow",
-    "merge_commit_sha": "4334852fb7092fb0028ccef53653d8a648deae2b",
-    "head_sha": "9a7046da670a7da8956c8fb442a9833b45a9f143",
+    "pr_number": 414,
+    "pr_title": "feat(ops-agent): Implement terminal ops AI agent — Phase 1-2 (auto-patrol, self-repair, multi-turn dialogue)",
+    "merge_commit_sha": "6591d9938702e1e4d7ffecbf2f149399822d3065",
+    "head_sha": "20d41b6820ced709cfd309870fa548f1f44caed9",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 5,
+      "total": 10,
       "passed": 0,
       "failed": 0,
-      "skipped": 1
+      "skipped": 5
     },
     "check_runs": [
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-18T06:09:22Z",
+        "completed_at": "2026-04-18T06:09:22Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔧 服务器初始化",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-18T06:09:22Z",
+        "completed_at": "2026-04-18T06:09:22Z",
+        "output_title": null,
+        "output_summary": ""
+      },
       {
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-04-18T05:59:18Z",
-        "completed_at": "2026-04-18T05:59:18Z",
+        "started_at": "2026-04-18T06:09:22Z",
+        "completed_at": "2026-04-18T06:09:22Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🗂️ 同步注册表状态",
-        "status": "in_progress",
-        "conclusion": null,
-        "started_at": "2026-04-18T05:59:20Z",
-        "completed_at": null,
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-18T06:09:22Z",
+        "completed_at": "2026-04-18T06:09:22Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-04-18T06:09:22Z",
+        "completed_at": "2026-04-18T06:09:22Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-18T05:59:21Z",
+        "started_at": "2026-04-18T06:09:24Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -52,7 +79,25 @@
         "name": "💉 注入注册表上下文到 Copilot Issue",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-18T05:59:21Z",
+        "started_at": "2026-04-18T06:09:24Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🗂️ 同步注册表状态",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-18T06:09:26Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "📡 Bridge E · GitHub Changes → Notion",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-04-18T06:09:24Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -61,7 +106,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-04-18T05:59:19Z",
+        "started_at": "2026-04-18T06:09:23Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
