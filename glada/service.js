@@ -489,8 +489,14 @@ function startService() {
               let data = '';
               resp.on('data', c => { data += c; });
               resp.on('end', () => {
+                // 前置检查：如果响应是 HTML 而非 JSON，提供清晰的错误信息
+                const trimmed = data.trim();
+                if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
+                  reject(new Error(`LLM API 返回了 HTML 而非 JSON (HTTP ${resp.statusCode})，请检查 ZY_LLM_BASE_URL 配置是否正确`));
+                  return;
+                }
                 try { resolve({ status: resp.statusCode, data: JSON.parse(data) }); }
-                catch { reject(new Error('LLM 响应解析失败')); }
+                catch { reject(new Error(`LLM 响应解析失败 (HTTP ${resp.statusCode}, body前100字符: ${data.substring(0, 100)})`)); }
               });
             });
             r.on('error', reject);

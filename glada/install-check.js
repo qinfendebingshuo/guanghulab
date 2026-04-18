@@ -239,10 +239,12 @@ async function main() {
           pass('经济型模型', classified.economy.slice(0, 3).join(', '));
         }
       } else {
-        warn('模型发现', `代理未返回模型列表（将使用默认模型: ${model}）`);
+        // 模型列表端点不可用是常见情况（很多代理商不支持），不是错误
+        pass('模型路由', `使用默认模型: ${model}（代理商不支持模型列表端点 · 不影响对话功能）`);
       }
     } catch (err) {
-      warn('模型发现', `发现失败: ${err.message}（将使用默认模型: ${model}）`);
+      // 即使异常也不算严重失败——对话功能不依赖模型发现
+      warn('模型发现', `发现异常: ${err.message}（不影响对话 · 使用默认模型: ${model}）`);
     }
   } else {
     warn('模型发现', '跳过（密钥或URL未配置）');
