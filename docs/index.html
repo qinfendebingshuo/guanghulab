@@ -327,7 +327,7 @@ footer .sub{font-size:13px;color:var(--text-dim);letter-spacing:3px}
     <span class="line"></span>
   </div>
   <div class="pulse-grid">
-    <div class="pulse-card"><div class="pulse-num">5</div><div class="pulse-label">运行天数</div></div>
+    <div class="pulse-card"><div class="pulse-num" id="uptimeDays">5</div><div class="pulse-label">运行天数</div></div>
     <div class="pulse-card"><div class="pulse-num">121+</div><div class="pulse-label">主权服务器 MCP 工具</div></div>
     <div class="pulse-card"><div class="pulse-num">3</div><div class="pulse-label">已注册频道</div></div>
     <div class="pulse-card"><div class="pulse-num">∞</div><div class="pulse-label">语言云层</div></div>
@@ -431,5 +431,14 @@ footer .sub{font-size:13px;color:var(--text-dim);letter-spacing:3px}
   </div>
 </footer>
 
+<script>
+(function(){
+  var launch=new Date('2026-04-13T00:00:00+08:00');
+  var now=new Date();
+  var days=Math.max(1,Math.floor((now-launch)/(864e5)));
+  var el=document.getElementById('uptimeDays');
+  if(el)el.textContent=days;
+})();
+</script>
 </body>
 </html>
