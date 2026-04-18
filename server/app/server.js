@@ -794,12 +794,12 @@ app.get('/api/system/status', (_req, res) => {
 app.get('/api/system/full-status', async (_req, res) => {
   const results = { timestamp: new Date().toISOString(), services: {} };
 
-  // Helper: 探测内部服务
+  // Helper: 探测内部服务（使用已导入的 http 模块，见文件下方 line ~1005）
   function probeService(name, port, pathStr, timeoutMs = 5000) {
     return new Promise((resolve) => {
       const start = Date.now();
       const nodeHttp = require('http');
-      const req = nodeHttp.get({ hostname: '127.0.0.1', port, path: pathStr, timeout: timeoutMs }, (resp) => {
+      const probeReq = nodeHttp.get({ hostname: '127.0.0.1', port, path: pathStr, timeout: timeoutMs }, (resp) => {
         let body = '';
         resp.on('data', (c) => { body += c; });
         resp.on('end', () => {
@@ -812,11 +812,11 @@ app.get('/api/system/full-status', async (_req, res) => {
           }
         });
       });
-      req.on('error', (err) => {
+      probeReq.on('error', (err) => {
         resolve({ name, status: 'offline', latency: Date.now() - start, error: err.message });
       });
-      req.on('timeout', () => {
-        req.destroy();
+      probeReq.on('timeout', () => {
+        probeReq.destroy();
         resolve({ name, status: 'timeout', latency: timeoutMs, error: '连接超时 (' + timeoutMs + 'ms)' });
       });
     });

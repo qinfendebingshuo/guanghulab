@@ -198,6 +198,32 @@
         "response_field": "_system.steps[]",
         "step_format": "{ name, status(done/active/error/skip/warn), detail, time(ms) }"
       }
+    },
+    {
+      "id": "YM-FEAT-008",
+      "name": "系统状态面板 · 真实连接检测",
+      "module": "server/sites/yaoming/index.html + server/app/server.js",
+      "routes": [
+        "GET /api/system/full-status",
+        "GET /api/glada/health (via nginx proxy)"
+      ],
+      "status": "implemented",
+      "verified_at": "2026-04-18",
+      "depends_on": [],
+      "architecture": {
+        "backend": "/api/system/full-status 并行探测 3800/3100/3900 端口",
+        "frontend": "viewSysStatus 面板 + 30秒自动刷新",
+        "github_api": "直接从前端调用 GitHub API 获取工作流状态",
+        "nginx": "/api/glada/ 反向代理到 127.0.0.1:3900"
+      },
+      "history": [
+        {
+          "date": "2026-04-18",
+          "action": "new-feature",
+          "change": "新增系统状态面板 · 冰朔指令要求真实连接检测，不做假状态",
+          "files_changed": ["server/app/server.js", "server/nginx/guanghuyaoming.conf", "server/sites/yaoming/index.html"]
+        }
+      ]
     }
   ],
 
@@ -243,5 +269,25 @@
       "lesson": "前端Markdown渲染器缺少标题(#/##/###)和有序列表(1./2./3.)支持时，AI使用这些格式会导致排版崩溃。renderMarkdown/parseMarkdown的格式支持必须覆盖模型常用的所有markdown语法。",
       "pattern": "越往下排版越乱 → 检查markdown渲染器是否支持模型使用的格式元素"
     }
-  ]
+  ],
+
+  "system_status_panel": {
+    "added_at": "2026-04-18",
+    "view_id": "viewSysStatus",
+    "nav_id": "navSysStatus",
+    "api_endpoint": "/api/system/full-status",
+    "description": "真实系统状态面板 · 实时连接检测所有服务 · 每30秒自动刷新",
+    "features": [
+      "铸渊主权服务器 (3800) 真实连接检测 + 延迟",
+      "MCP大脑服务器 (3100) 真实连接检测 + 工具数",
+      "GLADA自主开发Agent (3900) 真实连接检测 + 版本",
+      "后端模块加载状态 (6个模块)",
+      "GitHub Actions 最近10条工作流运行状态",
+      "系统资源 (CPU/内存/运行时间)",
+      "连接失败时显示真实错误原因",
+      "30秒自动刷新"
+    ],
+    "nginx_proxy_added": "/api/glada/ → 127.0.0.1:3900",
+    "principle": "冰朔指令：必须接入真实系统状态，连接就连接，连不上就连不上，显示原因。不做假的不更新的状态。"
+  }
 }

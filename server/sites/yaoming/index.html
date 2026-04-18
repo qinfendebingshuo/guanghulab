@@ -2703,9 +2703,15 @@ function switchView(view){
   if(view === 'cab'){
     syncCabPanel();
   }
-  // System Status view: trigger fetch on entry
+  // System Status view: trigger fetch on entry, clear timer on exit
   if(view === 'sysStatus'){
     fetchSystemStatus();
+  } else {
+    // Clear system status timer when leaving the view
+    if(typeof _sysStatusTimer !== 'undefined' && _sysStatusTimer) {
+      clearInterval(_sysStatusTimer);
+      _sysStatusTimer = null;
+    }
   }
 }
 
