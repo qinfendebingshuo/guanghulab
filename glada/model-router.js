@@ -144,8 +144,70 @@ function httpGet(url, headers, timeout) {
 }
 
 /**
+ * 尝试从指定 URL 获取模型列表
+ * @param {string} url - 完整的模型列表 API URL
+ * @param {string} apiKey - API 密钥
+ * @returns {Promise<string[]|null>} 模型 ID 列表，或 null 表示该端点不可用
+ */
+async function tryFetchModels(url, apiKey) {
+  const response = await httpGet(url, {
+    'Authorization': `Bearer ${apiKey}`,
+    'Accept': 'application/json'
+  }, 15000);
+
+  if (response.status !== 200) {
+    console.log(`[GLADA-Router] ℹ️ ${url} 返回 HTTP ${response.status}，跳过`);
+    return null;
+  }
+
+  const body = String(response.body || '').trim();
+
+  // 前置检测：如果响应是 HTML 而非 JSON，直接跳过（不报错）
+  // 某些 API 代理商不支持 /models 端点，会返回 HTML 页面
+  if (body.startsWith('<') || body.startsWith('<!')) {
+    console.log(`[GLADA-Router] ℹ️ ${url} 返回了 HTML 页面（该代理商可能不支持模型列表端点），跳过`);
+    return null;
+  }
+
+  // 空响应
+  if (!body || body === '{}' || body === '[]') {
+    console.log(`[GLADA-Router] ℹ️ ${url} 返回空响应，跳过`);
+    return null;
+  }
+
+  let result;
+  try {
+    result = JSON.parse(body);
+  } catch (parseErr) {
+    console.log(`[GLADA-Router] ℹ️ ${url} 响应非 JSON 格式: ${parseErr.message}，跳过`);
+    return null;
+  }
+
+  // OpenAI-compatible: { data: [{ id: "model-name", ... }] }
+  // 也兼容直接返回数组的格式
+  let models;
+  if (Array.isArray(result.data)) {
+    models = result.data.map(m => m.id || m.name || m).filter(Boolean);
+  } else if (Array.isArray(result)) {
+    models = result.map(m => (typeof m === 'string') ? m : (m.id || m.name)).filter(Boolean);
+  } else if (result.models && Array.isArray(result.models)) {
+    models = result.models.map(m => (typeof m === 'string') ? m : (m.id || m.name)).filter(Boolean);
+  } else {
+    console.log('[GLADA-Router] ℹ️ 响应 JSON 格式无法识别为模型列表，跳过');
+    return null;
+  }
+
+  return models;
+}
+
+/**
  * 从代理 API 发现可用模型
- * 调用 OpenAI-compatible 的 GET /models 端点
+ * 依次尝试多种端点路径（兼容不同 API 代理商）：
+ *   1. ${baseUrl}/models          （标准 OpenAI-compatible）
+ *   2. ${baseUrl}/v1/models       （某些代理商需要 /v1 前缀）
+ *
+ * 如果所有端点均不可用（常见于 DeepSeek 等仅提供 chat 端点的代理商），
+ * 系统会静默降级使用环境变量中配置的默认模型，不影响正常对话功能。
  *
  * @returns {Promise<string[]>} 可用模型 ID 列表
  */
@@ -158,42 +220,32 @@ async function discoverModels() {
     return [];
   }
 
-  const url = `${baseUrl}/models`;
-
-  try {
-    const response = await httpGet(url, {
-      'Authorization': `Bearer ${apiKey}`,
-      'Accept': 'application/json'
-    }, 15000);
-
-    if (response.status !== 200) {
-      console.warn(`[GLADA-Router] ⚠️ 模型发现 API 返回 ${response.status}: ${String(response.body).substring(0, 200)}`);
-      return [];
-    }
-
-    const result = JSON.parse(response.body);
-
-    // OpenAI-compatible: { data: [{ id: "model-name", ... }] }
-    // 也兼容直接返回数组的格式
-    let models;
-    if (Array.isArray(result.data)) {
-      models = result.data.map(m => m.id || m.name || m).filter(Boolean);
-    } else if (Array.isArray(result)) {
-      models = result.map(m => (typeof m === 'string') ? m : (m.id || m.name)).filter(Boolean);
-    } else if (result.models && Array.isArray(result.models)) {
-      models = result.models.map(m => (typeof m === 'string') ? m : (m.id || m.name)).filter(Boolean);
-    } else {
-      console.warn('[GLADA-Router] ⚠️ 无法解析模型列表格式');
-      return [];
-    }
-
-    console.log(`[GLADA-Router] 🔍 发现 ${models.length} 个可用模型: ${models.slice(0, 10).join(', ')}${models.length > 10 ? '...' : ''}`);
-    return models;
-
-  } catch (err) {
-    console.warn(`[GLADA-Router] ⚠️ 模型发现失败: ${err.message}`);
-    return [];
+  // 构建候选端点列表（按优先级排序）
+  const candidateUrls = [`${baseUrl}/models`];
+  // 如果 baseUrl 不含 /v1，额外尝试 /v1/models
+  if (!baseUrl.endsWith('/v1') && !baseUrl.endsWith('/v1/')) {
+    candidateUrls.push(`${baseUrl}/v1/models`);
   }
+
+  for (const url of candidateUrls) {
+    try {
+      const models = await tryFetchModels(url, apiKey);
+      if (models && models.length > 0) {
+        console.log(`[GLADA-Router] 🔍 发现 ${models.length} 个可用模型: ${models.slice(0, 10).join(', ')}${models.length > 10 ? '...' : ''}`);
+        return models;
+      }
+    } catch (err) {
+      // JSON 解析失败或网络错误，尝试下一个端点
+      console.log(`[GLADA-Router] ℹ️ ${url} 请求异常: ${err.message}，尝试下一个端点`);
+    }
+  }
+
+  // 所有端点均不可用——这是正常情况（很多代理商不提供 /models 端点）
+  // 不使用 ⚠️ 警告，因为这不影响核心对话功能
+  const fallbackModel = process.env.GLADA_MODEL || 'deepseek-chat';
+  console.log(`[GLADA-Router] ℹ️ 模型列表端点不可用（代理商可能不支持），将使用默认模型: ${fallbackModel}`);
+  console.log(`[GLADA-Router] ℹ️ 这不影响对话功能——chat/completions 端点正常即可工作`);
+  return [];
 }
 
 /**
@@ -260,8 +312,8 @@ async function refreshModelCache() {
       console.log(`  通用型: ${classified.general.slice(0, 3).join(', ') || '无'}`);
       console.log(`  经济型: ${classified.economy.slice(0, 3).join(', ') || '无'}`);
     } else if (!cachedModels) {
-      // 发现失败且没有缓存，用环境变量中的模型名作为终极降级
-      // 注意：GLADA_MODEL 是用户在部署时显式配置的降级模型，不是硬编码
+      // 模型列表不可用（代理商不支持 /models 端点），用环境变量中配置的模型
+      // 注意：GLADA_MODEL 是用户在部署时显式配置的默认模型，不是硬编码
       const fallbackModel = process.env.GLADA_MODEL || process.env.LLM_MODEL || 'deepseek-chat';
       cachedModels = {
         models: [fallbackModel],
@@ -275,7 +327,7 @@ async function refreshModelCache() {
         count: 1,
         fallback: true
       };
-      console.warn(`[GLADA-Router] ⚠️ 模型发现失败，降级使用: ${fallbackModel}`);
+      console.log(`[GLADA-Router] ✅ 使用配置的默认模型: ${fallbackModel}（模型列表端点不可用，不影响对话功能）`);
     }
 
     return cachedModels;
