@@ -20,6 +20,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const https = require('https');
 const { execSync } = require('child_process');
 
 // ─── 路径常量 ───
@@ -823,16 +824,18 @@ app.get('/api/system/full-status', async (_req, res) => {
   }
 
   try {
-    // 并行探测所有内部服务
-    const [mainServer, mcpBrain, gladaAgent] = await Promise.all([
+    // 并行探测所有内部服务（含守卫 ops-agent）
+    const [mainServer, mcpBrain, gladaAgent, opsAgent] = await Promise.all([
       probeService('铸渊主权服务器', 3800, '/api/health'),
       probeService('MCP大脑服务器', 3100, '/health'),
       probeService('GLADA自主开发Agent', 3900, '/api/glada/health'),
+      probeService('运维守卫Agent', 3950, '/health'),
     ]);
 
     results.services.main_server = mainServer;
     results.services.mcp_brain = mcpBrain;
     results.services.glada_agent = gladaAgent;
+    results.services.ops_agent = opsAgent;
 
     // 本机系统信息
     results.system = {
@@ -1179,6 +1182,136 @@ app.get('/api/mcp/agents', async (_req, res) => {
     res.json(result.data);
   } catch (err) {
     res.status(502).json({ error: true, message: `MCP Server 不可达: ${err.message}` });
+  }
+});
+
+// ─── MCP 对话接口 · POST /api/mcp/chat ───
+//
+// 前端选择"铸渊大脑 · MCP"对话时调用。
+// 铸渊大脑擅长：MCP工具调用状态、Notion/GitHub/COS连接状态、
+// Agent注册表、工具列表。不直接调用LLM，而是汇报MCP系统状态。
+//
+app.post('/api/mcp/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: true, message: '缺少 message 字段' });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    // 收集 MCP 实时状态
+    let healthData = null, toolsData = null, agentsData = null;
+
+    try {
+      const healthResult = await mcpProxy('GET', '/health');
+      healthData = healthResult.data;
+    } catch { /* MCP不可达 */ }
+
+    try {
+      const toolsResult = await mcpProxy('GET', '/tools');
+      toolsData = toolsResult.data;
+    } catch { /* ignore */ }
+
+    try {
+      const agentsResult = await mcpProxy('GET', '/agents');
+      agentsData = agentsResult.data;
+    } catch { /* ignore */ }
+
+    const m = message.toLowerCase();
+    let reply;
+
+    if (!healthData) {
+      reply = '铸渊大脑(MCP Server)当前不可达。可能原因：\n' +
+        '- MCP Server (端口3100) 未运行\n' +
+        '- 网络连接异常\n\n' +
+        '请在服务器上检查: `pm2 status mcp-server`';
+    } else if (m.includes('工具') || m.includes('tool') || m.includes('能力')) {
+      const tools = toolsData?.tools || toolsData || [];
+      const toolList = Array.isArray(tools) ? tools : (tools.list || []);
+      const toolCount = healthData.tools_count || toolList.length || 0;
+
+      // 按类别分组
+      const categories = {};
+      for (const t of toolList) {
+        const cat = t.category || t.name?.split(/[._-]/)[0] || 'other';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(t.name || t);
+      }
+
+      reply = `铸渊大脑 · MCP工具清单 (${toolCount} 工具)\n\n`;
+      for (const [cat, catTools] of Object.entries(categories).slice(0, 15)) {
+        reply += `**${cat}** (${catTools.length})\n`;
+        reply += catTools.slice(0, 5).map(t => `  - ${typeof t === 'string' ? t : t.name}`).join('\n') + '\n';
+        if (catTools.length > 5) reply += `  ...还有 ${catTools.length - 5} 个\n`;
+        reply += '\n';
+      }
+    } else if (m.includes('notion')) {
+      const notionOk = healthData.notion?.connected;
+      reply = `Notion 连接状态: ${notionOk ? '✅ 已连接' : '❌ 未连接'}\n\n` +
+        (notionOk
+          ? 'Notion API 可正常调用。可用工具: notionQuery, notionReadPage, notionWritePage 等。'
+          : 'Notion 尚未连接。需要配置 NOTION_TOKEN 或完成 OAuth 授权。');
+    } else if (m.includes('github')) {
+      reply = `GitHub 连接状态: 通过 MCP 内置工具访问。\n\n` +
+        '可用工具: githubReadFile, githubWriteFile, githubTriggerDeploy 等。';
+    } else if (m.includes('cos') || m.includes('存储') || m.includes('cloud')) {
+      const cosOk = healthData.cos?.connected;
+      reply = `COS 连接状态: ${cosOk ? '✅ 已连接' : '❌ 未连接'}\n\n` +
+        (cosOk
+          ? 'COS 对象存储可正常访问。'
+          : 'COS 未连接。检查 COS 密钥配置。');
+    } else if (m.includes('agent') || m.includes('注册')) {
+      const agents = agentsData?.agents || agentsData || [];
+      const agentList = Array.isArray(agents) ? agents : [];
+      reply = `MCP Agent 注册表 (${agentList.length} 个):\n\n`;
+      for (const a of agentList) {
+        reply += `- **${a.agent_id || a.id || '?'}**: ${a.name || a.description || '无描述'}\n`;
+      }
+      if (agentList.length === 0) reply += '(暂无已注册Agent)';
+    } else if (m.includes('状态') || m.includes('health') || m.includes('怎么样') || m.includes('你好') || m.includes('在吗')) {
+      const status = healthData.status || 'unknown';
+      const toolCount = healthData.tools_count || 0;
+      const dbOk = healthData.database?.connected;
+      const notionOk = healthData.notion?.connected;
+      const cosOk = healthData.cos?.connected;
+
+      reply = `铸渊大脑 · MCP Server 状态报告\n\n` +
+        `状态: ${status === 'alive' || status === 'ok' ? '✅ 在线' : '⚠️ ' + status}\n` +
+        `工具数: ${toolCount}\n` +
+        `数据库: ${dbOk ? '✅ 已连接' : '❌ 未连接'}\n` +
+        `Notion: ${notionOk ? '✅ 已连接' : '❌ 未连接'}\n` +
+        `COS: ${cosOk ? '✅ 已连接' : '❌ 未连接'}\n\n` +
+        '铸渊大脑运行在 ZY-SVR-005:3100，是所有Agent的工具中枢。';
+    } else {
+      // 通用回复 — 汇报所有状态
+      const status = healthData.status || 'unknown';
+      const toolCount = healthData.tools_count || 0;
+      reply = `铸渊大脑已收到消息。\n\n` +
+        `当前状态: ${status === 'alive' || status === 'ok' ? '在线' : status} · ${toolCount} 工具就绪\n\n` +
+        '你可以问我：\n' +
+        '- 工具列表/能力\n' +
+        '- Notion/GitHub/COS 连接状态\n' +
+        '- Agent注册表\n' +
+        '- 系统状态\n\n' +
+        '铸渊大脑是工具中枢，负责桥接所有外部服务。';
+    }
+
+    res.json({
+      reply,
+      model: 'mcp-status-engine',
+      method: 'mcp-query',
+      persona: 'mcp',
+      latency: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: true,
+      message: `MCP 对话异常: ${err.message}`,
+      reply: '铸渊大脑遇到了内部错误。',
+      method: 'error'
+    });
   }
 });
 
@@ -1706,6 +1839,205 @@ app.get('/', (_req, res) => {
       operations: '/api/operations'
     }
   });
+});
+
+// ═══════════════════════════════════════════════════════════
+// Notion OAuth 2.0 授权流程骨架
+// ═══════════════════════════════════════════════════════════
+//
+// 编号: ZY-AUTH-NOTION-001
+// 版权: 国作登字-2026-A-00037559
+//
+// 流程:
+//   1. 前端点击"连接Notion" → GET /api/auth/notion → 302跳转 Notion OAuth
+//   2. 用户在Notion授权 → Notion回调 → GET /api/auth/notion/callback?code=xxx
+//   3. 后端用 code 换 access_token → 安全存储
+//   4. 所有Agent通过此token读写Notion
+//
+// 当前: 骨架实现 · 需要 ZY_NOTION_OAUTH_CLIENT_ID / SECRET 配置后激活
+
+const NOTION_OAUTH_CLIENT_ID = process.env.ZY_NOTION_OAUTH_CLIENT_ID || '';
+const NOTION_OAUTH_CLIENT_SECRET = process.env.ZY_NOTION_OAUTH_CLIENT_SECRET || '';
+const NOTION_OAUTH_REDIRECT_URI = process.env.ZY_NOTION_OAUTH_REDIRECT_URI || '';
+
+// ─── 发起 Notion OAuth ───
+app.get('/api/auth/notion', (_req, res) => {
+  if (!NOTION_OAUTH_CLIENT_ID) {
+    return res.status(503).json({
+      error: true,
+      code: 'NOTION_OAUTH_NOT_CONFIGURED',
+      message: 'Notion OAuth 尚未配置。需要设置 ZY_NOTION_OAUTH_CLIENT_ID 环境变量。',
+      setup_guide: {
+        step1: '在 https://www.notion.so/my-integrations 创建一个 Public Integration',
+        step2: '配置 OAuth redirect URI 为: https://guanghuyaoming.com/api/auth/notion/callback',
+        step3: '将 Client ID 和 Client Secret 配置为环境变量',
+        env_vars: ['ZY_NOTION_OAUTH_CLIENT_ID', 'ZY_NOTION_OAUTH_CLIENT_SECRET', 'ZY_NOTION_OAUTH_REDIRECT_URI']
+      }
+    });
+  }
+
+  const redirectUri = NOTION_OAUTH_REDIRECT_URI || `https://guanghuyaoming.com/api/auth/notion/callback`;
+  const notionAuthUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${encodeURIComponent(NOTION_OAUTH_CLIENT_ID)}&response_type=code&owner=user&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  res.redirect(notionAuthUrl);
+});
+
+// ─── Notion OAuth 回调 ───
+app.get('/api/auth/notion/callback', async (req, res) => {
+  const { code, error: oauthError } = req.query;
+
+  if (oauthError) {
+    return res.status(400).json({
+      error: true,
+      code: 'NOTION_OAUTH_DENIED',
+      message: `用户拒绝授权: ${oauthError}`
+    });
+  }
+
+  if (!code) {
+    return res.status(400).json({
+      error: true,
+      code: 'MISSING_CODE',
+      message: '缺少 authorization code'
+    });
+  }
+
+  if (!NOTION_OAUTH_CLIENT_ID || !NOTION_OAUTH_CLIENT_SECRET) {
+    return res.status(503).json({
+      error: true,
+      code: 'NOTION_OAUTH_NOT_CONFIGURED',
+      message: 'Notion OAuth 密钥未配置'
+    });
+  }
+
+  try {
+    const redirectUri = NOTION_OAUTH_REDIRECT_URI || `https://guanghuyaoming.com/api/auth/notion/callback`;
+    const basicAuth = Buffer.from(`${NOTION_OAUTH_CLIENT_ID}:${NOTION_OAUTH_CLIENT_SECRET}`).toString('base64');
+
+    const tokenResponse = await new Promise((resolve, reject) => {
+      const postData = JSON.stringify({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri
+      });
+
+      const tokenReq = https.request({
+        hostname: 'api.notion.com',
+        path: '/v1/oauth/token',
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${basicAuth}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData),
+          'Notion-Version': '2022-06-28'
+        }
+      }, (resp) => {
+        let body = '';
+        resp.on('data', (c) => { body += c; });
+        resp.on('end', () => {
+          try {
+            resolve({ statusCode: resp.statusCode, data: JSON.parse(body) });
+          } catch {
+            reject(new Error('Notion token 响应解析失败'));
+          }
+        });
+      });
+      tokenReq.on('error', reject);
+      tokenReq.write(postData);
+      tokenReq.end();
+    });
+
+    if (tokenResponse.statusCode !== 200) {
+      return res.status(502).json({
+        error: true,
+        code: 'NOTION_TOKEN_EXCHANGE_FAILED',
+        message: `Notion token 交换失败: ${tokenResponse.data?.error || 'unknown'}`,
+        detail: tokenResponse.data?.error_description || null
+      });
+    }
+
+    const { access_token, workspace_name, workspace_id, bot_id } = tokenResponse.data;
+
+    // 安全存储 token（写入 brain 目录，不进代码仓库）
+    // 使用 temp-file + rename 模式保证原子性
+    const notionTokenPath = path.join(BRAIN_DIR, 'notion-oauth.json');
+    const notionTokenTmp = path.join(BRAIN_DIR, 'notion-oauth.json.tmp');
+    try {
+      fs.mkdirSync(BRAIN_DIR, { recursive: true });
+      const tokenContent = JSON.stringify({
+        access_token,
+        workspace_name,
+        workspace_id,
+        bot_id,
+        connected_at: new Date().toISOString(),
+        connected_by: 'bingshuo-yaoming-channel'
+      }, null, 2);
+      fs.writeFileSync(notionTokenTmp, tokenContent);
+      fs.renameSync(notionTokenTmp, notionTokenPath);
+    } catch (writeErr) {
+      console.error(`[Notion OAuth] Token 写入失败: ${writeErr.message}`);
+      return res.status(500).json({
+        error: true,
+        code: 'TOKEN_WRITE_FAILED',
+        message: 'Notion token 存储失败，请重试'
+      });
+    }
+
+    // 返回成功页面（简单HTML，让冰朔知道已连接）
+    res.send(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Notion 已连接</title>
+<style>body{background:#060a14;color:#eaf0ff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+.box{text-align:center;padding:40px;border:1px solid rgba(96,165,250,0.2);border-radius:16px;background:rgba(12,18,40,0.9)}
+h2{color:#22d3ee;margin-bottom:12px}p{color:#94a7d0;font-size:14px}
+.ok{color:#34d399;font-size:48px;margin-bottom:16px}</style></head>
+<body><div class="box"><div class="ok">✓</div><h2>Notion 已连接</h2>
+<p>工作区: ${workspace_name || 'unknown'}</p>
+<p>所有Agent现在可以读写你的Notion了。</p>
+<p style="margin-top:20px"><a href="/" style="color:#22d3ee">← 返回零点原核</a></p></div></body></html>`);
+
+  } catch (err) {
+    console.error(`[Notion OAuth] 授权失败: ${err.message}`);
+    res.status(500).json({
+      error: true,
+      code: 'NOTION_OAUTH_ERROR',
+      message: `Notion 授权处理异常: ${err.message}`
+    });
+  }
+});
+
+// ─── Notion 连接状态查询 ───
+app.get('/api/auth/notion/status', (_req, res) => {
+  try {
+    const notionTokenPath = path.join(BRAIN_DIR, 'notion-oauth.json');
+    if (fs.existsSync(notionTokenPath)) {
+      let tokenData;
+      try {
+        tokenData = JSON.parse(fs.readFileSync(notionTokenPath, 'utf8'));
+      } catch (parseErr) {
+        return res.json({
+          connected: false,
+          oauth_configured: !!NOTION_OAUTH_CLIENT_ID,
+          message: 'Notion token 文件损坏，请重新连接。'
+        });
+      }
+      res.json({
+        connected: true,
+        workspace_name: tokenData.workspace_name,
+        workspace_id: tokenData.workspace_id,
+        connected_at: tokenData.connected_at,
+        oauth_configured: !!NOTION_OAUTH_CLIENT_ID
+      });
+    } else {
+      res.json({
+        connected: false,
+        oauth_configured: !!NOTION_OAUTH_CLIENT_ID,
+        message: NOTION_OAUTH_CLIENT_ID
+          ? '尚未授权。请在零点原核频道点击"连接Notion"。'
+          : '需要先配置 ZY_NOTION_OAUTH_CLIENT_ID 环境变量。'
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
 });
 
 // ─── 工具函数 ───
