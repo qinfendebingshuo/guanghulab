@@ -807,6 +807,124 @@ test('context-builder 将 skills 加入系统提示词', () => {
   assert(ctxContent.includes('context.sections.skills'), 'contextToSystemPrompt 应包含 skills 输出');
 });
 
+// ── 5. 模型自动路由测试（第三方代理多模型支持） ──
+
+console.log('\n🔀 模型路由测试:');
+
+test('model-router 模块加载', () => {
+  const router = require('../model-router');
+  assert(typeof router.initialize === 'function', '应有 initialize 方法');
+  assert(typeof router.selectModel === 'function', '应有 selectModel 方法');
+  assert(typeof router.detectTaskType === 'function', '应有 detectTaskType 方法');
+  assert(typeof router.classifyModels === 'function', '应有 classifyModels 方法');
+  assert(typeof router.getStatus === 'function', '应有 getStatus 方法');
+  assert(typeof router.shutdown === 'function', '应有 shutdown 方法');
+});
+
+test('模型分类 - 推理型模型识别', () => {
+  const router = require('../model-router');
+  const models = ['deepseek-r1', 'claude-3-opus', 'gpt-4o', 'qwen-turbo'];
+  const classified = router.classifyModels(models);
+  assert(classified.reasoning.includes('deepseek-r1'), 'deepseek-r1 应被分为推理型');
+  assert(classified.reasoning.length > 0, '应有推理型模型');
+});
+
+test('模型分类 - 代码型模型识别', () => {
+  const router = require('../model-router');
+  const models = ['deepseek-coder-v2', 'codestral-latest', 'gpt-4o', 'llama-3'];
+  const classified = router.classifyModels(models);
+  assert(classified.coding.includes('deepseek-coder-v2'), 'deepseek-coder-v2 应被分为代码型');
+  assert(classified.coding.includes('codestral-latest'), 'codestral-latest 应被分为代码型');
+});
+
+test('模型分类 - 经济型模型识别', () => {
+  const router = require('../model-router');
+  const models = ['gpt-4o-mini', 'gemini-2-flash', 'claude-3-haiku', 'qwen-turbo'];
+  const classified = router.classifyModels(models);
+  assert(classified.economy.includes('gpt-4o-mini'), 'gpt-4o-mini 应被分为经济型');
+  assert(classified.economy.length >= 3, '应有多个经济型模型');
+});
+
+test('模型分类 - 通用型模型识别', () => {
+  const router = require('../model-router');
+  const models = ['gpt-4o', 'claude-3-sonnet', 'deepseek-chat', 'qwen-max', 'gemini-pro'];
+  const classified = router.classifyModels(models);
+  assert(classified.general.length > 0, '应有通用型模型');
+  assert(classified.general.includes('gpt-4o'), 'gpt-4o 应被分为通用型');
+});
+
+test('任务类型检测 - 代码任务', () => {
+  const router = require('../model-router');
+  assert(router.detectTaskType('创建新的路由文件') === 'coding', '创建路由应为 coding');
+  assert(router.detectTaskType('修改数据库模块') === 'coding', '修改模块应为 coding');
+  assert(router.detectTaskType('implement the API endpoint') === 'coding', 'implement 应为 coding');
+});
+
+test('任务类型检测 - 推理任务', () => {
+  const router = require('../model-router');
+  assert(router.detectTaskType('分析系统架构设计') === 'reasoning', '架构分析应为 reasoning');
+  assert(router.detectTaskType('安全审核代码') === 'reasoning', '安全审核应为 reasoning');
+});
+
+test('任务类型检测 - 经济型任务', () => {
+  const router = require('../model-router');
+  assert(router.detectTaskType('更新 README 文档') === 'economy', 'README 应为 economy');
+  assert(router.detectTaskType('添加配置文件注释') === 'economy', '配置应为 economy');
+});
+
+test('任务类型检测 - 默认为 coding', () => {
+  const router = require('../model-router');
+  assert(router.detectTaskType('some unknown task') === 'coding', '未知任务应默认为 coding');
+  assert(router.detectTaskType('') === 'general', '空描述应为 general');
+});
+
+test('getStatus 未初始化时返回正确状态', () => {
+  const router = require('../model-router');
+  const status = router.getStatus();
+  assert(typeof status === 'object', 'status 应为对象');
+  assert('initialized' in status, 'status 应有 initialized 字段');
+  assert('models' in status || 'message' in status, 'status 应有 models 或 message 字段');
+});
+
+test('step-executor 集成 model-router', () => {
+  const seContent = fs.readFileSync(path.join(ROOT, 'glada', 'step-executor.js'), 'utf-8');
+  assert(seContent.includes("require('./model-router')"), 'step-executor 应引用 model-router');
+  assert(seContent.includes('modelRouter.selectModel'), 'step-executor 应调用 selectModel');
+});
+
+test('reflector 集成 model-router', () => {
+  const rfContent = fs.readFileSync(path.join(ROOT, 'glada', 'reflector.js'), 'utf-8');
+  assert(rfContent.includes("require('./model-router')"), 'reflector 应引用 model-router');
+  assert(rfContent.includes('modelRouter.selectModel'), 'reflector 应调用 selectModel');
+});
+
+test('service.js 集成 model-router', () => {
+  const svcContent = fs.readFileSync(path.join(ROOT, 'glada', 'service.js'), 'utf-8');
+  assert(svcContent.includes("require('./model-router')"), 'service.js 应引用 model-router');
+  assert(svcContent.includes('/api/glada/models'), 'service.js 应有模型状态端点');
+  assert(svcContent.includes('modelRouter.initialize'), 'service.js 应初始化 model-router');
+  assert(svcContent.includes('modelRouter.shutdown'), 'service.js 应关闭 model-router');
+});
+
+test('ecosystem.config.js 包含模型路由环境变量', () => {
+  const ecoContent = fs.readFileSync(path.join(ROOT, 'glada', 'ecosystem.config.js'), 'utf-8');
+  assert(ecoContent.includes('GLADA_MODEL_PREFERENCE'), 'ecosystem 应有 GLADA_MODEL_PREFERENCE');
+  assert(ecoContent.includes('GLADA_MODEL_REFRESH_MS'), 'ecosystem 应有 GLADA_MODEL_REFRESH_MS');
+});
+
+test('install-check.js 包含模型发现检查', () => {
+  const icContent = fs.readFileSync(path.join(ROOT, 'glada', 'install-check.js'), 'utf-8');
+  assert(icContent.includes('model-router'), 'install-check 应引用 model-router');
+  assert(icContent.includes('discoverModels'), 'install-check 应调用 discoverModels');
+  assert(icContent.includes('classifyModels'), 'install-check 应调用 classifyModels');
+});
+
+test('deploy workflow 包含模型路由配置', () => {
+  const wfContent = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'deploy-to-zhuyuan-server.yml'), 'utf-8');
+  assert(wfContent.includes('GLADA_MODEL_PREFERENCE'), 'workflow 应写入 GLADA_MODEL_PREFERENCE');
+  assert(wfContent.includes('GLADA_MODEL_REFRESH_MS'), 'workflow 应写入 GLADA_MODEL_REFRESH_MS');
+});
+
 // ── 结果 ──
 
 console.log(`\n${'═'.repeat(40)}`);

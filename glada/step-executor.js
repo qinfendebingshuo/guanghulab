@@ -21,6 +21,8 @@ const { execSync } = require('child_process');
 const https = require('https');
 const http = require('http');
 
+const modelRouter = require('./model-router');
+
 const ROOT = path.resolve(__dirname, '..');
 
 // ── LLM 调用配置 ───────────────────────────────
@@ -365,10 +367,14 @@ async function executeStep(step, systemPrompt, gladaTask, options = {}) {
     // 1. 构建步骤执行指令
     const userMessage = buildStepPrompt(step, gladaTask);
 
-    // 2. 调用 LLM（使用 execution_plan 中的模型偏好和重试策略）
-    console.log(`[GLADA-Executor] 🤖 调用 LLM...`);
+    // 2. 调用 LLM（使用模型路由器自动选择最佳模型）
+    const modelSelection = await modelRouter.selectModel(step.description, {
+      model: options.model || execPlan.model_preference || null,
+      taskType: options.taskType
+    });
+    console.log(`[GLADA-Executor] 🤖 调用 LLM · 模型: ${modelSelection.model} (${modelSelection.source})`);
     const llmResponse = await callLLM(systemPrompt, userMessage, {
-      model: options.model || execPlan.model_preference || 'deepseek-chat',
+      model: modelSelection.model,
       maxTokens: options.maxTokens || 8192,
       maxRetries: retryPolicy.max_retries || 3,
       backoffMs: retryPolicy.backoff_ms || 5000

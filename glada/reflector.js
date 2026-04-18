@@ -25,6 +25,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const modelRouter = require('./model-router');
+
 const ROOT = path.resolve(__dirname, '..');
 const REFLECTIONS_DIR = path.join(ROOT, 'glada', 'logs', 'reflections');
 
@@ -315,8 +317,15 @@ async function reflectWithLLM(gladaTask, callLLM, options = {}) {
   try {
     console.log(`[GLADA-Reflect] 🪞 开始反思任务: ${gladaTask.glada_task_id}`);
 
+    // 使用模型路由器选择适合反思任务的模型（推理型优先）
+    const modelSelection = await modelRouter.selectModel('反思分析任务执行过程', {
+      model: options.model || null,
+      taskType: 'reasoning'
+    });
+    console.log(`[GLADA-Reflect] 🤖 反思模型: ${modelSelection.model} (${modelSelection.source})`);
+
     const llmOutput = await callLLM(systemPrompt, userMessage, {
-      model: options.model || 'deepseek-chat',
+      model: modelSelection.model,
       maxTokens: options.maxTokens || 4096,
       maxRetries: 2,
       backoffMs: 3000
