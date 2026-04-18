@@ -44,6 +44,7 @@ on:
         type: choice
         options:
           - deploy
+          - setup-datasources
           - setup-ssl
           - health
           - rollback
@@ -95,6 +96,8 @@ jobs:
           mkdir -p /opt/zhiku/data/index
           mkdir -p /opt/zhiku/data/books
           mkdir -p /opt/zhiku/data/guardian
+          mkdir -p /opt/zhiku/datasources/fqweb
+          mkdir -p /opt/zhiku/datasources/swiftcat
           mkdir -p /var/log/zhiku
           mkdir -p /var/www/certbot
           
@@ -174,6 +177,8 @@ jobs:
           ZY_ZHIKU_DATA_DIR=/opt/zhiku/data
           ZY_ZHIKU_LOG_DIR=/var/log/zhiku
           ZY_ZHIKU_DOMAIN=${{ secrets.ZY_ZHIKU_DOMAIN }}
+          ZY_FANQIE_API_URL=http://127.0.0.1:9999
+          ZY_QIMAO_API_URL=http://127.0.0.1:7700
           ZY_SMTP_PORT=465
           ZY_SMTP_USER=${{ secrets.ZY_SMTP_USER }}
           ZY_SMTP_PASS=${{ secrets.ZY_SMTP_PASS }}
@@ -265,7 +270,234 @@ jobs:
           ENDSSH
 
   # ═══════════════════════════════════════════════════════
-  # Job 2: SSL 证书申请
+  # Job 2: 部署数据源服务 (FQWeb + SwiftCat)
+  # ═══════════════════════════════════════════════════════
+  setup-datasources:
+    name: '📡 部署数据源服务 · FQWeb + SwiftCat'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-datasources'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '☕ 安装 JRE 17 + Python3 运行环境'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+
+          echo "[ZY-SVR-006] ─── 安装运行环境 ───"
+
+          # JRE 17 (FQWeb 需要)
+          if ! java -version 2>&1 | grep -q '17\|21'; then
+            echo "[ZY-SVR-006] 安装 JRE 17..."
+            apt-get update -q
+            apt-get install -y openjdk-17-jre-headless
+          else
+            echo "[ZY-SVR-006] JRE 已安装: $(java -version 2>&1 | head -1)"
+          fi
+
+          # Python 3 + pip (SwiftCat 需要)
+          if ! command -v python3 &>/dev/null; then
+            echo "[ZY-SVR-006] 安装 Python3..."
+            apt-get update -q
+            apt-get install -y python3 python3-pip python3-venv
+          else
+            echo "[ZY-SVR-006] Python3 已安装: $(python3 --version)"
+          fi
+
+          # 创建数据源服务目录
+          mkdir -p /opt/zhiku/datasources/fqweb
+          mkdir -p /opt/zhiku/datasources/swiftcat
+          mkdir -p /var/log/zhiku
+
+          echo "[ZY-SVR-006] 运行环境就绪"
+          ENDSSH
+
+      - name: '📚 部署 FQWeb (番茄小说 API 服务)'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+
+          echo "[ZY-SVR-006] ─── 部署 FQWeb ───"
+          cd /opt/zhiku/datasources/fqweb
+
+          # 从 GitHub Release 下载最新 JAR
+          # benefit77/FanQieWeb 的 Release 文件为 FanQieWeb-xxx.jar
+          FQWEB_JAR=$(ls -t *.jar 2>/dev/null | head -1)
+
+          if [ -z "$FQWEB_JAR" ]; then
+            echo "[ZY-SVR-006] 下载 FQWeb JAR..."
+            # 获取最新 release asset URL
+            RELEASE_URL=$(curl -s https://api.github.com/repos/benefit77/FanQieWeb/releases/latest \
+              | python3 -c "import sys,json; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if a['name'].endswith('.jar')), ''))" 2>/dev/null)
+
+            if [ -n "$RELEASE_URL" ]; then
+              curl -L -o fqweb.jar "$RELEASE_URL"
+              FQWEB_JAR="fqweb.jar"
+              echo "[ZY-SVR-006] FQWeb JAR 已下载"
+            else
+              echo "[ZY-SVR-006] ⚠️ 无法获取 FQWeb Release，尝试构建..."
+              # 备用：克隆并用 gradlew 构建
+              if [ ! -d "source" ]; then
+                git clone --depth 1 https://github.com/benefit77/FanQieWeb.git source
+              fi
+              cd source
+              if [ -f "gradlew" ]; then
+                chmod +x gradlew
+                ./gradlew build -x test 2>&1 | tail -5
+                BUILT_JAR=$(find build/libs -name "*.jar" -not -name "*plain*" | head -1)
+                if [ -n "$BUILT_JAR" ]; then
+                  cp "$BUILT_JAR" /opt/zhiku/datasources/fqweb/fqweb.jar
+                  FQWEB_JAR="fqweb.jar"
+                fi
+              fi
+              cd /opt/zhiku/datasources/fqweb
+            fi
+          fi
+
+          if [ -n "$FQWEB_JAR" ]; then
+            echo "[ZY-SVR-006] FQWeb JAR: $FQWEB_JAR"
+            # 写启动脚本
+            cat > start.sh << 'STARTEOF'
+          #!/bin/bash
+          cd /opt/zhiku/datasources/fqweb
+          exec java -jar $(ls -t *.jar | head -1) --server.port=9999
+          STARTEOF
+            chmod +x start.sh
+            echo "[ZY-SVR-006] FQWeb 部署完成"
+          else
+            echo "[ZY-SVR-006] ⚠️ FQWeb JAR 未找到，跳过"
+          fi
+          ENDSSH
+
+      - name: '🐱 部署 SwiftCat (七猫小说下载器 API)'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+
+          echo "[ZY-SVR-006] ─── 部署 SwiftCat ───"
+          cd /opt/zhiku/datasources/swiftcat
+
+          # 克隆或更新代码
+          if [ -d ".git" ]; then
+            git pull --ff-only 2>/dev/null || true
+          else
+            # 先尝试新仓库名 (swiftcat-downloader)，再尝试旧名 (7mao-novel-downloader)
+            git clone --depth 1 https://github.com/shing-yu/swiftcat-downloader.git . 2>/dev/null \
+              || git clone --depth 1 https://github.com/shing-yu/7mao-novel-downloader.git . 2>/dev/null \
+              || echo "[ZY-SVR-006] ⚠️ SwiftCat 仓库不可达"
+          fi
+
+          # 创建 Python 虚拟环境并安装依赖
+          if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+            python3 -m venv venv 2>/dev/null || true
+            source venv/bin/activate 2>/dev/null || true
+
+            if [ -f "requirements.txt" ]; then
+              pip3 install -r requirements.txt 2>&1 | tail -3
+            elif [ -f "setup.py" ]; then
+              pip3 install -e . 2>&1 | tail -3
+            elif [ -f "pyproject.toml" ]; then
+              pip3 install . 2>&1 | tail -3
+            fi
+
+            # 写启动脚本
+            cat > start.sh << 'STARTEOF'
+          #!/bin/bash
+          cd /opt/zhiku/datasources/swiftcat
+          source venv/bin/activate 2>/dev/null || true
+          # 尝试常见入口
+          if [ -f "app.py" ]; then
+            exec python3 app.py --port 7700
+          elif [ -f "main.py" ]; then
+            exec python3 main.py --port 7700
+          elif [ -f "server.py" ]; then
+            exec python3 server.py --port 7700
+          else
+            echo "[SwiftCat] 未找到入口文件"
+            ls -la
+          fi
+          STARTEOF
+            chmod +x start.sh
+            echo "[ZY-SVR-006] SwiftCat 部署完成"
+          else
+            echo "[ZY-SVR-006] ⚠️ SwiftCat 依赖文件未找到"
+          fi
+          ENDSSH
+
+      - name: '🔄 注册到 PM2 并启动'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+
+          echo "[ZY-SVR-006] ─── 注册数据源服务到 PM2 ───"
+
+          # FQWeb (番茄小说)
+          if [ -f "/opt/zhiku/datasources/fqweb/start.sh" ] && ls /opt/zhiku/datasources/fqweb/*.jar &>/dev/null; then
+            pm2 describe fqweb &>/dev/null && pm2 delete fqweb || true
+            pm2 start /opt/zhiku/datasources/fqweb/start.sh \
+              --name fqweb \
+              --log /var/log/zhiku/fqweb.log \
+              --time
+            echo "[ZY-SVR-006] FQWeb 已注册到 PM2"
+          else
+            echo "[ZY-SVR-006] ⚠️ FQWeb 未就绪，跳过 PM2 注册"
+          fi
+
+          # SwiftCat (七猫小说)
+          if [ -f "/opt/zhiku/datasources/swiftcat/start.sh" ]; then
+            pm2 describe swiftcat &>/dev/null && pm2 delete swiftcat || true
+            pm2 start /opt/zhiku/datasources/swiftcat/start.sh \
+              --name swiftcat \
+              --log /var/log/zhiku/swiftcat.log \
+              --time
+            echo "[ZY-SVR-006] SwiftCat 已注册到 PM2"
+          else
+            echo "[ZY-SVR-006] ⚠️ SwiftCat 未就绪，跳过 PM2 注册"
+          fi
+
+          pm2 save
+
+          echo ""
+          echo "=== PM2 所有进程状态 ==="
+          pm2 list
+          ENDSSH
+
+      - name: '🏥 数据源健康检查'
+        run: |
+          sleep 8
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          echo "=== FQWeb 检查 (port 9999) ==="
+          curl -s --max-time 5 http://127.0.0.1:9999/version 2>/dev/null \
+            && echo "" && echo "✅ FQWeb 可达" \
+            || echo "⚠️ FQWeb 不可达 (端口 9999)"
+          echo ""
+
+          echo "=== SwiftCat 检查 (port 7700) ==="
+          curl -s --max-time 5 http://127.0.0.1:7700/ 2>/dev/null \
+            && echo "" && echo "✅ SwiftCat 可达" \
+            || echo "⚠️ SwiftCat 不可达 (端口 7700)"
+          echo ""
+
+          echo "=== 智库 API 搜索测试 ==="
+          curl -s --max-time 10 http://127.0.0.1:3006/api/health 2>/dev/null | python3 -m json.tool 2>/dev/null \
+            || echo "智库 API 未响应"
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 3: SSL 证书申请
   # ═══════════════════════════════════════════════════════
   setup-ssl:
     name: '🔐 SSL 证书申请'
@@ -305,7 +537,7 @@ jobs:
           ENDSSH
 
   # ═══════════════════════════════════════════════════════
-  # Job 3: 健康检查
+  # Job 4: 健康检查
   # ═══════════════════════════════════════════════════════
   health:
     name: '🏥 健康检查'
@@ -343,7 +575,7 @@ jobs:
           ENDSSH
 
   # ═══════════════════════════════════════════════════════
-  # Job 4: 回滚
+  # Job 5: 回滚
   # ═══════════════════════════════════════════════════════
   rollback:
     name: '⏪ 回滚'
