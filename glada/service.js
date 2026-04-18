@@ -438,8 +438,9 @@ function startService() {
 
       // 构建多轮对话消息
       const messages = [{ role: 'system', content: systemPrompt }];
-      // 加入最近历史（最多8轮）
-      const recentHistory = session.history.slice(-16);
+      // 加入最近历史（最多8轮 = 16条消息，每轮含user+assistant）
+      const MAX_HISTORY_MESSAGES = 16;
+      const recentHistory = session.history.slice(-MAX_HISTORY_MESSAGES);
       for (const h of recentHistory) {
         messages.push(h);
       }
@@ -559,9 +560,11 @@ function startService() {
       // 记录对话历史
       session.history.push({ role: 'user', content: message });
       session.history.push({ role: 'assistant', content: reply });
-      // 限制历史长度
-      if (session.history.length > 40) {
-        session.history = session.history.slice(-30);
+      // 限制历史长度（超过20轮=40条消息时，裁剪到最近15轮=30条）
+      const MAX_SESSION_MESSAGES = 40;
+      const TRIM_TO_MESSAGES = 30;
+      if (session.history.length > MAX_SESSION_MESSAGES) {
+        session.history = session.history.slice(-TRIM_TO_MESSAGES);
       }
 
       res.json({
