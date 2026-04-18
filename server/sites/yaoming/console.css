@@ -377,10 +377,12 @@ body::after {
 
 .srv-card, .s-card, .agent-card, .project-card {
   animation: consoleCardBreathe 7s ease-in-out infinite !important;
+  will-change: border-color, box-shadow;
 }
 
 .shield-stat, .shield-layer, .novel-module, .novel-stat, .shield-log {
   animation: consoleCardBreathe 8s ease-in-out infinite !important;
+  will-change: border-color, box-shadow;
 }
 
 /* OpenClaw 特殊呼吸 */
