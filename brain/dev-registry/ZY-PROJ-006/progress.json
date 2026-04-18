@@ -1,0 +1,134 @@
+{
+  "id": "ZY-PROJ-006",
+  "name": "光湖智库节点 · guanghu.online · 独立部署版",
+  "guardian": "铸渊 · ICE-GL-ZY001",
+  "copyright": "国作登字-2026-A-00037559",
+  "domain": "guanghu.online",
+  "server": "ZY-SVR-006 (43.153.203.105 · 新加坡)",
+  "background": {
+    "bingshuo_requirement": "智库节点从guanghuyaoming.com迁移至guanghu.online独立域名·首次落地模块借阅协议·QQ邮箱验证码登录·搜索下载·书岚AI图书管理员·七层镜防",
+    "zhuyuan_understanding": "一个完整的智能书库系统：邮箱认证→搜索→下载→在线阅读→AI Agent对话→七层安全防护·全部集成在单个Node.js服务中"
+  },
+  "architecture": {
+    "stack": "Node.js 20 + Express + PM2 + Nginx",
+    "port": 3006,
+    "frontend": "SPA · public/index.html + assets/",
+    "backend": "server/server.js (1671行 · 20个API端点)",
+    "subsystems": [
+      "mirror-shield: 七层镜防 (L1语言膜→L7核心 + 语言主控)",
+      "mirror-agent: 镜面Agent (快照+差异+LLM评估+工单)",
+      "shulan-agent: 书岚人格体 (四层提示词+守护Agent+对话工具包)",
+      "builtin-source: 内置数据源直连 (番茄小说fallback)"
+    ],
+    "api_endpoints": {
+      "auth": ["POST /api/auth/send-code", "POST /api/auth/verify", "GET /api/auth/session", "POST /api/auth/logout"],
+      "search": ["GET /api/search", "GET /api/sources/check"],
+      "download": ["POST /api/download/start", "GET /api/download/status/:taskId", "GET /api/download/local/:bookId"],
+      "agent": ["POST /api/agent/chat", "GET /api/agent/memory", "GET /api/agent/status"],
+      "reader": ["GET /api/reader/catalog/:source/:bookId", "GET /api/reader/chapter"],
+      "legacy": ["POST /api/checkout", "POST /api/return", "GET /api/book/:id", "GET /api/download/:id", "GET /api/read/:id"],
+      "mirror": ["/api/mirror/*"],
+      "health": ["GET /api/health"]
+    }
+  },
+  "phases": [
+    {
+      "id": "ZY-PROJ-006-PHASE-1",
+      "name": "基础落地 · 邮箱登录 + 搜索 + 部署",
+      "status": "completed",
+      "completed_at": "2026-04-17",
+      "content": [
+        "QQ邮箱验证码登录系统 (SMTP直发 + 主站转发备用)",
+        "JWT Token认证 (24h过期 + 黑名单注销)",
+        "番茄+七猫数据源搜索 (外部API + 内置直连fallback)",
+        "Nginx反代配置 (HTTP→HTTPS重定向 + /api/代理)",
+        "PM2守护进程配置",
+        "部署工作流 deploy-zhiku-guanghu-online.yml (deploy/setup-ssl/health/rollback)"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-006-PHASE-2",
+      "name": "七层镜防 + 书岚Agent + 下载引擎",
+      "status": "completed",
+      "completed_at": "2026-04-17",
+      "content": [
+        "七层镜防集成 (L1语言膜→L7核心 + 语言主控5指令)",
+        "书岚人格体AG-SL-WEB-001 (四层提示词+守护Agent+对话工具包)",
+        "下载引擎 (外部API→COS桶 + 内置直连fallback)",
+        "在线阅读器 (章节目录+分章阅读+进度存储)",
+        "镜面Agent (快照+差异检测+LLM评估+安全工单)"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-006-PHASE-3",
+      "name": "修复部署缺失 + 服务器恢复",
+      "status": "in_progress",
+      "started_at": "2026-04-18",
+      "content": [
+        "✅ 诊断：zhiku-api errored状态(36次崩溃) → builtin-source目录部署缺失",
+        "✅ 修复：deploy workflow添加builtin-source上传步骤",
+        "✅ 加固：server.js将builtin-source改为可选加载(try/catch)",
+        "✅ 优化：前端Safari/iOS错误处理改善",
+        "✅ 加固：deploy workflow添加package-lock.json上传",
+        "⏳ 合并PR后触发部署 → 验证服务器恢复"
+      ],
+      "next_step": "合并本PR后触发deploy-zhiku-guanghu-online.yml部署·验证zhiku-api启动成功·验证邮箱验证码发送正常"
+    },
+    {
+      "id": "ZY-PROJ-006-PHASE-4",
+      "name": "SSL证书 + 健康监控 + 稳定性加固",
+      "status": "planned",
+      "content": [
+        "申请SSL证书 (setup-ssl动作 · certbot + nginx)",
+        "配置HTTPS正式模式 (替换HTTP-only临时配置)",
+        "健康监控端点加强 (/api/health完整系统自检)",
+        "PM2日志轮转配置",
+        "定时备份数据目录"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-006-PHASE-5",
+      "name": "用户体验优化 + 书岚Agent增强",
+      "status": "planned",
+      "content": [
+        "搜索结果分页 + 排序",
+        "下载任务队列管理 (同时下载数限制 + 任务列表页)",
+        "在线阅读器优化 (阅读进度云同步 + 书签 + 夜间模式)",
+        "书岚Agent记忆增强 (长期偏好学习 + 推荐系统)",
+        "书岚Agent工具调用 (搜索+下载+分章 工具包集成)",
+        "前端响应式优化 (移动端适配完善)"
+      ]
+    },
+    {
+      "id": "ZY-PROJ-006-PHASE-6",
+      "name": "团队书库 + 数据持久化",
+      "status": "planned",
+      "content": [
+        "团队书库 (男频/女频分区 + 评分评论系统)",
+        "SQLite/Redis数据持久化 (替换JSON文件存储)",
+        "COS桶书籍管理 (上传/下载/删除 + 容量统计)",
+        "用户书架管理 (收藏 + 阅读历史 + 推荐列表)",
+        "管理后台 (用户管理 + 书籍管理 + 系统设置)"
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "ZY-PROJ-006-FIX-1",
+      "date": "2026-04-18",
+      "problem": "邮箱验证码登录失效 — Safari显示'The string did not match the expected pattern'",
+      "root_cause": "部署workflow(deploy-zhiku-guanghu-online.yml)未上传builtin-source/目录到服务器。server.js第66行require('./builtin-source')启动时直接崩溃(MODULE_NOT_FOUND)。PM2重启36次后放弃→zhiku-api状态errored→所有API不可用→前端fetch失败→Safari显示底层TypeError",
+      "fix": "1)部署workflow添加builtin-source目录创建+上传步骤 2)server.js将builtin-source改为try/catch可选加载(非核心模块不应阻塞整个服务) 3)所有builtinSource调用点添加null检查 4)前端Safari/iOS TypeError处理改为友好提示 5)部署workflow添加package-lock.json上传",
+      "files_changed": [
+        ".github/workflows/deploy-zhiku-guanghu-online.yml",
+        "server/zhiku-node/server/server.js",
+        "server/zhiku-node/public/assets/js/main.js"
+      ],
+      "result": "implemented",
+      "lesson_learned": "部署workflow每添加新子模块目录时必须同步添加上传步骤。非核心模块应使用try/catch可选加载防止级联崩溃。"
+    }
+  ],
+  "status": "in_progress",
+  "current_phase": "ZY-PROJ-006-PHASE-3",
+  "last_active": "2026-04-18"
+}
