@@ -43,3 +43,5 @@
 - 私钥仅写入 runner 临时目录 `~/.ssh/id_rsa`，并在流程结束后清理。
 - 工作流不会打印私钥内容。
 - `permissions` 为 `contents: read`，遵循最小权限原则。
+- 生产环境建议配置 `SSH_KNOWN_HOSTS`；若未配置，工作流会使用 `ssh-keyscan` 回退并打印指纹，需自行进行带外校验。
+- 指纹校验建议：请向服务器管理员获取可信指纹（例如通过控制台登录服务器执行 `for k in /etc/ssh/ssh_host_*_key.pub; do ssh-keygen -lf \"$k\"; done`），并与工作流日志中的指纹逐项比对。
