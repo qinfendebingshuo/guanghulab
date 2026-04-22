@@ -1,0 +1,112 @@
+name: 🔐 SSH Connectivity Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      remote_path:
+        description: 'Remote directory path to inspect (optional)'
+        required: false
+        default: ''
+        type: string
+      ssh_port:
+        description: 'SSH port override (optional, default from secrets or 22)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  check-ssh-and-list-files:
+    name: Check SSH and List Remote Files
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST || secrets.ZY_SERVER_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER || secrets.ZY_SERVER_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.ZY_SERVER_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SECRET_SSH_PORT: ${{ secrets.SSH_PORT }}
+      SECRET_REMOTE_PATH: ${{ secrets.REMOTE_PATH || secrets.ZY_SERVER_PATH }}
+      INPUT_SSH_PORT: ${{ github.event.inputs.ssh_port }}
+      INPUT_REMOTE_PATH: ${{ github.event.inputs.remote_path }}
+    steps:
+      - name: Validate required secrets
+        run: |
+          set -euo pipefail
+          [ -n "${SSH_HOST}" ] || { echo "❌ Missing secret: SSH_HOST (or fallback ZY_SERVER_HOST)"; exit 1; }
+          [ -n "${SSH_USER}" ] || { echo "❌ Missing secret: SSH_USER (or fallback ZY_SERVER_USER)"; exit 1; }
+          [ -n "${SSH_PRIVATE_KEY}" ] || { echo "❌ Missing secret: SSH_PRIVATE_KEY (or fallback ZY_SERVER_KEY)"; exit 1; }
+
+      - name: Setup SSH client configuration
+        run: |
+          set -euo pipefail
+          SSH_PORT_EFFECTIVE="${INPUT_SSH_PORT:-${SECRET_SSH_PORT:-22}}"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          echo "::add-mask::${SSH_PRIVATE_KEY}"
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          if [ -n "${SSH_KNOWN_HOSTS}" ]; then
+            printf '%s\n' "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          else
+            echo "⚠️ SSH_KNOWN_HOSTS not set; using ssh-keyscan fallback for this run"
+            ssh-keyscan -p "${SSH_PORT_EFFECTIVE}" -H "${SSH_HOST}" > /tmp/ssh_known_hosts_scanned 2> /tmp/ssh_keyscan_stderr || true
+            [ -s /tmp/ssh_known_hosts_scanned ] || {
+              echo "❌ ssh-keyscan failed to retrieve host key"
+              cat /tmp/ssh_keyscan_stderr || true
+              exit 1
+            }
+            cat /tmp/ssh_known_hosts_scanned >> ~/.ssh/known_hosts
+            echo "Scanned host key fingerprints (verify out-of-band for production):"
+            ssh-keygen -lf /tmp/ssh_known_hosts_scanned || true
+            rm -f /tmp/ssh_known_hosts_scanned /tmp/ssh_keyscan_stderr
+          fi
+          chmod 600 ~/.ssh/known_hosts
+
+          {
+            echo "SSH_PORT_EFFECTIVE=${SSH_PORT_EFFECTIVE}"
+          } >> "$GITHUB_ENV"
+
+      - name: SSH connectivity test
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/id_rsa \
+            -p "${SSH_PORT_EFFECTIVE}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o StrictHostKeyChecking=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            "echo CONNECT_OK"
+
+      - name: List remote files
+        run: |
+          set -euo pipefail
+          REMOTE_PATH_EFFECTIVE="${INPUT_REMOTE_PATH:-${SECRET_REMOTE_PATH:-~}}"
+
+          ssh -i ~/.ssh/id_rsa \
+            -p "${SSH_PORT_EFFECTIVE}" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o StrictHostKeyChecking=yes \
+            "${SSH_USER}@${SSH_HOST}" \
+            'bash -s' -- "${REMOTE_PATH_EFFECTIVE}" <<'REMOTE'
+          set -euo pipefail
+          remote_path="${1:-~}"
+
+          echo "REMOTE_PATH=${remote_path}"
+          echo "===== pwd ====="
+          pwd
+          echo "===== ls -lah ====="
+          ls -lah "${remote_path}"
+          echo "===== find (maxdepth 2, first 200 files) ====="
+          find "${remote_path}" -maxdepth 2 -type f | head -n 200
+REMOTE
+
+      - name: Cleanup SSH key material
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_rsa ~/.ssh/known_hosts
