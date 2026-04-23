@@ -60,9 +60,9 @@ module.exports = {
       PORT: 3900,
       GLADA_PORT: 3900,
       GLADA_POLL_INTERVAL: 30000,
-      GLADA_MODEL: 'deepseek-chat',
-      GLADA_MODEL_PREFERENCE: '',           // 空 = 让 model-router 自动选择
-      GLADA_MODEL_REFRESH_MS: 600000,       // 模型列表刷新间隔（10分钟）
+      GLADA_MODEL: 'deepseek-v3',             // PoloAPI 默认模型
+      GLADA_MODEL_PREFERENCE: '',             // 空 = 让 model-router 自动选择
+      GLADA_MODEL_REFRESH_MS: 600000,         // 模型列表刷新间隔（10分钟）
       GLADA_STOP_ON_FAILURE: 'true',
       // 从 .env 文件链加载 LLM 密钥（部署时由 workflow 写入）
       ...mergedEnv
