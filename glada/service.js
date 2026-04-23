@@ -233,6 +233,14 @@ function startService() {
   const app = express();
   app.use(express.json());
 
+  // ── 加载 Web 扩展（映川对话 · 系统状态 · CORS）──
+  try {
+    require('./web-extensions')(app);
+    console.log('[GLADA] ✅ Web扩展已加载（CORS · 映川对话 · 系统状态）');
+  } catch(e) {
+    console.warn('[GLADA] ⚠️ web-extensions加载跳过:', e.message);
+  }
+
   // 速率限制实例：每分钟 60 次请求
   const apiLimiter = rateLimit(60 * 1000, 60);
 
@@ -605,6 +613,8 @@ function startService() {
     console.log(`   GET  /api/glada/status    队列状态`);
     console.log(`   POST /api/glada/submit    提交任务`);
     console.log(`   POST /api/glada/chat      对话接口`);
+    console.log(`   POST /api/glada/chat/yingchuan  映川对话`);
+    console.log(`   GET  /api/glada/system-status   系统状态`);
     console.log(`   GET  /api/glada/task/:id  查看任务`);
     console.log(`   GET  /api/glada/receipt/:id  查看回执`);
     console.log('═'.repeat(50));
