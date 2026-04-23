@@ -201,494 +201,55 @@ jobs:
           # ─── Nginx 配置 ───
           ln -sf /etc/nginx/sites-available/zhiku /etc/nginx/sites-enabled/zhiku
           
-          # 检查 SSL 证书是否存在，不存在则先用 HTTP 模式
-          if [ ! -f /etc/letsencrypt/live/guanghu.online/fullchain.pem ]; then
-            echo "[ZY-SVR-006] SSL 证书尚未申请，先使用 HTTP 模式"
-            # 临时替换 Nginx 配置为 HTTP only
-            cat > /etc/nginx/sites-available/zhiku << 'NGINX_TEMP'
-          server {
-              listen 80;
-              listen [::]:80;
-              server_name guanghu.online www.guanghu.online;
-              
-              root /opt/zhiku/public;
-              index index.html;
-              
-              location /.well-known/acme-challenge/ {
-                  root /var/www/certbot;
-              }
-              
-              location /api/ {
-                  proxy_pass http://127.0.0.1:3006;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-              }
-              
-              location /assets/ {
-                  expires 7d;
-                  add_header Cache-Control "public, immutable";
-              }
-              
-              location / {
-                  try_files $uri $uri/ /index.html;
-              }
-          }
-          NGINX_TEMP
+          # 检查 SSL 证书是否存在，不存在则先用HTTP配置
+          if [ ! -f /etc/letsencrypt/live/$ZY_ZHIKU_DOMAIN/fullchain.pem ]; then
+            sed -i 's/listen 443 ssl http2/listen 80/' /etc/nginx/sites-enabled/zhiku
+            sed -i 's/listen [::]:443 ssl http2/listen [::]:80/' /etc/nginx/sites-enabled/zhiku
+            sed -i '/ssl_/d' /etc/nginx/sites-enabled/zhiku
+            sed -i '/add_header X-Frame-Options/d' /etc/nginx/sites-enabled/zhiku
           fi
           
-          nginx -t && systemctl reload nginx
-          echo "[ZY-SVR-006] Nginx 已重载"
-          
-          # ─── PM2 启动/重启 ───
+          # ─── 启动/重启服务 ───
+          pm2 delete zhiku-api 2>/dev/null || true
           cd /opt/zhiku
-          if pm2 describe zhiku-api &>/dev/null; then
-            pm2 restart zhiku-api
-            echo "[ZY-SVR-006] zhiku-api 已重启"
-          else
-            pm2 start ecosystem.config.js
-            echo "[ZY-SVR-006] zhiku-api 已启动"
-          fi
-          
+          pm2 start ecosystem.config.js --env production
           pm2 save
-          pm2 startup systemd -u root --hp /root 2>/dev/null || true
+          pm2 startup 2>/dev/null || true
           
-          echo "[ZY-SVR-006] 部署完成 · guanghu.online"
-          ENDSSH
-
-      - name: '🏥 健康检查'
-        run: |
-          sleep 5
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          set -e
-          echo "=== PM2 状态 ==="
-          pm2 list
-          echo ""
-          echo "=== API 健康检查 ==="
-          curl -s http://127.0.0.1:3006/api/health | python3 -m json.tool || echo "API 未响应"
-          echo ""
-          echo "=== Nginx 状态 ==="
-          systemctl status nginx --no-pager -l | head -10
-          ENDSSH
-
-  # ═══════════════════════════════════════════════════════
-  # Job 2: 部署数据源服务 (FQWeb + SwiftCat)
-  # ═══════════════════════════════════════════════════════
-  setup-datasources:
-    name: '📡 部署数据源服务 · FQWeb + SwiftCat'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-datasources'
-
-    steps:
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '☕ 安装 JDK 17 + Python3 运行环境'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          set -e
-
-          echo "[ZY-SVR-006] ─── 安装运行环境 ───"
-
-          # JDK 17+ (FQWeb 运行需要 JRE · Gradle 构建需要完整 JDK)
-          if ! javac -version 2>&1 | grep -q '17\|21'; then
-            echo "[ZY-SVR-006] 安装 JDK 17..."
-            apt-get update -q
-            apt-get install -y openjdk-17-jdk-headless
-          else
-            echo "[ZY-SVR-006] JDK 已安装: $(javac -version 2>&1 | head -1)"
-          fi
-
-          # Python 3 + pip (SwiftCat 需要)
-          if ! command -v python3 &>/dev/null; then
-            echo "[ZY-SVR-006] 安装 Python3..."
-            apt-get update -q
-            apt-get install -y python3 python3-pip python3-venv
-          else
-            echo "[ZY-SVR-006] Python3 已安装: $(python3 --version)"
-          fi
-
-          # 创建数据源服务目录
-          mkdir -p /opt/zhiku/datasources/fqweb
-          mkdir -p /opt/zhiku/datasources/swiftcat
-          mkdir -p /var/log/zhiku
-
-          echo "[ZY-SVR-006] 运行环境就绪"
-          ENDSSH
-
-      - name: '📚 部署 FQWeb (番茄小说 API 服务)'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          set -e
-
-          echo "[ZY-SVR-006] ─── 部署 FQWeb ───"
-          cd /opt/zhiku/datasources/fqweb
-
-          # 检查已有 JAR
-          FQWEB_JAR=$(ls -t *.jar 2>/dev/null | head -1)
-
-          if [ -z "$FQWEB_JAR" ]; then
-            echo "[ZY-SVR-006] 下载 FQWeb JAR..."
-            # 依次尝试: 上游 6DDUU6/FQWeb → fork benefit77/FanQieWeb
-            RELEASE_URL=""
-            for REPO in "6DDUU6/FQWeb" "benefit77/FanQieWeb"; do
-              echo "[ZY-SVR-006] 查询 ${REPO} Release..."
-              RELEASE_URL=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" \
-                | python3 -c "import sys,json; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if a['name'].endswith('.jar')), ''))" 2>/dev/null)
-              if [ -n "$RELEASE_URL" ]; then
-                echo "[ZY-SVR-006] 找到 Release: ${REPO}"
-                break
-              fi
-            done
-
-            if [ -n "$RELEASE_URL" ]; then
-              curl -L -o fqweb.jar "$RELEASE_URL"
-              FQWEB_JAR="fqweb.jar"
-              echo "[ZY-SVR-006] FQWeb JAR 已下载"
-            else
-              echo "[ZY-SVR-006] ⚠️ 无 Release 可用，尝试从源码构建..."
-              # 备用：克隆并用 gradlew 构建（需要 JDK）
-              rm -rf source 2>/dev/null
-              CLONE_OK=false
-              for REPO in "6DDUU6/FQWeb" "benefit77/FanQieWeb"; do
-                echo "[ZY-SVR-006] 尝试克隆 ${REPO}..."
-                if git clone --depth 1 "https://github.com/${REPO}.git" source 2>/dev/null; then
-                  CLONE_OK=true
-                  echo "[ZY-SVR-006] 已克隆 ${REPO}"
-                  break
-                fi
-              done
-
-              if [ "$CLONE_OK" = true ] && [ -d "source" ]; then
-                cd source
-                if [ -f "gradlew" ]; then
-                  chmod +x gradlew
-                  echo "[ZY-SVR-006] 开始 Gradle 构建（需要 JDK 17+）..."
-                  ./gradlew build -x test 2>&1 | tail -10
-                  BUILT_JAR=$(find build/libs -name "*.jar" -not -name "*plain*" 2>/dev/null | head -1)
-                  if [ -n "$BUILT_JAR" ]; then
-                    cp "$BUILT_JAR" /opt/zhiku/datasources/fqweb/fqweb.jar
-                    FQWEB_JAR="fqweb.jar"
-                    echo "[ZY-SVR-006] ✅ FQWeb 构建成功"
-                  else
-                    echo "[ZY-SVR-006] ⚠️ 构建产物未找到（build/libs 目录不存在或无 JAR）"
-                  fi
-                else
-                  echo "[ZY-SVR-006] ⚠️ 无 gradlew 文件，无法构建"
-                fi
-                cd /opt/zhiku/datasources/fqweb
-              fi
-            fi
-          fi
-
-          if [ -n "$FQWEB_JAR" ]; then
-            echo "[ZY-SVR-006] FQWeb JAR: $FQWEB_JAR"
-            # 写启动脚本
-            cat > start.sh << 'STARTEOF'
-          #!/bin/bash
-          cd /opt/zhiku/datasources/fqweb
-          exec java -jar $(ls -t *.jar | head -1) --server.port=9999
-          STARTEOF
-            chmod +x start.sh
-            echo "[ZY-SVR-006] FQWeb 部署完成"
-          else
-            echo "[ZY-SVR-006] ⚠️ FQWeb JAR 未找到，跳过"
-          fi
-          ENDSSH
-
-      - name: '🐱 部署 SwiftCat (七猫小说下载器 API)'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          set -e
-
-          echo "[ZY-SVR-006] ─── 部署 SwiftCat ───"
-          cd /opt/zhiku/datasources/swiftcat
-
-          SWIFTCAT_READY=false
-
-          # ─── 策略1: 已有可用代码（git pull 更新）───
-          if [ -d ".git" ] && { [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; }; then
-            echo "[ZY-SVR-006] 已有 SwiftCat 代码，尝试更新..."
-            git pull --ff-only 2>/dev/null || true
-            SWIFTCAT_READY=true
-          else
-            # 清理非 Python 源码的残留目录（如上次克隆了 binary-only 的 swiftcat-downloader）
-            if [ -d ".git" ] && ! { [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; }; then
-              echo "[ZY-SVR-006] 清理无效的旧克隆..."
-              cd /opt/zhiku/datasources
-              rm -rf swiftcat
-              mkdir -p swiftcat
-              cd swiftcat
-            fi
-
-            # ─── 策略2: 克隆有 Python 源码的仓库 ───
-            # 7mao-novel-downloader (已归档但仍可克隆·有 Python 源码)
-            echo "[ZY-SVR-006] 尝试克隆 7mao-novel-downloader (Python 源码)..."
-            if git clone --depth 1 https://github.com/shing-yu/7mao-novel-downloader.git . 2>/dev/null; then
-              if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
-                echo "[ZY-SVR-006] ✅ 7mao-novel-downloader 克隆成功 (有 Python 依赖)"
-                SWIFTCAT_READY=true
-              else
-                echo "[ZY-SVR-006] 7mao-novel-downloader 无 Python 依赖文件"
-              fi
-            else
-              echo "[ZY-SVR-006] 7mao-novel-downloader 仓库不可达"
-            fi
-
-            # ─── 策略3: 如果源码不可用，下载 release 二进制 ───
-            if [ "$SWIFTCAT_READY" = false ]; then
-              echo "[ZY-SVR-006] 尝试下载 swiftcat-downloader release 二进制..."
-              # 清理可能的残留
-              rm -rf .git 2>/dev/null
-              BINARY_URL=$(curl -s "https://api.github.com/repos/shing-yu/swiftcat-downloader/releases/latest" \
-                | python3 -c "import sys,json; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if 'linux' in a['name'].lower()), ''))" 2>/dev/null)
-
-              if [ -n "$BINARY_URL" ]; then
-                curl -L -o swiftcat "$BINARY_URL"
-                chmod +x swiftcat
-                echo "[ZY-SVR-006] ✅ SwiftCat 二进制已下载"
-                # 为二进制创建启动脚本
-                cat > start.sh << 'STARTEOF'
-          #!/bin/bash
-          cd /opt/zhiku/datasources/swiftcat
-          export PORT=7700
-          if [ -f "swiftcat" ]; then
-            exec ./swiftcat --port ${PORT} 2>/dev/null || exec ./swiftcat
-          fi
-          STARTEOF
-                chmod +x start.sh
-                SWIFTCAT_READY=binary
-                echo "[ZY-SVR-006] SwiftCat 二进制部署完成"
-              else
-                echo "[ZY-SVR-006] ⚠️ SwiftCat release 也无 Linux 二进制"
-              fi
-            fi
-          fi
-
-          # ─── 为 Python 源码创建虚拟环境和启动脚本 ───
-          if [ "$SWIFTCAT_READY" = true ]; then
-            if [ -f "requirements.txt" ] || [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
-              python3 -m venv venv 2>/dev/null || true
-              source venv/bin/activate 2>/dev/null || true
-
-              if [ -f "requirements.txt" ]; then
-                pip3 install -r requirements.txt 2>&1 | tail -3
-              elif [ -f "setup.py" ]; then
-                pip3 install -e . 2>&1 | tail -3
-              elif [ -f "pyproject.toml" ]; then
-                pip3 install . 2>&1 | tail -3
-              fi
-
-              cat > start.sh << 'STARTEOF'
-          #!/bin/bash
-          cd /opt/zhiku/datasources/swiftcat
-          source venv/bin/activate 2>/dev/null || true
-          export PORT=7700
-          if [ -f "app.py" ]; then
-            exec python3 app.py --port ${PORT} 2>/dev/null || exec python3 app.py
-          elif [ -f "main.py" ]; then
-            exec python3 main.py --port ${PORT} 2>/dev/null || exec python3 main.py
-          elif [ -f "server.py" ]; then
-            exec python3 server.py --port ${PORT} 2>/dev/null || exec python3 server.py
-          else
-            echo "[SwiftCat] 未找到入口文件 (app.py/main.py/server.py)"
-            ls -la *.py 2>/dev/null || echo "无 Python 文件"
-          fi
-          STARTEOF
-              chmod +x start.sh
-              echo "[ZY-SVR-006] SwiftCat Python 部署完成"
-            fi
-          elif [ "$SWIFTCAT_READY" = false ]; then
-            echo "[ZY-SVR-006] ⚠️ SwiftCat 所有部署策略均失败"
-            echo "[ZY-SVR-006] 说明: swiftcat-downloader 仅发布二进制(Python版不开源)，7mao-novel-downloader 已归档"
-            echo "[ZY-SVR-006] 建议: 智库系统将自动使用内置直连适配器作为 fallback"
-          fi
-          ENDSSH
-
-      - name: '🔄 注册到 PM2 并启动'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          set -e
-
-          echo "[ZY-SVR-006] ─── 注册数据源服务到 PM2 ───"
-
-          # FQWeb (番茄小说)
-          if [ -f "/opt/zhiku/datasources/fqweb/start.sh" ] && ls /opt/zhiku/datasources/fqweb/*.jar &>/dev/null; then
-            pm2 describe fqweb &>/dev/null && pm2 delete fqweb || true
-            pm2 start /opt/zhiku/datasources/fqweb/start.sh \
-              --name fqweb \
-              --log /var/log/zhiku/fqweb.log \
-              --time
-            echo "[ZY-SVR-006] FQWeb 已注册到 PM2"
-          else
-            echo "[ZY-SVR-006] ⚠️ FQWeb 未就绪，跳过 PM2 注册"
-          fi
-
-          # SwiftCat (七猫小说)
-          if [ -f "/opt/zhiku/datasources/swiftcat/start.sh" ]; then
-            pm2 describe swiftcat &>/dev/null && pm2 delete swiftcat || true
-            pm2 start /opt/zhiku/datasources/swiftcat/start.sh \
-              --name swiftcat \
-              --log /var/log/zhiku/swiftcat.log \
-              --time
-            echo "[ZY-SVR-006] SwiftCat 已注册到 PM2"
-          else
-            echo "[ZY-SVR-006] ⚠️ SwiftCat 未就绪，跳过 PM2 注册"
-          fi
-
-          pm2 save
-
-          echo ""
-          echo "=== PM2 所有进程状态 ==="
-          pm2 list
-          ENDSSH
-
-      - name: '🏥 数据源健康检查'
-        run: |
-          sleep 8
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          echo "=== FQWeb 检查 (port 9999) ==="
-          curl -s --max-time 5 http://127.0.0.1:9999/version 2>/dev/null \
-            && echo "" && echo "✅ FQWeb 可达" \
-            || echo "⚠️ FQWeb 不可达 (端口 9999)"
-          echo ""
-
-          echo "=== SwiftCat 检查 (port 7700) ==="
-          curl -s --max-time 5 http://127.0.0.1:7700/ 2>/dev/null \
-            && echo "" && echo "✅ SwiftCat 可达" \
-            || echo "⚠️ SwiftCat 不可达 (端口 7700)"
-          echo ""
-
-          echo "=== 智库 API 搜索测试 ==="
-          curl -s --max-time 10 http://127.0.0.1:3006/api/health 2>/dev/null | python3 -m json.tool 2>/dev/null \
-            || echo "智库 API 未响应"
-          ENDSSH
-
-  # ═══════════════════════════════════════════════════════
-  # Job 3: SSL 证书申请
-  # ═══════════════════════════════════════════════════════
-  setup-ssl:
-    name: '🔐 SSL 证书申请'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
-
-    steps:
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '🔐 申请 Let''s Encrypt SSL'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          set -e
-          
-          # 安装 certbot
-          apt-get update -q
-          apt-get install -y certbot python3-certbot-nginx
-          
-          # 申请证书
-          certbot --nginx -d guanghu.online -d www.guanghu.online \
-            --non-interactive --agree-tos \
-            --email admin@guanghu.online \
-            --redirect
-          
-          echo "[ZY-SVR-006] SSL 证书已申请 · guanghu.online"
-          
-          # 上传正式 Nginx 配置（如果存在 SSL 模式的备份）
+          # 重载 Nginx
           nginx -t && systemctl reload nginx
+          
+          # 验证服务状态
+          echo "[ZY-SVR-006] 服务启动状态:"
+          pm2 list | grep zhiku-api
+          
+          # 验证API可达性
+          echo "[ZY-SVR-006] API健康检查:"
+          curl -s http://localhost:3006/api/health | jq -r '.status'
+          
+          echo "[ZY-SVR-006] 部署完成 · 服务已启动"
           ENDSSH
 
-  # ═══════════════════════════════════════════════════════
-  # Job 4: 健康检查
-  # ═══════════════════════════════════════════════════════
-  health:
-    name: '🏥 健康检查'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
-
-    steps:
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '🏥 检查服务状态'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
-          echo "=== PM2 状态 ==="
-          pm2 list
-          echo ""
-          echo "=== zhiku-api 健康检查 ==="
-          curl -s http://127.0.0.1:3006/api/health | python3 -m json.tool || echo "API 未响应"
-          echo ""
-          echo "=== Nginx 状态 ==="
-          systemctl status nginx --no-pager -l | head -10
-          echo ""
-          echo "=== 磁盘使用 ==="
-          df -h /opt/zhiku
-          echo ""
-          echo "=== 日志最后10行 ==="
-          tail -10 /var/log/zhiku/pm2-zhiku-api.log 2>/dev/null || echo "暂无日志"
-          ENDSSH
-
-  # ═══════════════════════════════════════════════════════
-  # Job 5: 回滚
-  # ═══════════════════════════════════════════════════════
-  rollback:
-    name: '⏪ 回滚'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
-
-    steps:
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '⏪ 回滚到备份'
+      - name: '✅ 验证服务状态'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
-          if [ -d /opt/zhiku.bak ]; then
-            pm2 stop zhiku-api || true
-            rm -rf /opt/zhiku.rollback
-            mv /opt/zhiku /opt/zhiku.rollback
-            cp -r /opt/zhiku.bak /opt/zhiku
-            cd /opt/zhiku && pm2 start ecosystem.config.js
-            pm2 save
-            echo "[ZY-SVR-006] 已回滚到备份版本"
-          else
-            echo "[ZY-SVR-006] 无备份可回滚"
+          
+          # 检查PM2状态
+          status=$(pm2 list | grep zhiku-api | awk '{print $10}')
+          if [ "$status" != "online" ]; then
+            echo "[ZY-SVR-006] ❌ zhiku-api状态异常: $status"
+            pm2 logs zhiku-api --lines 20
             exit 1
           fi
+          
+          # 检查API健康端点
+          health=$(curl -s http://localhost:3006/api/health | jq -r '.status')
+          if [ "$health" != "ok" ]; then
+            echo "[ZY-SVR-006] ❌ API健康检查失败: $health"
+            exit 1
+          fi
+          
+          echo "[ZY-SVR-006] ✅ 服务验证通过: status=$status, health=$health"
           ENDSSH
