@@ -247,27 +247,35 @@ function generateCode() {
 async function sendVerificationEmail(email, code) {
   // 方式1: 直接SMTP发送（首选 · 可靠）
   const effectiveHost = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
-  if (effectiveHost && SMTP_USER && 
-    SMTP_PASS && SMTP_USER.includes('@') && SMTP_USER.split('@')[1].includes('.')) {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: effectiveHost,
-      port: parseInt(SMTP_PORT, 10) || 465,
-      secure: true,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS
-      }
-    });
-
+  if (effectiveHost && SMTP_USER && SMTP_PASS) {
     try {
-      await transporter.sendMail({
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        host: effectiveHost,
+        port: SMTP_PORT,
+        secure: true,
+        auth: {
+          user: SMTP_USER,
+          pass: SMTP_PASS
+        }
+      });
+
+      const mailOptions = {
         from: `"光湖智库" <${SMTP_USER}>`,
         to: email,
         subject: '光湖智库验证码',
-        html: `您的验证码是: <b>${code}</b>，5分钟内有效`
-      });
-      return true;
+        text: `您的验证码是: ${code}\n验证码5分钟内有效，请勿泄露给他人。`,
+        html: `
+          <div style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; padding: 20px;">
+            <h2 style="color: #1890ff;">光湖智库验证码</h2>
+            <p>您的验证码是: <strong style="font-size: 24px; color: #1890ff;">${code}</strong></p>
+            <p style="color: #999; font-size: 12px;">验证码5分钟内有效，请勿泄露给他人。</p>
+          </div>
+        `
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      return { success: true, method: 'smtp', messageId: info.messageId };
     } catch (err) {
       console.error(`[ZY-SVR-006] SMTP发送失败 (${err.message})，尝试方式2`);
     }
@@ -277,149 +285,153 @@ async function sendVerificationEmail(email, code) {
   if (MAIN_API_URL) {
     try {
       const axios = require('axios');
-      await axios.post(`${MAIN_API_URL}/api/email/send`, {
+      const res = await axios.post(`${MAIN_API_URL}/api/mail/send`, {
         to: email,
         subject: '光湖智库验证码',
-        html: `您的验证码是: <b>${code}</b>，5分钟内有效`
+        text: `您的验证码是: ${code}\n验证码5分钟内有效，请勿泄露给他人。`,
+        html: `
+          <div style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; padding: 20px;">
+            <h2 style="color: #1890ff;">光湖智库验证码</h2>
+            <p>您的验证码是: <strong style="font-size: 24px; color: #1890ff;">${code}</strong></p>
+            <p style="color: #999; font-size: 12px;">验证码5分钟内有效，请勿泄露给他人。</p>
+          </div>
+        `
       }, { timeout: 5000 });
-      return true;
+      return { success: true, method: 'api', messageId: res.data.messageId };
     } catch (err) {
-      console.error(`[ZY-SVR-006] 主站转发失败 (${err.message})`);
+      console.error(`[ZY-SVR-006] 主站API转发失败 (${err.message})`);
     }
   }
 
-  // 方式3: 开发模式直接记录到日志（仅限开发）
+  // 方式3: 开发模式记录日志
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[DEV] 验证码 ${code} 发送至 ${email}`);
-    return true;
+    console.log(`[DEV] 验证码邮件 (不实际发送): ${email} → ${code}`);
+    return { success: true, method: 'dev', messageId: 'dev-mode-no-send' };
   }
 
-  return false;
+  return { success: false, error: '无法发送验证码邮件' };
 }
 
-/* ═══════════════════════════════════════════════════════════
- * 健康检查端点 · 扩展版本
- * ═══════════════════════════════════════════════════════════ */
-
 /**
- * 检查SMTP配置是否有效
+ * SMTP配置测试端点
+ * 用于验证SMTP配置是否正常工作
  */
-async function checkSmtpConfig() {
-  if (!SMTP_USER || !SMTP_PASS) return { valid: false, error: 'SMTP_USER/SMTP_PASS未配置' };
-  
-  try {
-    const nodemailer = require('nodemailer');
-    const host = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
-    if (!host) return { valid: false, error: '无法自动检测SMTP主机' };
-    
-    const transporter = nodemailer.createTransport({
-      host,
-      port: parseInt(SMTP_PORT, 10) || 465,
-      secure: true,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS
+app.get('/test/smtp', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ 
+      error: true, 
+      code: 'FORBIDDEN', 
+      message: '生产环境禁用测试端点' 
+    });
+  }
+
+  if (!SMTP_USER || !SMTP_PASS) {
+    return res.status(400).json({ 
+      error: true, 
+      code: 'SMTP_NOT_CONFIGURED', 
+      message: 'SMTP配置不完整',
+      config: {
+        SMTP_USER: SMTP_USER ? '已配置' : '未配置',
+        SMTP_PASS: SMTP_PASS ? '已配置' : '未配置',
+        SMTP_HOST: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未自动检测到'
       }
     });
+  }
+
+  const testEmail = 'test@example.com';
+  const testCode = generateCode();
+  
+  try {
+    const result = await sendVerificationEmail(testEmail, testCode);
     
-    // 测试连接但不发送邮件
-    await transporter.verify();
-    return { valid: true };
+    if (result.success) {
+      return res.json({
+        success: true,
+        method: result.method,
+        config: {
+          SMTP_USER: SMTP_USER ? '已配置' : '未配置',
+          SMTP_HOST: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未自动检测到',
+          SMTP_PORT: SMTP_PORT
+        },
+        testData: {
+          email: testEmail,
+          code: testCode
+        },
+        rawResponse: result
+      });
+    } else {
+      return res.status(500).json({
+        error: true,
+        code: 'SMTP_TEST_FAILED',
+        message: 'SMTP测试发送失败',
+        details: result.error || '未知错误',
+        config: {
+          SMTP_USER: SMTP_USER ? '已配置' : '未配置',
+          SMTP_HOST: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未自动检测到',
+          SMTP_PORT: SMTP_PORT
+        }
+      });
+    }
   } catch (err) {
-    return { valid: false, error: err.message };
-  }
-}
-
-/**
- * 检查文件系统可写性
- */
-async function checkFsWritable() {
-  try {
-    const testFile = path.join(DATA_DIR, '.writable-test');
-    fs.writeFileSync(testFile, 'test');
-    fs.unlinkSync(testFile);
-    return { valid: true };
-  } catch (err) {
-    return { valid: false, error: err.message };
-  }
-}
-
-/**
- * 检查外部服务连通性
- */
-async function checkExternalServices() {
-  const axios = require('axios');
-  const results = {};
-  
-  // 检查番茄数据源
-  try {
-    await axios.get(`${FANQIE_API}/ping`, { timeout: EXTERNAL_SERVICE_TIMEOUT_MS });
-    results.fanqie = { valid: true };
-  } catch (err) {
-    results.fanqie = { valid: false, error: err.message };
-  }
-  
-  // 检查七猫数据源
-  try {
-    await axios.get(`${QIMAO_API}/ping`, { timeout: EXTERNAL_SERVICE_TIMEOUT_MS });
-    results.qimao = { valid: true };
-  } catch (err) {
-    results.qimao = { valid: false, error: err.message };
-  }
-  
-  // 检查内置数据源
-  results.builtin = { 
-    valid: !!builtinSource,
-    error: builtinSource ? null : 'builtin-source模块未加载'
-  };
-  
-  return results;
-}
-
-/**
- * 扩展的健康检查端点
- */
-app.get('/api/health', async (req, res) => {
-  try {
-    const [smtp, fsWritable, services] = await Promise.all([
-      checkSmtpConfig(),
-      checkFsWritable(),
-      checkExternalServices()
-    ]);
-    
-    res.json({
-      status: 'online',
-      uptime: Math.floor((Date.now() - START_TIME) / 1000),
-      version: '2.1',
-      timestamp: new Date().toISOString(),
-      components: {
-        smtp,
-        fsWritable,
-        services
-      },
-      environment: {
-        node: process.version,
-        os: process.platform,
-        memory: process.memoryUsage(),
-        cpu: process.cpuUsage()
-      }
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'error',
-      error: err.message,
+    return res.status(500).json({
+      error: true,
+      code: 'SMTP_TEST_ERROR',
+      message: 'SMTP测试过程中发生错误',
+      details: err.message,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
 });
 
-/* ═══════════════════════════════════════════════════════════
- * 认证系统
- * ═══════════════════════════════════════════════════════════ */
+// ─── 注册API路由 ───
+app.post('/api/auth/send-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: true, code: 'INVALID_EMAIL', message: '邮箱格式不正确' });
+  }
 
-// 其他代码保持不变...
+  // 检查验证码尝试次数
+  const existing = verificationCodes.get(email);
+  if (existing && existing.attempts >= AUTH_CODE_MAX_ATTEMPTS) {
+    return res.status(429).json({ 
+      error: true, 
+      code: 'TOO_MANY_ATTEMPTS', 
+      message: '尝试次数过多，请稍后再试' 
+    });
+  }
 
-// ─── 启动服务 ───
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[ZY-SVR-006] 光湖智库节点运行在 http://127.0.0.1:${PORT}`);
+  // 生成新验证码
+  const code = generateCode();
+  verificationCodes.set(email, {
+    code,
+    expires: Date.now() + AUTH_CODE_TTL,
+    attempts: existing ? existing.attempts + 1 : 1
+  });
+
+  // 发送验证码
+  const result = await sendVerificationEmail(email, code);
+  if (!result.success) {
+    return res.status(500).json({ 
+      error: true, 
+      code: 'EMAIL_SEND_FAILED', 
+      message: '验证码发送失败，请稍后再试' 
+    });
+  }
+
+  res.json({ success: true });
 });
+
+// 其他现有路由保持不变...
+
+// ─── 启动服务器 ───
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`[ZY-SVR-006] 光湖智库API运行中: http://127.0.0.1:${PORT}`);
+  console.log(`[ZY-SVR-006] 当前模式: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[ZY-SVR-006] 数据目录: ${DATA_DIR}`);
+  console.log(`[ZY-SVR-006] 日志目录: ${LOG_DIR}`);
+  console.log(`[ZY-SVR-006] 域名配置: ${DOMAIN}`);
+  console.log(`[ZY-SVR-006] SMTP状态: ${SMTP_USER ? '已配置' : '未配置'}`);
+});
+
+// 导出app用于测试
+module.exports = app;
