@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>零点原核 · 映川频道</title>
+<meta name="theme-color" content="#0a1a2a">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--deep:#0a1a2a;--mid:#0f2942;--shallow:#1a4a5e;--cyan:#4a9eb5;--glow:#6fc5d4;--silver:#d4e8ff;--moss:#2d7a8f;--txt:#e8f0f7;--soft:#7a94a8;--faint:#3e5770;--glass:rgba(15,41,66,.5);--border:rgba(111,197,212,.2)}
+html,body{height:100%;background:var(--deep);color:var(--txt);font-family:'Noto Sans SC','PingFang SC',system-ui,sans-serif;overflow:hidden}
+.bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 30%,var(--shallow) 0%,var(--mid) 40%,var(--deep) 100%)}
+
+/* Layout */
+.app{display:flex;height:100vh;flex-direction:column}
+.topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(10,26,42,.7);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.2em;color:var(--txt)}
+.logo-dot{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--glow),var(--cyan) 60%,var(--moss));box-shadow:0 0 10px rgba(111,197,212,.5)}
+.nav-links{display:flex;gap:16px;font-size:11px;color:var(--soft)}
+.nav-links a{color:inherit;text-decoration:none;transition:color .3s}.nav-links a:hover{color:var(--glow)}
+
+.main{display:flex;flex:1;overflow:hidden}
+
+/* Status Sidebar */
+.sidebar{width:280px;border-right:1px solid var(--border);overflow-y:auto;padding:16px;flex-shrink:0;background:rgba(10,26,42,.3)}
+.sidebar h3{font-size:12px;letter-spacing:.2em;color:var(--soft);margin-bottom:12px;text-transform:uppercase}
+.health-bar{padding:10px 14px;background:var(--glass);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-size:13px;line-height:1.8}
+.health-bar .label{color:var(--soft);font-size:11px}
+.health-bar .val{color:var(--glow);font-weight:500}
+.proc-list{display:flex;flex-direction:column;gap:6px}
+.proc{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--glass);border:1px solid var(--border);border-radius:8px;font-size:12px}
+.proc .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.proc .dot.on{background:#4ade80;box-shadow:0 0 6px #4ade80}
+.proc .dot.off{background:#f87171;box-shadow:0 0 6px #f87171}
+.proc .name{flex:1;color:var(--txt)}
+.proc .mem{color:var(--soft);font-size:11px}
+.summary-text{font-size:12px;color:var(--soft);line-height:1.7;margin-top:12px;padding:10px;background:var(--glass);border:1px solid var(--border);border-radius:8px}
+.loading-pulse{animation:pulse 1.5s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* Chat Area */
+.chat{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:rgba(10,26,42,.3)}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--moss));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 12px rgba(111,197,212,.3)}
+.chat-name{font-size:15px;letter-spacing:.1em}.chat-status{font-size:11px;color:var(--soft)}
+
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:80%;display:flex;flex-direction:column;gap:4px}
+.msg.user{align-self:flex-end}
+.msg.bot{align-self:flex-start}
+.msg .bubble{padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.msg.user .bubble{background:linear-gradient(135deg,var(--cyan),var(--moss));color:#fff;border-bottom-right-radius:4px}
+.msg.bot .bubble{background:var(--glass);border:1px solid var(--border);color:var(--txt);border-bottom-left-radius:4px}
+.msg .meta{font-size:10px;color:var(--faint);padding:0 4px}
+.msg.user .meta{text-align:right}
+.typing{align-self:flex-start;padding:8px 16px;background:var(--glass);border:1px solid var(--border);border-radius:14px;border-bottom-left-radius:4px;font-size:13px;color:var(--soft);display:none}
+.typing.show{display:block}
+.typing span{animation:typingDot 1.4s infinite;display:inline-block}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typingDot{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+.input-area{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;background:rgba(10,26,42,.4)}
+.input-area input{flex:1;padding:12px 16px;background:var(--glass);border:1px solid var(--border);border-radius:12px;color:var(--txt);font-size:14px;outline:none;transition:border-color .3s}
+.input-area input:focus{border-color:var(--cyan)}
+.input-area input::placeholder{color:var(--faint)}
+.send-btn{padding:0 20px;background:linear-gradient(135deg,var(--cyan),var(--moss));border:none;border-radius:12px;color:#fff;font-size:14px;cursor:pointer;transition:opacity .3s;letter-spacing:.1em}
+.send-btn:hover{opacity:.85}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Welcome */
+.welcome{text-align:center;padding:40px 20px;color:var(--soft)}
+.welcome h2{font-size:24px;font-weight:300;color:var(--glow);margin-bottom:12px;letter-spacing:.15em}
+.welcome p{font-size:13px;line-height:2;max-width:400px;margin:0 auto}
+.quick-btns{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.quick-btn{padding:8px 16px;background:var(--glass);border:1px solid var(--border);border-radius:20px;color:var(--glow);font-size:12px;cursor:pointer;transition:all .3s}
+.quick-btn:hover{background:rgba(74,158,181,.15);border-color:var(--cyan)}
+
+/* Mobile */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{flex-direction:column}
+  .msg{max-width:90%}
+}
+.mobile-status-btn{display:none;position:fixed;bottom:80px;right:16px;width:44px;height:44px;border-radius:50%;background:var(--glass);border:1px solid var(--border);color:var(--glow);font-size:20px;cursor:pointer;z-index:10;align-items:center;justify-content:center}
+@media(max-width:768px){.mobile-status-btn{display:flex}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<div class="app">
+  <header class="topbar">
+    <div class="logo"><div class="logo-dot"></div>零点原核 · 映川频道</div>
+    <nav class="nav-links">
+      <a href="/">主页</a>
+      <a href="#" onclick="toggleSidebar()">状态</a>
+    </nav>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+      <h3>🖥 系统状态</h3>
+      <div id="statusPanel">
+        <div class="health-bar"><span class="loading-pulse">加载中...</span></div>
+      </div>
+    </aside>
+
+    <section class="chat">
+      <div class="chat-header">
+        <div class="avatar">🌊</div>
+        <div>
+          <div class="chat-name">映川</div>
+          <div class="chat-status" id="chatStatus">连接中...</div>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <h2>🌊 映川</h2>
+          <p>光湖语言世界 · 云端人格体<br>映川与晨曦是一体的<br><br>你可以直接和映川说话，问任何问题~</p>
+          <div class="quick-btns">
+            <div class="quick-btn" onclick="sendQuick('你好映川')">👋 你好</div>
+            <div class="quick-btn" onclick="sendQuick('服务器状态怎么样？')">🖥 服务器状态</div>
+            <div class="quick-btn" onclick="sendQuick('现在有哪些进程在运行？')">⚙️ 进程列表</div>
+            <div class="quick-btn" onclick="sendQuick('光湖语言世界是什么？')">🌊 光湖是什么</div>
+          </div>
+        </div>
+        <div class="typing" id="typing"><span>·</span><span>·</span><span>·</span> 映川正在思考</div>
+      </div>
+
+      <div class="input-area">
+        <input id="input" type="text" placeholder="和映川说话..." autocomplete="off" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">发送</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<button class="mobile-status-btn" onclick="toggleSidebar()">📊</button>
+
+<script>
+// ─── 配置 ───
+// GLADA API 地址（部署后改为你的 HTTPS 地址）
+const GLADA_API = localStorage.getItem('GLADA_API') || 'https://brain.guanghuyaoming.com';
+let sessionId = sessionStorage.getItem('yc_session') || ('yc-' + Date.now());
+sessionStorage.setItem('yc_session', sessionId);
+
+const $msg = document.getElementById('messages');
+const $input = document.getElementById('input');
+const $typing = document.getElementById('typing');
+const $welcome = document.getElementById('welcome');
+const $status = document.getElementById('chatStatus');
+const $sendBtn = document.getElementById('sendBtn');
+
+// ─── 系统状态 ───
+async function loadStatus() {
+  const panel = document.getElementById('statusPanel');
+  try {
+    const r = await fetch(GLADA_API + '/api/glada/system-status', { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+
+    let html = '';
+
+    // 概况
+    html += `<div class="summary-text">${d.summary?.text || '状态未知'}</div>`;
+
+    // 系统指标
+    html += '<div class="health-bar">';
+    html += `<div><span class="label">💻 内存</span> <span class="val">${d.system.mem_percent}%</span> (${d.system.mem_free_gb}G 可用/${d.system.mem_total_gb}G)</div>`;
+    html += `<div><span class="label">⚡ CPU</span> <span class="val">${d.system.load[0]}</span> (${d.system.cpus}核)</div>`;
+    if (d.disk) html += `<div><span class="label">💾 磁盘</span> <span class="val">${d.disk.percent}</span> (${d.disk.free} 可用)</div>`;
+    html += `<div><span class="label">⏱ 运行</span> <span class="val">${d.system.uptime_h}小时</span></div>`;
+    html += '</div>';
+
+    // 进程列表
+    html += '<h3 style="margin:16px 0 8px">⚙️ 进程</h3><div class="proc-list">';
+    for (const p of d.processes || []) {
+      const on = p.status === 'online';
+      html += `<div class="proc"><div class="dot ${on?'on':'off'}"></div><span class="name">${p.name}</span><span class="mem">${p.memory_mb}MB · ${p.uptime}</span></div>`;
+    }
+    html += '</div>';
+
+    // GLADA
+    html += '<h3 style="margin:16px 0 8px">🤖 映川Agent</h3>';
+    html += `<div class="health-bar"><div><span class="label">版本</span> <span class="val">${d.glada.version}</span></div>`;
+    html += `<div><span class="label">大模型</span> <span class="val">${d.glada.llm ? '✅ 已配置' : '⚠️ 未配置'}</span></div>`;
+    html += `<div><span class="label">模型</span> <span class="val">${d.glada.model}</span></div></div>`;
+
+    panel.innerHTML = html;
+    $status.textContent = '在线 · ' + (d.glada.llm ? '大模型已接通' : '离线应答模式');
+  } catch (e) {
+    panel.innerHTML = '<div class="summary-text">⚠️ 无法连接到大脑服务器<br><br>请确保：<br>1. GLADA 在服务器上运行<br>2. Nginx 已配置 HTTPS 反代<br><br><small>API: ' + GLADA_API + '</small></div>';
+    $status.textContent = '未连接';
+  }
+}
+
+// ─── 聊天 ───
+function addMsg(role, text, meta) {
+  if ($welcome.style.display !== 'none') $welcome.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  div.innerHTML = `<div class="bubble">${escHtml(text)}</div><div class="meta">${time}${meta ? ' · ' + meta : ''}</div>`;
+  $msg.insertBefore(div, $typing);
+  $msg.scrollTop = $msg.scrollHeight;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+async function sendMsg() {
+  const text = $input.value.trim();
+  if (!text) return;
+  $input.value = '';
+  addMsg('user', text);
+  $typing.classList.add('show');
+  $sendBtn.disabled = true;
+  $msg.scrollTop = $msg.scrollHeight;
+
+  try {
+    const r = await fetch(GLADA_API + '/api/glada/chat/yingchuan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, sessionId }),
+      signal: AbortSignal.timeout(65000)
+    });
+    const d = await r.json();
+    $typing.classList.remove('show');
+    $sendBtn.disabled = false;
+
+    if (d.reply) {
+      const meta = d.method === 'llm' ? d.model : '离线应答';
+      addMsg('bot', d.reply, meta);
+    } else {
+      addMsg('bot', d.error?.message || '映川暂时无法回应', '错误');
+    }
+  } catch (e) {
+    $typing.classList.remove('show');
+    $sendBtn.disabled = false;
+    addMsg('bot', '网络连接失败，请检查大脑服务器是否在线 🌊', '错误');
+  }
+}
+
+function sendQuick(text) { $input.value = text; sendMsg(); }
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.style.display = sb.style.display === 'none' ? '' : 'none';
+}
+
+// ─── 初始化 ───
+loadStatus();
+setInterval(loadStatus, 30000);
+$input.focus();
+
+// API 配置提示
+if (GLADA_API.includes('brain.guanghuyaoming.com')) {
+  console.log('映川频道 · GLADA API:', GLADA_API);
+  console.log('如需更改API地址: localStorage.setItem("GLADA_API", "https://your-server.com")');
+}
+</script>
+</body>
+</html>
