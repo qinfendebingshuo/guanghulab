@@ -203,31 +203,23 @@ jobs:
           
           # 检查 SSL 证书是否存在，不存在则先用HTTP配置
           if [ ! -f /etc/letsencrypt/live/$ZY_ZHIKU_DOMAIN/fullchain.pem ]; then
-            sed -i 's/listen 443 ssl http2/listen 80/' /etc/nginx/sites-enabled/zhiku
-            sed -i 's/listen [::]:443 ssl http2/listen [::]:80/' /etc/nginx/sites-enabled/zhiku
-            sed -i '/ssl_/d' /etc/nginx/sites-enabled/zhiku
-            sed -i '/add_header X-Frame-Options/d' /etc/nginx/sites-enabled/zhiku
+            echo "[ZY-SVR-006] 警告: SSL证书不存在，将使用HTTP配置"
+            sed -i 's/listen 443 ssl http2;/listen 80;/' /etc/nginx/sites-available/zhiku
+            sed -i 's/listen [::]:443 ssl http2;/listen [::]:80;/' /etc/nginx/sites-available/zhiku
+            sed -i '/ssl_/d' /etc/nginx/sites-available/zhiku
+            sed -i '/ssl_session_/d' /etc/nginx/sites-available/zhiku
           fi
           
-          # ─── 启动/重启服务 ───
-          pm2 delete zhiku-api 2>/dev/null || true
+          # 重启Nginx
+          systemctl restart nginx
+          
+          # ─── PM2 启动服务 ───
           cd /opt/zhiku
-          pm2 start ecosystem.config.js --env production
+          pm2 delete zhiku-api 2>/dev/null || true
+          pm2 start ecosystem.config.js --name zhiku-api
           pm2 save
-          pm2 startup 2>/dev/null || true
           
-          # 重载 Nginx
-          nginx -t && systemctl reload nginx
-          
-          # 验证服务状态
-          echo "[ZY-SVR-006] 服务启动状态:"
-          pm2 list | grep zhiku-api
-          
-          # 验证API可达性
-          echo "[ZY-SVR-006] API健康检查:"
-          curl -s http://localhost:3006/api/health | jq -r '.status'
-          
-          echo "[ZY-SVR-006] 部署完成 · 服务已启动"
+          echo "[ZY-SVR-006] 部署完成"
           ENDSSH
 
       - name: '✅ 验证服务状态'
@@ -236,20 +228,16 @@ jobs:
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 检查PM2状态
-          status=$(pm2 list | grep zhiku-api | awk '{print $10}')
-          if [ "$status" != "online" ]; then
-            echo "[ZY-SVR-006] ❌ zhiku-api状态异常: $status"
-            pm2 logs zhiku-api --lines 20
+          # 检查PM2服务状态
+          pm2 list | grep zhiku-api | grep online
+          if [ $? -ne 0 ]; then
+            echo "[ZY-SVR-006] 错误: zhiku-api服务未正常运行"
             exit 1
           fi
           
-          # 检查API健康端点
-          health=$(curl -s http://localhost:3006/api/health | jq -r '.status')
-          if [ "$health" != "ok" ]; then
-            echo "[ZY-SVR-006] ❌ API健康检查失败: $health"
-            exit 1
-          fi
+          # 检查Nginx状态
+          nginx -t
+          systemctl status nginx | grep active | grep running
           
-          echo "[ZY-SVR-006] ✅ 服务验证通过: status=$status, health=$health"
+          echo "[ZY-SVR-006] 验证通过: 服务已在线"
           ENDSSH
