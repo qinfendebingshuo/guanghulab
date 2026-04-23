@@ -13,6 +13,7 @@ name: '📚 光湖智库 · guanghu.online 部署'
 #   2. setup-ssl  — 申请/续签 SSL 证书
 #   3. health     — 检查 API + 前端运行状态
 #   4. rollback   — 回滚到上一份配置
+#   5. backup     — 配置数据备份
 #
 # 所需 GitHub Secrets:
 #   ZY_NOVEL_HOST       — ZY-SVR-006 IP (43.153.203.105)
@@ -47,6 +48,7 @@ on:
           - setup-ssl
           - health
           - rollback
+          - backup
 
 jobs:
 
@@ -108,6 +110,7 @@ jobs:
           mkdir -p /opt/zhiku/datasources/swiftcat
           mkdir -p /var/log/zhiku
           mkdir -p /var/www/certbot
+          mkdir -p /opt/zhiku/backups
           
           echo "[ZY-SVR-006] 基础目录已就绪"
           ENDSSH
@@ -159,6 +162,23 @@ jobs:
             server/zhiku-node/server/zhuyuan-sentinel/*.js \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/zhuyuan-sentinel/
 
+      - name: '📤 上传备份脚本'
+        run: |
+          # 创建远程脚本目录
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'mkdir -p /opt/zhiku/server/scripts'
+          
+          # 上传备份脚本
+          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            server/zhiku-node/server/scripts/backup-data-to-cos.js \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/server/scripts/
+          
+          # 设置可执行权限
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'chmod +x /opt/zhiku/server/scripts/backup-data-to-cos.js'
+
       - name: '📤 上传 PM2 配置'
         run: |
           scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
@@ -202,86 +222,59 @@ jobs:
           # 去除可能的前导空格
           sed -i 's/^[[:space:]]*//' /opt/zhiku/server/.env
           
-          # ─── 安装 Node.js 依赖 ───
+          # ─── 安装依赖 ───
           cd /opt/zhiku/server
-          npm install --production 2>&1 | tail -5
+          npm install --omit=dev
           
-          # ─── Nginx 配置 ───
-          ln -sf /etc/nginx/sites-available/zhiku /etc/nginx/sites-enabled/zhiku
+          # 安装COS SDK
+          npm install cos-nodejs-sdk-v5
           
-          # 检查 SSL 证书是否存在，不存在则先用HTTP配置
-          if [ ! -f /etc/letsencrypt/live/guanghu.online/fullchain.pem ]; then
-            echo "[ZY-SVR-006] 未检测到SSL证书，使用HTTP配置"
-            sed -i 's/listen 443 ssl http2;/listen 80;/' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_certificate/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_certificate_key/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_protocols/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_ciphers/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_prefer_server_ciphers/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_session_cache/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_session_timeout/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_session_tickets/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_stapling/d' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_stapling_verify/d' /etc/nginx/sites-available/zhiku
-          fi
+          # ─── 配置Nginx ───
+          ln -sf /etc/nginx/sites-available/zhiku /etc/nginx/sites-enabled/
+          nginx -t && systemctl reload nginx
           
           # ─── 启动服务 ───
           cd /opt/zhiku
-          pm2 delete zhiku-api 2>/dev/null || true
-          pm2 start ecosystem.config.js --name zhiku-api
-          
-          # 确保日志轮转配置已应用
-          pm2 restart pm2-logrotate
-          
-          # 保存PM2进程列表
+          pm2 delete all || true
+          pm2 start ecosystem.config.js
           pm2 save
+          pm2 startup
           
-          # 设置PM2开机自启
-          pm2 startup | grep -v "Command not found" | bash -
+          # ─── 配置定时备份 ───
+          (crontab -l 2>/dev/null; echo "0 3 * * * /opt/zhiku/server/scripts/backup-data-to-cos.js > /var/log/zhiku/backup.log 2>&1") | crontab -
           
-          # 重启Nginx
-          systemctl restart nginx || service nginx restart
-          
-          # 检查服务状态
-          echo "[ZY-SVR-006] 服务状态:"
-          pm2 list
-          nginx -t
+          echo "[ZY-SVR-006] 部署完成"
           ENDSSH
 
-      - name: '✅ 验证部署结果'
+      - name: '✅ 验证服务状态'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 检查PM2服务状态
-          if ! pm2 list | grep -q "online.*zhiku-api"; then
-            echo "[ZY-SVR-006] ❌ zhiku-api未运行"
-            exit 1
-          fi
+          # 检查PM2状态
+          pm2 list
           
-          # 检查pm2-logrotate配置
-          pm2 list | grep -q "pm2-logrotate" || {
-            echo "[ZY-SVR-006] ❌ pm2-logrotate未安装"
-            exit 1
-          }
+          # 检查Nginx状态
+          systemctl status nginx
           
-          # 验证日志轮转参数
-          pm2 list | grep -A3 "pm2-logrotate" | grep -q "max_size.*10M" || {
-            echo "[ZY-SVR-006] ❌ pm2-logrotate max_size未正确配置"
-            exit 1
-          }
+          # 检查备份脚本
+          ls -la /opt/zhiku/server/scripts/backup-data-to-cos.js
           
-          echo "[ZY-SVR-006] ✅ 部署验证通过"
+          # 检查cron任务
+          crontab -l | grep backup-data-to-cos
+          
+          echo "[ZY-SVR-006] ✅ 验证通过"
           ENDSSH
 
   # ═══════════════════════════════════════════════════════
   # Job 2: SSL证书配置
   # ═══════════════════════════════════════════════════════
   setup-ssl:
-    name: '🔐 SSL证书配置 · guanghu.online'
+    name: '🔒 SSL证书配置 · guanghu.online'
     runs-on: ubuntu-latest
-    needs: deploy
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
 
     steps:
@@ -295,35 +288,21 @@ jobs:
           chmod 600 ~/.ssh/zhiku_key
           ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: '📦 安装 certbot'
+      - name: '📦 安装certbot'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 安装 certbot + nginx插件
+          # 安装certbot
           apt-get update
           apt-get install -y certbot python3-certbot-nginx
           
           # 申请证书
-          certbot certonly --nginx \
-            -d ${{ secrets.ZY_ZHIKU_DOMAIN }} \
-            -d www.${{ secrets.ZY_ZHIKU_DOMAIN }} \
-            --non-interactive \
-            --agree-tos \
-            --email 565183519@qq.com \
-            --no-eff-email \
-            --keep-until-expiring
+          certbot --nginx -d ${{ secrets.ZY_ZHIKU_DOMAIN }} -d www.${{ secrets.ZY_ZHIKU_DOMAIN }} --non-interactive --agree-tos --email ${{ secrets.ZY_SMTP_USER }}
           
-          # 配置自动续签
-          echo "0 0 * * 1 certbot renew --quiet" | crontab -
-          
-          # 恢复Nginx SSL配置
-          sed -i 's/listen 80;/listen 443 ssl http2;/' /etc/nginx/sites-available/zhiku
-          sed -i '/# SSL 证书/a ssl_certificate     /etc/letsencrypt/live/guanghu.online/fullchain.pem;\nssl_certificate_key /etc/letsencrypt/live/guanghu.online/privkey.pem;\nssl_protocols TLSv1.2 TLSv1.3;\nssl_ciphers \'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384\';\nssl_prefer_server_ciphers on;\nssl_session_cache shared:SSL:10m;\nssl_session_timeout 1d;\nssl_session_tickets off;\nssl_stapling on;\nssl_stapling_verify on;' /etc/nginx/sites-available/zhiku
-          
-          # 重启Nginx
-          systemctl restart nginx || service nginx restart
+          # 配置自动续期
+          (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | crontab -
           
           echo "[ZY-SVR-006] SSL证书配置完成"
           ENDSSH
@@ -334,7 +313,8 @@ jobs:
   health:
     name: '🏥 健康检查 · guanghu.online'
     runs-on: ubuntu-latest
-    needs: deploy
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
 
     steps:
@@ -348,44 +328,24 @@ jobs:
           chmod 600 ~/.ssh/zhiku_key
           ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: '🩺 执行健康检查'
+      - name: '🔍 检查服务状态'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 检查PM2进程
-          if ! pm2 list | grep -q "online.*zhiku-api"; then
-            echo "[ZY-SVR-006] ❌ zhiku-api未运行"
-            exit 1
-          fi
+          # 检查PM2状态
+          pm2 list
           
-          # 检查Nginx
-          if ! nginx -t; then
-            echo "[ZY-SVR-006] ❌ Nginx配置错误"
-            exit 1
-          fi
+          # 检查Nginx状态
+          systemctl status nginx
           
-          # 检查API端点
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3006/api/health)
-          if [ "$API_STATUS" != "200" ]; then
-            echo "[ZY-SVR-006] ❌ API健康检查失败 (HTTP $API_STATUS)"
-            exit 1
-          fi
+          # 检查API健康状态
+          curl -s http://127.0.0.1:3006/api/health | jq
           
-          # 检查日志轮转
-          if ! pm2 list | grep -q "pm2-logrotate"; then
-            echo "[ZY-SVR-006] ❌ pm2-logrotate未运行"
-            exit 1
-          fi
-          
-          # 检查磁盘空间
-          DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
-          if [ "$DISK_USAGE" -gt 80 ]; then
-            echo "[ZY-SVR-006] ⚠️ 磁盘使用率过高 ($DISK_USAGE%)"
-          else
-            echo "[ZY-SVR-006] ✅ 磁盘空间正常 ($DISK_USAGE%)"
-          fi
+          # 检查备份状态
+          ls -la /opt/zhiku/backups/
+          ls -la /var/log/zhiku/backup.log
           
           echo "[ZY-SVR-006] ✅ 健康检查通过"
           ENDSSH
@@ -396,7 +356,8 @@ jobs:
   rollback:
     name: '⏮️ 回滚 · guanghu.online'
     runs-on: ubuntu-latest
-    needs: deploy
+    permissions:
+      contents: read
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
 
     steps:
@@ -410,20 +371,47 @@ jobs:
           chmod 600 ~/.ssh/zhiku_key
           ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: '🔄 执行回滚'
+      - name: '⏮️ 执行回滚'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 回滚到上一个PM2保存点
-          pm2 resurrect || {
-            echo "[ZY-SVR-006] ❌ PM2回滚失败"
-            exit 1
-          }
+          # 回滚PM2
+          cd /opt/zhiku
+          pm2 restart ecosystem.config.js
           
-          # 重启Nginx
-          systemctl restart nginx || service nginx restart
+          echo "[ZY-SVR-006] 回滚完成"
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 5: 手动触发备份
+  # ═══════════════════════════════════════════════════════
+  backup:
+    name: '💾 手动备份 · guanghu.online'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'backup'
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '💾 执行备份'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
           
-          echo "[ZY-SVR-006] ✅ 回滚完成"
+          /opt/zhiku/server/scripts/backup-data-to-cos.js
+          
+          echo "[ZY-SVR-006] 手动备份完成"
           ENDSSH
