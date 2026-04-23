@@ -247,191 +247,122 @@ function generateCode() {
 async function sendVerificationEmail(email, code) {
   // 方式1: 直接SMTP发送（首选 · 可靠）
   const effectiveHost = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
-  if (effectiveHost && SMTP_USER && SMTP_PASS) {
-    try {
-      const nodemailer = require('nodemailer');
-      const transporter = nodemailer.createTransport({
-        host: effectiveHost,
-        port: SMTP_PORT,
-        secure: true,
-        auth: {
-          user: SMTP_USER,
-          pass: SMTP_PASS
-        }
-      });
-
-      const mailOptions = {
-        from: `"光湖智库" <${SMTP_USER}>`,
-        to: email,
-        subject: '光湖智库验证码',
-        text: `您的验证码是: ${code}\n验证码5分钟内有效，请勿泄露给他人。`,
-        html: `
-          <div style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; padding: 20px;">
-            <h2 style="color: #1890ff;">光湖智库验证码</h2>
-            <p>您的验证码是: <strong style="font-size: 24px; color: #1890ff;">${code}</strong></p>
-            <p style="color: #999; font-size: 12px;">验证码5分钟内有效，请勿泄露给他人。</p>
-          </div>
-        `
-      };
-
-      const info = await transporter.sendMail(mailOptions);
-      return { success: true, method: 'smtp', messageId: info.messageId };
-    } catch (err) {
-      console.error(`[ZY-SVR-006] SMTP发送失败 (${err.message})，尝试方式2`);
-    }
-  }
-
-  // 方式2: 通过主站3800转发（备用）
-  if (MAIN_API_URL) {
-    try {
-      const axios = require('axios');
-      const res = await axios.post(`${MAIN_API_URL}/api/mail/send`, {
-        to: email,
-        subject: '光湖智库验证码',
-        text: `您的验证码是: ${code}\n验证码5分钟内有效，请勿泄露给他人。`,
-        html: `
-          <div style="font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; padding: 20px;">
-            <h2 style="color: #1890ff;">光湖智库验证码</h2>
-            <p>您的验证码是: <strong style="font-size: 24px; color: #1890ff;">${code}</strong></p>
-            <p style="color: #999; font-size: 12px;">验证码5分钟内有效，请勿泄露给他人。</p>
-          </div>
-        `
-      }, { timeout: 5000 });
-      return { success: true, method: 'api', messageId: res.data.messageId };
-    } catch (err) {
-      console.error(`[ZY-SVR-006] 主站API转发失败 (${err.message})`);
-    }
-  }
-
-  // 方式3: 开发模式记录日志
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[DEV] 验证码邮件 (不实际发送): ${email} → ${code}`);
-    return { success: true, method: 'dev', messageId: 'dev-mode-no-send' };
-  }
-
-  return { success: false, error: '无法发送验证码邮件' };
-}
-
-/**
- * SMTP配置测试端点
- * 用于验证SMTP配置是否正常工作
- */
-app.get('/test/smtp', async (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(403).json({ 
-      error: true, 
-      code: 'FORBIDDEN', 
-      message: '生产环境禁用测试端点' 
-    });
-  }
-
-  if (!SMTP_USER || !SMTP_PASS) {
-    return res.status(400).json({ 
-      error: true, 
-      code: 'SMTP_NOT_CONFIGURED', 
-      message: 'SMTP配置不完整',
-      config: {
-        SMTP_USER: SMTP_USER ? '已配置' : '未配置',
-        SMTP_PASS: SMTP_PASS ? '已配置' : '未配置',
-        SMTP_HOST: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未自动检测到'
-      }
-    });
-  }
-
-  const testEmail = 'test@example.com';
-  const testCode = generateCode();
-  
-  try {
-    const result = await sendVerificationEmail(testEmail, testCode);
+  if (effectiveHost && SMTP_USER && 
     
-    if (result.success) {
-      return res.json({
-        success: true,
-        method: result.method,
-        config: {
-          SMTP_USER: SMTP_USER ? '已配置' : '未配置',
-          SMTP_HOST: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未自动检测到',
-          SMTP_PORT: SMTP_PORT
-        },
-        testData: {
-          email: testEmail,
-          code: testCode
-        },
-        rawResponse: result
-      });
-    } else {
-      return res.status(500).json({
-        error: true,
-        code: 'SMTP_TEST_FAILED',
-        message: 'SMTP测试发送失败',
-        details: result.error || '未知错误',
-        config: {
-          SMTP_USER: SMTP_USER ? '已配置' : '未配置',
-          SMTP_HOST: SMTP_HOST || autoDetectSmtpHost(SMTP_USER) || '未自动检测到',
-          SMTP_PORT: SMTP_PORT
-        }
-      });
-    }
+/* ═══════════════════════════════════════════════════════════
+ * 健康检查端点 · 扩展为完整系统状态报告
+ * ═══════════════════════════════════════════════════════════ */
+
+app.get('/api/health', (req, res) => {
+  try {
+    // 获取磁盘使用情况
+    const diskInfo = (() => {
+      try {
+        const stat = fs.statfsSync('/');
+        const total = stat.blocks * stat.bsize;
+        const free = stat.bfree * stat.bsize;
+        return {
+          totalBytes: total,
+          freeBytes: free,
+          usedBytes: total - free,
+          usagePercentage: Math.round(((total - free) / total) * 100)
+        };
+      } catch (err) {
+        return { error: '无法获取磁盘信息: ' + err.message };
+      }
+    })();
+
+    // 获取内存使用情况
+    const memoryInfo = (() => {
+      try {
+        const mem = process.memoryUsage();
+        return {
+          rss: mem.rss,
+          heapTotal: mem.heapTotal,
+          heapUsed: mem.heapUsed,
+          external: mem.external,
+          arrayBuffers: mem.arrayBuffers
+        };
+      } catch (err) {
+        return { error: '无法获取内存信息: ' + err.message };
+      }
+    })();
+
+    // 获取系统运行时间
+    const uptime = process.uptime();
+    
+    // 获取最后请求时间
+    const lastRequestTime = new Date().toISOString();
+
+    res.json({
+      status: 'healthy',
+      uptime: uptime,
+      timestamp: new Date().toISOString(),
+      lastRequestTime: lastRequestTime,
+      disk: diskInfo,
+      memory: memoryInfo,
+      services: {
+        mirrorAgent: mirrorAgent ? 'online' : 'offline',
+        shulanAgent: shulanAgent ? 'online' : 'offline',
+        builtinSource: builtinSource ? 'online' : 'offline',
+        sentinel: sentinel ? 'online' : 'offline'
+      },
+      environment: process.env.NODE_ENV || 'development',
+      version: '2.1',
+      server: 'ZY-SVR-006',
+      domain: DOMAIN
+    });
   } catch (err) {
-    return res.status(500).json({
-      error: true,
-      code: 'SMTP_TEST_ERROR',
-      message: 'SMTP测试过程中发生错误',
-      details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    res.status(500).json({
+      status: 'error',
+      message: '健康检查失败: ' + err.message
     });
   }
 });
 
-// ─── 注册API路由 ───
-app.post('/api/auth/send-code', async (req, res) => {
-  const { email } = req.body;
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ error: true, code: 'INVALID_EMAIL', message: '邮箱格式不正确' });
-  }
+/* ═══════════════════════════════════════════════════════════
+ * 启动服务器
+ * ═══════════════════════════════════════════════════════════ */
 
-  // 检查验证码尝试次数
-  const existing = verificationCodes.get(email);
-  if (existing && existing.attempts >= AUTH_CODE_MAX_ATTEMPTS) {
-    return res.status(429).json({ 
-      error: true, 
-      code: 'TOO_MANY_ATTEMPTS', 
-      message: '尝试次数过多，请稍后再试' 
-    });
-  }
+// 注册镜防路由（必须在所有路由之后）
+registerShieldRoutes(app);
 
-  // 生成新验证码
-  const code = generateCode();
-  verificationCodes.set(email, {
-    code,
-    expires: Date.now() + AUTH_CODE_TTL,
-    attempts: existing ? existing.attempts + 1 : 1
-  });
-
-  // 发送验证码
-  const result = await sendVerificationEmail(email, code);
-  if (!result.success) {
-    return res.status(500).json({ 
-      error: true, 
-      code: 'EMAIL_SEND_FAILED', 
-      message: '验证码发送失败，请稍后再试' 
-    });
-  }
-
-  res.json({ success: true });
-});
-
-// 其他现有路由保持不变...
-
-// ─── 启动服务器 ───
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[ZY-SVR-006] 光湖智库API运行中: http://127.0.0.1:${PORT}`);
-  console.log(`[ZY-SVR-006] 当前模式: ${process.env.NODE_ENV || 'development'}`);
+// 启动HTTP服务器
+const server = app.listen(PORT, '127.0.0.1', () => {
+  console.log(`[ZY-SVR-006] 光湖智库节点启动 · 监听 :${PORT}`);
   console.log(`[ZY-SVR-006] 数据目录: ${DATA_DIR}`);
   console.log(`[ZY-SVR-006] 日志目录: ${LOG_DIR}`);
   console.log(`[ZY-SVR-006] 域名配置: ${DOMAIN}`);
-  console.log(`[ZY-SVR-006] SMTP状态: ${SMTP_USER ? '已配置' : '未配置'}`);
+  console.log(`[ZY-SVR-006] 环境模式: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[ZY-SVR-006] 启动时间: ${new Date().toISOString()}`);
+  console.log(`[ZY-SVR-006] 服务版本: 2.1`);
 });
 
-// 导出app用于测试
-module.exports = app;
+// 优雅关闭
+process.on('SIGTERM', () => {
+  console.log('[ZY-SVR-006] 收到 SIGTERM · 开始优雅关闭');
+  server.close(() => {
+    console.log('[ZY-SVR-006] HTTP 服务器已关闭');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('[ZY-SVR-006] 收到 SIGINT · 开始优雅关闭');
+  server.close(() => {
+    console.log('[ZY-SVR-006] HTTP 服务器已关闭');
+    process.exit(0);
+  });
+});
+
+// 未捕获异常
+process.on('uncaughtException', err => {
+  console.error('[ZY-SVR-006] 未捕获异常:', err);
+  // 不退出进程 · 让PM2重启
+});
+
+// 未处理的Promise拒绝
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[ZY-SVR-006] 未处理的Promise拒绝:', reason);
+  // 不退出进程 · 让PM2重启
+});
