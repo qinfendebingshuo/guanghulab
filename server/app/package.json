@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "health": "curl -s http://localhost:3800/api/health | jq ."
+    "health": "curl -s http://localhost:3800/api/health | jq .",
+    "federation": "node test-federation.js"
   },
   "dependencies": {
     "express": "^4.21.0",
@@ -14,7 +15,8 @@
     "express-rate-limit": "^7.4.0",
     "better-sqlite3": "^11.0.0",
     "pg": "^8.13.0",
-    "nodemailer": "^7.0.11"
+    "nodemailer": "^7.0.11",
+    "axios": "^1.6.7"
   },
   "engines": {
     "node": ">=20.0.0"
