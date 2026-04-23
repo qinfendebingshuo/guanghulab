@@ -6,6 +6,7 @@
  * 编号: ZY-OPS-HC-001
  * 签发: 铸渊 · ICE-GL-ZY001
  * 版权: 国作登字-2026-A-00037559
+ * 更新: 2026-04-23 · 修复 MCP 跨服务器检测 + 告警冷却
  *
  * 三层巡检:
  *   - 快速巡检(5分钟): 端口存活检测
@@ -19,14 +20,19 @@ const http = require('http');
 const { execSync } = require('child_process');
 const os = require('os');
 
-// ── 监控目标列表 ───────────────────────────
+// ── 服务器 IP 配置（环境变量覆盖）─────────
+
+const SVR_002_HOST = process.env.ZY_SVR_002_HOST || '127.0.0.1';  // 面孔服务器（本机）
+const SVR_005_HOST = process.env.ZY_SVR_005_HOST || '127.0.0.1';  // 大脑服务器（需配置真实 IP）
+
+// ── 监控目标列表 ─────────────────────
 
 const SERVICES = [
-  { name: '铸渊主权服务器', port: 3800, path: '/api/health', critical: true },
-  { name: 'MCP大脑服务器', port: 3100, path: '/health', critical: true },
-  { name: 'GLADA自主开发Agent', port: 3900, path: '/api/glada/health', critical: false },
-  { name: '智库节点API', port: 4000, path: '/api/health', critical: false },
-  { name: '铸渊运维守卫', port: 3950, path: '/health', critical: false },
+  { name: '铸渊主权服务器', host: SVR_002_HOST, port: 3800, path: '/api/health', critical: true, timeout: 8000 },
+  { name: 'MCP大脑服务器', host: SVR_005_HOST, port: 3100, path: '/health', critical: true, timeout: 15000 },
+  { name: 'GLADA自主开发Agent', host: SVR_002_HOST, port: 3900, path: '/api/glada/health', critical: false, timeout: 8000 },
+  { name: '智库节点API', host: SVR_002_HOST, port: 4000, path: '/api/health', critical: false, timeout: 8000 },
+  { name: '铸渊运维守卫', host: SVR_002_HOST, port: 3950, path: '/health', critical: false, timeout: 8000 },
 ];
 
 const PM2_PROCESSES = [
@@ -38,13 +44,70 @@ const PM2_PROCESSES = [
   'glada-agent',
 ];
 
-// ── HTTP 健康检查 ──────────────────────────
+// ── 告警冷却机制（避免重复发邮件）───────
 
-function probeService(name, port, probePath, timeoutMs = 8000) {
+const alertCooldown = new Map();  // key: service name, value: { lastAlert: timestamp, count: number }
+const ALERT_COOLDOWN_MS = 30 * 60 * 1000;  // 30分钟内同一服务不重复告警
+const MAX_ALERTS_PER_DAY = 6;  // 每个服务每天最多6次告警
+
+/**
+ * 检查是否应该发送告警（冷却期内不重复发）
+ * @param {string} serviceName
+ * @returns {boolean}
+ */
+function shouldAlert(serviceName) {
+  const now = Date.now();
+  const record = alertCooldown.get(serviceName);
+
+  if (!record) {
+    alertCooldown.set(serviceName, { lastAlert: now, count: 1, dayStart: now });
+    return true;
+  }
+
+  // 超过24小时重置计数
+  if (now - record.dayStart > 24 * 60 * 60 * 1000) {
+    alertCooldown.set(serviceName, { lastAlert: now, count: 1, dayStart: now });
+    return true;
+  }
+
+  // 每天超过最大次数，不再发
+  if (record.count >= MAX_ALERTS_PER_DAY) {
+    return false;
+  }
+
+  // 冷却期内不重复发
+  if (now - record.lastAlert < ALERT_COOLDOWN_MS) {
+    return false;
+  }
+
+  record.lastAlert = now;
+  record.count++;
+  return true;
+}
+
+/**
+ * 获取告警冷却状态（调试用）
+ */
+function getAlertCooldownStatus() {
+  const status = {};
+  for (const [name, record] of alertCooldown.entries()) {
+    status[name] = {
+      lastAlert: new Date(record.lastAlert).toISOString(),
+      alertsToday: record.count,
+      maxPerDay: MAX_ALERTS_PER_DAY,
+      cooldownRemaining: Math.max(0, ALERT_COOLDOWN_MS - (Date.now() - record.lastAlert))
+    };
+  }
+  return status;
+}
+
+// ── HTTP 健康检查 ────────────────────
+
+function probeService(name, host, port, probePath, timeoutMs = 8000) {
   return new Promise((resolve) => {
     const start = Date.now();
     const req = http.get({
-      hostname: '127.0.0.1',
+      hostname: host,
       port,
       path: probePath,
       timeout: timeoutMs
@@ -57,6 +120,7 @@ function probeService(name, port, probePath, timeoutMs = 8000) {
         try { data = JSON.parse(body); } catch { /* ignore */ }
         resolve({
           name,
+          host,
           port,
           status: 'online',
           statusCode: res.statusCode,
@@ -69,6 +133,7 @@ function probeService(name, port, probePath, timeoutMs = 8000) {
     req.on('error', (err) => {
       resolve({
         name,
+        host,
         port,
         status: 'offline',
         statusCode: 0,
@@ -81,6 +146,7 @@ function probeService(name, port, probePath, timeoutMs = 8000) {
       req.destroy();
       resolve({
         name,
+        host,
         port,
         status: 'timeout',
         statusCode: 0,
@@ -92,7 +158,7 @@ function probeService(name, port, probePath, timeoutMs = 8000) {
   });
 }
 
-// ── PM2 进程状态 ──────────────────────────
+// ── PM2 进程状态 ──────────────────
 
 function getPM2Status() {
   try {
@@ -113,7 +179,7 @@ function getPM2Status() {
   }
 }
 
-// ── 系统资源 ──────────────────────────────
+// ── 系统资源 ──────────────────────
 
 function getSystemResources() {
   const totalMem = os.totalmem();
@@ -155,7 +221,7 @@ function getSystemResources() {
   };
 }
 
-// ── Nginx 状态 ───────────────────────────
+// ── Nginx 状态 ─────────────────────
 
 function getNginxStatus() {
   try {
@@ -171,11 +237,11 @@ function getNginxStatus() {
   }
 }
 
-// ── 快速巡检（5分钟一次） ────────────────
+// ── 快速巡检（5分钟一次）────────────
 
 async function quickCheck() {
   const results = await Promise.all(
-    SERVICES.map(s => probeService(s.name, s.port, s.path))
+    SERVICES.map(s => probeService(s.name, s.host, s.port, s.path, s.timeout))
   );
 
   const issues = [];
@@ -185,11 +251,13 @@ async function quickCheck() {
     if (r.status !== 'online') {
       issues.push({
         service: s.name,
+        host: s.host,
         port: s.port,
         status: r.status,
         error: r.error,
         critical: s.critical,
-        severity: s.critical ? 'high' : 'medium'
+        severity: s.critical ? 'high' : 'medium',
+        shouldNotify: shouldAlert(s.name)
       });
     }
   }
@@ -199,6 +267,8 @@ async function quickCheck() {
     timestamp: new Date().toISOString(),
     services: results,
     issues,
+    // 只返回需要通知的问题（过滤掉冷却期内的）
+    notifiableIssues: issues.filter(i => i.shouldNotify),
     healthy: issues.filter(i => i.critical).length === 0,
     summary: issues.length === 0
       ? '✅ 所有服务正常运行'
@@ -206,7 +276,7 @@ async function quickCheck() {
   };
 }
 
-// ── 深度巡检（1小时一次） ─────────────────
+// ── 深度巡检（1小时一次）───────────
 
 async function deepCheck() {
   const quick = await quickCheck();
@@ -224,7 +294,8 @@ async function deepCheck() {
         status: proc.status,
         error: `进程${proc.status === 'errored' ? '出错' : '已停止'}`,
         critical: PM2_PROCESSES.includes(proc.name),
-        severity: 'high'
+        severity: 'high',
+        shouldNotify: shouldAlert(`PM2:${proc.name}`)
       });
     }
     if (proc.restarts > 10) {
@@ -233,7 +304,8 @@ async function deepCheck() {
         status: 'unstable',
         error: `频繁重启(${proc.restarts}次)`,
         critical: false,
-        severity: 'medium'
+        severity: 'medium',
+        shouldNotify: shouldAlert(`PM2:${proc.name}:restarts`)
       });
     }
   }
@@ -245,7 +317,8 @@ async function deepCheck() {
       status: 'warning',
       error: `内存使用率 ${resources.memory.used_pct}% (>90%)`,
       critical: true,
-      severity: 'high'
+      severity: 'high',
+      shouldNotify: shouldAlert('系统内存')
     });
   }
   if (resources.disk.used_pct > 85) {
@@ -254,7 +327,8 @@ async function deepCheck() {
       status: 'warning',
       error: `磁盘使用率 ${resources.disk.used_pct}% (>85%)`,
       critical: true,
-      severity: resources.disk.used_pct > 95 ? 'critical' : 'high'
+      severity: resources.disk.used_pct > 95 ? 'critical' : 'high',
+      shouldNotify: shouldAlert('磁盘空间')
     });
   }
 
@@ -265,7 +339,8 @@ async function deepCheck() {
       status: nginx.status,
       error: 'Nginx 未运行',
       critical: true,
-      severity: 'critical'
+      severity: 'critical',
+      shouldNotify: shouldAlert('Nginx')
     });
   }
 
@@ -277,6 +352,7 @@ async function deepCheck() {
     resources,
     nginx,
     issues,
+    notifiableIssues: issues.filter(i => i.shouldNotify),
     healthy: issues.filter(i => i.critical).length === 0,
     summary: issues.length === 0
       ? '✅ 深度巡检通过 · 所有服务和资源正常'
@@ -284,7 +360,7 @@ async function deepCheck() {
   };
 }
 
-// ── 全量体检（每天一次） ─────────────────
+// ── 全量体检（每天一次）───────────
 
 async function fullReport() {
   const deep = await deepCheck();
@@ -292,6 +368,7 @@ async function fullReport() {
     type: 'daily_report',
     report_id: `RPT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`,
     ...deep,
+    alertCooldownStatus: getAlertCooldownStatus(),
     recommendations: generateRecommendations(deep)
   };
 }
@@ -311,6 +388,9 @@ function generateRecommendations(checkResult) {
     if (issue.service === 'Nginx') {
       recs.push('紧急: Nginx 异常，所有外部访问将受影响');
     }
+    if (issue.service === 'MCP大脑服务器' && issue.status === 'timeout') {
+      recs.push('提示: MCP服务器在远程机器(ZY-SVR-005)，请检查: 1)大脑服务器是否运行 2)网络连接是否正常 3)防火墙端口是否开放');
+    }
   }
   if (recs.length === 0) {
     recs.push('系统运行良好，无需额外操作');
@@ -327,5 +407,7 @@ module.exports = {
   getNginxStatus,
   quickCheck,
   deepCheck,
-  fullReport
+  fullReport,
+  shouldAlert,
+  getAlertCooldownStatus,
 };
