@@ -22,6 +22,9 @@ const path = require('path');
 
 const execAsync = promisify(exec);
 
+// 会话全局上限（防止内存爆炸）
+const MAX_SESSIONS = 200;
+
 function rateLimit(windowMs, maxReqs) {
   const hits = new Map();
   setInterval(() => {
@@ -47,6 +50,18 @@ function fmtUptime(ms) {
   const h = Math.floor(m / 60);
   if (h < 24) return h + '小时' + (m % 60) + '分';
   return Math.floor(h / 24) + '天' + (h % 24) + '小时';
+}
+
+/**
+ * 淘汰最老的会话（LRU策略）
+ * @param {Map} sessions
+ */
+function evictOldest(sessions) {
+  let oldest = null, oldestTime = Infinity;
+  for (const [id, s] of sessions) {
+    if (s.t < oldestTime) { oldest = id; oldestTime = s.t; }
+  }
+  if (oldest) sessions.delete(oldest);
 }
 
 module.exports = function setupWebExtensions(app) {
@@ -144,7 +159,13 @@ module.exports = function setupWebExtensions(app) {
 
     try {
       const sessionId = sid || 'yc-' + Date.now();
-      if (!ycSessions.has(sessionId)) ycSessions.set(sessionId, { h: [], t: Date.now() });
+      if (!ycSessions.has(sessionId)) {
+        // 会话数量上限保护：超限时淘汰最老会话
+        while (ycSessions.size >= MAX_SESSIONS) {
+          evictOldest(ycSessions);
+        }
+        ycSessions.set(sessionId, { h: [], t: Date.now() });
+      }
       const sess = ycSessions.get(sessionId);
       sess.t = Date.now();
 
