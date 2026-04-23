@@ -49,9 +49,10 @@ for (const envFile of envChain) {
 module.exports = {
   apps: [{
     name: 'glada-agent',
-    script: 'service-entry.js',  // 通过入口包装器启动，自动加载web扩展
+    script: 'service.js',  // 直接启动service.js（web-extensions已内置加载）
     cwd: __dirname,
     instances: 1,
+    exec_mode: 'fork',     // fork模式，避免cluster模式的兼容问题
     autorestart: true,
     watch: false,
     env: {
