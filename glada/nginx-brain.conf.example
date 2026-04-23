@@ -1,0 +1,50 @@
+# Nginx 配置示例 · 大脑服务器 HTTPS 反向代理
+# 将 GLADA (端口3900) 暴露为 HTTPS
+#
+# 部署步骤：
+# 1. 将此文件复制到 /etc/nginx/sites-available/brain.guanghuyaoming.com
+# 2. ln -s /etc/nginx/sites-available/brain.guanghuyaoming.com /etc/nginx/sites-enabled/
+# 3. 申请SSL证书: certbot --nginx -d brain.guanghuyaoming.com
+# 4. nginx -t && systemctl reload nginx
+#
+# 前提：brain.guanghuyaoming.com 的 DNS A 记录指向大脑服务器 IP (43.156.237.110)
+
+server {
+    listen 80;
+    server_name brain.guanghuyaoming.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name brain.guanghuyaoming.com;
+
+    # SSL 证书（certbot 会自动配置）
+    # ssl_certificate     /etc/letsencrypt/live/brain.guanghuyaoming.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/brain.guanghuyaoming.com/privkey.pem;
+
+    # 安全头
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options nosniff;
+
+    # GLADA API 反向代理
+    location /api/ {
+        proxy_pass http://127.0.0.1:3900;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+        chunked_transfer_encoding off;
+        proxy_buffering off;
+    }
+
+    # 健康检查（不走代理缓存）
+    location /api/glada/health {
+        proxy_pass http://127.0.0.1:3900;
+        proxy_cache off;
+    }
+}

@@ -49,7 +49,7 @@ for (const envFile of envChain) {
 module.exports = {
   apps: [{
     name: 'glada-agent',
-    script: 'service.js',
+    script: 'service-entry.js',  // 通过入口包装器启动，自动加载web扩展
     cwd: __dirname,
     instances: 1,
     autorestart: true,
