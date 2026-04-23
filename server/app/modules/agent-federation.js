@@ -2,152 +2,278 @@
 
 /**
  * ═══════════════════════════════════════════════════════════
- * 🤝 三节点Agent联邦核心模块
+ * 🤝 三节点Agent联邦握手协议模块
  * ═══════════════════════════════════════════════════════════
  *
- * 编号: ZY-FED-001
+ * 编号: ZY-FED-HANDSHAKE-001
  * 守护: 铸渊 · ICE-GL-ZY001
  * 版权: 国作登字-2026-A-00037559
  *
  * 功能:
- *   1. Agent注册与身份验证
- *   2. 跨节点消息广播
- *   3. 联邦状态监控
+ *   1. 管理网站Agent ↔ GitHub/Notion Agent之间的握手协议
+ *   2. 维护联邦成员状态
+ *   3. 处理消息路由和广播
+ *
+ * 协议:
+ *   - 使用WebSocket实现实时通信
+ *   - 消息格式遵循HLDP语言结构
  */
 
+const WebSocket = require('ws');
 const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
+const { validateSession } = require('./email-auth');
 
 // ─── 常量 ───
-const AGENT_EXPIRE_MS = 24 * 60 * 60 * 1000; // 24小时
-const TOKEN_BYTES = 32;
+const FEDERATION_VERSION = '1.0';
+const HEARTBEAT_INTERVAL = 30000; // 30秒
+const RECONNECT_TIMEOUT = 5000;   // 5秒
 
-// ─── 内存存储 ───
-const registeredAgents = new Map(); // agentId → { name, token, createdAt, expiresAt }
-const broadcastChannels = new Map(); // channelId → [agentId1, agentId2...]
+// ─── 联邦成员状态 ───
+const federationMembers = new Map(); // agentId → { ws, lastSeen, metadata }
+const messageQueues = new Map();    // agentId → message[]
+
+// ─── WebSocket 服务器 ───
+let wss;
 
 /**
- * 生成安全token
+ * 初始化联邦握手服务
+ * @param {http.Server} server - HTTP服务器实例
  */
-function generateToken() {
-  return crypto.randomBytes(TOKEN_BYTES).toString('hex');
+function initFederation(server) {
+  wss = new WebSocket.Server({
+    server,
+    path: '/api/federation/ws',
+    verifyClient: (info, cb) => {
+      // 验证session token
+      const token = info.req.headers['x-federation-token'];
+      if (!token || !validateSession(token).valid) {
+        return cb(false, 401, 'Unauthorized');
+      }
+      cb(true);
+    }
+  });
+
+  wss.on('connection', handleConnection);
+  wss.on('error', handleError);
+
+  // 启动心跳检测
+  setInterval(checkHeartbeats, HEARTBEAT_INTERVAL);
 }
 
 /**
- * 清理过期的Agent
+ * 处理新连接
+ * @param {WebSocket} ws - WebSocket连接
+ * @param {http.IncomingMessage} req - HTTP请求
  */
-function cleanupExpiredAgents() {
-  const now = Date.now();
-  for (const [agentId, agent] of registeredAgents.entries()) {
-    if (now > agent.expiresAt) {
-      registeredAgents.delete(agentId);
-      // 从所有广播频道移除
-      for (const [channelId, agents] of broadcastChannels.entries()) {
-        const index = agents.indexOf(agentId);
-        if (index !== -1) {
-          agents.splice(index, 1);
-        }
-      }
+function handleConnection(ws, req) {
+  const token = req.headers['x-federation-token'];
+  const session = validateSession(token);
+  const agentId = generateAgentId(session.email);
+
+  // 注册新成员
+  federationMembers.set(agentId, {
+    ws,
+    lastSeen: Date.now(),
+    metadata: {
+      type: 'website', // 或 'github'/'notion'
+      version: FEDERATION_VERSION,
+      session: session.email
+    }
+  });
+
+  ws.on('message', (data) => handleMessage(agentId, data));
+  ws.on('close', () => handleDisconnect(agentId));
+  ws.on('pong', () => updateHeartbeat(agentId));
+
+  // 发送欢迎消息
+  sendMessage(ws, {
+    type: 'handshake',
+    status: 'welcome',
+    agentId,
+    timestamp: Date.now()
+  });
+
+  console.log(`[Federation] 新成员连接: ${agentId}`);
+}
+
+/**
+ * 处理消息
+ * @param {string} agentId - 发送方ID
+ * @param {string} data - 原始消息数据
+ */
+function handleMessage(agentId, data) {
+  try {
+    const message = JSON.parse(data);
+    updateHeartbeat(agentId);
+
+    switch (message.type) {
+      case 'handshake':
+        handleHandshake(agentId, message);
+        break;
+      case 'broadcast':
+        handleBroadcast(agentId, message);
+        break;
+      case 'direct':
+        handleDirectMessage(agentId, message);
+        break;
+      default:
+        console.warn(`[Federation] 未知消息类型: ${message.type}`);
+    }
+  } catch (err) {
+    console.error(`[Federation] 消息处理错误: ${err.message}`);
+  }
+}
+
+/**
+ * 处理握手消息
+ * @param {string} agentId - 发送方ID
+ * @param {object} message - 握手消息
+ */
+function handleHandshake(agentId, message) {
+  const member = federationMembers.get(agentId);
+  if (!member) return;
+
+  if (message.status === 'ready') {
+    member.metadata.type = message.agentType; // github/notion/website
+    console.log(`[Federation] 握手完成: ${agentId} (${message.agentType})`);
+
+    // 如果有排队消息，立即发送
+    if (messageQueues.has(agentId)) {
+      const queue = messageQueues.get(agentId);
+      messageQueues.delete(agentId);
+      queue.forEach(msg => sendMessage(member.ws, msg));
     }
   }
 }
 
-// 每10分钟清理一次
-setInterval(cleanupExpiredAgents, 10 * 60 * 1000);
-
 /**
- * 注册新Agent
- * @param {object} payload - 注册信息
- * @returns {object} 注册结果
+ * 处理广播消息
+ * @param {string} senderId - 发送方ID
+ * @param {object} message - 广播消息
  */
-function registerAgent(payload) {
-  if (!payload || !payload.name || typeof payload.name !== 'string') {
-    throw new Error('无效的注册信息: 必须提供Agent名称');
-  }
-
-  const agentId = uuidv4();
-  const token = generateToken();
-  const now = Date.now();
-  const expiresAt = now + AGENT_EXPIRE_MS;
-
-  registeredAgents.set(agentId, {
-    name: payload.name,
-    token,
-    createdAt: now,
-    expiresAt
+function handleBroadcast(senderId, message) {
+  federationMembers.forEach((member, agentId) => {
+    if (agentId !== senderId) {
+      sendMessage(member.ws, {
+        type: 'broadcast',
+        from: senderId,
+        content: message.content,
+        timestamp: Date.now()
+      });
+    }
   });
-
-  console.log(`[Agent Federation] 新Agent注册: ${payload.name} (${agentId.slice(0, 8)}...)`);
-
-  return {
-    agentId,
-    token,
-    expiresAt: new Date(expiresAt).toISOString()
-  };
 }
 
 /**
- * 验证Agent token
+ * 处理直接消息
+ * @param {string} senderId - 发送方ID
+ * @param {object} message - 直接消息
+ */
+function handleDirectMessage(senderId, message) {
+  const target = federationMembers.get(message.to);
+  if (target) {
+    sendMessage(target.ws, {
+      type: 'direct',
+      from: senderId,
+      content: message.content,
+      timestamp: Date.now()
+    });
+  } else {
+    // 目标不在线，加入队列
+    if (!messageQueues.has(message.to)) {
+      messageQueues.set(message.to, []);
+    }
+    messageQueues.get(message.to).push({
+      type: 'direct',
+      from: senderId,
+      content: message.content,
+      timestamp: Date.now()
+    });
+  }
+}
+
+/**
+ * 处理断开连接
+ * @param {string} agentId - 断开连接的Agent ID
+ */
+function handleDisconnect(agentId) {
+  federationMembers.delete(agentId);
+  console.log(`[Federation] 成员断开: ${agentId}`);
+}
+
+/**
+ * 处理错误
+ * @param {Error} err - 错误对象
+ */
+function handleError(err) {
+  console.error(`[Federation] WebSocket错误: ${err.message}`);
+}
+
+/**
+ * 更新心跳时间
  * @param {string} agentId - Agent ID
- * @param {string} token - 验证token
- * @returns {boolean} 是否有效
  */
-function validateAgent(agentId, token) {
-  if (!agentId || !token) return false;
-
-  const agent = registeredAgents.get(agentId);
-  if (!agent) return false;
-
-  // 使用时间恒定比较防止时序攻击
-  const tokenBuffer = Buffer.from(token);
-  const agentBuffer = Buffer.from(agent.token);
-
-  return tokenBuffer.length === agentBuffer.length &&
-         crypto.timingSafeEqual(tokenBuffer, agentBuffer) &&
-         Date.now() <= agent.expiresAt;
+function updateHeartbeat(agentId) {
+  const member = federationMembers.get(agentId);
+  if (member) {
+    member.lastSeen = Date.now();
+  }
 }
 
 /**
- * 广播消息
- * @param {object} payload - 广播信息
- * @returns {object} 广播结果
+ * 检查心跳
  */
-function broadcastMessage(payload) {
-  if (!payload || !payload.agentId || !payload.token || !payload.channelId) {
-    throw new Error('无效的广播请求: 必须提供agentId, token和channelId');
+function checkHeartbeats() {
+  const now = Date.now();
+  federationMembers.forEach((member, agentId) => {
+    if (now - member.lastSeen > HEARTBEAT_INTERVAL * 2) {
+      console.warn(`[Federation] 心跳超时: ${agentId}`);
+      member.ws.terminate();
+    } else {
+      member.ws.ping();
+    }
+  });
+}
+
+/**
+ * 发送消息
+ * @param {WebSocket} ws - WebSocket连接
+ * @param {object} message - 消息对象
+ */
+function sendMessage(ws, message) {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
   }
+}
 
-  if (!validateAgent(payload.agentId, payload.token)) {
-    throw new Error('Agent验证失败');
-  }
-
-  const channelAgents = broadcastChannels.get(payload.channelId) || [];
-  const senderName = registeredAgents.get(payload.agentId).name;
-
-  console.log(`[Agent Federation] 消息广播: ${senderName} → ${channelAgents.length}个接收者`);
-
-  return {
-    success: true,
-    channelId: payload.channelId,
-    recipients: channelAgents.length,
-    timestamp: new Date().toISOString()
-  };
+/**
+ * 生成Agent ID
+ * @param {string} email - 用户邮箱
+ * @returns {string} 唯一Agent ID
+ */
+function generateAgentId(email) {
+  const hash = crypto.createHash('sha256');
+  hash.update(email + Date.now());
+  return 'agent-' + hash.digest('hex').slice(0, 8);
 }
 
 /**
  * 获取联邦状态
- * @returns {object} 状态信息
+ * @returns {object} 联邦状态
  */
 function getStatus() {
   return {
-    totalAgents: registeredAgents.size,
-    totalChannels: broadcastChannels.size,
-    lastUpdated: new Date().toISOString()
+    version: FEDERATION_VERSION,
+    members: Array.from(federationMembers.keys()),
+    activeConnections: wss?.clients?.size || 0,
+    queuedMessages: Array.from(messageQueues.entries()).map(([k, v]) => ({
+      agent: k,
+      count: v.length
+    }))
   };
 }
 
 module.exports = {
-  registerAgent,
-  broadcastMessage,
+  initFederation,
   getStatus
 };

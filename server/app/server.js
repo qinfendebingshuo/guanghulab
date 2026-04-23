@@ -10,7 +10,7 @@
  * 版权: 国作登字-2026-A-00037559
  *
  * 修改记录:
- * 2026-04-23 - 新增三节点Agent联邦路由
+ * 2026-04-23 - 新增三节点Agent联邦握手协议
  */
 
 'use strict';
@@ -23,51 +23,19 @@ const os = require('os');
 const https = require('https');
 const { execSync } = require('child_process');
 
-// ─── 新增联邦Agent模块 ───
+// ─── 新增联邦握手协议模块 ───
 const federation = require('./modules/agent-federation');
 
 // 原有代码保持不变...
 
 // ═══════════════════════════════════════════════════════════
-// 新增联邦Agent API路由
+// 新增联邦握手协议
 // ═══════════════════════════════════════════════════════════
-app.post('/api/federation/register', limiter, (req, res) => {
-  try {
-    const result = federation.registerAgent(req.body);
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ 
-      error: true, 
-      code: 'FEDERATION_ERROR',
-      message: err.message 
-    });
-  }
-});
-
-app.post('/api/federation/broadcast', limiter, (req, res) => {
-  try {
-    const result = federation.broadcastMessage(req.body);
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ 
-      error: true, 
-      code: 'BROADCAST_ERROR',
-      message: err.message 
-    });
-  }
-});
-
-app.get('/api/federation/status', limiter, (req, res) => {
-  try {
-    const result = federation.getStatus();
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ 
-      error: true, 
-      code: 'STATUS_ERROR',
-      message: err.message 
-    });
-  }
+const server = app.listen(3800, () => {
+  console.log(`铸渊服务器运行中: http://localhost:3800`);
+  
+  // 初始化联邦握手服务
+  federation.initFederation(server);
 });
 
 // 原有代码保持不变...
