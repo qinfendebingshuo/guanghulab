@@ -16,6 +16,7 @@ import express from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
+import { timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 
 const execAsync = promisify(exec);
@@ -25,11 +26,31 @@ app.use(express.json());
 const PORT = process.env.ZY_MCP_PORT || 3900;
 const MCP_SECRET = process.env.ZY_MCP_SECRET;
 
+// ─── 常量时间比较（防时序攻击） ───
+function safeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(a, 'utf-8'), Buffer.from(b, 'utf-8'));
+  } catch {
+    return false;
+  }
+}
+
 // ─── 认证中间件 ───
 function auth(req, res, next) {
-  if (!MCP_SECRET) return next();
+  // 未配置密钥时，仅允许 loopback 地址访问
+  if (!MCP_SECRET) {
+    const ip = req.ip || req.connection?.remoteAddress || '';
+    const isLocal = (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1');
+    if (isLocal) return next();
+    return res.status(403).json({
+      jsonrpc: '2.0',
+      error: { code: -32001, message: '未配置 ZY_MCP_SECRET，仅允许本地访问(127.0.0.1)' }
+    });
+  }
   const token = req.headers.authorization;
-  if (!token || token !== `Bearer ${MCP_SECRET}`) {
+  if (!token || !safeCompare(token, `Bearer ${MCP_SECRET}`)) {
     return res.status(401).json({ jsonrpc: '2.0', error: { code: -32001, message: '未授权' } });
   }
   next();
@@ -212,7 +233,7 @@ app.get('/health', (_req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🤖 铸渊MCP Server v1.0 · 光湖第二只手`);
   console.log(`   端口: ${PORT}`);
-  console.log(`   认证: ${MCP_SECRET ? '✅ Bearer Token' : '⚠️  开发模式(无认证)'}`);
+  console.log(`   认证: ${MCP_SECRET ? '✅ Bearer Token' : '⚠️  本地模式(仅127.0.0.1)'}`);
   console.log(`   工具: 10个 · server_health / pm2_list / pm2_restart / read_logs / deploy / brain_status / list_dir / read_file / system_stats / nginx_status`);
   console.log(`   时间: ${new Date().toISOString()}\n`);
 });
