@@ -140,6 +140,175 @@ body {
   margin-left: auto;
 }
 
+/* ── 图标按钮 ─────────────────────────────────────── */
+.gl-btn-icon {
+  background: none;
+  border: 1px solid var(--gl-border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: var(--gl-transition);
+  color: var(--gl-text-secondary);
+  line-height: 1;
+}
+
+.gl-btn-icon:hover {
+  border-color: var(--gl-accent-dim);
+  background: rgba(56, 189, 248, 0.06);
+}
+
+/* ── BYOK 设置面板 ────────────────────────────────── */
+.gl-byok-panel {
+  border-bottom: 1px solid var(--gl-border);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.03) 0%, transparent 100%);
+  animation: glFadeIn 0.3s ease;
+}
+
+.gl-byok-header {
+  padding: 12px 24px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.gl-byok-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gl-text-primary);
+}
+
+.gl-byok-hint {
+  font-size: 11px;
+  color: var(--gl-text-muted);
+}
+
+.gl-byok-body {
+  padding: 10px 24px 14px;
+}
+
+.gl-byok-input-wrap {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.gl-byok-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--gl-bg-input);
+  border: 1px solid var(--gl-border);
+  border-radius: 8px;
+  color: var(--gl-text-primary);
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  outline: none;
+  transition: var(--gl-transition);
+}
+
+.gl-byok-input:focus {
+  border-color: var(--gl-accent-dim);
+  box-shadow: 0 0 0 2px var(--gl-accent-glow);
+}
+
+.gl-byok-input::placeholder {
+  color: var(--gl-text-muted);
+  font-family: inherit;
+}
+
+.gl-byok-eye {
+  flex-shrink: 0;
+}
+
+.gl-byok-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.gl-btn-small {
+  padding: 5px 14px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.gl-byok-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gl-byok-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--gl-bg-input);
+  color: var(--gl-text-muted);
+  border: 1px solid var(--gl-border);
+}
+
+.gl-byok-badge.active {
+  color: var(--gl-success);
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.gl-byok-badge-hint {
+  font-size: 11px;
+  color: var(--gl-text-muted);
+}
+
+.gl-byok-guide {
+  margin-top: 4px;
+}
+
+.gl-byok-guide details {
+  font-size: 12px;
+  color: var(--gl-text-muted);
+}
+
+.gl-byok-guide summary {
+  cursor: pointer;
+  color: var(--gl-accent-dim);
+  transition: var(--gl-transition);
+}
+
+.gl-byok-guide summary:hover {
+  color: var(--gl-accent);
+}
+
+.gl-byok-guide ol {
+  margin: 8px 0 0 20px;
+  line-height: 1.8;
+}
+
+.gl-byok-guide a {
+  color: var(--gl-accent);
+  text-decoration: none;
+}
+
+.gl-byok-guide a:hover {
+  text-decoration: underline;
+}
+
+/* BYOK 内联状态提示 */
+.gl-byok-inline {
+  font-size: 11px;
+  color: var(--gl-success);
+  margin-top: 8px;
+  padding: 4px 0;
+}
+
+.gl-byok-inline a {
+  color: var(--gl-accent);
+  text-decoration: none;
+}
+
+.gl-byok-inline a:hover {
+  text-decoration: underline;
+}
+
 /* ── 输入框 ───────────────────────────────────────── */
 .gl-textarea {
   width: 100%;

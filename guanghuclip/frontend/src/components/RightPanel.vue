@@ -3,6 +3,75 @@
     <span class="gl-header-icon">🎥</span>
     <span class="gl-header-title">视频生产区</span>
     <span class="gl-header-subtitle">光湖短视频工作台</span>
+    <!-- BYOK 设置入口 -->
+    <button class="gl-btn-icon" @click="showApiSettings = !showApiSettings" :title="apiKeyStatus">
+      🔑
+    </button>
+  </div>
+
+  <!-- BYOK API Key 设置面板 -->
+  <div class="gl-byok-panel" v-if="showApiSettings">
+    <div class="gl-byok-header">
+      <span class="gl-byok-title">🔐 自定义 API Key</span>
+      <span class="gl-byok-hint">使用自己的即梦额度，不消耗平台余额</span>
+    </div>
+    <div class="gl-byok-body">
+      <div class="gl-byok-input-wrap">
+        <input
+          class="gl-byok-input"
+          :type="showKey ? 'text' : 'password'"
+          v-model="customApiKey"
+          placeholder="粘贴你的即梦 (火山方舟) API Key..."
+          @input="onApiKeyInput"
+        />
+        <button class="gl-btn-icon gl-byok-eye" @click="showKey = !showKey">
+           showKey ? '🙈' : '👁️' 
+        </button>
+      </div>
+      <div class="gl-byok-actions">
+        <button
+          class="gl-btn gl-btn-small gl-btn-primary"
+          @click="saveApiKey"
+          :disabled="!customApiKey.trim()"
+        >
+          💾 保存
+        </button>
+        <button
+          class="gl-btn gl-btn-small gl-btn-secondary"
+          @click="clearApiKey"
+          v-if="savedApiKey"
+        >
+          🗑️ 清除
+        </button>
+        <button
+          class="gl-btn gl-btn-small gl-btn-secondary"
+          @click="showApiSettings = false"
+        >
+          收起
+        </button>
+      </div>
+      <div class="gl-byok-status" v-if="savedApiKey">
+        <span class="gl-byok-badge active">✅ 已配置自定义 Key</span>
+        <span class="gl-byok-badge-hint">生成将使用您自己的额度</span>
+      </div>
+      <div class="gl-byok-status" v-else>
+        <span class="gl-byok-badge">💡 未配置</span>
+        <span class="gl-byok-badge-hint">将使用平台默认额度（有限）</span>
+      </div>
+      <div class="gl-byok-guide">
+        <details>
+          <summary>如何获取即梦 API Key？</summary>
+          <ol>
+            <li>访问 <a href="https://console.volcengine.com/ark" target="_blank">火山方舟控制台</a></li>
+            <li>注册/登录账号，完成实名认证</li>
+            <li>在「API Key 管理」页面创建新的 Key</li>
+            <li>复制 Key 粘贴到上方输入框</li>
+            <li>在「模型广场」开通 Seedance 1.5 Pro 模型</li>
+            <li>充值余额（按量计费，5秒视频约 ¥0.3）</li>
+          </ol>
+        </details>
+      </div>
+    </div>
   </div>
 
   <div class="gl-content">
@@ -85,6 +154,11 @@
           >1080p</span>
         </div>
       </div>
+
+      <!-- BYOK 状态提示 -->
+      <div class="gl-byok-inline" v-if="savedApiKey">
+        🔑 使用自定义 Key · <a href="#" @click.prevent="showApiSettings = true">管理</a>
+      </div>
     </div>
 
     <!-- ④ 生成按钮 -->
@@ -150,6 +224,54 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { io } from 'socket.io-client';
 
+// ── BYOK 状态 ─────────────────────────────────────
+const STORAGE_KEY = 'guanghuclip_custom_api_key';
+const showApiSettings = ref(false);
+const showKey = ref(false);
+const customApiKey = ref('');
+const savedApiKey = ref('');
+
+// 初始化：从 localStorage 读取已保存的 Key
+const loadSavedKey = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      savedApiKey.value = saved;
+      customApiKey.value = saved;
+    }
+  } catch (e) {
+    console.warn('无法读取 localStorage:', e);
+  }
+};
+
+const saveApiKey = () => {
+  const key = customApiKey.value.trim();
+  if (!key) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, key);
+    savedApiKey.value = key;
+    showApiSettings.value = false;
+  } catch (e) {
+    console.warn('无法写入 localStorage:', e);
+  }
+};
+
+const clearApiKey = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    savedApiKey.value = '';
+    customApiKey.value = '';
+  } catch (e) {
+    console.warn('无法清除 localStorage:', e);
+  }
+};
+
+const onApiKeyInput = () => {};
+
+const apiKeyStatus = computed(() => {
+  return savedApiKey.value ? '已配置自定义 API Key' : '配置自定义 API Key';
+});
+
 // ── 状态 ──────────────────────────────────────────
 const stage = ref('idle');          // idle → input → generating → completed / failed
 const prompt = ref('');
@@ -164,7 +286,6 @@ const taskId = ref('');
 
 // ── 字数统计 ──────────────────────────────────────
 const charCount = computed(() => {
-  // 中文算1字，其他算0.5字（近似）
   let count = 0;
   for (const ch of prompt.value) {
     count += /[\u4e00-\u9fff]/.test(ch) ? 1 : 0.5;
@@ -187,7 +308,7 @@ const onPromptInput = () => {
 };
 
 // ── 进度环 ────────────────────────────────────────
-const circumference = 2 * Math.PI * 52; // r=52
+const circumference = 2 * Math.PI * 52;
 const dashOffset = computed(() => {
   return circumference - (progress.value / 100) * circumference;
 });
@@ -196,6 +317,8 @@ const dashOffset = computed(() => {
 let socket = null;
 
 onMounted(() => {
+  loadSavedKey();
+
   socket = io({ transports: ['websocket', 'polling'] });
 
   socket.on('video:progress', (data) => {
@@ -225,15 +348,22 @@ async function generate() {
     progress.value = 5;
     progressMsg.value = '正在提交任务...';
 
+    const body = {
+      prompt: prompt.value.trim(),
+      model: selectedModel.value,
+      duration: duration.value,
+      resolution: resolution.value,
+    };
+
+    // BYOK: 如果有自定义 Key 则附带
+    if (savedApiKey.value) {
+      body.customApiKey = savedApiKey.value;
+    }
+
     const resp = await fetch('/api/video/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: prompt.value.trim(),
-        model: selectedModel.value,
-        duration: duration.value,
-        resolution: resolution.value,
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await resp.json();
@@ -244,7 +374,8 @@ async function generate() {
 
     taskId.value = data.taskId;
     progress.value = 10;
-    progressMsg.value = '任务已提交，等待即梦处理...';
+    const keyHint = data.usingCustomKey ? '(您的Key)' : '(平台)';
+    progressMsg.value = `任务已提交，等待即梦处理... ${keyHint}`;
   } catch (err) {
     errorMsg.value = err.message;
     stage.value = 'failed';

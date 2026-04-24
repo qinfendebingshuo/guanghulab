@@ -4,6 +4,8 @@
  * GET  /api/video/status/:id — 查询进度
  * GET  /api/video/preview/:id — 获取预览URL
  * GET  /api/video/download/:id — 下载视频
+ *
+ * 支持 BYOK: 前端可传 customApiKey，用户使用自己的即梦额度
  */
 const express = require('express');
 const router = express.Router();
@@ -16,7 +18,14 @@ const tasks = new Map();
 // ── 提交生成任务 ────────────────────────────────────
 router.post('/generate', async (req, res) => {
   try {
-    const { prompt, model = 'jimeng', duration = '5', resolution = '1080p', style } = req.body;
+    const {
+      prompt,
+      model = 'jimeng',
+      duration = '5',
+      resolution = '1080p',
+      style,
+      customApiKey,  // BYOK: 用户自定义 API Key
+    } = req.body;
 
     if (!prompt || !prompt.trim()) {
       return res.status(400).json({ error: '提示词不能为空' });
@@ -24,6 +33,11 @@ router.post('/generate', async (req, res) => {
     if (prompt.length > 3000) {
       return res.status(400).json({ error: '提示词超过1000字限制' });
     }
+
+    // 简单校验自定义 Key 格式（非空字符串即可）
+    const sanitizedKey = customApiKey && typeof customApiKey === 'string'
+      ? customApiKey.trim()
+      : null;
 
     const taskId = uuidv4();
     const task = {
@@ -39,13 +53,20 @@ router.post('/generate', async (req, res) => {
       previewUrl: null,
       apiTaskId: null,
       error: null,
+      customApiKey: sanitizedKey,  // 存储以便轮询时使用同一 key
+      usingCustomKey: !!sanitizedKey,
     };
     tasks.set(taskId, task);
 
     // 异步启动生成
     processVideoTask(taskId, req.app.get('io'));
 
-    res.json({ taskId, status: 'pending', message: '视频生成任务已提交' });
+    res.json({
+      taskId,
+      status: 'pending',
+      message: '视频生成任务已提交',
+      usingCustomKey: !!sanitizedKey,
+    });
   } catch (err) {
     console.error('[POST /api/video/generate]', err);
     res.status(500).json({ error: '服务器内部错误' });
@@ -65,6 +86,7 @@ router.get('/status/:taskId', (req, res) => {
     error: task.error,
     createdAt: task.createdAt,
     completedAt: task.completedAt,
+    usingCustomKey: task.usingCustomKey,
   });
 });
 
@@ -99,13 +121,15 @@ async function processVideoTask(taskId, io) {
     // 1) 提交到即梦
     task.status = 'generating';
     task.progress = 10;
-    emit({ status: 'generating', progress: 10, message: '正在提交到即梦...' });
+    const keyLabel = task.usingCustomKey ? '您的Key' : '平台';
+    emit({ status: 'generating', progress: 10, message: `正在提交到即梦 (${keyLabel})...` });
 
     const submitResult = await videoDispatch.submitTask({
       prompt: task.prompt,
       duration: task.params.duration,
       resolution: task.params.resolution,
       style: task.params.style,
+      customApiKey: task.customApiKey,
     });
 
     task.apiTaskId = submitResult.taskId;
@@ -117,7 +141,7 @@ async function processVideoTask(taskId, io) {
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
       await sleep(5000);
 
-      const result = await videoDispatch.queryTask(submitResult.taskId);
+      const result = await videoDispatch.queryTask(submitResult.taskId, task.customApiKey);
 
       if (result.status === 'completed') {
         task.status = 'completed';
@@ -126,7 +150,7 @@ async function processVideoTask(taskId, io) {
         task.previewUrl = result.videoUrl;
         task.completedAt = new Date().toISOString();
         emit({ status: 'completed', progress: 100, message: '✅ 视频生成完成！', videoUrl: result.videoUrl });
-        console.log(`[video] ✅ 完成: ${taskId}`);
+        console.log(`[video] ✅ 完成: ${taskId} (${task.usingCustomKey ? '用户Key' : '平台Key'})`);
         return;
       }
 
