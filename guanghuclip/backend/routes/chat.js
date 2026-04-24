@@ -1,67 +1,102 @@
 /**
- * routes/chat.js — 对话路由（v2.0 轻量版）
- *
- * 前端 ←→ persona-engine ←→ Notion大脑 + 仓库工具箱
- *
- * 版权: 国作登字-2026-A-00037559
+ * 💬 聊天API路由
+ * POST /api/chat          — 发送消息
+ * GET  /api/chat/personas  — 获取人格体列表
+ * GET  /api/chat/tools     — 获取工具清单
+ * GET  /api/chat/status    — 获取系统状态
+ * POST /api/chat/clear     — 清空会话
  */
-
-'use strict';
-
 const express = require('express');
 const router = express.Router();
-const personaEngine = require('../services/persona-engine');
-const ToolRegistry = require('../services/tool-registry');
+const sessionOrchestrator = require('../services/session-orchestrator');
+const conversationManager = require('../services/conversation-manager');
+const toolExecutor = require('../services/tool-executor');
+const llmClient = require('../services/llm-client');
 
-// ── 对话接口 ──
+// ── 发送消息 ────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { message, history = [], model, sessionId } = req.body;
+    const { message, userId = 'anonymous', personaId = 'default' } = req.body;
 
-    if (!message || typeof message !== 'string') {
+    if (!message || !message.trim()) {
       return res.status(400).json({ error: '消息不能为空' });
     }
 
-    const result = await personaEngine.chat(message, history, {
-      model,
-      sessionId: sessionId || `web-${Date.now()}`
-    });
+    const io = req.app.get('io');
+
+    // 通知前端：人格体开始思考
+    if (io) {
+      io.emit('chat:thinking', {
+        userId,
+        personaId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // 核心：会话编排器处理消息
+    const result = await sessionOrchestrator.handleMessage(
+      userId,
+      message.trim(),
+      personaId,
+      io
+    );
+
+    // 通知前端：人格体回复完成
+    if (io) {
+      io.emit('chat:reply', {
+        userId,
+        persona: result.persona,
+        reply: result.reply,
+        toolCalls: result.toolCalls,
+        duration: result.duration,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     res.json({
-      reply: result.content,
-      model: result.model,
-      brainLoaded: result.brainLoaded,
-      toolsUsed: result.toolsUsed || [],
-      rounds: result.rounds || 0
+      reply: result.reply,
+      persona: result.persona,
+      toolCalls: result.toolCalls.map(tc => ({
+        id: tc.id,
+        name: tc.name,
+        status: tc.status,
+        result: tc.result,
+        duration: tc.duration,
+        timestamp: tc.timestamp,
+      })),
+      duration: result.duration,
     });
   } catch (err) {
-    console.error('[Chat] 对话失败:', err.message);
-    res.status(500).json({
-      error: '对话服务暂时不可用',
-      detail: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+    console.error('[POST /api/chat]', err);
+    res.status(500).json({ error: '服务器内部错误: ' + err.message });
   }
 });
 
-// ── 刷新大脑缓存 ──
-router.post('/refresh-brain', async (req, res) => {
-  personaEngine.refreshBrain();
-  res.json({ message: '大脑缓存已刷新，下次对话将重新从 Notion 加载' });
+// ── 获取人格体列表 ──────────────────────────────────
+router.get('/personas', (_req, res) => {
+  res.json({ personas: sessionOrchestrator.getPersonaList() });
 });
 
-// ── 工具箱状态 ──
-router.get('/tools', (req, res) => {
+// ── 获取工具清单 ────────────────────────────────────
+router.get('/tools', (_req, res) => {
+  res.json({ tools: toolExecutor.getToolList() });
+});
+
+// ── 获取系统状态 ────────────────────────────────────
+router.get('/status', (_req, res) => {
   res.json({
-    manifest: ToolRegistry.getToolManifest(),
-    loadedCount: ToolRegistry.getLoadedCount(),
-    message: '用什么拿什么，用完还回去'
+    lighthouse: '🗼 active',
+    llm: llmClient.getStatus(),
+    conversations: conversationManager.getStats(),
+    tools: toolExecutor.getToolList().length,
   });
 });
 
-// ── 卸载所有工具模块（释放内存）──
-router.post('/tools/unload', (req, res) => {
-  ToolRegistry.unloadAll();
-  res.json({ message: '全部工具模块已卸载', loadedCount: 0 });
+// ── 清空会话 ────────────────────────────────────────
+router.post('/clear', (req, res) => {
+  const { userId = 'anonymous' } = req.body;
+  conversationManager.clearSession(userId);
+  res.json({ message: '会话已清空' });
 });
 
 module.exports = router;
