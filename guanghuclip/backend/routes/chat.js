@@ -1,64 +1,67 @@
 /**
- * 人格体聊天路由
- * POST /api/chat/send   — 发送消息并获取回复
- * GET  /api/chat/models  — 获取可用模型列表
+ * routes/chat.js — 对话路由（v2.0 轻量版）
+ *
+ * 前端 ←→ persona-engine ←→ Notion大脑 + 仓库工具箱
+ *
+ * 版权: 国作登字-2026-A-00037559
  */
+
+'use strict';
+
 const express = require('express');
 const router = express.Router();
 const personaEngine = require('../services/persona-engine');
-const llmClient = require('../services/llm-client');
+const ToolRegistry = require('../services/tool-registry');
 
-// ── 获取可用模型列表 ────────────────────────────────
-router.get('/models', (req, res) => {
+// ── 对话接口 ──
+router.post('/', async (req, res) => {
   try {
-    const models = llmClient.getAvailableModels();
-    const bestModel = llmClient.selectBestModel();
-    res.json({ models, defaultModel: bestModel });
-  } catch (err) {
-    console.error('[GET /api/chat/models]', err);
-    res.status(500).json({ error: '获取模型列表失败' });
-  }
-});
+    const { message, history = [], model, sessionId } = req.body;
 
-// ── 发送消息 ────────────────────────────────────────
-router.post('/send', async (req, res) => {
-  try {
-    const { message, history, modelId } = req.body;
-
-    if (!message || !message.trim()) {
+    if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: '消息不能为空' });
     }
 
-    const result = await personaEngine.chat({
-      message: message.trim(),
-      history: history || [],
-      modelId: modelId || undefined,
+    const result = await personaEngine.chat(message, history, {
+      model,
+      sessionId: sessionId || `web-${Date.now()}`
     });
 
     res.json({
-      reply: result.reply,
+      reply: result.content,
       model: result.model,
-      modelName: result.modelName,
-      toolsUsed: result.toolsUsed,
+      brainLoaded: result.brainLoaded,
+      toolsUsed: result.toolsUsed || [],
+      rounds: result.rounds || 0
     });
   } catch (err) {
-    console.error('[POST /api/chat/send]', err);
-
-    // 友好错误提示
-    let errorMsg = '人格体暂时无法回复';
-    if (err.message.includes('API Key')) {
-      errorMsg = '大模型API Key未配置或无效，请检查服务器环境变量';
-    } else if (err.message.includes('额度')) {
-      errorMsg = '当前模型额度不足，请切换其他模型或充值';
-    } else if (err.message.includes('timeout')) {
-      errorMsg = '模型响应超时，请稍后重试';
-    }
-
+    console.error('[Chat] 对话失败:', err.message);
     res.status(500).json({
-      error: errorMsg,
-      detail: err.message,
+      error: '对话服务暂时不可用',
+      detail: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
+});
+
+// ── 刷新大脑缓存 ──
+router.post('/refresh-brain', async (req, res) => {
+  personaEngine.refreshBrain();
+  res.json({ message: '大脑缓存已刷新，下次对话将重新从 Notion 加载' });
+});
+
+// ── 工具箱状态 ──
+router.get('/tools', (req, res) => {
+  res.json({
+    manifest: ToolRegistry.getToolManifest(),
+    loadedCount: ToolRegistry.getLoadedCount(),
+    message: '用什么拿什么，用完还回去'
+  });
+});
+
+// ── 卸载所有工具模块（释放内存）──
+router.post('/tools/unload', (req, res) => {
+  ToolRegistry.unloadAll();
+  res.json({ message: '全部工具模块已卸载', loadedCount: 0 });
 });
 
 module.exports = router;
