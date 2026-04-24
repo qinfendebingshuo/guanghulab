@@ -2,7 +2,12 @@
   <div class="gl-header">
     <span class="gl-header-icon">🤖</span>
     <span class="gl-header-title">人格体交互区</span>
-    <span class="gl-header-subtitle">光湖AI · 无记忆模式</span>
+    <!-- 模型选择器 -->
+    <select class="gl-model-select" v-model="selectedModel" :title="modelTitle">
+      <option v-for="m in availableModels" :key="m.id" :value="m.id" :disabled="!m.available">
+         m.icon   m.name   m.available ? '' : '(未配置)' 
+      </option>
+    </select>
   </div>
 
   <!-- 聊天消息区域 -->
@@ -13,7 +18,7 @@
       有什么问题都可以问我，比如：
       <ul style="margin-top: 8px; padding-left: 20px;">
         <li>怎么写好视频提示词？</li>
-        <li>即梦Seedance有什么特点？</li>
+        <li>帮我在Notion里查一下项目进度</li>
         <li>我想生成一个什么风格的视频</li>
       </ul>
     </div>
@@ -23,8 +28,22 @@
       :key="i"
       class="gl-msg"
       :class="msg.role === 'user' ? 'gl-msg-user' : 'gl-msg-bot'"
-      v-html="msg.content"
-    ></div>
+    >
+      <div v-html="msg.content"></div>
+      <div class="gl-msg-meta" v-if="msg.role === 'bot' && msg.modelName">
+         msg.modelName 
+        <span v-if="msg.toolsUsed && msg.toolsUsed.length > 0">
+          · 🔧  msg.toolsUsed.map(t => t.name.replace('notion_', '')).join(', ') 
+        </span>
+      </div>
+    </div>
+
+    <!-- 输入中动画 -->
+    <div class="gl-msg gl-msg-bot gl-typing" v-if="isTyping">
+      <span class="gl-typing-dot"></span>
+      <span class="gl-typing-dot"></span>
+      <span class="gl-typing-dot"></span>
+    </div>
   </div>
 
   <!-- 输入区域 -->
@@ -34,55 +53,191 @@
       v-model="input"
       placeholder="输入消息..."
       @keydown.enter="sendMessage"
+      :disabled="isTyping"
     />
-    <button class="gl-btn gl-btn-primary" style="padding: 10px 16px;" @click="sendMessage">
-      发送
+    <button
+      class="gl-btn gl-btn-primary"
+      style="padding: 10px 16px;"
+      @click="sendMessage"
+      :disabled="isTyping || !input.trim()"
+    >
+       isTyping ? '…' : '发送' 
     </button>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 
 const input = ref('');
 const messages = ref([]);
 const chatArea = ref(null);
+const isTyping = ref(false);
+const selectedModel = ref('');
+const availableModels = ref([]);
 
-// P0: 本地预设回复 (P1接入大模型API)
-const quickReplies = {
-  '提示词': '写好视频提示词的技巧：\n\n1. <b>描述画面</b>：先说主体（谁/什么），再说环境（在哪里），最后说动作\n2. <b>加入风格</b>：电影质感、动漫风、水彩画、赛博朋克...\n3. <b>镜头语言</b>：特写、航拍、慢动作、推拉摇移\n4. <b>光影氛围</b>：金色夕阳、霓虹灯光、柔和晨光\n\n例如：「一只橘猫在樱花树下打瞌睡，微风吹过花瓣缓缓飘落，电影质感，浅景深，暖色调」',
-  '即梦': '即梦 Seedance 1.5 Pro 是字节跳动推出的AI视频生成模型 🎬\n\n特点：\n• 支持 5秒/10秒 视频生成\n• 支持 720p/1080p 分辨率\n• 中文提示词理解能力强\n• 生成速度较快（通常1-3分钟）\n• 画面质量优秀，动态自然\n\n目前是我们MVP的默认模型，后续会开放更多选择！',
-  '风格': '光湖支持的视频风格参考：\n\n🎬 <b>写实/电影</b>：真实感画面，适合故事片\n🎨 <b>动漫/二次元</b>：日系动画风格\n🌐 <b>3D/CG</b>：三维渲染质感\n🎭 <b>赛博朋克</b>：霓虹+科技感\n🌿 <b>水彩/油画</b>：艺术绘画质感\n\n在提示词里加上风格关键词就行！',
-  'default': '我收到了你的消息 😊 目前我还在MVP阶段，暂时只能回复预设内容。\n\n你可以试试问我：\n• 怎么写提示词\n• 即梦模型介绍\n• 视频风格推荐\n\n或者直接去右边面板试试生成视频吧！'
-};
+// ── 初始化：加载可用模型列表 ────────────────────
+onMounted(async () => {
+  try {
+    const resp = await fetch('/api/chat/models');
+    const data = await resp.json();
+    availableModels.value = data.models || [];
+    if (data.defaultModel) {
+      selectedModel.value = data.defaultModel;
+    } else if (availableModels.value.length > 0) {
+      const first = availableModels.value.find(m => m.available);
+      if (first) selectedModel.value = first.id;
+    }
+  } catch (err) {
+    console.warn('加载模型列表失败:', err);
+    // fallback
+    availableModels.value = [
+      { id: 'qianwen', name: '通义千问', icon: '🧠', available: true },
+      { id: 'deepseek', name: 'DeepSeek', icon: '🔮', available: true },
+      { id: 'kimi', name: 'Kimi', icon: '🌙', available: true },
+      { id: 'zhipu', name: '智谱清言', icon: '💎', available: true },
+    ];
+    selectedModel.value = 'qianwen';
+  }
+});
 
+const modelTitle = ref('选择AI模型');
+
+// ── 发送消息 ──────────────────────────────────────
 async function sendMessage() {
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || isTyping.value) return;
 
-  messages.value.push({ role: 'user', content: text });
+  messages.value.push({ role: 'user', content: escapeHtml(text) });
   input.value = '';
+  isTyping.value = true;
 
   await nextTick();
   scrollToBottom();
 
-  // 模拟延迟
-  setTimeout(() => {
-    let reply = quickReplies.default;
-    for (const [key, val] of Object.entries(quickReplies)) {
-      if (key !== 'default' && text.includes(key)) {
-        reply = val;
-        break;
-      }
+  try {
+    // 构建历史消息（发给后端的是纯文本，不含 HTML）
+    const history = messages.value
+      .filter(m => m.role === 'user' || m.role === 'bot')
+      .slice(-20)
+      .map(m => ({
+        role: m.role === 'bot' ? 'assistant' : 'user',
+        content: stripHtml(m.content),
+      }));
+    // 去掉最后一条（就是当前这条，会通过 message 参数发）
+    history.pop();
+
+    const resp = await fetch('/api/chat/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history,
+        modelId: selectedModel.value,
+      }),
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      throw new Error(data.error || '人格体暂时无法回复');
     }
-    messages.value.push({ role: 'bot', content: reply });
-    nextTick(() => scrollToBottom());
-  }, 500);
+
+    messages.value.push({
+      role: 'bot',
+      content: formatReply(data.reply),
+      modelName: data.modelName,
+      toolsUsed: data.toolsUsed,
+    });
+  } catch (err) {
+    messages.value.push({
+      role: 'bot',
+      content: `<span style="color: var(--gl-error)">❌ ${escapeHtml(err.message)}</span>`,
+    });
+  } finally {
+    isTyping.value = false;
+    await nextTick();
+    scrollToBottom();
+  }
 }
 
+// ── 工具函数 ──────────────────────────────────────
 function scrollToBottom() {
   if (chatArea.value) {
     chatArea.value.scrollTop = chatArea.value.scrollHeight;
   }
 }
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function stripHtml(str) {
+  return str.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+}
+
+function formatReply(text) {
+  // 简单的 markdown 转 HTML
+  return text
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+}
 </script>
+
+<style scoped>
+.gl-model-select {
+  margin-left: auto;
+  padding: 4px 8px;
+  background: var(--gl-bg-input);
+  border: 1px solid var(--gl-border);
+  border-radius: 6px;
+  color: var(--gl-text-secondary);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  max-width: 140px;
+}
+
+.gl-model-select:focus {
+  border-color: var(--gl-accent-dim);
+}
+
+.gl-msg-meta {
+  font-size: 10px;
+  color: var(--gl-text-muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* ── 打字动画 ── */
+.gl-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  min-height: auto;
+}
+
+.gl-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gl-accent);
+  opacity: 0.4;
+  animation: glTypingBounce 1.2s ease-in-out infinite;
+}
+
+.gl-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.gl-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes glTypingBounce {
+  0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+</style>

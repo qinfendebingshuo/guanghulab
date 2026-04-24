@@ -1,8 +1,6 @@
 /**
- * 光湖短视频工作台 · API Server
+ * 光湖短视频工作台 · 后端入口
  * Express + Socket.IO
- *
- * 霜砚出品 · AG-SY-WEB-001
  */
 const express = require('express');
 const http = require('http');
@@ -13,56 +11,63 @@ const config = require('./config');
 
 const app = express();
 const server = http.createServer(app);
-
-// ── CORS ────────────────────────────────────────────
-app.use(cors({ origin: config.corsOrigins, credentials: true }));
-app.use(express.json({ limit: '1mb' }));
-
-// ── Socket.IO ───────────────────────────────────────
 const io = new Server(server, {
-  cors: { origin: config.corsOrigins, credentials: true },
-  pingTimeout: 60000,
+  cors: { origin: config.corsOrigins, methods: ['GET', 'POST'] },
 });
+
+// 中间件
+app.use(cors({ origin: config.corsOrigins }));
+app.use(express.json({ limit: '10mb' }));
+
+// 将 io 实例挂到 app 上，供路由使用
 app.set('io', io);
 
-// ── 静态文件 (生产环境) ──────────────────────────────
-const distPath = path.resolve(__dirname, '../frontend/dist');
-app.use(express.static(distPath));
+// ── 路由 ────────────────────────────────────────────
+const videoRoutes = require('./routes/video');
+const chatRoutes = require('./routes/chat');
 
-// ── API 路由 ────────────────────────────────────────
-app.use('/api/video', require('./routes/video'));
+app.use('/api/video', videoRoutes);
+app.use('/api/chat', chatRoutes);
 
-// 健康检查
-app.get('/api/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'guanghuclip-api',
-    version: '1.0.0-p0',
-    timestamp: new Date().toISOString(),
-    jimengConfigured: !!config.jimeng.apiKey,
-  });
+// ── 静态文件 ────────────────────────────────────────
+const frontendDist = path.resolve(__dirname, '../frontend/dist');
+app.use(express.static(frontendDist));
+
+// SPA 回退
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  }
 });
 
-// ── SPA 回退 (生产环境) ─────────────────────────────
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
-
-// ── Socket.IO 事件 ──────────────────────────────────
+// ── Socket.IO 连接 ──────────────────────────────────
 io.on('connection', (socket) => {
-  console.log(`[Socket] 连接: ${socket.id}`);
+  console.log(`[WS] 客户端连接: ${socket.id}`);
   socket.on('disconnect', () => {
-    console.log(`[Socket] 断开: ${socket.id}`);
+    console.log(`[WS] 客户端断开: ${socket.id}`);
   });
 });
 
 // ── 启动 ────────────────────────────────────────────
-server.listen(config.port, () => {
-  console.log('');
-  console.log('  🎬 光湖短视频工作台 API');
-  console.log(`  ── 端口: ${config.port}`);
-  console.log(`  ── 时间: ${new Date().toISOString()}`);
-  console.log(`  ── 即梦: ${config.jimeng.apiKey ? '✅ 已配置' : '❌ 未配置'}`);
-  console.log(`  ── 模型: ${config.jimeng.model}`);
-  console.log('');
+server.listen(config.port, '0.0.0.0', () => {
+  console.log(``);
+  console.log(`  🌊 光湖短视频工作台 已启动`);
+  console.log(`  📡 端口: ${config.port}`);
+  console.log(`  🎬 视频API: /api/video/*`);
+  console.log(`  🤖 聊天API: /api/chat/*`);
+  console.log(`  🔗 CORS: ${config.corsOrigins.join(', ')}`);
+  console.log(``);
+
+  // 检查大模型配置
+  const llmClient = require('./services/llm-client');
+  const models = llmClient.getAvailableModels().filter(m => m.available);
+  console.log(`  🧠 可用大模型: ${models.map(m => m.name).join(' / ') || '❌ 无 (请配置API Key)'}`);
+
+  // 检查 Notion 配置
+  if (config.notion.token) {
+    console.log(`  📝 Notion桥接: ✅ 已配置`);
+  } else {
+    console.log(`  📝 Notion桥接: ⬜ 未配置 (ZY_NOTION_TOKEN)`);
+  }
+  console.log(``);
 });
