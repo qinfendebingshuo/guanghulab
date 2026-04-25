@@ -32,7 +32,8 @@ class ExportFormatter:
         last_edited: str,
         url: str | None = None,
     ) -> list[CorpusEntry]:
-        source_url = url or f"https://www.notion.so/{page_id.replace('-', '')}"
+        clean_id = page_id.replace("-", "")
+        source_url = url or f"https://www.notion.so/{clean_id}"
         entries: list[CorpusEntry] = []
 
         # Title as metadata entry
@@ -69,7 +70,8 @@ class ExportFormatter:
         last_edited: str,
         url: str | None = None,
     ) -> list[CorpusEntry]:
-        source_url = url or f"https://www.notion.so/{page_id.replace('-', '')}"
+        clean_id = page_id.replace("-", "")
+        source_url = url or f"https://www.notion.so/{clean_id}"
         entries: list[CorpusEntry] = []
 
         for msg in messages:
