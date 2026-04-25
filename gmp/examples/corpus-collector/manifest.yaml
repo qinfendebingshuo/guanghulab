@@ -1,0 +1,80 @@
+# ============================================================
+# GMP 示例 1: 语料采集器 / Example 1: Corpus Collector
+# ============================================================
+# 这是一个完整的 GMP manifest.yaml 示例
+# 展示一个后端数据处理模块的典型配置
+# ============================================================
+
+gmp_version: "1.0"
+module_name: "corpus-collector"
+module_name_cn: "语料采集器"
+version: "1.2.0"
+
+author:
+  name: "铸渊"
+  id: "ICE-GL-ZY001"
+  attribution: "zhuyuan"
+
+description: "从多源采集语料并标准化存储，支持网页、API、文件三种采集模式"
+description_en: "Collect corpus from multiple sources (web, API, file) and store in standardized format"
+
+tags:
+  status: "green"
+  category: "data-pipeline"
+  layer: "backend"
+  attribution: "zhuyuan"
+
+port: 3201
+env_prefix: "GH_CORPUS_COLLECTOR"
+
+health_check:
+  endpoint: "/health"
+  method: "GET"
+  expected_status: 200
+  timeout_seconds: 10
+  interval_seconds: 30
+
+dependencies:
+  system:
+    - "node >= 18.0.0"
+    - "pm2"
+  modules:
+    - "event-bus"
+  npm:
+    - "express"
+    - "axios"
+    - "cheerio"
+    - "node-cron"
+
+scripts:
+  install: "install.sh"
+  uninstall: "uninstall.sh"
+  health_check: "health_check.sh"
+  start: "node index.js"
+  stop: "pm2 stop corpus-collector"
+
+pm2:
+  name: "corpus-collector"
+  instances: 1
+  max_memory_restart: "256M"
+  log_file: "/var/log/gh-modules/corpus-collector.log"
+
+routes:
+  - "/api/corpus"
+  - "/api/corpus/collect"
+  - "/api/corpus/status"
+
+repository: "qinfendebingshuo/guanghulab"
+path_in_repo: "modules/corpus-collector"
+license: "PROPRIETARY"
+min_gmp_version: "1.0"
+
+compatible_servers:
+  - "ZY-SVR-002"
+  - "ZY-SVR-004"
+
+metadata:
+  routing_map_id: "M-CORPUS"
+  created_date: "2026-03-15"
+  last_updated: "2026-04-25"
+  notes: "主力数据采集模块，支持定时采集和手动触发"

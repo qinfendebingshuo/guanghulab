@@ -1,0 +1,98 @@
+# ============================================================
+# GMP manifest.yaml 模板 / GMP manifest.yaml Template
+# ============================================================
+# 协议版本 / Protocol Version: GMP v1.0
+# 使用说明 / Usage:
+#   1. 复制此文件到你的模块根目录
+#   2. 重命名为 manifest.yaml
+#   3. 填写所有 [必填] 字段
+#   4. 根据需要填写 [可选] 字段
+#   5. 同时创建 install.sh, uninstall.sh, health_check.sh, config.env.example
+# ============================================================
+
+# === 基本信息 / Basic Info [必填/Required] ===
+
+gmp_version: "1.0"                         # [必填] GMP 协议版本，固定 "1.0"
+module_name: "your-module-name"             # [必填] 模块唯一标识 (kebab-case)
+module_name_cn: "你的模块中文名"              # [必填] 中文显示名
+version: "0.1.0"                            # [必填] 语义化版本号 (semver)
+
+author:                                     # [必填] 作者信息
+  name: "开发者名"                            # 开发者名称
+  id: "ICE-GL-XX000"                        # 人格体/开发者编号
+  attribution: "zhuyuan"                    # [必填] 归属: zhuyuan|banti|external|copilot
+
+description: "模块一句话描述（中文）"          # [必填] 中文描述
+description_en: "One-line description (EN)"  # [必填] 英文描述
+
+# === 分类标签 / Tags [必填/Required] ===
+
+tags:
+  status: "yellow"                          # [必填] green|yellow|red|white
+  category: "utility"                       # [必填] 功能分类（见 tag-taxonomy.md）
+  layer: "backend"                          # [必填] frontend|backend|infra|brain|protocol|config
+  attribution: "zhuyuan"                    # [必填] 与 author.attribution 一致
+
+# === 运行时 / Runtime [必填/Required] ===
+
+port: 3700                                  # [必填] 服务端口 (1024-65535)
+env_prefix: "GH_YOUR_MODULE"                # [必填] 环境变量前缀 GH_{MODULE}_
+
+health_check:                               # [必填] 健康检查配置
+  endpoint: "/health"                       # 健康检查 HTTP 端点
+  method: "GET"                             # HTTP 方法
+  expected_status: 200                      # 期望状态码
+  timeout_seconds: 10                       # 超时时间（秒）
+  interval_seconds: 30                      # 检查间隔（秒）
+
+# === 依赖 / Dependencies [可选/Optional] ===
+
+dependencies:
+  system:                                   # 系统级依赖
+    - "node >= 18.0.0"
+    - "pm2"
+  modules: []                               # 模块间依赖（其他 GMP 模块名）
+  npm: []                                   # NPM 包依赖
+
+# === 生命周期脚本 / Lifecycle Scripts [必填/Required] ===
+
+scripts:
+  install: "install.sh"                     # [必填] 安装脚本
+  uninstall: "uninstall.sh"                 # [必填] 卸载脚本
+  health_check: "health_check.sh"           # [必填] 健康检查脚本
+  start: "node index.js"                    # [推荐] 启动命令
+  stop: "pm2 stop ${module_name}"           # [推荐] 停止命令
+
+# === PM2 配置 / PM2 Config [推荐/Recommended] ===
+
+pm2:
+  name: "your-module-name"                  # PM2 进程名（与 module_name 一致）
+  instances: 1                              # 实例数
+  max_memory_restart: "256M"                # 内存上限
+  log_file: "/var/log/gh-modules/your-module-name.log"
+
+# === 路由 / Routes [可选/Optional] ===
+
+routes: []                                  # 注册的路由列表
+  # - "/api/your-endpoint"
+
+# === 仓库信息 / Repository [可选/Optional] ===
+
+repository: "qinfendebingshuo/guanghulab"
+path_in_repo: ""                            # 仓库内路径
+license: "PROPRIETARY"
+min_gmp_version: "1.0"
+
+# === 兼容服务器 / Compatible Servers [可选/Optional] ===
+
+compatible_servers:
+  - "ZY-SVR-002"                            # 新加坡主力
+  - "ZY-SVR-004"                            # 大陆备用
+
+# === 自由元数据 / Metadata [可选/Optional] ===
+
+metadata:
+  routing_map_id: ""                        # routing-map.json 中的模块 ID
+  created_date: "2026-01-01"
+  last_updated: "2026-01-01"
+  notes: ""

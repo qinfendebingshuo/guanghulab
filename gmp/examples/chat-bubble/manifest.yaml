@@ -1,0 +1,79 @@
+# ============================================================
+# GMP 示例 2: 聊天气泡 / Example 2: Chat Bubble
+# ============================================================
+# 这是一个前端+后端混合模块的 GMP manifest.yaml 示例
+# 展示一个用户交互模块的典型配置
+# ============================================================
+
+gmp_version: "1.0"
+module_name: "chat-bubble"
+module_name_cn: "聊天气泡"
+version: "0.9.0"
+
+author:
+  name: "铸渊"
+  id: "ICE-GL-ZY001"
+  attribution: "zhuyuan"
+
+description: "嵌入式聊天气泡组件，支持与人格体实时对话"
+description_en: "Embeddable chat bubble widget for real-time conversation with personas"
+
+tags:
+  status: "yellow"                          # 可用但需整理
+  category: "frontend-ui"
+  layer: "frontend"
+  attribution: "zhuyuan"
+
+port: 3301
+env_prefix: "GH_CHAT_BUBBLE"
+
+health_check:
+  endpoint: "/health"
+  method: "GET"
+  expected_status: 200
+  timeout_seconds: 5
+  interval_seconds: 60
+
+dependencies:
+  system:
+    - "node >= 18.0.0"
+    - "pm2"
+  modules:
+    - "event-bus"
+    - "llm-engine"                          # 依赖 LLM 引擎进行对话
+  npm:
+    - "express"
+    - "ws"
+    - "uuid"
+
+scripts:
+  install: "install.sh"
+  uninstall: "uninstall.sh"
+  health_check: "health_check.sh"
+  start: "node server.js"
+  stop: "pm2 stop chat-bubble"
+
+pm2:
+  name: "chat-bubble"
+  instances: 1
+  max_memory_restart: "128M"
+  log_file: "/var/log/gh-modules/chat-bubble.log"
+
+routes:
+  - "/api/chat"
+  - "/api/chat/ws"
+  - "/widget/chat-bubble.js"               # 前端嵌入脚本
+
+repository: "qinfendebingshuo/guanghulab"
+path_in_repo: "chat-bubble"
+license: "PROPRIETARY"
+min_gmp_version: "1.0"
+
+compatible_servers:
+  - "ZY-SVR-002"
+
+metadata:
+  routing_map_id: "M-CHAT"
+  created_date: "2026-02-20"
+  last_updated: "2026-04-10"
+  notes: "前端嵌入式组件，后端提供 WebSocket 实时通信。status=yellow 因为 WebSocket 重连机制需优化。"
