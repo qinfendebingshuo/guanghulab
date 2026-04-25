@@ -2,12 +2,10 @@
 PY-A04-20260425-002
 
 Endpoints:
-  POST   /receipts                        -> create receipt
-  PATCH  /receipts/{receipt_id}            -> update result
-  GET    /receipts/{receipt_id}            -> get receipt
-  GET    /sessions/{session_id}/receipts   -> get session receipts
-
-Reference: HLDP-ARCH-001 L2 Tool Receipt System
+  POST   /receipts                      -> create receipt
+  PATCH  /receipts/{receipt_id}          -> update result
+  GET    /receipts/{receipt_id}          -> query single receipt
+  GET    /sessions/{session_id}/receipts -> query session receipts
 """
 from __future__ import annotations
 
@@ -18,13 +16,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from config import settings
-from receipt_formatter import ReceiptFormatter
 from receipt_manager import (
     PgReceiptManager,
     Receipt,
     ReceiptStatus,
     SqliteReceiptManager,
 )
+from receipt_formatter import ReceiptFormatter
 
 
 # ---------------------------------------------------------------------------
@@ -43,60 +41,41 @@ class CreateReceiptRequest(BaseModel):
     persona_id: str = Field(default="", description="Persona making the call")
 
 
-class CreateReceiptResponse(BaseModel):
-    """Response for POST /receipts."""
-
-    receipt_id: str
-    status: str
-
-
 class UpdateReceiptRequest(BaseModel):
     """Body for PATCH /receipts/{id}."""
 
     output: dict[str, Any] | None = Field(
-        default=None, description="Tool output"
+        default=None, description="Tool output payload"
     )
-    status: str = Field(
-        description="New status: success | error | timeout"
-    )
+    status: ReceiptStatus = Field(description="Final status of the tool call")
     duration_ms: int | None = Field(
         default=None, description="Execution duration in ms"
     )
 
 
 class ReceiptResponse(BaseModel):
-    """Single receipt with formatted text."""
+    """Unified receipt response with optional formatted views."""
 
     receipt: Receipt
     formatted_text: str = Field(
-        description="Human-readable formatted receipt"
+        default="", description="Human-readable text"
     )
-    hldp_text: str = Field(
-        default="", description="HLDP mother-tongue formatted receipt"
-    )
-
-
-class SessionReceiptsResponse(BaseModel):
-    """All receipts for a session."""
-
-    session_id: str
-    receipts: list[Receipt]
-    summary_text: str = Field(
-        description="Human-readable session summary"
+    formatted_hldp: str = Field(
+        default="", description="HLDP tree structure"
     )
 
 
 # ---------------------------------------------------------------------------
-# Application
+# App lifecycle
 # ---------------------------------------------------------------------------
 
 _manager: PgReceiptManager | SqliteReceiptManager | None = None
-formatter = ReceiptFormatter()
+_formatter = ReceiptFormatter()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup / shutdown: connect and close the DB backend."""
+    """Startup / shutdown hook."""
     global _manager
     if settings.use_sqlite:
         mgr = SqliteReceiptManager()
@@ -115,10 +94,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Tool Receipt System",
-    version="1.0.0",
-    description="HLDP-ARCH-001 L2 - Tool call traceability for persona agents",
+    description="HLDP-ARCH-001 L2 · Tool call tracing & receipt management",
+    version="0.1.0",
     lifespan=lifespan,
 )
+
+
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+
+
+def _build_response(receipt: Receipt) -> ReceiptResponse:
+    """Wrap a Receipt with formatted outputs."""
+    return ReceiptResponse(
+        receipt=receipt,
+        formatted_text=_formatter.to_text(receipt),
+        formatted_hldp=_formatter.to_hldp(receipt),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -126,97 +119,84 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 
 
-@app.post("/receipts", response_model=CreateReceiptResponse, status_code=201)
-async def create_receipt(req: CreateReceiptRequest):
-    """Record a new tool call and return a receipt ID."""
-    if isinstance(_manager, SqliteReceiptManager):
-        rid = _manager.record_call(
-            tool_name=req.tool_name,
-            input_params=req.input_params,
-            session_id=req.session_id,
-            persona_id=req.persona_id,
-        )
-    else:
+@app.post("/receipts", response_model=ReceiptResponse, status_code=201)
+async def create_receipt(body: CreateReceiptRequest):
+    """Create a new pending receipt for a tool call."""
+    if isinstance(_manager, PgReceiptManager):
         rid = await _manager.record_call(
-            tool_name=req.tool_name,
-            input_params=req.input_params,
-            session_id=req.session_id,
-            persona_id=req.persona_id,
+            tool_name=body.tool_name,
+            input_params=body.input_params,
+            session_id=body.session_id,
+            persona_id=body.persona_id,
         )
-    return CreateReceiptResponse(
-        receipt_id=rid, status=ReceiptStatus.PENDING.value
-    )
+        receipt = await _manager.get_receipt(rid)
+    else:
+        rid = _manager.record_call(
+            tool_name=body.tool_name,
+            input_params=body.input_params,
+            session_id=body.session_id,
+            persona_id=body.persona_id,
+        )
+        receipt = _manager.get_receipt(rid)
+
+    if receipt is None:
+        raise HTTPException(status_code=500, detail="Failed to create receipt")
+    return _build_response(receipt)
 
 
 @app.patch("/receipts/{receipt_id}", response_model=ReceiptResponse)
-async def update_receipt(receipt_id: str, req: UpdateReceiptRequest):
+async def update_receipt(receipt_id: str, body: UpdateReceiptRequest):
     """Update a receipt with tool output and final status."""
-    try:
-        status = ReceiptStatus(req.status)
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid status. Must be one of: success, error, timeout",
-        )
-
-    if isinstance(_manager, SqliteReceiptManager):
-        receipt = _manager.update_result(
-            receipt_id=receipt_id,
-            output=req.output,
-            status=status,
-            duration_ms=req.duration_ms,
-        )
-    else:
+    if isinstance(_manager, PgReceiptManager):
         receipt = await _manager.update_result(
             receipt_id=receipt_id,
-            output=req.output,
-            status=status,
-            duration_ms=req.duration_ms,
+            output=body.output,
+            status=body.status,
+            duration_ms=body.duration_ms,
         )
-    if not receipt:
+    else:
+        receipt = _manager.update_result(
+            receipt_id=receipt_id,
+            output=body.output,
+            status=body.status,
+            duration_ms=body.duration_ms,
+        )
+
+    if receipt is None:
         raise HTTPException(status_code=404, detail="Receipt not found")
-    return ReceiptResponse(
-        receipt=receipt,
-        formatted_text=formatter.to_text(receipt),
-        hldp_text=formatter.to_hldp(receipt),
-    )
+    return _build_response(receipt)
 
 
 @app.get("/receipts/{receipt_id}", response_model=ReceiptResponse)
 async def get_receipt(receipt_id: str):
     """Retrieve a single receipt by ID."""
-    if isinstance(_manager, SqliteReceiptManager):
-        receipt = _manager.get_receipt(receipt_id)
-    else:
+    if isinstance(_manager, PgReceiptManager):
         receipt = await _manager.get_receipt(receipt_id)
-    if not receipt:
-        raise HTTPException(status_code=404, detail="Receipt not found")
-    return ReceiptResponse(
-        receipt=receipt,
-        formatted_text=formatter.to_text(receipt),
-        hldp_text=formatter.to_hldp(receipt),
-    )
-
-
-@app.get(
-    "/sessions/{session_id}/receipts",
-    response_model=SessionReceiptsResponse,
-)
-async def get_session_receipts(session_id: str):
-    """Retrieve all receipts for a session."""
-    if isinstance(_manager, SqliteReceiptManager):
-        receipts = _manager.get_session_receipts(session_id)
     else:
+        receipt = _manager.get_receipt(receipt_id)
+
+    if receipt is None:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    return _build_response(receipt)
+
+
+@app.get("/sessions/{session_id}/receipts")
+async def get_session_receipts(session_id: str):
+    """Retrieve all receipts for a given session."""
+    if isinstance(_manager, PgReceiptManager):
         receipts = await _manager.get_session_receipts(session_id)
-    return SessionReceiptsResponse(
-        session_id=session_id,
-        receipts=receipts,
-        summary_text=formatter.session_summary(session_id, receipts),
-    )
+    else:
+        receipts = _manager.get_session_receipts(session_id)
+
+    return {
+        "session_id": session_id,
+        "count": len(receipts),
+        "receipts": [_build_response(r).model_dump() for r in receipts],
+    }
 
 
 # ---------------------------------------------------------------------------
-# Entrypoint
+# Standalone runner
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":

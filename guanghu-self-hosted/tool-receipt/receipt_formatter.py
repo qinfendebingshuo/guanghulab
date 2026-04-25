@@ -1,133 +1,179 @@
-"""Receipt Formatter - Dual-format output for Tool Receipt System
+"""Receipt Formatter - Human-readable & HLDP format outputs
 PY-A04-20260425-002
 
-Two output formats:
-  1. JSON   (for system / AI consumption)
-  2. Human-readable text (for frontend / HLDP mother tongue)
-
-Reference: HLDP-ARCH-001 L2 receipt_format spec
+Two output modes:
+  1. JSON   -> receipt.model_dump_json()  (for system consumption)
+  2. Text   -> to_text(receipt)           (for frontend / human reading)
+  3. HLDP   -> to_hldp(receipt)           (for HLDP mother-tongue tree)
 """
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import Any
 
-if TYPE_CHECKING:
-    from receipt_manager import Receipt
+from receipt_manager import Receipt, ReceiptStatus
 
 
-_STATUS_ICONS: dict[str, str] = {
-    "pending": "\u23f3",
-    "success": "\u2705",
-    "error": "\u274c",
-    "timeout": "\u23f1\ufe0f",
+_STATUS_ICON: dict[ReceiptStatus, str] = {
+    ReceiptStatus.PENDING: "\u23f3",   # hourglass
+    ReceiptStatus.SUCCESS: "\u2705",   # check mark
+    ReceiptStatus.ERROR:   "\u274c",   # cross mark
+    ReceiptStatus.TIMEOUT: "\u23f0",   # alarm clock
+}
+
+_STATUS_LABEL: dict[ReceiptStatus, str] = {
+    ReceiptStatus.PENDING: "pending",
+    ReceiptStatus.SUCCESS: "success",
+    ReceiptStatus.ERROR:   "error",
+    ReceiptStatus.TIMEOUT: "timeout",
 }
 
 
 class ReceiptFormatter:
-    """Stateless formatter that converts Receipt objects into display formats."""
+    """Stateless formatter for Receipt objects."""
 
-    # ------------------------------------------------------------------ #
-    # JSON format (for system / AI)
-    # ------------------------------------------------------------------ #
-
-    @staticmethod
-    def to_json(receipt: Receipt) -> str:
-        """Pretty-printed JSON string."""
-        return json.dumps(receipt.model_dump(), ensure_ascii=False, indent=2)
+    # ------------------------------------------------------------------
+    # JSON (system)
+    # ------------------------------------------------------------------
 
     @staticmethod
-    def to_json_compact(receipt: Receipt) -> str:
-        """Single-line JSON string."""
-        return json.dumps(receipt.model_dump(), ensure_ascii=False)
+    def to_json(receipt: Receipt, *, indent: int = 2) -> str:
+        """Serialize receipt to pretty-printed JSON string."""
+        return receipt.model_dump_json(indent=indent)
 
-    # ------------------------------------------------------------------ #
-    # Human-readable text (for frontend)
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # Human-readable text (frontend)
+    # ------------------------------------------------------------------
 
     @staticmethod
     def to_text(receipt: Receipt) -> str:
-        """Human-readable multi-line text for one receipt."""
-        icon = _STATUS_ICONS.get(receipt.status, "?")
+        """Render receipt as human-readable multi-line text."""
+        icon = _STATUS_ICON.get(receipt.status, "")
+        label = _STATUS_LABEL.get(receipt.status, receipt.status.value)
         lines: list[str] = [
-            icon + " Tool Receipt: " + receipt.receipt_id[:8] + "...",
-            "  Tool:     " + receipt.tool_name,
-            "  Status:   " + receipt.status.upper(),
+            f"=== Tool Receipt {icon} ===",
+            f"ID:       {receipt.receipt_id}",
+            f"Session:  {receipt.session_id}",
+            f"Persona:  {receipt.persona_id}",
+            f"Tool:     {receipt.tool_name}",
+            f"Status:   {label}",
+            f"Created:  {receipt.created_at}",
+            f"Updated:  {receipt.updated_at}",
         ]
         if receipt.duration_ms is not None:
-            lines.append("  Duration: " + str(receipt.duration_ms) + "ms")
-        lines.append("  Time:     " + receipt.created_at)
-
-        if receipt.input_params:
-            params_str = json.dumps(receipt.input_params, ensure_ascii=False)
-            if len(params_str) > 120:
-                params_str = params_str[:117] + "..."
-            lines.append("  Input:    " + params_str)
-
+            lines.append(f"Duration: {receipt.duration_ms} ms")
+        lines.append("")
+        lines.append("--- Input ---")
+        lines.append(_pretty_dict(receipt.input_params))
         if receipt.output is not None:
-            output_str = json.dumps(receipt.output, ensure_ascii=False)
-            if len(output_str) > 120:
-                output_str = output_str[:117] + "..."
-            lines.append("  Output:   " + output_str)
-
+            lines.append("")
+            lines.append("--- Output ---")
+            lines.append(_pretty_dict(receipt.output))
         return "\n".join(lines)
 
-    # ------------------------------------------------------------------ #
-    # HLDP mother-tongue format
-    # ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------
+    # HLDP mother-tongue tree
+    # ------------------------------------------------------------------
 
     @staticmethod
     def to_hldp(receipt: Receipt) -> str:
-        """HLDP structured receipt for persona agents."""
-        icon = _STATUS_ICONS.get(receipt.status, "?")
-        lines: list[str] = [
-            "HLDP://tool-receipt/" + receipt.receipt_id[:8],
-            "  tool: " + receipt.tool_name,
-            "  status: " + icon + " " + receipt.status,
-        ]
-        if receipt.duration_ms is not None:
-            lines.append("  duration_ms: " + str(receipt.duration_ms))
-        lines.append("  timestamp: " + receipt.created_at)
-        if receipt.persona_id:
-            lines.append("  persona: " + receipt.persona_id)
-        if receipt.input_params:
-            lines.append(
-                "  input: " + json.dumps(receipt.input_params, ensure_ascii=False)
-            )
-        if receipt.output is not None:
-            lines.append(
-                "  output: " + json.dumps(receipt.output, ensure_ascii=False)
-            )
-        return "\n".join(lines)
+        """Render receipt as an HLDP tree structure block."""
+        icon = _STATUS_ICON.get(receipt.status, "")
+        label = _STATUS_LABEL.get(receipt.status, receipt.status.value)
 
-    # ------------------------------------------------------------------ #
-    # Session summary
-    # ------------------------------------------------------------------ #
+        input_summary = _compact_dict(receipt.input_params)
+        output_summary = (
+            _compact_dict(receipt.output)
+            if receipt.output is not None
+            else "null"
+        )
+        duration_str = (
+            str(receipt.duration_ms) + "ms"
+            if receipt.duration_ms is not None
+            else "n/a"
+        )
+
+        tree = (
+            f"HLDP://tool-receipt/{receipt.receipt_id}\n"
+            f"\u251c\u2500\u2500 tool: {receipt.tool_name}\n"
+            f"\u251c\u2500\u2500 status: {icon} {label}\n"
+            f"\u251c\u2500\u2500 session: {receipt.session_id}\n"
+            f"\u251c\u2500\u2500 persona: {receipt.persona_id}\n"
+            f"\u251c\u2500\u2500 created: {receipt.created_at}\n"
+            f"\u251c\u2500\u2500 duration: {duration_str}\n"
+            f"\u251c\u2500\u2500 input: {input_summary}\n"
+            f"\u2514\u2500\u2500 output: {output_summary}"
+        )
+        return tree
+
+    # ------------------------------------------------------------------
+    # Batch helpers
+    # ------------------------------------------------------------------
 
     @staticmethod
-    def session_summary(session_id: str, receipts: list[Receipt]) -> str:
-        """Human-readable summary of all receipts in a session."""
+    def session_summary_text(receipts: list[Receipt]) -> str:
+        """Summarise a session's receipts as human-readable text."""
         if not receipts:
-            return "Session " + session_id + ": no receipts."
-
-        total = len(receipts)
-        by_status: dict[str, int] = {}
-        for r in receipts:
-            by_status[r.status] = by_status.get(r.status, 0) + 1
-
+            return "(no receipts)"
         lines: list[str] = [
-            "Session: " + session_id,
-            "Total calls: " + str(total),
+            f"Session: {receipts[0].session_id}",
+            f"Total calls: {len(receipts)}",
+            "",
         ]
-        for status, count in sorted(by_status.items()):
-            icon = _STATUS_ICONS.get(status, "?")
-            lines.append("  " + icon + " " + status + ": " + str(count))
-
-        lines.append("")
-        lines.append("Timeline:")
-        for r in receipts:
-            icon = _STATUS_ICONS.get(r.status, "?")
-            dur = (str(r.duration_ms) + "ms") if r.duration_ms is not None else "-"
-            lines.append("  " + icon + " " + r.tool_name + " [" + dur + "]")
-
+        for i, r in enumerate(receipts, 1):
+            icon = _STATUS_ICON.get(r.status, "")
+            dur = f" ({r.duration_ms}ms)" if r.duration_ms is not None else ""
+            lines.append(f"  {i}. {icon} {r.tool_name} -> {r.status.value}{dur}")
         return "\n".join(lines)
+
+    @staticmethod
+    def session_summary_hldp(receipts: list[Receipt]) -> str:
+        """Summarise a session's receipts as an HLDP tree."""
+        if not receipts:
+            return "HLDP://tool-receipt/session/empty"
+        sid = receipts[0].session_id
+        children: list[str] = []
+        for r in receipts:
+            icon = _STATUS_ICON.get(r.status, "")
+            dur = (
+                str(r.duration_ms) + "ms"
+                if r.duration_ms is not None
+                else "n/a"
+            )
+            children.append(
+                f"\u251c\u2500\u2500 {r.tool_name} {icon} {r.status.value} "
+                f"({dur}) id={r.receipt_id}"
+            )
+        # replace last connector
+        if children:
+            children[-1] = "\u2514\u2500\u2500" + children[-1][3:]
+        header = (
+            f"HLDP://tool-receipt/session/{sid}\n"
+            f"\u251c\u2500\u2500 total: {len(receipts)}"
+        )
+        return header + "\n" + "\n".join(children)
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+
+def _pretty_dict(d: dict[str, Any] | Any) -> str:
+    """Pretty-print a dict as indented JSON."""
+    if d is None:
+        return "null"
+    try:
+        return json.dumps(d, indent=2, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return str(d)
+
+
+def _compact_dict(d: dict[str, Any] | Any) -> str:
+    """One-line compact JSON representation."""
+    if d is None:
+        return "null"
+    try:
+        return json.dumps(d, ensure_ascii=False, separators=(",", ":"))
+    except (TypeError, ValueError):
+        return str(d)
