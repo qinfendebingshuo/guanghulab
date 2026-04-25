@@ -1,56 +1,35 @@
+import Link from 'next/link';
 import type { Agent } from '@/lib/api';
 
 interface AgentCardProps {
   agent: Agent;
-  showDetail?: boolean;
 }
 
-const statusConfig: Record<string, { color: string; label: string }> = {
-  online: { color: 'bg-green-400', label: '在线' },
-  offline: { color: 'bg-gray-400', label: '离线' },
-  busy: { color: 'bg-yellow-400', label: '任务中' },
-};
-
-export function AgentCard({ agent, showDetail }: AgentCardProps) {
-  const statusInfo = statusConfig[agent.status] || statusConfig.offline;
+export default function AgentCard({ agent }: AgentCardProps) {
+  const statusColor =
+    agent.status === '在线'
+      ? 'bg-green-500'
+      : agent.status === '任务中'
+      ? 'bg-yellow-500'
+      : 'bg-gray-400';
 
   return (
-    <a
-      href={`/agents/${agent.id}`}
-      className="block rounded-xl bg-white p-5 shadow-sm transition hover:shadow-md"
-    >
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">{agent.icon}</span>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-800">{agent.name}</h3>
-            <span
-              className={`inline-block h-2.5 w-2.5 rounded-full ${statusInfo.color}`}
-              title={statusInfo.label}
-            />
+    <Link href={`/agents/${agent.id}`}>
+      <div className="bg-white rounded-lg border border-gh-border p-4 hover:shadow-md transition-shadow cursor-pointer">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-gh-primary/10 flex items-center justify-center text-lg">
+            {agent.icon}
           </div>
-          <p className="mt-0.5 font-mono text-xs text-gray-400">{agent.code}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gh-text text-sm truncate">{agent.name}</h3>
+            <p className="text-xs text-gh-muted font-mono">{agent.code}</p>
+          </div>
+          <span className={`w-2.5 h-2.5 rounded-full ${statusColor} flex-shrink-0`} />
         </div>
-      </div>
-
-      {showDetail && agent.role && (
-        <p className="mt-3 text-sm text-gray-600">{agent.role}</p>
-      )}
-
-      <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-          statusInfo.color === 'bg-green-400'
-            ? 'bg-green-50 text-green-700'
-            : statusInfo.color === 'bg-yellow-400'
-              ? 'bg-yellow-50 text-yellow-700'
-              : 'bg-gray-100 text-gray-600'
-        }`}>
-          {statusInfo.label}
-        </span>
         {agent.currentTask && (
-          <span className="truncate">当前: {agent.currentTask}</span>
+          <p className="text-xs text-gh-muted line-clamp-2">{agent.currentTask}</p>
         )}
       </div>
-    </a>
+    </Link>
   );
 }
