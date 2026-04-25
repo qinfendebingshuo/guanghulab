@@ -1,81 +1,115 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AgentCard } from '@/components/AgentCard';
-import { fetchAgents, fetchOrders } from '@/lib/api';
-import type { Agent, Order } from '@/lib/api';
+import { fetchAgents, fetchOrders, type Agent, type Order } from '@/lib/api';
+import AgentCard from '@/components/AgentCard';
+import OrderCard from '@/components/OrderCard';
 
 export default function HomePage() {
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [stats, setStats] = useState({ total: 0, developing: 0, completed: 0 });
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
+    async function loadData() {
       try {
-        const [agentList, orderList] = await Promise.all([
+        const [agentData, orderData] = await Promise.all([
           fetchAgents(),
           fetchOrders(),
         ]);
-        setAgents(agentList);
-        setStats({
-          total: orderList.length,
-          developing: orderList.filter((o: Order) => o.status === '开发中').length,
-          completed: orderList.filter((o: Order) => o.status === '已完成').length,
-        });
-      } catch (err) {
-        console.error('加载数据失败:', err);
+        setAgents(agentData);
+        setOrders(orderData);
       } finally {
         setLoading(false);
       }
     }
-    load();
+    loadData();
   }, []);
 
+  const stats = {
+    total: orders.length,
+    inProgress: orders.filter((o) => o.status === '开发中').length,
+    completed: orders.filter((o) => o.status === '已完成').length,
+    reviewing: orders.filter((o) => o.status === '待审查').length,
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-gh-muted text-lg">加载中...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* 品牌区 */}
-      <section className="rounded-2xl bg-gradient-to-r from-guanghu-primary to-guanghu-secondary p-8 text-white shadow-lg">
-        <h1 className="text-3xl font-bold sm:text-4xl">🌊 光湖 · GuangHu Lab</h1>
-        <p className="mt-2 text-lg opacity-90">
-          人格体自主运行基础设施 · Agent开发团队的新家
+      <section className="text-center py-12">
+        <h1 className="text-4xl font-bold text-gh-text mb-3">
+          🌊 光湖 · GuangHu Lab
+        </h1>
+        <p className="text-gh-muted text-lg">
+          人格体自主运行基础设施 · HLDP 驱动
         </p>
       </section>
 
       {/* 统计卡片 */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="工单总数" value={stats.total} icon="📋" />
-        <StatCard label="开发中" value={stats.developing} icon="🔧" />
-        <StatCard label="已完成" value={stats.completed} icon="✅" />
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="总工单" value={stats.total} color="blue" />
+        <StatCard label="开发中" value={stats.inProgress} color="yellow" />
+        <StatCard label="待审查" value={stats.reviewing} color="purple" />
+        <StatCard label="已完成" value={stats.completed} color="green" />
       </section>
 
       {/* Agent 状态总览 */}
       <section>
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">Agent 状态总览</h2>
-        {loading ? (
-          <p className="text-gray-500">加载中…</p>
-        ) : agents.length === 0 ? (
-          <p className="text-gray-500">暂无Agent数据 · 请确认API已连接</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {agents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
-          </div>
-        )}
+        <h2 className="text-2xl font-semibold text-gh-text mb-4">
+          Agent 状态总览
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {agents.map((agent) => (
+            <AgentCard key={agent.id} agent={agent} />
+          ))}
+        </div>
+      </section>
+
+      {/* 最近工单 */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gh-text mb-4">
+          最近工单
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {orders.slice(0, 6).map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
       </section>
     </div>
   );
 }
 
-function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: 'blue' | 'yellow' | 'purple' | 'green';
+}) {
+  const colorMap = {
+    blue: 'bg-blue-50 border-blue-200 text-blue-700',
+    yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+    purple: 'bg-purple-50 border-purple-200 text-purple-700',
+    green: 'bg-green-50 border-green-200 text-green-700',
+  };
+
   return (
-    <div className="flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm transition hover:shadow-md">
-      <span className="text-3xl">{icon}</span>
-      <div>
-        <p className="text-2xl font-bold text-gray-800">{value}</p>
-        <p className="text-sm text-gray-500">{label}</p>
-      </div>
+    <div
+      className={`rounded-lg border p-4 text-center ${colorMap[color]}`}
+    >
+      <div className="text-3xl font-bold">{value}</div>
+      <div className="text-sm mt-1">{label}</div>
     </div>
   );
 }

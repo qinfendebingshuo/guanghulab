@@ -2,117 +2,111 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { OrderCard } from '@/components/OrderCard';
-import { fetchAgentById, fetchOrdersByAgent } from '@/lib/api';
-import type { Agent, Order } from '@/lib/api';
+import { fetchAgentById, fetchOrders, type Agent, type Order } from '@/lib/api';
+import StatusBadge from '@/components/StatusBadge';
+import OrderCard from '@/components/OrderCard';
+import Link from 'next/link';
 
 export default function AgentDetailPage() {
   const params = useParams();
-  const id = params.id as string;
   const [agent, setAgent] = useState<Agent | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchAgentById(id), fetchOrdersByAgent(id)])
-      .then(([agentData, orderData]) => {
+    if (params.id) {
+      Promise.all([
+        fetchAgentById(params.id as string),
+        fetchOrders(),
+      ]).then(([agentData, orderData]) => {
         setAgent(agentData);
-        setOrders(orderData);
-      })
-      .catch((err) => console.error('加载Agent详情失败:', err))
-      .finally(() => setLoading(false));
-  }, [id]);
+        setOrders(orderData.filter((o) => o.assignee === agentData?.name));
+        setLoading(false);
+      });
+    }
+  }, [params.id]);
 
   if (loading) {
-    return <p className="py-8 text-center text-gray-500">加载中…</p>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-gh-muted">加载中...</div>
+      </div>
+    );
   }
 
   if (!agent) {
-    return <p className="py-8 text-center text-gray-500">Agent未找到</p>;
+    return (
+      <div className="text-center py-20">
+        <p className="text-gh-muted">Agent 不存在</p>
+        <Link href="/agents" className="text-gh-primary hover:underline mt-2 inline-block">
+          返回 Agent 列表
+        </Link>
+      </div>
+    );
   }
 
-  const statusColor: Record<string, string> = {
-    online: 'bg-green-400',
-    offline: 'bg-gray-400',
-    busy: 'bg-yellow-400',
-  };
-
   return (
-    <div className="space-y-6">
-      <a href="/agents" className="text-sm text-guanghu-primary hover:underline">
-        ← 返回Agent列表
-      </a>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Link href="/agents" className="text-gh-primary hover:underline text-sm">
+        ← 返回 Agent 列表
+      </Link>
 
-      {/* Agent 信息卡 */}
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <span className="text-5xl">{agent.icon}</span>
+      <div className="bg-white rounded-lg border border-gh-border p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-full bg-gh-primary/10 flex items-center justify-center text-2xl">
+            {agent.icon}
+          </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-800">{agent.name}</h1>
+            <h1 className="text-2xl font-bold text-gh-text">{agent.name}</h1>
+            <p className="text-sm text-gh-muted font-mono">{agent.code}</p>
+          </div>
+          <div className="ml-auto">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                agent.status === '在线'
+                  ? 'bg-green-100 text-green-700'
+                  : agent.status === '任务中'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
               <span
-                className={`inline-block h-3 w-3 rounded-full ${statusColor[agent.status] || 'bg-gray-400'}`}
-                title={agent.status}
+                className={`w-2 h-2 rounded-full ${
+                  agent.status === '在线'
+                    ? 'bg-green-500'
+                    : agent.status === '任务中'
+                    ? 'bg-yellow-500'
+                    : 'bg-gray-400'
+                }`}
               />
-            </div>
-            <p className="mt-1 font-mono text-sm text-gray-400">{agent.code}</p>
+              {agent.status}
+            </span>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-xs text-gray-400">角色</p>
-            <p className="mt-0.5 text-sm font-medium text-gray-800">{agent.role}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">当前状态</p>
-            <p className="mt-0.5 text-sm font-medium capitalize text-gray-800">{agent.status}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">编号前缀</p>
-            <p className="mt-0.5 font-mono text-sm font-medium text-gray-800">{agent.prefix}</p>
-          </div>
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gh-text mb-2">人格信息</h3>
+          <p className="text-sm text-gh-muted">{agent.description}</p>
         </div>
 
-        {agent.description && (
-          <div className="mt-4">
-            <p className="text-xs text-gray-400">人格信息</p>
-            <p className="mt-1 text-sm leading-relaxed text-gray-700">{agent.description}</p>
+        {agent.currentTask && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gh-text mb-2">当前任务</h3>
+            <p className="text-sm text-gh-text">{agent.currentTask}</p>
           </div>
         )}
       </div>
 
-      {/* 当前任务 */}
-      <div>
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">当前任务</h2>
-        {orders.filter((o) => o.status !== '已完成').length === 0 ? (
-          <p className="text-sm text-gray-500">暂无进行中的任务</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {orders
-              .filter((o) => o.status !== '已完成')
-              .map((order) => (
-                <OrderCard key={order.id} order={order} />
-              ))}
+      {orders.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-gh-text mb-4">历史工单</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {orders.map((order) => (
+              <OrderCard key={order.id} order={order} />
+            ))}
           </div>
-        )}
-      </div>
-
-      {/* 历史工单 */}
-      <div>
-        <h2 className="mb-4 text-xl font-semibold text-gray-800">历史工单</h2>
-        {orders.filter((o) => o.status === '已完成').length === 0 ? (
-          <p className="text-sm text-gray-500">暂无已完成工单</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {orders
-              .filter((o) => o.status === '已完成')
-              .map((order) => (
-                <OrderCard key={order.id} order={order} />
-              ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

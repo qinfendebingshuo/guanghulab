@@ -2,117 +2,129 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { StatusBadge } from '@/components/StatusBadge';
-import { fetchOrderById } from '@/lib/api';
-import type { Order } from '@/lib/api';
+import { fetchOrderById, type Order } from '@/lib/api';
+import StatusBadge from '@/components/StatusBadge';
+import Link from 'next/link';
 
 export default function OrderDetailPage() {
   const params = useParams();
-  const id = params.id as string;
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchOrderById(id)
-      .then(setOrder)
-      .catch((err) => console.error('加载工单详情失败:', err))
-      .finally(() => setLoading(false));
-  }, [id]);
+    if (params.id) {
+      fetchOrderById(params.id as string).then((data) => {
+        setOrder(data);
+        setLoading(false);
+      });
+    }
+  }, [params.id]);
 
   if (loading) {
-    return <p className="py-8 text-center text-gray-500">加载中…</p>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-gh-muted">加载中...</div>
+      </div>
+    );
   }
 
   if (!order) {
-    return <p className="py-8 text-center text-gray-500">工单未找到</p>;
+    return (
+      <div className="text-center py-20">
+        <p className="text-gh-muted">工单不存在</p>
+        <Link href="/orders" className="text-gh-primary hover:underline mt-2 inline-block">
+          返回工单列表
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* 返回链接 */}
-      <a href="/orders" className="text-sm text-guanghu-primary hover:underline">
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Link href="/orders" className="text-gh-primary hover:underline text-sm">
         ← 返回工单看板
-      </a>
+      </Link>
 
-      {/* 标题区 */}
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="bg-white rounded-lg border border-gh-border p-6">
+        <div className="flex items-start justify-between mb-6">
           <div>
-            <p className="mb-1 font-mono text-sm text-gray-400">{order.code}</p>
-            <h1 className="text-2xl font-bold text-gray-800">{order.title}</h1>
+            <span className="text-sm font-mono text-gh-primary">{order.code}</span>
+            <h1 className="text-2xl font-bold text-gh-text mt-1">{order.title}</h1>
           </div>
           <StatusBadge status={order.status} />
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <InfoItem label="负责Agent" value={order.agent} />
-          <InfoItem label="优先级" value={order.priority} />
-          <InfoItem label="阶段编号" value={order.phase} />
-          <InfoItem label="分支名" value={order.branch} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <InfoRow label="优先级" value={order.priority} />
+          <InfoRow label="负责Agent" value={order.assignee} />
+          <InfoRow label="分支" value={order.branch} mono />
+          <InfoRow label="仓库路径" value={order.repoPath} mono />
+          <InfoRow label="阶段编号" value={order.phase} />
+          <InfoRow label="创建时间" value={order.createdAt} />
         </div>
+
+        {order.devContent && (
+          <Section title="开发内容">
+            <p className="text-sm text-gh-text whitespace-pre-wrap">{order.devContent}</p>
+          </Section>
+        )}
+
+        {order.constraints && (
+          <Section title="约束">
+            <p className="text-sm text-gh-muted whitespace-pre-wrap">{order.constraints}</p>
+          </Section>
+        )}
+
+        {order.selfCheck && (
+          <Section title="自检结果">
+            <pre className="text-sm bg-gray-50 rounded p-4 overflow-x-auto">{order.selfCheck}</pre>
+          </Section>
+        )}
+
+        {order.reviewResult && (
+          <Section title="审核结果">
+            <pre className="text-sm bg-gray-50 rounded p-4 overflow-x-auto">{order.reviewResult}</pre>
+          </Section>
+        )}
+
+        {order.commitHash && (
+          <Section title="Git 信息">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gh-muted">Commit:</span>
+              <a
+                href={`https://github.com/qinfendebingshuo/guanghulab/commit/${order.commitHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-sm text-gh-primary hover:underline"
+              >
+                {order.commitHash.slice(0, 8)}
+              </a>
+            </div>
+          </Section>
+        )}
       </div>
-
-      {/* 开发内容 */}
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">开发内容</h2>
-        <pre className="whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
-          {order.content}
-        </pre>
-      </div>
-
-      {/* 约束 */}
-      {order.constraints && (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-lg font-semibold text-gray-800">约束</h2>
-          <p className="text-sm leading-relaxed text-gray-700">{order.constraints}</p>
-        </div>
-      )}
-
-      {/* 自检 / 审核结果 */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-lg font-semibold text-gray-800">自检结果</h2>
-          <p className="text-sm text-gray-700">
-            {order.selfCheckResult || '暂无'}
-          </p>
-        </div>
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-lg font-semibold text-gray-800">审核结果</h2>
-          <p className="text-sm text-gray-700">
-            {order.reviewResult || '暂无'}
-          </p>
-        </div>
-      </div>
-
-      {/* Git commit 链接（预留） */}
-      {order.branch && (
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-lg font-semibold text-gray-800">Git 信息</h2>
-          <p className="text-sm text-gray-700">
-            分支：<code className="rounded bg-gray-100 px-2 py-0.5 font-mono">{order.branch}</code>
-          </p>
-          <p className="mt-2 text-sm text-gray-700">
-            仓库路径：<code className="rounded bg-gray-100 px-2 py-0.5 font-mono">{order.repoPath || '未指定'}</code>
-          </p>
-        </div>
-      )}
-
-      {/* 下一轮指引 */}
-      {order.nextGuide && (
-        <div className="rounded-xl border border-guanghu-accent/20 bg-cyan-50 p-6">
-          <h2 className="mb-2 text-lg font-semibold text-guanghu-accent">下一轮指引</h2>
-          <p className="text-sm text-gray-700">{order.nextGuide}</p>
-        </div>
-      )}
     </div>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value, mono }: { label: string; value?: string; mono?: boolean }) {
   return (
     <div>
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="mt-0.5 font-medium text-gray-800">{value || '-'}</p>
+      <span className="text-sm text-gh-muted">{label}</span>
+      <div className={`text-sm text-gh-text mt-0.5 ${mono ? 'font-mono' : ''}`}>
+        {value || '-'}
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-6">
+      <h3 className="text-sm font-semibold text-gh-text mb-2 border-b border-gh-border pb-1">
+        {title}
+      </h3>
+      {children}
     </div>
   );
 }
