@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 15, 23, 42;
+  --background-rgb: 248, 250, 252;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+/* 聊天页面全屏样式覆盖 */
+.chat-fullscreen {
+  color: white;
+  background: #030712;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
