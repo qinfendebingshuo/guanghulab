@@ -1,4 +1,4 @@
-"""Export Formatter · Notion page → JSONL training corpus
+"""Export Formatter - Notion page to JSONL training corpus
 PY-A04-20260425-001
 
 Output schema per line:
@@ -19,8 +19,13 @@ class CorpusEntry(BaseModel):
     source_url: str = Field(description="Notion page URL")
 
 
+def _default_source_url(page_id: str) -> str:
+    """Build a Notion URL from a page ID (hyphens stripped)."""
+    return "https://www.notion.so/" + page_id.replace("-", "")
+
+
 class ExportFormatter:
-    """Stateless helpers that turn Notion data into *CorpusEntry* lists."""
+    """Stateless helpers that turn Notion data into CorpusEntry lists."""
 
     # ---- page formatting ----
 
@@ -32,28 +37,28 @@ class ExportFormatter:
         last_edited: str,
         url: str | None = None,
     ) -> list[CorpusEntry]:
-        clean_id = page_id.replace("-", "")
-        source_url = url or f"https://www.notion.so/{clean_id}"
+        source_url = url or _default_source_url(page_id)
         entries: list[CorpusEntry] = []
 
         # Title as metadata entry
         entries.append(
             CorpusEntry(
                 role="system",
-                content=f"[PAGE_TITLE] {title}",
+                content="[PAGE_TITLE] " + title,
                 timestamp=last_edited,
                 source_url=source_url,
             )
         )
 
-        # Body – split long content into chunks
+        # Body - split long content into chunks
         blocks = ExportFormatter._split_content(content)
         for block in blocks:
-            if block.strip():
+            stripped = block.strip()
+            if stripped:
                 entries.append(
                     CorpusEntry(
                         role="page",
-                        content=block.strip(),
+                        content=stripped,
                         timestamp=last_edited,
                         source_url=source_url,
                     )
@@ -70,19 +75,19 @@ class ExportFormatter:
         last_edited: str,
         url: str | None = None,
     ) -> list[CorpusEntry]:
-        clean_id = page_id.replace("-", "")
-        source_url = url or f"https://www.notion.so/{clean_id}"
+        source_url = url or _default_source_url(page_id)
         entries: list[CorpusEntry] = []
 
         for msg in messages:
             role = msg.get("role", "user")
             text = msg.get("content", "")
             ts = msg.get("timestamp", last_edited)
-            if text.strip():
+            stripped = text.strip()
+            if stripped:
                 entries.append(
                     CorpusEntry(
                         role=role,
-                        content=text.strip(),
+                        content=stripped,
                         timestamp=ts,
                         source_url=source_url,
                     )
@@ -94,7 +99,7 @@ class ExportFormatter:
 
     @staticmethod
     def _split_content(content: str, max_chars: int = 4000) -> list[str]:
-        """Split *content* on paragraph boundaries so each chunk ≤ *max_chars*."""
+        """Split content on paragraph boundaries so each chunk <= max_chars."""
         if len(content) <= max_chars:
             return [content]
 
@@ -107,7 +112,7 @@ class ExportFormatter:
                 blocks.append(current)
                 current = para
             else:
-                current = f"{current}\n\n{para}" if current else para
+                current = (current + "\n\n" + para) if current else para
 
         if current:
             blocks.append(current)
@@ -125,7 +130,7 @@ class ExportFormatter:
 
     @staticmethod
     def write_jsonl(entries: list[CorpusEntry], output_path: str) -> int:
-        """Overwrite *output_path* with JSONL. Returns entry count."""
+        """Overwrite output_path with JSONL. Returns entry count."""
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
@@ -135,7 +140,7 @@ class ExportFormatter:
 
     @staticmethod
     def append_jsonl(entries: list[CorpusEntry], output_path: str) -> int:
-        """Append to *output_path*. Returns entry count."""
+        """Append to output_path. Returns entry count."""
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as fh:
