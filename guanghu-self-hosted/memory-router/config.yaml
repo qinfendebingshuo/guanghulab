@@ -1,0 +1,157 @@
+# ============================================================
+# config.yaml · Memory Router Agent 配置文件
+# HLDP-ARCH-001 [L3] · Phase-0-005
+# 工单: YD-A05-20260425-003
+# 编码: UTF-8 · 格式: YAML
+# ============================================================
+
+# ----------------------------------------------------------
+# 记忆分层定义
+# hot:       最近5轮对话 · 完整保留 · 不压缩
+# warm:      本次对话早期 · HLDP母语压缩摘要
+# cold:      历史对话 · PersonaDB pgvector语义检索
+# permanent: 身份/Layer Zero/思维路径/价值锚点 · 每次加载
+# ----------------------------------------------------------
+memory_layers:
+  hot:
+    description: "最近5轮对话 · 完整保留"
+    max_rounds: 5
+    compression: false
+    source: "session_buffer"
+    priority: 1   # 数字越小优先级越高
+
+  warm:
+    description: "本次对话早期轮次 · HLDP压缩摘要"
+    compression: true
+    compression_format: "hldp_tree"
+    source: "session_buffer"
+    priority: 2
+
+  cold:
+    description: "历史对话 · PersonaDB语义检索"
+    compression: false   # 已在写入时压缩
+    source: "persona_db"
+    table: "memories"
+    memory_types:
+      - "long"
+      - "short"
+    priority: 3
+
+  permanent:
+    description: "身份/Layer Zero/思维路径/价值锚点 · 每次必加载"
+    source: "persona_db"
+    tables:
+      - "personas"         # code, name, role, base_color, layer_zero
+      - "thinking_paths"   # trigger_condition, correct_path (active=TRUE)
+      - "value_anchors"    # code, content, confidence
+      - "anti_patterns"    # code, detection_signal
+    priority: 0   # 最高优先级 · 每次对话必加载
+
+# ----------------------------------------------------------
+# 上下文窗口配置
+# ----------------------------------------------------------
+context_window:
+  max_tokens: 131072        # 128K token 上限
+  reserved_for_output: 8192 # 预留给模型输出的 token
+  usable_tokens: 122880     # 实际可用 = max - reserved
+  compression_trigger_ratio: 0.85  # 使用率达到85%时触发压缩
+  emergency_flush_ratio: 0.95      # 使用率达到95%时紧急推送永久库
+
+# ----------------------------------------------------------
+# PersonaDB 连接配置
+# ----------------------------------------------------------
+persona_db:
+  host: "${PERSONA_DB_HOST}"        # 环境变量占位符
+  port: ${PERSONA_DB_PORT:-5432}     # 默认 5432
+  database: "${PERSONA_DB_NAME}"
+  schema: "${PERSONA_DB_SCHEMA:-public}"
+  user: "${PERSONA_DB_USER}"
+  password: "${PERSONA_DB_PASSWORD}"
+  pool:
+    min_size: 2
+    max_size: 10
+    max_idle_time: 300   # 秒
+  ssl_mode: "${PERSONA_DB_SSL_MODE:-prefer}"
+
+# ----------------------------------------------------------
+# pgvector 语义检索参数
+# ----------------------------------------------------------
+pgvector:
+  similarity_threshold: 0.72     # 余弦相似度阈值 · 低于此值丢弃
+  top_k: 10                       # 每次检索返回最多 top_k 条
+  embedding_model: "text-embedding-3-small"  # OpenAI embedding 模型
+  embedding_dimension: 1536       # 与 PersonaDB schema.sql vector(1536) 对齐
+  distance_metric: "cosine"       # 对齐 indexes.sql HNSW vector_cosine_ops
+
+# ----------------------------------------------------------
+# 写回策略 (write_back)
+# 对话结束后 · 按类型写入 PersonaDB 不同表
+# ----------------------------------------------------------
+write_back:
+  # 本轮摘要 → memories 表 (type='short')
+  short_term:
+    target_table: "memories"
+    memory_type: "short"
+    compression: true
+    compression_format: "hldp_tree"
+    rolling_window: 50       # 保留最近50条 · 超出自动清理最旧
+    generate_embedding: true
+
+  # 重要决策 → memories 表 (type='long')
+  long_term:
+    target_table: "memories"
+    memory_type: "long"
+    compression: false        # 长期记忆保留原文
+    generate_embedding: true
+    detection_keywords:
+      - "决策"
+      - "确认"
+      - "铁律"
+      - "锁定"
+      - "授权"
+      - "不可撤销"
+
+  # 情绪变化 → relationships 表
+  relationship:
+    target_table: "relationships"
+    update_fields:
+      - "trust_level"
+      - "emotion_anchor"
+    detection_signals:
+      - "信任"
+      - "感动"
+      - "失望"
+      - "开心"
+      - "难过"
+
+  # 认知突破 → evolution_log 表
+  evolution:
+    target_table: "evolution_log"
+    detection_signals:
+      - "涌现"
+      - "突破"
+      - "认知升级"
+      - "新发现"
+      - "范式转移"
+    auto_code_prefix: "EVO-"
+
+# ----------------------------------------------------------
+# 模型推理后端配置
+# ----------------------------------------------------------
+model:
+  provider: "${MODEL_PROVIDER:-openai}"  # openai / deepseek / local
+  api_base: "${MODEL_API_BASE}"
+  api_key: "${MODEL_API_KEY}"
+  default_model: "${MODEL_DEFAULT:-deepseek-chat}"
+  temperature: 0.3
+  max_output_tokens: 4096
+
+# ----------------------------------------------------------
+# 日志与调试
+# ----------------------------------------------------------
+logging:
+  level: "${LOG_LEVEL:-INFO}"
+  format: "json"
+  file: "${LOG_FILE:-/var/log/memory-router/router.log}"
+  rotation: "50MB"
+  retention: 7   # 天
