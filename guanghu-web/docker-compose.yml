@@ -1,0 +1,83 @@
+# 光湖网站 · 三模块集成 · Docker Compose
+# GH-INT-001
+
+version: '3.8'
+
+services:
+  # 统一前端 (Next.js) - 包含主站骨架 + 聊天界面
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+      - NEXT_PUBLIC_WS_URL=ws://ws:8765
+    depends_on:
+      - api
+      - ws
+    restart: unless-stopped
+    networks:
+      - guanghu-net
+
+  # 后端API (FastAPI)
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://guanghu:${DB_PASSWORD:-changeme}@db:5432/guanghu
+      - API_SECRET_KEY=${API_SECRET_KEY:-changeme}
+      - API_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - guanghu-net
+
+  # WebSocket服务器
+  ws:
+    build:
+      context: ./ws
+      dockerfile: Dockerfile
+    ports:
+      - "8765:8765"
+    environment:
+      - DATABASE_URL=postgresql://guanghu:${DB_PASSWORD:-changeme}@db:5432/guanghu
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - guanghu-net
+
+  # PostgreSQL数据库
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=guanghu
+      - POSTGRES_USER=guanghu
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guanghu"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - guanghu-net
+
+volumes:
+  pgdata:
+
+networks:
+  guanghu-net:
+    driver: bridge

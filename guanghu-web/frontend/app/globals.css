@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 30, 41, 59;
+  --background-rgb: 248, 250, 252;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+/* 聊天界面专用样式 */
+.chat-container {
+  @apply flex flex-col h-[calc(100vh-4rem)];
+}
+
+.chat-messages {
+  @apply flex-1 overflow-y-auto p-4 space-y-3;
+}
+
+.chat-input-area {
+  @apply border-t border-gh-border bg-white p-4;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
