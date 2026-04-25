@@ -1,0 +1,204 @@
+{
+  "$schema": "wake-sequence-v1",
+  "version": "1.0.0",
+  "protocol": "boot-protocol",
+  "description": "唤醒序列配置 — step 顺序、超时、fallback",
+  "updated": "2026-04-25",
+  "_comment": "兼容 JSON.parse (Node.js) / json.loads (Python)",
+
+  "defaults": {
+    "timeout_ms": 30000,
+    "retry_max": 2,
+    "retry_delay_ms": 5000,
+    "fallback": "skip_and_warn"
+  },
+
+  "steps": [
+    {
+      "order": 0,
+      "id": "read_instructions",
+      "name": "读指令页",
+      "description": "加载当前 Agent 的指令页，获取身份、职责、协议",
+      "required": true,
+      "timeout_ms": 15000,
+      "retry_max": 3,
+      "retry_delay_ms": 3000,
+      "fallback": "abort",
+      "input": {
+        "source": "persona_map",
+        "field": "instructions_url"
+      },
+      "output": {
+        "sets": ["agent_identity", "agent_duties", "agent_protocols"]
+      },
+      "validation": {
+        "check": "non_empty_response",
+        "error_message": "指令页加载失败，无法确认身份，中止启动"
+      }
+    },
+    {
+      "order": 1,
+      "id": "read_snapshot",
+      "name": "读快照",
+      "description": "加载记忆页与系统上下文快照，恢复上次执行状态",
+      "required": true,
+      "timeout_ms": 15000,
+      "retry_max": 2,
+      "retry_delay_ms": 3000,
+      "fallback": "warn_and_continue",
+      "input": {
+        "sources": [
+          {
+            "type": "notion_page",
+            "field": "memory_url",
+            "label": "记忆页"
+          },
+          {
+            "type": "file",
+            "path": "brain/system-health.json",
+            "label": "系统健康",
+            "optional": true
+          },
+          {
+            "type": "file",
+            "path": "brain/repo-map.json",
+            "label": "仓库地图",
+            "optional": true
+          }
+        ]
+      },
+      "output": {
+        "sets": ["last_execution_state", "system_health", "repo_structure"]
+      },
+      "validation": {
+        "check": "at_least_one_source",
+        "error_message": "快照全部加载失败，仍可继续但缺少历史上下文"
+      }
+    },
+    {
+      "order": 2,
+      "id": "align_identity",
+      "name": "对齐身份",
+      "description": "根据 persona-map.toml 校验 Agent 编号、名称、层级、角色",
+      "required": true,
+      "timeout_ms": 10000,
+      "retry_max": 1,
+      "retry_delay_ms": 2000,
+      "fallback": "abort",
+      "input": {
+        "source": "config_file",
+        "path": "guanghu-self-hosted/boot-protocol/persona-map.toml"
+      },
+      "output": {
+        "sets": ["verified_identity"]
+      },
+      "validation": {
+        "checks": [
+          {
+            "type": "agent_id_exists",
+            "description": "确认当前 Agent ID 在 persona-map 中已注册"
+          },
+          {
+            "type": "layer_match",
+            "description": "确认 Agent 所属层级与 persona-map 定义一致"
+          },
+          {
+            "type": "name_match",
+            "description": "确认 Agent 名称与 persona-map 定义一致"
+          }
+        ],
+        "error_message": "身份对齐失败，Agent 信息与 persona-map 不匹配"
+      }
+    },
+    {
+      "order": 3,
+      "id": "report_ready",
+      "name": "报到",
+      "description": "向信号总线发送就绪信号，确认启动完成",
+      "required": true,
+      "timeout_ms": 10000,
+      "retry_max": 2,
+      "retry_delay_ms": 3000,
+      "fallback": "warn_and_continue",
+      "input": {
+        "from_previous_steps": ["verified_identity"]
+      },
+      "output": {
+        "actions": [
+          {
+            "type": "signal",
+            "target": "signal_bus",
+            "event": "agent.boot.ready",
+            "payload_fields": ["agent_id", "persona_name", "layer", "timestamp"]
+          },
+          {
+            "type": "log",
+            "target": "memory_page",
+            "template": "[{timestamp}] {persona_name} 启动完成，身份已对齐，进入工作状态。"
+          }
+        ]
+      },
+      "validation": {
+        "check": "signal_acknowledged",
+        "error_message": "报到信号未被确认，但不影响后续任务执行"
+      }
+    }
+  ],
+
+  "fallback_strategies": {
+    "abort": {
+      "description": "立即中止整个启动序列",
+      "action": "停止后续所有步骤，记录错误日志，发送告警信号"
+    },
+    "warn_and_continue": {
+      "description": "记录警告日志，跳过当前步骤继续执行",
+      "action": "写入警告到记忆页，继续下一步"
+    },
+    "skip_and_warn": {
+      "description": "静默跳过并记录",
+      "action": "仅写入日志，不发送告警"
+    },
+    "retry_then_abort": {
+      "description": "重试耗尽后中止",
+      "action": "重试达到上限后执行 abort 策略"
+    }
+  },
+
+  "model_backends": {
+    "_comment": "参考 core/brain-wake/index.js 中的多模型后端配置，此处仅做标准化声明",
+    "priority_order": ["anthropic", "openai", "dashscope", "deepseek", "custom"],
+    "backends": [
+      {
+        "name": "anthropic",
+        "env_key": "ANTHROPIC_API_KEY",
+        "format": "anthropic",
+        "preferred_models": ["claude-sonnet-4", "claude-3-5-sonnet-20241022"]
+      },
+      {
+        "name": "openai",
+        "env_key": "OPENAI_API_KEY",
+        "format": "openai",
+        "preferred_models": ["gpt-4o", "gpt-4-turbo"]
+      },
+      {
+        "name": "dashscope",
+        "env_key": "DASHSCOPE_API_KEY",
+        "format": "openai",
+        "preferred_models": ["qwen-max", "qwen-plus"]
+      },
+      {
+        "name": "deepseek",
+        "env_key": "DEEPSEEK_API_KEY",
+        "format": "openai",
+        "preferred_models": ["deepseek-chat", "deepseek-reasoner"]
+      },
+      {
+        "name": "custom",
+        "env_key": "LLM_API_KEY",
+        "base_url_env": "LLM_BASE_URL",
+        "format": "openai",
+        "preferred_models": []
+      }
+    ]
+  }
+}

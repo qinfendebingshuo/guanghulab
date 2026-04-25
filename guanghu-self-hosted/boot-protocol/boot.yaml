@@ -1,0 +1,116 @@
+# ============================================================
+# boot.yaml — 启动序列定义
+# Boot Protocol 标准化配置
+# 工单: YD-A05-20260425-001 | Phase-0-001
+# ============================================================
+# 编码: UTF-8
+# 格式: YAML 2空格缩进
+# 兼容: yaml.safe_load (Python) / js-yaml (Node.js)
+# ============================================================
+
+version: "1.0.0"
+protocol: "boot-protocol"
+description: "光湖纪元体系 AGE OS v1.0 标准化启动序列"
+
+# ----------------------------------------------------------
+# 启动序列定义
+# 读指令页 → 读快照 → 对齐身份 → 报到
+# ----------------------------------------------------------
+boot_sequence:
+  - step: 0
+    id: "read_instructions"
+    name: "读指令页"
+    description: "加载 Agent 指令页，获取身份定义、职责范围、协议规则"
+    required: true
+    sources:
+      - type: "notion_page"
+        label: "指令页"
+        resolve: "agent.instructions_url"
+    on_failure: "abort"
+
+  - step: 1
+    id: "read_snapshot"
+    name: "读快照"
+    description: "加载记忆页/系统上下文快照，恢复上一次执行状态"
+    required: true
+    sources:
+      - type: "notion_page"
+        label: "记忆页"
+        resolve: "agent.memory_url"
+      - type: "file"
+        label: "系统健康"
+        path: "brain/system-health.json"
+        optional: true
+      - type: "file"
+        label: "仓库地图"
+        path: "brain/repo-map.json"
+        optional: true
+    on_failure: "warn_and_continue"
+
+  - step: 2
+    id: "align_identity"
+    name: "对齐身份"
+    description: "根据 persona-map 校验当前 Agent 编号、名称、层级、角色是否一致"
+    required: true
+    sources:
+      - type: "config"
+        label: "人格体映射表"
+        path: "guanghu-self-hosted/boot-protocol/persona-map.toml"
+    validation:
+      - check: "agent_id_exists"
+        description: "确认当前 Agent ID 在 persona-map 中已注册"
+      - check: "layer_match"
+        description: "确认 Agent 所属层级与 persona-map 定义一致"
+    on_failure: "abort"
+
+  - step: 3
+    id: "report_ready"
+    name: "报到"
+    description: "向信号总线发送就绪信号，确认启动完成"
+    required: true
+    actions:
+      - type: "signal"
+        target: "signal_bus"
+        payload:
+          event: "agent.boot.ready"
+          fields:
+            - "agent_id"
+            - "persona_name"
+            - "layer"
+            - "timestamp"
+      - type: "log"
+        target: "memory_page"
+        template: "[{timestamp}] {persona_name} 启动完成，身份已对齐，进入工作状态。"
+    on_failure: "warn_and_continue"
+
+# ----------------------------------------------------------
+# 全局配置
+# ----------------------------------------------------------
+global:
+  timeout_seconds: 30
+  retry_max: 2
+  retry_delay_seconds: 5
+  log_level: "info"
+  encoding: "utf-8"
+
+# ----------------------------------------------------------
+# 层级定义
+# ----------------------------------------------------------
+layers:
+  - id: "cognitive"
+    name: "认知层"
+    description: "知识管理、记忆维护、工单调度、Agent 集群指挥"
+    guardian: "AG-SY-01"
+
+  - id: "execution"
+    name: "执行层"
+    description: "代码守护、自动化执行、部署交付、通信桥接"
+    guardian: "AG-ZY-00"
+
+  - id: "agent_cluster"
+    name: "Agent 集群"
+    description: "受认知层指挥，执行具体开发/录入/翻译等任务"
+    members:
+      - "5TH-LE-HK-A02"
+      - "5TH-LE-HK-A04"
+      - "5TH-LE-HK-A05"
