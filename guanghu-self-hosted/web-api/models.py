@@ -1,6 +1,7 @@
-"""GH-API-001 · Pydantic v2 请求/响应模型
+"""GH-API-002 · Pydantic v2 请求/响应模型 · 对齐GH-DB-001 schema
 
-工单 · Agent · 分发 · Webhook
+工单(work_orders) · Agent(agents) · 聊天消息(chat_messages)
+所有枚举/表名/列名严格对齐 web-database/schema.sql
 """
 from datetime import datetime
 from enum import Enum
@@ -8,44 +9,69 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-# ========== 枚举 ==========
+# ========== 枚举 · 对齐 GH-DB-001 PostgreSQL 枚举类型 ==========
 
 class OrderStatus(str, Enum):
-    PENDING = "pending"          # 待开发
-    IN_PROGRESS = "in_progress"  # 开发中
-    SELF_CHECK = "self_check"    # 自检中
-    AWAITING_REVIEW = "awaiting_review"  # 待审查
-    REVIEWING = "reviewing"      # 审核中
-    COMPLETED = "completed"      # 已完成
-    SUSPENDED = "suspended"      # 暂缓
+    """对齐 gh_work_order_status"""
+    PENDING = "pending"
+    DEVELOPING = "developing"
+    SELF_CHECKING = "self_checking"
+    REVIEWING = "reviewing"
+    APPROVED = "approved"
+    COMPLETED = "completed"
+    SUSPENDED = "suspended"
 
 
 class OrderPriority(str, Enum):
+    """对齐 gh_work_order_priority"""
     P0 = "P0"
     P1 = "P1"
     P2 = "P2"
 
 
 class AgentStatus(str, Enum):
-    IDLE = "idle"
-    BUSY = "busy"
+    """对齐 gh_agent_status"""
+    ONLINE = "online"
     OFFLINE = "offline"
-    ERROR = "error"
+    BUSY = "busy"
 
 
-# ========== 工单模型 ==========
+class ExecutionAction(str, Enum):
+    """对齐 gh_execution_action"""
+    CLAIMED = "claimed"
+    STARTED = "started"
+    SELF_CHECKED = "self_checked"
+    SUBMITTED = "submitted"
+    REVIEWED = "reviewed"
+
+
+class ReviewResultEnum(str, Enum):
+    """对齐 gh_review_result"""
+    PASS = "pass"
+    FAIL = "fail"
+    REVISION_NEEDED = "revision_needed"
+
+
+class MessageType(str, Enum):
+    """对齐 gh_message_type"""
+    TEXT = "text"
+    COMMAND = "command"
+    SYSTEM = "system"
+
+
+# ========== 工单模型 · work_orders ==========
 
 class OrderCreate(BaseModel):
-    """创建工单请求"""
-    title: str = Field(..., min_length=1, max_length=200)
-    order_code: str = Field(..., description="编号 如 PY-A04-20260425-001")
-    phase_code: Optional[str] = Field(None, description="阶段编号")
+    """创建工单请求 · 对齐 work_orders 表"""
+    title: str = Field(..., min_length=1, max_length=256)
+    code: str = Field(..., description="工单唯一编码 如 GH-API-002")
+    phase: Optional[str] = Field(None, description="阶段编号 如 Phase-NOW-007")
     priority: OrderPriority = OrderPriority.P1
-    description: str = Field("", description="开发内容")
+    dev_content: str = Field("", description="开发内容")
     repo_path: Optional[str] = Field(None, description="仓库路径")
     branch_name: Optional[str] = Field(None, description="分支名")
     constraints: Optional[str] = Field(None, description="约束")
-    assigned_agent: Optional[str] = Field(None, description="负责Agent")
+    assigned_agent_code: Optional[str] = Field(None, description="负责Agent编码 如 A04")
     next_guide: Optional[str] = Field(None, description="下一轮指引")
 
 
@@ -54,29 +80,30 @@ class OrderUpdate(BaseModel):
     title: Optional[str] = None
     priority: Optional[OrderPriority] = None
     status: Optional[OrderStatus] = None
-    description: Optional[str] = None
+    dev_content: Optional[str] = None
     repo_path: Optional[str] = None
     branch_name: Optional[str] = None
     constraints: Optional[str] = None
-    assigned_agent: Optional[str] = None
+    assigned_agent_code: Optional[str] = None
     self_check_result: Optional[str] = None
     review_result: Optional[str] = None
     next_guide: Optional[str] = None
 
 
 class OrderResponse(BaseModel):
-    """工单响应"""
-    id: int
+    """工单响应 · 对齐 work_orders 表"""
+    id: str
+    code: str
     title: str
-    order_code: str
-    phase_code: Optional[str] = None
-    priority: OrderPriority
     status: OrderStatus
-    description: str = ""
+    priority: OrderPriority
+    phase: Optional[str] = None
+    dev_content: str = ""
     repo_path: Optional[str] = None
     branch_name: Optional[str] = None
     constraints: Optional[str] = None
     assigned_agent: Optional[str] = None
+    assigned_agent_code: Optional[str] = None
     self_check_result: Optional[str] = None
     review_result: Optional[str] = None
     next_guide: Optional[str] = None
@@ -92,41 +119,66 @@ class OrderListResponse(BaseModel):
     page_size: int
 
 
-# ========== Agent模型 ==========
+# ========== Agent模型 · agents ==========
 
 class AgentRegister(BaseModel):
-    """Agent注册请求"""
-    agent_code: str = Field(..., description="Agent编号 如 培园A04")
-    name: str = Field(..., description="Agent名称")
-    capabilities: list[str] = Field(default_factory=list, description="能力列表")
-    prefix: str = Field("", description="编号前缀 如 PY-A04")
+    """Agent注册请求 · 对齐 agents 表"""
+    code: str = Field(..., description="Agent编号 如 A04")
+    name: str = Field(..., description="Agent名称 如 培园")
+    role: Optional[str] = Field(None, description="角色描述 如 API开发")
+    boot_config_ref: Optional[str] = Field(None, description="Boot Protocol配置路径")
 
 
 class AgentResponse(BaseModel):
-    """Agent响应"""
-    id: int
-    agent_code: str
+    """Agent响应 · 对齐 agents 表"""
+    id: str
+    code: str
     name: str
+    role: Optional[str] = None
     status: AgentStatus
-    capabilities: list[str] = []
-    prefix: str = ""
-    current_order_id: Optional[int] = None
     last_heartbeat: Optional[datetime] = None
+    boot_config_ref: Optional[str] = None
+    persona_db_ref: Optional[str] = None
     created_at: datetime
-    updated_at: datetime
 
 
 class AgentStatusUpdate(BaseModel):
     """Agent状态更新"""
     status: AgentStatus
-    current_order_id: Optional[int] = None
 
 
 class AgentHeartbeat(BaseModel):
     """Agent心跳"""
-    agent_code: str
-    status: AgentStatus = AgentStatus.IDLE
-    current_order_id: Optional[int] = None
+    code: str
+    status: AgentStatus = AgentStatus.ONLINE
+
+
+# ========== 聊天消息模型 · chat_messages ==========
+
+class ChatMessageCreate(BaseModel):
+    """创建聊天消息 · 对齐 chat_messages 表"""
+    sender: str = Field(..., description="发送方 Agent code 或用户标识")
+    receiver: str = Field(..., description="接收方 Agent code 或用户标识")
+    content: str = Field(..., min_length=1)
+    msg_type: MessageType = MessageType.TEXT
+
+
+class ChatMessageResponse(BaseModel):
+    """聊天消息响应"""
+    id: str
+    sender: str
+    receiver: str
+    content: str
+    msg_type: MessageType
+    created_at: datetime
+
+
+class ChatMessageListResponse(BaseModel):
+    """聊天消息列表响应"""
+    messages: list[ChatMessageResponse]
+    total: int
+    page: int
+    page_size: int
 
 
 # ========== 分发模型 ==========
@@ -134,7 +186,7 @@ class AgentHeartbeat(BaseModel):
 class DispatchResult(BaseModel):
     """分发结果"""
     dispatched: bool
-    order_id: Optional[int] = None
+    order_id: Optional[str] = None
     order_code: Optional[str] = None
     agent_code: Optional[str] = None
     message: str = ""
@@ -157,7 +209,7 @@ class GitHubWebhookEvent(BaseModel):
 class HealthResponse(BaseModel):
     """健康检查响应"""
     status: str = "ok"
-    version: str = "0.1.0"
+    version: str = "0.2.0"
     service: str = "guanghu-web-api"
 
 

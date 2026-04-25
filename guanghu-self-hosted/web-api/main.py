@@ -1,7 +1,8 @@
-"""GH-API-001 · 光湖网站后端API · 主入口
+"""GH-API-002 · 光湖网站后端API · 主入口 · 对齐GH-DB-001
 
 FastAPI app + lifespan管理
 光湖自研开发中枢 · Agent Dev Hub后端
+v0.2.0 · Schema对齐GH-DB-001 + 聊天端点
 """
 import logging
 from contextlib import asynccontextmanager
@@ -10,11 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from db import init_pool, close_pool
-from models import HealthResponse, TokenRequest, TokenResponse, MessageResponse
+from models import HealthResponse, TokenRequest, MessageResponse
 from routes.orders import router as orders_router
 from routes.agents import router as agents_router
 from routes.dispatch import router as dispatch_router
 from routes.webhook import router as webhook_router
+from routes.chat import router as chat_router
 
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
@@ -26,7 +28,7 @@ logger = logging.getLogger("guanghu.api")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    logger.info("Starting guanghu-web-api...")
+    logger.info("Starting guanghu-web-api v0.2.0 (GH-DB-001 aligned)...")
     logger.info("Initializing database pool: %s", settings.database_url.split("@")[-1])
     try:
         await init_pool()
@@ -42,8 +44,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="光湖网站后端API",
-    description="光湖自研开发中枢 · Agent Dev Hub · 工单引擎+Agent管理+GitHub集成",
-    version="0.1.0",
+    description="光湖自研开发中枢 · Agent Dev Hub · 对齐GH-DB-001 · 工单+Agent+聊天+GitHub集成",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
@@ -61,6 +63,7 @@ app.include_router(orders_router)
 app.include_router(agents_router)
 app.include_router(dispatch_router)
 app.include_router(webhook_router)
+app.include_router(chat_router)
 
 
 # ========== 顶层端点 ==========
