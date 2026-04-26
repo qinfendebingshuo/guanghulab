@@ -1,0 +1,154 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🚀 GMP团队模块自动部署 · ZY-SVR-006 (新加坡 43.153.203.105)
+#
+# 触发条件: GMP相关PR合并到main后自动部署
+# 目标服务器: ZY-SVR-006 · 43.153.203.105
+# 部署方式: SSH → git pull → npm install → pm2 reload
+#
+# 涉及模块:
+#   guanghu-self-hosted/gmp-agent/ → 培园(app/webhook/installer/uninstaller)
+#                                     + 译典(mcp-tools/manifest/health)
+#   gmp-agent/                     → 录册(logger/test-runner/test/)
+#
+# 所需 GitHub Secrets:
+#   ZY_SERVER_KEY       - SSH私钥 (ZY-SVR-006)
+#   ZY_SERVER_HOST      - 服务器IP或域名 (默认 43.153.203.105)
+#   ZY_SERVER_USER      - SSH用户名 (默认 root)
+#   ZY_REPO_PATH        - 服务器上仓库路径 (默认 ~/guanghulab)
+# ═══════════════════════════════════════════════
+
+name: '🚀 GMP模块自动部署 · ZY-SVR-006'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'guanghu-self-hosted/gmp-agent/**'
+      - 'gmp-agent/**'
+
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - deploy
+          - health-check-only
+        default: 'deploy'
+
+concurrency:
+  group: gmp-deploy-zsvr006
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-gmp:
+    name: '🚀 部署GMP模块到ZY-SVR-006'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔐 配置SSH'
+        env:
+          SSH_KEY: ${{ secrets.ZY_SERVER_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/zy_key
+          chmod 600 ~/.ssh/zy_key
+
+          # 验证密钥格式
+          if ! head -1 ~/.ssh/zy_key | grep -q "BEGIN"; then
+            echo "❌ SSH密钥格式异常，请检查 ZY_SERVER_KEY secret"
+            exit 1
+          fi
+
+          SERVER_HOST="${{ secrets.ZY_SERVER_HOST || '43.153.203.105' }}"
+          ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "✅ SSH配置完成 · 目标: $SERVER_HOST"
+
+      - name: '🚀 部署GMP模块'
+        env:
+          SERVER_HOST: ${{ secrets.ZY_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.ZY_SERVER_USER }}
+          REPO_PATH: ${{ secrets.ZY_REPO_PATH }}
+        run: |
+          HOST="${SERVER_HOST:-43.153.203.105}"
+          USER="${SERVER_USER:-root}"
+          REPO="${REPO_PATH:-~/guanghulab}"
+
+          echo "📦 部署GMP模块到 ZY-SVR-006 ($HOST)"
+          echo "   仓库路径: $REPO"
+
+          ssh -i ~/.ssh/zy_key -o StrictHostKeyChecking=no "$USER@$HOST" << REMOTE_CMD
+          set -e
+          echo "📡 连接成功 · 开始部署GMP模块"
+
+          # 进入仓库目录
+          cd $REPO
+
+          # 拉取最新代码
+          echo "🔄 git pull..."
+          git pull origin main 2>&1
+
+          # 部署 gmp-agent (培园+译典核心框架)
+          if [ -d "guanghu-self-hosted/gmp-agent" ]; then
+            echo "📦 安装gmp-agent依赖..."
+            cd guanghu-self-hosted/gmp-agent
+            npm install --production 2>&1 | tail -3
+            cd $REPO
+
+            # 重启gmp-agent进程
+            if pm2 describe gmp-agent > /dev/null 2>&1; then
+              echo "🔄 重启 gmp-agent..."
+              pm2 reload gmp-agent --update-env 2>&1
+            else
+              echo "🆕 首次启动 gmp-agent..."
+              cd guanghu-self-hosted/gmp-agent
+              pm2 start app.js --name gmp-agent --update-env 2>&1
+              cd $REPO
+            fi
+            echo "✅ gmp-agent 部署完成"
+          fi
+
+          # 保存PM2配置
+          pm2 save 2>&1
+
+          # 健康检查
+          sleep 3
+          if curl -sf http://127.0.0.1:4000/health > /dev/null 2>&1; then
+            echo "✅ GMP健康检查通过 · 端口4000"
+          else
+            echo "⚠️ GMP健康检查未响应 (端口4000) · 请手动确认"
+          fi
+
+          echo "🎉 GMP模块部署完成"
+          REMOTE_CMD
+
+      - name: '🧹 清理SSH密钥'
+        if: always()
+        run: rm -f ~/.ssh/zy_key
+
+      - name: '📊 输出部署摘要'
+        if: always()
+        run: |
+          echo "## 🚀 GMP模块部署摘要" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 内容 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 目标服务器 | ZY-SVR-006 · 43.153.203.105 (新加坡) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发提交 | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发分支 | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发者 | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 时间 | $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST') |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 已部署模块" >> $GITHUB_STEP_SUMMARY
+          echo "- \`guanghu-self-hosted/gmp-agent/\` — 培园(核心框架) + 译典(MCP工具集+健康检查)" >> $GITHUB_STEP_SUMMARY
+          echo "- \`gmp-agent/\` — 录册(日志+测试模块)" >> $GITHUB_STEP_SUMMARY
