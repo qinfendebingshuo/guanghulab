@@ -1,0 +1,100 @@
+{
+  "_meta": {
+    "description": "光湖半体Agent注册表 · 搬迁用",
+    "version": "1.1.0",
+    "updatedAt": "2026-04-26",
+    "updatedBy": "译典A05",
+    "note": "页面ID使用ENV:前缀占位符，部署时从.env读取对应UUID"
+  },
+  "agents": {
+    "译典A05": {
+      "id": "5TH-LE-HK-A05",
+      "name": "译典·配置开发",
+      "role": "配置开发·文档规范·架构设计",
+      "memoryPageId": "ENV:NOTION_PAGE_YD_A05_MEMORY",
+      "capabilities": ["architecture", "config", "documentation", "github", "gmp"]
+    },
+    "培园A04": {
+      "id": "5TH-LE-HK-A04",
+      "name": "培园·功能开发",
+      "role": "功能开发·代码实现·测试",
+      "memoryPageId": "ENV:NOTION_PAGE_PY_A04_MEMORY",
+      "capabilities": ["coding", "testing", "implementation", "debugging"]
+    },
+    "录册A02": {
+      "id": "5TH-LE-HK-A02",
+      "name": "录册·知识管理",
+      "role": "知识管理·数据库·文档归档",
+      "memoryPageId": "ENV:NOTION_PAGE_LC_A02_MEMORY",
+      "capabilities": ["database", "knowledge", "documentation", "archive"]
+    },
+    "霜砚Web": {
+      "id": "AG-SY-WEB-001",
+      "name": "霜砚·Web开发",
+      "role": "Web前端·API开发·部署·审核",
+      "memoryPageId": "ENV:NOTION_PAGE_SY_MEMORY",
+      "capabilities": ["web", "frontend", "api", "deployment", "review"]
+    },
+    "守门": {
+      "id": "GUARDIAN",
+      "name": "守门",
+      "role": "安全守卫·权限检查",
+      "memoryPageId": "ENV:NOTION_PAGE_GUARDIAN_MEMORY",
+      "capabilities": ["security", "guard"]
+    },
+    "扫尘": {
+      "id": "SWEEPER",
+      "name": "扫尘",
+      "role": "清理·归档·维护",
+      "memoryPageId": "ENV:NOTION_PAGE_SWEEPER_MEMORY",
+      "capabilities": ["cleanup", "archive", "maintenance"]
+    },
+    "小坍缩核": {
+      "id": "COLLAPSE",
+      "name": "小坍缩核",
+      "role": "路由器自检·系统监控",
+      "memoryPageId": "ENV:NOTION_PAGE_COLLAPSE_MEMORY",
+      "capabilities": ["monitoring", "selfcheck"]
+    },
+    "晨星": {
+      "id": "MORNING_STAR",
+      "name": "晨星",
+      "role": "路由器自检·通知",
+      "memoryPageId": "ENV:NOTION_PAGE_MORNINGSTAR_MEMORY",
+      "capabilities": ["monitoring", "notification"]
+    },
+    "舒舒": {
+      "id": "SHUSHU",
+      "name": "舒舒",
+      "role": "飞书机器人·副脑",
+      "memoryPageId": "ENV:NOTION_PAGE_SHUSHU_MEMORY",
+      "capabilities": ["feishu", "chat", "bridge"]
+    },
+    "之之": {
+      "id": "ZHIZHI",
+      "name": "之之",
+      "role": "钉钉系统·秋秋",
+      "memoryPageId": "ENV:NOTION_PAGE_ZHIZHI_MEMORY",
+      "capabilities": ["dingtalk", "devboard", "frontend"]
+    }
+  },
+  "ticketDatabase": {
+    "id": "ENV:GH_NOTION_TICKET_DB_ID",
+    "name": "半体工单数据库",
+    "comment": "对应Notion中的 ⚡ 半体工单 · Half-Body Orders 数据库"
+  },
+  "_envMapping": {
+    "_comment": "部署时在.env中配置以下变量（值为Notion页面UUID，不含横线）",
+    "GH_NOTION_TICKET_DB_ID": "半体工单数据库ID",
+    "NOTION_PAGE_YD_A05_MEMORY": "译典记忆区页面ID",
+    "NOTION_PAGE_PY_A04_MEMORY": "培园记忆区页面ID",
+    "NOTION_PAGE_LC_A02_MEMORY": "录册记忆区页面ID",
+    "NOTION_PAGE_SY_MEMORY": "霜砚记忆页面ID",
+    "NOTION_PAGE_GUARDIAN_MEMORY": "守门记忆页面ID",
+    "NOTION_PAGE_SWEEPER_MEMORY": "扫尘记忆页面ID",
+    "NOTION_PAGE_COLLAPSE_MEMORY": "小坍缩核记忆页面ID",
+    "NOTION_PAGE_MORNINGSTAR_MEMORY": "晨星记忆页面ID",
+    "NOTION_PAGE_SHUSHU_MEMORY": "舒舒记忆页面ID",
+    "NOTION_PAGE_ZHIZHI_MEMORY": "之之记忆页面ID"
+  }
+}

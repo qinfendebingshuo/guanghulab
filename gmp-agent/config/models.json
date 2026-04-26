@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "description": "通义千问模型配置 · Agent搬迁用",
+    "version": "1.0.0",
+    "provider": "dashscope (阿里云)",
+    "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "format": "openai-compatible"
+  },
+  "models": {
+    "qwen-plus": {
+      "description": "通用推理·中等规模·平衡速度和质量",
+      "maxContextTokens": 131072,
+      "freeQuota": "1M tokens",
+      "useCase": ["reasoning", "thinking", "analysis"]
+    },
+    "qwen-turbo": {
+      "description": "快速响应·小规模·适合简单任务",
+      "maxContextTokens": 131072,
+      "freeQuota": "1M tokens",
+      "useCase": ["simple", "formatting", "short-reply"]
+    },
+    "qwen-coder-turbo": {
+      "description": "代码专精·优化代码生成和理解",
+      "maxContextTokens": 131072,
+      "freeQuota": "1M tokens",
+      "useCase": ["coding", "review", "debugging"]
+    }
+  },
+  "fallback": {
+    "order": ["qwen-plus", "qwen-turbo"],
+    "comment": "首选模型不可用时按此顺序降级"
+  }
+}
