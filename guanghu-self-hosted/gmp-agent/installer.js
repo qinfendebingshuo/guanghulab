@@ -15,8 +15,9 @@
 
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { createLogger } = require('./lib/logger');
+const { assertSafeModuleName, assertWithinBase } = require('./lib/path-guard');
 
 const logger = createLogger('installer');
 
@@ -36,6 +37,9 @@ class ModuleInstaller {
    * @returns {Object} 安装结果
    */
   async install({ repoUrl, moduleName, branch, autoTriggered }) {
+    // 安全防线 1: 模块名白名单校验 (防命令/路径注入)
+    assertSafeModuleName(moduleName);
+
     const startTime = Date.now();
     const branchName = branch || 'main';
     const cloneUrl = repoUrl || this.config.defaultRepoUrl;
@@ -44,6 +48,10 @@ class ModuleInstaller {
 
     const tempDir = path.join(this.config.tempDir, 'install-' + moduleName + '-' + Date.now());
     const targetDir = path.join(this.config.modulesDir, moduleName);
+
+    // 安全防线 2: resolve 后校验目标目录在 modulesDir 之内 (防路径穿越)
+    assertWithinBase(this.config.modulesDir, targetDir);
+    assertWithinBase(this.config.tempDir, tempDir);
 
     try {
       // Step 1: 克隆仓库到临时目录
@@ -113,12 +121,16 @@ class ModuleInstaller {
    */
   _cloneRepo(url, branch, dest) {
     try {
-      // 使用 --depth 1 浅克隆加速
-      const cloneCmd = 'git clone --depth 1 --branch ' + branch + ' ' + url + ' ' + dest;
-      execSync(cloneCmd, { stdio: 'pipe', timeout: 120000 });
+      // 使用 execFileSync 数组形式传参，参数不经过 shell 解析，防命令注入
+      execFileSync(
+        'git',
+        ['clone', '--depth', '1', '--branch', branch, url, dest],
+        { stdio: 'pipe', timeout: 120000 }
+      );
       logger.info('[Installer] 仓库克隆完成');
     } catch (err) {
-      throw new Error('仓库克隆失败: ' + (err.stderr ? err.stderr.toString().substring(0, 200) : err.message));
+      // 错误信息不暴露 stderr 原文 (可能含 token / 内部路径)
+      throw new Error('仓库克隆失败 (exit code ' + (err.status || 'unknown') + ')');
     }
   }
 
@@ -154,14 +166,14 @@ class ModuleInstaller {
     const packageJson = path.join(moduleDir, 'package.json');
     if (fs.existsSync(packageJson)) {
       try {
-        execSync('npm install --production', {
+        execFileSync('npm', ['install', '--production'], {
           cwd: moduleDir,
           stdio: 'pipe',
           timeout: 180000
         });
         logger.info('[Installer] npm依赖安装完成');
       } catch (err) {
-        logger.warn('[Installer] npm install警告: ' + (err.stderr ? err.stderr.toString().substring(0, 200) : err.message));
+        logger.warn('[Installer] npm install警告 (exit ' + (err.status || 'unknown') + ')');
       }
     }
 
@@ -169,14 +181,14 @@ class ModuleInstaller {
     const requirementsTxt = path.join(moduleDir, 'requirements.txt');
     if (fs.existsSync(requirementsTxt)) {
       try {
-        execSync('pip install -r requirements.txt --quiet', {
+        execFileSync('pip', ['install', '-r', 'requirements.txt', '--quiet'], {
           cwd: moduleDir,
           stdio: 'pipe',
           timeout: 180000
         });
         logger.info('[Installer] pip依赖安装完成');
       } catch (err) {
-        logger.warn('[Installer] pip install警告: ' + (err.stderr ? err.stderr.toString().substring(0, 200) : err.message));
+        logger.warn('[Installer] pip install警告 (exit ' + (err.status || 'unknown') + ')');
       }
     }
   }
@@ -191,7 +203,7 @@ class ModuleInstaller {
 
     if (fs.existsSync(selfCheckScript)) {
       try {
-        execSync('node selfcheck.js', {
+        execFileSync('node', ['selfcheck.js'], {
           cwd: moduleDir,
           stdio: 'pipe',
           timeout: 60000
@@ -199,8 +211,8 @@ class ModuleInstaller {
         logger.info('[Installer] 自检通过 (selfcheck.js)');
         return { passed: true, method: 'selfcheck.js' };
       } catch (err) {
-        logger.warn('[Installer] 自检失败: ' + (err.stderr ? err.stderr.toString().substring(0, 200) : err.message));
-        return { passed: false, method: 'selfcheck.js', error: err.message };
+        logger.warn('[Installer] 自检失败 (exit ' + (err.status || 'unknown') + ')');
+        return { passed: false, method: 'selfcheck.js', error: 'exit code ' + (err.status || 'unknown') };
       }
     }
 

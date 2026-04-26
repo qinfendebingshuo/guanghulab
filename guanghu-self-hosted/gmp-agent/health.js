@@ -14,8 +14,9 @@
 'use strict';
 
 const http = require('http');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { createLogger } = require('./lib/logger');
+const { assertSafeModuleName } = require('./lib/path-guard');
 
 const logger = createLogger('health');
 
@@ -221,7 +222,7 @@ class HealthMonitor {
    */
   _checkPM2Process(name) {
     try {
-      const output = execSync('pm2 jlist', {
+      const output = execFileSync('pm2', ['jlist'], {
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 5000
@@ -320,37 +321,41 @@ class HealthMonitor {
    */
   async _executeRecovery(name, info, strategy) {
     const pm2Name = info.pm2Name || name;
+    // 安全防线: pm2Name / entryPoint 在传入命令前必须严格校验
+    // 防止恶意构造的模块信息触发命令注入 (即使白名单已在 install 入口拦截)
+    assertSafeModuleName(pm2Name);
 
     switch (strategy.action) {
       case 'pm2_restart':
         try {
-          execSync('pm2 restart ' + pm2Name, {
+          execFileSync('pm2', ['restart', pm2Name], {
             stdio: 'pipe',
             timeout: 15000
           });
           logger.info('PM2 restart ' + pm2Name + ' 已执行');
         } catch (err) {
-          logger.warn('PM2 restart 失败: ' + err.message);
+          logger.warn('PM2 restart 失败 (exit ' + (err.status || 'unknown') + ')');
         }
         break;
 
       case 'pm2_delete_start':
         try {
-          execSync('pm2 delete ' + pm2Name, { stdio: 'pipe', timeout: 10000 });
+          execFileSync('pm2', ['delete', pm2Name], { stdio: 'pipe', timeout: 10000 });
         } catch {
           // delete 失败不阻塞
         }
         try {
           const entryPoint = info.entryPoint || 'index.js';
-          const startCmd = 'pm2 start ' + entryPoint + ' --name ' + pm2Name;
-          execSync(startCmd, {
+          // entryPoint 同样校验, 防 info 被污染
+          assertSafeModuleName(entryPoint);
+          execFileSync('pm2', ['start', entryPoint, '--name', pm2Name], {
             cwd: info.path,
             stdio: 'pipe',
             timeout: 15000
           });
           logger.info('PM2 delete+start ' + pm2Name + ' 已执行');
         } catch (err) {
-          logger.warn('PM2 start 失败: ' + err.message);
+          logger.warn('PM2 start 失败 (exit ' + (err.status || 'unknown') + ')');
         }
         break;
 
@@ -361,30 +366,30 @@ class HealthMonitor {
         const installScript = path.join(info.path, 'install.sh');
         if (fs.existsSync(installScript)) {
           try {
-            execSync('bash install.sh', {
+            execFileSync('bash', ['install.sh'], {
               cwd: info.path,
               stdio: 'pipe',
               timeout: 120000
             });
             logger.info('install.sh 重新执行完成: ' + name);
           } catch (err) {
-            logger.error('install.sh 执行失败: ' + err.message);
+            logger.error('install.sh 执行失败 (exit ' + (err.status || 'unknown') + ')');
           }
         } else {
           // 没有 install.sh, 尝试 npm install + pm2 restart
           try {
             const packageJson = path.join(info.path, 'package.json');
             if (fs.existsSync(packageJson)) {
-              execSync('npm install --production', {
+              execFileSync('npm', ['install', '--production'], {
                 cwd: info.path,
                 stdio: 'pipe',
                 timeout: 60000
               });
             }
-            execSync('pm2 restart ' + pm2Name, { stdio: 'pipe', timeout: 15000 });
+            execFileSync('pm2', ['restart', pm2Name], { stdio: 'pipe', timeout: 15000 });
             logger.info('npm install + pm2 restart 已执行: ' + name);
           } catch (err) {
-            logger.error('reinstall fallback 失败: ' + err.message);
+            logger.error('reinstall fallback 失败 (exit ' + (err.status || 'unknown') + ')');
           }
         }
         break;

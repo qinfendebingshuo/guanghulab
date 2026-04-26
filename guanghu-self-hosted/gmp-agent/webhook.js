@@ -11,6 +11,65 @@ const { createLogger } = require('./lib/logger');
 
 const logger = createLogger('webhook');
 
+// ─── 速率限制 (纯Map实现, 不引入新依赖) ──────────────────
+// 策略: 同一IP在 60秒窗口内最多 30 次请求, 超出返回 429
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = 30;
+// IP -> 时间戳数组 (滑动窗口)
+const rateLimitStore = new Map();
+
+/**
+ * 提取客户端IP (兼容直连 / 反向代理后的 X-Forwarded-For)
+ */
+function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (typeof xff === 'string' && xff.length > 0) {
+    return xff.split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || 'unknown';
+}
+
+/**
+ * 速率限制中间件
+ */
+function rateLimiter(req, res, next) {
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+  let timestamps = rateLimitStore.get(ip) || [];
+  // 丢弃窗口外的旧请求
+  timestamps = timestamps.filter(t => t > windowStart);
+
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    const retryAfter = Math.ceil((timestamps[0] + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    res.setHeader('Retry-After', String(Math.max(retryAfter, 1)));
+    logger.warn('[Webhook] 速率限制触发 ip=' + ip + ' count=' + timestamps.length);
+    return res.status(429).json({
+      error: 'Too Many Requests',
+      message: '请求过于频繁, 请稍后再试',
+      retryAfter: retryAfter
+    });
+  }
+
+  timestamps.push(now);
+  rateLimitStore.set(ip, timestamps);
+
+  // 周期性清理冷IP (避免Map无限增长)
+  if (rateLimitStore.size > 10000) {
+    for (const [k, v] of rateLimitStore) {
+      const fresh = v.filter(t => t > windowStart);
+      if (fresh.length === 0) {
+        rateLimitStore.delete(k);
+      } else {
+        rateLimitStore.set(k, fresh);
+      }
+    }
+  }
+
+  next();
+}
+
 /**
  * 验证GitHub Webhook签名 (HMAC SHA-256)
  */
@@ -69,7 +128,7 @@ function createWebhookRouter(agent) {
    * POST /webhook/github
    * 接收GitHub Webhook事件
    */
-  router.post('/github', async (req, res) => {
+  router.post('/github', rateLimiter, async (req, res) => {
     const event = req.headers['x-github-event'];
     const delivery = req.headers['x-github-delivery'];
     const signature = req.headers['x-hub-signature-256'];
@@ -78,8 +137,17 @@ function createWebhookRouter(agent) {
 
     // 签名验证
     const secret = agent.config.webhookSecret;
+    // express.raw 将 req.body 设为 Buffer
+    let rawBody;
+    if (Buffer.isBuffer(req.body)) {
+      rawBody = req.body;
+    } else if (typeof req.body === 'string') {
+      rawBody = Buffer.from(req.body, 'utf-8');
+    } else {
+      rawBody = Buffer.from(JSON.stringify(req.body), 'utf-8');
+    }
+
     if (secret) {
-      const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
       if (!verifySignature(secret, rawBody, signature)) {
         logger.warn('[Webhook] 签名验证失败, 拒绝请求');
         return res.status(401).json({ error: 'Invalid signature' });
@@ -89,10 +157,7 @@ function createWebhookRouter(agent) {
     // 解析payload
     let payload;
     try {
-      payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      if (Buffer.isBuffer(req.body)) {
-        payload = JSON.parse(req.body.toString('utf-8'));
-      }
+      payload = JSON.parse(rawBody.toString('utf-8'));
     } catch (err) {
       logger.error('[Webhook] payload解析失败: ' + err.message);
       return res.status(400).json({ error: 'Invalid JSON payload' });

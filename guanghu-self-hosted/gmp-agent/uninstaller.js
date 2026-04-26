@@ -15,8 +15,9 @@
 
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { createLogger } = require('./lib/logger');
+const { assertSafeModuleName, assertWithinBase } = require('./lib/path-guard');
 
 const logger = createLogger('uninstaller');
 
@@ -35,6 +36,9 @@ class ModuleUninstaller {
    * @returns {Object} 卸载结果
    */
   async uninstall({ moduleName, keepBackup, force }) {
+    // 安全防线 1: 模块名白名单校验 (防命令/路径注入)
+    assertSafeModuleName(moduleName);
+
     const startTime = Date.now();
     const shouldBackup = keepBackup !== false; // 默认保留备份
 
@@ -47,6 +51,9 @@ class ModuleUninstaller {
     }
 
     const moduleDir = moduleInfo.path;
+    // 安全防线 2: resolve 后校验模块路径在 modulesDir 之内 (防路径穿越)
+    assertWithinBase(this.config.modulesDir, moduleDir);
+
     if (!fs.existsSync(moduleDir)) {
       // 文件不存在但注册表有记录 → 清理注册
       this.installedModules.delete(moduleName);
@@ -120,8 +127,9 @@ class ModuleUninstaller {
     }
 
     // 方式2: 尝试pm2 stop (如果使用PM2管理)
+    // moduleName 已在 uninstall() 入口经过白名单校验, 此处用 execFileSync 数组形式传参
     try {
-      execSync('pm2 stop ' + moduleName + ' 2>/dev/null || true', {
+      execFileSync('pm2', ['stop', moduleName], {
         stdio: 'pipe',
         timeout: 10000
       });
@@ -133,14 +141,14 @@ class ModuleUninstaller {
     const stopScript = path.join(moduleDir, 'stop.sh');
     if (fs.existsSync(stopScript)) {
       try {
-        execSync('bash stop.sh', {
+        execFileSync('bash', ['stop.sh'], {
           cwd: moduleDir,
           stdio: 'pipe',
           timeout: 15000
         });
         logger.info('[Uninstaller] 已执行模块stop脚本');
       } catch (err) {
-        logger.warn('[Uninstaller] stop脚本执行警告: ' + err.message);
+        logger.warn('[Uninstaller] stop脚本执行警告 (exit ' + (err.status || 'unknown') + ')');
       }
     }
   }
@@ -174,6 +182,7 @@ class ModuleUninstaller {
    * 备份模块到归档目录
    */
   _backupModule(moduleName, moduleDir) {
+    // moduleName 已在 uninstall() 入口经过白名单校验
     const archiveDir = path.join(this.config.modulesDir, '.archive');
     if (!fs.existsSync(archiveDir)) {
       fs.mkdirSync(archiveDir, { recursive: true });
@@ -181,6 +190,8 @@ class ModuleUninstaller {
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupDir = path.join(archiveDir, moduleName + '_' + timestamp);
+    // 路径校验: 备份目录必须在 archiveDir 之内
+    assertWithinBase(archiveDir, backupDir);
 
     this._copyDir(moduleDir, backupDir);
     logger.info('[Uninstaller] 模块已备份: ' + backupDir);
