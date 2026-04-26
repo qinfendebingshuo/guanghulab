@@ -3,8 +3,29 @@
 !.env.example
 node_modules/
 *.bak
+*.bak.*
+*.save
 *.log
 backend/api-server/logs/
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# 顶层禁止 commit 二进制压缩包（历史快照走 GitHub Releases）
+# 子目录的合法 zip（如 downloads/、backend/）不在此列
+/*.zip
+
+# macOS Java bundle 误传防御（曾发生过 jspawnhelper / libjli.dylib 残骸事故）
+/MacOS/
+/_CodeSignature/
+/jspawnhelper
+
+# 顶层临时调试脚本（请放到 tests/ 或 scripts/ 里）
+/notion-test*.js
+/connection-test.log
+/phase2-syslog.xml
+/test.txt
 
 # Writing Platform build artifacts
 writing-platform/frontend/dist/
