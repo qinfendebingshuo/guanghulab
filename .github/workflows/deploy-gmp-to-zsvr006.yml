@@ -1,0 +1,168 @@
+# ═══════════════════════════════════════════════
+# 🔺 Sovereign: TCS-0002∞ | Root: SYS-GLW-0001
+# 📜 Copyright: 国作登字-2026-A-00037559
+# ═══════════════════════════════════════════════
+# 🚀 GMP团队模块自动部署 · ZY-SVR-TEST-001 (新加坡 43.153.203.105)
+#
+# 触发条件: GMP相关PR合并到main后自动部署
+# 目标服务器: ZY-SVR-TEST-001 · 43.153.203.105 · /opt/guanghu (统一标准)
+# 部署方式: SSH → git pull → npm install → pm2 reload
+#
+# 涉及模块 (统一路径 guanghu-self-hosted/gmp-agent/):
+#   培园: app.js / webhook.js / installer.js / uninstaller.js / lib/
+#   译典: mcp-tools.js / manifest.yaml / health.js
+#   录册: src/logger.js / src/test-runner.js / test/
+#
+# 端口规划 (ZY-SVR-TPL-2026-0426-001):
+#   9800 - GMP-Agent 主端口
+#   9801 - Webhook 端口 (预留 · 当前与9800同进程)
+#
+# 所需 GitHub Secrets (优先 ZY_TEST_* · 回退 ZY_NOVEL_* · 再回退默认值):
+#   ZY_TEST_KEY  / ZY_NOVEL_KEY     - SSH私钥
+#   ZY_TEST_HOST / ZY_NOVEL_HOST    - 服务器IP (默认 43.153.203.105)
+#   ZY_TEST_USER / ZY_NOVEL_USER    - SSH用户名 (默认 root)
+#   ZY_TEST_PATH / ZY_NOVEL_PATH    - 仓库路径 (默认 /opt/guanghu)
+# ═══════════════════════════════════════════════
+
+name: '🚀 GMP模块自动部署 · ZY-SVR-TEST-001'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'guanghu-self-hosted/gmp-agent/**'
+
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '操作类型'
+        required: true
+        type: choice
+        options:
+          - deploy
+          - health-check-only
+        default: 'deploy'
+
+concurrency:
+  group: gmp-deploy-zsvr-test-001
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-gmp:
+    name: '🚀 部署GMP模块到ZY-SVR-TEST-001'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔐 配置SSH'
+        env:
+          # 优先 ZY_TEST_KEY (新规范), 回退 ZY_NOVEL_KEY (旧绑定)
+          SSH_KEY: ${{ secrets.ZY_TEST_KEY || secrets.ZY_NOVEL_KEY || secrets.ZY_SERVER_KEY }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "❌ SSH密钥缺失: 请配置 ZY_TEST_KEY 或 ZY_NOVEL_KEY"
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/zy_key
+          chmod 600 ~/.ssh/zy_key
+
+          # 验证密钥格式
+          if ! head -1 ~/.ssh/zy_key | grep -q "BEGIN"; then
+            echo "❌ SSH密钥格式异常"
+            exit 1
+          fi
+
+          SERVER_HOST="${{ secrets.ZY_TEST_HOST || secrets.ZY_NOVEL_HOST || secrets.ZY_SERVER_HOST || '43.153.203.105' }}"
+          ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "✅ SSH配置完成 · 目标: $SERVER_HOST"
+
+      - name: '🚀 部署GMP模块'
+        env:
+          SERVER_HOST: ${{ secrets.ZY_TEST_HOST || secrets.ZY_NOVEL_HOST || secrets.ZY_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.ZY_TEST_USER || secrets.ZY_NOVEL_USER || secrets.ZY_SERVER_USER }}
+          REPO_PATH: ${{ secrets.ZY_TEST_PATH || secrets.ZY_NOVEL_PATH || secrets.ZY_REPO_PATH }}
+          GMP_PORT: '9800'
+        run: |
+          HOST="${SERVER_HOST:-43.153.203.105}"
+          USER="${SERVER_USER:-root}"
+          REPO="${REPO_PATH:-/opt/guanghu}"
+          PORT="${GMP_PORT}"
+
+          echo "📦 部署GMP模块到 ZY-SVR-TEST-001 ($HOST)"
+          echo "   仓库路径: $REPO"
+          echo "   GMP端口: $PORT"
+
+          ssh -i ~/.ssh/zy_key -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "DEPLOY_REPO='$REPO' GMP_PORT='$PORT' bash -s" << 'REMOTE_CMD'
+          set -e
+          echo "📡 连接成功 · 开始部署GMP模块"
+          echo "  REPO=$DEPLOY_REPO  PORT=$GMP_PORT"
+
+          # 进入仓库目录
+          cd "$DEPLOY_REPO"
+
+          # 拉取最新代码
+          echo "🔄 git pull..."
+          git pull origin main 2>&1
+
+          # 部署 gmp-agent (培园+译典核心框架)
+          if [ -d "guanghu-self-hosted/gmp-agent" ]; then
+            echo "📦 安装gmp-agent依赖..."
+            cd guanghu-self-hosted/gmp-agent
+            npm install --production 2>&1 | tail -3
+            cd "$DEPLOY_REPO"
+
+            # 重启gmp-agent进程 (端口由 GMP_PORT 环境变量控制)
+            if pm2 describe gmp-agent > /dev/null 2>&1; then
+              echo "🔄 重启 gmp-agent..."
+              GMP_PORT="$GMP_PORT" pm2 reload gmp-agent --update-env 2>&1
+            else
+              echo "🆕 首次启动 gmp-agent..."
+              cd guanghu-self-hosted/gmp-agent
+              GMP_PORT="$GMP_PORT" pm2 start app.js --name gmp-agent --update-env 2>&1
+              cd "$DEPLOY_REPO"
+            fi
+            echo "✅ gmp-agent 部署完成"
+          fi
+
+          # 保存PM2配置
+          pm2 save 2>&1
+
+          # 健康检查
+          sleep 3
+          if curl -sf "http://127.0.0.1:${GMP_PORT}/health" > /dev/null 2>&1; then
+            echo "✅ GMP健康检查通过 · 端口${GMP_PORT}"
+          else
+            echo "⚠️ GMP健康检查未响应 (端口${GMP_PORT}) · 请手动确认"
+          fi
+
+          echo "🎉 GMP模块部署完成"
+          REMOTE_CMD
+
+      - name: '🧹 清理SSH密钥'
+        if: always()
+        run: rm -f ~/.ssh/zy_key
+
+      - name: '📊 输出部署摘要'
+        if: always()
+        run: |
+          echo "## 🚀 GMP模块部署摘要" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 内容 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 目标服务器 | ZY-SVR-TEST-001 · 43.153.203.105 (新加坡) |" >> $GITHUB_STEP_SUMMARY
+          echo "| 部署根目录 | /opt/guanghu (ZY-SVR-TPL-2026-0426-001 标准) |" >> $GITHUB_STEP_SUMMARY
+          echo "| GMP 端口 | 9800 |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发提交 | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发分支 | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 触发者 | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 时间 | $(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M CST') |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 已部署模块" >> $GITHUB_STEP_SUMMARY
+          echo "- \`guanghu-self-hosted/gmp-agent/\` — 培园(核心框架) + 译典(MCP工具集+健康检查) + 录册(日志+测试模块)" >> $GITHUB_STEP_SUMMARY

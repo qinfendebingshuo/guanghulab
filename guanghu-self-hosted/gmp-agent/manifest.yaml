@@ -1,0 +1,139 @@
+# GMP-Agent 守护进程 · 自描述 manifest
+# 遵循 GMP-SPEC-v1.0 manifest 模板
+# 作者: 译典A05 (5TH-LE-HK-A05)
+# 工单: GH-GMP-004
+
+# ─── 基本信息 ────────────────────────────────────────────
+module_name: gmp-agent
+version: 0.1.0
+description: |
+  GMP-Agent 守护进程 · 光湖模块协议执行体。
+  负责管理所有 GMP 模块的生命周期：安装、卸载、健康监控、自动修复。
+  冰朔的类比：服务器上的插座管理员，揭盖子装模块，装完盖回去。
+author: GMP开发团队 (培园A04 + 译典A05 + 录册A02)
+license: ISC
+repository: https://github.com/qinfendebingshuo/guanghulab
+path_in_repo: guanghu-self-hosted/gmp-agent
+
+# ─── 运行环境 ────────────────────────────────────────────
+runtime:
+  language: node
+  language_version: ">=18.0.0"
+  framework: express
+  entry_point: app.js
+  port: 9800
+  process_manager: pm2
+  pm2_name: gmp-agent
+
+# ─── 依赖 ────────────────────────────────────────────────
+dependencies:
+  system:
+    - git          # 模块克隆
+    - pm2          # 进程管理
+  npm:
+    - express: "^4.18.0"
+
+# ─── 目录结构 ────────────────────────────────────────────
+directories:
+  data: /opt/gmp
+  modules: /opt/modules
+  logs: /var/log/gh-modules
+  config: /opt/gmp/gmp-agent.config.json
+  registry: /opt/gmp/registry.json
+
+# ─── 健康检查 ────────────────────────────────────────────
+health_check:
+  endpoint: /health
+  interval: 60         # 秒 · 巡检已安装模块的间隔
+  timeout: 10          # 秒 · 单次健康检查超时
+  auto_restart: true
+  max_restart_attempts: 3
+
+# ─── MCP 工具 ────────────────────────────────────────────
+mcp_tools:
+  - name: gmp.install
+    description: 授权安装模块
+    method: POST
+    path: /mcp/call
+  - name: gmp.uninstall
+    description: 卸载模块
+    method: POST
+    path: /mcp/call
+  - name: gmp.status
+    description: 查看已安装模块清单
+    method: POST
+    path: /mcp/call
+  - name: gmp.health
+    description: 全模块健康检查
+    method: POST
+    path: /mcp/call
+  - name: gmp.list_available
+    description: 列出仓库可用模块
+    method: POST
+    path: /mcp/call
+
+# ─── REST API 端点 ───────────────────────────────────────
+api_endpoints:
+  - method: GET
+    path: /health
+    description: GMP-Agent 自身健康状态
+  - method: GET
+    path: /api/modules
+    description: 已安装模块列表
+  - method: GET
+    path: /api/modules/:name
+    description: 单模块详情
+  - method: POST
+    path: /api/modules/install
+    description: 安装模块 (REST)
+  - method: POST
+    path: /api/modules/uninstall
+    description: 卸载模块 (REST)
+  - method: GET
+    path: /api/system
+    description: 系统信息
+  - method: GET
+    path: /mcp/tools
+    description: 列出 MCP 可用工具
+  - method: POST
+    path: /mcp/call
+    description: 调用 MCP 工具 (JSON-RPC 2.0)
+
+# ─── 脚本 ────────────────────────────────────────────────
+scripts:
+  install: npm install --production
+  start: node app.js
+  dev: GMP_DEBUG=true node app.js
+  health_check: "curl -sf http://127.0.0.1:9800/health || exit 1"
+
+# ─── 标签 (GMP-SPEC 四维标签体系) ────────────────────────
+tags:
+  status: green              # 运行状态: green/yellow/red/gray
+  category: infra-core       # 功能分类: 基础设施核心
+  layer: L3-execution        # 架构层级: L3 执行层
+  attribution: gmp-team      # 归属: GMP 开发团队
+
+# ─── 安全 ────────────────────────────────────────────────
+security:
+  install_channel:
+    description: |
+      安装通道默认关闭（盖子盖着）。
+      收到合法 token 后揭盖子，安装完成或超时后盖回去。
+    token_ttl: 300           # 秒 · 安装token有效期
+    token_algorithm: HMAC-SHA256
+  iron_rules:
+    - 不修改 brain/ 目录
+    - 不删除 Workflow 文件
+    - 不绕过冰朔授权
+    - 修复有上限 (最多3次)
+    - 全部操作留痕
+
+# ─── 元信息 ──────────────────────────────────────────────
+meta:
+  created: "2026-04-26"
+  spec_version: GMP-SPEC-v1.0
+  work_order: GH-GMP-004
+  team:
+    - { agent: AG-PY-A04, role: 核心框架+Webhook+安装器+卸载器 }
+    - { agent: AG-YD-A05, role: MCP工具集+manifest自举+健康检查 }
+    - { agent: AG-LC-A02, role: 日志收集+测试报告+自测脚本 }
