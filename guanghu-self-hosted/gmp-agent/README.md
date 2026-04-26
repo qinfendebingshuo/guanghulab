@@ -28,13 +28,13 @@ npm install
 npm start
 ```
 
-服务默认监听 `http://localhost:4000`
+服务默认监听 `http://localhost:9800`
 
 ## 环境变量
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `GMP_PORT` | 4000 | 服务端口 |
+| `GMP_PORT` | 9800 | 服务端口（统一标准 · ZY-SVR-TPL-2026-0426-001）|
 | `GMP_MODULES_DIR` | ./modules | 已安装模块目录 |
 | `GMP_LOGS_DIR` | ./logs | 日志目录 |
 | `GMP_TEMP_DIR` | ./tmp | 临时目录 |

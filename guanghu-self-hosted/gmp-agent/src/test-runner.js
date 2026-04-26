@@ -19,7 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 // ─── 配置 ───────────────────────────────────────────────
 const DEFAULT_TEST_DIR = path.join(__dirname, '..', 'test');
@@ -64,7 +64,7 @@ function runTest(testFile, verbose = false) {
   };
 
   try {
-    const output = execSync(`node "${testFile}"`, {
+    const output = execFileSync('node', [testFile], {
       timeout: 30000,  // 30秒超时
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],

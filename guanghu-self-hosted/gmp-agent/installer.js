@@ -17,7 +17,12 @@ const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const { createLogger } = require('./lib/logger');
-const { assertSafeModuleName, assertWithinBase } = require('./lib/path-guard');
+const {
+  sanitizeModuleName,
+  assertWithinBase,
+  assertNotOption,
+  assertSafeGitUrl
+} = require('./lib/path-guard');
 
 const logger = createLogger('installer');
 
@@ -37,17 +42,23 @@ class ModuleInstaller {
    * @returns {Object} 安装结果
    */
   async install({ repoUrl, moduleName, branch, autoTriggered }) {
-    // 安全防线 1: 模块名白名单校验 (防命令/路径注入)
-    assertSafeModuleName(moduleName);
+    // 安全防线 1: 模块名白名单 + path.basename 净化 (CodeQL 公认 sanitizer)
+    const safeName = sanitizeModuleName(moduleName);
 
     const startTime = Date.now();
+    // 分支名同样做防选项注入校验 (防 git --upload-pack=... 二阶注入)
     const branchName = branch || 'main';
+    assertNotOption(branchName, '分支名');
+    if (!/^[a-zA-Z0-9_./-]{1,128}$/.test(branchName)) {
+      throw new Error('非法分支名: 仅允许字母数字 . _ - / 长度1~128');
+    }
     const cloneUrl = repoUrl || this.config.defaultRepoUrl;
+    assertSafeGitUrl(cloneUrl);
 
-    logger.info('[Installer] 开始安装模块: ' + moduleName + ' 分支=' + branchName);
+    logger.info('[Installer] 开始安装模块: ' + safeName + ' 分支=' + branchName);
 
-    const tempDir = path.join(this.config.tempDir, 'install-' + moduleName + '-' + Date.now());
-    const targetDir = path.join(this.config.modulesDir, moduleName);
+    const tempDir = path.join(this.config.tempDir, 'install-' + safeName + '-' + Date.now());
+    const targetDir = path.join(this.config.modulesDir, safeName);
 
     // 安全防线 2: resolve 后校验目标目录在 modulesDir 之内 (防路径穿越)
     assertWithinBase(this.config.modulesDir, targetDir);
@@ -59,14 +70,14 @@ class ModuleInstaller {
       this._cloneRepo(cloneUrl, branchName, tempDir);
 
       // Step 2: 检查模块目录是否存在
-      const moduleSrcDir = path.join(tempDir, 'guanghu-self-hosted', moduleName);
+      const moduleSrcDir = path.join(tempDir, 'guanghu-self-hosted', safeName);
       if (!fs.existsSync(moduleSrcDir)) {
-        throw new Error('模块目录不存在: guanghu-self-hosted/' + moduleName);
+        throw new Error('模块目录不存在: guanghu-self-hosted/' + safeName);
       }
 
       // Step 3: 验证manifest
       logger.info('[Installer] Step 2: 验证manifest...');
-      const manifestResult = this._validateManifest(moduleSrcDir, moduleName);
+      const manifestResult = this._validateManifest(moduleSrcDir, safeName);
 
       // Step 4: 安装依赖
       logger.info('[Installer] Step 3: 安装依赖...');
@@ -82,7 +93,7 @@ class ModuleInstaller {
 
       // Step 7: 注册模块
       const moduleInfo = {
-        name: moduleName,
+        name: safeName,
         path: targetDir,
         manifestPath: path.join(targetDir, 'manifest.yaml'),
         installedAt: new Date().toISOString(),
@@ -91,14 +102,14 @@ class ModuleInstaller {
         autoTriggered: !!autoTriggered,
         selfCheckPassed: selfCheckResult.passed
       };
-      this.installedModules.set(moduleName, moduleInfo);
+      this.installedModules.set(safeName, moduleInfo);
 
       const duration = Date.now() - startTime;
-      logger.info('[Installer] 模块安装成功: ' + moduleName + ' 耗时=' + duration + 'ms');
+      logger.info('[Installer] 模块安装成功: ' + safeName + ' 耗时=' + duration + 'ms');
 
       return {
         status: 'installed',
-        module: moduleName,
+        module: safeName,
         branch: branchName,
         duration: duration,
         selfCheck: selfCheckResult,
@@ -107,7 +118,7 @@ class ModuleInstaller {
 
     } catch (err) {
       const duration = Date.now() - startTime;
-      logger.error('[Installer] 安装失败: ' + moduleName + ' -> ' + err.message + ' 耗时=' + duration + 'ms');
+      logger.error('[Installer] 安装失败: ' + safeName + ' -> ' + err.message + ' 耗时=' + duration + 'ms');
       throw err;
 
     } finally {
@@ -117,14 +128,28 @@ class ModuleInstaller {
   }
 
   /**
-   * 克隆仓库 (sparse checkout 只取目标模块)
+   * 克隆仓库
    */
   _cloneRepo(url, branch, dest) {
+    // 二次断言: 防选项注入 (CodeQL js/second-order-command-line-injection)
+    assertSafeGitUrl(url);
+    assertNotOption(branch, '分支名');
+    assertNotOption(dest, '目标目录');
     try {
-      // 使用 execFileSync 数组形式传参，参数不经过 shell 解析，防命令注入
+      // 使用 execFileSync 数组形式传参; 同时使用 -c 关闭危险协议防 second-order injection
       execFileSync(
         'git',
-        ['clone', '--depth', '1', '--branch', branch, url, dest],
+        [
+          '-c', 'protocol.ext.allow=never',
+          '-c', 'protocol.file.allow=user',
+          'clone',
+          '--depth', '1',
+          '--single-branch',
+          '--branch', branch,
+          '--',
+          url,
+          dest
+        ],
         { stdio: 'pipe', timeout: 120000 }
       );
       logger.info('[Installer] 仓库克隆完成');

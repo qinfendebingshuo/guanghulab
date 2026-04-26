@@ -10,7 +10,7 @@ function loadConfig() {
 
   return {
     // 服务配置
-    port: parseInt(process.env.GMP_PORT || '4000', 10),
+    port: parseInt(process.env.GMP_PORT || '9800', 10),
     version: process.env.GMP_VERSION || '0.1.0',
 
     // 目录配置

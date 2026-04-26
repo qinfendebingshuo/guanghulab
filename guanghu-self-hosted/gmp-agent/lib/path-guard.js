@@ -39,6 +39,50 @@ function assertSafeModuleName(name) {
 }
 
 /**
+ * 标准化模块名: 校验 + path.basename 提取最后一段, 强行去除任何路径分隔符
+ * 同时是 CodeQL 公认的 path-injection sanitizer
+ * @param {string} name
+ * @returns {string} 净化后的模块名
+ */
+function sanitizeModuleName(name) {
+  assertSafeModuleName(name);
+  const sanitized = path.basename(name);
+  // path.basename 本身去除路径分隔符, 与白名单二次校验保险
+  if (sanitized !== name) {
+    throw new Error('非法模块名: 包含路径分隔符 ' + JSON.stringify(name));
+  }
+  return sanitized;
+}
+
+/**
+ * 校验命令行参数不以 '-' 开头, 防止 git/pm2 等命令的二阶选项注入
+ * (例如 --upload-pack=evil 会让 git 执行任意命令)
+ * @param {string} arg
+ * @param {string} label - 参数名, 用于错误信息
+ */
+function assertNotOption(arg, label) {
+  if (typeof arg !== 'string' || arg.length === 0) {
+    throw new Error('非法' + label + ': 必须为非空字符串');
+  }
+  if (arg.startsWith('-')) {
+    throw new Error('非法' + label + ': 禁止以 "-" 开头 (防选项注入) value=' + JSON.stringify(arg.substring(0, 40)));
+  }
+}
+
+/**
+ * 校验 git 仓库 URL 格式 (允许 https / git / ssh / file)
+ * @param {string} url
+ */
+function assertSafeGitUrl(url) {
+  assertNotOption(url, 'git URL');
+  // 仅允许常见协议前缀
+  const allowed = /^(https?:\/\/|git:\/\/|git@|ssh:\/\/|file:\/\/)/;
+  if (!allowed.test(url)) {
+    throw new Error('非法 git URL: 必须以 https:// / git:// / git@ / ssh:// / file:// 开头');
+  }
+}
+
+/**
  * 校验目标路径在 baseDir 之内 (防路径穿越)
  * @param {string} baseDir - 受信任的根目录
  * @param {string} targetPath - 待校验的路径
@@ -68,6 +112,9 @@ function safeJoin(baseDir, ...parts) {
 module.exports = {
   MODULE_NAME_REGEX,
   assertSafeModuleName,
+  sanitizeModuleName,
+  assertNotOption,
+  assertSafeGitUrl,
   assertWithinBase,
   safeJoin
 };

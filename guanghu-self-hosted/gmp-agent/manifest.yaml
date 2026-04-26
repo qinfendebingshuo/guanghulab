@@ -21,7 +21,7 @@ runtime:
   language_version: ">=18.0.0"
   framework: express
   entry_point: app.js
-  port: 4000
+  port: 9800
   process_manager: pm2
   pm2_name: gmp-agent
 
@@ -104,7 +104,7 @@ scripts:
   install: npm install --production
   start: node app.js
   dev: GMP_DEBUG=true node app.js
-  health_check: "curl -sf http://127.0.0.1:4000/health || exit 1"
+  health_check: "curl -sf http://127.0.0.1:9800/health || exit 1"
 
 # ─── 标签 (GMP-SPEC 四维标签体系) ────────────────────────
 tags:

@@ -121,6 +121,10 @@ function extractChangedModules(commits) {
 function createWebhookRouter(agent) {
   const router = express.Router();
 
+  // 速率限制 (router-level, 应用到所有 webhook 路由)
+  // 防止恶意请求消耗服务器资源
+  router.use(rateLimiter);
+
   // 需要原始body来验证签名
   router.use(express.raw({ type: 'application/json', limit: '10mb' }));
 
@@ -128,7 +132,7 @@ function createWebhookRouter(agent) {
    * POST /webhook/github
    * 接收GitHub Webhook事件
    */
-  router.post('/github', rateLimiter, async (req, res) => {
+  router.post('/github', async (req, res) => {
     const event = req.headers['x-github-event'];
     const delivery = req.headers['x-github-delivery'];
     const signature = req.headers['x-hub-signature-256'];

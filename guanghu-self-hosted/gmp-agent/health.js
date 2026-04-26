@@ -15,8 +15,9 @@
 
 const http = require('http');
 const { execFileSync } = require('child_process');
+const path = require('path');
 const { createLogger } = require('./lib/logger');
-const { assertSafeModuleName } = require('./lib/path-guard');
+const { sanitizeModuleName } = require('./lib/path-guard');
 
 const logger = createLogger('health');
 
@@ -320,10 +321,8 @@ class HealthMonitor {
    * @param {object} strategy
    */
   async _executeRecovery(name, info, strategy) {
-    const pm2Name = info.pm2Name || name;
-    // 安全防线: pm2Name / entryPoint 在传入命令前必须严格校验
-    // 防止恶意构造的模块信息触发命令注入 (即使白名单已在 install 入口拦截)
-    assertSafeModuleName(pm2Name);
+    // 用 sanitizeModuleName (path.basename + 白名单) 净化, CodeQL 公认 sanitizer
+    const pm2Name = sanitizeModuleName(info.pm2Name || name);
 
     switch (strategy.action) {
       case 'pm2_restart':
@@ -345,9 +344,12 @@ class HealthMonitor {
           // delete 失败不阻塞
         }
         try {
-          const entryPoint = info.entryPoint || 'index.js';
-          // entryPoint 同样校验, 防 info 被污染
-          assertSafeModuleName(entryPoint);
+          // entryPoint 用 path.basename 净化, 防路径穿越
+          const rawEntry = info.entryPoint || 'index.js';
+          const entryPoint = path.basename(rawEntry);
+          if (entryPoint !== rawEntry || entryPoint.startsWith('-')) {
+            throw new Error('非法 entryPoint: ' + JSON.stringify(rawEntry));
+          }
           execFileSync('pm2', ['start', entryPoint, '--name', pm2Name], {
             cwd: info.path,
             stdio: 'pipe',
@@ -361,7 +363,6 @@ class HealthMonitor {
 
       case 'reinstall':
         // 重新运行安装脚本 (如果有)
-        const path = require('path');
         const fs = require('fs');
         const installScript = path.join(info.path, 'install.sh');
         if (fs.existsSync(installScript)) {

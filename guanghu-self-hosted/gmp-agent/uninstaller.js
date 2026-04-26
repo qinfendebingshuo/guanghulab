@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const { createLogger } = require('./lib/logger');
-const { assertSafeModuleName, assertWithinBase } = require('./lib/path-guard');
+const { sanitizeModuleName, assertWithinBase } = require('./lib/path-guard');
 
 const logger = createLogger('uninstaller');
 
@@ -36,18 +36,18 @@ class ModuleUninstaller {
    * @returns {Object} 卸载结果
    */
   async uninstall({ moduleName, keepBackup, force }) {
-    // 安全防线 1: 模块名白名单校验 (防命令/路径注入)
-    assertSafeModuleName(moduleName);
+    // 安全防线 1: 模块名白名单 + path.basename 净化 (CodeQL 公认 sanitizer)
+    const safeName = sanitizeModuleName(moduleName);
 
     const startTime = Date.now();
     const shouldBackup = keepBackup !== false; // 默认保留备份
 
-    logger.info('[Uninstaller] 开始卸载模块: ' + moduleName + ' backup=' + shouldBackup + ' force=' + !!force);
+    logger.info('[Uninstaller] 开始卸载模块: ' + safeName + ' backup=' + shouldBackup + ' force=' + !!force);
 
     // Step 1: 检查模块是否存在
-    const moduleInfo = this.installedModules.get(moduleName);
+    const moduleInfo = this.installedModules.get(safeName);
     if (!moduleInfo) {
-      throw new Error('模块未注册: ' + moduleName);
+      throw new Error('模块未注册: ' + safeName);
     }
 
     const moduleDir = moduleInfo.path;
@@ -56,23 +56,23 @@ class ModuleUninstaller {
 
     if (!fs.existsSync(moduleDir)) {
       // 文件不存在但注册表有记录 → 清理注册
-      this.installedModules.delete(moduleName);
-      logger.warn('[Uninstaller] 模块目录不存在, 已清理注册: ' + moduleName);
-      return { status: 'cleaned', module: moduleName, note: '目录不存在·仅清理注册' };
+      this.installedModules.delete(safeName);
+      logger.warn('[Uninstaller] 模块目录不存在, 已清理注册: ' + safeName);
+      return { status: 'cleaned', module: safeName, note: '目录不存在·仅清理注册' };
     }
 
     try {
       // Step 2: 停止模块进程
       if (!force) {
         logger.info('[Uninstaller] Step 1: 停止模块进程...');
-        await this._stopModule(moduleName, moduleDir);
+        await this._stopModule(safeName, moduleDir);
       }
 
       // Step 3: 备份
       let backupPath = null;
       if (shouldBackup) {
         logger.info('[Uninstaller] Step 2: 备份模块...');
-        backupPath = this._backupModule(moduleName, moduleDir);
+        backupPath = this._backupModule(safeName, moduleDir);
       }
 
       // Step 4: 移除模块文件
@@ -80,15 +80,15 @@ class ModuleUninstaller {
       this._removeModule(moduleDir);
 
       // Step 5: 注销
-      this.installedModules.delete(moduleName);
+      this.installedModules.delete(safeName);
       logger.info('[Uninstaller] Step 4: 模块已注销');
 
       const duration = Date.now() - startTime;
-      logger.info('[Uninstaller] 模块卸载成功: ' + moduleName + ' 耗时=' + duration + 'ms');
+      logger.info('[Uninstaller] 模块卸载成功: ' + safeName + ' 耗时=' + duration + 'ms');
 
       return {
         status: 'uninstalled',
-        module: moduleName,
+        module: safeName,
         duration: duration,
         backupPath: backupPath,
         backupKept: shouldBackup
@@ -96,7 +96,7 @@ class ModuleUninstaller {
 
     } catch (err) {
       const duration = Date.now() - startTime;
-      logger.error('[Uninstaller] 卸载失败: ' + moduleName + ' -> ' + err.message + ' 耗时=' + duration + 'ms');
+      logger.error('[Uninstaller] 卸载失败: ' + safeName + ' -> ' + err.message + ' 耗时=' + duration + 'ms');
       throw err;
     }
   }
