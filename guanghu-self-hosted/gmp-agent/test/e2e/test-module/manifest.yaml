@@ -1,0 +1,56 @@
+# E2E 测试用 Mock GMP 模块
+# 遵循 GMP-SPEC-v1.0 manifest 模板
+# 工单: GH-GMP-006 · 录册A02
+
+# ─── 基本信息 ────────────────────────────────────────────
+module_name: e2e-test-mock-module
+version: 0.0.1
+description: |
+  端到端测试用的最小 GMP 规范模块。
+  用于验证安装/卸载/健康检查全流程。
+  不提供实际功能, 仅满足 GMP 规范的最低要求。
+author: 录册A02 (5TH-LE-HK-A02)
+license: ISC
+repository: https://github.com/qinfendebingshuo/guanghulab
+path_in_repo: guanghu-self-hosted/gmp-agent/test/e2e/test-module
+
+# ─── 运行环境 ────────────────────────────────────────────
+runtime:
+  language: node
+  language_version: ">=18.0.0"
+  entry_point: index.js
+  port: 19800
+  process_manager: pm2
+  pm2_name: e2e-test-mock-module
+
+# ─── 依赖 ────────────────────────────────────────────────
+dependencies:
+  system: []
+  npm: []
+
+# ─── 健康检查 ────────────────────────────────────────────
+health_check:
+  endpoint: /health
+  interval: 60
+  timeout: 5
+
+# ─── 脚本 ────────────────────────────────────────────────
+scripts:
+  install: bash install.sh
+  uninstall: bash uninstall.sh
+  health_check: bash health_check.sh
+  start: node index.js
+
+# ─── 标签 ────────────────────────────────────────────────
+tags:
+  status: green
+  category: test
+  layer: L3-execution
+  attribution: gmp-team
+
+# ─── 元信息 ──────────────────────────────────────────────
+meta:
+  created: "2026-04-26"
+  spec_version: GMP-SPEC-v1.0
+  work_order: GH-GMP-006
+  is_test_module: true
