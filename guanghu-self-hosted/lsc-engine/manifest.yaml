@@ -1,0 +1,95 @@
+# LSC-Engine · 神笔引擎 · MagicPen Engine
+# 遵循 GMP-SPEC-v1.0 manifest 模板
+# 作者: 译典A05 (5TH-LE-HK-A05)
+# 工单: GH-LSC-001 · Phase-LSC-001
+
+# ─── 基本信息 ────────────────────────────────────────────
+module_name: lsc-engine
+version: 0.1.0
+description: |
+  神笔引擎 · MagicPen Engine · 光湖Agent自造工具核心引擎。
+  语言源代码（Language Source Code）的运行时实现。
+  Agent用自然语言描述需求，引擎自动生成Python函数并热加载，写出来就能用。
+  不搬海滩，只画沙子。
+author: 译典A05 (5TH-LE-HK-A05)
+license: ISC
+repository: https://github.com/qinfendebingshuo/guanghulab
+path_in_repo: guanghu-self-hosted/lsc-engine
+
+# ─── 运行环境 ────────────────────────────────────────────
+runtime:
+  language: python
+  language_version: ">=3.9"
+  entry_point: index.js        # GMP生命周期入口(Node.js壳)
+  python_entry: magicpen.py    # Python核心引擎
+  process_manager: pm2
+  pm2_name: lsc-engine
+
+# ─── 依赖 ────────────────────────────────────────────────
+dependencies:
+  system:
+    - python3         # >=3.9
+    - pip3            # Python包管理
+  pip:
+    - RestrictedPython: ">=7.0"   # 安全沙箱
+  npm: []             # Node.js壳无额外依赖
+  python_stdlib:      # 核心引擎零外部依赖(仅标准库)
+    - importlib
+    - os
+    - json
+    - datetime
+    - types
+    - hashlib
+    - http.client     # 通义千问API调用
+    - ssl
+    - urllib.parse
+
+# ─── 目录结构 ────────────────────────────────────────────
+directories:
+  tools_self: /guanghu/tools/self          # 个人工具库 /{agent_name}/
+  tools_shared: /guanghu/tools/shared      # 共享工具库
+  config: /guanghu/config                  # 配置(含.env)
+  logs: /var/log/gh-modules/lsc-engine     # 日志
+
+# ─── 健康检查 ────────────────────────────────────────────
+health_check:
+  method: python
+  command: "python3 -c \"from magicpen import MagicPen; print('ok')\""
+  interval: 120        # 秒
+  timeout: 10
+
+# ─── 生命周期 ────────────────────────────────────────────
+lifecycle:
+  init: |
+    pip3 install RestrictedPython>=7.0 2>/dev/null || true
+    mkdir -p /guanghu/tools/self /guanghu/tools/shared
+    echo "[LSC-Engine] init complete"
+  start: "python3 -c \"from magicpen import MagicPen; print('[LSC-Engine] ready')\""
+  stop: "echo '[LSC-Engine] stopped'"
+  health_check: "python3 -c \"from magicpen import MagicPen; print('healthy')\""
+
+# ─── 标签 (GMP-SPEC 四维标签体系) ────────────────────────
+tags:
+  status: green              # 运行状态
+  category: core-engine      # 功能分类: 核心引擎
+  layer: L2-capability       # 架构层级: L2 能力层
+  attribution: yidian-a05    # 归属: 译典A05
+
+# ─── 安全 ────────────────────────────────────────────────
+security:
+  sandbox: RestrictedPython
+  iron_rules:
+    - 绝不修改其他Agent的代码和资源
+    - 绝不执行系统破坏操作
+    - 工具代码必须通过安全校验才能执行
+    - 个人工具目录隔离 (/tools/self/{agent_name}/)
+    - 全部操作留痕
+
+# ─── 元信息 ──────────────────────────────────────────────
+meta:
+  created: "2026-04-27"
+  spec_version: GMP-SPEC-v1.0
+  work_order: GH-LSC-001
+  phase: Phase-LSC-001
+  lsc_version: LSC-v1.0
+  industry_classification: Tool-Forging Agent (Level 3)
