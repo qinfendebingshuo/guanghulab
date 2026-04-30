@@ -95,7 +95,8 @@ function collectCommits() {
   const sep = '<<<COMMIT_SEP>>>';
   const fieldSep = '<<<F>>>';
   const fmt = ['%H', '%an', '%ae', '%aI', '%P', '%s', '%b'].join(fieldSep);
-  const raw = git(`log --author='冰朔\\|qinfendebingshuo' --format='${sep}${fmt}'`);
+  // 用两个 --author 而不是 alternation，避免 shell 转义陷阱（git 本身支持多个 --author 取并集）
+  const raw = git(`log --author='冰朔' --author='qinfendebingshuo' --format='${sep}${fmt}'`);
 
   const records = [];
   const chunks = raw.split(sep).map((c) => c.trim()).filter(Boolean);
@@ -201,7 +202,13 @@ async function collectGitHubApi() {
     };
   }
   const repo = process.env.CORPUS_REPO || 'qinfendebingshuo/guanghulab';
-  const fetch = global.fetch || (await import('node-fetch').then((m) => m.default));
+  if (typeof fetch !== 'function') {
+    return {
+      enabled: false,
+      reason: '当前 Node 运行时没有原生 fetch（需要 Node 18+）；跳过 GitHub API 抓取。',
+      records: [],
+    };
+  }
   const headers = {
     Authorization: `Bearer ${token}`,
     Accept: 'application/vnd.github+json',
@@ -261,6 +268,15 @@ async function collectGitHubApi() {
 }
 
 // ───────────────────────── 输出生成 ─────────────────────────
+
+function escapeMdTableCell(s) {
+  // 完整转义：先转反斜杠（防止 CodeQL incomplete-sanitization），
+  // 再转 pipe 与换行（markdown 表格不允许跨行单元格）
+  return String(s ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\r?\n/g, ' ');
+}
 
 function buildTimelineMarkdown(commits, cab, gh) {
   const lines = [];
@@ -351,7 +367,7 @@ function buildTimelineMarkdown(commits, cab, gh) {
     lines.push('|---|---|---|---|');
     for (const c of merges) {
       lines.push(
-        `| ${c.date} | ${c.pr_number ? `#${c.pr_number}` : '-'} | \`${c.hash.slice(0, 8)}\` | ${c.subject.replace(/\|/g, '\\|')} |`
+        `| ${c.date} | ${c.pr_number ? `#${c.pr_number}` : '-'} | \`${c.hash.slice(0, 8)}\` | ${escapeMdTableCell(c.subject)} |`
       );
     }
     lines.push('');
