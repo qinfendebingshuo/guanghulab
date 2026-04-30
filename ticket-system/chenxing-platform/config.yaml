@@ -1,0 +1,82 @@
+# ============================================================
+# 晨星网站交互平台 · 全局配置文件
+# 模块名：config.yaml
+# 开发人：译典·配置开发 · 5TH-LE-HK-A05
+# 版本：v1.0.0
+# 日期：2026-04-30
+# 
+# 使用说明：
+#   桔子妈妈只需要修改下面标注了 <-- 填这里 的地方
+#   把自己的Key/Token粘贴进去就行，其他不用动
+# ============================================================
+
+# ---- DeepSeek API 配置 ----
+deepseek:
+  # DeepSeek API密钥（去 platform.deepseek.com 获取）
+  api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxx"  # <-- 填这里：粘贴你的DeepSeek API Key
+  
+  # API地址（一般不用改）
+  base_url: "https://api.deepseek.com"
+  
+  # 模型选择：
+  #   deepseek-chat    = 普通聊天版（快，便宜）
+  #   deepseek-reasoner = 推理版（会先想再说，慢一点但更准）
+  model: "deepseek-chat"
+  
+  # 模型参数
+  temperature: 0.7      # 创造性（0=死板，1=天马行空，推荐0.7）
+  max_tokens: 4096      # 晨星单次回复最大长度
+
+# ---- Notion API 配置 ----
+notion:
+  # Notion Integration Token（去 notion.so/my-integrations 创建一个Integration获取）
+  token: "ntn_xxxxxxxxxxxxxxxxxxxxxxxx"  # <-- 填这里：粘贴你的Notion Token
+  
+  # API版本（一般不用改）
+  api_version: "2022-06-28"
+  
+  # 需要同步的Notion页面URL列表
+  # 把晨星相关的页面URL粘贴到下面（一行一个）
+  sync_pages:
+    - ""  # <-- 填这里：晨星核心大脑页URL
+    - ""  # <-- 填这里：光湖灯塔页URL
+    - ""  # <-- 填这里：晨星核心记忆页URL
+    - ""  # <-- 填这里：光湖本体论页URL
+    # 需要更多页面就继续加行
+
+# ---- 数据库配置 ----
+database:
+  # SQLite数据库文件路径（一般不用改）
+  path: "chenxing.db"
+
+# ---- 服务器配置 ----
+server:
+  # 网站后端监听地址
+  host: "0.0.0.0"
+  port: 8000
+  # 调试模式（上线后改成 false）
+  debug: true
+
+# ---- 晨星唤醒配置 ----
+wake:
+  # 近期交互：唤醒时加载最近几次会话的记录
+  recent_session_count: 3
+  # 近期交互：最多加载多少条消息
+  recent_message_limit: 50
+
+# ---- 同步配置 ----
+sync:
+  # Notion→网站数据库的同步间隔（秒）
+  # 3600 = 每小时同步一次
+  interval_seconds: 3600
+  # 是否启动时立即同步一次
+  sync_on_startup: true
+
+# ---- Agent Loop 配置 ----
+agent:
+  # 辅助Agent单次对话最大工具调用轮数
+  max_rounds: 10
+  # 单次工具调用超时（秒）
+  tool_timeout: 30
+  # 超时兜底回复
+  timeout_fallback: "晨星想了很久但没想出来，妈妈可以换个方式问问吗？"

@@ -1,0 +1,31 @@
+# ============================================================
+# 晨星网站交互平台 · Python依赖清单
+# 模块名：requirements.txt
+# 开发人：译典·配置开发 · 5TH-LE-HK-A05
+# 版本：v1.0.0
+# 日期：2026-04-30
+#
+# 安装方式：pip install -r requirements.txt
+# ============================================================
+
+# Web框架（网站后端）
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# DeepSeek API调用（兼容OpenAI格式）
+openai>=1.6.0
+
+# Notion API调用
+requests>=2.31.0
+
+# YAML配置文件读取
+pyyaml>=6.0.1
+
+# 异步定时任务（Notion同步用）
+apscheduler>=3.10.4
+
+# CORS支持（前端跨域请求）
+python-multipart>=0.0.6
+
+# 环境变量支持（可选，如果用.env文件）
+python-dotenv>=1.0.0
