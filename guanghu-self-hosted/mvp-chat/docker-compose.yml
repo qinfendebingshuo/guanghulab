@@ -1,0 +1,106 @@
+# ==========================================
+# 光湖 MVP Chat · Docker Compose 总装
+# 一键启动: docker-compose up -d
+# 工单: YD-A05-20260430-MVP
+# ==========================================
+
+version: '3.8'
+
+services:
+
+  # ── PostgreSQL 数据库 ──
+  postgres:
+    image: postgres:15-alpine
+    container_name: guanghu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-guanghu}
+      POSTGRES_USER: ${DB_USER:-guanghu}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?请在.env中设置DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-guanghu}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 记忆路由服务（培园A04开发）──
+  memory-router:
+    build:
+      context: ../memory-router
+      dockerfile: Dockerfile
+    container_name: guanghu-memory-router
+    restart: unless-stopped
+    environment:
+      PERSONA_DB_HOST: postgres
+      PERSONA_DB_PORT: 5432
+      PERSONA_DB_NAME: ${DB_NAME:-guanghu}
+      PERSONA_DB_USER: ${DB_USER:-guanghu}
+      PERSONA_DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${MEMORY_ROUTER_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── 后端API服务（培园A04开发）──
+  web-api:
+    build:
+      context: ../web-api
+      dockerfile: Dockerfile
+    container_name: guanghu-web-api
+    restart: unless-stopped
+    environment:
+      GH_API_DB_HOST: postgres
+      GH_API_DB_PORT: 5432
+      GH_API_DB_NAME: ${DB_NAME:-guanghu}
+      GH_API_DB_USER: ${DB_USER:-guanghu}
+      GH_API_DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── MVP Chat 主服务（前端+后端编排+双模型+人格壳）──
+  mvp-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: guanghu-mvp-chat
+    restart: unless-stopped
+    environment:
+      # 百炼模型API
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:?请在.env中设置DASHSCOPE_API_KEY}
+      SYSTEM_MODEL: ${SYSTEM_MODEL:-shuangyan-system-v1}
+      NAIPPING_MODEL: ${NAIPPING_MODEL:-naipping-v1}
+      # 深度推理（可选）
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      # Notion
+      ZY_NOTION_TOKEN: ${ZY_NOTION_TOKEN:?请在.env中设置ZY_NOTION_TOKEN}
+      USER_NOTION_TOKEN: ${USER_NOTION_TOKEN:-}
+      # PostgreSQL
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-guanghu}
+      DB_USER: ${DB_USER:-guanghu}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # 内部服务地址
+      MEMORY_ROUTER_URL: http://memory-router:8001
+      WEB_API_URL: http://web-api:8000
+      # 端口
+      CHAT_PORT: 3000
+    ports:
+      - "${CHAT_PORT:-3000}:3000"
+    depends_on:
+      - postgres
+      - memory-router
+      - web-api
+
+volumes:
+  pgdata:
+    driver: local

@@ -1,0 +1,66 @@
+# ==========================================
+# 光湖 MVP Chat · GMP模块清单
+# 遵循 GMP-SPEC-v1.0 规范
+# 工单: YD-A05-20260430-MVP
+# ==========================================
+
+name: mvp-chat
+version: 1.0.0
+description: >
+  光湖MVP聊天系统 · 一次性交付 ·
+  前端+双模型统一出口+人格壳加载器+Docker Compose总装 ·
+  集成9个已有模块
+author: 译典A05 (5TH-LE-HK-A05)
+license: proprietary
+
+# GMP标签
+tags:
+  status: development
+  category: chat-interface
+  layer: L5-application
+  attribution: yidian-a05
+
+# 依赖模块
+dependencies:
+  - name: memory-router
+    version: ">=2.0.0"
+    author: 培园A04
+    path: guanghu-self-hosted/memory-router/
+  - name: web-api
+    version: ">=1.0.0"
+    author: 培园A04
+    path: guanghu-self-hosted/web-api/
+  - name: web-database
+    version: ">=1.0.0"
+    author: 译典A05
+    path: guanghu-self-hosted/web-database/
+
+# 运行配置
+runtime:
+  language: python
+  version: ">=3.11"
+  framework: fastapi
+  entry: backend/main.py
+
+# 端口
+ports:
+  chat: 3000
+
+# 健康检查
+healthcheck:
+  endpoint: /health
+  interval: 30s
+  timeout: 5s
+
+# 环境变量
+env_required:
+  - DASHSCOPE_API_KEY
+  - ZY_NOTION_TOKEN
+  - DB_PASSWORD
+
+env_optional:
+  - DEEPSEEK_API_KEY
+  - QWEN_API_KEY
+  - USER_NOTION_TOKEN
+  - SYSTEM_MODEL
+  - NAIPPING_MODEL
