@@ -1,0 +1,43 @@
+{
+  "schema": "corpus-manifest/v1",
+  "generated_at": "2026-04-30T22:45:18.602Z",
+  "repository": "qinfendebingshuo/guanghulab",
+  "branch": "copilot/create-interaction-log-tool",
+  "head": "26b5c533e40b5c382a7aeea8457795d75db217c9",
+  "copyright": {
+    "registration": "国作登字-2026-A-00037559",
+    "sovereign": "冰朔 · TCS-0002∞ · ICE-GL∞",
+    "system_root": "SYS-GLW-0001",
+    "language_core": "TCS Language Core (通感语言核系统编程语言)",
+    "license_note": "本语料仅供冰朔本人用于训练曜冥语言人格核 / 铸渊 / 相关人格体微调使用。未经冰朔本人书面授权，禁止用于任何第三方模型训练、商业用途或数据集发布。"
+  },
+  "sources": {
+    "git_commits_total": 381,
+    "git_commits_non_merge": 44,
+    "git_commits_merge": 337,
+    "cab_task_specs": 2,
+    "github_api_enabled": false,
+    "github_api_records": 0,
+    "github_api_skip_reason": "GitHub API 调用失败: 403 Forbidden for https://api.github.com/repos/qinfendebingshuo/guanghulab/issues?state=all&creator=qinfendebingshuo&per_page=100"
+  },
+  "files": {
+    "raw.json": {
+      "bytes": 201472,
+      "sha256": "ad163f32909359de4adda522f61a59daeaa95538dbf3f9ad4ccf4da56997da8c"
+    },
+    "timeline.md": {
+      "bytes": 69733,
+      "sha256": "596549c032891d5c75b98bda38b9c67897d31f7094650c3deb8ca95500e12363"
+    },
+    "training.jsonl": {
+      "bytes": 35194,
+      "sha256": "94c1831410baab8418f3c052f71c1891d7a7692dbeddd4fd7a72dcf23b161421"
+    }
+  },
+  "notes": [
+    "本语料只收录「冰朔」本人作为作者/评论者的内容；bot 与自动化提交已排除。",
+    "所有内容已做基础脱敏（API key / 邮箱 / 手机号 / token）。",
+    "若需补全 GitHub Issues / PRs / Comments，请在本地设置 GH_TOKEN 后重新运行采集器。",
+    "Notion AI 聊天记录无法通过本采集器自动获取，需手动导出后用 manual-import 模式合并（后续 PR）。"
+  ]
+}
