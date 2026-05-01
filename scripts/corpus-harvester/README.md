@@ -23,6 +23,27 @@
 | 1. **git log** | ✅ 自动 | 仅收录作者为 `冰朔` / `qinfendebingshuo` 的 commits；bot 全部排除 |
 | 2. **CAB 任务规格** | ✅ 自动 | `bridge/chat-to-agent/{pending,completed}/*.json` 的 `reasoning_context.chat_summary`——这是仓库里**密度最高**的自然语言 |
 | 3. **GitHub Issues / PRs / Comments** | ⚠️ 需 token | 只在 `GH_TOKEN` 或 `GITHUB_TOKEN` 环境变量存在且可访问 Issues API 时启用 |
+| 4. **COS 存储桶（GPT/Notion 导出）** | 🆕 v2 | 冰朔上传到腾讯云 COS → `cos-fetch.js` 拉取 → `manual-import.js` 切分 |
+
+## 训练语料拉取管线（HLDP-ARCH-002 工厂上线后的标准流程）
+
+```
+[冰朔] GPT/Notion 全量导出 → 上传腾讯云 COS 存储桶（gpt-export/ + notion-export/ ...）
+        ↓
+[训练机] node scripts/corpus-harvester/cos-fetch.js \
+            --bucket {x} --region {y} --prefix gpt-export/ --dest ./corpus/raw/gpt
+        ↓
+[训练机] node scripts/corpus-harvester/manual-import.js
+        ↓ 输出: corpus/output/{training-fulltext.jsonl, training-dialog.jsonl, persona/*.jsonl, import-manifest.json}
+        ↓ 同时给出真实 token 估算 + 路径建议
+[铸渊] 对照 factory/docs/CORPUS-DECISION-MATRIX.md 拍板训练路径
+        ↓
+[铸渊] 写《路径选定报告》 → 报冰朔确认 → 启动训练
+```
+
+凭据通过环境变量注入（`TENCENT_COS_SECRET_ID` / `TENCENT_COS_SECRET_KEY`），**不入仓库**。
+详见 `factory/docs/GPU-PROCUREMENT.md` 与 `factory/docs/CORPUS-DECISION-MATRIX.md`。
+
 
 ## 用法
 

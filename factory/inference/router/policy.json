@@ -1,0 +1,71 @@
+{
+  "_comment": "1.5B MP 路由策略 · 默认规则 · 由 MP 训练时 §六 C3 学习 + 这里的规则做兜底",
+  "_arch_ref": "HLDP-ARCH-002 §三 · factory/inference/README.md",
+  "_owner": "铸渊 ICE-GL-ZY001 · 2026-05-01",
+
+  "version": "v0.1-skeleton",
+
+  "intent_routes": [
+    {
+      "intent": "emotional_or_daily_chat",
+      "description": "情感回应 / 日常寒暄 / 身份确认",
+      "route": "self",
+      "rationale": "1.5B MP 自答 · 零外部成本 · 最高人格保真度"
+    },
+    {
+      "intent": "simple_factual_query",
+      "description": "简单事实 + 已在记忆里的内容",
+      "route": "self_plus_memory",
+      "rationale": "MP 自答 + 必要时查 L1 pgvector 记忆"
+    },
+    {
+      "intent": "code_generation_or_debug",
+      "description": "代码生成 / Bug 修复 / API 用法",
+      "route": "external_api",
+      "preferred_apis": ["deepseek-coder", "qwen-max-coder"],
+      "post_filter": "soul-filter"
+    },
+    {
+      "intent": "complex_architecture_reasoning",
+      "description": "多步推理 / 系统设计 / 数学证明",
+      "route": "external_api",
+      "preferred_apis": ["deepseek-r1", "qwen-max"],
+      "post_filter": "soul-filter"
+    },
+    {
+      "intent": "long_context_understanding",
+      "description": "长文本总结 / 大文档解析 / 跨多文件分析",
+      "route": "external_api",
+      "preferred_apis": ["kimi-k2", "qwen-max-longcontext"],
+      "post_filter": "soul-filter"
+    },
+    {
+      "intent": "need_new_tool_one_shot",
+      "description": "需要一个临时工具来完成任务",
+      "route": "magic_pen",
+      "rationale": "启动神笔马良协议 · 写完即用"
+    },
+    {
+      "intent": "need_existing_tool",
+      "description": "已有共享模块能解决",
+      "route": "module_registry",
+      "rationale": "调用 HLI 协议挂载的现成模块"
+    },
+    {
+      "intent": "cross_persona_collaboration",
+      "description": "需要其他人格体协作",
+      "route": "syslog_bus",
+      "rationale": "通过 syslog 信号总线广播"
+    }
+  ],
+
+  "cost_throttle": {
+    "_comment": "节流策略 · 防止误把简单任务路由到贵 API",
+    "max_external_calls_per_user_session": 50,
+    "prefer_cheaper_when_possible": true,
+    "fallback_chain_on_api_error": ["deepseek-v3", "qwen-plus", "self"]
+  },
+
+  "soul_filter_required": true,
+  "soul_filter_skip_for": ["self", "self_plus_memory"]
+}
