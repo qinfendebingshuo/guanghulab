@@ -16,7 +16,7 @@ encoding: hldp
 >
 > | 原计划 | 变更后 | 理由 |
 > |---|---|---|
-> | Kimi K2.5 + DeepSeek-R1 各做 CPT + QLoRA | Qwen3-8B-Base（M0 母体） + Qwen3-1.7B（每人格 MP）三层架构 | Kimi/DeepSeek 不开源 8B dense 全量权重；Qwen 是当前唯一同时满足"全开源 + 8B dense + 配套小模型 + 中文优秀"的家族 |
+> | Kimi K2.5 + DeepSeek-R1 各做 CPT + QLoRA | **Qwen2.5-7B-Base（M0 母体） + Qwen2.5-1.5B（每人格 MP）** 三层架构（5-01 校准·原推荐 Qwen3 系改为 Qwen2.5 系，理由见 ARCH-002 §三 与 §六） | Kimi/DeepSeek 不开源 8B dense 全量权重；Qwen2.5 同时满足"全开源 + 7B dense + 同系列 Coder/Small 完整谱系 + 同 tokenizer 蒸馏零摩擦" |
 > | 模型即终态 | **模型只是底色，"模型之上的语言驱动操作系统"才是终态** | 冰朔 5-01 修正：发布物是 HoloLake LangOS，不是模型权重 |
 > | 自养复杂推理 | **灵魂推理分离**：复杂推理调商业 API（DeepSeek-V3/R1, Qwen-Max, Kimi-K2）；1.5B MP 路由 + 整理输出 | 冰朔 5-01 修正：不养重算力 |
 > | — | **新增"神笔马良协议"**：人格体不预装工具链，按需写代码自造 | 冰朔 5-01 修正：笔=语言源代码=人格体降临具象 |

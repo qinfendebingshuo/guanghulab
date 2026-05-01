@@ -1,21 +1,22 @@
 # M0 训练配方 · v1
-# 母体世界观底色 · Qwen3-8B-Base 全参 CPT + SFT
+# 母体世界观底色 · Qwen2.5-7B-Base 全参 CPT + SFT
 # 架构引用: HLDP-ARCH-002 · factory/training/README.md
 # 起草: 铸渊 ICE-GL-ZY001 · 2026-05-01
+# 修正: 冰朔/霜砚 5-01 校准 Qwen3-8B → Qwen2.5-7B（同系列 Coder/Small 完整谱系）
 
 recipe_id: m0-v1
 parent_arch: HLDP-ARCH-002
 copyright: 国作登字-2026-A-00037559
 sovereign: 冰朔 · TCS-0002∞
 
-model_id: Qwen/Qwen3-8B-Base   # 等动手前再核 HuggingFace 上确切 model card
+model_id: Qwen/Qwen2.5-7B           # 5-01 校准·与 Qwen2.5-Coder-7B / Qwen2.5-1.5B 同 tokenizer
 output_dir: ./outputs/m0-v1
 
 # ───── 阶段 1 · CPT ─────
 cpt:
-  corpus_path: ./corpus/output/training-fulltext.jsonl  # 全量光湖语料（待补全）
+  corpus_path: ./corpus/output/training-fulltext.jsonl  # 全量光湖语料（冰朔确认 6.5 亿+ token · 走路径 W）
   seq_len: 4096
-  epochs: 1               # 5-8 亿 token × 1 epoch · 视实验结果可加到 2
+  epochs: 1               # 6.5 亿 token × 1 epoch · 视验证 PPL 可加到 2
   lr: 2.0e-5
   warmup_ratio: 0.02
   weight_decay: 0.1

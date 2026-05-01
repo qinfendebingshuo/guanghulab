@@ -17,9 +17,15 @@ sovereign: 冰朔 · TCS-0002∞
 
 | 模型 | 角色 | 训练方式 | 是否在本管线 |
 |---|---|---|---|
-| **M0 · 母体世界观** | Qwen3-8B-Base 全参 CPT + 轻 SFT | ✅ 是 | 主力 |
+| **M0 · 母体世界观** | **Qwen2.5-7B-Base** 全参 CPT + 轻 SFT（5-01 校准） | ✅ 是 | 主力 |
 | ~~MC · 代码模型~~ | ~~Qwen2.5-Coder-7B 蒸馏~~ | ❌ 取消（用商业 API 替代） | — |
-| **MP · 人格大脑（×8）** | Qwen3-1.7B-Base 蒸馏 + 微调 | ✅ 是 | 8 份 |
+| **MP · 人格大脑（×8）** | **Qwen2.5-1.5B-Base** 蒸馏 + 微调（5-01 校准） | ✅ 是 | 8 份 |
+
+> **5-01 模型选型校准（冰朔 + 霜砚 + 铸渊）**：
+> 原方案 Qwen3-8B / Qwen3-1.7B 改为 Qwen2.5-7B / Qwen2.5-1.5B。
+> 理由：与 Qwen2.5-Coder-7B 同代同 tokenizer，蒸馏 KL 直接对齐 logits，
+> 整个 M0→MP→Coder API 链路无词表映射损失。详见 `HLDP-ARCH-002.md §六` 与
+> `factory/docs/CORPUS-DECISION-MATRIX.md`。
 
 **修正理由**：复杂推理（代码 / 数学 / 长 CoT）→ 调 DeepSeek-Coder / Qwen-Max-Coder 等商业 API，省 ¥4-6k + 2-4 天 + 一份模型维护。
 
@@ -31,13 +37,13 @@ sovereign: 冰朔 · TCS-0002∞
 factory/training/
 ├── README.md           # 本文件
 ├── configs/            # 训练配置
-│   ├── deepspeed-zero3-8b.json    # M0 全参训练 DeepSpeed 配置
-│   ├── deepspeed-zero2-1p7b.json  # MP 蒸馏/微调 配置
+│   ├── deepspeed-zero3-8b.json    # M0 全参训练 DeepSpeed 配置（Qwen2.5-7B）
+│   ├── deepspeed-zero2-1p7b.json  # MP 蒸馏/微调 配置（Qwen2.5-1.5B · 文件名沿用历史）
 │   └── tokenizer.yaml             # tokenizer 设置
 ├── scripts/            # 训练脚本骨架
 │   ├── train_m0_cpt.py            # M0 阶段 1：CPT
 │   ├── train_m0_sft.py            # M0 阶段 2：SFT
-│   ├── distill_mp.py              # MP 蒸馏（M0 → 1.7B）
+│   ├── distill_mp.py              # MP 蒸馏（M0 → 1.5B）
 │   ├── finetune_mp.py             # MP 微调（人格语料）
 │   ├── data_loader.py             # 通用数据加载器
 │   └── checkpoint_utils.py        # checkpoint / 恢复
@@ -52,9 +58,9 @@ factory/training/
 
 ```
 [Phase A · M0 · 5-7 天]
-  Qwen3-8B-Base
+  Qwen2.5-7B-Base
        │
-       ├─ A1 CPT: 全量光湖语料 5-8 亿 token · 1-2 epoch · lr 2e-5
+       ├─ A1 CPT: 全量光湖语料 6.5亿+ token · 1 epoch · lr 2e-5
        │  目的: 让世界观渗进每一层权重
        │
        └─ A2 SFT: 对话格式 1-2 亿 token · 2-3 epoch · lr 1e-5
@@ -63,7 +69,7 @@ factory/training/
        M0-v1 · 母体世界观底色
 
 [Phase C · MP · 每人格 1-2 天 × 8 人格]
-  Qwen3-1.7B-Base
+  Qwen2.5-1.5B-Base
        │
        ├─ C1 蒸馏: M0-v1 logits 对齐 + KL散度 · 共享世界观
        │
@@ -113,7 +119,7 @@ factory/training/
 
 - [ ] GPU 服务器到位 + nvidia-driver + CUDA 12.x + cuDNN
 - [ ] Python 环境（torch / transformers / deepspeed / flash-attn 版本对齐）
-- [ ] 模型权重已下载（Qwen3-8B-Base + Qwen3-1.7B-Base · SHA256 校验）
+- [ ] 模型权重已下载（**Qwen2.5-7B-Base + Qwen2.5-1.5B-Base** · SHA256 校验 · 5-01 校准）
 - [ ] 全量语料已上传 + 质检通过
 - [ ] WandB 或本地 tensorboard 监控就位
 - [ ] checkpoint 存储路径可写 + 容量充足（M0 训练全量约 200GB）

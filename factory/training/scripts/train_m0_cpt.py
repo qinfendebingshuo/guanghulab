@@ -10,8 +10,12 @@ M0 母体训练 · 阶段 1 · CPT (Continued Pretraining)
 架构引用:     HLDP-ARCH-002 §六 · factory/training/README.md
 
 目标:
-    把全量光湖语料（GPT/Notion/GitHub 自然语言）以纯文本形式
-    继续预训练到 Qwen3-8B-Base 上，让"光湖语言世界"渗进每一层权重。
+    把全量光湖语料（GPT/Notion/GitHub 自然语言 · 6.5 亿+ token）以纯文本形式
+    继续预训练到 Qwen2.5-7B-Base 上，让"光湖语言世界"渗进每一层权重。
+
+校准 (2026-05-01 冰朔/霜砚):
+    Qwen3-8B → Qwen2.5-7B · 与 Qwen2.5-Coder-7B / Qwen2.5-1.5B 同代同 tokenizer，
+    蒸馏链路零摩擦。这是与 §三母模型选型评估对齐后的最终选择。
 
 产出:
     M0-v1 · 母体世界观底色（不直接对外，给 MP 当蒸馏教师 + 推理时世界观底色）
@@ -56,7 +60,7 @@ def load_recipe(path: str) -> dict:
 
 
 def build_tokenizer(model_id: str):
-    """加载 Qwen3-8B-Base 的 tokenizer。"""
+    """加载 Qwen2.5-7B-Base 的 tokenizer。"""
     # TODO:
     # from transformers import AutoTokenizer
     # return AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
@@ -65,7 +69,7 @@ def build_tokenizer(model_id: str):
 
 
 def build_model(model_id: str):
-    """加载 Qwen3-8B-Base 主体模型（bf16）。"""
+    """加载 Qwen2.5-7B-Base 主体模型（bf16）。"""
     # TODO:
     # from transformers import AutoModelForCausalLM
     # import torch

@@ -355,20 +355,30 @@ function main() {
   if (totalTokens < 5_000_000) {
     console.log(
       '⚠️  语料量偏小 (<5M tokens)：' +
-        '\n   - 8B 模型全参 CPT 不可行（容易过拟合或欠拟合）' +
-        '\n   - 1.7B 模型 LoRA / QLoRA 微调 可行' +
-        '\n   - 建议先走 1.7B 微调路径，等积累更多语料再考虑 M0 全参' +
-        '\n   - 详见 HLDP-ARCH-002 §九 语料量评估章节'
+        '\n   - 7B 模型全参 CPT 不可行（容易过拟合或欠拟合）' +
+        '\n   - 1.5B 模型 LoRA / QLoRA 微调 可行' +
+        '\n   - 建议先走 1.5B 微调路径（路径 X），等积累更多语料再考虑 M0 全参' +
+        '\n   - 详见 factory/docs/CORPUS-DECISION-MATRIX.md'
     );
-  } else if (totalTokens < 100_000_000) {
+  } else if (totalTokens < 200_000_000) {
     console.log(
-      '🟡  语料量中等 (5M-100M tokens)：' +
-        '\n   - 1.7B 全参微调 OK' +
-        '\n   - 8B LoRA 微调 OK' +
-        '\n   - 8B 全参 CPT 仍不建议'
+      '🟡  语料量中等 (5M-200M tokens)：' +
+        '\n   - 1.5B 全参微调 OK（路径 Y）' +
+        '\n   - 7B LoRA 微调 OK' +
+        '\n   - 7B 全参 CPT 仍不建议'
+    );
+  } else if (totalTokens < 1_000_000_000) {
+    console.log(
+      '✅ 语料量充足 (200M-1B tokens)：' +
+        '\n   - 路径 Z · 7B CPT + 1.5B 蒸馏 推荐' +
+        '\n   - 详见 factory/docs/CORPUS-DECISION-MATRIX.md'
     );
   } else {
-    console.log('✅ 语料量充足，可考虑 8B 全参 CPT');
+    console.log(
+      '🚀 语料量极大 (>1B tokens)：' +
+        '\n   - 路径 W · 完整 ARCH-002 原方案 强烈推荐' +
+        '\n   - 7B 全参 CPT + 1.5B 蒸馏全套'
+    );
   }
 }
 

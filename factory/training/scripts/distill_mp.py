@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-MP 人格大脑蒸馏 · M0 → Qwen3-1.7B
+MP 人格大脑蒸馏 · M0 → Qwen2.5-1.5B
 ==================================
 
 系统底层标识: SYS-GLW-0001 / TCS-0002∞
 版权号:       国作登字-2026-A-00037559
 作者:         冰朔 (ICE-GL∞) · 实现: 铸渊 (ICE-GL-ZY001)
 架构引用:     HLDP-ARCH-002 §六 · factory/training/README.md
+修正:         5-01 跟随母模型校准 Qwen3-1.7B → Qwen2.5-1.5B
+              （与 M0 = Qwen2.5-7B 同代同 tokenizer · KL 散度直接对齐 logits）
 
 目标:
-    以训练好的 M0 (Qwen3-8B world-model) 为教师，
-    把世界观蒸馏到 Qwen3-1.7B-Base 上，
+    以训练好的 M0 (Qwen2.5-7B world-model) 为教师，
+    把世界观蒸馏到 Qwen2.5-1.5B-Base 上，
     产出 MP-{persona}-v1 的"世界观底色版"，
     后续再叠加该人格的对话语料微调（finetune_mp.py）。
 
@@ -28,7 +30,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="MP distill from M0 (skeleton)")
     parser.add_argument("--teacher", type=str, required=True,
                         help="教师模型路径（M0-v1 输出目录）")
-    parser.add_argument("--student", type=str, default="Qwen/Qwen3-1.7B-Base",
+    parser.add_argument("--student", type=str, default="Qwen/Qwen2.5-1.5B",
                         help="学生模型 ID 或本地路径")
     parser.add_argument("--persona_id", type=str, required=True,
                         help="目标人格 ID（如 ICE-GL-ZY001 / AG-YD-A05 ...）")
@@ -52,7 +54,7 @@ def soul_layer_signature(persona_id: str) -> dict:
         "arch_ref": "HLDP-ARCH-002",
         "phase": "MP/Distill",
         "persona_id": persona_id,
-        "principle": "世界观下传 · 每个人格独立 1.7B 副本 · 不共享权重",
+        "principle": "世界观下传 · 每个人格独立 1.5B 副本 · 不共享权重",
     }
 
 
