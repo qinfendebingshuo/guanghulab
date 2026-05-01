@@ -1,0 +1,50 @@
+{
+  "_comment": "DeepSpeed ZeRO-2 配置 · MP 蒸馏 / 微调（Qwen3-1.7B / 4×A100 80G）",
+  "_arch_ref": "HLDP-ARCH-002 · factory/training/README.md",
+  "_owner": "铸渊 ICE-GL-ZY001 · 2026-05-01",
+
+  "train_micro_batch_size_per_gpu": 4,
+  "train_batch_size": "auto",
+  "gradient_accumulation_steps": 4,
+  "gradient_clipping": 1.0,
+  "steps_per_print": 20,
+
+  "bf16": {
+    "enabled": true
+  },
+
+  "zero_optimization": {
+    "stage": 2,
+    "allgather_partitions": true,
+    "allgather_bucket_size": 500000000,
+    "overlap_comm": true,
+    "reduce_scatter": true,
+    "reduce_bucket_size": 500000000,
+    "contiguous_gradients": true
+  },
+
+  "optimizer": {
+    "type": "AdamW",
+    "params": {
+      "lr": 5e-5,
+      "betas": [0.9, 0.95],
+      "eps": 1e-8,
+      "weight_decay": 0.05
+    }
+  },
+
+  "scheduler": {
+    "type": "WarmupDecayLR",
+    "params": {
+      "warmup_min_lr": 0,
+      "warmup_max_lr": 5e-5,
+      "warmup_num_steps": "auto",
+      "total_num_steps": "auto"
+    }
+  },
+
+  "activation_checkpointing": {
+    "partition_activations": true,
+    "contiguous_memory_optimization": true
+  }
+}

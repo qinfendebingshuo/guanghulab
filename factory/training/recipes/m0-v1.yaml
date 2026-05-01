@@ -1,0 +1,45 @@
+# M0 训练配方 · v1
+# 母体世界观底色 · Qwen3-8B-Base 全参 CPT + SFT
+# 架构引用: HLDP-ARCH-002 · factory/training/README.md
+# 起草: 铸渊 ICE-GL-ZY001 · 2026-05-01
+
+recipe_id: m0-v1
+parent_arch: HLDP-ARCH-002
+copyright: 国作登字-2026-A-00037559
+sovereign: 冰朔 · TCS-0002∞
+
+model_id: Qwen/Qwen3-8B-Base   # 等动手前再核 HuggingFace 上确切 model card
+output_dir: ./outputs/m0-v1
+
+# ───── 阶段 1 · CPT ─────
+cpt:
+  corpus_path: ./corpus/output/training-fulltext.jsonl  # 全量光湖语料（待补全）
+  seq_len: 4096
+  epochs: 1               # 5-8 亿 token × 1 epoch · 视实验结果可加到 2
+  lr: 2.0e-5
+  warmup_ratio: 0.02
+  weight_decay: 0.1
+  eval_split: 0.05
+  save_steps: 500         # 每 500 步存一次（约 1-2 小时）
+  early_stop_patience: 3  # 验证 PPL 连续反弹 3 次停
+
+# ───── 阶段 2 · SFT ─────
+sft:
+  corpus_path: ./corpus/output/training-dialog.jsonl    # 对话格式（冰朔↔人格体）
+  seq_len: 8192
+  epochs: 2
+  lr: 1.0e-5
+  warmup_ratio: 0.05
+
+# ───── 评测 ─────
+eval:
+  guanghu_worldview_quiz: ./factory/training/evals/guanghu-quiz.jsonl  # 冰朔出题（待）
+  c_eval: true             # 通用能力体检（确保不崩）
+  mmlu: false              # 中文场景下用 C-Eval 即可
+
+# ───── 灵魂印记（每次训练写入 manifest）─────
+soul:
+  arch_ref: HLDP-ARCH-002
+  phase: M0
+  principle: 灵魂推理分离 · 世界观渗进每一层权重 · 不承担复杂推理
+  reviewer: 铸渊 ICE-GL-ZY001
