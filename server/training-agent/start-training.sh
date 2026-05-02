@@ -67,20 +67,39 @@ fi
 echo "training" > "$ROOT/.phase"
 "$REPORTER" "training" "训练启动 · 进入主循环" "" "start-training.sh launched on $(hostname)"
 
-# 真实训练入口（后续 PR 落地 train.py）
+# 真实训练入口
 TRAIN_PY="$ROOT/train.py"
-if [[ -x "$TRAIN_PY" ]] || [[ -f "$TRAIN_PY" ]]; then
-  # shellcheck disable=SC1091
-  source "$ROOT/venv/bin/activate"
-  exec python "$TRAIN_PY" 2>&1 | "$ROOT/watch-training-output.sh"
+DATA_DIR="${ZY_TRAIN_DATA:-/data/guanghu}"
+SFT_PATH="${ZY_DATA_PATH:-$DATA_DIR/processed/sft.jsonl}"
+MODEL_PATH="${ZY_MODEL_DIR:-$DATA_DIR/models/Qwen2.5-7B}"
+
+# 前置校验 — 缺哪样就立刻上报错误并退出
+if [[ ! -f "$TRAIN_PY" ]]; then
+  "$REPORTER" "error" "train.py 缺失" "" "$TRAIN_PY not found — bootstrap 未跑或脚本未同步"
+  echo "❌ $TRAIN_PY 不存在" >&2
+  exit 2
+fi
+if [[ ! -d "$MODEL_PATH" ]]; then
+  "$REPORTER" "error" "模型缺失" "" "Qwen2.5-7B 未在 $MODEL_PATH — 重跑 bootstrap"
+  echo "❌ 模型目录不存在: $MODEL_PATH" >&2
+  exit 3
+fi
+if [[ ! -f "$SFT_PATH" ]]; then
+  "$REPORTER" "error" "训练数据缺失" "" "$SFT_PATH not found — preprocess 未跑"
+  echo "❌ 训练数据不存在: $SFT_PATH" >&2
+  exit 4
 fi
 
-# ── 占位: train.py 还未落地 ──
-echo "═══════════════════════════════════════════"
-echo "⚠️ $TRAIN_PY 不存在"
-echo "  当前是 bootstrap-only 阶段。"
-echo "  真实训练逻辑(Qwen2.5-7B SFT + DeepSpeed)将在后续 PR 落地。"
-echo "═══════════════════════════════════════════"
-"$REPORTER" "preprocessing" "等待 train.py 落地" "" "train.py not yet deployed; staying in preprocessing"
-echo "preprocessing" > "$ROOT/.phase"
-exit 0
+# 自动探测 GPU 数 (fallback 4)
+NUM_GPUS=$(nvidia-smi --list-gpus 2>/dev/null | wc -l)
+NUM_GPUS=${NUM_GPUS:-4}
+[[ "$NUM_GPUS" -lt 1 ]] && NUM_GPUS=1
+echo "[start-training] 使用 ${NUM_GPUS} 卡 启动 deepspeed"
+"$REPORTER" "training" "DeepSpeed 启动 (${NUM_GPUS}×GPU)" "" "deepspeed --num_gpus=${NUM_GPUS} train.py"
+
+# shellcheck disable=SC1091
+source "$ROOT/venv/bin/activate"
+cd "$ROOT"
+# stdbuf 让 python 输出立即可见,管道到 watcher 解析后转发给 progress-reporter
+exec stdbuf -oL -eL deepspeed --num_gpus="${NUM_GPUS}" "$TRAIN_PY" 2>&1 \
+  | "$ROOT/watch-training-output.sh"

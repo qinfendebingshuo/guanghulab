@@ -94,13 +94,19 @@ jobs:
         run: |
           ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
             "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
-            'sudo mkdir -p /opt/guanghu/training && sudo chown -R ${{ secrets.ZY_GPU_USER }}:${{ secrets.ZY_GPU_USER }} /opt/guanghu/training'
+            'sudo mkdir -p /opt/guanghu/training/configs && sudo chown -R ${{ secrets.ZY_GPU_USER }}:${{ secrets.ZY_GPU_USER }} /opt/guanghu/training'
           scp -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
             server/training-agent/progress-reporter.sh \
             server/training-agent/setup.sh \
             server/training-agent/start-training.sh \
             server/training-agent/watch-training-output.sh \
+            server/training-agent/download-model.py \
+            server/training-agent/preprocess-corpus.py \
+            server/training-agent/train.py \
             "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:/opt/guanghu/training/"
+          scp -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            server/training-agent/configs/ds_zero3_offload.json \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:/opt/guanghu/training/configs/"
 
       - name: 🔐 写入 .env (服务器侧)
         if: github.event.inputs.action == 'bootstrap' || github.event.inputs.action == 'sync-scripts'

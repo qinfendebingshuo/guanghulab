@@ -64,7 +64,7 @@ mkdir -p "$ROOT" "$DATA_DIR/raw" "$DATA_DIR/processed" "$DATA_DIR/checkpoints" "
 report "bootstrapping" "环境配置开始" "" "Bootstrap started on $(hostname)"
 
 # ── 1. 系统依赖 ──
-echo "═══ 1/5 · 系统依赖 ═══"
+echo "═══ 1/7 · 系统依赖 ═══"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y --no-install-recommends \
@@ -75,7 +75,7 @@ apt-get install -y --no-install-recommends \
 report "bootstrapping" "系统依赖完成" "" "apt 包安装完成"
 
 # ── 2. Python venv + 训练栈 ──
-echo "═══ 2/5 · Python 训练栈 ═══"
+echo "═══ 2/7 · Python 训练栈 ═══"
 if [[ ! -d "$ROOT/venv" ]]; then
   python3 -m venv "$ROOT/venv"
 fi
@@ -89,22 +89,24 @@ pip install --index-url https://download.pytorch.org/whl/cu121 \
   pip install torch==2.4.1 torchvision torchaudio
 
 pip install \
-  "transformers>=4.45.0" \
+  "transformers>=4.48.0" \
   "accelerate>=0.34.0" \
   "datasets>=2.21.0" \
   "peft>=0.13.0" \
-  "deepspeed>=0.15.0" \
+  "deepspeed>=0.15.1" \
   "sentencepiece" \
   "protobuf" \
   "tqdm" \
   "tensorboard" \
+  "modelscope>=1.18.0" \
+  "huggingface_hub>=0.24.0" \
   "coscmd"
 
 deactivate
-report "bootstrapping" "Python 训练栈完成" "" "torch + transformers + accelerate + deepspeed 安装完成"
+report "bootstrapping" "Python 训练栈完成" "" "torch + transformers + accelerate + deepspeed + modelscope 安装完成"
 
 # ── 3. coscmd 配置 ──
-echo "═══ 3/5 · coscmd 配置 ═══"
+echo "═══ 3/7 · coscmd 配置 ═══"
 "$ROOT/venv/bin/coscmd" config \
   -a "$ZY_COS_SECRET_ID" \
   -s "$ZY_COS_SECRET_KEY" \
@@ -116,7 +118,7 @@ sed -i 's/myqcloud.com/myqcloud.com/' "$HOME/.cos.conf" 2>/dev/null || true
 report "bootstrapping" "COS 客户端配置完成" "" "coscmd configured for $ZY_COS_BUCKET ($ZY_COS_REGION)"
 
 # ── 4. 拉取语料 ──
-echo "═══ 4/5 · 下载语料 ═══"
+echo "═══ 4/7 · 下载语料 ═══"
 report "downloading-corpus" "拉取 raw/ 目录" "" "coscmd download raw/ → $DATA_DIR/raw"
 "$ROOT/venv/bin/coscmd" download -rs "raw/" "$DATA_DIR/raw/"
 
@@ -127,9 +129,26 @@ report "downloading-corpus" "语料下载完成" \
   "$(printf '{"step":0,"total_steps":0}')" \
   "raw=${RAW_COUNT} files downloaded to $DATA_DIR/raw"
 
-# ── 5. 写入辅助脚本 ──
-echo "═══ 5/5 · 安装训练辅助脚本 ═══"
-chmod +x "$ROOT/progress-reporter.sh" "$ROOT/start-training.sh" 2>/dev/null || true
+# ── 5. 下载开源模型 (Qwen2.5-7B from ModelScope) ──
+echo "═══ 5/7 · 下载 Qwen2.5-7B 模型 ═══"
+report "bootstrapping" "下载 Qwen2.5-7B 模型" "" "ModelScope snapshot_download qwen/Qwen2.5-7B"
+ZY_TRAIN_DATA="$DATA_DIR" "$ROOT/venv/bin/python" "$ROOT/download-model.py"
+MODEL_BYTES=$(du -sb "$DATA_DIR/models/Qwen2.5-7B" 2>/dev/null | awk '{print $1}')
+MODEL_GB=$(awk "BEGIN{printf \"%.2f\",${MODEL_BYTES:-0}/1024/1024/1024}")
+report "bootstrapping" "模型下载完成" "" "Qwen2.5-7B 已就绪 ${MODEL_GB} GiB at $DATA_DIR/models/Qwen2.5-7B"
+
+# ── 6. 预处理语料 → SFT JSONL ──
+echo "═══ 6/7 · 预处理语料 ═══"
+report "preprocessing" "ChatGPT export + Notion zip → SFT JSONL" "" "running preprocess-corpus.py"
+ZY_TRAIN_DATA="$DATA_DIR" "$ROOT/venv/bin/python" "$ROOT/preprocess-corpus.py"
+SFT_LINES=$(wc -l < "$DATA_DIR/processed/sft.jsonl" 2>/dev/null || echo 0)
+report "preprocessing" "预处理完成" \
+  "$(printf '{"step":0,"total_steps":0}')" \
+  "SFT 样本数=${SFT_LINES} 写入 $DATA_DIR/processed/sft.jsonl"
+
+# ── 7. 训练辅助脚本 ──
+echo "═══ 7/7 · 安装训练辅助脚本 ═══"
+chmod +x "$ROOT/progress-reporter.sh" "$ROOT/start-training.sh" "$ROOT/watch-training-output.sh" 2>/dev/null || true
 
 cat > /etc/cron.d/zy-training-heartbeat <<'CRON'
 # 铸渊副将 · 训练心跳兜底（每 5 分钟即使训练脚本崩了也能上报 GPU 状态）

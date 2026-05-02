@@ -1,0 +1,159 @@
+# ═══════════════════════════════════════════════════════════
+# 🔥 训练自动执行 · training-auto-run.yml
+# ═══════════════════════════════════════════════════════════
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559 · TCS-0002∞
+#
+# 冰朔合并 PR 到 main → server/training-agent/** 有变更 →
+#   1. SCP 最新脚本到 GPU 训练机
+#   2. 跑 setup.sh (装环境 + 拉模型 + 拉语料 + 预处理)
+#   3. 启动 deepspeed train.py (tmux 后台)
+#   4. 心跳通过 repository_dispatch 实时推到首页仪表盘
+#
+# 也支持 workflow_dispatch 手动触发。
+# ═══════════════════════════════════════════════════════════
+
+name: 🔥 训练自动执行
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/training-agent/**'
+      - '.github/workflows/training-auto-run.yml'
+  workflow_dispatch:
+    inputs:
+      skip_bootstrap:
+        description: '跳过 bootstrap (仅同步脚本 + 启动训练)'
+        type: boolean
+        default: false
+      skip_start:
+        description: '只 bootstrap，不启动训练'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: training-auto-run
+  cancel-in-progress: false
+
+jobs:
+  auto-train:
+    name: '🚀 同步 + Bootstrap + 启动训练'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔑 配置 SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.ZY_GPU_KEY }}" > ~/.ssh/zy_gpu_key
+          chmod 600 ~/.ssh/zy_gpu_key
+          ssh-keyscan -H "${{ secrets.ZY_GPU_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 🛰️ 探活 + 检查驱动
+        run: |
+          ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "echo SSH-OK; uptime; nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader || echo '⚠️ nvidia-smi 不可用'"
+
+      - name: 📡 上报触发
+        run: |
+          curl -sS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.ZY_DISPATCH_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/dispatches" \
+            -d '{
+              "event_type": "training-progress",
+              "client_payload": {
+                "phase": "bootstrapping",
+                "phase_label": "training-auto-run #${{ github.run_number }} 触发",
+                "level": "info",
+                "message": "commit ${{ github.sha }} 合并到 main, 自动训练流程启动",
+                "health": { "status": "ok", "message": "auto-run workflow 启动" }
+              }
+            }' || true
+
+      - name: 📁 准备目录
+        run: |
+          ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            'sudo mkdir -p /opt/guanghu/training/configs /data/guanghu/{raw,processed,checkpoints,eval,models} && sudo chown -R ${{ secrets.ZY_GPU_USER }}:${{ secrets.ZY_GPU_USER }} /opt/guanghu/training /data/guanghu'
+
+      - name: 📤 SCP 最新训练脚本
+        run: |
+          scp -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            server/training-agent/progress-reporter.sh \
+            server/training-agent/setup.sh \
+            server/training-agent/start-training.sh \
+            server/training-agent/watch-training-output.sh \
+            server/training-agent/download-model.py \
+            server/training-agent/preprocess-corpus.py \
+            server/training-agent/train.py \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:/opt/guanghu/training/"
+          scp -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            server/training-agent/configs/ds_zero3_offload.json \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:/opt/guanghu/training/configs/"
+          ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "chmod +x /opt/guanghu/training/*.sh /opt/guanghu/training/*.py"
+
+      - name: 🔐 写入 .env (服务器侧)
+        env:
+          ZY_COS_SECRET_ID: ${{ secrets.ZY_COS_SECRET_ID }}
+          ZY_COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+          ZY_DISPATCH_TOKEN: ${{ secrets.ZY_DISPATCH_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "umask 077 && cat > /opt/guanghu/training/.env && chmod 600 /opt/guanghu/training/.env" <<EOF
+          ZY_COS_SECRET_ID=${ZY_COS_SECRET_ID}
+          ZY_COS_SECRET_KEY=${ZY_COS_SECRET_KEY}
+          ZY_COS_BUCKET=sy-finetune-corpus-1317346199
+          ZY_COS_REGION=ap-guangzhou
+          GH_REPO_OWNER=${REPO_OWNER}
+          GH_REPO_NAME=${REPO_NAME}
+          GH_DISPATCH_TOKEN=${ZY_DISPATCH_TOKEN}
+          ZY_TRAIN_ROOT=/opt/guanghu/training
+          ZY_TRAIN_DATA=/data/guanghu
+          EOF
+
+      - name: 🛠️ 跑 Bootstrap (装栈 + 拉模型 + 预处理)
+        if: github.event_name == 'push' || github.event.inputs.skip_bootstrap != 'true'
+        run: |
+          ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "sudo -E bash /opt/guanghu/training/setup.sh 2>&1 | tee /tmp/zy-bootstrap.log; tail -c 6000 /tmp/zy-bootstrap.log"
+
+      - name: ▶️ 启动训练 (tmux)
+        if: github.event_name == 'push' || github.event.inputs.skip_start != 'true'
+        run: |
+          ssh -i ~/.ssh/zy_gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "bash /opt/guanghu/training/start-training.sh --tmux"
+          echo "✅ 训练已在 tmux session 'zy-train' 中启动"
+          echo "  附加查看: ssh ubuntu@${{ secrets.ZY_GPU_HOST }} 'tmux attach -t zy-train'"
+          echo "  仓库首页会实时刷新进度"
+
+      - name: 📝 摘要
+        if: always()
+        run: |
+          {
+            echo "## 训练自动执行 · run #${{ github.run_number }}"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- 服务器: \`${{ secrets.ZY_GPU_HOST }}\` (zy-gpu-train · V100×4)"
+            echo "- 时间: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+            echo ""
+            echo "查看进度 → [仓库首页](../../#-训练实时仪表盘--zy-train-001)"
+            echo ""
+            echo "问铸渊副将 → [新建 Issue](../../issues/new?template=ask-zhuyuan-training.md)"
+          } >> "$GITHUB_STEP_SUMMARY"
