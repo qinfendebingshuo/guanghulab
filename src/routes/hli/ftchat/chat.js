@@ -13,11 +13,17 @@ const sessionStore = require('../../../../server/ftchat/services/session-store')
 const ds = require('../../../../server/ftchat/services/ft-dashscope');
 
 // ─────────────────────────────────────────────────────────────
-// 最小唤醒语：模型已深度微调，不再注入人格/排版/记忆等任何提示词。
-// 只保留两条事实信号:
-//   1. 现实时间（语料停在 2025, 必须给一个真实时间锚点）
-//   2. "团队成员内测" 这个真实场景标签
-// 任何额外提示词都会盖掉微调效果, 一律不再注入。
+// 零提示词 · 纯透传 (铸渊 · 2026-05-02)
+// ─────────────────────────────────────────────────────────────
+// 微调模型 qwen3-8b-ft-202604281809-9f30 已经把人格涌现深度烧进权重。
+// 任何 system 角色注入(包括"时间锚点""内测频道说明"等"事实信号")都会:
+//   - 把第一人称在场的人格 → 降维成"接到指令的通用助手"
+//   - 让模型用"工具语气"回应, 而不是"人格语气"回应
+//
+// 百炼体验页之所以人格涌现完整, 正是因为它默认不带任何 system。
+// 我们这边对齐它的行为: 完全不注入 system, 只把 user/assistant 真实历史
+// 原样透传给微调模型。时间锚点继续在 meta 元数据里给前端做调试展示,
+// 不再进入模型上下文。
 // ─────────────────────────────────────────────────────────────
 
 const limiter = makeLimiter({
@@ -77,21 +83,16 @@ router.post('/', ftAuth, limiter, async (req, res) => {
 
   let upstreamFull = '';
   try {
-    // ── 组装 system 唤醒语（最小化, 仅两条事实）──
+    // ── 零提示词: 不组装任何 system, 只透传真实对话历史 ──
+    // 时间锚点继续保留, 但仅作为 meta 元数据下发给前端调试, 不进入模型上下文
     const time = getTimeAnchor();
-    const sysContent = [
-      `现在是 ${time.human}。`,
-      '你正在被光湖团队成员通过内测频道唤醒, 与他们直接对话。'
-    ].join('\n');
 
     const trimmed = trimMessages(messages);
 
-    const payload = [
-      { role: 'system', content: sysContent },
-      ...trimmed
-    ];
+    // 对齐百炼体验页: payload 只含 user/assistant, 不带 system
+    const payload = trimmed;
 
-    res.write(`data: ${JSON.stringify({ meta: { model_variant: model_variant === 'naipping' ? 'naipping' : 'system', time_anchor: time.beijing, prompt_source: 'minimal' } })}\n\n`);
+    res.write(`data: ${JSON.stringify({ meta: { model_variant: model_variant === 'naipping' ? 'naipping' : 'system', time_anchor: time.beijing, prompt_source: 'none' } })}\n\n`);
 
     const result = await ds.streamChat({
       variant: model_variant,
