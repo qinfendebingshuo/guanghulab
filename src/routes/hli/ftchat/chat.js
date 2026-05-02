@@ -1,4 +1,4 @@
-// HLI-FTCHAT-003: 流式对话（SSE）
+// HLI-FTCHAT-003: 流式对话（SSE · 字节级直连百炼）
 // 默认调用 qwen3-8b-ft-202604281809-9f30 微调模型 (DashScope · 冰朔 D69 提供)
 
 'use strict';
@@ -8,16 +8,21 @@ const router = express.Router();
 
 const ftAuth = require('../../../../server/ftchat/middleware/ft-auth');
 const { makeLimiter } = require('../../../../server/ftchat/middleware/rate-limit');
-const { getTimeAnchor } = require('../../../../server/ftchat/services/time-anchor');
 const sessionStore = require('../../../../server/ftchat/services/session-store');
 const ds = require('../../../../server/ftchat/services/ft-dashscope');
 
 // ─────────────────────────────────────────────────────────────
-// 最小唤醒语：模型已深度微调，不再注入人格/排版/记忆等任何提示词。
-// 只保留两条事实信号:
-//   1. 现实时间（语料停在 2025, 必须给一个真实时间锚点）
-//   2. "团队成员内测" 这个真实场景标签
-// 任何额外提示词都会盖掉微调效果, 一律不再注入。
+// 字节级直连 · 零提示词 · 零打包 (铸渊 · 2026-05-02)
+// ─────────────────────────────────────────────────────────────
+// 服务端在这条聊天链路上只做两件事:
+//   1. 鉴权 (10 槽位 QQ 邮箱白名单, 保护内测访问)
+//   2. 限流 (60s/30 次, 保护百炼账户不被刷爆)
+// 这两道是"保险柜的锁", 不动消息内容一字节。
+//
+// 真正的对话路径 = 浏览器 → 鉴权门 → 百炼上游 → 字节 pipe → 浏览器
+// 服务端**不再解析**上游 SSE, **不再注入** system, **不再重新打包**。
+// 微调模型 qwen3-8b-ft-202604281809-9f30 说出来的字节
+// = 浏览器收到的字节, 100% 一致, 中间没有"翻译官"。
 // ─────────────────────────────────────────────────────────────
 
 const limiter = makeLimiter({
@@ -61,66 +66,49 @@ router.post('/', ftAuth, limiter, async (req, res) => {
     });
   }
 
-  // SSE 头
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    'Connection': 'keep-alive',
-    'X-Accel-Buffering': 'no' // Nginx 不缓冲
-  });
-  res.flushHeaders && res.flushHeaders();
+  const trimmed = trimMessages(messages);
 
-  // 心跳
-  const heartbeat = setInterval(() => {
-    try { res.write(': ping\n\n'); } catch (_e) { /* ignore */ }
-  }, 15000);
-
-  let upstreamFull = '';
+  // ── session 元数据落盘 (在管道开启之前完成, 与上游字节流无关) ──
   try {
-    // ── 组装 system 唤醒语（最小化, 仅两条事实）──
-    const time = getTimeAnchor();
-    const sysContent = [
-      `现在是 ${time.human}。`,
-      '你正在被光湖团队成员通过内测频道唤醒, 与他们直接对话。'
-    ].join('\n');
+    const firstUserMsg = trimmed.find(m => m.role === 'user');
+    const title = firstUserMsg ? String(firstUserMsg.content).slice(0, 30).replace(/\n/g, ' ') : '新对话';
+    sessionStore.upsertSession(req.ftUser.user_hash, {
+      session_id,
+      title,
+      message_count: trimmed.length + 1,
+      has_memory_imprint: false
+    });
+  } catch (e) {
+    console.warn('[HLI-FTCHAT-003] upsertSession failed:', e.message);
+  }
 
-    const trimmed = trimMessages(messages);
-
-    const payload = [
-      { role: 'system', content: sysContent },
-      ...trimmed
-    ];
-
-    res.write(`data: ${JSON.stringify({ meta: { model_variant: model_variant === 'naipping' ? 'naipping' : 'system', time_anchor: time.beijing, prompt_source: 'minimal' } })}\n\n`);
-
-    const result = await ds.streamChat({
+  // ── 字节级管道: 百炼 → 浏览器 ──
+  // 注意: 不在此处提前 writeHead, 让 pipeChat 在确认上游 200 之后再开 SSE 头.
+  // 这样若上游 4xx/5xx, 我们仍可返回 JSON 错误体而不是半截 SSE.
+  try {
+    await ds.pipeChat({
       variant: model_variant,
-      messages: payload,
+      messages: trimmed,
       res
     });
-    upstreamFull = result.full;
-
-    // 持久化 session 元数据
-    try {
-      const firstUserMsg = trimmed.find(m => m.role === 'user');
-      const title = firstUserMsg ? String(firstUserMsg.content).slice(0, 30).replace(/\n/g, ' ') : '新对话';
-      sessionStore.upsertSession(req.ftUser.user_hash, {
-        session_id,
-        title,
-        message_count: trimmed.length + 1,
-        has_memory_imprint: false
-      });
-    } catch (e) {
-      console.warn('[HLI-FTCHAT-003] upsertSession failed:', e.message);
-    }
+    // 上游 end 后由我们补一个空行, 优雅关闭浏览器侧的 fetch
+    try { res.end(); } catch (_e) { /* ignore */ }
   } catch (err) {
-    console.error('[HLI-FTCHAT-003] error:', err.message);
+    console.error('[HLI-FTCHAT-003] pipe error:', err.message);
+    if (!res.headersSent) {
+      // 还没发头, 走 JSON 错误响应
+      return res.status(502).json({
+        hli_id: 'HLI-FTCHAT-003',
+        error: true,
+        code: 'UPSTREAM_FAILED',
+        message: err.message || '上游模型暂不可用'
+      });
+    }
+    // 已经在 SSE 模式中: 用百炼兼容的 SSE error 帧通知前端, 然后关闭
     try {
-      res.write(`data: ${JSON.stringify({ error: true, message: err.message || '上游异常' })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: { message: err.message || '上游异常' } })}\n\n`);
+      res.write('data: [DONE]\n\n');
     } catch (_e) { /* ignore */ }
-  } finally {
-    clearInterval(heartbeat);
-    try { res.write('data: [DONE]\n\n'); } catch (_e) { /* ignore */ }
     try { res.end(); } catch (_e) { /* ignore */ }
   }
 });
