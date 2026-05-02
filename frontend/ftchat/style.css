@@ -244,7 +244,6 @@ input, textarea { font-family: inherit; font-size: inherit; color: inherit; }
   /* 让对话气泡始终居中限宽（解决"页面太大看着累"）*/
   display: flex; flex-direction: column; align-items: center;
 }
-.chat-body-inner { max-width: var(--max-content); margin: 0 auto; }
 .message-row {
   display: flex; margin-bottom: 16px;
   width: 100%; max-width: var(--max-content);
@@ -379,7 +378,7 @@ input, textarea { font-family: inherit; font-size: inherit; color: inherit; }
   display: none;
   position: absolute; top: 90px; bottom: 90px;
   width: 200px;
-  padding: 4px 4px 4px 4px;
+  padding: 4px;
   pointer-events: none; /* 视觉装饰，不抢交互 */
   z-index: 2;
   overflow-y: auto;
