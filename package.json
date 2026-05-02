@@ -5,7 +5,7 @@
   "main": "broadcast-generator.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:contract": "node scripts/hli-contract-check.js",
+    "test:contract": "node scripts/hli-contract-check.js && node tests/contract/ftchat.test.js",
     "test:route-align": "node scripts/route-align-check.js",
     "start": "node server.js",
     "start:test": "node src/index.js",
@@ -22,6 +22,7 @@
     "dingtalk-encrypt": "^2.1.1",
     "dingtalk-stream": "^2.1.4",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "nodemailer": "^7.0.11"
   }
 }

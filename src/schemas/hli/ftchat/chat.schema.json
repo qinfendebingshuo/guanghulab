@@ -1,0 +1,40 @@
+{
+  "hli_id": "HLI-FTCHAT-003",
+  "version": "v0.1",
+  "route": "/hli/ftchat/chat",
+  "method": "POST",
+  "type": "STREAM",
+  "purpose": "调用阿里云百炼微调模型（默认 shuangyan-system-v1）流式回复，附带 Notion 提示词 + 真实时间瞄点 + 跨会话母语记忆",
+  "input": {
+    "type": "object",
+    "required": ["session_id", "messages"],
+    "properties": {
+      "session_id": { "type": "string", "description": "前端生成的本地 session id（同一对话框）" },
+      "messages": {
+        "type": "array",
+        "description": "本对话框的滚动消息（前端维护，最多 ~100K token）",
+        "items": {
+          "type": "object",
+          "required": ["role", "content"],
+          "properties": {
+            "role": { "type": "string", "enum": ["user", "assistant"] },
+            "content": { "type": "string" }
+          }
+        }
+      },
+      "model_variant": { "type": "string", "enum": ["system", "naipping"], "default": "system", "description": "微调线选择，团队成员默认 system" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "SSE 流：data: { delta: '...' } / data: [DONE]，最终响应保存到服务端 session-store",
+    "properties": {
+      "hli_id": { "type": "string" },
+      "stream": { "type": "string", "enum": ["text/event-stream"] }
+    }
+  },
+  "dependencies": ["HLI-FTCHAT-002"],
+  "changelog": [
+    { "date": "2026-05-02", "note": "FTCHAT 初版 · DashScope compatible-mode SSE" }
+  ]
+}
