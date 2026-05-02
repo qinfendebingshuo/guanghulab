@@ -96,6 +96,10 @@ input, textarea { font-family: inherit; font-size: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
 }
+/* 让 HTML hidden 属性在 .login-screen / .chat-screen 上生效
+   （否则 .xxx-screen 的 display:flex 会覆盖 UA 的 [hidden]{display:none}） */
+.login-screen[hidden],
+.chat-screen[hidden] { display: none; }
 .login-card {
   width: 100%; max-width: 440px;
   background: var(--bg-elev); border: 1px solid var(--border);
