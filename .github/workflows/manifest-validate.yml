@@ -1,0 +1,33 @@
+name: '✦ Manifest 校验 · ZY-FN 编号体系'
+
+on:
+  pull_request:
+    paths:
+      - '.github/brain/architecture/function-manifest.json'
+      - '.github/brain/architecture/function-manifest.schema.json'
+      - 'scripts/manifest/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/brain/architecture/function-manifest.json'
+      - '.github/brain/architecture/function-manifest.schema.json'
+      - 'scripts/manifest/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: '校验 function-manifest.json'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 'Run validator'
+        run: node scripts/manifest/validate.js --strict
+      - name: 'Run channel-switcher smoke test'
+        run: node server/channel-switcher/test/smoke.js

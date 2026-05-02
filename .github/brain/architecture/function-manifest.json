@@ -1,0 +1,279 @@
+{
+  "$schema": "./function-manifest.schema.json",
+  "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
+  "_copyright": "国作登字-2026-A-00037559",
+  "_description": "光湖 · 母编号 × 子编号 编号体系 · 唯一真相源 · 铸渊维护",
+  "version": "1.0.0",
+  "updated_at": "2026-05-02",
+  "servers": [
+    {
+      "id": "ZY-SVR-002",
+      "display_name_zh": "面孔",
+      "role": "前端静态+专线主入口+域名反向代理",
+      "location": "Singapore",
+      "spec": "2核8G",
+      "ipv4": "(见 server/proxy/config/server-registry.json)",
+      "status": "active",
+      "template_version": "0.1.0-pending",
+      "deploy_root": "/opt/guanghu",
+      "registered_functions": [],
+      "github_secrets": {
+        "host": "SERVER_HOST",
+        "key": "SERVER_KEY",
+        "user": "SERVER_USER"
+      },
+      "notes": "Phase 2 才接入标准模板, 当前保持现状"
+    },
+    {
+      "id": "ZY-SVR-005",
+      "display_name_zh": "大脑",
+      "role": "数据库+MCP+Agent+订阅服务",
+      "location": "Singapore",
+      "spec": "4核8G",
+      "ipv4": "(见 server-registry.json)",
+      "status": "active",
+      "template_version": "0.1.0-pending",
+      "deploy_root": "/opt/guanghu",
+      "registered_functions": [],
+      "github_secrets": {
+        "host": "ZY_BRAIN_HOST",
+        "key": "ZY_BRAIN_KEY",
+        "user": "ZY_BRAIN_USER"
+      },
+      "notes": "未来挂 ZY-FN-CORE-* 系列 (零点原核频道)"
+    },
+    {
+      "id": "ZY-SVR-006",
+      "display_name_zh": "智库节点",
+      "role": "guanghu.online 主载体 · 多 ZY-FN 共域共存",
+      "location": "Singapore",
+      "ipv4": "43.153.203.105",
+      "spec": "2核4G",
+      "status": "active",
+      "template_version": "0.1.0",
+      "deploy_root": "/opt/guanghu",
+      "registered_functions": [
+        "ZY-FN-0001",
+        "ZY-FN-0002",
+        "ZY-FN-0003",
+        "ZY-FN-0007"
+      ],
+      "github_secrets": {
+        "host": "ZY_NOVEL_HOST",
+        "key": "ZY_NOVEL_KEY",
+        "user": "ZY_NOVEL_USER"
+      },
+      "notes": "Phase 1 首个标准模板宿主 · 域名 guanghu.online · 当前同时跑多个 ZY-FN, Phase 2 升级为单激活态热插拔"
+    }
+  ],
+  "functions": [
+    {
+      "id": "ZY-FN-0001",
+      "display_name_zh": "光湖智库",
+      "aliases": ["智库", "智库节点", "模块借阅协议", "书库", "智能小说书库"],
+      "host_server": "ZY-SVR-006",
+      "domain": "guanghu.online",
+      "domain_paths": ["/api/zhiku", "/api/mirror"],
+      "ports": [3006],
+      "pm2_processes": ["zhiku-api"],
+      "description": "智能小说书库 + 模块借阅协议 + 镜鉴守护. 多源整合(番茄/七猫)+ 七层镜防",
+      "created_for": "落地模块借阅协议 · 铸渊 D68 授权 · 内部数据沉淀基座",
+      "keep_decision": "keep",
+      "status": "active",
+      "modules": [
+        "M-ZHIKU-API",
+        "M-ZHIKU-MIRROR-AGENT",
+        "M-ZHIKU-MIRROR-SHIELD",
+        "M-ZHIKU-COS-BRIDGE"
+      ],
+      "api_keys_alias": {
+        "ZHIKU_JWT_SECRET": "ZY_NOVEL_JWT_SECRET",
+        "ZHIKU_COS_SECRET_ID": "ZY_OSS_KEY",
+        "ZHIKU_COS_SECRET_KEY": "ZY_OSS_SECRET",
+        "ZHIKU_COS_BUCKET": "ZY_NOVEL_COS_BUCKET"
+      },
+      "frontend_entry": "(暂无独立前端 · 仅 API)",
+      "backend_entry": "server/zhiku-node/ecosystem.config.js",
+      "health_check": {
+        "url": "https://guanghu.online/api/mirror/status",
+        "expected_status": 200
+      },
+      "notes": "Phase 2 评估是否把 mirror-agent / mirror-shield 拆出独立 ZY-FN-0003 还是保持归在 0001 内"
+    },
+    {
+      "id": "ZY-FN-0002",
+      "display_name_zh": "旧版小说下载",
+      "aliases": ["旧小说下载", "novel-api", "ZY-PROJ-002"],
+      "host_server": "ZY-SVR-006",
+      "domain": "guanghu.online",
+      "domain_paths": [],
+      "ports": [4000],
+      "pm2_processes": ["novel-api"],
+      "description": "早期小说下载分章引擎 · 已被智库节点 (ZY-FN-0001) 吸收, 不再使用",
+      "created_for": "(历史遗留) 番茄/七猫小说下载 + 分章 · 早于模块借阅协议",
+      "keep_decision": "retire",
+      "status": "retired",
+      "modules": ["M-NOVEL-API-LEGACY"],
+      "api_keys_alias": {},
+      "frontend_entry": "(无)",
+      "backend_entry": "server/novel-db/app/index.js",
+      "health_check": {
+        "url": "(已退役 · 不需要健康检查)",
+        "expected_status": 200
+      },
+      "notes": "冰朔 2026-05-02 决定退役 · 后续 PR 停 PM2 进程并归档代码到 archive/"
+    },
+    {
+      "id": "ZY-FN-0003",
+      "display_name_zh": "镜鉴守护",
+      "aliases": ["镜鉴", "镜面监控", "七层镜防", "守夜"],
+      "host_server": "ZY-SVR-006",
+      "domain": "guanghu.online",
+      "domain_paths": ["/api/mirror/sovereign"],
+      "ports": [],
+      "pm2_processes": ["mirror-agent", "mirror-shield"],
+      "description": "第三方书库镜面监控 + 七层动态镜防 (语言膜→镜面→IP隐身→漂移→自爆→重建→零点原核)",
+      "created_for": "防扫描封禁 + 自动差异感知 + 工单制源治理 · D68 守夜系列",
+      "keep_decision": "keep",
+      "status": "active",
+      "modules": [
+        "M-ZHIKU-MIRROR-AGENT",
+        "M-ZHIKU-MIRROR-SHIELD"
+      ],
+      "api_keys_alias": {
+        "MIRROR_LLM_KEY_PRIMARY": "ZY_DEEPSEEK_API_KEY",
+        "MIRROR_LLM_KEY_FALLBACK": "ANTHROPIC_API_KEY"
+      },
+      "frontend_entry": "(无)",
+      "backend_entry": "server/zhiku-node/server/mirror-agent/snapshot-engine.js",
+      "health_check": {
+        "url": "https://guanghu.online/api/mirror/status",
+        "expected_status": 200
+      },
+      "notes": "目前与 ZY-FN-0001 共进程 zhiku-api · 逻辑独立但部署一体 · Phase 2 评估拆分"
+    },
+    {
+      "id": "ZY-FN-0007",
+      "display_name_zh": "微调模型聊天",
+      "aliases": [
+        "微调聊天",
+        "微调模型",
+        "微调模型内测",
+        "测试模型",
+        "测试模型聊天",
+        "ftchat",
+        "shuangyan",
+        "双言",
+        "光湖微调",
+        "上次开发的测试模型"
+      ],
+      "host_server": "ZY-SVR-006",
+      "domain": "guanghu.online",
+      "domain_paths": ["/", "/hli/ftchat"],
+      "ports": [3010],
+      "pm2_processes": ["ftchat-api"],
+      "description": "调用阿里云百炼微调模型 (双言系统线/奶瓶线) 流式聊天 · 带 Notion 提示词 + 真实时间瞄点 + 跨会话母语记忆",
+      "created_for": "冰朔微调模型内测 · 10 席位先到先得 · 验证情感驱动语料采集回路",
+      "keep_decision": "keep",
+      "status": "active",
+      "modules": [
+        "M-LOGIN-QQ",
+        "M-FTCHAT-LLM",
+        "M-FTCHAT-NOTION-PROMPT",
+        "M-FTCHAT-MEMORY-AGENT",
+        "M-CHAT-UI"
+      ],
+      "api_keys_alias": {
+        "FTCHAT_DASHSCOPE_KEY": "FT_DASHSCOPE_API_KEY",
+        "FTCHAT_NOTION_TOKEN": "FT_NOTION_API_TOKEN",
+        "FTCHAT_NOTION_PAGE": "FT_NOTION_PROMPT_PAGE_ID",
+        "FTCHAT_MODEL_SYSTEM": "FT_MODEL_SYSTEM",
+        "FTCHAT_MODEL_NAIPPING": "FT_MODEL_NAIPPING",
+        "FTCHAT_MODEL_FALLBACK": "FT_MODEL_FALLBACK",
+        "FTCHAT_SMTP_USER": "ZY_SMTP_USER",
+        "FTCHAT_SMTP_PASS": "ZY_SMTP_PASS"
+      },
+      "frontend_entry": "frontend/ftchat/",
+      "backend_entry": "server/ftchat/ecosystem.config.js",
+      "health_check": {
+        "url": "https://guanghu.online/hli/ftchat/status",
+        "expected_status": 200
+      },
+      "notes": "2026-05-02 修复: model_not_found 自动降级到 qwen-turbo · 真实微调模型 ID = qwen3-8b-ft-202604281809-9f30 (冰朔 D69 提供 · 已写为代码默认值, 无需配 secret)"
+    }
+  ],
+  "active_routes": {
+    "guanghu.online": {
+      "active_fn": "ZY-FN-0007",
+      "host_server": "ZY-SVR-006",
+      "since": "2026-04-30",
+      "history": [
+        { "fn": "ZY-FN-0001", "from": "2026-04-12", "to": "2026-04-30" },
+        { "fn": "ZY-FN-0007", "from": "2026-04-30", "to": null }
+      ],
+      "notes": "Phase 1 阶段实际是多 ZY-FN 共存于同一域名 (zhiku-api+ftchat-api+novel-api), 此字段记录'前端默认入口'对应的 ZY-FN. Phase 2 升级为单激活态后此字段成为强约束."
+    }
+  },
+  "modules_index": [
+    {
+      "id": "M-LOGIN-QQ",
+      "display_name_zh": "QQ 邮箱验证码登录",
+      "description": "邮箱验证码登录 · SMTP via QQ",
+      "used_by": ["ZY-FN-0007"]
+    },
+    {
+      "id": "M-FTCHAT-LLM",
+      "display_name_zh": "微调模型 LLM 调用",
+      "description": "DashScope compatible-mode SSE 流式 + 非流式降级 · model_not_found 自动 fallback",
+      "used_by": ["ZY-FN-0007"]
+    },
+    {
+      "id": "M-FTCHAT-NOTION-PROMPT",
+      "display_name_zh": "Notion 提示词拉取",
+      "description": "拉取 Notion 页面作为系统提示词",
+      "used_by": ["ZY-FN-0007"]
+    },
+    {
+      "id": "M-FTCHAT-MEMORY-AGENT",
+      "display_name_zh": "跨会话母语记忆",
+      "description": "压缩历史 + 持久化 · 跨会话恢复",
+      "used_by": ["ZY-FN-0007"]
+    },
+    {
+      "id": "M-CHAT-UI",
+      "display_name_zh": "聊天前端 UI",
+      "description": "通用聊天界面 + 频道徽章占位",
+      "used_by": ["ZY-FN-0007"]
+    },
+    {
+      "id": "M-ZHIKU-API",
+      "display_name_zh": "智库 API",
+      "description": "模块借阅协议核心 API",
+      "used_by": ["ZY-FN-0001"]
+    },
+    {
+      "id": "M-ZHIKU-MIRROR-AGENT",
+      "display_name_zh": "镜鉴 Agent",
+      "description": "差异感知 → LLM 评估 → 工单生成",
+      "used_by": ["ZY-FN-0001", "ZY-FN-0003"]
+    },
+    {
+      "id": "M-ZHIKU-MIRROR-SHIELD",
+      "display_name_zh": "七层镜防",
+      "description": "语言膜+镜面+IP隐身+漂移+自爆+重建+零点原核",
+      "used_by": ["ZY-FN-0001", "ZY-FN-0003"]
+    },
+    {
+      "id": "M-ZHIKU-COS-BRIDGE",
+      "display_name_zh": "智库 COS 桥接",
+      "description": "腾讯云 COS · ap-singapore · 团队书库桥接",
+      "used_by": ["ZY-FN-0001"]
+    },
+    {
+      "id": "M-NOVEL-API-LEGACY",
+      "display_name_zh": "旧版小说下载引擎",
+      "description": "(已退役) 早期小说下载+分章",
+      "used_by": ["ZY-FN-0002"]
+    }
+  ]
+}

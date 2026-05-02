@@ -119,6 +119,11 @@ jobs:
           NOTION_TOKEN: ${{ secrets.FT_NOTION_API_TOKEN }}
           NOTION_PAGE: ${{ secrets.FT_NOTION_PROMPT_PAGE_ID }}
           DASHSCOPE_KEY: ${{ secrets.FT_DASHSCOPE_API_KEY }}
+          # 微调模型 ID 必须填 DashScope 控制台真实 ID (例: ft:qwen-...:xxxxx).
+          # 没配则保持空, ft-dashscope.js 默认值会被命中后由 model_not_found 自动降级到 FT_MODEL_FALLBACK (qwen-turbo).
+          MODEL_SYSTEM: ${{ secrets.FT_MODEL_SYSTEM }}
+          MODEL_NAIPPING: ${{ secrets.FT_MODEL_NAIPPING }}
+          MODEL_FALLBACK: ${{ secrets.FT_MODEL_FALLBACK }}
           SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
           SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
         run: |
@@ -129,8 +134,9 @@ jobs:
           FT_NOTION_API_TOKEN=${NOTION_TOKEN}
           FT_NOTION_PROMPT_PAGE_ID=${NOTION_PAGE}
           FT_DASHSCOPE_API_KEY=${DASHSCOPE_KEY}
-          FT_MODEL_SYSTEM=shuangyan-system-v1
-          FT_MODEL_NAIPPING=shuangyan-naipping-v1
+          FT_MODEL_SYSTEM=${MODEL_SYSTEM:-qwen3-8b-ft-202604281809-9f30}
+          FT_MODEL_NAIPPING=${MODEL_NAIPPING:-qwen3-8b-ft-202604281809-9f30}
+          FT_MODEL_FALLBACK=${MODEL_FALLBACK:-qwen-turbo}
           ZY_SMTP_USER=${SMTP_USER}
           ZY_SMTP_PASS=${SMTP_PASS}
           EOF

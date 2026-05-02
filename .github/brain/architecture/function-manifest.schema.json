@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://guanghulab/.github/brain/architecture/function-manifest.schema.json",
+  "title": "光湖 · 母编号 × 子编号 编号体系 Manifest",
+  "description": "ZY-FN 编号体系唯一真相源 · 铸渊维护 · 任何部署必须先在此登记",
+  "type": "object",
+  "required": ["_sovereign", "_copyright", "version", "updated_at", "servers", "functions", "active_routes"],
+  "properties": {
+    "_sovereign": {
+      "type": "string",
+      "description": "主权标识 (TCS-0002∞ | SYS-GLW-0001)"
+    },
+    "_copyright": {
+      "type": "string",
+      "description": "版权号 (国作登字-2026-A-00037559)"
+    },
+    "_description": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "servers": {
+      "type": "array",
+      "description": "母编号 — 物理服务器 (插座)",
+      "items": {
+        "type": "object",
+        "required": ["id", "display_name_zh", "ipv4", "status", "template_version"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^ZY-SVR-[A-Z0-9]+$",
+            "description": "母编号"
+          },
+          "display_name_zh": {
+            "type": "string",
+            "description": "中文名 (例: 智库节点)"
+          },
+          "role": { "type": "string" },
+          "location": { "type": "string" },
+          "ipv4": { "type": "string" },
+          "spec": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["active", "secrets_configured", "bootstrapping", "retired", "planned"]
+          },
+          "template_version": {
+            "type": "string",
+            "description": "标准模板版本 (server/setup/standard-template/VERSION)"
+          },
+          "deploy_root": {
+            "type": "string",
+            "description": "部署根目录, 默认 /opt/guanghu",
+            "default": "/opt/guanghu"
+          },
+          "registered_functions": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^ZY-FN-[A-Z0-9]+$" },
+            "description": "本服务器上已部署的 ZY-FN 列表"
+          },
+          "github_secrets": {
+            "type": "object",
+            "description": "GitHub Secrets 引用名 (不是真值)"
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "description": "子编号 — 完整功能组 (插头·热插拔单元)",
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "display_name_zh", "host_server", "domain",
+          "description", "created_for", "status", "modules"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^ZY-FN-[A-Z0-9]+$",
+            "description": "子编号 (FN = Function 功能组)"
+          },
+          "display_name_zh": {
+            "type": "string",
+            "description": "中文名 — 冰朔人类记忆主键"
+          },
+          "aliases": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "中文别名/俗名 — 用于自然语言模糊匹配 (例: 测试模型, 微调聊天)"
+          },
+          "host_server": {
+            "type": "string",
+            "pattern": "^ZY-SVR-[A-Z0-9]+$",
+            "description": "归属母编号"
+          },
+          "domain": {
+            "type": "string",
+            "description": "占用域名 (例: guanghu.online)"
+          },
+          "domain_paths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "在该域名下占用的路径前缀列表 (例: ['/', '/api/ftchat'])"
+          },
+          "ports": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "本 ZY-FN 占用的服务器内部端口列表"
+          },
+          "pm2_processes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "description": {
+            "type": "string",
+            "description": "一句话描述"
+          },
+          "created_for": {
+            "type": "string",
+            "description": "为什么开发它 (动机) — 必填, 失忆恢复关键字段"
+          },
+          "keep_decision": {
+            "type": "string",
+            "enum": ["keep", "evaluate", "retire"],
+            "description": "冰朔的留存判断"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "standby", "deprecated", "retired", "planned"]
+          },
+          "modules": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^M-[A-Z0-9-]+$" },
+            "description": "包含的模块编号列表"
+          },
+          "api_keys_alias": {
+            "type": "object",
+            "description": "密钥别名 → GitHub Secret 名映射 (本 ZY-FN 内代码只看到别名)",
+            "additionalProperties": { "type": "string" }
+          },
+          "frontend_entry": {
+            "type": "string",
+            "description": "前端入口路径 (例: /opt/guanghu/ftchat/public)"
+          },
+          "backend_entry": {
+            "type": "string",
+            "description": "后端启动入口 (例: server/ftchat/ecosystem.config.js)"
+          },
+          "health_check": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "expected_status": { "type": "integer", "default": 200 }
+            }
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "active_routes": {
+      "type": "object",
+      "description": "域名 → 当前激活的子编号 (热插拔状态机)",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["active_fn"],
+        "properties": {
+          "active_fn": { "type": "string", "pattern": "^ZY-FN-[A-Z0-9]+$" },
+          "host_server": { "type": "string", "pattern": "^ZY-SVR-[A-Z0-9]+$" },
+          "since": { "type": "string" },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fn": { "type": "string" },
+                "from": { "type": "string" },
+                "to": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "modules_index": {
+      "type": "array",
+      "description": "(可选) 模块零件清单 — 给注册中心查询用",
+      "items": {
+        "type": "object",
+        "required": ["id", "display_name_zh"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^M-[A-Z0-9-]+$" },
+          "display_name_zh": { "type": "string" },
+          "description": { "type": "string" },
+          "used_by": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^ZY-FN-[A-Z0-9]+$" }
+          }
+        }
+      }
+    }
+  }
+}
