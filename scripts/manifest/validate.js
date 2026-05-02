@@ -137,7 +137,7 @@ if (warnings.length) {
 console.log(JSON.stringify(summary, null, 2));
 
 if (errors.length) {
-  process.exit(strict ? 1 : 1);
+  process.exit(1);
 }
 if (strict && warnings.length) process.exit(1);
 process.exit(0);

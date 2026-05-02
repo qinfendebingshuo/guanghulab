@@ -29,11 +29,11 @@ const MODEL_NAIPPING = process.env.FT_MODEL_NAIPPING || 'qwen3-8b-ft-20260428180
 const MODEL_FALLBACK = process.env.FT_MODEL_FALLBACK || 'qwen-turbo';
 
 // 已确认在 DashScope 账号下不存在的模型 ID, 后续直接走 fallback, 避免每轮都 404
-const _missingModels = new Set();
+const missingModels = new Set();
 
 function pickModel(variant) {
   const primary = variant === 'naipping' ? MODEL_NAIPPING : MODEL_SYSTEM;
-  if (_missingModels.has(primary)) return MODEL_FALLBACK;
+  if (missingModels.has(primary)) return MODEL_FALLBACK;
   return primary;
 }
 
@@ -85,7 +85,7 @@ function _streamChatOnce(args) {
             isModelNotFound = parsed && parsed.error && parsed.error.code === 'model_not_found';
           } catch (_e) { /* ignore */ }
           if (isModelNotFound) {
-            _missingModels.add(model);
+            missingModels.add(model);
             const err = new Error(msg);
             err.modelNotFound = true;
             err.attemptedModel = model;
@@ -220,7 +220,7 @@ async function chatOnce(args) {
               isModelNotFound = parsed && parsed.error && parsed.error.code === 'model_not_found';
             } catch (_e) { /* ignore */ }
             if (isModelNotFound) {
-              _missingModels.add(model);
+              missingModels.add(model);
               const err = new Error(`DashScope HTTP ${upstream.statusCode}: ${buf.slice(0, 200)}`);
               err.modelNotFound = true;
               err.attemptedModel = model;
