@@ -20,6 +20,42 @@ const fs = require('fs');
 const path = require('path');
 const memory = require('./memory');
 
+// ── 全局开关 + 冷却 ──────────────────────────
+//
+// OPS_EMAIL_ENABLED:
+//   - 默认 true。设为 'false'/'0' 时所有邮件函数立即 no-op（kill switch）。
+//   - 用法：`pm2 set ops-agent:OPS_EMAIL_ENABLED false && pm2 restart ops-agent`
+//
+// OPS_ALERT_COOLDOWN_MINUTES:
+//   - 默认 360（6 小时）。同一 (service+severity) 的告警与工单邮件在该间隔内只发一次，
+//     避免高频持续故障（例如 MCP 连接超时）刷屏。
+
+const COOLDOWN_MINUTES = (() => {
+  const v = parseInt(process.env.OPS_ALERT_COOLDOWN_MINUTES || '360', 10);
+  return Number.isFinite(v) && v >= 0 ? v : 360;
+})();
+
+const _lastSentAt = new Map(); // key -> epoch ms
+
+function isEmailEnabled() {
+  const v = process.env.OPS_EMAIL_ENABLED;
+  if (v === undefined || v === null || v === '') return true;
+  const norm = String(v).trim().toLowerCase();
+  return !(norm === 'false' || norm === '0' || norm === 'no' || norm === 'off');
+}
+
+function cooldownRemainingMs(key) {
+  const last = _lastSentAt.get(key);
+  if (!last) return 0;
+  const elapsed = Date.now() - last;
+  const windowMs = COOLDOWN_MINUTES * 60 * 1000;
+  return elapsed >= windowMs ? 0 : windowMs - elapsed;
+}
+
+function markSent(key) {
+  _lastSentAt.set(key, Date.now());
+}
+
 // ── SMTP 传输器（懒初始化） ──────────────
 
 let _transporter = null;
@@ -53,6 +89,11 @@ function getSmtpTransporter() {
 // ── 发送邮件告警 ────────────────────────────
 
 async function sendAlertEmail(subject, htmlBody) {
+  if (!isEmailEnabled()) {
+    console.log('[Notifier] OPS_EMAIL_ENABLED=false，跳过邮件发送');
+    return { sent: false, reason: 'disabled' };
+  }
+
   const transporter = getSmtpTransporter();
   if (!transporter) {
     console.log('[Notifier] SMTP 未配置，跳过邮件发送');
@@ -133,16 +174,44 @@ async function alertOnIssues(checkResult) {
   const criticalIssues = checkResult.issues.filter(i => i.severity === 'critical' || i.severity === 'high');
   if (criticalIssues.length === 0) return; // 只对高/紧急级别发邮件
 
-  const title = `发现 ${criticalIssues.length} 个严重问题`;
-  const html = buildAlertHTML(title, criticalIssues, checkResult);
+  // 冷却：剔除最近已通知过的 (service+severity)
+  const freshIssues = [];
+  const skipped = [];
+  for (const i of criticalIssues) {
+    const key = `alert:${i.service || 'unknown'}:${i.severity || 'unknown'}`;
+    const remaining = cooldownRemainingMs(key);
+    if (remaining > 0) {
+      skipped.push({ key, remainingMinutes: Math.ceil(remaining / 60000) });
+    } else {
+      freshIssues.push({ issue: i, key });
+    }
+  }
+
+  if (skipped.length > 0) {
+    console.log(`[Notifier] 冷却中跳过 ${skipped.length} 个告警: ${skipped.map(s => `${s.key}(${s.remainingMinutes}m)`).join(', ')}`);
+  }
+
+  if (freshIssues.length === 0) {
+    return { sent: false, reason: 'cooldown', skipped: skipped.length };
+  }
+
+  const issuesToSend = freshIssues.map(f => f.issue);
+  const title = `发现 ${issuesToSend.length} 个严重问题`;
+  const html = buildAlertHTML(title, issuesToSend, checkResult);
 
   // 发邮件
   const emailResult = await sendAlertEmail(title, html);
 
+  // 仅在真正发出去时记录冷却时间戳，避免 SMTP 失败导致永久静默
+  if (emailResult && emailResult.sent) {
+    for (const f of freshIssues) markSent(f.key);
+  }
+
   // 记录事件
   memory.logEvent('alert', {
     title,
-    issueCount: criticalIssues.length,
+    issueCount: issuesToSend.length,
+    skippedByCooldown: skipped.length,
     emailSent: emailResult.sent,
     summary: checkResult.summary
   });
@@ -153,6 +222,14 @@ async function alertOnIssues(checkResult) {
 // ── 工单升级通知 ────────────────────────────
 
 async function notifyTicketCreated(ticket) {
+  // 冷却兜底：同一 (service+severity) 在窗口内只发一次工单邮件
+  const cooldownKey = `ticket:${ticket.relatedService || ticket.title || 'unknown'}:${ticket.severity || 'unknown'}`;
+  const remaining = cooldownRemainingMs(cooldownKey);
+  if (remaining > 0) {
+    console.log(`[Notifier] 工单邮件冷却中(${Math.ceil(remaining / 60000)}分钟剩余)，跳过 ${ticket.id}`);
+    return { sent: false, reason: 'cooldown' };
+  }
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -179,7 +256,9 @@ async function notifyTicketCreated(ticket) {
 </body>
 </html>`;
 
-  return sendAlertEmail(`新工单 ${ticket.id}: ${ticket.title}`, html);
+  const result = await sendAlertEmail(`新工单 ${ticket.id}: ${ticket.title}`, html);
+  if (result && result.sent) markSent(cooldownKey);
+  return result;
 }
 
 // ── 每日报告邮件 ────────────────────────────
@@ -242,5 +321,8 @@ module.exports = {
   alertOnIssues,
   notifyTicketCreated,
   sendDailyReport,
-  getSmtpTransporter
+  getSmtpTransporter,
+  isEmailEnabled,
+  // 供测试使用
+  _resetCooldownForTests: () => _lastSentAt.clear()
 };
