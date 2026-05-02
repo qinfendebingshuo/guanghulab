@@ -4,7 +4,7 @@
   "route": "/hli/ftchat/chat",
   "method": "POST",
   "type": "STREAM",
-  "purpose": "调用阿里云百炼微调模型（默认 shuangyan-system-v1）流式回复，附带 Notion 提示词 + 真实时间瞄点 + 跨会话母语记忆",
+  "purpose": "调用阿里云百炼微调模型（默认 qwen3-8b-ft-202604281809-9f30）流式回复，附带 Notion 提示词 + 真实时间瞄点 + 跨会话母语记忆。model_not_found 自动降级到 qwen-turbo。",
   "input": {
     "type": "object",
     "required": ["session_id", "messages"],

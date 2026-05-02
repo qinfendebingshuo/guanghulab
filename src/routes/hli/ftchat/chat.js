@@ -1,5 +1,5 @@
 // HLI-FTCHAT-003: 流式对话（SSE）
-// 默认调用 shuangyan-system-v1 微调模型
+// 默认调用 qwen3-8b-ft-202604281809-9f30 微调模型 (DashScope · 冰朔 D69 提供)
 
 'use strict';
 

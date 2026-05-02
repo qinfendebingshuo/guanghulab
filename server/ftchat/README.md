@@ -67,8 +67,9 @@ guanghu.online (Nginx 443, SSL 复用 zhiku 证书)
 
 ## 调用模型
 
-- 默认: `shuangyan-system-v1` (微调系统线)
-- 备选: `shuangyan-naipping-v1` (奶瓶/情感线, 仅服务端可切, 前端不暴露按钮)
+- 默认: `qwen3-8b-ft-202604281809-9f30` (微调系统线 · 冰朔 D69 提供 DashScope 真实模型 ID)
+- 备选: 同上 (奶瓶/情感线尚未单独微调, 暂复用系统线 · 仅服务端可切, 前端不暴露按钮)
+- 兜底: `qwen-turbo` (model_not_found 自动降级, 由 FT_MODEL_FALLBACK 控制)
 - 端点: `https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions`
 - 鉴权: `FT_DASHSCOPE_API_KEY` (与商业模型 key 区分)
 
