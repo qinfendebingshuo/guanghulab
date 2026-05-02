@@ -157,17 +157,18 @@ function getOpenTickets() {
 
 /**
  * 按服务+诊断查找处于 open 状态的工单（去重用）
+ * 严格匹配：必须同时提供 relatedService 与 diagnosis，避免跨问题误合并
  * @param {Object} key - { relatedService, diagnosis }
  * @returns {Object|null}
  */
 function findOpenTicketByKey(key = {}) {
   const { relatedService, diagnosis } = key;
-  if (!relatedService && !diagnosis) return null;
+  if (!relatedService || !diagnosis) return null;
   const tickets = loadTickets();
   return tickets.find(t =>
     t.status === 'open' &&
-    (relatedService ? t.relatedService === relatedService : true) &&
-    (diagnosis ? t.diagnosis === diagnosis : true)
+    t.relatedService === relatedService &&
+    t.diagnosis === diagnosis
   ) || null;
 }
 
