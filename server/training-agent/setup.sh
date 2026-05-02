@@ -113,8 +113,7 @@ echo "═══ 3/7 · coscmd 配置 ═══"
   -b "$ZY_COS_BUCKET" \
   -r "$ZY_COS_REGION"
 
-# 用内网域名（南京 GPU → 广州 COS 走内网，免费且快）
-sed -i 's/myqcloud.com/myqcloud.com/' "$HOME/.cos.conf" 2>/dev/null || true
+# 注: coscmd 默认即走 cos.{region}.myqcloud.com,腾讯云内网会自动路由,无需改 endpoint
 report "bootstrapping" "COS 客户端配置完成" "" "coscmd configured for $ZY_COS_BUCKET ($ZY_COS_REGION)"
 
 # ── 4. 拉取语料 ──
