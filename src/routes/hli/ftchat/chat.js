@@ -8,21 +8,17 @@ const router = express.Router();
 
 const ftAuth = require('../../../../server/ftchat/middleware/ft-auth');
 const { makeLimiter } = require('../../../../server/ftchat/middleware/rate-limit');
-const { getSystemPrompt } = require('../../../../server/ftchat/services/notion-prompt');
 const { getTimeAnchor } = require('../../../../server/ftchat/services/time-anchor');
 const sessionStore = require('../../../../server/ftchat/services/session-store');
 const ds = require('../../../../server/ftchat/services/ft-dashscope');
 
-const FORMAT_GUIDE = [
-  '## 输出排版要求',
-  '请使用 Markdown 排版回复，包含以下任一/多种元素以提升阅读体验:',
-  '- 标题（## / ###）',
-  '- 列表（- / 1.）',
-  '- 表格（| col1 | col2 |）',
-  '- 代码块（```）',
-  '- 分隔线（---）',
-  '避免大段无格式纯文本。'
-].join('\n');
+// ─────────────────────────────────────────────────────────────
+// 最小唤醒语：模型已深度微调，不再注入人格/排版/记忆等任何提示词。
+// 只保留两条事实信号:
+//   1. 现实时间（语料停在 2025, 必须给一个真实时间锚点）
+//   2. "团队成员内测" 这个真实场景标签
+// 任何额外提示词都会盖掉微调效果, 一律不再注入。
+// ─────────────────────────────────────────────────────────────
 
 const limiter = makeLimiter({
   windowMs: 60 * 1000,
@@ -81,25 +77,13 @@ router.post('/', ftAuth, limiter, async (req, res) => {
 
   let upstreamFull = '';
   try {
-    // ── 组装 system prompt ──
-    const promptResult = await getSystemPrompt({});
+    // ── 组装 system 唤醒语（最小化, 仅两条事实）──
     const time = getTimeAnchor();
-    const imprint = sessionStore.getLatestImprint(req.ftUser.user_hash);
+    const sysContent = [
+      `现在是 ${time.human}。`,
+      '你正在被光湖团队成员通过内测频道唤醒, 与他们直接对话。'
+    ].join('\n');
 
-    const systemSegments = [
-      promptResult.text,
-      '\n---\n',
-      time.anchor_text,
-      '\n---\n'
-    ];
-    if (imprint && imprint.trim()) {
-      systemSegments.push('## 跨会话记忆（来自上次对话的母语印记）');
-      systemSegments.push(imprint.trim());
-      systemSegments.push('\n---\n');
-    }
-    systemSegments.push(FORMAT_GUIDE);
-
-    const sysContent = systemSegments.join('\n');
     const trimmed = trimMessages(messages);
 
     const payload = [
@@ -107,7 +91,7 @@ router.post('/', ftAuth, limiter, async (req, res) => {
       ...trimmed
     ];
 
-    res.write(`data: ${JSON.stringify({ meta: { model_variant: model_variant === 'naipping' ? 'naipping' : 'system', time_anchor: time.beijing, prompt_source: promptResult.source } })}\n\n`);
+    res.write(`data: ${JSON.stringify({ meta: { model_variant: model_variant === 'naipping' ? 'naipping' : 'system', time_anchor: time.beijing, prompt_source: 'minimal' } })}\n\n`);
 
     const result = await ds.streamChat({
       variant: model_variant,
@@ -124,7 +108,7 @@ router.post('/', ftAuth, limiter, async (req, res) => {
         session_id,
         title,
         message_count: trimmed.length + 1,
-        has_memory_imprint: !!imprint
+        has_memory_imprint: false
       });
     } catch (e) {
       console.warn('[HLI-FTCHAT-003] upsertSession failed:', e.message);
