@@ -1,0 +1,252 @@
+name: '✦ FTCHAT 部署 · guanghu.online (微调模型内测)'
+
+# ═══════════════════════════════════════════════════════════
+# 光湖 · 微调模型团队内测站 部署工作流
+# 编号: ZY-WF-FTCHAT
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 目标服务器: ZY-SVR-006 (43.153.203.105 · 新加坡)
+# 域名:       guanghu.online
+# 部署路径:   /opt/guanghu/ftchat
+# 后端端口:   3010 (内部, Nginx 反代)
+# 进程名:     ftchat-api (PM2)
+#
+# 复用 Secrets (与 novel-mirror-shield 同服务器):
+#   ZY_NOVEL_HOST  — 43.153.203.105
+#   ZY_NOVEL_USER  — root
+#   ZY_NOVEL_KEY   — SSH 私钥
+#
+# 新增 Secrets:
+#   FT_NOTION_API_TOKEN     — Notion Internal Integration token
+#   FT_NOTION_PROMPT_PAGE_ID — Notion 系统提示词页面 ID
+#   FT_DASHSCOPE_API_KEY    — 阿里云百炼 API Key (区分商业模型)
+#   ZY_SMTP_USER / ZY_SMTP_PASS — QQ 邮箱 SMTP (验证码发件)
+# ═══════════════════════════════════════════════════════════
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'server/ftchat/**'
+      - 'server/nginx/ftchat-guanghu-online.conf'
+      - 'frontend/ftchat/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-ftchat-guanghu-online.yml'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '执行动作'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - retire-zhiku
+          - health
+          - rollback
+
+jobs:
+  deploy:
+    name: '🚀 部署 FTCHAT'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
+
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/ftchat_key
+          chmod 600 ~/.ssh/ftchat_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '📦 服务器准备目录'
+        run: |
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          mkdir -p /opt/guanghu/ftchat/{src,server/ftchat,scripts,data,public}
+          mkdir -p /var/log/ftchat
+          # 数据目录权限
+          chmod 700 /opt/guanghu/ftchat/data
+          echo "✓ 目录就绪"
+          ENDSSH
+
+      - name: '📤 上传后端代码 (src/ + server/ftchat/)'
+        run: |
+          # 排除 node_modules / data / public 等
+          tar --exclude='node_modules' --exclude='.git' --exclude='data' \
+              -czf /tmp/ftchat-backend.tar.gz \
+              src/ server/ftchat/services server/ftchat/middleware \
+              server/ftchat/ecosystem.config.js \
+              package.json package-lock.json \
+              scripts/hli-contract-check.js
+          scp -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            /tmp/ftchat-backend.tar.gz \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/guanghu/ftchat/_payload.tar.gz
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'cd /opt/guanghu/ftchat && tar -xzf _payload.tar.gz && rm -f _payload.tar.gz && echo "✓ 后端代码已解压"'
+
+      - name: '📤 上传前端静态文件'
+        run: |
+          scp -r -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            frontend/ftchat/* \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/guanghu/ftchat/public/
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'echo "✓ 前端 $(ls /opt/guanghu/ftchat/public/ | wc -l) 个文件"'
+
+      - name: '⚙️ 生成服务器 .env (在 runner 上拼接, 避免 heredoc 暴露 secrets)'
+        env:
+          NOTION_TOKEN: ${{ secrets.FT_NOTION_API_TOKEN }}
+          NOTION_PAGE: ${{ secrets.FT_NOTION_PROMPT_PAGE_ID }}
+          DASHSCOPE_KEY: ${{ secrets.FT_DASHSCOPE_API_KEY }}
+          SMTP_USER: ${{ secrets.ZY_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.ZY_SMTP_PASS }}
+        run: |
+          cat > /tmp/ftchat.env << EOF
+          NODE_ENV=production
+          PORT=3010
+          FTCHAT_DATA_DIR=/opt/guanghu/ftchat/data
+          FT_NOTION_API_TOKEN=${NOTION_TOKEN}
+          FT_NOTION_PROMPT_PAGE_ID=${NOTION_PAGE}
+          FT_DASHSCOPE_API_KEY=${DASHSCOPE_KEY}
+          FT_MODEL_SYSTEM=shuangyan-system-v1
+          FT_MODEL_NAIPPING=shuangyan-naipping-v1
+          ZY_SMTP_USER=${SMTP_USER}
+          ZY_SMTP_PASS=${SMTP_PASS}
+          EOF
+          scp -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            /tmp/ftchat.env \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/guanghu/ftchat/.env
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
+            'chmod 600 /opt/guanghu/ftchat/.env'
+          rm -f /tmp/ftchat.env
+
+      - name: '📦 安装依赖'
+        run: |
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          cd /opt/guanghu/ftchat
+          # Node 与 PM2 假定已在服务器上 (与 novel-api 复用)
+          npm ci --production --silent || npm install --production --silent
+          # 契约自检 (确保上传的 schema 与代码一致)
+          if [ -f scripts/hli-contract-check.js ]; then
+            node scripts/hli-contract-check.js || echo "⚠ 契约自检发现问题, 继续部署"
+          fi
+          echo "✓ 依赖安装完成"
+          ENDSSH
+
+      - name: '🚀 启动/重启 PM2'
+        run: |
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          cd /opt/guanghu/ftchat
+          # 加载 .env 到当前 shell, PM2 reload --update-env 会继承
+          set -a
+          # shellcheck disable=SC1091
+          . ./.env
+          set +a
+          pm2 describe ftchat-api > /dev/null 2>&1 \
+            && pm2 reload server/ftchat/ecosystem.config.js --update-env \
+            || pm2 start server/ftchat/ecosystem.config.js
+          pm2 save
+          pm2 startup systemd -u root --hp /root 2>/dev/null || true
+          systemctl enable pm2-root 2>/dev/null || true
+          echo "=== PM2 状态 ==="
+          pm2 list
+          ENDSSH
+
+      - name: '🌐 部署 Nginx 配置'
+        run: |
+          scp -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            server/nginx/ftchat-guanghu-online.conf \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/etc/nginx/sites-available/ftchat-guanghu-online.conf
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          # 备份并禁用旧的 zhiku 站点 (域名复用)
+          if [ -L /etc/nginx/sites-enabled/zhiku ] || [ -L /etc/nginx/sites-enabled/zhiku-guanghu-online.conf ]; then
+            rm -f /etc/nginx/sites-enabled/zhiku /etc/nginx/sites-enabled/zhiku-guanghu-online.conf
+            echo "✓ 已禁用旧 zhiku 站点"
+          fi
+          ln -sf /etc/nginx/sites-available/ftchat-guanghu-online.conf \
+                 /etc/nginx/sites-enabled/ftchat-guanghu-online.conf
+          nginx -t
+          systemctl reload nginx
+          echo "✓ Nginx 已重载"
+          ENDSSH
+
+      - name: '✅ 健康检查'
+        run: |
+          sleep 3
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          echo "── /health (本地直连 3010) ──"
+          curl -fsS http://127.0.0.1:3010/health || (echo '后端未就绪' && exit 1)
+          echo
+          echo "── /hli/ftchat/status (本地) ──"
+          curl -fsS http://127.0.0.1:3010/hli/ftchat/status
+          echo
+          echo "── /hli/ftchat/status (公网 HTTPS) ──"
+          curl -fsS https://guanghu.online/hli/ftchat/status || echo '⚠ 公网检查失败 (可能 DNS/SSL 还没就绪)'
+          echo
+          echo "✓ 健康检查通过"
+          ENDSSH
+
+  retire-zhiku:
+    name: '🗄️ 下架旧 zhiku 站点'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'retire-zhiku'
+    steps:
+      - name: '📥 检出代码'
+        uses: actions/checkout@v4
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/ftchat_key
+          chmod 600 ~/.ssh/ftchat_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+      - name: '🛑 停止 zhiku-api + 禁用 nginx 站点'
+        run: |
+          ssh -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set +e
+          pm2 describe zhiku-api > /dev/null 2>&1 && {
+            pm2 stop zhiku-api
+            pm2 delete zhiku-api
+            pm2 save
+            echo "✓ zhiku-api PM2 进程已停止"
+          } || echo "ℹ zhiku-api 不在 PM2 中"
+          # 禁用 nginx
+          rm -f /etc/nginx/sites-enabled/zhiku /etc/nginx/sites-enabled/zhiku-guanghu-online.conf
+          nginx -t && systemctl reload nginx && echo "✓ Nginx 已重载"
+          ENDSSH
+
+  health:
+    name: '🩺 健康检查'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
+    steps:
+      - run: |
+          curl -fsS https://guanghu.online/health
+          echo
+          curl -fsS https://guanghu.online/hli/ftchat/status

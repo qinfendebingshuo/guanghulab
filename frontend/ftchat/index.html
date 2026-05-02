@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+  <meta name="theme-color" content="#0a0e27">
+  <meta name="description" content="光湖 · 微调模型内测频道">
+  <title>光湖 · 微调模型内测</title>
+  <link rel="stylesheet" href="./style.css">
+  <!-- marked + DOMPurify (jsDelivr CDN, 国内可达) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+</head>
+<body data-theme="dark">
+  <!-- 星空动态背景 (canvas, 固定层) -->
+  <canvas id="starfield" aria-hidden="true"></canvas>
+
+  <!-- 主题切换 -->
+  <button id="themeToggle" class="theme-toggle" aria-label="切换主题">
+    <span class="theme-icon-dark">🌙</span>
+    <span class="theme-icon-light">☀️</span>
+  </button>
+
+  <!-- 登录页 -->
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">✦</div>
+        <h1 class="login-title">光湖 · 微调模型内测</h1>
+        <p class="login-subtitle">10 席位先到先得 · 仅限 QQ 邮箱</p>
+      </div>
+
+      <div id="slotsBanner" class="slots-banner" role="status">
+        <span id="slotsText">正在查询席位…</span>
+      </div>
+
+      <form id="loginForm" class="login-form" autocomplete="off" novalidate>
+        <label for="emailInput" class="login-label">QQ 邮箱</label>
+        <input id="emailInput" type="email" class="login-input" placeholder="例如: 123456@qq.com" autocomplete="email" inputmode="email" required>
+
+        <button id="sendCodeBtn" type="button" class="btn-secondary">获取验证码</button>
+
+        <label for="codeInput" class="login-label">6 位验证码</label>
+        <input id="codeInput" type="text" class="login-input" placeholder="6 位数字" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code">
+
+        <button id="loginBtn" type="submit" class="btn-primary">进入对话</button>
+      </form>
+
+      <p id="loginMsg" class="login-msg" role="alert"></p>
+
+      <p class="login-footer">
+        守护: 铸渊 · ICE-GL-ZY001<br>
+        版权: 国作登字-2026-A-00037559
+      </p>
+    </div>
+  </section>
+
+  <!-- 聊天主界面 -->
+  <section id="chatScreen" class="chat-screen" hidden>
+    <!-- 移动端抽屉遮罩 -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- 左侧栏 -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <button id="newChatBtn" class="btn-new-chat" type="button">＋ 新对话</button>
+        <button id="sidebarClose" class="sidebar-close-mobile" type="button" aria-label="关闭侧栏">✕</button>
+      </div>
+      <div id="sessionsList" class="sessions-list" role="navigation"></div>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <span id="userBadge" class="user-badge"></span>
+          <span id="slotIndex" class="slot-badge"></span>
+        </div>
+        <button id="logoutBtn" class="btn-logout" type="button">退出登录</button>
+      </div>
+    </aside>
+
+    <!-- 主聊天区 -->
+    <main class="chat-main">
+      <header class="chat-header">
+        <button id="sidebarToggle" class="sidebar-toggle-mobile" type="button" aria-label="打开侧栏">☰</button>
+        <div class="chat-title-block">
+          <h2 class="chat-title">光湖 · 微调模型内测</h2>
+          <div id="metaBar" class="meta-bar"></div>
+        </div>
+      </header>
+
+      <div id="chatBody" class="chat-body" role="log" aria-live="polite"></div>
+
+      <form id="composer" class="composer" autocomplete="off">
+        <textarea id="msgInput" class="msg-input" placeholder="说点什么…(Enter 发送 / Shift+Enter 换行)" rows="1"></textarea>
+        <button id="sendBtn" type="submit" class="btn-send" aria-label="发送">发送</button>
+      </form>
+    </main>
+  </section>
+
+  <script src="./theme-toggle.js"></script>
+  <script src="./chat.js"></script>
+</body>
+</html>

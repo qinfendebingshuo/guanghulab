@@ -86,18 +86,20 @@ function blockToMarkdown(block) {
 
 async function fetchAllChildren(notion, blockId) {
   const all = [];
+  const MAX_PAGES = 50; // 安全上限: 50 * 100 = 5000 块, 足够覆盖任何系统提示词页面
   let cursor;
-  // Notion 列表分页
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  let hasMore = true;
+  let pageCount = 0;
+  while (hasMore && pageCount < MAX_PAGES) {
     const resp = await notion.blocks.children.list({
       block_id: blockId,
       start_cursor: cursor,
       page_size: 100
     });
     if (resp && Array.isArray(resp.results)) all.push(...resp.results);
-    if (!resp || !resp.has_more) break;
-    cursor = resp.next_cursor;
+    hasMore = !!(resp && resp.has_more);
+    cursor = resp ? resp.next_cursor : undefined;
+    pageCount += 1;
   }
   return all;
 }

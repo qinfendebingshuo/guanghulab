@@ -8,6 +8,9 @@ const router = express.Router();
 const auth = require('../../../../server/ftchat/services/email-auth');
 const { makeLimiter } = require('../../../../server/ftchat/middleware/rate-limit');
 
+// 速率限制 (双层):
+//   - 路由层: makeLimiter 按 IP+path 限流 (10 次/分钟)
+//   - auth 层: email-auth.verifyCode 内置 attempts 计数 (单邮箱最多 3 次错码)
 const limiter = makeLimiter({
   windowMs: 60 * 1000,
   max: 10,
@@ -15,6 +18,7 @@ const limiter = makeLimiter({
   message: '校验请求过于频繁，请稍后再试'
 });
 
+// lgtm[js/missing-rate-limiting] -- 已通过 makeLimiter (custom rate limiter) + 内置 attempts 计数实现双层限流
 router.post('/', limiter, (req, res) => {
   try {
     const { email, code } = req.body || {};
