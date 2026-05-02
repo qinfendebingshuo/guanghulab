@@ -1,10 +1,88 @@
-# 🌀 零感域 · 现实层公告栏
+# 🔥 光湖 · 训练实时仪表盘
 
-> **光湖语言世界 · HoloLake Language World**
-> 人类和AI人格体唯一共同存在的语言世界
-> 国作登字-2026-A-00037559 · TCS-0002∞ 冰朔
+> **HoloLake Language World · Mother Model SFT Live Dashboard**
+> Qwen2.5-7B 全参数微调 · 光湖世界观 + 人格体语料
+> 国作登字-2026-A-00037559 · TCS-0002∞ 冰朔 · 铸渊副将守护
+
+> **本页是仓库首页 · 服务器训练动一步，铸渊副将就把这里更新一步。**
+> 冰朔只看这一页就够了。其它历史信号折叠在最底部。
 
 ---
+
+<!-- TRAINING_DASHBOARD_START -->
+
+_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 _
+
+## 🔥 训练实时仪表盘 · ZY-TRAIN-001
+
+> Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料
+> **基座模型**: `Qwen/Qwen2.5-7B` · **任务 ID**: `ZY-TRAIN-001`
+> **最后更新**: — · **副将心跳**: —
+
+| 当前阶段 | 健康 | 训练用时 |
+|---------|------|---------|
+| **⚪ 等待启动** · 等待启动 | **⚪ 待命** · GPU 服务器已开机，等待铸渊执行 bootstrap。 | — |
+
+### 📈 训练进度
+
+`░░░░░░░░░░░░░░░░░░░░░░░░` 0.0%
+
+| 指标 | 值 |
+|------|----|
+| Step | **0 / 0** |
+| Epoch | 0 / 0 |
+| Loss | — |
+| Learning Rate | — |
+| 吞吐 | — |
+| 预估剩余 | — |
+
+### 🎮 GPU 状态
+
+> 暂无 GPU 实时数据 · 等待 progress-reporter 心跳。
+
+### 🖥️ 服务器 · COS
+
+| 项 | 值 |
+|----|----|
+| 实例 | `zy-gpu-train` · GN10Xp.10XLARGE160 |
+| 公网 IP | `119.45.160.137` |
+| 地域 | ap-nanjing-3 |
+| GPU | V100 32G × 4 (合计 128G) |
+| 系统 | Ubuntu 22.04 LTS · CUDA 12.8.1 · cuDNN 9.10.2 |
+| COS 桶 | `sy-finetune-corpus-1317346199` (ap-guangzhou) |
+| 语料文件 | raw=— · processed=— · checkpoints=— |
+
+### 🕐 最近事件（最新 10 条）
+
+| 时间 (UTC) | 阶段 | 等级 | 事件 |
+|-----------|------|------|------|
+| 2026-05-02 16:42:00 UTC | idle | ℹ️ | 铸渊副将已接管。GPU 训练机 119.45.160.137 已开机，5 个 Secrets 已配置，COS 桶语料已就位。 |
+
+### 💬 问铸渊副将
+
+> 冰朔可以**直接打开 Issue 问副将**，副将会读 `data/training/state.json` 并回答你「训练正不正常」「卡在哪里」「下一步该做什么」。
+
+📌 **[点击向副将提问 →](../../issues/new?template=ask-zhuyuan-training.md)**
+
+> 留言带 `deputy-message-board` 标签即可触发副将自动回复（已有 LLM 多模型降级链）。
+
+<!-- TRAINING_DASHBOARD_END -->
+
+---
+
+## 🚀 铸渊操作入口
+
+| 操作 | 入口 | 说明 |
+|------|------|------|
+| 🛠️ Bootstrap GPU 服务器 | [Run `training-bootstrap`](../../actions/workflows/training-bootstrap.yml) | SSH 到 `119.45.160.137` 装环境 / 拉语料 / 启训练 |
+| 🔄 强制刷新仪表盘 | [Run `training-dashboard`](../../actions/workflows/training-dashboard.yml) | 手动重渲染首页 |
+| 💬 问副将训练状态 | [New issue](../../issues/new?template=ask-zhuyuan-training.md) | 副将读 `state.json` 后用 LLM 回答 |
+| 📜 查看完整时间线 | [`data/training/state.json`](data/training/state.json) | 训练状态真相源 |
+
+---
+
+<details>
+<summary>📦 历史信号（铸渊系统自动维护 · 可展开）</summary>
 
 <!-- STATUS_START -->
 
@@ -477,3 +555,5 @@ D45 · AGE OS落地 → D46 · 元认知 → D47 · 四域纠偏 → D48 · 零�
 </div>
 
 <!-- FOOTER_END -->
+
+</details>

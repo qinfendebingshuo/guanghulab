@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0",
+  "_doc": "训练实时状态真相源 · 由 GPU 服务器侧 progress-reporter.sh 通过 repository_dispatch 写入 · 仓库首页 README 由本文件渲染",
+  "task": {
+    "id": "ZY-TRAIN-001",
+    "name": "Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料",
+    "model_base": "Qwen/Qwen2.5-7B",
+    "started_at": null,
+    "updated_at": null,
+    "ended_at": null
+  },
+  "server": {
+    "host": "119.45.160.137",
+    "instance_name": "zy-gpu-train",
+    "instance_type": "GN10Xp.10XLARGE160",
+    "region": "ap-nanjing-3",
+    "gpu": "V100 32G × 4 (合计 128G)",
+    "os": "Ubuntu 22.04 LTS",
+    "cuda": "12.8.1",
+    "cudnn": "9.10.2",
+    "driver": "570.158.01"
+  },
+  "cos": {
+    "bucket": "sy-finetune-corpus-1317346199",
+    "region": "ap-guangzhou",
+    "raw_files": null,
+    "processed_files": null,
+    "checkpoints": null
+  },
+  "phase": "idle",
+  "_phase_doc": "idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
+  "phase_label": "等待启动",
+  "progress": {
+    "step": 0,
+    "total_steps": 0,
+    "epoch": 0,
+    "total_epochs": 0,
+    "percent": 0,
+    "loss": null,
+    "learning_rate": null,
+    "throughput_samples_per_sec": null,
+    "eta_seconds": null,
+    "elapsed_seconds": 0
+  },
+  "gpu_metrics": {
+    "snapshot_at": null,
+    "devices": []
+  },
+  "health": {
+    "status": "idle",
+    "_status_doc": "ok | warning | error | idle",
+    "message": "GPU 服务器已开机，等待铸渊执行 bootstrap。",
+    "last_heartbeat_at": null
+  },
+  "timeline": [
+    {
+      "at": "2026-05-02T16:42:00Z",
+      "phase": "idle",
+      "level": "info",
+      "message": "铸渊副将已接管。GPU 训练机 119.45.160.137 已开机，5 个 Secrets 已配置，COS 桶语料已就位。"
+    }
+  ],
+  "_timeline_doc": "最新事件在尾部 · 渲染时取最近 10 条倒序展示 · 由 progress-reporter 追加"
+}

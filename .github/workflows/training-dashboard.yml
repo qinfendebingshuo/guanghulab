@@ -1,0 +1,106 @@
+# ═══════════════════════════════════════════════════════════
+# 🔥 训练实时仪表盘 · training-dashboard.yml
+# ═══════════════════════════════════════════════════════════
+# 签发: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559 · TCS-0002∞
+#
+# GPU 服务器侧 progress-reporter.sh 通过 GitHub repository_dispatch
+# (event_type=training-progress) 推送训练心跳 → 本 workflow:
+#   1. 把 client_payload 合并到 data/training/state.json
+#   2. 渲染 README.md 中 TRAINING_DASHBOARD 段落
+#   3. commit & push
+#
+# 触发:
+#   - repository_dispatch · types=[training-progress, training-event]
+#   - workflow_dispatch · 手动强制重渲染
+#   - schedule · 每 30 分钟兜底重渲染（即使没有心跳，也确保 README 不出陈旧）
+# ═══════════════════════════════════════════════════════════
+
+name: 🔥 训练实时仪表盘
+
+on:
+  repository_dispatch:
+    types: [training-progress, training-event]
+  workflow_dispatch:
+    inputs:
+      force_render:
+        description: '强制重渲染 README（即使 state.json 未变）'
+        type: boolean
+        default: true
+  schedule:
+    - cron: '*/30 * * * *'  # 每 30 分钟兜底
+
+permissions:
+  contents: write
+
+concurrency:
+  group: training-dashboard
+  cancel-in-progress: false
+
+jobs:
+  update-dashboard:
+    name: 🔄 合并心跳 + 渲染首页
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📡 合并训练心跳事件
+        if: github.event_name == 'repository_dispatch'
+        env:
+          TRAINING_EVENT_JSON: ${{ toJson(github.event.client_payload) }}
+        run: |
+          echo "═══ 收到训练心跳 ═══"
+          echo "$TRAINING_EVENT_JSON" | head -c 2000
+          echo ""
+          echo "═══════════════════"
+          node scripts/training/merge-event.js
+
+      - name: 🎨 渲染 README 训练仪表盘
+        run: |
+          node scripts/training/render-readme.js
+
+      - name: 💾 提交变更
+        run: |
+          git config user.name "zhuyuan-bot"
+          git config user.email "zhuyuan@guanghulab.com"
+          git add data/training/state.json README.md
+          if git diff --cached --quiet; then
+            echo "[dashboard] 无变更"
+            exit 0
+          fi
+          # 简短 commit 信息（带阶段+step）
+          PHASE=$(node -e "console.log(JSON.parse(require('fs').readFileSync('data/training/state.json','utf8')).phase)")
+          STEP=$(node -e "const s=JSON.parse(require('fs').readFileSync('data/training/state.json','utf8'));console.log((s.progress&&s.progress.step)||0)")
+          TOTAL=$(node -e "const s=JSON.parse(require('fs').readFileSync('data/training/state.json','utf8'));console.log((s.progress&&s.progress.total_steps)||0)")
+          MSG="🔥 training-dashboard · phase=${PHASE} step=${STEP}/${TOTAL} [skip ci]"
+          git commit -m "$MSG"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin "${GITHUB_REF_NAME:-main}" && git push origin HEAD && exit 0
+            echo "⚠️ 推送冲突 第${i}次重试"
+            sleep $((i * 3))
+          done
+          echo "❌ 推送失败"
+          exit 1
+
+      - name: 📝 摘要
+        if: always()
+        run: |
+          echo "## 训练仪表盘更新" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 触发: \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "- 事件类型: \`${{ github.event.action }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- 时间: $(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_STEP_SUMMARY
+          if [ -f data/training/state.json ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 当前状态" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            node -e "const s=JSON.parse(require('fs').readFileSync('data/training/state.json','utf8'));console.log(JSON.stringify({phase:s.phase,progress:s.progress,health:s.health.status},null,2))" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
