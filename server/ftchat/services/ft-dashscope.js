@@ -258,4 +258,122 @@ async function chatOnce(args) {
   }
 }
 
-module.exports = { streamChat, chatOnce, pickModel, MODEL_SYSTEM, MODEL_NAIPPING, MODEL_FALLBACK };
+/**
+ * ═════════════════════════════════════════════════════════════
+ * 纯字节管道 (铸渊 · 2026-05-02)
+ * ═════════════════════════════════════════════════════════════
+ * 上游百炼 SSE 字节直接 pipe 到浏览器, 服务端零解析、零打包。
+ * 仅在以下两种情况打断管道:
+ *   1. 上游非 200 → 收集错误体, 判定 model_not_found 后由 pipeChat 决定降级
+ *   2. 上游 timeout / 网络错误 → reject 给上层 (此时 res headers 可能尚未发出)
+ *
+ * 与 streamChat 的区别:
+ *   - streamChat: 服务端解析 SSE → 抽出 delta.content → 重新发 `{delta: piece}` 帧
+ *                 (本轮已弃用于聊天链路, 仅保留兼容)
+ *   - pipeChat:   `upstream.pipe(res)`, 字节透传, 浏览器直接读百炼原生格式
+ */
+function _pipeChatOnce(args) {
+  const { variant, messages, res, modelOverride } = args;
+  const apiKey = getApiKey();
+  const model = modelOverride || pickModel(variant);
+
+  const body = JSON.stringify({
+    model,
+    messages,
+    stream: true,
+    max_tokens: 2048,
+    temperature: 0.8
+  });
+
+  return new Promise((resolve, reject) => {
+    const upReq = https.request({
+      hostname: ENDPOINT_HOST,
+      path: ENDPOINT_PATH,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'text/event-stream',
+        'Content-Length': Buffer.byteLength(body)
+      },
+      timeout: 120000
+    }, (upstream) => {
+      if (upstream.statusCode !== 200) {
+        let errBuf = '';
+        upstream.on('data', c => { errBuf += c; });
+        upstream.on('end', () => {
+          const msg = `DashScope HTTP ${upstream.statusCode}: ${errBuf.slice(0, 300)}`;
+          console.error('[FTCHAT DS pipe]', msg);
+          let isModelNotFound = false;
+          try {
+            const parsed = JSON.parse(errBuf);
+            isModelNotFound = parsed && parsed.error && parsed.error.code === 'model_not_found';
+          } catch (_e) { /* ignore */ }
+          if (isModelNotFound) {
+            missingModels.add(model);
+            const err = new Error(msg);
+            err.modelNotFound = true;
+            err.attemptedModel = model;
+            return reject(err);
+          }
+          reject(new Error(msg));
+        });
+        return;
+      }
+
+      // 200 OK: 字节级管道. 上游 SSE 头透传给浏览器
+      if (!res.headersSent) {
+        res.writeHead(200, {
+          'Content-Type': upstream.headers['content-type'] || 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no'
+        });
+        if (typeof res.flushHeaders === 'function') res.flushHeaders();
+      }
+
+      upstream.pipe(res, { end: false });
+      upstream.on('end', () => resolve({ model }));
+      upstream.on('error', (err) => {
+        console.error('[FTCHAT DS pipe] upstream error:', err.message);
+        reject(err);
+      });
+    });
+
+    upReq.on('timeout', () => upReq.destroy(new Error('upstream timeout')));
+    upReq.on('error', (err) => {
+      console.error('[FTCHAT DS pipe] request error:', err.message);
+      reject(err);
+    });
+
+    upReq.write(body);
+    upReq.end();
+  });
+}
+
+/**
+ * 纯字节管道版本: 把上游百炼 SSE 字节直接 pipe 到 res.
+ * model_not_found 时自动降级到 FT_MODEL_FALLBACK (仅当 res headers 尚未发出时).
+ * 上游 200 之后, 服务端不再解析任何字节 — 浏览器直接读 OpenAI 兼容 SSE 格式.
+ *
+ * @returns {Promise<{ model: string }>}
+ */
+async function pipeChat(args) {
+  try {
+    return await _pipeChatOnce(args);
+  } catch (err) {
+    if (
+      err && err.modelNotFound &&
+      err.attemptedModel !== MODEL_FALLBACK &&
+      args.res && !args.res.headersSent
+    ) {
+      console.warn(
+        `[FTCHAT DS pipe] model "${err.attemptedModel}" not accessible, falling back to "${MODEL_FALLBACK}"`
+      );
+      return _pipeChatOnce(Object.assign({}, args, { modelOverride: MODEL_FALLBACK }));
+    }
+    throw err;
+  }
+}
+
+module.exports = { streamChat, pipeChat, chatOnce, pickModel, MODEL_SYSTEM, MODEL_NAIPPING, MODEL_FALLBACK };

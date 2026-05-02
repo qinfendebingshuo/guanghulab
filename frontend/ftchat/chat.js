@@ -158,6 +158,18 @@
     metaBar.textContent = parts.join(' · ');
   }
 
+  // 字节级直连百炼后, 服务端不再下发 meta 帧 ——
+  // 这条 meta 完全由前端本地生成, 仅用于 UI 展示, 不进入对话上下文。
+  function localMeta(variant) {
+    var now = new Date();
+    var bj = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+    return {
+      time_anchor: bj,
+      prompt_source: '直连百炼',
+      model_variant: variant === 'naipping' ? 'naipping' : 'system'
+    };
+  }
+
   // ─── API 调用 ───
   function api(path, opts) {
     opts = opts || {};
@@ -499,6 +511,9 @@
     var bubble = appendStreamBubble();
     var fullText = '';
 
+    // 字节级直连: 服务端不再下发 meta, 这里前端本地生成一次
+    setMetaBar(localMeta('system'));
+
     fetch(API_BASE + '/hli/ftchat/chat', {
       method: 'POST',
       headers: {
@@ -519,16 +534,21 @@
       if (!res.ok) {
         return res.json().then(function (d) { throw new Error(d.message || 'HTTP ' + res.status); });
       }
+      // 直接解析百炼/OpenAI 兼容 SSE 格式: data: { choices: [{ delta: { content: "..." } }] }
       return readSse(res, function (event) {
-        if (event.delta) {
-          fullText += event.delta;
+        // 模型增量 token
+        var delta = event && event.choices && event.choices[0] && event.choices[0].delta;
+        var piece = delta && delta.content;
+        if (piece) {
+          fullText += piece;
           bubble.classList.remove('cursor-blink');
           bubble.innerHTML = renderMarkdown(fullText) + '<span class="cursor-blink"></span>';
           scrollToBottom();
         }
-        if (event.meta) setMetaBar(event.meta);
-        if (event.error) {
-          bubble.innerHTML = '<em>⚠️ ' + escapeHtml(event.message || '上游异常') + '</em>';
+        // 百炼/我方异常时透传的 error 帧
+        if (event && event.error) {
+          var msg = (event.error && event.error.message) || event.message || '上游异常';
+          bubble.innerHTML = '<em>⚠️ ' + escapeHtml(msg) + '</em>';
         }
       });
     }).then(function () {
