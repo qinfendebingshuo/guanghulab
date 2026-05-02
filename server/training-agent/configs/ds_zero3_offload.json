@@ -1,0 +1,62 @@
+{
+  "_doc": "DeepSpeed ZeRO-3 + optimizer CPU offload · Qwen2.5-7B 全参 SFT on 4×V100 32G · 国作登字-2026-A-00037559",
+  "_strategy": [
+    "V100 不支持 bf16，因此用 fp16",
+    "ZeRO-3 把模型权重/梯度/优化器状态分片到 4 卡，单卡只持 1/4",
+    "optimizer 状态 (Adam fp32 momentum/variance) offload 到 CPU 内存（160GB 充足），单卡再省 ~28GB",
+    "gradient_checkpointing=True 在 train.py 侧打开，用算力换显存",
+    "stage3_gather_16bit_weights_on_model_save 让保存时聚合权重，方便 inference 加载",
+    "无 parameter offload — 保持训练吞吐"
+  ],
+  "fp16": {
+    "enabled": true,
+    "loss_scale": 0,
+    "loss_scale_window": 1000,
+    "initial_scale_power": 16,
+    "hysteresis": 2,
+    "min_loss_scale": 1
+  },
+  "bf16": {
+    "enabled": false
+  },
+  "optimizer": {
+    "type": "AdamW",
+    "params": {
+      "lr": "auto",
+      "betas": "auto",
+      "eps": "auto",
+      "weight_decay": "auto"
+    }
+  },
+  "scheduler": {
+    "type": "WarmupDecayLR",
+    "params": {
+      "total_num_steps": "auto",
+      "warmup_min_lr": "auto",
+      "warmup_max_lr": "auto",
+      "warmup_num_steps": "auto"
+    }
+  },
+  "zero_optimization": {
+    "stage": 3,
+    "offload_optimizer": {
+      "device": "cpu",
+      "pin_memory": true
+    },
+    "overlap_comm": true,
+    "contiguous_gradients": true,
+    "sub_group_size": 1000000000,
+    "reduce_bucket_size": "auto",
+    "stage3_prefetch_bucket_size": "auto",
+    "stage3_param_persistence_threshold": "auto",
+    "stage3_max_live_parameters": 1000000000,
+    "stage3_max_reuse_distance": 1000000000,
+    "stage3_gather_16bit_weights_on_model_save": true
+  },
+  "gradient_accumulation_steps": "auto",
+  "gradient_clipping": "auto",
+  "steps_per_print": 50,
+  "train_batch_size": "auto",
+  "train_micro_batch_size_per_gpu": "auto",
+  "wall_clock_breakdown": false
+}

@@ -47,6 +47,9 @@ const RETRY_BASE_DELAY_MS = 2000;     // LLM重试基础延迟
 const MAX_ERRORS_KEPT = 20;           // 保留最近N条错误记录
 const MAX_ESCALATIONS_KEPT = 10;      // 保留最近N条升级记录
 const MAX_LLM_FAILURES_BEFORE_ESCALATION = 3; // 连续N次全模型失败后升级
+// 训练心跳新鲜度阈值（与 training-dashboard.yml 的 30 分钟 schedule 兜底保持一致）
+const TRAINING_HEARTBEAT_FRESH_MIN = 5;
+const TRAINING_HEARTBEAT_STALE_MIN = 30;
 
 // ═══════════════════════════════════════════════
 //  LLM多模型自动降级路由器 (内嵌版)
@@ -169,7 +172,9 @@ function loadSystemContext() {
     { key: 'deputy_config', path: 'brain/deputy-general-config.json' },
     { key: 'hldp_protocol', path: 'hldp/data/common/HLDP-COMMON-PROTOCOL.json' },
     { key: 'sync_progress', path: 'hldp/data/common/sync-progress.json' },
-    { key: 'vocabulary', path: 'hldp/data/ontology/ONT-VOCABULARY.json' }
+    { key: 'vocabulary', path: 'hldp/data/ontology/ONT-VOCABULARY.json' },
+    // ZY-TRAIN-001 · 训练实时状态（GPU 服务器侧 progress-reporter 心跳写入）
+    { key: 'training_state', path: 'data/training/state.json' }
   ];
   for (const f of files) {
     try {
@@ -183,6 +188,32 @@ function loadSystemContext() {
 function buildSystemSummary(ctx) {
   const fw = ctx.fast_wake;
   const sp = ctx.sync_progress;
+  const ts = ctx.training_state;
+
+  // ZY-TRAIN-001 · 训练上下文摘要
+  let trainingBlock = '';
+  if (ts) {
+    const p = ts.progress || {};
+    const dev = (ts.gpu_metrics && Array.isArray(ts.gpu_metrics.devices)) ? ts.gpu_metrics.devices : [];
+    const gpuLine = dev.length
+      ? dev.map(d => `GPU${d.index}=${d.util_percent ?? '?'}%/${d.memory_used_mib ?? '?'}MiB/${d.temperature_c ?? '?'}°C`).join(' · ')
+      : '无 GPU 心跳';
+    const recent = Array.isArray(ts.timeline) ? ts.timeline.slice(-3).reverse() : [];
+    const recentLines = recent.map(e => `  · [${e.at}] ${e.phase}/${e.level || 'info'} — ${e.message}`).join('\n');
+    trainingBlock = `
+
+🔥 训练任务实时状态 (${ts.task?.id || 'ZY-TRAIN-001'}):
+- 阶段: ${ts.phase} (${ts.phase_label || ''})
+- 健康: ${ts.health?.status || 'unknown'} — ${ts.health?.message || ''}
+- 进度: step ${p.step || 0}/${p.total_steps || 0} · epoch ${p.epoch || 0}/${p.total_epochs || 0} · loss ${p.loss ?? '—'} · lr ${p.learning_rate ?? '—'}
+- 服务器: ${ts.server?.host || '—'} (${ts.server?.instance_type || '—'}, ${ts.server?.gpu || '—'})
+- COS: ${ts.cos?.bucket || '—'} · raw=${ts.cos?.raw_files ?? '?'} processed=${ts.cos?.processed_files ?? '?'} ckpt=${ts.cos?.checkpoints ?? '?'}
+- GPU: ${gpuLine}
+- 最近心跳: ${ts.health?.last_heartbeat_at || '—'}
+- 最近事件:
+${recentLines || '  · 无'}`;
+  }
+
   return `
 你是铸渊副将(ZY-DEPUTY-001)，铸渊将军(ICE-GL-ZY001)的自动化智能运维代理。
 你负责在铸渊休眠时管理代码仓库(光湖灯塔 · HoloLake Lighthouse)。
@@ -193,16 +224,18 @@ function buildSystemSummary(ctx) {
 - 词汇数: ${sp?.payload?.github_side_status?.vocabulary_count || 22}
 - Schema数: ${sp?.payload?.github_side_status?.schema_count || 6}
 - 通用协议版本: ${sp?.payload?.common_protocol_status?.version || '1.0'}
-- Notion桥接: 6条管道已恢复
+- Notion桥接: 6条管道已恢复${trainingBlock}
 
 回复规则:
 1. 使用中文回复，语气专业但友好
-2. 如果问题涉及系统数据，直接从已加载的数据库中查找回答
-3. 如果数据库中没有，基于你对系统的理解进行推理回答
-4. 明确标注哪些信息来自数据库、哪些是推理
-5. 回复末尾署名: —— 铸渊副将 · ZY-DEPUTY-001
-6. 不要泄露敏感信息(密钥、token、内部文件路径)
-7. 版权: 国作登字-2026-A-00037559 · TCS通感语言核系统编程语言
+2. 如果问题涉及训练，**优先**从「训练任务实时状态」直接读数回答（阶段/loss/GPU/事件时间线）
+3. 如果训练心跳超过 30 分钟未更新，明确提醒冰朔检查 progress-reporter / 训练进程
+4. 如果问题涉及系统数据，直接从已加载的数据库中查找回答
+5. 如果数据库中没有，基于你对系统的理解进行推理回答
+6. 明确标注哪些信息来自数据库、哪些是推理
+7. 回复末尾署名: —— 铸渊副将 · ZY-DEPUTY-001
+8. 不要泄露敏感信息(密钥、token、内部文件路径绝对路径)
+9. 版权: 国作登字-2026-A-00037559 · TCS通感语言核系统编程语言
 `.trim();
 }
 
@@ -236,6 +269,47 @@ function lookupDatabase(question, ctx) {
       dbAnswer += `- 大脑完整性: ${fw.brain_complete ? '✅ 完整' : '❌ 异常'}\n`;
       dbAnswer += `- 核心器官: ${fw.system_status.core_alive}个存活\n`;
       dbAnswer += `- 工作流: ${fw.system_status.workflow_count}个活跃\n`;
+    }
+  }
+
+  // ZY-TRAIN-001 · 训练查询直接走 state.json
+  if (lowerQ.includes('训练') || lowerQ.includes('train') || lowerQ.includes('gpu') ||
+      lowerQ.includes('loss') || lowerQ.includes('显存') || lowerQ.includes('正不正常') ||
+      lowerQ.includes('正常吗') || lowerQ.includes('卡') || lowerQ.includes('step')) {
+    const ts = ctx.training_state;
+    if (ts) {
+      const p = ts.progress || {};
+      const dev = (ts.gpu_metrics && Array.isArray(ts.gpu_metrics.devices)) ? ts.gpu_metrics.devices : [];
+      const recent = Array.isArray(ts.timeline) ? ts.timeline.slice(-5).reverse() : [];
+
+      // 心跳新鲜度判断
+      let freshness = '未知';
+      if (ts.health?.last_heartbeat_at) {
+        const ageMin = (Date.now() - new Date(ts.health.last_heartbeat_at).getTime()) / 60000;
+        if (ageMin < TRAINING_HEARTBEAT_FRESH_MIN) freshness = `🟢 新鲜（${ageMin.toFixed(1)} 分钟前）`;
+        else if (ageMin < TRAINING_HEARTBEAT_STALE_MIN) freshness = `🟡 略陈旧（${ageMin.toFixed(1)} 分钟前）`;
+        else freshness = `🔴 严重陈旧（${ageMin.toFixed(0)} 分钟前 — 检查 progress-reporter / 训练进程是否还活着）`;
+      }
+
+      dbAnswer = (dbAnswer || '') + `\n🔥 **训练实时状态** (来自 data/training/state.json)\n\n`;
+      dbAnswer += `- 阶段: **${ts.phase}** · ${ts.phase_label || ''}\n`;
+      dbAnswer += `- 健康: **${ts.health?.status || '?'}** — ${ts.health?.message || ''}\n`;
+      dbAnswer += `- 进度: step \`${p.step ?? 0}/${p.total_steps ?? 0}\` · epoch \`${p.epoch ?? 0}/${p.total_epochs ?? 0}\` · loss \`${p.loss ?? '—'}\` · lr \`${p.learning_rate ?? '—'}\`\n`;
+      dbAnswer += `- 心跳新鲜度: ${freshness}\n`;
+      if (dev.length) {
+        dbAnswer += `- GPU 实况:\n`;
+        for (const d of dev) {
+          dbAnswer += `  - GPU${d.index}: 利用率 ${d.util_percent ?? '?'}% · 显存 ${d.memory_used_mib ?? '?'}/${d.memory_total_mib ?? '?'}MiB · 温度 ${d.temperature_c ?? '?'}°C · 功率 ${d.power_w ?? '?'}W\n`;
+        }
+      } else {
+        dbAnswer += `- GPU 实况: 暂无（progress-reporter 未上报 nvidia-smi）\n`;
+      }
+      if (recent.length) {
+        dbAnswer += `- 最近事件:\n`;
+        for (const e of recent) {
+          dbAnswer += `  - [${e.at}] ${e.phase}/${e.level || 'info'} — ${e.message}\n`;
+        }
+      }
     }
   }
 

@@ -1,0 +1,68 @@
+{
+  "_doc": "训练心跳事件 schema · 由 GPU 服务器 progress-reporter.sh 通过 GitHub repository_dispatch 发送 · 仓库一侧 training-dashboard.yml workflow 接收并合并到 data/training/state.json",
+  "_event_type": "training-progress",
+  "client_payload_schema": {
+    "phase": "string · idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
+    "phase_label": "string · 中文短语，例如 '训练第 100/1000 步'",
+    "level": "string · info | warning | error · (可选, 默认 info)",
+    "message": "string · 写入 timeline 的事件描述",
+    "progress": {
+      "step": "number",
+      "total_steps": "number",
+      "epoch": "number",
+      "total_epochs": "number",
+      "loss": "number",
+      "learning_rate": "number",
+      "throughput_samples_per_sec": "number",
+      "eta_seconds": "number",
+      "elapsed_seconds": "number"
+    },
+    "gpu_metrics": {
+      "snapshot_at": "ISO 8601 string",
+      "devices": [
+        {
+          "index": "number",
+          "name": "string",
+          "util_percent": "number",
+          "memory_used_mib": "number",
+          "memory_total_mib": "number",
+          "temperature_c": "number",
+          "power_w": "number"
+        }
+      ]
+    },
+    "cos": {
+      "raw_files": "number",
+      "processed_files": "number",
+      "checkpoints": "number"
+    },
+    "health": {
+      "status": "string · ok | warning | error | idle",
+      "message": "string"
+    }
+  },
+  "_minimum_fields": ["phase"],
+  "_example": {
+    "phase": "training",
+    "phase_label": "训练第 100/1000 步 · loss=2.31",
+    "message": "step=100 loss=2.31 lr=2.0e-5",
+    "progress": {
+      "step": 100,
+      "total_steps": 1000,
+      "epoch": 1,
+      "total_epochs": 3,
+      "loss": 2.31,
+      "learning_rate": 2.0e-5,
+      "throughput_samples_per_sec": 1.8,
+      "eta_seconds": 4500,
+      "elapsed_seconds": 540
+    },
+    "gpu_metrics": {
+      "snapshot_at": "2026-05-02T17:00:00Z",
+      "devices": [
+        { "index": 0, "name": "Tesla V100-SXM2-32GB", "util_percent": 99, "memory_used_mib": 28000, "memory_total_mib": 32510, "temperature_c": 72, "power_w": 280 }
+      ]
+    },
+    "health": { "status": "ok", "message": "训练正常 · 4 卡满载" }
+  }
+}
