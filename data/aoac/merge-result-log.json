@@ -2,31 +2,67 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-05-02 13:09:14+08:00",
-  "timestamp_utc": "2026-05-02T05:09:14.501Z",
+  "timestamp": "2026-05-02 14:07:04+08:00",
+  "timestamp_utc": "2026-05-02T06:07:04.893Z",
   "merge": {
-    "pr_number": 440,
-    "pr_title": "fix(ftchat): honor [hidden] on login/chat screens",
-    "merge_commit_sha": "37b85ecac6db88e192b845f6533e27d85e9e9152",
-    "head_sha": "c2751d1b5357760458b1f3a675553ad95de2ec3b",
+    "pr_number": 441,
+    "pr_title": "fix(ftchat): cache-bust frontend so login redirect reaches users",
+    "merge_commit_sha": "e8c51739497723d46e2e3b80bf2f601f4786e0c3",
+    "head_sha": "c362746799ce6d0afb8a74bb07a40848d6848b40",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 6,
-      "passed": 0,
-      "failed": 0,
-      "skipped": 3
+      "total": 14,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 7
     },
     "check_runs": [
+      {
+        "name": "🔧 ��务器初始化",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💚 健康检查",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
       {
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-02T05:09:11Z",
-        "completed_at": "2026-05-02T05:09:01Z",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -34,8 +70,17 @@
         "name": "🗄️ 下架旧 zhiku 站点",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-02T05:09:02Z",
-        "completed_at": "2026-05-02T05:09:01Z",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署应用代码",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-02T06:06:56Z",
+        "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
@@ -43,16 +88,16 @@
         "name": "🩺 健康检查",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-02T05:09:02Z",
-        "completed_at": "2026-05-02T05:09:01Z",
+        "started_at": "2026-05-02T06:06:53Z",
+        "completed_at": "2026-05-02T06:06:53Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🚀 部署 FTCHAT",
+        "name": "🚀 部署到测试站",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-02T05:09:10Z",
+        "started_at": "2026-05-02T06:06:56Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -61,8 +106,35 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-02T05:09:10Z",
+        "started_at": "2026-05-02T06:06:56Z",
         "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💉 注入注册表上下文到 Copilot Issue",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-05-02T06:06:56Z",
+        "completed_at": "2026-05-02T06:07:03Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 部署 FTCHAT",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-02T06:07:01Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🗂️ 同步注册表状态",
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-05-02T06:06:55Z",
+        "completed_at": "2026-05-02T06:07:00Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -70,7 +142,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-02T05:09:03Z",
+        "started_at": "2026-05-02T06:06:55Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
