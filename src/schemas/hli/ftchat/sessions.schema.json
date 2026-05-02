@@ -1,0 +1,37 @@
+{
+  "hli_id": "HLI-FTCHAT-004",
+  "version": "v0.1",
+  "route": "/hli/ftchat/sessions",
+  "method": "GET",
+  "type": "REQUEST",
+  "purpose": "获取当前用户的历史对话列表（标题 + 时间 + 消息数 + 是否有母语压缩记忆）",
+  "input": {
+    "type": "object",
+    "properties": {}
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "sessions"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "sessions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["session_id", "title", "updated_at"],
+          "properties": {
+            "session_id": { "type": "string" },
+            "title": { "type": "string" },
+            "updated_at": { "type": "string", "format": "date-time" },
+            "message_count": { "type": "integer" },
+            "has_memory_imprint": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  },
+  "dependencies": ["HLI-FTCHAT-002"],
+  "changelog": [
+    { "date": "2026-05-02", "note": "FTCHAT 初版" }
+  ]
+}

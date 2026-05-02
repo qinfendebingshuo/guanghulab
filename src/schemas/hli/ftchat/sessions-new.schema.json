@@ -1,0 +1,40 @@
+{
+  "hli_id": "HLI-FTCHAT-005",
+  "version": "v0.1",
+  "route": "/hli/ftchat/sessions/new",
+  "method": "POST",
+  "type": "REQUEST",
+  "purpose": "用户开新对话 → 唤醒 memory-agent 把上一对话压缩成母语段，注入下次对话的系统提示词",
+  "input": {
+    "type": "object",
+    "properties": {
+      "previous_session_id": { "type": "string", "description": "上一会话 ID，为空则跳过压缩" },
+      "previous_messages": {
+        "type": "array",
+        "description": "上一会话的最近消息（前端 push 上来减少服务端存储）",
+        "items": {
+          "type": "object",
+          "required": ["role", "content"],
+          "properties": {
+            "role": { "type": "string" },
+            "content": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "session_id"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "session_id": { "type": "string", "description": "新会话 ID" },
+      "memory_imprint": { "type": "string", "description": "母语格式压缩段，将自动注入下次 chat 的 system prompt" },
+      "compressed": { "type": "boolean" }
+    }
+  },
+  "dependencies": ["HLI-FTCHAT-002"],
+  "changelog": [
+    { "date": "2026-05-02", "note": "FTCHAT 初版 · memory-agent 压缩" }
+  ]
+}

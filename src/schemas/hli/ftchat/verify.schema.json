@@ -1,0 +1,33 @@
+{
+  "hli_id": "HLI-FTCHAT-002",
+  "version": "v0.1",
+  "route": "/hli/ftchat/verify",
+  "method": "POST",
+  "type": "REQUEST",
+  "purpose": "校验 QQ 邮箱验证码 → 占据槽位 → 签发 session token",
+  "input": {
+    "type": "object",
+    "required": ["email", "code"],
+    "properties": {
+      "email": { "type": "string", "format": "email" },
+      "code": { "type": "string", "minLength": 6, "maxLength": 6 }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "success"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "success": { "type": "boolean" },
+      "token": { "type": "string" },
+      "user_hash": { "type": "string", "description": "邮箱 SHA256 截断 hash，前端用于隔离 localStorage" },
+      "expires_at": { "type": "string", "format": "date-time" },
+      "slot_index": { "type": "integer", "minimum": 1, "maximum": 10 },
+      "message": { "type": "string" }
+    }
+  },
+  "dependencies": ["HLI-FTCHAT-001"],
+  "changelog": [
+    { "date": "2026-05-02", "note": "FTCHAT 初版" }
+  ]
+}

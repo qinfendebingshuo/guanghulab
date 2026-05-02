@@ -1,0 +1,30 @@
+{
+  "hli_id": "HLI-FTCHAT-001",
+  "version": "v0.1",
+  "route": "/hli/ftchat/login",
+  "method": "POST",
+  "type": "REQUEST",
+  "purpose": "向 QQ 邮箱发送 6 位验证码（10 槽位先到先得）",
+  "input": {
+    "type": "object",
+    "required": ["email"],
+    "properties": {
+      "email": { "type": "string", "format": "email", "description": "QQ 邮箱地址（@qq.com）" }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["hli_id", "success"],
+    "properties": {
+      "hli_id": { "type": "string" },
+      "success": { "type": "boolean" },
+      "message": { "type": "string" },
+      "cooldown": { "type": "integer", "description": "冷却剩余秒数" },
+      "slots_remaining": { "type": "integer", "description": "当前剩余可用槽位（用于前端友好提示）" }
+    }
+  },
+  "dependencies": [],
+  "changelog": [
+    { "date": "2026-05-02", "note": "FTCHAT 初版 · 任意 QQ 邮箱 + 10 槽位占位" }
+  ]
+}

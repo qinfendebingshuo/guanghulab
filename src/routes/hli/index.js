@@ -12,6 +12,10 @@ router.use('/auth', authRouter);
 const brainRouter = require('./brain');
 router.use('/brain', brainRouter);
 
+// FTCHAT 域（团队内测频道, 自管理 token；公开端点 + 受保护端点都在此 router 内）
+const ftchatRouter = require('./ftchat');
+router.use('/ftchat', ftchatRouter);
+
 // 以下域需要 HLI 鉴权中间件
 const hliAuth = require('../../middleware/hli-auth.middleware');
 
