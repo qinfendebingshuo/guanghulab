@@ -82,17 +82,18 @@ guanghu.online (Nginx 443, SSL 复用 zhiku 证书)
 | `FT_NOTION_API_TOKEN` | Notion Internal Integration Token | ✅ 已配置 |
 | `FT_NOTION_PROMPT_PAGE_ID` | 系统提示词页面 ID | ✅ 已配置 |
 | `FT_DASHSCOPE_API_KEY` | 阿里云百炼 API Key | ✅ 已配置 |
-| `ZY_SMTP_USER` | QQ 邮箱发件账号 | ⏳ 待冰朔配置 |
-| `ZY_SMTP_PASS` | QQ 邮箱授权码 | ⏳ 待冰朔配置 |
+| `ZY_SMTP_USER` | QQ 邮箱发件账号 | ✅ 已存在 (复用零点原核 SMTP) |
+| `ZY_SMTP_PASS` | QQ 邮箱授权码 | ✅ 已存在 (复用零点原核 SMTP) |
+
+> 全部 secrets 已就绪。CI 直接 `git push` 即可触发部署。
 
 ## 冰朔仍需手动操作的清单
 
-1. **GitHub Secrets**: 配置 `ZY_SMTP_USER` 和 `ZY_SMTP_PASS` (QQ 邮箱 SMTP 授权码)
-2. **下架旧 zhiku**: 触发 GitHub Actions "FTCHAT 部署" workflow → `retire-zhiku`，或手动执行:
+1. **下架旧 zhiku**: 触发 GitHub Actions "FTCHAT 部署" workflow → `retire-zhiku`，或手动执行:
    ```bash
    ssh root@43.153.203.105 'pm2 stop zhiku-api && pm2 delete zhiku-api && pm2 save && rm -f /etc/nginx/sites-enabled/zhiku /etc/nginx/sites-enabled/zhiku-guanghu-online.conf && nginx -t && systemctl reload nginx'
    ```
-3. **DNS 确认**: `guanghu.online` A 记录 → 43.153.203.105 (与旧 zhiku 同址，应已就绪)
+2. **DNS 确认**: `guanghu.online` A 记录 → 43.153.203.105 (与旧 zhiku 同址，应已就绪)
 
 ## 本地开发
 
