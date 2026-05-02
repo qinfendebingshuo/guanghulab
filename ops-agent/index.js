@@ -384,6 +384,41 @@ app.get('/api/ops/events', (req, res) => {
 
 // ── 巡检 + 修复 + 告警逻辑 ─────────────────
 
+/**
+ * 处理升级：去重 + 邮件 + 广播
+ * 同一 (relatedService+diagnosis) 已有 open 工单 → 累加 autoRepairAttempts，不发邮件、不广播
+ * 否则 → 创建新工单 + 邮件 + 广播
+ */
+async function escalateIssue(repairResult) {
+  const issue = repairResult.issue;
+  const relatedService = issue.service;
+  const diagnosis = issue.error || issue.status;
+
+  const existing = memory.findOpenTicketByKey({ relatedService, diagnosis });
+  if (existing) {
+    const updated = memory.updateTicket(existing.id, {
+      autoRepairAttempts: (existing.autoRepairAttempts || 0) + (repairResult.retryCount || MAX_RETRIES)
+    });
+    console.log(`[OPS] 已存在开放工单 ${existing.id}，仅累加修复尝试次数（不发邮件）`);
+    return { ticket: updated, deduplicated: true };
+  }
+
+  const ticket = memory.createTicket({
+    title: `${issue.service} - ${issue.error || issue.status}`,
+    description: repairResult.message,
+    severity: issue.severity,
+    category: issue.category || 'service',
+    direction: classifyDirection(issue),
+    diagnosis,
+    suggestedFix: issue.fix || '',
+    relatedService,
+    autoRepairAttempts: repairResult.retryCount || MAX_RETRIES
+  });
+  broadcast('new_ticket', { ticket });
+  await notifier.notifyTicketCreated(ticket);
+  return { ticket, deduplicated: false };
+}
+
 let isChecking = false;
 
 async function runQuickCheck() {
@@ -400,24 +435,10 @@ async function runQuickCheck() {
       const repairResults = repairEngine.autoRepair(result.issues, MAX_RETRIES);
       memory.incrementStat('totalRepairs', repairResults.filter(r => r.repaired).length);
 
-      // 修不了的 → 创建工单
+      // 修不了的 → 创建工单（带去重）
       for (const r of repairResults) {
         if (r.escalate) {
-          const ticket = memory.createTicket({
-            title: `${r.issue.service} - ${r.issue.error || r.issue.status}`,
-            description: r.message,
-            severity: r.issue.severity,
-            category: r.issue.category || 'service',
-            direction: classifyDirection(r.issue),
-            diagnosis: r.issue.error || r.issue.status,
-            suggestedFix: r.issue.fix || '',
-            relatedService: r.issue.service,
-            autoRepairAttempts: r.retryCount || MAX_RETRIES
-          });
-          broadcast('new_ticket', { ticket });
-
-          // 邮件通知
-          await notifier.notifyTicketCreated(ticket);
+          await escalateIssue(r);
         }
       }
 
@@ -458,19 +479,7 @@ async function runDeepCheck() {
 
       for (const r of repairResults) {
         if (r.escalate) {
-          const ticket = memory.createTicket({
-            title: `${r.issue.service} - ${r.issue.error || r.issue.status}`,
-            description: r.message,
-            severity: r.issue.severity,
-            category: r.issue.category || 'service',
-            direction: classifyDirection(r.issue),
-            diagnosis: r.issue.error || r.issue.status,
-            suggestedFix: r.issue.fix || '',
-            relatedService: r.issue.service,
-            autoRepairAttempts: r.retryCount || MAX_RETRIES
-          });
-          broadcast('new_ticket', { ticket });
-          await notifier.notifyTicketCreated(ticket);
+          await escalateIssue(r);
         }
       }
 

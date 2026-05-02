@@ -121,6 +121,7 @@ assert(typeof memory.logEvent === 'function', 'logEvent 是函数');
 assert(typeof memory.queryEvents === 'function', 'queryEvents 是函数');
 assert(typeof memory.buildMemoryContext === 'function', 'buildMemoryContext 是函数');
 assert(typeof memory.createTicket === 'function', 'createTicket 是函数');
+assert(typeof memory.findOpenTicketByKey === 'function', 'findOpenTicketByKey 是函数');
 
 const ctx = memory.buildMemoryContext();
 assert(typeof ctx === 'string', 'buildMemoryContext 返回字符串');
@@ -171,15 +172,29 @@ assert(typeof notifier.sendDailyReport === 'function', 'sendDailyReport 是函�
 const transporter = notifier.getSmtpTransporter();
 assert(transporter === null || typeof transporter === 'object', 'SMTP 未配置时返回 null');
 
-// ── 结果汇总 ──────────────────────────────
+// kill switch: OPS_EMAIL_ENABLED=false 时 sendAlertEmail no-op
+(async () => {
+  const prev = process.env.OPS_EMAIL_ENABLED;
+  process.env.OPS_EMAIL_ENABLED = 'false';
+  try {
+    assert(notifier.isEmailEnabled() === false, 'isEmailEnabled: false 时返回 false');
+    const r = await notifier.sendAlertEmail('test', '<p>x</p>');
+    assert(r && r.sent === false && r.reason === 'disabled', 'sendAlertEmail: kill switch 返回 {sent:false, reason:"disabled"}');
+  } finally {
+    if (prev === undefined) delete process.env.OPS_EMAIL_ENABLED;
+    else process.env.OPS_EMAIL_ENABLED = prev;
+  }
 
-console.log('\n─────────────────────────────');
-console.log(`结果: ${passed} 通过, ${failed} 失败`);
+  // ── 结果汇总 ──────────────────────────────
 
-if (failed > 0) {
-  console.log('❌ 冒烟测试未全部通过\n');
-  process.exit(1);
-} else {
-  console.log('✅ 冒烟测试全部通过\n');
-  process.exit(0);
-}
+  console.log('\n─────────────────────────────');
+  console.log(`结果: ${passed} 通过, ${failed} 失败`);
+
+  if (failed > 0) {
+    console.log('❌ 冒烟测试未全部通过\n');
+    process.exit(1);
+  } else {
+    console.log('✅ 冒烟测试全部通过\n');
+    process.exit(0);
+  }
+})();
