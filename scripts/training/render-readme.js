@@ -173,7 +173,11 @@ function renderTimeline(state) {
   lines.push('| 时间 (UTC) | 阶段 | 等级 | 事件 |', '|-----------|------|------|------|');
   for (const e of recent) {
     const lvl = e.level === 'error' ? '🔴' : e.level === 'warning' ? '🟡' : 'ℹ️';
-    const msg = String(e.message || '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+    // 转义 Markdown 表格元字符: 先转义反斜杠，再转义管道，最后压成单行
+    const msg = String(e.message || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/\|/g, '\\|')
+      .replace(/[\r\n]+/g, ' ');
     lines.push(`| ${fmtTimestamp(e.at)} | ${e.phase || '—'} | ${lvl} | ${msg} |`);
   }
   lines.push('');

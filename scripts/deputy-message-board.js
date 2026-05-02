@@ -47,6 +47,9 @@ const RETRY_BASE_DELAY_MS = 2000;     // LLM重试基础延迟
 const MAX_ERRORS_KEPT = 20;           // 保留最近N条错误记录
 const MAX_ESCALATIONS_KEPT = 10;      // 保留最近N条升级记录
 const MAX_LLM_FAILURES_BEFORE_ESCALATION = 3; // 连续N次全模型失败后升级
+// 训练心跳新鲜度阈值（与 training-dashboard.yml 的 30 分钟 schedule 兜底保持一致）
+const TRAINING_HEARTBEAT_FRESH_MIN = 5;
+const TRAINING_HEARTBEAT_STALE_MIN = 30;
 
 // ═══════════════════════════════════════════════
 //  LLM多模型自动降级路由器 (内嵌版)
@@ -283,8 +286,8 @@ function lookupDatabase(question, ctx) {
       let freshness = '未知';
       if (ts.health?.last_heartbeat_at) {
         const ageMin = (Date.now() - new Date(ts.health.last_heartbeat_at).getTime()) / 60000;
-        if (ageMin < 5) freshness = `🟢 新鲜（${ageMin.toFixed(1)} 分钟前）`;
-        else if (ageMin < 30) freshness = `🟡 略陈旧（${ageMin.toFixed(1)} 分钟前）`;
+        if (ageMin < TRAINING_HEARTBEAT_FRESH_MIN) freshness = `🟢 新鲜（${ageMin.toFixed(1)} 分钟前）`;
+        else if (ageMin < TRAINING_HEARTBEAT_STALE_MIN) freshness = `🟡 略陈旧（${ageMin.toFixed(1)} 分钟前）`;
         else freshness = `🔴 严重陈旧（${ageMin.toFixed(0)} 分钟前 — 检查 progress-reporter / 训练进程是否还活着）`;
       }
 

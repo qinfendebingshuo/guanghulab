@@ -50,8 +50,12 @@ while IFS= read -r line; do
   STEP=${STEP:-0}; TOTAL=${TOTAL:-0}; EPOCH=${EPOCH:-0}; TE=${TE:-0}
   LOSS=${LOSS:-null}; LR=${LR:-null}; THR=${THR:-null}
 
-  # 节流：每 N 步上报一次（最后一步必报）
-  if [[ "$STEP" != "$TOTAL" ]] && (( STEP - LAST_REPORT_STEP < REPORT_INTERVAL_STEPS )) && (( LAST_REPORT_STEP >= 0 )); then
+  # 节流：每 N 步上报一次（最后一步=训练完成必报；首步必报）
+  IS_LAST=0
+  if [[ "$TOTAL" -gt 0 && "$STEP" -ge "$TOTAL" ]]; then
+    IS_LAST=1
+  fi
+  if (( IS_LAST == 0 )) && (( LAST_REPORT_STEP >= 0 )) && (( STEP - LAST_REPORT_STEP < REPORT_INTERVAL_STEPS )); then
     continue
   fi
   LAST_REPORT_STEP=$STEP
