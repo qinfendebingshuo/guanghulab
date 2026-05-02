@@ -97,6 +97,14 @@ jobs:
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
             'cd /opt/guanghu/ftchat && tar -xzf _payload.tar.gz && rm -f _payload.tar.gz && echo "✓ 后端代码已解压"'
 
+      - name: '🏷️ 注入前端构建版本号 (cache-busting)'
+        run: |
+          BUILD_ID="${GITHUB_SHA::7}-$(date -u +%Y%m%d%H%M)"
+          echo "BUILD_ID=${BUILD_ID}"
+          # 替换 index.html 中的 __BUILD_ID__ 占位 → 触发用户端 CSS/JS 强制刷新
+          sed -i "s/__BUILD_ID__/${BUILD_ID}/g" frontend/ftchat/index.html
+          grep -E 'style\.css|chat\.js|theme-toggle\.js' frontend/ftchat/index.html || true
+
       - name: '📤 上传前端静态文件'
         run: |
           scp -r -i ~/.ssh/ftchat_key -o StrictHostKeyChecking=no \

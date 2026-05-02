@@ -259,6 +259,12 @@
   function enterChat() {
     loginScreen.hidden = true;
     chatScreen.hidden = false;
+    // 防御性兜底: 直接用 inline style 切换显示, 避免 CDN/WebView 缓存
+    // 让 [hidden] 的 CSS 修复未到达客户端时, 卡在登录页的退化
+    try {
+      loginScreen.style.display = 'none';
+      chatScreen.style.display = '';
+    } catch (_e) { /* ignore */ }
     userBadge.textContent = email || '匿名';
     userBadge.title = email || '';
     slotBadgeEl.textContent = '席位 ' + slotIndex + '/10';
