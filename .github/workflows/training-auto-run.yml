@@ -15,14 +15,30 @@
 
 name: 🔥 训练自动执行
 
+# ⚠️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2026-05-03 冰朔 D72 决策：母模型训练已转交 Notion 侧霜砚 + 服务器
+# 直接协作。GitHub 副驾驶受国内续费限制将逐步停用，本仓库不再
+# 自动同步训练机，避免仓库代码覆盖服务器热修。
+#
+# - push 触发已移除（仅保留手动）
+# - workflow_dispatch 默认 dry_run，不执行任何 SSH 操作
+# - 必须显式勾选 confirm_override=true 才能真正执行
+# - 详见 docs/zhuyuan-handover/05-stop-sync.md
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'server/training-agent/**'
-      - '.github/workflows/training-auto-run.yml'
+  # push 触发已停用 (D72)
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'server/training-agent/**'
+  #     - '.github/workflows/training-auto-run.yml'
   workflow_dispatch:
     inputs:
+      confirm_override:
+        description: '⚠️ 我已确认霜砚同意 + 服务器无运行中训练，重新启用同步'
+        type: boolean
+        default: false
       skip_bootstrap:
         description: '跳过 bootstrap (仅同步脚本 + 启动训练)'
         type: boolean
@@ -40,8 +56,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  guard:
+    name: '🛑 同步停用守卫'
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - name: 检查覆盖确认
+        id: check
+        run: |
+          if [[ "${{ github.event.inputs.confirm_override }}" == "true" ]]; then
+            echo "✅ 收到覆盖确认，继续执行同步流程"
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "🛑 训练同步已被冰朔 D72 决策停用，本次执行中止"
+            echo "如需重新启用，手动触发并勾选 confirm_override=true"
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## 🛑 训练同步已停用"
+              echo ""
+              echo "母模型训练已转交 Notion 侧霜砚 + 服务器直接协作 (D72 决策)。"
+              echo "本 workflow 不再自动同步训练机。"
+              echo ""
+              echo "如需重新启用：手动触发并勾选 \`confirm_override\`。"
+              echo ""
+              echo "详见 [docs/zhuyuan-handover/05-stop-sync.md](../blob/main/docs/zhuyuan-handover/05-stop-sync.md)。"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   auto-train:
     name: '🚀 同步 + Bootstrap + 启动训练'
+    needs: guard
+    if: needs.guard.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:

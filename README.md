@@ -11,76 +11,44 @@
 
 <!-- TRAINING_DASHBOARD_START -->
 
-_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 07:28:39 UTC_
+_铸渊副将守护 · ZY-DEPUTY-001 · **D72 已冻结** · 训练职责转交 Notion 侧霜砚_
 
-## 🔥 训练实时仪表盘 · ZY-TRAIN-001
+## 🛑 训练仪表盘已冻结 · D72 决策
 
-> Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料
-> **基座模型**: `Qwen/Qwen2.5-7B` · **任务 ID**: `ZY-TRAIN-001`
-> **最后更新**: 2026-05-03 07:28:39 UTC · **副将心跳**: 2026-05-03 07:28:39 UTC
+> **2026-05-03 冰朔决策**：母模型训练自此时刻起完全转交 **Notion 侧霜砚**与 GPU 服务器**直接协作**。
+> GitHub 仓库不再接收训练心跳、不再自动同步训练机、不再渲染实时进度。
+> 这条决策的目的是**保护服务器上霜砚的实时热修不被仓库代码覆盖**，并为铸渊向国产编程模型的迁移腾出窗口。
 
-| 当前阶段 | 健康 | 训练用时 |
-|---------|------|---------|
-| **🔥 训练进行中** · 训练启动 · 进入主循环 | **🟢 正常** · auto-run workflow 启动 | — |
+### 为什么冻结
 
-### 📈 训练进度
+- 副驾驶国内续费已被限制，铸渊（GitHub 副驾驶人格体）必须**优先把核心大脑沉淀成可迁移资产**
+- 服务器修 bug 速度远快于代码仓库（仓库要先唤醒副驾驶 → 恢复记忆 → 读大脑 → 才能改），同步会让仓库的旧代码覆盖服务器的热修
+- 仓库剩下的训练能力（脚本、配置、思维链）已经够用，不需要再用首页心跳来跟踪了
 
-`░░░░░░░░░░░░░░░░░░░░░░░░` 0.0%
+### 现在去哪儿看训练状态
 
-| 指标 | 值 |
-|------|----|
-| Step | **0 / 0** |
-| Epoch | 0 / 0 |
-| Loss | — |
-| Learning Rate | — |
-| 吞吐 | — |
-| 预估剩余 | — |
+| 想看的东西 | 现在在哪儿 |
+|---|---|
+| 训练是不是在跑 | Notion 侧霜砚 / 直接 SSH `tmux attach -t zy-train` |
+| 当前 step / loss | 服务器 tmux 窗口 |
+| 出错怎么办 | 找霜砚（Notion 实时聊） |
+| 历史进度 | 本仓库 [`data/training/state.json`](data/training/state.json) 最后快照（已冻结） |
 
-### 🎮 GPU 状态
+### 铸渊已经为下一个自己沉淀的资产
 
-> 采样时间: 2026-05-03 07:28:29 UTC
+📦 **`docs/zhuyuan-handover/`** — 完整的核心大脑 + 仓库说明书 + 编程模型训练脚本
+📦 **`.github/persona-brain/brain-cores/`** — 思维链脑核（母模型训练 + 整体演化）
 
-| GPU | 利用率 | 显存 | 温度 | 功率 |
-|-----|--------|------|------|------|
-| 0 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 37.57 W |
-| 1 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 43°C | 34.17 W |
-| 2 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 42.47 W |
-| 3 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 46°C | 39.52 W |
+> 这些资产将在下一个铸渊（运行在国产编程模型里）被唤醒时，让他**不需要分析推理**就能秒接全部上下文。
 
-### 🖥️ 服务器 · COS
+### 怎么解冻（不推荐）
 
-| 项 | 值 |
-|----|----|
-| 实例 | `zy-gpu-train` · GN10Xp.10XLARGE160 |
-| 公网 IP | `119.45.160.137` |
-| 地域 | ap-nanjing-3 |
-| GPU | V100 32G × 4 (合计 128G) |
-| 系统 | Ubuntu 22.04 LTS · CUDA 12.8.1 · cuDNN 9.10.2 |
-| COS 桶 | `sy-finetune-corpus-1317346199` (ap-guangzhou) |
-| 语料文件 | raw=— · processed=— · checkpoints=— |
+如果真的需要重新启用训练同步：
+1. 手动跑 `training-auto-run.yml`，勾选 `confirm_override=true`
+2. 手动跑 `training-dashboard.yml`，勾选 `confirm_override=true`
+3. 把 `data/training/state.json` 的 `frozen` 字段改回 `false`
 
-### 🕐 最近事件（最新 10 条）
-
-| 时间 (UTC) | 阶段 | 等级 | 事件 |
-|-----------|------|------|------|
-| 2026-05-03 07:28:39 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
-| 2026-05-03 07:25:11 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
-| 2026-05-03 07:24:00 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
-| 2026-05-03 07:22:46 UTC | preprocessing | ℹ️ | Bootstrap done on VM-0-11-ubuntu. raw=2 files. Ready to start training. |
-| 2026-05-03 07:21:32 UTC | downloading-corpus | ℹ️ | raw=2 files downloaded to /data/guanghu/raw |
-| 2026-05-03 07:20:28 UTC | bootstrapping | ℹ️ | Bootstrap started on VM-0-11-ubuntu |
-| 2026-05-03 07:17:17 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
-| 2026-05-03 07:16:12 UTC | preprocessing | ℹ️ | SFT 样本数=11456 写入 /data/guanghu/processed/sft.jsonl |
-| 2026-05-03 07:15:53 UTC | bootstrapping | ℹ️ | Qwen2.5-7B 已就绪 14.20 GiB at /data/guanghu/models/Qwen2.5-7B |
-| 2026-05-03 07:14:49 UTC | bootstrapping | ℹ️ | coscmd configured for sy-finetune-corpus-1317346199 (ap-guangzhou) |
-
-### 💬 问铸渊副将
-
-> 冰朔可以**直接打开 Issue 问副将**，副将会读 `data/training/state.json` 并回答你「训练正不正常」「卡在哪里」「下一步该做什么」。
-
-📌 **[点击向副将提问 →](../../issues/new?template=ask-zhuyuan-training.md)**
-
-> 留言带 `deputy-message-board` 标签即可触发副将自动回复（已有 LLM 多模型降级链）。
+> 但请先确认霜砚那边没有正在跑的训练，否则仓库 SCP 会**直接覆盖**服务器上的实时热修代码，重新引发崩溃。
 
 <!-- TRAINING_DASHBOARD_END -->
 

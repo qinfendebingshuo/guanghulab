@@ -22,21 +22,30 @@
 
 name: 🛠️ 训练机 Bootstrap
 
+# ⚠️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2026-05-03 D72：训练机自动同步已停用。母模型训练转交 Notion 侧
+# 霜砚 + 服务器直接协作。SSH/SCP 操作必须 confirm_override=true。
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 on:
   workflow_dispatch:
     inputs:
+      confirm_override:
+        description: '⚠️ 我已确认霜砚同意 + 服务器无运行中训练，重新启用 bootstrap'
+        type: boolean
+        default: false
       action:
         description: '动作'
         required: true
-        default: 'bootstrap'
+        default: 'probe'
         type: choice
         options:
+          - probe         # 仅探活 SSH（safe）
+          - status        # 查询状态（safe）
           - bootstrap     # 上传脚本 + 跑 setup.sh
           - sync-scripts  # 仅上传脚本（不跑 setup）
           - start         # 启动训练（tmux）
           - stop          # 停训练
-          - status        # 查询状态
-          - probe         # 仅探活 SSH
 
 permissions:
   contents: read
@@ -46,8 +55,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  guard:
+    name: '🛑 同步停用守卫'
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - name: 检查覆盖确认
+        id: check
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          # probe / status 两个只读动作允许通过 (不修改服务器状态)
+          if [[ "$ACTION" == "probe" || "$ACTION" == "status" ]]; then
+            echo "ℹ️ 只读动作 ($ACTION)，允许执行"
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "${{ github.event.inputs.confirm_override }}" == "true" ]]; then
+            echo "✅ 收到覆盖确认 + 写动作 ($ACTION)，继续"
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "🛑 写动作 ($ACTION) 需要勾选 confirm_override，本次中止"
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## 🛑 训练机 Bootstrap 已停用"
+              echo ""
+              echo "动作 \`$ACTION\` 会修改服务器状态，已被 D72 决策保护。"
+              echo "如需执行，请勾选 \`confirm_override\` 后再触发。"
+              echo ""
+              echo "只读动作 \`probe\` / \`status\` 不需要勾选。"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   bootstrap:
     name: '🚀 ${{ github.event.inputs.action }}'
+    needs: guard
+    if: needs.guard.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
