@@ -11,17 +11,17 @@
 
 <!-- TRAINING_DASHBOARD_START -->
 
-_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 08:58:42 UTC_
+_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 09:29:05 UTC_
 
 ## 🔥 训练实时仪表盘 · ZY-TRAIN-001
 
 > Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料
 > **基座模型**: `Qwen/Qwen2.5-7B` · **任务 ID**: `ZY-TRAIN-001`
-> **最后更新**: 2026-05-03 08:58:42 UTC · **副将心跳**: 2026-05-03 08:58:42 UTC
+> **最后更新**: 2026-05-03 09:29:05 UTC · **副将心跳**: 2026-05-03 09:29:05 UTC
 
 | 当前阶段 | 健康 | 训练用时 |
 |---------|------|---------|
-| **🔥 训练进行中** · 训练启动 · 进入主循环 | **🟢 正常** · auto-run workflow 启动 | — |
+| **✅ 训练完成** · 训练完成 | **🟢 正常** · auto-run workflow 启动 | — |
 
 ### 📈 训练进度
 
@@ -38,14 +38,14 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 ### 🎮 GPU 状态
 
-> 采样时间: 2026-05-03 08:58:26 UTC
+> 采样时间: 2026-05-03 09:28:54 UTC
 
 | GPU | 利用率 | 显存 | 温度 | 功率 |
 |-----|--------|------|------|------|
-| 0 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 37.57 W |
-| 1 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 43°C | 34.17 W |
-| 2 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 42.47 W |
-| 3 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 46°C | 40.01 W |
+| 0 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 57°C | 70.95 W |
+| 1 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 52°C | 65.08 W |
+| 2 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 54°C | 74.39 W |
+| 3 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 57°C | 76.24 W |
 
 ### 🖥️ 服务器 · COS
 
@@ -63,6 +63,7 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 | 时间 (UTC) | 阶段 | 等级 | 事件 |
 |-----------|------|------|------|
+| 2026-05-03 09:29:05 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 | 2026-05-03 08:58:42 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 | 2026-05-03 08:56:05 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 | 2026-05-03 08:54:57 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
@@ -72,7 +73,6 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 | 2026-05-03 07:28:39 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 | 2026-05-03 07:25:11 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 | 2026-05-03 07:24:00 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
-| 2026-05-03 07:22:46 UTC | preprocessing | ℹ️ | Bootstrap done on VM-0-11-ubuntu. raw=2 files. Ready to start training. |
 
 ### 💬 问铸渊副将
 
