@@ -231,7 +231,6 @@ def main() -> int:
         logging_steps=LOGGING_STEPS,
         save_steps=SAVE_STEPS,
         save_total_limit=3,
-        save_safetensors=True,
         save_strategy="steps",
         report_to=["tensorboard"],
         deepspeed=str(DS_CONFIG),
