@@ -229,14 +229,34 @@ def iter_chatgpt_export(path: Path, stats: dict) -> Iterator[list[dict]]:
                 yield msgs
 
 
-# ── Notion dialog zip (逻辑保持不变) ──
+# ── Notion / GitHub 语料 zip ──
+#
+# 设计原则: GitHub 语料 = 冰朔 ↔ 铸渊 真实自然交互, 是一段完整的认知演化录像。
+# 不需要清洗, 只需要识别说话人切换点。说话人标签可能以多种形态出现:
+#   1.  `冰朔：你好`              ← 标签 + 冒号 + 同行内容
+#   2.  `## 冰朔` / `### 铸渊`    ← 标题独占一行, 内容在后续段落
+#   3.  `**冰朔**` / `**铸渊**`   ← 粗体独占一行, 内容在后续段落
+#   4.  `> 冰朔: 你好`            ← 引用块
+# Notion 导出有时是 zip 套 zip (含子页面), 需要递归。
 
 NOTION_USER_LABELS = ("冰朔", "User", "user", "用户", "ICE-GL", "TCS-0002")
-NOTION_ASSISTANT_LABELS = ("铸渊", "ZY", "Zhuyuan", "zhuyuan", "Assistant", "assistant", "AI", "助手", "ICE-GL-ZY001")
-LINE_LABEL_RE = re.compile(r"^\s*[#>*\-]*\s*\*{0,2}\s*([^：:\n]{1,20})\s*[：:]\s*(.*)$")
+NOTION_ASSISTANT_LABELS = (
+    "铸渊", "ZY", "Zhuyuan", "zhuyuan", "Assistant", "assistant",
+    "AI", "助手", "ICE-GL-ZY001", "Copilot", "copilot", "ChatGPT", "chatgpt", "GPT",
+)
+
+# 形如 `冰朔: ...` / `> 铸渊：...` (标签 + 冒号 + 内容)
+LINE_LABEL_RE = re.compile(r"^\s*[>*\-]*\s*\*{0,2}\s*([^：:\n*#>`]{1,20}?)\s*\*{0,2}\s*[：:]\s*(.*)$")
+# 形如 `## 冰朔` / `### 铸渊` (heading 独占一行)
+HEADING_LABEL_RE = re.compile(r"^\s*#{1,6}\s+\*{0,2}\s*([^\n*#`：:]{1,20}?)\s*\*{0,2}\s*$")
+# 形如 `**冰朔**` (bold 独占一行, 无内容)
+BOLD_LABEL_RE = re.compile(r"^\s*\*{2}\s*([^\n*：:]{1,20}?)\s*\*{2}\s*$")
 
 
 def _classify_speaker(label: str) -> str | None:
+    if not label:
+        return None
+    label = label.strip()
     if not label:
         return None
     for k in NOTION_USER_LABELS:
@@ -248,8 +268,31 @@ def _classify_speaker(label: str) -> str | None:
     return None
 
 
+def _detect_speaker(line: str) -> tuple[str | None, str]:
+    """返回 (role | None, 同行剩余内容)。识别多种说话人标签形态。"""
+    # 1. 标签:内容 形式
+    m = LINE_LABEL_RE.match(line)
+    if m:
+        role = _classify_speaker(m.group(1))
+        if role:
+            return role, (m.group(2) or "").strip()
+    # 2. 独占一行的 heading
+    m = HEADING_LABEL_RE.match(line)
+    if m:
+        role = _classify_speaker(m.group(1))
+        if role:
+            return role, ""
+    # 3. 独占一行的 bold
+    m = BOLD_LABEL_RE.match(line)
+    if m:
+        role = _classify_speaker(m.group(1))
+        if role:
+            return role, ""
+    return None, ""
+
+
 def _parse_notion_markdown(text: str) -> list[dict]:
-    """启发式解析 Notion 导出 md：形如 `冰朔: ...` / `> 铸渊: ...` 的行作为说话人切换点。"""
+    """启发式解析 Notion / GitHub 对话 md。识别多种说话人标签形态。"""
     msgs: list[dict] = []
     cur_role: str | None = None
     cur_buf: list[str] = []
@@ -263,12 +306,11 @@ def _parse_notion_markdown(text: str) -> list[dict]:
         cur_buf = []
 
     for raw in text.splitlines():
-        m = LINE_LABEL_RE.match(raw)
-        role = _classify_speaker(m.group(1)) if m else None
+        role, inline = _detect_speaker(raw)
         if role:
             flush()
             cur_role = role
-            cur_buf = [m.group(2).strip()] if m.group(2) else []
+            cur_buf = [inline] if inline else []
         else:
             if cur_role is None:
                 continue  # 文件头部还没到对话部分
@@ -277,28 +319,54 @@ def _parse_notion_markdown(text: str) -> list[dict]:
     return msgs
 
 
+def _iter_md_in_zip(zf: zipfile.ZipFile, source_label: str) -> Iterator[tuple[str, str]]:
+    """递归遍历 zip (含嵌套 zip), 产出 (display_name, text) 序列。"""
+    for info in zf.infolist():
+        if info.is_dir():
+            continue
+        lname = info.filename.lower()
+        try:
+            if lname.endswith(".md") or lname.endswith(".markdown") or lname.endswith(".txt"):
+                with zf.open(info) as fh:
+                    text = io.TextIOWrapper(fh, encoding="utf-8", errors="ignore").read()
+                yield (f"{source_label}::{info.filename}", text)
+            elif lname.endswith(".zip"):
+                # 子 zip → 递归
+                with zf.open(info) as fh:
+                    inner_bytes = fh.read()
+                with zipfile.ZipFile(io.BytesIO(inner_bytes)) as inner:
+                    yield from _iter_md_in_zip(inner, f"{source_label}::{info.filename}")
+        except Exception as e:
+            print(f"[preprocess] 解压失败 {info.filename}: {e}", flush=True)
+
+
 def iter_notion_zip(zip_path: Path, stats: dict) -> Iterator[list[dict]]:
     if not zip_path.is_file():
         print(f"[preprocess] 跳过(无文件): {zip_path}", flush=True)
         return
     print(f"[preprocess] 解析 Notion zip: {zip_path}", flush=True)
+    md_total = 0
+    md_with_speaker = 0
+    md_no_speaker_samples: list[str] = []
     with zipfile.ZipFile(zip_path) as zf:
-        for info in zf.infolist():
-            if info.is_dir():
-                continue
-            name = info.filename.lower()
-            if not (name.endswith(".md") or name.endswith(".markdown") or name.endswith(".txt")):
-                continue
-            try:
-                with zf.open(info) as fh:
-                    text = io.TextIOWrapper(fh, encoding="utf-8", errors="ignore").read()
-            except Exception as e:
-                print(f"[preprocess] 解压失败 {info.filename}: {e}", flush=True)
-                continue
+        for fname, text in _iter_md_in_zip(zf, zip_path.name):
+            md_total += 1
             msgs = _parse_notion_markdown(text)
             if msgs:
+                md_with_speaker += 1
                 stats["notion_files"] += 1
+                print(f"[preprocess]   ✓ {fname}: 解析出 {len(msgs)} 条 turn", flush=True)
                 yield msgs
+            else:
+                # 收集前 3 个未识别文件名 + 文件头几行, 方便冰朔诊断
+                if len(md_no_speaker_samples) < 3:
+                    head = "\n".join(text.splitlines()[:8])
+                    md_no_speaker_samples.append(f"  - {fname}\n    头部预览:\n    " + head.replace("\n", "\n    "))
+    print(f"[preprocess] Notion 扫描: md/txt 文件总数 {md_total}, 识别出说话人的 {md_with_speaker}", flush=True)
+    if md_no_speaker_samples:
+        print("[preprocess] ⚠ 以下 md 未识别到说话人标签 (前 3 个示例,冰朔可据此扩展标签):", flush=True)
+        for s in md_no_speaker_samples:
+            print(s, flush=True)
 
 
 # ── SFT 规范化 + 滑窗切片 ──
