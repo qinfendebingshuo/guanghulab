@@ -11,17 +11,17 @@
 
 <!-- TRAINING_DASHBOARD_START -->
 
-_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 06:19:54 UTC_
+_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 06:20:05 UTC_
 
 ## 🔥 训练实时仪表盘 · ZY-TRAIN-001
 
 > Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料
 > **基座模型**: `Qwen/Qwen2.5-7B` · **任务 ID**: `ZY-TRAIN-001`
-> **最后更新**: 2026-05-03 06:19:54 UTC · **副将心跳**: 2026-05-03 06:19:54 UTC
+> **最后更新**: 2026-05-03 06:20:05 UTC · **副将心跳**: 2026-05-03 06:20:05 UTC
 
 | 当前阶段 | 健康 | 训练用时 |
 |---------|------|---------|
-| **🔧 数据预处理** · 预处理完成 | **🟢 正常** · auto-run workflow 启动 | — |
+| **🔥 训练进行中** · DeepSpeed 启动 (4×GPU) | **🟢 正常** · auto-run workflow 启动 | — |
 
 ### 📈 训练进度
 
@@ -38,11 +38,11 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 ### 🎮 GPU 状态
 
-> 采样时间: 2026-05-03 06:19:46 UTC
+> 采样时间: 2026-05-03 06:19:55 UTC
 
 | GPU | 利用率 | 显存 | 温度 | 功率 |
 |-----|--------|------|------|------|
-| 0 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 37.6 W |
+| 0 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 37.57 W |
 | 1 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 42°C | 33.68 W |
 | 2 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 42.47 W |
 | 3 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 39.52 W |
@@ -63,6 +63,7 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 | 时间 (UTC) | 阶段 | 等级 | 事件 |
 |-----------|------|------|------|
+| 2026-05-03 06:20:05 UTC | training | ℹ️ | deepspeed --num_gpus=4 train.py |
 | 2026-05-03 06:19:54 UTC | preprocessing | ℹ️ | SFT 样本数=11456 写入 /data/guanghu/processed/sft.jsonl |
 | 2026-05-03 06:19:36 UTC | preprocessing | ℹ️ | running preprocess-corpus.py |
 | 2026-05-03 06:18:27 UTC | bootstrapping | ℹ️ | torch + transformers + accelerate + deepspeed + modelscope 安装完成 |
@@ -72,7 +73,6 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 | 2026-05-03 05:41:36 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 | 2026-05-03 05:37:02 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 | 2026-05-03 05:33:56 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
-| 2026-05-02 19:35:48 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 
 ### 💬 问铸渊副将
 
