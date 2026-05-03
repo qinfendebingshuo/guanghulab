@@ -2,40 +2,31 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-05-03 15:13:29+08:00",
-  "timestamp_utc": "2026-05-03T07:13:29.007Z",
+  "timestamp": "2026-05-03 23:28:56+08:00",
+  "timestamp_utc": "2026-05-03T15:28:56.713Z",
   "merge": {
-    "pr_number": 449,
-    "pr_title": "fix(training): harden datasets.map against multi-rank fork crash",
-    "merge_commit_sha": "52f694cc468b9208e10c9fc44d48eb79a12f9a8c",
-    "head_sha": "535b7881312e38a0180e467ce28f55465671d55a",
+    "pr_number": 450,
+    "pr_title": "docs(training): 落档 2026-05-03 母模型全参 SFT kickoff 快照",
+    "merge_commit_sha": "373981f9204373af32856f4be5d97af1bbb4e17b",
+    "head_sha": "2ad4986482b08e01edc7db40a618393c9f795940",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 11,
+      "total": 14,
       "passed": 0,
-      "failed": 0,
+      "failed": 1,
       "skipped": 5
     },
     "check_runs": [
       {
-        "name": "gate-guard",
-        "status": "completed",
-        "conclusion": "skipped",
-        "started_at": "2026-05-03T07:13:24Z",
-        "completed_at": "2026-05-03T07:13:23Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
         "name": "🔒 SSL证书配置",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-03T07:13:24Z",
-        "completed_at": "2026-05-03T07:13:23Z",
+        "started_at": "2026-05-03T15:28:49Z",
+        "completed_at": "2026-05-03T15:28:48Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -43,8 +34,8 @@
         "name": "🚀 预览站→主站 一键推送",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-03T07:13:24Z",
-        "completed_at": "2026-05-03T07:13:23Z",
+        "started_at": "2026-05-03T15:28:49Z",
+        "completed_at": "2026-05-03T15:28:48Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -52,8 +43,8 @@
         "name": "🔧 服务器初始化",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-03T07:13:23Z",
-        "completed_at": "2026-05-03T07:13:23Z",
+        "started_at": "2026-05-03T15:28:48Z",
+        "completed_at": "2026-05-03T15:28:48Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -61,8 +52,8 @@
         "name": "💚 健康检查",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-03T07:13:23Z",
-        "completed_at": "2026-05-03T07:13:23Z",
+        "started_at": "2026-05-03T15:28:48Z",
+        "completed_at": "2026-05-03T15:28:48Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -70,16 +61,61 @@
         "name": "🚀 部署应用代码",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-03T07:13:26Z",
+        "started_at": "2026-05-03T15:28:51Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🚀 同步 + Bootstrap + 启动训练",
+        "name": "gate-guard",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-03T15:28:48Z",
+        "completed_at": "2026-05-03T15:28:48Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🗂️ 同步注册表状态",
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-05-03T15:28:50Z",
+        "completed_at": "2026-05-03T15:28:55Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💉 注入注册表上下文到 Copilot Issue",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-03T07:13:26Z",
+        "started_at": "2026-05-03T15:28:51Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "deploy",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-03T15:28:52Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🌉 README结构 → Notion同步",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-03T15:28:52Z",
+        "completed_at": null,
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "📦 打包并上传",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-03T15:28:50Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -88,25 +124,16 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "queued",
         "conclusion": null,
-        "started_at": "2026-05-03T07:13:23Z",
+        "started_at": "2026-05-03T15:28:48Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🗂️ 同步注册表状态",
+        "name": "memory-guardian",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-03T07:13:25Z",
-        "completed_at": null,
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💉 注入注册表上下文到 Copilot Issue",
-        "status": "queued",
-        "conclusion": null,
-        "started_at": "2026-05-03T07:13:23Z",
+        "started_at": "2026-05-03T15:28:51Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
@@ -115,7 +142,7 @@
         "name": "build",
         "status": "in_progress",
         "conclusion": null,
-        "started_at": "2026-05-03T07:13:25Z",
+        "started_at": "2026-05-03T15:28:50Z",
         "completed_at": null,
         "output_title": null,
         "output_summary": ""
