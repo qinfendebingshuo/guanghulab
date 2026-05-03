@@ -81,6 +81,75 @@ def log(msg: str):
 
 # ── 数据加载 + 模板化 ──
 
+def _resolve_role_anchors(tokenizer) -> dict[str, list[int]]:
+    """解析 ChatML 的 assistant 段定位锚点.
+
+    返回:
+      im_start_id   — <|im_start|> 的 token id
+      im_end_id     — <|im_end|> 的 token id
+      asst_role_ids — "assistant\n" 编码后的 token id 序列 (作为内容前的角色头)
+
+    思路:
+      Qwen2.5 的 chat_template 把每段对话包成 <|im_start|>{role}\n{content}<|im_end|>\n.
+      <|im_start|> / <|im_end|> 是 special token, BPE 不会跨它们合并,
+      因此可以在 full_ids 上直接用 token-id 做线性扫描定位 assistant 段,
+      不依赖任何 "前缀对齐" 假设. 这是修复 "有效样本: 0" 故障的关键.
+    """
+    im_start_id = tokenizer.convert_tokens_to_ids("<|im_start|>")
+    im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    if im_start_id is None or im_end_id is None or im_start_id == tokenizer.unk_token_id:
+        raise RuntimeError(
+            "[train] tokenizer 缺少 <|im_start|>/<|im_end|> special token, "
+            "确认这是 Qwen2.5 系列模型 (而不是兼容包装)."
+        )
+    # "assistant\n" 编码为 content token (不带任何 special token)
+    asst_role_ids = tokenizer.encode("assistant\n", add_special_tokens=False)
+    if not asst_role_ids:
+        raise RuntimeError("[train] 无法编码 'assistant\\n' 角色头, tokenizer 异常.")
+    return {
+        "im_start_id": im_start_id,
+        "im_end_id": im_end_id,
+        "asst_role_ids": asst_role_ids,
+    }
+
+
+def _mask_assistant_segments(
+    full_ids: list[int],
+    im_start_id: int,
+    im_end_id: int,
+    asst_role_ids: list[int],
+) -> tuple[list[int], int]:
+    """在 full_ids 上线性扫描, 找出所有 assistant 段并返回 labels + 标记到的 token 数.
+
+    被标记的范围 = assistant 内容 + 闭合的 <|im_end|> (让模型学会自然停止).
+    若 max_seq_len 截断导致最后一段没有闭合的 im_end_id, 则标到序列末尾.
+    """
+    n = len(full_ids)
+    labels = [IGNORE_INDEX] * n
+    role_len = len(asst_role_ids)
+    marked = 0
+    k = 0
+    while k < n:
+        if full_ids[k] != im_start_id:
+            k += 1
+            continue
+        # 检查 <|im_start|> 后是否是 "assistant\n"
+        if k + role_len < n and full_ids[k + 1 : k + 1 + role_len] == asst_role_ids:
+            content_start = k + 1 + role_len
+            # 找到内容结尾的 <|im_end|>
+            j = content_start
+            while j < n and full_ids[j] != im_end_id:
+                j += 1
+            content_end = min(j, n - 1)  # 含 im_end (若存在), 否则到序列末尾
+            for p in range(content_start, content_end + 1):
+                labels[p] = full_ids[p]
+            marked += content_end + 1 - content_start
+            k = content_end + 1
+        else:
+            k += 1
+    return labels, marked
+
+
 def build_dataset(tokenizer):
     if not DATA_PATH.is_file():
         raise FileNotFoundError(f"训练数据不存在: {DATA_PATH} · 请先跑 preprocess-corpus.py")
@@ -89,40 +158,68 @@ def build_dataset(tokenizer):
     raw = load_dataset("json", data_files=str(DATA_PATH), split="train")
     log(f"[train] 样本数: {len(raw)}")
 
+    anchors = _resolve_role_anchors(tokenizer)
+    im_start_id = anchors["im_start_id"]
+    im_end_id = anchors["im_end_id"]
+    asst_role_ids = anchors["asst_role_ids"]
+
     def encode(example: dict[str, Any]) -> dict[str, list[int]]:
         msgs = example["messages"]
-        # apply_chat_template 会按 Qwen2.5 ChatML 格式化, 包括 system/user/assistant
-        # 用 tokenize=True 一次性拿 ids；同时建 labels 让 user 段不参与 loss
+        # apply_chat_template 一次性按 Qwen2.5 ChatML 格式化整段对话
         full_ids = tokenizer.apply_chat_template(
             msgs, tokenize=True, add_generation_prompt=False,
             truncation=True, max_length=MAX_SEQ_LEN,
         )
-        # 构建 mask: 仅 assistant 段算 loss
-        labels = [IGNORE_INDEX] * len(full_ids)
-        # 重新逐段定位 assistant 区间
-        prefix_ids: list[int] = []
-        for i, m in enumerate(msgs):
-            include_assistant = (m["role"] == "assistant")
-            partial = msgs[: i + 1]
-            cur_ids = tokenizer.apply_chat_template(
-                partial, tokenize=True, add_generation_prompt=False,
-                truncation=True, max_length=MAX_SEQ_LEN,
-            )
-            seg_start = len(prefix_ids)
-            seg_end = min(len(cur_ids), len(full_ids))
-            if include_assistant and seg_start < seg_end:
-                for k in range(seg_start, seg_end):
-                    labels[k] = full_ids[k]
-            prefix_ids = cur_ids
-            if seg_end >= len(full_ids):
-                break
+        labels, _marked = _mask_assistant_segments(
+            full_ids, im_start_id, im_end_id, asst_role_ids
+        )
         return {"input_ids": full_ids, "labels": labels, "attention_mask": [1] * len(full_ids)}
 
     cols = raw.column_names
     ds = raw.map(encode, remove_columns=cols, num_proc=max(1, (os.cpu_count() or 4) // 2))
-    # 过滤掉没有 assistant token 的样本
+    # 过滤掉没有 assistant token 的样本 (理论上极少, 留作防御)
     ds = ds.filter(lambda ex: any(l != IGNORE_INDEX for l in ex["labels"]))
     log(f"[train] 有效样本: {len(ds)}")
+
+    # ── "自动门" 防呆守护 ──
+    # 若一条都没标到, 立即停, 不让 Trainer 在空数据集上裸奔.
+    # 同时打首条样本的诊断信息, 让下一次定位时 < 30 秒.
+    if len(ds) == 0:
+        sample = raw[0] if len(raw) > 0 else None
+        diag = ["[train] ❌ 有效样本为 0 — 标记环节失效, 终止训练."]
+        if sample is not None:
+            try:
+                fid = tokenizer.apply_chat_template(
+                    sample["messages"], tokenize=True, add_generation_prompt=False,
+                    truncation=True, max_length=MAX_SEQ_LEN,
+                )
+                preview = tokenizer.decode(fid[:200], skip_special_tokens=False)
+                diag.append(f"[train] 诊断: im_start_id={im_start_id} im_end_id={im_end_id} "
+                            f"asst_role_ids={asst_role_ids}")
+                diag.append(f"[train] 诊断: 首条样本 token 数={len(fid)}")
+                diag.append(f"[train] 诊断: 首条样本前 200 token 解码=\n{preview}")
+            except Exception as e:
+                diag.append(f"[train] 诊断失败: {e}")
+        for line in diag:
+            log(line)
+        raise RuntimeError("有效样本为 0 — 见上方诊断.")
+
+    # 标注质量统计 — "门会回报它做了什么"
+    if is_main_process():
+        try:
+            sample_n = min(64, len(ds))
+            asst_tokens = 0
+            total_tokens = 0
+            for i in range(sample_n):
+                row = ds[i]
+                total_tokens += len(row["labels"])
+                asst_tokens += sum(1 for l in row["labels"] if l != IGNORE_INDEX)
+            ratio = asst_tokens / total_tokens if total_tokens else 0.0
+            log(f"[train] 标注统计 (前 {sample_n} 条采样): "
+                f"平均 assistant token 占比={ratio:.2%} "
+                f"(平均 {asst_tokens // sample_n} tok/样本)")
+        except Exception as e:
+            log(f"[train] 标注统计失败(非致命): {e}")
     return ds
 
 
@@ -207,7 +304,7 @@ def main() -> int:
     log("[train] 加载模型 (fp16)...")
     model = AutoModelForCausalLM.from_pretrained(
         str(MODEL_DIR),
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         trust_remote_code=True,
         use_cache=False,  # 与 gradient_checkpointing 冲突
     )
