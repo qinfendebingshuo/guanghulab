@@ -11,17 +11,17 @@
 
 <!-- TRAINING_DASHBOARD_START -->
 
-_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 05:37:02 UTC_
+_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 05:41:36 UTC_
 
 ## 🔥 训练实时仪表盘 · ZY-TRAIN-001
 
 > Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料
 > **基座模型**: `Qwen/Qwen2.5-7B` · **任务 ID**: `ZY-TRAIN-001`
-> **最后更新**: 2026-05-03 05:37:02 UTC · **副将心跳**: 2026-05-03 05:37:02 UTC
+> **最后更新**: 2026-05-03 05:41:36 UTC · **副将心跳**: 2026-05-03 05:41:36 UTC
 
 | 当前阶段 | 健康 | 训练用时 |
 |---------|------|---------|
-| **✅ 训练完成** · 训练完成 | **🟢 正常** · GPU 服务器已开机，等待铸渊执行 bootstrap。 | — |
+| **🔥 训练进行中** · 训练启动 · 进入主循环 | **🟢 正常** · GPU 服务器已开机，等待铸渊执行 bootstrap。 | — |
 
 ### 📈 训练进度
 
@@ -38,14 +38,14 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 ### 🎮 GPU 状态
 
-> 采样时间: 2026-05-03 05:36:52 UTC
+> 采样时间: 2026-05-03 05:41:24 UTC
 
 | GPU | 利用率 | 显存 | 温度 | 功率 |
 |-----|--------|------|------|------|
-| 0 · Tesla V100-SXM2-32GB | 1% | 0 / 32768 MiB | 44°C | 37.57 W |
+| 0 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 44°C | 37.57 W |
 | 1 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 42°C | 33.68 W |
-| 2 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 43°C | 41.98 W |
-| 3 · Tesla V100-SXM2-32GB | 1% | 0 / 32768 MiB | 44°C | 39.52 W |
+| 2 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 44°C | 42.47 W |
+| 3 · Tesla V100-SXM2-32GB | 0% | 0 / 32768 MiB | 45°C | 39.52 W |
 
 ### 🖥️ 服务器 · COS
 
@@ -63,6 +63,7 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 | 时间 (UTC) | 阶段 | 等级 | 事件 |
 |-----------|------|------|------|
+| 2026-05-03 05:41:36 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 | 2026-05-03 05:37:02 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 | 2026-05-03 05:33:56 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 | 2026-05-02 19:35:48 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
@@ -72,7 +73,6 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 | 2026-05-02 19:02:10 UTC | bootstrapping | ℹ️ | apt 包安装完成 |
 | 2026-05-02 19:02:00 UTC | bootstrapping | ℹ️ | Bootstrap started on VM-0-11-ubuntu |
 | 2026-05-02 17:50:00 UTC | idle | ℹ️ | ZY_DISPATCH_TOKEN 已配置。真实训练栈落地：train.py (Qwen2.5-7B 全参 SFT) + DeepSpeed ZeRO-3 + 模型自动下载 + 语料预处理。合并 PR 后 training-auto-run 工作流自动 SCP/setup/启动训练，仓库首页将开始实时刷新。 |
-| 2026-05-02 16:42:00 UTC | idle | ℹ️ | 铸渊副将已接管。GPU 训练机 119.45.160.137 已开机，5 个 Secrets 已配置，COS 桶语料已就位。 |
 
 ### 💬 问铸渊副将
 
