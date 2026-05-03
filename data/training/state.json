@@ -6,7 +6,7 @@
     "name": "Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料",
     "model_base": "Qwen/Qwen2.5-7B",
     "started_at": "2026-05-02T19:34:41.648Z",
-    "updated_at": "2026-05-03T06:18:27.782Z",
+    "updated_at": "2026-05-03T06:19:36.454Z",
     "ended_at": "2026-05-03T05:42:46.428Z"
   },
   "server": {
@@ -27,9 +27,9 @@
     "processed_files": null,
     "checkpoints": null
   },
-  "phase": "bootstrapping",
+  "phase": "preprocessing",
   "_phase_doc": "idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
-  "phase_label": "Python 训练栈完成",
+  "phase_label": "ChatGPT export + Notion zip → SFT JSONL",
   "progress": {
     "step": 0,
     "total_steps": 0,
@@ -43,7 +43,7 @@
     "elapsed_seconds": 0
   },
   "gpu_metrics": {
-    "snapshot_at": "2026-05-03T06:18:15Z",
+    "snapshot_at": "2026-05-03T06:19:18Z",
     "devices": [
       {
         "index": 0,
@@ -87,7 +87,7 @@
     "status": "ok",
     "_status_doc": "ok | warning | error | idle",
     "message": "auto-run workflow 启动",
-    "last_heartbeat_at": "2026-05-03T06:18:27.782Z"
+    "last_heartbeat_at": "2026-05-03T06:19:36.454Z"
   },
   "timeline": [
     {
@@ -179,6 +179,12 @@
       "phase": "bootstrapping",
       "level": "info",
       "message": "torch + transformers + accelerate + deepspeed + modelscope 安装完成"
+    },
+    {
+      "at": "2026-05-03T06:19:36.454Z",
+      "phase": "preprocessing",
+      "level": "info",
+      "message": "running preprocess-corpus.py"
     }
   ],
   "_timeline_doc": "最新事件在尾部 · 渲染时取最近 10 条倒序展示 · 由 progress-reporter 追加"
