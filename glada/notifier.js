@@ -269,6 +269,16 @@ function buildEmailHtml(subject, plainBody, eventType, data) {
  * @returns {Promise<boolean>}
  */
 async function sendEmail(notification) {
+  // ⚠️ D72 (2026-05-03) 冰朔决策：默认禁用所有邮件告警。
+  // 与 ops-agent/notifier.js 行为一致：必须显式 OPS_EMAIL_ENABLED=true 才发。
+  const v = process.env.OPS_EMAIL_ENABLED;
+  const norm = v === undefined || v === null ? '' : String(v).trim().toLowerCase();
+  const enabled = norm === 'true' || norm === '1' || norm === 'yes' || norm === 'on';
+  if (!enabled) {
+    console.log('[GLADA-Notify] OPS_EMAIL_ENABLED!=true (D72 默认禁用)，跳过邮件通知');
+    return false;
+  }
+
   const transporter = getSmtpTransporter();
   if (!transporter) {
     console.log('[GLADA-Notify] ⚠️ QQ邮箱 SMTP 未配置（需要 ZY_SMTP_USER + ZY_SMTP_PASS），跳过邮件通知');

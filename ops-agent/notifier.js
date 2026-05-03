@@ -38,10 +38,14 @@ const COOLDOWN_MINUTES = (() => {
 const _lastSentAt = new Map(); // key -> epoch ms
 
 function isEmailEnabled() {
+  // ⚠️ D72 (2026-05-03) 冰朔决策：默认禁用所有邮件告警。
+  // 服务器持续给冰朔发"大脑服务器异常"邮件，已成为噪音。
+  // 如需重新启用：显式设置 OPS_EMAIL_ENABLED=true (大小写不敏感)。
+  // 之前默认是 true，本次翻转默认为 false。
   const v = process.env.OPS_EMAIL_ENABLED;
-  if (v === undefined || v === null || v === '') return true;
+  if (v === undefined || v === null || v === '') return false;
   const norm = String(v).trim().toLowerCase();
-  return !(norm === 'false' || norm === '0' || norm === 'no' || norm === 'off');
+  return norm === 'true' || norm === '1' || norm === 'yes' || norm === 'on';
 }
 
 function cooldownRemainingMs(key) {

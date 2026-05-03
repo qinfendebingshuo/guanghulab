@@ -1,0 +1,145 @@
+name: 🛑 紧急停邮件 (Ops-Agent Email Kill Switch)
+
+# ⚠️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2026-05-03 D72：冰朔反映 ops-agent 一直发"大脑服务器异常"邮件刷屏。
+# 本 workflow 提供一键停止 / 恢复邮件告警的能力。
+#
+# 仓库侧的 OPS_EMAIL_ENABLED 默认值已翻转为 false（见 ops-agent/notifier.js）。
+# 但服务器上跑的 ops-agent 进程可能已经从环境变量或 pm2 set 拿到了 true，
+# 这个 workflow 是用来在不重新部署的情况下立即让服务器停发邮件。
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '动作'
+        required: true
+        default: 'disable'
+        type: choice
+        options:
+          - disable          # 关掉邮件（pm2 set OPS_EMAIL_ENABLED=false + restart）
+          - enable           # 重新启用邮件
+          - stop-ops-agent   # 直接停掉整个 ops-agent 进程（最彻底）
+          - status           # 仅查询当前状态，不修改
+      target:
+        description: '目标服务器'
+        required: true
+        default: 'face'
+        type: choice
+        options:
+          - face   # ZY-SVR-002 面孔服务器（ops-agent 主部署位）
+          - brain  # ZY-SVR-005 大脑服务器（如果那里也跑了 ops-agent）
+
+permissions:
+  contents: read
+
+concurrency:
+  group: emergency-stop-email
+  cancel-in-progress: false
+
+jobs:
+  kill-switch:
+    name: '🛑 ${{ github.event.inputs.action }} on ${{ github.event.inputs.target }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 🔑 准备 SSH (面孔)
+        if: github.event.inputs.target == 'face'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SERVER_KEY }}" > ~/.ssh/svr_key
+          chmod 600 ~/.ssh/svr_key
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "TARGET_USER=${{ secrets.SERVER_USER }}" >> "$GITHUB_ENV"
+          echo "TARGET_HOST=${{ secrets.SERVER_HOST }}" >> "$GITHUB_ENV"
+
+      - name: 🔑 准备 SSH (大脑)
+        if: github.event.inputs.target == 'brain'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.ZY_BRAIN_KEY }}" > ~/.ssh/svr_key
+          chmod 600 ~/.ssh/svr_key
+          ssh-keyscan -H "${{ secrets.ZY_BRAIN_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "TARGET_USER=${{ secrets.ZY_BRAIN_USER }}" >> "$GITHUB_ENV"
+          echo "TARGET_HOST=${{ secrets.ZY_BRAIN_HOST }}" >> "$GITHUB_ENV"
+
+      - name: 🛑 关闭邮件
+        if: github.event.inputs.action == 'disable'
+        run: |
+          ssh -i ~/.ssh/svr_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "${TARGET_USER}@${TARGET_HOST}" \
+            'set -e
+             echo "=== Before ==="
+             pm2 env ops-agent 2>/dev/null | grep -i OPS_EMAIL || echo "(no current OPS_EMAIL var)"
+             echo "=== Setting OPS_EMAIL_ENABLED=false ==="
+             pm2 set ops-agent:OPS_EMAIL_ENABLED false || true
+             pm2 restart ops-agent --update-env || pm2 restart ops-agent || true
+             echo "=== After ==="
+             pm2 env ops-agent 2>/dev/null | grep -i OPS_EMAIL || echo "(env empty / agent not running)"
+             pm2 status ops-agent || echo "(ops-agent not in pm2 list)"' \
+            2>&1 | tee /tmp/kill-output.log
+          {
+            echo "## 🛑 邮件告警已关闭"
+            echo ""
+            echo "目标：\`${{ github.event.inputs.target }}\` (\`$TARGET_HOST\`)"
+            echo ""
+            echo "\`\`\`"
+            tail -c 4000 /tmp/kill-output.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: ▶️ 重新启用邮件
+        if: github.event.inputs.action == 'enable'
+        run: |
+          ssh -i ~/.ssh/svr_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "${TARGET_USER}@${TARGET_HOST}" \
+            'pm2 set ops-agent:OPS_EMAIL_ENABLED true || true
+             pm2 restart ops-agent --update-env || pm2 restart ops-agent || true
+             pm2 env ops-agent 2>/dev/null | grep -i OPS_EMAIL || echo "(env empty)"
+             pm2 status ops-agent' \
+            2>&1 | tee /tmp/kill-output.log
+          {
+            echo "## ▶️ 邮件告警已重新启用"
+            echo ""
+            echo "\`\`\`"
+            tail -c 4000 /tmp/kill-output.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 💀 直接停掉 ops-agent
+        if: github.event.inputs.action == 'stop-ops-agent'
+        run: |
+          ssh -i ~/.ssh/svr_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "${TARGET_USER}@${TARGET_HOST}" \
+            'pm2 stop ops-agent || true
+             pm2 status ops-agent || echo "(stopped)"' \
+            2>&1 | tee /tmp/kill-output.log
+          {
+            echo "## 💀 ops-agent 进程已停止"
+            echo ""
+            echo "\`\`\`"
+            tail -c 4000 /tmp/kill-output.log
+            echo "\`\`\`"
+            echo ""
+            echo "如需恢复：\`pm2 start ops-agent\` (在服务器上)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 📋 查询状态
+        if: github.event.inputs.action == 'status'
+        run: |
+          ssh -i ~/.ssh/svr_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            "${TARGET_USER}@${TARGET_HOST}" \
+            'pm2 env ops-agent 2>/dev/null | grep -i -E "OPS_EMAIL|SMTP" || echo "(no relevant env vars)"
+             echo "---"
+             pm2 status ops-agent || echo "(ops-agent not in pm2)"' \
+            2>&1 | tee /tmp/status-output.log
+          {
+            echo "## 📋 当前状态"
+            echo ""
+            echo "\`\`\`"
+            cat /tmp/status-output.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
