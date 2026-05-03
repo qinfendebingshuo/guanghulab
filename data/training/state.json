@@ -6,7 +6,7 @@
     "name": "Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料",
     "model_base": "Qwen/Qwen2.5-7B",
     "started_at": "2026-05-02T19:34:41.648Z",
-    "updated_at": "2026-05-03T07:21:32.568Z",
+    "updated_at": "2026-05-03T07:22:46.429Z",
     "ended_at": "2026-05-03T07:17:17.765Z"
   },
   "server": {
@@ -27,9 +27,9 @@
     "processed_files": null,
     "checkpoints": null
   },
-  "phase": "downloading-corpus",
+  "phase": "preprocessing",
   "_phase_doc": "idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
-  "phase_label": "语料下载完成",
+  "phase_label": "Bootstrap 完成 · 等待启动训练",
   "progress": {
     "step": 0,
     "total_steps": 0,
@@ -43,7 +43,7 @@
     "elapsed_seconds": 0
   },
   "gpu_metrics": {
-    "snapshot_at": "2026-05-03T07:21:24Z",
+    "snapshot_at": "2026-05-03T07:21:56Z",
     "devices": [
       {
         "index": 0,
@@ -87,7 +87,7 @@
     "status": "ok",
     "_status_doc": "ok | warning | error | idle",
     "message": "auto-run workflow 启动",
-    "last_heartbeat_at": "2026-05-03T07:21:32.568Z"
+    "last_heartbeat_at": "2026-05-03T07:22:46.429Z"
   },
   "timeline": [
     {
@@ -311,6 +311,12 @@
       "phase": "downloading-corpus",
       "level": "info",
       "message": "raw=2 files downloaded to /data/guanghu/raw"
+    },
+    {
+      "at": "2026-05-03T07:22:46.429Z",
+      "phase": "preprocessing",
+      "level": "info",
+      "message": "Bootstrap done on VM-0-11-ubuntu. raw=2 files. Ready to start training."
     }
   ],
   "_timeline_doc": "最新事件在尾部 · 渲染时取最近 10 条倒序展示 · 由 progress-reporter 追加"
