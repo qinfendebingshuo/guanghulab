@@ -49,9 +49,10 @@ from typing import Any
 #      把 ZY_MAP_NUM_PROC 调高也安全.
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 try:
+    # force=True 会强制覆盖已有的 start method;
+    # 极少数情况下 (子解释器/已有活跃池) 仍会抛 RuntimeError, 此时降级跳过.
     _mp.set_start_method("spawn", force=True)
 except RuntimeError:
-    # 已经被设置过 — 由调用方负责, 不强制覆盖
     pass
 
 import torch
