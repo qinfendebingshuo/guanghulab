@@ -1,0 +1,164 @@
+{
+  "_meta": {
+    "observer": "铸渊全链路部署观测系统 v1.0",
+    "copyright": "国作登字-2026-A-00037559",
+    "collected_at": "2026-05-03T15:31:26.722Z"
+  },
+  "run": {
+    "id": 25283179348,
+    "workflow_name": "🏛️ 铸渊主权服务器 · 部署",
+    "conclusion": "failure",
+    "status": "completed",
+    "html_url": "https://github.com/qinfendebingshuo/guanghulab/actions/runs/25283179348",
+    "head_sha": "373981f9204373af32856f4be5d97af1bbb4e17b",
+    "head_branch": "main",
+    "actor": "qinfendebingshuo",
+    "created_at": "2026-05-03T15:28:48Z",
+    "updated_at": "2026-05-03T15:31:15Z",
+    "run_started_at": "2026-05-03T15:28:48Z"
+  },
+  "jobs_summary": {
+    "total": 5,
+    "success": 0,
+    "failure": 1,
+    "skipped": 4,
+    "cancelled": 0
+  },
+  "failed_jobs": [
+    {
+      "job_id": 74123498392,
+      "job_name": "🚀 部署应用代码",
+      "conclusion": "failure",
+      "started_at": "2026-05-03T15:28:51Z",
+      "completed_at": "2026-05-03T15:31:14Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "🔐 配置SSH",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "📦 同步应用代码",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 4
+        },
+        {
+          "name": "🔄 同步 docs → portal (单一数据源保障)",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5
+        },
+        {
+          "name": "🌐 同步前端内容到站点",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6
+        },
+        {
+          "name": "📦 同步配置文件",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7
+        },
+        {
+          "name": "📦 同步迁移脚本",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8
+        },
+        {
+          "name": "📥 安装依赖 & 重启",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        }
+      ],
+      "log_content": "﻿2026-05-03T15:28:51.9182302Z Current runner version: '2.334.0'\n2026-05-03T15:28:51.9210873Z ##[group]Runner Image Provisioner\n2026-05-03T15:28:51.9212034Z Hosted Compute Agent\n2026-05-03T15:28:51.9213034Z Version: 20260213.493\n2026-05-03T15:28:51.9213963Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3\n2026-05-03T15:28:51.9215047Z Build Date: 2026-02-13T00:28:41Z\n2026-05-03T15:28:51.9216084Z Worker ID: {96fe2af4-7a1f-4e0c-ab09-cf6dbf1a2f4e}\n2026-05-03T15:28:51.9217402Z Azure Region: northcentralus\n2026-05-03T15:28:51.9218371Z ##[endgroup]\n2026-05-03T15:28:51.9220159Z ##[group]Operating System\n2026-05-03T15:28:51.9221198Z Ubuntu\n2026-05-03T15:28:51.9221996Z 24.04.4\n2026-05-03T15:28:51.9222719Z LTS\n2026-05-03T15:28:51.9223548Z ##[endgroup]\n2026-05-03T15:28:51.9224342Z ##[group]Runner Image\n2026-05-03T15:28:51.9225271Z Image: ubuntu-24.04\n2026-05-03T15:28:51.9226151Z Version: 20260413.86.1\n2026-05-03T15:28:51.9227921Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md\n2026-05-03T15:28:51.9229830Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86\n2026-05-03T15:28:51.9231097Z ##[endgroup]\n2026-05-03T15:28:51.9232697Z ##[group]GITHUB_TOKEN Permissions\n2026-05-03T15:28:51.9235107Z Contents: read\n2026-05-03T15:28:51.9236073Z Metadata: read\n2026-05-03T15:28:51.9237376Z ##[endgroup]\n2026-05-03T15:28:51.9239982Z Secret source: Actions\n2026-05-03T15:28:51.9241447Z Prepare workflow directory\n2026-05-03T15:28:51.9666443Z Prepare all required actions\n2026-05-03T15:28:51.9723254Z Getting action download info\n2026-05-03T15:28:52.2646255Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)\n2026-05-03T15:28:52.4952040Z Complete job name: 🚀 部署应用代码\n2026-05-03T15:28:52.5740781Z ##[group]Run actions/checkout@v4\n2026-05-03T15:28:52.5741839Z with:\n2026-05-03T15:28:52.5742554Z   repository: qinfendebingshuo/guanghulab\n2026-05-03T15:28:52.5743517Z   token: ***\n2026-05-03T15:28:52.5744132Z   ssh-strict: true\n2026-05-03T15:28:52.5744779Z   ssh-user: git\n2026-05-03T15:28:52.5745410Z   persist-credentials: true\n2026-05-03T15:28:52.5746085Z   clean: true\n2026-05-03T15:28:52.5746925Z   sparse-checkout-cone-mode: true\n2026-05-03T15:28:52.5747659Z   fetch-depth: 1\n2026-05-03T15:28:52.5748278Z   fetch-tags: false\n2026-05-03T15:28:52.5748913Z   show-progress: true\n2026-05-03T15:28:52.5749548Z   lfs: false\n2026-05-03T15:28:52.5750143Z   submodules: false\n2026-05-03T15:28:52.5750772Z   set-safe-directory: true\n2026-05-03T15:28:52.5751729Z ##[endgroup]\n2026-05-03T15:28:52.6871814Z Syncing repository: qinfendebingshuo/guanghulab\n2026-05-03T15:28:52.6874170Z ##[group]Getting Git version info\n2026-05-03T15:28:52.6875232Z Working directory is '/home/runner/work/guanghulab/guanghulab'\n2026-05-03T15:28:52.6876569Z [command]/usr/bin/git version\n2026-05-03T15:28:52.6918591Z git version 2.53.0\n2026-05-03T15:28:52.6945625Z ##[endgroup]\n202\n\n... [截断 5517 字符] ...\n\n37Z \u001b[36;1m# 确保目标目录存在\u001b[0m\n2026-05-03T15:28:57.1123863Z \u001b[36;1mssh -i ~/.ssh/zy_key \\\u001b[0m\n2026-05-03T15:28:57.1124326Z \u001b[36;1m  ***@*** \\\u001b[0m\n2026-05-03T15:28:57.1125297Z \u001b[36;1m  \"mkdir -p ${TARGET_DIR} /opt/zhuyuan/app /opt/age-os/mcp-server /opt/age-os/agents /opt/age-os/schema /opt/age-os/scripts /opt/age-os/logs /opt/glada /opt/zhuyuan/ops-agent /opt/zhuyuan/ops-agent/data /opt/zhuyuan/data/logs\"\u001b[0m\n2026-05-03T15:28:57.1126288Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1126537Z \u001b[36;1m# 同步后端应用代码\u001b[0m\n2026-05-03T15:28:57.1127043Z \u001b[36;1mrsync -avz --delete \\\u001b[0m\n2026-05-03T15:28:57.1127432Z \u001b[36;1m  -e \"ssh -i ~/.ssh/zy_key\" \\\u001b[0m\n2026-05-03T15:28:57.1127780Z \u001b[36;1m  server/app/ \\\u001b[0m\n2026-05-03T15:28:57.1128165Z \u001b[36;1m  ***@***:/opt/zhuyuan/app/\u001b[0m\n2026-05-03T15:28:57.1128498Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1128769Z \u001b[36;1m# 同步 AGE OS MCP Server 代码\u001b[0m\n2026-05-03T15:28:57.1129107Z \u001b[36;1mrsync -avz --delete \\\u001b[0m\n2026-05-03T15:28:57.1129473Z \u001b[36;1m  -e \"ssh -i ~/.ssh/zy_key\" \\\u001b[0m\n2026-05-03T15:28:57.1129822Z \u001b[36;1m  --exclude='node_modules' \\\u001b[0m\n2026-05-03T15:28:57.1130179Z \u001b[36;1m  server/age-os/mcp-server/ \\\u001b[0m\n2026-05-03T15:28:57.1130614Z \u001b[36;1m  ***@***:/opt/age-os/mcp-server/\u001b[0m\n2026-05-03T15:28:57.1130950Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1131252Z \u001b[36;1m# 同步 AGE OS Agents 代码（活模块 · S5新增）\u001b[0m\n2026-05-03T15:28:57.1131614Z \u001b[36;1mrsync -avz --delete \\\u001b[0m\n2026-05-03T15:28:57.1131958Z \u001b[36;1m  -e \"ssh -i ~/.ssh/zy_key\" \\\u001b[0m\n2026-05-03T15:28:57.1132322Z \u001b[36;1m  server/age-os/agents/ \\\u001b[0m\n2026-05-03T15:28:57.1132702Z \u001b[36;1m  ***@***:/opt/age-os/agents/\u001b[0m\n2026-05-03T15:28:57.1133043Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1133313Z \u001b[36;1m# 同步 AGE OS Schema\u001b[0m\n2026-05-03T15:28:57.1133626Z \u001b[36;1mrsync -avz \\\u001b[0m\n2026-05-03T15:28:57.1133933Z \u001b[36;1m  -e \"ssh -i ~/.ssh/zy_key\" \\\u001b[0m\n2026-05-03T15:28:57.1134275Z \u001b[36;1m  server/age-os/schema/ \\\u001b[0m\n2026-05-03T15:28:57.1134646Z \u001b[36;1m  ***@***:/opt/age-os/schema/\u001b[0m\n2026-05-03T15:28:57.1134962Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1135219Z \u001b[36;1m# 同步 AGE OS PM2 配置\u001b[0m\n2026-05-03T15:28:57.1135538Z \u001b[36;1mscp -i ~/.ssh/zy_key \\\u001b[0m\n2026-05-03T15:28:57.1135906Z \u001b[36;1m  server/age-os/ecosystem.config.js \\\u001b[0m\n2026-05-03T15:28:57.1136307Z \u001b[36;1m  ***@***:/opt/age-os/\u001b[0m\n2026-05-03T15:28:57.1136733Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1137001Z \u001b[36;1m# 同步 AGE OS package.json\u001b[0m\n2026-05-03T15:28:57.1137339Z \u001b[36;1mscp -i ~/.ssh/zy_key \\\u001b[0m\n2026-05-03T15:28:57.1137675Z \u001b[36;1m  server/age-os/package.json \\\u001b[0m\n2026-05-03T15:28:57.1138067Z \u001b[36;1m  ***@***:/opt/age-os/\u001b[0m\n2026-05-03T15:28:57.1138374Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1138642Z \u001b[36;1m# 同步 GLADA 自主开发Agent 代码\u001b[0m\n2026-05-03T15:28:57.1138976Z \u001b[36;1mrsync -avz --delete \\\u001b[0m\n2026-05-03T15:28:57.1139308Z \u001b[36;1m  -e \"ssh -i ~/.ssh/zy_key\" \\\u001b[0m\n2026-05-03T15:28:57.1139677Z \u001b[36;1m  --exclude='node_modules' \\\u001b[0m\n2026-05-03T15:28:57.1140018Z \u001b[36;1m  --exclude='queue/*.json' \\\u001b[0m\n2026-05-03T15:28:57.1140353Z \u001b[36;1m  --exclude='logs/' \\\u001b[0m\n2026-05-03T15:28:57.1140677Z \u001b[36;1m  --exclude='receipts/' \\\u001b[0m\n2026-05-03T15:28:57.1141016Z \u001b[36;1m  --exclude='.env.glada' \\\u001b[0m\n2026-05-03T15:28:57.1141333Z \u001b[36;1m  glada/ \\\u001b[0m\n2026-05-03T15:28:57.1141676Z \u001b[36;1m  ***@***:/opt/glada/\u001b[0m\n2026-05-03T15:28:57.1141982Z \u001b[36;1m\u001b[0m\n2026-05-03T15:28:57.1142238Z \u001b[36;1m# 同步 OPS Agent 运维守卫代码\u001b[0m\n2026-05-03T15:28:57.1142549Z \u001b[36;1mrsync -avz --delete \\\u001b[0m\n2026-05-03T15:28:57.1142875Z \u001b[36;1m  -e \"ssh -i ~/.ssh/zy_key\" \\\u001b[0m\n2026-05-03T15:28:57.1143222Z \u001b[36;1m  --exclude='node_modules' \\\u001b[0m\n2026-05-03T15:28:57.1143550Z \u001b[36;1m  --exclude='data/' \\\u001b[0m\n2026-05-03T15:28:57.1144062Z \u001b[36;1m  --exclude='.env.ops-agent' \\\u001b[0m\n2026-05-03T15:28:57.1144431Z \u001b[36;1m  ops-agent/ \\\u001b[0m\n2026-05-03T15:28:57.1144801Z \u001b[36;1m  ***@***:/opt/zhuyuan/ops-agent/\u001b[0m\n2026-05-03T15:28:57.1167291Z shell: /usr/bin/bash -e {0}\n2026-05-03T15:28:57.1167630Z ##[endgroup]\n2026-05-03T15:28:57.1210785Z 📦 部署目标: preview → /opt/zhuyuan/sites/preview\n2026-05-03T15:31:13.0094435Z ssh: connect to host *** port 22: Connection timed out\n2026-05-03T15:31:13.0099332Z rsync: connection unexpectedly closed (0 bytes received so far) [sender]\n2026-05-03T15:31:13.0100695Z rsync error: unexplained error (code 255) at io.c(232) [sender=3.2.7]\n2026-05-03T15:31:13.0118046Z ##[error]Process completed with exit code 255.\n2026-05-03T15:31:13.0275255Z Post job cleanup.\n2026-05-03T15:31:13.1283902Z [command]/usr/bin/git version\n2026-05-03T15:31:13.1320882Z git version 2.53.0\n2026-05-03T15:31:13.1367423Z Temporarily overriding HOME='/home/runner/work/_temp/f35687eb-1d16-40f8-8db0-62e51ff619f9' before making global git config changes\n2026-05-03T15:31:13.1368701Z Adding repository directory to the temporary git global config as a safe directory\n2026-05-03T15:31:13.1381164Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/guanghulab/guanghulab\n2026-05-03T15:31:13.1416381Z [command]/usr/bin/git config --local --name-only --get-regexp core\\.sshCommand\n2026-05-03T15:31:13.1449783Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'core\\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\"\n2026-05-03T15:31:13.1687036Z [command]/usr/bin/git config --local --name-only --get-regexp http\\.https\\:\\/\\/github\\.com\\/\\.extraheader\n2026-05-03T15:31:13.1708724Z http.https://github.com/.extraheader\n2026-05-03T15:31:13.1721649Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader\n2026-05-03T15:31:13.1755314Z [command]/usr/bin/git submodule foreach --recursive sh -c \"git config --local --name-only --get-regexp 'http\\.https\\:\\/\\/github\\.com\\/\\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\"\n2026-05-03T15:31:13.2001667Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\\.gitdir:\n2026-05-03T15:31:13.2034363Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url\n2026-05-03T15:31:13.2392972Z Cleaning up orphan processes\n2026-05-03T15:31:13.2705094Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/\n"
+    }
+  ],
+  "all_jobs": [
+    {
+      "id": 74123498392,
+      "name": "🚀 部署应用代码",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-05-03T15:28:51Z",
+      "completed_at": "2026-05-03T15:31:14Z"
+    },
+    {
+      "id": 74123498502,
+      "name": "💚 健康检查",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-05-03T15:28:48Z",
+      "completed_at": "2026-05-03T15:28:48Z"
+    },
+    {
+      "id": 74123498523,
+      "name": "🔧 服务器初始化",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-05-03T15:28:48Z",
+      "completed_at": "2026-05-03T15:28:48Z"
+    },
+    {
+      "id": 74123498564,
+      "name": "🚀 预览站→主站 一键推送",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-05-03T15:28:49Z",
+      "completed_at": "2026-05-03T15:28:48Z"
+    },
+    {
+      "id": 74123498568,
+      "name": "🔒 SSL证书配置",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-05-03T15:28:49Z",
+      "completed_at": "2026-05-03T15:28:48Z"
+    }
+  ],
+  "analysis": {
+    "needs_repair": true,
+    "error_summary": "[high] 文件同步失败; [medium] 命令执行失败",
+    "matched_patterns": [
+      {
+        "name": "文件同步失败",
+        "fix": "检查rsync路径和权限",
+        "severity": "high"
+      },
+      {
+        "name": "命令执行失败",
+        "fix": "查看上方具体错误信息",
+        "severity": "medium"
+      }
+    ],
+    "recommendation": "副将可尝试自动修复: 检查rsync路径和权限 → 查看上方具体错误信息"
+  }
+}
