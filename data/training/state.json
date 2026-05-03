@@ -6,7 +6,7 @@
     "name": "Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料",
     "model_base": "Qwen/Qwen2.5-7B",
     "started_at": "2026-05-02T19:34:41.648Z",
-    "updated_at": "2026-05-03T06:17:34.391Z",
+    "updated_at": "2026-05-03T06:18:14.923Z",
     "ended_at": "2026-05-03T05:42:46.428Z"
   },
   "server": {
@@ -29,7 +29,7 @@
   },
   "phase": "bootstrapping",
   "_phase_doc": "idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
-  "phase_label": "training-auto-run #2 触发",
+  "phase_label": "环境配置开始",
   "progress": {
     "step": 0,
     "total_steps": 0,
@@ -43,7 +43,7 @@
     "elapsed_seconds": 0
   },
   "gpu_metrics": {
-    "snapshot_at": "2026-05-03T05:41:51Z",
+    "snapshot_at": "2026-05-03T06:18:04Z",
     "devices": [
       {
         "index": 0,
@@ -51,15 +51,15 @@
         "memory_used_mib": 0,
         "name": "Tesla V100-SXM2-32GB",
         "power_w": 37.57,
-        "temperature_c": 44,
-        "util_percent": 1
+        "temperature_c": 45,
+        "util_percent": 0
       },
       {
         "index": 1,
         "memory_total_mib": 32768,
         "memory_used_mib": 0,
         "name": "Tesla V100-SXM2-32GB",
-        "power_w": 33.68,
+        "power_w": 34.17,
         "temperature_c": 42,
         "util_percent": 0
       },
@@ -69,7 +69,7 @@
         "memory_used_mib": 0,
         "name": "Tesla V100-SXM2-32GB",
         "power_w": 42.47,
-        "temperature_c": 44,
+        "temperature_c": 45,
         "util_percent": 0
       },
       {
@@ -79,7 +79,7 @@
         "name": "Tesla V100-SXM2-32GB",
         "power_w": 39.52,
         "temperature_c": 45,
-        "util_percent": 1
+        "util_percent": 0
       }
     ]
   },
@@ -87,7 +87,7 @@
     "status": "ok",
     "_status_doc": "ok | warning | error | idle",
     "message": "auto-run workflow 启动",
-    "last_heartbeat_at": "2026-05-03T06:17:34.391Z"
+    "last_heartbeat_at": "2026-05-03T06:18:14.923Z"
   },
   "timeline": [
     {
@@ -167,6 +167,12 @@
       "phase": "bootstrapping",
       "level": "info",
       "message": "commit 9884be1f5bdc7c847fdf24038c44aacc7a7d912f 合并到 main, 自动训练流程启动"
+    },
+    {
+      "at": "2026-05-03T06:18:14.923Z",
+      "phase": "bootstrapping",
+      "level": "info",
+      "message": "Bootstrap started on VM-0-11-ubuntu"
     }
   ],
   "_timeline_doc": "最新事件在尾部 · 渲染时取最近 10 条倒序展示 · 由 progress-reporter 追加"
