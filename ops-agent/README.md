@@ -156,6 +156,8 @@ ops-agent/
 | `ZY_SMTP_USER` | SMTP邮箱 | - |
 | `ZY_SMTP_PASS` | SMTP授权码 | - |
 | `OPS_NOTIFY_EMAIL` | 告警接收邮箱 | =ZY_SMTP_USER |
+| `OPS_EMAIL_ENABLED` | **邮件总开关** · D72 翻转默认为 `false`（持续噪音） · 设 `true`/`1`/`yes`/`on` 才发件 | **false** |
+| `OPS_ALERT_COOLDOWN_MINUTES` | 告警冷却（分钟） | 360 |
 
 ## 安全原则
 

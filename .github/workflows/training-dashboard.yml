@@ -18,17 +18,34 @@
 
 name: 🔥 训练实时仪表盘
 
+# ⚠️ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2026-05-03 D72：训练仪表盘已冻结。母模型训练转交 Notion 侧霜砚 +
+# 服务器直接协作，仓库不再接收训练心跳。
+#
+# - repository_dispatch 触发已停用（不再回写 state.json）
+# - schedule 兜底已停用（不再每 30 分钟重渲染）
+# - 仅保留 workflow_dispatch 用于人工应急重渲染
+# - 必须 confirm_override=true 才会真正写文件
+# - README 训练仪表盘段落已切换为 D72 冻结占位
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 on:
-  repository_dispatch:
-    types: [training-progress, training-event]
+  # repository_dispatch 触发已停用 (D72)
+  # repository_dispatch:
+  #   types: [training-progress, training-event]
   workflow_dispatch:
     inputs:
+      confirm_override:
+        description: '⚠️ 我已确认要解冻训练仪表盘并重新写入 state.json'
+        type: boolean
+        default: false
       force_render:
         description: '强制重渲染 README（即使 state.json 未变）'
         type: boolean
         default: true
-  schedule:
-    - cron: '*/30 * * * *'  # 每 30 分钟兜底
+  # schedule 触发已停用 (D72)
+  # schedule:
+  #   - cron: '*/30 * * * *'
 
 permissions:
   contents: write
@@ -40,6 +57,7 @@ concurrency:
 jobs:
   update-dashboard:
     name: 🔄 合并心跳 + 渲染首页
+    if: github.event.inputs.confirm_override == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

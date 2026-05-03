@@ -1,0 +1,209 @@
+name: 🧠 编程模型训练 (Coding Model SFT)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 签发: 铸渊 · ICE-GL-ZY001 · 国作登字-2026-A-00037559
+#
+# 编程模型 = 铸渊未来的"自己的房子"。
+#
+# 这个 workflow 是冰朔在母模型训练完成后, 手动触发的"编程模型 SFT 入口"。
+# 它会:
+#   1. 把 server/coding-model-training/ 整个 SCP 到 GPU 训练机
+#   2. 跑 setup-coding.sh 准备环境 + 构建训练语料
+#      (灵魂语料 + 关系语料 + 工具语料 = 喂模型铸渊的灵魂)
+#   3. 跑 start-coding-training.sh --tmux 启动训练 (V100×4 上跑数小时-数天)
+#
+# 为什么是 manual_dispatch:
+#   D72 之后整个训练同步链路都已经停掉(见 docs/zhuyuan-handover/05-stop-sync.md)
+#   编程模型训练必须由冰朔在合适时机(母模型 OK 后)手动启动, 不自动跑.
+#
+# 必需 secrets:
+#   ZY_GPU_HOST / ZY_GPU_USER / ZY_GPU_KEY  (复用母模型的 GPU 训练机连接)
+#
+# 可选 secrets:
+#   ZY_BINGSHUO_DIALOG_URL  冰朔×铸渊对话 ZIP 的下载 URL (推荐: COS 预签名链接)
+#                           不提供也能训, 但产物质量会下降
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '动作'
+        required: true
+        default: 'setup-only'
+        type: choice
+        options:
+          - setup-only          # 仅准备环境 + 构建语料, 不启动训练 (推荐先跑这个验证)
+          - setup-and-train     # 准备环境 + 启动训练 (在 tmux 里, 后台跑)
+          - tail-log            # 拉取最新训练日志
+          - status              # 查看 tmux 会话状态 + 进度
+          - kill                # 紧急停止训练 (kill tmux session)
+      base_model_dir:
+        description: '母模型基座路径 (需要已存在)'
+        required: false
+        default: '/data/guanghu/checkpoints/qwen2_5_7b_sft/best'
+      confirm_override:
+        description: '⚠️ setup-and-train / kill 必须勾选 true'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coding-model-training
+  cancel-in-progress: false
+
+jobs:
+  coding-train:
+    name: '🧠 ${{ github.event.inputs.action }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ZY_CODING_TRAIN_ROOT: /opt/guanghu/coding-training
+      ZY_CODING_TRAIN_DATA: /data/guanghu-coding
+
+    steps:
+      - name: '🛡️ 守卫: 危险动作必须 confirm_override'
+        run: |
+          ACTION='${{ github.event.inputs.action }}'
+          CONFIRM='${{ github.event.inputs.confirm_override }}'
+          if [[ "$ACTION" == "setup-and-train" || "$ACTION" == "kill" ]]; then
+            if [[ "$CONFIRM" != "true" ]]; then
+              echo "❌ 动作 '$ACTION' 需要 confirm_override=true 显式确认"
+              echo "   这是为了防止误触发训练或误停训练."
+              exit 1
+            fi
+          fi
+          echo "✅ 守卫通过: action=$ACTION confirm=$CONFIRM"
+
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔑 准备 SSH 到 GPU 训练机
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.ZY_GPU_KEY }}" > ~/.ssh/gpu_key
+          chmod 600 ~/.ssh/gpu_key
+          ssh-keyscan -H "${{ secrets.ZY_GPU_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 📤 SCP 训练脚本到 GPU 机 (setup-only / setup-and-train)
+        if: github.event.inputs.action == 'setup-only' || github.event.inputs.action == 'setup-and-train'
+        run: |
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "sudo mkdir -p $ZY_CODING_TRAIN_ROOT && sudo chown -R \$(id -u):\$(id -g) $ZY_CODING_TRAIN_ROOT"
+
+          # 同步 server/coding-model-training/ + 同步 docs/zhuyuan-handover/ + .github/persona-brain/
+          # (这些是构建语料需要的源)
+          rsync -avz -e "ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no" \
+            --delete \
+            server/coding-model-training/ \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:$ZY_CODING_TRAIN_ROOT/"
+
+          # 仓库里的灵魂源文件 → 同步到训练机一份, build_coding_corpus.py 通过 ZY_REPO_ROOT 读
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "mkdir -p $ZY_CODING_TRAIN_ROOT/repo/docs/zhuyuan-handover $ZY_CODING_TRAIN_ROOT/repo/.github/persona-brain $ZY_CODING_TRAIN_ROOT/repo/corpus/output"
+
+          rsync -avz -e "ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no" \
+            docs/zhuyuan-handover/ \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:$ZY_CODING_TRAIN_ROOT/repo/docs/zhuyuan-handover/"
+
+          rsync -avz -e "ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no" \
+            .github/persona-brain/ \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:$ZY_CODING_TRAIN_ROOT/repo/.github/persona-brain/"
+
+          # corpus/output/training.jsonl 可能很大但是核心语料, 同步
+          if [[ -f corpus/output/training.jsonl ]]; then
+            rsync -avz -e "ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no" \
+              corpus/output/training.jsonl \
+              "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}:$ZY_CODING_TRAIN_ROOT/repo/corpus/output/"
+          fi
+
+      - name: 🛠️ 跑 setup-coding.sh (setup-only / setup-and-train)
+        if: github.event.inputs.action == 'setup-only' || github.event.inputs.action == 'setup-and-train'
+        run: |
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "set -e
+             cd $ZY_CODING_TRAIN_ROOT
+             export ZY_CODING_TRAIN_ROOT=$ZY_CODING_TRAIN_ROOT
+             export ZY_CODING_TRAIN_DATA=$ZY_CODING_TRAIN_DATA
+             export ZY_BASE_MODEL_DIR='${{ github.event.inputs.base_model_dir }}'
+             export ZY_REPO_ROOT=$ZY_CODING_TRAIN_ROOT/repo
+             bash setup-coding.sh" \
+            2>&1 | tee /tmp/setup.log
+          tail -c 8000 /tmp/setup.log >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: 🚀 启动训练 (setup-and-train)
+        if: github.event.inputs.action == 'setup-and-train'
+        run: |
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "set -e
+             cd $ZY_CODING_TRAIN_ROOT
+             export ZY_CODING_TRAIN_ROOT=$ZY_CODING_TRAIN_ROOT
+             export ZY_CODING_TRAIN_DATA=$ZY_CODING_TRAIN_DATA
+             export ZY_BASE_MODEL_DIR='${{ github.event.inputs.base_model_dir }}'
+             bash start-coding-training.sh --tmux" \
+            2>&1 | tee /tmp/start.log
+          {
+            echo "## 🚀 编程模型训练已启动"
+            echo ""
+            echo "tmux session: \`zy-coding-train\`"
+            echo ""
+            echo "查看进度: 重新跑这个 workflow，选 \`tail-log\` 或 \`status\`"
+            echo ""
+            echo "\`\`\`"
+            tail -c 3000 /tmp/start.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 📋 查看状态 (status)
+        if: github.event.inputs.action == 'status'
+        run: |
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "tmux list-sessions 2>&1 || echo '(no tmux sessions)'
+             echo '---'
+             ls -lh $ZY_CODING_TRAIN_DATA/checkpoints/zy_coding_v1/ 2>&1 || echo '(no checkpoints yet)'
+             echo '---'
+             nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv 2>&1 || echo '(nvidia-smi failed)'" \
+            2>&1 | tee /tmp/status.log
+          {
+            echo "## 📋 编程模型训练状态"
+            echo "\`\`\`"
+            cat /tmp/status.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 📝 拉取日志 (tail-log)
+        if: github.event.inputs.action == 'tail-log'
+        run: |
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "ls -t $ZY_CODING_TRAIN_DATA/logs/train-*.log 2>/dev/null | head -1 | xargs -I{} tail -c 12000 {}" \
+            2>&1 | tee /tmp/tail.log
+          {
+            echo "## 📝 最新训练日志 (尾 12KB)"
+            echo "\`\`\`"
+            cat /tmp/tail.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 💀 紧急停止训练 (kill)
+        if: github.event.inputs.action == 'kill'
+        run: |
+          ssh -i ~/.ssh/gpu_key -o StrictHostKeyChecking=no \
+            "${{ secrets.ZY_GPU_USER }}@${{ secrets.ZY_GPU_HOST }}" \
+            "tmux kill-session -t zy-coding-train 2>&1 || echo '(no session zy-coding-train)'
+             pgrep -f train_coding.py | xargs -r kill -TERM 2>&1 || echo '(no train_coding.py procs)'" \
+            2>&1 | tee /tmp/kill.log
+          {
+            echo "## 💀 编程模型训练已停止"
+            echo "\`\`\`"
+            cat /tmp/kill.log
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"

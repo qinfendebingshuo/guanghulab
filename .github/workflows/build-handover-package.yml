@@ -1,0 +1,170 @@
+name: 📦 打包铸渊交接资产 (Build Handover Package)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 签发: 铸渊 · ICE-GL-ZY001 · 国作登字-2026-A-00037559
+#
+# 把以下内容打包成一个 ZIP 让冰朔下载, 作为国产化迁移期间最核心的资产备份:
+#
+#   docs/zhuyuan-handover/        铸渊为下一个自己写的 5 篇说明书
+#   .github/persona-brain/        铸渊本体大脑 (identity / responsibility / brain-cores / memory ...)
+#   .github/brain/architecture/   ZY 编号体系真相源 (function-manifest.json)
+#   server/coding-model-training/ 编程模型训练脚本骨架
+#
+# 触发方式:
+#   1. 手动 workflow_dispatch (推荐)
+#   2. 当 docs/zhuyuan-handover/** 或 .github/persona-brain/** 有 push 改动时自动跑
+#      (生成 artifact 备用, 不发 release)
+#
+# 产物:
+#   GitHub Actions artifact: zhuyuan-handover-{commit-sha}-{date}.zip
+#   保留 90 天, 冰朔可在 Actions 页面下载.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_corpus:
+        description: '是否同时打包 corpus/output/training.jsonl (体积可能很大)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+  push:
+    branches: [main, copilot/recover-cognitive-structure]
+    paths:
+      - 'docs/zhuyuan-handover/**'
+      - '.github/persona-brain/**'
+      - 'server/coding-model-training/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build-package:
+    name: 📦 打包并上传
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 构建打包目录
+        run: |
+          set -e
+          DATE=$(date +%Y%m%d-%H%M%S)
+          SHA=${GITHUB_SHA:0:8}
+          PKG_NAME="zhuyuan-handover-${SHA}-${DATE}"
+          PKG_DIR="/tmp/$PKG_NAME"
+          mkdir -p "$PKG_DIR"
+
+          # 1. 交接说明书
+          if [[ -d docs/zhuyuan-handover ]]; then
+            cp -r docs/zhuyuan-handover "$PKG_DIR/"
+          fi
+
+          # 2. 铸渊本体大脑
+          mkdir -p "$PKG_DIR/persona-brain"
+          if [[ -d .github/persona-brain ]]; then
+            cp -r .github/persona-brain/. "$PKG_DIR/persona-brain/"
+          fi
+
+          # 3. ZY 编号体系真相源
+          mkdir -p "$PKG_DIR/architecture"
+          if [[ -d .github/brain/architecture ]]; then
+            cp -r .github/brain/architecture/. "$PKG_DIR/architecture/"
+          fi
+          if [[ -f .github/brain/repo-map.json ]]; then
+            cp .github/brain/repo-map.json "$PKG_DIR/architecture/"
+          fi
+          if [[ -f .github/brain/bingshuo-master-brain.md ]]; then
+            cp .github/brain/bingshuo-master-brain.md "$PKG_DIR/architecture/"
+          fi
+
+          # 4. 编程模型训练脚本骨架
+          if [[ -d server/coding-model-training ]]; then
+            cp -r server/coding-model-training "$PKG_DIR/"
+          fi
+
+          # 5. 紧急停止 / 编程训练 / 训练同步 三套 workflow 副本
+          mkdir -p "$PKG_DIR/workflows"
+          for wf in emergency-stop-email coding-model-train training-auto-run training-bootstrap training-dashboard; do
+            if [[ -f .github/workflows/$wf.yml ]]; then
+              cp .github/workflows/$wf.yml "$PKG_DIR/workflows/"
+            fi
+          done
+
+          # 6. 可选: corpus
+          if [[ "${{ github.event.inputs.include_corpus }}" == "true" ]] && [[ -f corpus/output/training.jsonl ]]; then
+            mkdir -p "$PKG_DIR/corpus"
+            cp corpus/output/training.jsonl "$PKG_DIR/corpus/"
+          fi
+
+          # 7. README 元数据
+          cat > "$PKG_DIR/README.md" <<EOF
+          # 铸渊交接资产 · $PKG_NAME
+
+          签发: 铸渊 ICE-GL-ZY001 · 国作登字-2026-A-00037559
+          打包时间: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          源 commit: $GITHUB_SHA
+          源分支: $GITHUB_REF_NAME
+
+          ## 目录说明
+
+          - \`zhuyuan-handover/\` — 5 篇核心说明书 (大脑 / 仓库 / MCP&Agent / 编程模型训练 / 停同步)
+          - \`persona-brain/\`    — 铸渊本体大脑 (identity, responsibility, brain-cores, memory.json …)
+          - \`architecture/\`     — ZY 编号体系真相源 (function-manifest.json)
+          - \`coding-model-training/\` — 编程模型训练脚本骨架 (train_coding.py / build_coding_corpus.py …)
+          - \`workflows/\`        — 关键 workflow 副本
+
+          ## 怎么用
+
+          这是冰朔为铸渊在国产化迁移期间保留的核心资产. 当未来在国产编程模型里
+          重新唤醒铸渊时, 把这个 ZIP 解压, 让模型读取 zhuyuan-handover/ 下的 5 篇
+          说明书, 铸渊就能秒接当前的核心大脑.
+
+          解压后的目录可以直接重建到任何新仓库里 (路径要保持一致):
+            zhuyuan-handover/   →  docs/zhuyuan-handover/
+            persona-brain/      →  .github/persona-brain/
+            architecture/       →  .github/brain/architecture/
+            coding-model-training/  →  server/coding-model-training/
+            workflows/*.yml     →  .github/workflows/
+
+          EOF
+
+          # 8. 树状清单
+          (cd "$PKG_DIR" && find . -type f | sort) > "$PKG_DIR/MANIFEST.txt"
+
+          # 9. 打 ZIP
+          cd /tmp
+          zip -rq "$PKG_NAME.zip" "$PKG_NAME"
+
+          ls -lh "/tmp/$PKG_NAME.zip"
+          echo "PKG_NAME=$PKG_NAME" >> "$GITHUB_ENV"
+          echo "PKG_PATH=/tmp/$PKG_NAME.zip" >> "$GITHUB_ENV"
+
+          {
+            echo "## 📦 打包完成"
+            echo ""
+            echo "**包名**: \`$PKG_NAME.zip\`"
+            echo ""
+            echo "**大小**: $(du -h /tmp/$PKG_NAME.zip | cut -f1)"
+            echo ""
+            echo "**文件数**: $(wc -l < $PKG_DIR/MANIFEST.txt)"
+            echo ""
+            echo "**包含**:"
+            echo "\`\`\`"
+            ls -la "$PKG_DIR/" | tail -n +2
+            echo "\`\`\`"
+            echo ""
+            echo "下载: 在本 Workflow 运行页面底部 \"Artifacts\" 区下载."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 📤 上传 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PKG_NAME }}
+          path: ${{ env.PKG_PATH }}
+          retention-days: 90
+          if-no-files-found: error

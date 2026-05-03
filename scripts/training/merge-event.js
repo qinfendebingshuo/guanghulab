@@ -60,6 +60,17 @@ function main() {
   }
 
   const state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
+
+  // ── D72 冻结守卫 ──
+  // 2026-05-03 母模型训练已转交 Notion 侧霜砚, 仓库不再接收训练心跳。
+  // 即使 workflow 误触发, 也禁止把心跳事件写回 state.json。
+  // 解冻方法: 把 state.json 的 frozen 字段改成 false。
+  if (state.frozen === true) {
+    console.log('[merge-event] 🛑 state.json frozen=true (D72)，本次心跳已忽略');
+    console.log('[merge-event] reason:', state.frozen_reason || '(unspecified)');
+    process.exit(0);
+  }
+
   const now = new Date().toISOString();
 
   // ── 阶段切换 ──
