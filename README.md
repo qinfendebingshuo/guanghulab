@@ -11,17 +11,17 @@
 
 <!-- TRAINING_DASHBOARD_START -->
 
-_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 06:56:36 UTC_
+_铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05-03 07:13:49 UTC_
 
 ## 🔥 训练实时仪表盘 · ZY-TRAIN-001
 
 > Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料
 > **基座模型**: `Qwen/Qwen2.5-7B` · **任务 ID**: `ZY-TRAIN-001`
-> **最后更新**: 2026-05-03 06:56:36 UTC · **副将心跳**: 2026-05-03 06:56:36 UTC
+> **最后更新**: 2026-05-03 07:13:49 UTC · **副将心跳**: 2026-05-03 07:13:49 UTC
 
 | 当前阶段 | 健康 | 训练用时 |
 |---------|------|---------|
-| **✅ 训练完成** · 训练完成 | **🟢 正常** · auto-run workflow 启动 | — |
+| **🛠️ 环境配置中** · training-auto-run #4 触发 | **🟢 正常** · auto-run workflow 启动 | — |
 
 ### 📈 训练进度
 
@@ -63,6 +63,7 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 
 | 时间 (UTC) | 阶段 | 等级 | 事件 |
 |-----------|------|------|------|
+| 2026-05-03 07:13:49 UTC | bootstrapping | ℹ️ | commit 52f694cc468b9208e10c9fc44d48eb79a12f9a8c 合并到 main, 自动训练流程启动 |
 | 2026-05-03 06:56:36 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
 | 2026-05-03 06:55:29 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 | 2026-05-03 06:53:19 UTC | preprocessing | ℹ️ | Bootstrap done on VM-0-11-ubuntu. raw=2 files. Ready to start training. |
@@ -72,7 +73,6 @@ _铸渊副将守护 · ZY-DEPUTY-001 · 服务器动他也动 · 更新: 2026-05
 | 2026-05-03 06:48:40 UTC | bootstrapping | ℹ️ | Bootstrap started on VM-0-11-ubuntu |
 | 2026-05-03 06:48:05 UTC | bootstrapping | ℹ️ | commit 7961cfb4610270537130ef3675c9bba44b0e7649 合并到 main, 自动训练流程启动 |
 | 2026-05-03 06:30:35 UTC | done | ℹ️ | train.py exited cleanly on VM-0-11-ubuntu |
-| 2026-05-03 06:25:17 UTC | training | ℹ️ | start-training.sh launched on VM-0-11-ubuntu |
 
 ### 💬 问铸渊副将
 

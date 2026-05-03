@@ -6,7 +6,7 @@
     "name": "Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料",
     "model_base": "Qwen/Qwen2.5-7B",
     "started_at": "2026-05-02T19:34:41.648Z",
-    "updated_at": "2026-05-03T06:56:36.190Z",
+    "updated_at": "2026-05-03T07:13:49.951Z",
     "ended_at": "2026-05-03T06:56:36.190Z"
   },
   "server": {
@@ -27,9 +27,9 @@
     "processed_files": null,
     "checkpoints": null
   },
-  "phase": "done",
+  "phase": "bootstrapping",
   "_phase_doc": "idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
-  "phase_label": "训练完成",
+  "phase_label": "training-auto-run #4 触发",
   "progress": {
     "step": 0,
     "total_steps": 0,
@@ -87,7 +87,7 @@
     "status": "ok",
     "_status_doc": "ok | warning | error | idle",
     "message": "auto-run workflow 启动",
-    "last_heartbeat_at": "2026-05-03T06:56:36.190Z"
+    "last_heartbeat_at": "2026-05-03T07:13:49.951Z"
   },
   "timeline": [
     {
@@ -263,6 +263,12 @@
       "phase": "done",
       "level": "info",
       "message": "train.py exited cleanly on VM-0-11-ubuntu"
+    },
+    {
+      "at": "2026-05-03T07:13:49.951Z",
+      "phase": "bootstrapping",
+      "level": "info",
+      "message": "commit 52f694cc468b9208e10c9fc44d48eb79a12f9a8c 合并到 main, 自动训练流程启动"
     }
   ],
   "_timeline_doc": "最新事件在尾部 · 渲染时取最近 10 条倒序展示 · 由 progress-reporter 追加"
