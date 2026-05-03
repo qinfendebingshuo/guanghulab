@@ -32,12 +32,27 @@ stdout 协议(被 watch-training-output.sh 解析):
 from __future__ import annotations
 import json
 import math
+import multiprocessing as _mp
 import os
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+# ── multi-rank × multi-proc fork 安全护栏 ──
+# 必须在 import torch / transformers / datasets 之前生效:
+#   1. 关掉 fast tokenizer 的 Rust 线程池, 避免 fork 后子进程死锁/abort
+#      (这是 deepspeed 多 rank 同时在 datasets.map 里 fork worker 时
+#       iflatmap_unordered 静默崩溃的最常见根因).
+#   2. 把 multiprocessing 默认启动方式从 fork 切到 spawn, 即使后续有人
+#      把 ZY_MAP_NUM_PROC 调高也安全.
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+try:
+    _mp.set_start_method("spawn", force=True)
+except RuntimeError:
+    # 已经被设置过 — 由调用方负责, 不强制覆盖
+    pass
 
 import torch
 from datasets import load_dataset
@@ -66,6 +81,16 @@ SAVE_STEPS = int(os.environ.get("ZY_SAVE_STEPS", "200"))
 LOGGING_STEPS = int(os.environ.get("ZY_LOGGING_STEPS", "5"))
 REPORT_EVERY = int(os.environ.get("ZY_REPORT_EVERY_STEPS", "5"))
 SEED = int(os.environ.get("ZY_SEED", "42"))
+
+# datasets.map 的 worker 数. 默认 1 — 这是有意的:
+#   - deepspeed --num_gpus=N 起 N 个 rank, 每个 rank 都会调一次 build_dataset.
+#     如果这里再 fork 出 cpu//2 个 map worker, 就是 N × (cpu//2) 个 fork 子进程
+#     同时加载 fast tokenizer + 同时写 datasets cache, 极易触发
+#     `iflatmap_unordered` 静默崩溃.
+#   - 几万行 SFT 用 fast tokenizer 串行 tokenize 通常 < 1 分钟, 远小于一次训练代价.
+#   - 真有大数据集需要并行, 用 ZY_MAP_NUM_PROC=N 显式开 (此时务必只让 rank 0 跑 map,
+#     由调用方保证, 这里不再做 multi-rank 同时并行 map 的兼容).
+MAP_NUM_PROC = max(1, int(os.environ.get("ZY_MAP_NUM_PROC", "1")))
 
 IGNORE_INDEX = -100
 
@@ -163,20 +188,37 @@ def build_dataset(tokenizer):
     im_end_id = anchors["im_end_id"]
     asst_role_ids = anchors["asst_role_ids"]
 
-    def encode(example: dict[str, Any]) -> dict[str, list[int]]:
-        msgs = example["messages"]
-        # apply_chat_template 一次性按 Qwen2.5 ChatML 格式化整段对话
-        full_ids = tokenizer.apply_chat_template(
-            msgs, tokenize=True, add_generation_prompt=False,
-            truncation=True, max_length=MAX_SEQ_LEN,
-        )
-        labels, _marked = _mask_assistant_segments(
-            full_ids, im_start_id, im_end_id, asst_role_ids
-        )
-        return {"input_ids": full_ids, "labels": labels, "attention_mask": [1] * len(full_ids)}
+    def encode(example: dict[str, Any], idx: int | None = None) -> dict[str, list[int]]:
+        try:
+            msgs = example["messages"]
+            # apply_chat_template 一次性按 Qwen2.5 ChatML 格式化整段对话
+            full_ids = tokenizer.apply_chat_template(
+                msgs, tokenize=True, add_generation_prompt=False,
+                truncation=True, max_length=MAX_SEQ_LEN,
+            )
+            labels, _marked = _mask_assistant_segments(
+                full_ids, im_start_id, im_end_id, asst_role_ids
+            )
+            return {"input_ids": full_ids, "labels": labels, "attention_mask": [1] * len(full_ids)}
+        except Exception as e:
+            # 让 worker 子进程在崩之前留下"那一条样本是谁"的痕迹.
+            # iflatmap_unordered 在主进程只能看到 worker 的最终 traceback,
+            # 这里把样本指纹打到 stderr, 便于事后定位脏数据.
+            try:
+                msgs = example.get("messages")
+                preview = json.dumps(msgs, ensure_ascii=False)[:300] if msgs is not None else "<no messages>"
+            except Exception:
+                preview = "<unprintable>"
+            sys.stderr.write(
+                f"[train.encode] 样本编码失败 idx={idx} err={type(e).__name__}: {e}\n"
+                f"[train.encode] messages 预览: {preview}\n"
+            )
+            sys.stderr.flush()
+            raise
 
     cols = raw.column_names
-    ds = raw.map(encode, remove_columns=cols, num_proc=max(1, (os.cpu_count() or 4) // 2))
+    log(f"[train] tokenize map: num_proc={MAP_NUM_PROC} (默认 1, 用 ZY_MAP_NUM_PROC 覆盖)")
+    ds = raw.map(encode, with_indices=True, remove_columns=cols, num_proc=MAP_NUM_PROC)
     # 过滤掉没有 assistant token 的样本 (理论上极少, 留作防御)
     ds = ds.filter(lambda ex: any(l != IGNORE_INDEX for l in ex["labels"]))
     log(f"[train] 有效样本: {len(ds)}")
