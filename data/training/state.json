@@ -6,7 +6,7 @@
     "name": "Qwen2.5-7B 全参数 SFT · 光湖世界观 + 人格体语料",
     "model_base": "Qwen/Qwen2.5-7B",
     "started_at": "2026-05-02T19:34:41.648Z",
-    "updated_at": "2026-05-03T06:18:14.923Z",
+    "updated_at": "2026-05-03T06:18:27.782Z",
     "ended_at": "2026-05-03T05:42:46.428Z"
   },
   "server": {
@@ -29,7 +29,7 @@
   },
   "phase": "bootstrapping",
   "_phase_doc": "idle | bootstrapping | downloading-corpus | preprocessing | training | evaluating | done | error",
-  "phase_label": "环境配置开始",
+  "phase_label": "Python 训练栈完成",
   "progress": {
     "step": 0,
     "total_steps": 0,
@@ -43,7 +43,7 @@
     "elapsed_seconds": 0
   },
   "gpu_metrics": {
-    "snapshot_at": "2026-05-03T06:18:04Z",
+    "snapshot_at": "2026-05-03T06:18:15Z",
     "devices": [
       {
         "index": 0,
@@ -87,7 +87,7 @@
     "status": "ok",
     "_status_doc": "ok | warning | error | idle",
     "message": "auto-run workflow 启动",
-    "last_heartbeat_at": "2026-05-03T06:18:14.923Z"
+    "last_heartbeat_at": "2026-05-03T06:18:27.782Z"
   },
   "timeline": [
     {
@@ -173,6 +173,12 @@
       "phase": "bootstrapping",
       "level": "info",
       "message": "Bootstrap started on VM-0-11-ubuntu"
+    },
+    {
+      "at": "2026-05-03T06:18:27.782Z",
+      "phase": "bootstrapping",
+      "level": "info",
+      "message": "torch + transformers + accelerate + deepspeed + modelscope 安装完成"
     }
   ],
   "_timeline_doc": "最新事件在尾部 · 渲染时取最近 10 条倒序展示 · 由 progress-reporter 追加"
