@@ -1,0 +1,194 @@
+#!/usr/bin/env node
+// ════════════════════════════════════════════════════════════════
+// 光湖搬家 · convert-workflows
+// Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+// 守护: 铸渊 · ICE-GL-ZY001
+//
+// 把 .github/workflows/*.yml 转成 Gitea Actions 兼容版本到 .gitea/workflows/.
+// Gitea Actions 与 GitHub Actions 兼容 ≥95%, 这里处理已知不兼容点:
+//   - secrets.GITHUB_TOKEN  →  secrets.GITEA_TOKEN
+//   - actions/checkout@v4   保持 (Gitea 1.21+ 已支持)
+//   - actions/upload-artifact / download-artifact  保持
+//   - github.event.* 保持 (Gitea 自身的 webhook event 同名)
+//   - 移除/标记 GitHub-only feature: id-token oidc, codeql-action
+//
+// 用法:
+//   node scripts/migration/convert-workflows.js \
+//     --from .github/workflows \
+//     --to .gitea/workflows \
+//     --report convert-report.json \
+//     [--keep-original]   # 不删原始文件
+// ════════════════════════════════════════════════════════════════
+
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+function parseArgs(argv) {
+  const args = {
+    from: '.github/workflows',
+    to: '.gitea/workflows',
+    report: null,
+    keepOriginal: true,
+  };
+  for (let i = 2; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--from') args.from = argv[++i];
+    else if (a === '--to') args.to = argv[++i];
+    else if (a === '--report') args.report = argv[++i];
+    else if (a === '--keep-original') args.keepOriginal = true;
+    else if (a === '--no-keep-original') args.keepOriginal = false;
+    else if (a === '-h' || a === '--help') {
+      console.log(fs.readFileSync(__filename, 'utf8').split('\n').slice(0, 25).join('\n'));
+      process.exit(0);
+    }
+  }
+  return args;
+}
+
+const args = parseArgs(process.argv);
+
+const FROM = path.resolve(args.from);
+const TO = path.resolve(args.to);
+
+if (!fs.existsSync(FROM)) {
+  console.error(`❌ 源目录不存在: ${FROM}`);
+  process.exit(1);
+}
+fs.mkdirSync(TO, { recursive: true });
+
+// ─── 转换规则 ──────────────────────────────────────────────
+// 每条规则: { name, match (regex|fn), replace (string|fn), severity }
+// severity:
+//   safe    - 自动改写, 改完依然 100% 行为一致
+//   review  - 自动改写, 但建议人工 review
+//   skip    - 不能转, 整文件标记 unconvertible
+const RULES = [
+  {
+    name: 'GITHUB_TOKEN → GITEA_TOKEN',
+    match: /\bsecrets\.GITHUB_TOKEN\b/g,
+    replace: 'secrets.GITEA_TOKEN',
+    severity: 'safe',
+  },
+  {
+    name: 'github.token → gitea.token',
+    match: /\$\{\{\s*github\.token\s*\}\}/g,
+    replace: '${{ secrets.GITEA_TOKEN }}',
+    severity: 'safe',
+  },
+  {
+    name: 'env.GITHUB_TOKEN → env.GITEA_TOKEN (in env: blocks)',
+    match: /(\benv:\s*\n(?:\s+\w+:.*\n)*?\s+)GITHUB_TOKEN(\s*:)/g,
+    replace: '$1GITEA_TOKEN$2',
+    severity: 'safe',
+  },
+  {
+    name: 'OIDC id-token (GitHub-only) ',
+    match: /\bid-token:\s*write\b/g,
+    replace: '# id-token: write  # [removed: OIDC GitHub-only]',
+    severity: 'review',
+  },
+  {
+    name: 'github/codeql-action (GitHub-only)',
+    match: /uses:\s*github\/codeql-action\/[^\s]+/g,
+    replace: (m) => `# ${m}  # [unconvertible: codeql is GitHub-only]`,
+    severity: 'skip',
+  },
+  {
+    name: 'github-script v6 fetch.toJson (兼容差异)',
+    match: /uses:\s*actions\/github-script@v[0-9]+/g,
+    replace: (m) => m, // 保持, 但提示 review
+    severity: 'review',
+    note: 'github-script 在 Gitea 上需要 octokit 兼容版本, 部分 rest API 路径可能不同',
+  },
+  {
+    name: 'pull_request_target (Gitea 1.21 才支持)',
+    match: /^\s*pull_request_target\s*:/m,
+    replace: (m) => m,
+    severity: 'review',
+    note: '需要 Gitea ≥ 1.21.0',
+  },
+  {
+    name: '自托管 runner 标签',
+    match: /runs-on:\s*ubuntu-latest/g,
+    replace: 'runs-on: ubuntu-22.04',
+    severity: 'safe',
+    note: '统一使用 ubuntu-22.04 标签, 与 act_runner 默认 label 对齐',
+  },
+];
+
+// ─── 主流程 ────────────────────────────────────────────────
+const report = {
+  _sovereign: 'TCS-0002∞',
+  _copyright: '国作登字-2026-A-00037559',
+  generated_at: new Date().toISOString(),
+  source_dir: FROM,
+  target_dir: TO,
+  files: [],
+  unconvertible: [],
+  summary: { total: 0, converted: 0, review_needed: 0, skipped: 0 },
+};
+
+const files = fs.readdirSync(FROM).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
+report.summary.total = files.length;
+
+for (const f of files) {
+  const src = fs.readFileSync(path.join(FROM, f), 'utf8');
+  let dst = src;
+  const fileEntry = { file: f, applied: [], severity: 'safe', notes: [] };
+
+  for (const rule of RULES) {
+    if (rule.match instanceof RegExp) {
+      // 测试是否匹配
+      const before = dst;
+      if (typeof rule.replace === 'function') {
+        dst = dst.replace(rule.match, rule.replace);
+      } else {
+        dst = dst.replace(rule.match, rule.replace);
+      }
+      if (before !== dst) {
+        fileEntry.applied.push(rule.name);
+        if (rule.severity === 'review' && fileEntry.severity !== 'skip') fileEntry.severity = 'review';
+        if (rule.severity === 'skip') fileEntry.severity = 'skip';
+        if (rule.note) fileEntry.notes.push(rule.note);
+      }
+    }
+  }
+
+  // 头部加一行铸渊签名 (基于 src 而非 dst 判断, 避免重复运行重复加)
+  if (!src.startsWith('# Generated by convert-workflows')) {
+    dst = `# Generated by scripts/migration/convert-workflows.js @ ${new Date().toISOString()}\n# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559\n${dst}`;
+  }
+
+  if (fileEntry.severity === 'skip') {
+    report.unconvertible.push({ ...fileEntry });
+    report.summary.skipped += 1;
+  } else {
+    fs.writeFileSync(path.join(TO, f), dst);
+    report.summary.converted += 1;
+    if (fileEntry.severity === 'review') report.summary.review_needed += 1;
+  }
+  report.files.push(fileEntry);
+}
+
+if (args.report) {
+  fs.writeFileSync(args.report, JSON.stringify(report, null, 2));
+}
+
+console.log('═══════════════════════════════════════════════════════');
+console.log('  workflow 转换完成');
+console.log(`  total       : ${report.summary.total}`);
+console.log(`  converted   : ${report.summary.converted}`);
+console.log(`  review-need : ${report.summary.review_needed}`);
+console.log(`  skipped     : ${report.summary.skipped}`);
+console.log('═══════════════════════════════════════════════════════');
+if (report.summary.skipped > 0) {
+  console.log('⚠️  以下文件无法自动转换, 需人工介入:');
+  for (const u of report.unconvertible) {
+    console.log(`  - ${u.file}: ${u.applied.join(', ')}`);
+  }
+}
+if (args.report) {
+  console.log(`详细报告: ${args.report}`);
+}

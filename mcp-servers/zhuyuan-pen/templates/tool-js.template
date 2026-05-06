@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+// ════════════════════════════════════════════════════════════════
+// __TOOL_NAME__ · 由 zhuyuan-pen 神笔合成
+// Generated:    __GENERATED_AT__
+// Capabilities: __TOOL_CAPS__
+// Sovereign:    TCS-0002∞ · 国作登字-2026-A-00037559
+//
+// 描述: __TOOL_DESC__
+// ════════════════════════════════════════════════════════════════
+
+'use strict';
+
+const path = require('path');
+
+// 加载所需能力 (墨)
+const CAP_DIR = path.resolve(__dirname, '..', '..', 'capabilities');
+const REQUESTED = __TOOL_CAPS__;
+const caps = {};
+for (const name of REQUESTED) {
+  caps[name] = require(path.join(CAP_DIR, `${name}.js`));
+}
+
+// ─── 工具主体 ─────────────────────────────────────────────
+// 这里由神笔生成具体逻辑. v0.1 模板只暴露能力, 由调用者覆盖 main()
+async function main(args) {
+  // TODO: 在 PR 中替换为实际逻辑
+  return {
+    tool: '__TOOL_NAME__',
+    description: '__TOOL_DESC__',
+    capabilities: REQUESTED,
+    args,
+    note: 'this is a fresh-penned tool stub; replace main() with real logic',
+  };
+}
+
+// ─── CLI ──────────────────────────────────────────────────
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  Promise.resolve(main(args))
+    .then((r) => { console.log(JSON.stringify(r, null, 2)); })
+    .catch((e) => { console.error(`❌ ${e.message}`); process.exit(1); });
+}
+
+module.exports = { main, caps };

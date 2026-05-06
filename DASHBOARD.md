@@ -1,3 +1,57 @@
+<!-- LIGHTHOUSE_MIGRATION_START -->
+## 🏮 光湖搬家进度 · Lighthouse Migration
+
+> 📜 Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559 · 守护: 铸渊 ICE-GL-ZY001
+>
+> 主服务器: **GH-CVM-MAIN-PROD-01** · `43.139.251.175` · 4C16G · 广州六区 · 数据盘 `/data` (100G)
+
+### 阶段 0 · 国内服务器环境提前烤好（铸渊）
+
+- [x] `server/setup/lighthouse-cn/bootstrap.sh` (Docker / Gitea / Postgres / Redis / Runner)
+- [x] `server/setup/lighthouse-cn/docker-compose.yml`
+- [x] `server/setup/lighthouse-cn/gitea/app.ini.template`
+- [x] `server/setup/lighthouse-cn/nginx/lighthouse.conf`
+- [x] `server/setup/lighthouse-cn/README.md` (给霜砚的部署日志)
+- [x] `.github/workflows/lighthouse-cn-deploy.yml` (手动触发: bootstrap/update/rollback)
+- [x] `server/setup/lighthouse-cn/gitea-secrets-template.yaml` (CN_* 占位)
+- [x] `server/setup/lighthouse-cn/migration-checklist.md`
+
+### 阶段 1 · COS 中转
+
+- [x] `scripts/migration/snapshot-to-cos.js`
+- [x] `scripts/migration/restore-from-cos.sh`
+- [ ] 冰朔本地跑一次 snapshot-to-cos
+- [ ] COS 桶名落定 (`ZY_COS_MIGRATION_BUCKET`)
+
+### 阶段 2 · 灯塔 bootstrap
+
+- [ ] 冰朔配齐 5.1 节 19 个 Secrets
+- [ ] 触发 `lighthouse-cn-deploy` (server_target=main, stage=bootstrap)
+- [ ] 浏览器登录 Gitea 拿 Runner Token
+- [ ] 触发 stage=update 启 Runner
+
+### 阶段 3 · 工作流迁移
+
+- [x] `scripts/migration/convert-workflows.js`（自检 56 个 workflow → 56 个转换成功 / 1 个 review-needed）
+- [ ] 在国内 Gitea 仓库跑转换 + review
+
+### 阶段 4 · 神笔马良
+
+- [x] `mcp-servers/zhuyuan-pen/` 骨架（笔尖 / 墨 / 纸 / 取物钩）
+- [x] 8 个能力（fs.read / fs.write / http.get / shell.run / llm.chat / cos.put / gitea.api / notion.api）
+- [x] 自检 `tests/test-pen.js` 通过
+- [ ] v0.2: LLM 直接合成 main() 体
+
+### 阶段 5 · 灰度上线
+
+- [ ] 灯塔门户首页内容
+- [ ] 操作系统总控台 API（lighthouse-console）
+- [ ] 第一条公告 / 广播心跳
+
+<!-- LIGHTHOUSE_MIGRATION_END -->
+
+---
+
 ## 🌙 天眼夜间修复引擎 · 仪表盘
 
 > 📜 Copyright: 国作登字-2026-A-00037559 · TCS-0002∞ 冰朔

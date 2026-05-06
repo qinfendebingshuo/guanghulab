@@ -1,0 +1,60 @@
+; ════════════════════════════════════════════════════════════════
+; 光湖灯塔 · Gitea app.ini 模板
+; Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+; bootstrap.sh 会用 sed 替换 __PLACEHOLDER__ 后写入
+;   $DATA_ROOT/lighthouse/gitea/conf/app.ini
+; bootstrap.sh 会立刻 chmod 600 这份文件 (含 DB 密码 + SECRET_KEY)
+;
+; 注: 大部分配置已通过 docker-compose 的 GITEA__xxx 环境变量注入
+; 这份文件只承载"环境变量不方便表达"的内容 (注释、分组等)
+; ════════════════════════════════════════════════════════════════
+
+APP_NAME = 光湖代码仓库 · HoloLake Code Repository
+RUN_USER = git
+RUN_MODE = prod
+
+[server]
+PROTOCOL          = http
+HTTP_PORT         = __GITEA_HTTP_PORT__
+SSH_PORT          = __GITEA_SSH_PORT__
+SSH_LISTEN_PORT   = 22
+START_SSH_SERVER  = true
+LFS_START_SERVER  = true
+DISABLE_ROUTER_LOG = false
+
+[service]
+DISABLE_REGISTRATION = true
+REQUIRE_SIGNIN_VIEW  = false
+DEFAULT_KEEP_EMAIL_PRIVATE = true
+ENABLE_NOTIFY_MAIL   = false
+
+[security]
+INSTALL_LOCK         = true
+SECRET_KEY           = __GITEA_SECRET_KEY__
+INTERNAL_TOKEN_URI   = file:/data/gitea/conf/internal_token
+
+[actions]
+ENABLED               = true
+DEFAULT_ACTIONS_URL   = https://gitea.com
+
+[indexer]
+REPO_INDEXER_ENABLED  = true
+REPO_INDEXER_TYPE     = bleve
+ISSUE_INDEXER_TYPE    = bleve
+
+[lfs]
+PATH = /data/git/lfs
+
+[mailer]
+ENABLED = false
+
+[log]
+LEVEL = Info
+ROOT_PATH = /data/gitea/log
+
+[picture]
+DISABLE_GRAVATAR = true
+
+[other]
+SHOW_FOOTER_BRANDING = true
+SHOW_FOOTER_VERSION  = false
