@@ -1,0 +1,225 @@
+name: lighthouse-cn-deploy
+
+# ════════════════════════════════════════════════════════════════
+# 光湖灯塔 · 国内主服务器手动部署
+# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+# 守护: 铸渊 · ICE-GL-ZY001
+#
+# 仅手动触发. 在 Actions 页面 Run workflow:
+#   server_target: main / backup
+#   stage:         bootstrap / update / rollback
+#
+# 必需 Secrets (主服务器):
+#   ZY_LIGHTHOUSE_HOST / ZY_LIGHTHOUSE_USER / ZY_LIGHTHOUSE_KEY / ZY_LIGHTHOUSE_PORT
+#   ZY_LIGHTHOUSE_DOMAIN
+# 可选 (备用机):
+#   ZY_LIGHTHOUSE_BACKUP_HOST / ZY_LIGHTHOUSE_BACKUP_USER / ZY_LIGHTHOUSE_BACKUP_KEY
+# Bootstrap 阶段需要:
+#   ZY_GITEA_ADMIN_USER / ZY_GITEA_ADMIN_PASS / ZY_GITEA_ADMIN_EMAIL / ZY_GITEA_DB_PASS
+# Update 阶段 (注册 runner) 还需要:
+#   ZY_GITEA_RUNNER_TOKEN
+# ════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_target:
+        description: '部署目标'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - backup
+      stage:
+        description: '部署阶段'
+        required: true
+        default: 'bootstrap'
+        type: choice
+        options:
+          - bootstrap
+          - update
+          - rollback
+      dry_run:
+        description: '只打印计划, 不真的执行 (true/false)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-cn-${{ inputs.server_target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ${{ inputs.server_target }} · ${{ inputs.stage }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve target server
+        id: target
+        env:
+          MAIN_HOST: ${{ secrets.ZY_LIGHTHOUSE_HOST }}
+          MAIN_USER: ${{ secrets.ZY_LIGHTHOUSE_USER }}
+          MAIN_KEY: ${{ secrets.ZY_LIGHTHOUSE_KEY }}
+          MAIN_PORT: ${{ secrets.ZY_LIGHTHOUSE_PORT }}
+          BACKUP_HOST: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_HOST }}
+          BACKUP_USER: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_USER }}
+          BACKUP_KEY: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_KEY }}
+          TARGET: ${{ inputs.server_target }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET" = "main" ]; then
+            HOST="$MAIN_HOST"
+            USER="$MAIN_USER"
+            KEY="$MAIN_KEY"
+            PORT="${MAIN_PORT:-22}"
+            SERVER_ID="GH-CVM-MAIN-PROD-01"
+          else
+            HOST="$BACKUP_HOST"
+            USER="$BACKUP_USER"
+            KEY="$BACKUP_KEY"
+            PORT="22"
+            SERVER_ID="GH-CVM-BACKUP-01"
+          fi
+          if [ -z "$HOST" ]; then
+            echo "❌ 目标服务器 ($TARGET) 的 HOST secret 未配置, 终止" >&2
+            exit 1
+          fi
+          if [ -z "$KEY" ]; then
+            echo "❌ 目标服务器 ($TARGET) 的 KEY secret 未配置, 终止" >&2
+            exit 1
+          fi
+          # 不输出 HOST 到 stdout 以避免被截图泄露
+          echo "host=$HOST"      >> "$GITHUB_OUTPUT"
+          echo "user=$USER"      >> "$GITHUB_OUTPUT"
+          echo "port=$PORT"      >> "$GITHUB_OUTPUT"
+          echo "server_id=$SERVER_ID" >> "$GITHUB_OUTPUT"
+          # KEY 单独写入文件
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/lighthouse_key
+          chmod 600 ~/.ssh/lighthouse_key
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "✅ SSH 凭据就绪 ($SERVER_ID)"
+
+      - name: Sanity check (dry-run)
+        if: inputs.dry_run == 'true'
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          echo "=== DRY RUN ==="
+          echo "would rsync server/setup/lighthouse-cn/ → $USER@<host>:/opt/guanghu/lighthouse-cn/"
+          echo "would ssh $USER@<host> bash /opt/guanghu/lighthouse-cn/bootstrap.sh STAGE=${{ inputs.stage }}"
+          echo "(real host masked)"
+
+      - name: Rsync template to server
+        if: inputs.dry_run != 'true'
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "mkdir -p /opt/guanghu/lighthouse-cn"
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/lighthouse_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            server/setup/lighthouse-cn/ \
+            "$USER@$HOST:/opt/guanghu/lighthouse-cn/"
+          # 顺带把 restore 脚本 + workflow 转换器也推上去, 后续阶段要用
+          rsync -avz \
+            -e "ssh -i ~/.ssh/lighthouse_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            scripts/migration/ \
+            "$USER@$HOST:/opt/guanghu/lighthouse-cn/migration/"
+
+      - name: Run bootstrap / update / rollback
+        if: inputs.dry_run != 'true'
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          SERVER_ID: ${{ steps.target.outputs.server_id }}
+          STAGE: ${{ inputs.stage }}
+          GITEA_ADMIN_USER: ${{ secrets.ZY_GITEA_ADMIN_USER }}
+          GITEA_ADMIN_PASS: ${{ secrets.ZY_GITEA_ADMIN_PASS }}
+          GITEA_ADMIN_EMAIL: ${{ secrets.ZY_GITEA_ADMIN_EMAIL }}
+          GITEA_DB_PASS: ${{ secrets.ZY_GITEA_DB_PASS }}
+          GITEA_RUNNER_TOKEN: ${{ secrets.ZY_GITEA_RUNNER_TOKEN }}
+        run: |
+          set -euo pipefail
+          # 把 secrets 写到一个临时 envfile, scp 上去 source, 不进进程参数
+          ENVFILE="$(mktemp)"
+          chmod 600 "$ENVFILE"
+          {
+            printf 'export CN_LIGHTHOUSE_SERVER_ID=%q\n' "$SERVER_ID"
+            printf 'export STAGE=%q\n'              "$STAGE"
+            printf 'export GITEA_ADMIN_USER=%q\n'   "$GITEA_ADMIN_USER"
+            printf 'export GITEA_ADMIN_PASS=%q\n'   "$GITEA_ADMIN_PASS"
+            printf 'export GITEA_ADMIN_EMAIL=%q\n'  "$GITEA_ADMIN_EMAIL"
+            printf 'export GITEA_DB_PASS=%q\n'      "$GITEA_DB_PASS"
+            printf 'export GITEA_RUNNER_TOKEN=%q\n' "$GITEA_RUNNER_TOKEN"
+          } > "$ENVFILE"
+
+          REMOTE_ENV="/tmp/lighthouse-bootstrap.env.$$"
+          scp -i ~/.ssh/lighthouse_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$ENVFILE" "$USER@$HOST:$REMOTE_ENV"
+          rm -f "$ENVFILE"
+
+          # 远程执行: source envfile → 跑 bootstrap → 立刻删 envfile
+          # GitHub Actions 自动屏蔽 secrets 在 stdout/stderr 中的明文出现 (***)
+          ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "set -e; chmod 600 '$REMOTE_ENV'; \
+               . '$REMOTE_ENV'; \
+               rm -f '$REMOTE_ENV'; \
+               set +x; \
+               bash /opt/guanghu/lighthouse-cn/bootstrap.sh" \
+              2>&1 | tee bootstrap-output.log
+
+      - name: Pull back latest receipt
+        if: inputs.dry_run != 'true' && always()
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts
+          scp -i ~/.ssh/lighthouse_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghu/_logs/lighthouse-bootstrap-*.json" \
+              artifacts/ 2>/dev/null || echo "(no receipt yet)"
+          ls -la artifacts/ || true
+
+      - name: Upload receipts
+        if: inputs.dry_run != 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-bootstrap-receipt-${{ inputs.server_target }}-${{ inputs.stage }}
+          path: |
+            artifacts/
+            bootstrap-output.log
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/lighthouse_key

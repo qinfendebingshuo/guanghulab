@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════
+# __TOOL_NAME__ · 由 zhuyuan-pen 神笔合成
+# Generated:    __GENERATED_AT__
+# Capabilities: __TOOL_CAPS__
+# Sovereign:    TCS-0002∞ · 国作登字-2026-A-00037559
+#
+# 描述: __TOOL_DESC__
+# ════════════════════════════════════════════════════════════════
+
+set -euo pipefail
+
+TOOL_NAME="__TOOL_NAME__"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CAP_DIR="$(cd "$SCRIPT_DIR/../../capabilities" && pwd)"
+
+# 模板使用 shell 时, 能力字典通常用 node 桥接调用
+# 例: node -e "require('$CAP_DIR/http.get.js')('https://...').then(r => console.log(r.body))"
+
+main() {
+  echo "__TOOL_NAME__ stub (replace main() in $0)"
+  echo "args: $*"
+}
+
+main "$@"
