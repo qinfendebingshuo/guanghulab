@@ -1,0 +1,197 @@
+name: lighthouse-cn-rollback
+
+# ════════════════════════════════════════════════════════════════
+# 光湖灯塔 · 一键回滚 (手动触发)
+# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+# 守护: 铸渊 · ICE-GL-ZY001
+#
+# 用法: Actions → lighthouse-cn-rollback → Run workflow
+#   server_target: main / backup
+#   snapshot_ts:   留空 = 回到上一个快照; 填具体时间戳 = 回到那一份
+#   confirm_phrase: 必须填『我确认回滚』, 否则只列快照不执行
+#
+# 与 lighthouse-cn-deploy 的 stage=rollback 等价, 但单独建一个 workflow
+# 是给霜砚 / Awen 一个明显的"红按钮", 不会跟部署混在一起误触.
+# ════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_target:
+        description: '回滚目标'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - backup
+      snapshot_ts:
+        description: '快照时间戳 (留空=上一个; 用 list-only 模式查可用快照)'
+        required: false
+        default: ''
+        type: string
+      mode:
+        description: '操作模式'
+        required: true
+        default: 'list-only'
+        type: choice
+        options:
+          - list-only
+          - rollback
+      confirm_phrase:
+        description: 'rollback 模式必填 · 输入 "我确认回滚" 才会真跑'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-cn-rollback-${{ inputs.server_target }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: 启动前预检
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      effective_mode: ${{ steps.gate.outputs.effective_mode }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: 密钥预检
+        env:
+          ZY_LIGHTHOUSE_HOST: ${{ secrets.ZY_LIGHTHOUSE_HOST }}
+          ZY_LIGHTHOUSE_USER: ${{ secrets.ZY_LIGHTHOUSE_USER }}
+          ZY_LIGHTHOUSE_KEY: ${{ secrets.ZY_LIGHTHOUSE_KEY }}
+          ZY_LIGHTHOUSE_PORT: ${{ secrets.ZY_LIGHTHOUSE_PORT }}
+          ZY_LIGHTHOUSE_BACKUP_HOST: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_HOST }}
+          ZY_LIGHTHOUSE_BACKUP_USER: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_USER }}
+          ZY_LIGHTHOUSE_BACKUP_KEY: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_KEY }}
+        run: |
+          node scripts/preflight/check-secrets.js \
+            --workflow lighthouse-cn-deploy \
+            --stage rollback \
+            --target "${{ inputs.server_target }}"
+
+      - name: 误触锁
+        id: gate
+        env:
+          MODE: ${{ inputs.mode }}
+          PHRASE: ${{ inputs.confirm_phrase }}
+        run: |
+          set -e
+          EFFECTIVE="$MODE"
+          if [ "$MODE" = "rollback" ] && [ "$PHRASE" != "我确认回滚" ]; then
+            echo "═══════════════════════════════════════════════"
+            echo "  ⚠️  误触保护: 选了 rollback 但 confirm_phrase != 『我确认回滚』"
+            echo "       自动降级为 list-only 模式 (只列快照, 不真回滚)."
+            echo "       要真跑回滚, 重新 Run workflow 并在 confirm_phrase"
+            echo "       字段填入: 我确认回滚"
+            echo "═══════════════════════════════════════════════"
+            EFFECTIVE="list-only"
+          fi
+          echo "effective_mode=$EFFECTIVE" >> "$GITHUB_OUTPUT"
+
+  rollback:
+    name: ${{ inputs.server_target }} · ${{ needs.preflight.outputs.effective_mode }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 装载 SSH 凭据
+        id: target
+        env:
+          MAIN_HOST: ${{ secrets.ZY_LIGHTHOUSE_HOST }}
+          MAIN_USER: ${{ secrets.ZY_LIGHTHOUSE_USER }}
+          MAIN_KEY: ${{ secrets.ZY_LIGHTHOUSE_KEY }}
+          MAIN_PORT: ${{ secrets.ZY_LIGHTHOUSE_PORT }}
+          BACKUP_HOST: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_HOST }}
+          BACKUP_USER: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_USER }}
+          BACKUP_KEY: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_KEY }}
+          TARGET: ${{ inputs.server_target }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET" = "main" ]; then
+            HOST="$MAIN_HOST"; USER="$MAIN_USER"; KEY="$MAIN_KEY"; PORT="${MAIN_PORT:-22}"
+          else
+            HOST="$BACKUP_HOST"; USER="$BACKUP_USER"; KEY="$BACKUP_KEY"; PORT="22"
+          fi
+          if [ -z "$HOST" ] || [ -z "$KEY" ]; then
+            echo "❌ 目标 ($TARGET) 凭据缺失" >&2; exit 1
+          fi
+          umask 077; mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/lighthouse_key
+          chmod 600 ~/.ssh/lighthouse_key
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+          echo "port=$PORT" >> "$GITHUB_OUTPUT"
+
+      - name: 列出可用快照
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -e
+          ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "bash /opt/guanghu/lighthouse-cn/rollback.sh --list" \
+            2>&1 | tee snapshot-list.log
+
+      - name: 执行回滚
+        if: needs.preflight.outputs.effective_mode == 'rollback'
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          TS: ${{ inputs.snapshot_ts }}
+        run: |
+          set -e
+          ARGS=""
+          if [ -n "$TS" ]; then ARGS="--to $TS"; fi
+          ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "bash /opt/guanghu/lighthouse-cn/rollback.sh $ARGS" \
+            2>&1 | tee rollback-output.log
+
+      - name: 拉回回执
+        if: always()
+        env:
+          HOST: ${{ steps.target.outputs.host }}
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts
+          scp -i ~/.ssh/lighthouse_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghu/_logs/rollback-*.json" \
+              artifacts/ 2>/dev/null || echo "(no rollback receipt yet — 可能是 list-only 模式)"
+          ls -la artifacts/ || true
+
+      - name: 上传回执
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-rollback-${{ inputs.server_target }}-${{ github.run_id }}
+          path: |
+            artifacts/
+            snapshot-list.log
+            rollback-output.log
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: 清理 SSH 私钥
+        if: always()
+        run: rm -f ~/.ssh/lighthouse_key
