@@ -120,8 +120,17 @@ case "$STAGE" in
   rollback)
     echo "[rollback] 委派给 rollback.sh (快照式回滚)..."
     if [ -x "$SCRIPT_DIR/rollback.sh" ]; then
-      DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
-        bash "$SCRIPT_DIR/rollback.sh" "${ROLLBACK_TS:+--to}" "${ROLLBACK_TS:-}"
+      # 修复: ROLLBACK_TS 为空时不能用 ${VAR:+--to} ${VAR:-} 拼参,
+      # 那会传两个空字符串 "" "" 给 rollback.sh, 触发 "未知参数" 退码 2.
+      # 改用条件分支显式调用; 这里不能写成 "${ROLLBACK_ARGS[@]}" 直接展开,
+      # 因为脚本顶部已 set -u, bash<4.4 在空数组展开会报 unbound variable.
+      if [ -n "${ROLLBACK_TS:-}" ]; then
+        DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+          bash "$SCRIPT_DIR/rollback.sh" --to "$ROLLBACK_TS"
+      else
+        DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+          bash "$SCRIPT_DIR/rollback.sh"
+      fi
       exit $?
     else
       echo "[rollback fallback] 脚本未找到, 仅停服" >&2
@@ -415,6 +424,15 @@ systemctl restart fail2ban || true
 mkdir -p "$DEPLOY_ROOT/_logs"
 RECEIPT_TS="$(date +%Y%m%d-%H%M%S)"
 SIZE_TIER_VAL="${SIZE_TIER:-unknown}"
+
+# 真实 runner 运行态 (跟 RUNNER_DEFAULT_ENABLED 区分):
+# RUNNER_DEFAULT_ENABLED = 当前档位是否"默认允许"启 runner (来自 .env.tune)
+# runner_running         = 此刻 lighthouse-gitea-runner 容器是否真在跑
+RUNNER_RUNNING="false"
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx 'lighthouse-gitea-runner'; then
+  RUNNER_RUNNING="true"
+fi
+
 cat > "$DEPLOY_ROOT/_logs/lighthouse-bootstrap-$RECEIPT_TS.json" <<EOF
 {
   "_sovereign": "TCS-0002∞ | $SERVER_ID",
@@ -427,7 +445,8 @@ cat > "$DEPLOY_ROOT/_logs/lighthouse-bootstrap-$RECEIPT_TS.json" <<EOF
   "gitea_http_port": $GITEA_HTTP_PORT,
   "gitea_ssh_port": $GITEA_SSH_PORT,
   "size_tier": "$SIZE_TIER_VAL",
-  "runner_started": ${RUNNER_DEFAULT_ENABLED:-false},
+  "runner_default_enabled": ${RUNNER_DEFAULT_ENABLED:-false},
+  "runner_running": $RUNNER_RUNNING,
   "pre_snapshot": "${PRE_SNAP:-none}",
   "server_env_file": "$SERVER_ENV_JSON",
   "post_health_ok": ${GITEA_HEALTHY:-false}
