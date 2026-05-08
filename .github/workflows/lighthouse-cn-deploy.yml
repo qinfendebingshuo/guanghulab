@@ -40,6 +40,11 @@ on:
           - bootstrap
           - update
           - rollback
+      confirm_phrase:
+        description: 'bootstrap / rollback 必填 · 输入 "我确认部署" 才会真跑 (空 = 自动 dry-run)'
+        required: false
+        default: ''
+        type: string
       dry_run:
         description: '只打印计划, 不真的执行 (true/false)'
         required: false
@@ -57,8 +62,75 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: 启动前预检 · 密钥 + 误触锁
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      effective_dry_run: ${{ steps.misclick.outputs.effective_dry_run }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 启动前最小密钥校验 (中文报告)
+        env:
+          ZY_LIGHTHOUSE_HOST: ${{ secrets.ZY_LIGHTHOUSE_HOST }}
+          ZY_LIGHTHOUSE_USER: ${{ secrets.ZY_LIGHTHOUSE_USER }}
+          ZY_LIGHTHOUSE_KEY: ${{ secrets.ZY_LIGHTHOUSE_KEY }}
+          ZY_LIGHTHOUSE_PORT: ${{ secrets.ZY_LIGHTHOUSE_PORT }}
+          ZY_LIGHTHOUSE_DOMAIN: ${{ secrets.ZY_LIGHTHOUSE_DOMAIN }}
+          ZY_GITEA_ADMIN_USER: ${{ secrets.ZY_GITEA_ADMIN_USER }}
+          ZY_GITEA_ADMIN_PASS: ${{ secrets.ZY_GITEA_ADMIN_PASS }}
+          ZY_GITEA_ADMIN_EMAIL: ${{ secrets.ZY_GITEA_ADMIN_EMAIL }}
+          ZY_GITEA_DB_PASS: ${{ secrets.ZY_GITEA_DB_PASS }}
+          ZY_GITEA_RUNNER_TOKEN: ${{ secrets.ZY_GITEA_RUNNER_TOKEN }}
+          ZY_LIGHTHOUSE_BACKUP_HOST: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_HOST }}
+          ZY_LIGHTHOUSE_BACKUP_USER: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_USER }}
+          ZY_LIGHTHOUSE_BACKUP_KEY: ${{ secrets.ZY_LIGHTHOUSE_BACKUP_KEY }}
+          ZY_COS_SECRET_ID: ${{ secrets.ZY_COS_SECRET_ID }}
+          ZY_COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+          ZY_COS_BUCKET: ${{ secrets.ZY_COS_BUCKET }}
+          ZY_COS_REGION: ${{ secrets.ZY_COS_REGION }}
+          ZY_DISPATCH_TOKEN: ${{ secrets.ZY_DISPATCH_TOKEN }}
+          ZY_FEISHU_WEBHOOK: ${{ secrets.ZY_FEISHU_WEBHOOK }}
+        run: |
+          node scripts/preflight/check-secrets.js \
+            --workflow lighthouse-cn-deploy \
+            --stage "${{ inputs.stage }}" \
+            --target "${{ inputs.server_target }}"
+
+      - name: 误触锁 · bootstrap/rollback 必须显式确认
+        id: misclick
+        env:
+          STAGE: ${{ inputs.stage }}
+          PHRASE: ${{ inputs.confirm_phrase }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          set -e
+          EFFECTIVE_DRY="$DRY"
+          if [ "$STAGE" = "bootstrap" ] || [ "$STAGE" = "rollback" ]; then
+            if [ "$PHRASE" != "我确认部署" ]; then
+              echo "═══════════════════════════════════════════════"
+              echo "  ⚠️  误触保护: stage=$STAGE 必须在 confirm_phrase"
+              echo "       字段输入『我确认部署』才会真跑."
+              echo "       当前值=「$PHRASE」 → 自动切到 dry-run 模式."
+              echo "       (这一层是为了防止 Awen / 冰朔不小心点错按钮)"
+              echo "═══════════════════════════════════════════════"
+              EFFECTIVE_DRY="true"
+            else
+              echo "✅ 已显式确认 (stage=$STAGE)"
+            fi
+          fi
+          echo "effective_dry_run=$EFFECTIVE_DRY" >> "$GITHUB_OUTPUT"
+
   deploy:
     name: ${{ inputs.server_target }} · ${{ inputs.stage }}
+    needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -114,7 +186,7 @@ jobs:
           echo "✅ SSH 凭据就绪 ($SERVER_ID)"
 
       - name: Sanity check (dry-run)
-        if: inputs.dry_run == 'true'
+        if: needs.preflight.outputs.effective_dry_run == 'true'
         env:
           HOST: ${{ steps.target.outputs.host }}
           USER: ${{ steps.target.outputs.user }}
@@ -126,7 +198,7 @@ jobs:
           echo "(real host masked)"
 
       - name: Rsync template to server
-        if: inputs.dry_run != 'true'
+        if: needs.preflight.outputs.effective_dry_run != 'true'
         env:
           HOST: ${{ steps.target.outputs.host }}
           USER: ${{ steps.target.outputs.user }}
@@ -148,7 +220,7 @@ jobs:
             "$USER@$HOST:/opt/guanghu/lighthouse-cn/migration/"
 
       - name: Run bootstrap / update / rollback
-        if: inputs.dry_run != 'true'
+        if: needs.preflight.outputs.effective_dry_run != 'true'
         env:
           HOST: ${{ steps.target.outputs.host }}
           USER: ${{ steps.target.outputs.user }}
@@ -194,7 +266,7 @@ jobs:
               2>&1 | tee bootstrap-output.log
 
       - name: Pull back latest receipt
-        if: inputs.dry_run != 'true' && always()
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
         env:
           HOST: ${{ steps.target.outputs.host }}
           USER: ${{ steps.target.outputs.user }}
@@ -209,7 +281,7 @@ jobs:
           ls -la artifacts/ || true
 
       - name: Upload receipts
-        if: inputs.dry_run != 'true' && always()
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-bootstrap-receipt-${{ inputs.server_target }}-${{ inputs.stage }}

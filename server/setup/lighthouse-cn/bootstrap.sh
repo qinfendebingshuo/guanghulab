@@ -43,7 +43,7 @@
 set -euo pipefail
 
 # ─── 全局参数 ─────────────────────────────────────────────────
-TEMPLATE_VERSION="0.1.0"
+TEMPLATE_VERSION="0.2.0"
 SERVER_ID="${CN_LIGHTHOUSE_SERVER_ID:-${SERVER_ID:-}}"
 DATA_ROOT="${DATA_ROOT:-/data}"
 DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/guanghu}"
@@ -81,6 +81,20 @@ if ! mountpoint -q "$DATA_ROOT"; then
   sleep 5
 fi
 
+# ─── 自我感知: 探测真实硬件 + 动态调优 ────────────────────────
+# 不再硬假设 4C16G, 适配 2C8G / 4C16G / 任意规格
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+mkdir -p "$DEPLOY_ROOT/_logs"
+SERVER_ENV_JSON="$DEPLOY_ROOT/_logs/server-env.json"
+
+if [ -x "$SCRIPT_DIR/detect-env.sh" ]; then
+  echo "[0/8] 探测当前服务器实际配置 (detect-env.sh)..."
+  DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+    bash "$SCRIPT_DIR/detect-env.sh" "$SERVER_ENV_JSON" || {
+      echo "⚠️  detect-env.sh 失败, 继续但不动态调优" >&2
+    }
+fi
+
 if [ "$STAGE" = "bootstrap" ]; then
   for v in GITEA_ADMIN_USER GITEA_ADMIN_PASS GITEA_ADMIN_EMAIL GITEA_DB_PASS; do
     if [ -z "${!v:-}" ]; then
@@ -104,16 +118,43 @@ case "$STAGE" in
   bootstrap) ;;
   update) STAGE_UPDATE_ONLY=1 ;;
   rollback)
-    echo "[rollback] 停服 + 回滚 docker-compose ..."
-    cd "$DATA_ROOT/lighthouse" 2>/dev/null && docker compose down || true
-    echo "[rollback] 完成. 数据未删除. 重启需手动 docker compose up -d"
-    exit 0
+    echo "[rollback] 委派给 rollback.sh (快照式回滚)..."
+    if [ -x "$SCRIPT_DIR/rollback.sh" ]; then
+      DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+        bash "$SCRIPT_DIR/rollback.sh" "${ROLLBACK_TS:+--to}" "${ROLLBACK_TS:-}"
+      exit $?
+    else
+      echo "[rollback fallback] 脚本未找到, 仅停服" >&2
+      cd "$DATA_ROOT/lighthouse" 2>/dev/null && docker compose down || true
+      exit 0
+    fi
     ;;
   *)
     echo "❌ 未知 STAGE: $STAGE (合法: bootstrap / update / rollback)" >&2
     exit 1
     ;;
 esac
+
+# ─── update / bootstrap: 跑前先建快照 ────────────────────────
+# 这样万一这次 update 把 compose / app.ini 改坏, rollback.sh 能回到这一刻
+if [ -d "$DATA_ROOT/lighthouse" ] && [ -f "$DATA_ROOT/lighthouse/docker-compose.yml" ]; then
+  PRE_TS="$(date +%Y%m%d-%H%M%S)"
+  PRE_SNAP="$DATA_ROOT/lighthouse/snapshots/$PRE_TS-pre-$STAGE"
+  mkdir -p "$PRE_SNAP"
+  for f in docker-compose.yml .env .env.tune; do
+    [ -f "$DATA_ROOT/lighthouse/$f" ] && cp -a "$DATA_ROOT/lighthouse/$f" "$PRE_SNAP/" || true
+  done
+  if [ -f "$DATA_ROOT/lighthouse/gitea/conf/app.ini" ]; then
+    mkdir -p "$PRE_SNAP/gitea/conf"
+    cp -a "$DATA_ROOT/lighthouse/gitea/conf/app.ini" "$PRE_SNAP/gitea/conf/" || true
+  fi
+  echo "snapshot before $STAGE @ $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$PRE_SNAP/NOTE"
+  # 只保留最近 10 份, 防数据盘塞满
+  ls -1tr "$DATA_ROOT/lighthouse/snapshots" 2>/dev/null \
+    | head -n -10 \
+    | xargs -I{} rm -rf "$DATA_ROOT/lighthouse/snapshots/{}" 2>/dev/null || true
+  echo "[snap] pre-$STAGE 快照 -> $PRE_SNAP"
+fi
 
 # ─── 1. APT 镜像源 (阿里云) ──────────────────────────────────
 if [ "${STAGE}" = "bootstrap" ]; then
@@ -270,19 +311,58 @@ if [ -f "$APP_INI_TPL" ] && [ ! -f "$DATA_ROOT/lighthouse/gitea/conf/app.ini" ];
   unset GITEA_SECRET_KEY
 fi
 
+# ─── 6.5 动态调优 ─────────────────────────────────────────────
+# 依据 detect-env 探到的真实硬件档位, 写 .env.tune
+if [ -x "$SCRIPT_DIR/tune-from-env.sh" ] && [ -f "$SERVER_ENV_JSON" ]; then
+  ENV_FILE="$SERVER_ENV_JSON" DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+    bash "$SCRIPT_DIR/tune-from-env.sh" || echo "⚠️  tune-from-env.sh 失败, 用默认参数继续"
+fi
+
+# 加载档位决策, 决定是否在 update 阶段顺带启 runner profile
+RUNNER_DEFAULT_ENABLED="false"
+if [ -f "$DATA_ROOT/lighthouse/.env.tune" ]; then
+  # shellcheck disable=SC1091
+  . "$DATA_ROOT/lighthouse/.env.tune"
+fi
+
 cd "$COMPOSE_DIR"
 docker compose pull
-docker compose up -d
+
+# update 阶段且档位允许 + token 已注入 → 顺带启 runner
+COMPOSE_UP_ARGS=("up" "-d")
+if [ "$STAGE" = "update" ] && [ "${RUNNER_DEFAULT_ENABLED:-false}" = "true" ] \
+   && [ -n "${GITEA_RUNNER_TOKEN:-}" ]; then
+  echo "    档位允许 + RUNNER_TOKEN 已注入, 顺带启 runner"
+  COMPOSE_UP_ARGS=("--profile" "runner" "up" "-d")
+fi
+
+docker compose "${COMPOSE_UP_ARGS[@]}"
 
 # 等 Gitea 起来
 echo "    等待 Gitea 健康检查 ..."
+GITEA_HEALTHY="false"
 for i in $(seq 1 30); do
   if curl -fs "http://127.0.0.1:$GITEA_HTTP_PORT/api/v1/version" >/dev/null 2>&1; then
     echo "    Gitea 已上线"
+    GITEA_HEALTHY="true"
     break
   fi
   sleep 2
 done
+
+# ─── 自动兜底: update 失败 → 自动回滚到 pre-snapshot ──────────
+# bootstrap (首次) 不触发自动回滚 (没有"上一个版本"可回)
+if [ "$GITEA_HEALTHY" = "false" ] && [ "$STAGE" = "update" ] && [ -n "${PRE_SNAP:-}" ]; then
+  echo "❌ Gitea 60s 内未上线, 触发自动回滚到 pre-update 快照..." >&2
+  PRE_TS_BASENAME="$(basename "$PRE_SNAP")"
+  if [ -x "$SCRIPT_DIR/rollback.sh" ]; then
+    DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+      bash "$SCRIPT_DIR/rollback.sh" --to "$PRE_TS_BASENAME" || \
+      echo "⚠️  自动回滚也失败了, 请人工介入. snapshot=$PRE_SNAP" >&2
+  fi
+  echo "[autorollback] 已触发. 仔细看上方日志." >&2
+  exit 1
+fi
 
 # 创建初始管理员 (idempotent: 已存在会报错并被忽略)
 # 用临时文件 + stdin 避免密码进 ps / shell history
@@ -333,7 +413,9 @@ systemctl restart fail2ban || true
 
 # ─── 收尾回执 ─────────────────────────────────────────────────
 mkdir -p "$DEPLOY_ROOT/_logs"
-cat > "$DEPLOY_ROOT/_logs/lighthouse-bootstrap-$(date +%Y%m%d-%H%M%S).json" <<EOF
+RECEIPT_TS="$(date +%Y%m%d-%H%M%S)"
+SIZE_TIER_VAL="${SIZE_TIER:-unknown}"
+cat > "$DEPLOY_ROOT/_logs/lighthouse-bootstrap-$RECEIPT_TS.json" <<EOF
 {
   "_sovereign": "TCS-0002∞ | $SERVER_ID",
   "_copyright": "国作登字-2026-A-00037559",
@@ -343,7 +425,12 @@ cat > "$DEPLOY_ROOT/_logs/lighthouse-bootstrap-$(date +%Y%m%d-%H%M%S).json" <<EO
   "data_root": "$DATA_ROOT",
   "deploy_root": "$DEPLOY_ROOT",
   "gitea_http_port": $GITEA_HTTP_PORT,
-  "gitea_ssh_port": $GITEA_SSH_PORT
+  "gitea_ssh_port": $GITEA_SSH_PORT,
+  "size_tier": "$SIZE_TIER_VAL",
+  "runner_started": ${RUNNER_DEFAULT_ENABLED:-false},
+  "pre_snapshot": "${PRE_SNAP:-none}",
+  "server_env_file": "$SERVER_ENV_JSON",
+  "post_health_ok": ${GITEA_HEALTHY:-false}
 }
 EOF
 
