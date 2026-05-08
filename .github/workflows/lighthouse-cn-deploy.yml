@@ -41,7 +41,7 @@ on:
           - update
           - rollback
       confirm_phrase:
-        description: 'bootstrap / rollback 必填 · 输入 "我确认部署" 才会真跑 (空 = 自动 dry-run)'
+        description: 'bootstrap 必填『我确认部署』 / rollback 必填『我确认回滚』(也可填『我确认部署』向下兼容); 空 = 自动 dry-run'
         required: false
         default: ''
         type: string
@@ -113,18 +113,30 @@ jobs:
         run: |
           set -e
           EFFECTIVE_DRY="$DRY"
-          if [ "$STAGE" = "bootstrap" ] || [ "$STAGE" = "rollback" ]; then
-            if [ "$PHRASE" != "我确认部署" ]; then
-              echo "═══════════════════════════════════════════════"
-              echo "  ⚠️  误触保护: stage=$STAGE 必须在 confirm_phrase"
-              echo "       字段输入『我确认部署』才会真跑."
-              echo "       当前值=「$PHRASE」 → 自动切到 dry-run 模式."
-              echo "       (这一层是为了防止 Awen / 冰朔不小心点错按钮)"
-              echo "═══════════════════════════════════════════════"
-              EFFECTIVE_DRY="true"
-            else
-              echo "✅ 已显式确认 (stage=$STAGE)"
-            fi
+          # 口令兼容: bootstrap 收『我确认部署』; rollback 同时接受
+          # 『我确认部署』(向下兼容旧用户记忆) 和『我确认回滚』
+          # (与独立的 lighthouse-cn-rollback workflow 对齐).
+          REQUIRED=""
+          OK="false"
+          if [ "$STAGE" = "bootstrap" ]; then
+            REQUIRED="我确认部署"
+            [ "$PHRASE" = "我确认部署" ] && OK="true"
+          elif [ "$STAGE" = "rollback" ]; then
+            REQUIRED="我确认回滚 (或我确认部署)"
+            { [ "$PHRASE" = "我确认回滚" ] || [ "$PHRASE" = "我确认部署" ]; } && OK="true"
+          else
+            OK="skip"
+          fi
+          if [ "$OK" = "false" ]; then
+            echo "═══════════════════════════════════════════════"
+            echo "  ⚠️  误触保护: stage=$STAGE 必须在 confirm_phrase"
+            echo "       字段输入『$REQUIRED』才会真跑."
+            echo "       当前值=「$PHRASE」 → 自动切到 dry-run 模式."
+            echo "       (这一层是为了防止 Awen / 冰朔不小心点错按钮)"
+            echo "═══════════════════════════════════════════════"
+            EFFECTIVE_DRY="true"
+          elif [ "$OK" = "true" ]; then
+            echo "✅ 已显式确认 (stage=$STAGE, phrase=「$PHRASE」)"
           fi
           echo "effective_dry_run=$EFFECTIVE_DRY" >> "$GITHUB_OUTPUT"
 

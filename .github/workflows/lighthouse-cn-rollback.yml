@@ -148,6 +148,26 @@ jobs:
               "bash /opt/guanghu/lighthouse-cn/rollback.sh --list" \
             2>&1 | tee snapshot-list.log
 
+      - name: 校验 snapshot_ts 格式 (防注入)
+        if: needs.preflight.outputs.effective_mode == 'rollback'
+        env:
+          TS: ${{ inputs.snapshot_ts }}
+        run: |
+          set -e
+          # snapshot_ts 来自 workflow_dispatch 用户输入, 后面要进 ssh
+          # 远程命令字符串. 必须严格白名单, 防止空格/分号/反引号等注入.
+          # 合法形式 (来自 rollback.sh `date +%Y%m%d-%H%M%S`):
+          #   YYYYMMDD-HHMMSS
+          #   YYYYMMDD-HHMMSS-pre-rollback   (rollback.sh 自动派生)
+          #   空                              (= 回到上一个快照)
+          if [ -n "$TS" ] && ! printf '%s' "$TS" | grep -Eq '^[0-9]{8}-[0-9]{6}(-pre-rollback)?$'; then
+            echo "❌ snapshot_ts 格式不合法: 「$TS」" >&2
+            echo "   合法形式: YYYYMMDD-HHMMSS 或 YYYYMMDD-HHMMSS-pre-rollback" >&2
+            echo "   或留空 (= 回滚到最近一次快照)" >&2
+            exit 1
+          fi
+          echo "✅ snapshot_ts 格式校验通过${TS:+: $TS}"
+
       - name: 执行回滚
         if: needs.preflight.outputs.effective_mode == 'rollback'
         env:
@@ -157,13 +177,22 @@ jobs:
           TS: ${{ inputs.snapshot_ts }}
         run: |
           set -e
-          ARGS=""
-          if [ -n "$TS" ]; then ARGS="--to $TS"; fi
-          ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
-              -o StrictHostKeyChecking=accept-new \
-              "$USER@$HOST" \
-              "bash /opt/guanghu/lighthouse-cn/rollback.sh $ARGS" \
-            2>&1 | tee rollback-output.log
+          # TS 已在上一步白名单校验, 这里仍走 argv 传入而非命令字符串拼接,
+          # 以双层防护: 远程 sh 接到的是 $1 / $2, 不是字面拼好的字符串.
+          if [ -n "$TS" ]; then
+            ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
+                -o StrictHostKeyChecking=accept-new \
+                "$USER@$HOST" \
+                'bash /opt/guanghu/lighthouse-cn/rollback.sh --to "$1"' \
+                _ "$TS" \
+              2>&1 | tee rollback-output.log
+          else
+            ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
+                -o StrictHostKeyChecking=accept-new \
+                "$USER@$HOST" \
+                'bash /opt/guanghu/lighthouse-cn/rollback.sh' \
+              2>&1 | tee rollback-output.log
+          fi
 
       - name: 拉回回执
         if: always()
