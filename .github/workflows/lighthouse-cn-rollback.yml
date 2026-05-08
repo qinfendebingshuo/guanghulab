@@ -180,6 +180,12 @@ jobs:
           # TS 已在上一步白名单校验, 这里仍走 argv 传入而非命令字符串拼接,
           # 以双层防护: 远程 sh 接到的是 $1 / $2, 不是字面拼好的字符串.
           if [ -n "$TS" ]; then
+            # 远程 sh -c 'cmd "$1"' _ "$TS" 这种调法:
+            #   - 引号内的 'bash ... --to "$1"' 是远程 shell 字面接收的命令
+            #   - 后面 _ 作为远程 sh 的 $0 (占位, 习惯用 _ 表示"不关心")
+            #   - "$TS" 作为远程 sh 的 $1, 由 ssh 安全地走 argv 传过去,
+            #     不会被本地或远程 shell 二次解释 → 即使 TS 含特殊字符
+            #     也不会被注入 (上一步已正则白名单, 这里是双层防御)
             ssh -i ~/.ssh/lighthouse_key -p "$PORT" \
                 -o StrictHostKeyChecking=accept-new \
                 "$USER@$HOST" \

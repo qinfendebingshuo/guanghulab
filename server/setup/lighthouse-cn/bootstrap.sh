@@ -122,13 +122,15 @@ case "$STAGE" in
     if [ -x "$SCRIPT_DIR/rollback.sh" ]; then
       # 修复: ROLLBACK_TS 为空时不能用 ${VAR:+--to} ${VAR:-} 拼参,
       # 那会传两个空字符串 "" "" 给 rollback.sh, 触发 "未知参数" 退码 2.
-      # 改用条件数组拼参: 只在非空时才追加 --to + 时间戳.
-      ROLLBACK_ARGS=()
+      # 改用条件分支显式调用; 这里不能写成 "${ROLLBACK_ARGS[@]}" 直接展开,
+      # 因为脚本顶部已 set -u, bash<4.4 在空数组展开会报 unbound variable.
       if [ -n "${ROLLBACK_TS:-}" ]; then
-        ROLLBACK_ARGS=(--to "$ROLLBACK_TS")
+        DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+          bash "$SCRIPT_DIR/rollback.sh" --to "$ROLLBACK_TS"
+      else
+        DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
+          bash "$SCRIPT_DIR/rollback.sh"
       fi
-      DATA_ROOT="$DATA_ROOT" DEPLOY_ROOT="$DEPLOY_ROOT" \
-        bash "$SCRIPT_DIR/rollback.sh" "${ROLLBACK_ARGS[@]}"
       exit $?
     else
       echo "[rollback fallback] 脚本未找到, 仅停服" >&2
