@@ -5,6 +5,7 @@
 # Placeholder substitutions (awk · 执行时替换):
 #   __DOMAIN__              → guanghulab.com
 #   __PORTAL_PORT__         → 3000 (默认)
+#   __VAULT_PORT__          → 8080 (默认 · PR-5 secrets-vault)
 #   __NGINX_WORKER_CONN__   → 512 (tiny) / 1024 (small) ...
 #
 # Conditional blocks (markers MUST be on their own line, exact form):
@@ -80,6 +81,35 @@ server {
 #         access_log off;
 #         default_type application/json;
 #         return 200 '{"status":"ok","server":"GH-CVM-DOMAIN-PROD-01","tls":"on"}';
+#     }
+#
+#     # PR-5 自部署密钥管理页 · /admin/* (vault on 127.0.0.1:__VAULT_PORT__)
+#     #
+#     # 三层守: (1) allow 127.0.0.1; deny all; (公网/任何远端 IP 直接 403)
+#     #         (2) basic-auth (htpasswd) — 凭据在 _logs/vault-credentials-FIRST-BOOT.txt
+#     #         (3) 上游 vault 只 bind 127.0.0.1:__VAULT_PORT__
+#     # 冰朔访问方式: ssh -L 8443:127.0.0.1:443 ubuntu@<host>
+#     #               浏览器 https://localhost:8443/admin/
+#     #               (注: 走 ssh 隧道时 nginx 看到的来源是 127.0.0.1, 通过)
+#     #
+#     # 健康端点 (/admin/__healthz) 也走同一份 ACL, 没意义对外暴露
+#     location /admin/ {
+#         allow 127.0.0.1;
+#         allow ::1;
+#         deny all;
+#
+#         auth_basic "guanghulab admin";
+#         auth_basic_user_file /etc/nginx/.htpasswd_admin;
+#
+#         proxy_pass http://127.0.0.1:__VAULT_PORT__;
+#         proxy_http_version 1.1;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#         proxy_buffering off;
+#         proxy_read_timeout 60s;
+#         proxy_send_timeout 60s;
 #     }
 #
 #     # Portal 反代 (/ + /api/* 全部走 portal). 注意 SSE 必需配置.
