@@ -9,14 +9,20 @@
     "3. .github/workflows/.archive/ 下的 .yml 不参与扫描 (已归档=不跑)",
     "4. 修改本文件需要冰朔 review (在 PR description 里说明为什么新加)"
   ],
-  "version": "1.0.0",
+  "version": "1.1.0",
   "updated_at": "2026-05-09",
   "cn_server_workflows": [
     {
       "name": "deploy-domain-server.yml",
-      "status": "planned-PR2",
-      "reason": "PR-2 即将创建 · 唯一被授权部署到 2C2G 的 workflow · 误触锁=输入「重装广州」",
-      "exists": false
+      "status": "active",
+      "reason": "PR-2 落地 · 唯一被授权部署到 2C2G 的 workflow · 误触锁=输入「重装广州」 · 失败自动 SSH rollback",
+      "exists": true
+    },
+    {
+      "name": "domain-server-rollback.yml",
+      "status": "active",
+      "reason": "PR-2 落地 · 单独的回滚红按钮 · 误触锁=输入「重装广州」 · list-only 默认安全档",
+      "exists": true
     },
     {
       "name": "refresh-autodl-endpoint.yml",

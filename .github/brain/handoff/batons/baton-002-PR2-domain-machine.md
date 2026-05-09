@@ -90,7 +90,23 @@ grep -c "cn-domain-deploy\|autodl-inference" scripts/preflight/secrets-manifest.
 
 ## 已交付 (PR-2 合并后填)
 
-(待 PR-2 完成时填: commit SHA, 实际部署日志路径)
+- **2026-05-09** 落地于 `copilot/pr-2-domain-deployment-lock-rollback` 分支
+- 提交内容:
+  - `server/setup/domain-cn/detect-env.sh` (8.7K · 探 CPU/内存/磁盘/IP/DNS/LE 证书 → server-env.json + 中文 stdout 摘要)
+  - `server/setup/domain-cn/tune-from-env.sh` (6.5K · size_tier 决档, tiny=2C2G 关 forgejo+lfs / nginx worker=512 / portal 单进程 / 自动 1G swap)
+  - `server/setup/domain-cn/bootstrap.sh` (16.6K · 8 步: detect → 跑前快照 → tune → apt → node20+pm2 → 标准目录+三占位 → swap → nginx → certbot.timer → ufw + portal systemd unit · `trap autorollback_on_failure EXIT` 失败自动回滚 · 中文回执 → `/opt/guanghulab/_logs/deploy-report.md`)
+  - `server/setup/domain-cn/rollback.sh` (6.8K · `--list` / `--to <TS>` / 默认回最近 · 只回滚配置层不动数据)
+  - `server/setup/domain-cn/nginx/guanghulab.conf.template` (双条件块 `__SSL_BEGIN__` / `__NOSSL_BEGIN__` · 证书在/不在两套配置 · nginx -t 双路径都通过)
+  - `server/setup/domain-cn/README.md` (霜砚版部署清单)
+  - `.github/workflows/deploy-domain-server.yml` (workflow_dispatch · 误触锁=「重装广州」否则降级 dry-run · rsync 模板 + ssh bootstrap + 拉 deploy-report.md 贴 GH summary + artifact 30 天)
+  - `.github/workflows/domain-server-rollback.yml` (单独红按钮 · 默认 list-only 安全档 · `snapshot_ts` 严格白名单防注入 · `重装广州` 才真跑回滚)
+  - `scripts/preflight/cn-isolation-allowlist.json` 升 v1.1.0: deploy-domain-server.yml + domain-server-rollback.yml 标 `status=active, exists=true`
+  - `.github/brain/architecture/function-manifest.json` ZY-SVR-CN01: status `secrets_configured` → `bootstrapping`, template_version `0.2.0-pending-PR2` → `0.2.0`
+- 验证 (本地全绿):
+  - `node scripts/preflight/check-server-isolation.js` → EXIT=0 · 2 个 workflow 已授权
+  - `node scripts/manifest/validate.js` → errors=0 warnings=0
+  - `bash -n` × 4 sh 脚本全 OK · `nginx -t` USE_SSL=0/1 双路径 syntax OK
+  - python `yaml.safe_load` 双 workflow 解析 OK
 
 ## 给冰朔的中文回执 (PR-2 合后用这个模板)
 
