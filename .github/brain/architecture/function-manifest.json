@@ -72,10 +72,10 @@
       "location": "广州 (腾讯云轻量)",
       "ipv4": "(见 secrets.ZY_CN_SERVER_HOST · 重装后由冰朔配置)",
       "spec": "2核2G",
-      "status": "bootstrapping",
-      "template_version": "0.2.0",
+      "status": "active",
+      "template_version": "0.3.0",
       "deploy_root": "/data/guanghulab",
-      "registered_functions": [],
+      "registered_functions": ["ZY-FN-PORTAL"],
       "github_secrets": {
         "host": "ZY_CN_SERVER_HOST",
         "user": "ZY_CN_SERVER_USER",
@@ -85,7 +85,7 @@
       "isolation": "exclusive",
       "isolation_allowlist_path": "scripts/preflight/cn-isolation-allowlist.json",
       "physical_alias": "GH-CVM-DOMAIN-PROD-01",
-      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive 表示只有 cn-isolation-allowlist.json 里的 workflow 可以触碰. 不跑训练, 不做 VPN 中继, 不挂 ali-landing. PR-2 已落地 server/setup/domain-cn/ 三段式模板 (detect-env + tune-from-env + bootstrap) + autorollback + 误触锁「重装广州」, 等 Awen 跑 deploy-domain-server.yml 真正落地."
+      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive. PR-2 落地 server/setup/domain-cn/ 三段式模板 + autorollback + 误触锁「重装广州」. PR-4 落地 server/portal/ (Express + better-sqlite3) + frontend/lighthouse-portal/ (静态三栏 · 中文 · 思源黑体本地) · pm2 max_memory_restart=512M · /api/chat 字节级 SSE 转发 AutoDL · cc-002 三道关 (前端不传 / 后端剥 / 推理剥)."
     },
     {
       "id": "ZY-SVR-GPU01",
@@ -241,6 +241,31 @@
         "expected_status": 200
       },
       "notes": "2026-05-02 修复: model_not_found 自动降级到 qwen-turbo · 真实微调模型 ID = qwen3-8b-ft-202604281809-9f30 (冰朔 D69 提供 · 已写为代码默认值, 无需配 secret)"
+    },
+    {
+      "id": "ZY-FN-PORTAL",
+      "display_name_zh": "光湖门户",
+      "aliases": ["光湖 Portal", "guanghulab.com 门户", "lighthouse-portal"],
+      "host_server": "ZY-SVR-CN01",
+      "domain": "guanghulab.com",
+      "domain_paths": ["/", "/api/health", "/api/conversations", "/api/chat", "/api/active-model", "/api/persona-db", "/api/manifest"],
+      "ports": [3000],
+      "pm2_processes": ["guanghulab-portal"],
+      "description": "guanghulab.com 唯一对外入口 · 三栏 SPA (人格层/开发层 tab 切模型) · SQLite 对话历史 · 字节级 SSE 转发 AutoDL 推理 · cc-002 三道关守人格洁净",
+      "created_for": "PR-4 · 接力第 4 棒 · 双层 Web Portal",
+      "keep_decision": "keep",
+      "status": "active",
+      "modules": ["M-PORTAL-API", "M-PORTAL-FRONTEND"],
+      "api_keys_alias": {
+        "_说明": "Portal 本身不直接持密钥. AutoDL bearer/host/port 来自本地 inference-endpoint.json (PR-3 写). 用户级密钥走 PR-5 secrets-vault."
+      },
+      "frontend_entry": "frontend/lighthouse-portal/",
+      "backend_entry": "server/portal/ecosystem.config.js",
+      "health_check": {
+        "url": "https://guanghulab.com/api/health",
+        "expected_status": 200
+      },
+      "notes": "PR-4 落地 · pm2 max_memory_restart=512M · 静态资源 nginx 直发 (/_static/) · cc-002 三道关 (前端不传 system / 后端 _strip_system_messages / 推理端 server.py 入口剥) · 切 tab=切模型, 推理端没起时本地状态先生效, upstream 异步重试"
     }
   ],
   "active_routes": {
@@ -315,6 +340,18 @@
       "display_name_zh": "旧版小说下载引擎",
       "description": "(已退役) 早期小说下载+分章",
       "used_by": ["ZY-FN-0002"]
+    },
+    {
+      "id": "M-PORTAL-API",
+      "display_name_zh": "光湖门户后端",
+      "description": "Express + better-sqlite3 · 对话历史 · /api/chat 字节级 SSE 转发 AutoDL · cc-002 三道关之后端层",
+      "used_by": ["ZY-FN-PORTAL"]
+    },
+    {
+      "id": "M-PORTAL-FRONTEND",
+      "display_name_zh": "光湖门户前端",
+      "description": "纯静态 HTML + vanilla JS · 三栏 (历史/聊天/上下文) · 切 tab 切模型 · 中文思源黑体本地",
+      "used_by": ["ZY-FN-PORTAL"]
     }
   ]
 }

@@ -1,0 +1,195 @@
+/*
+ * 光湖 Portal · 样式
+ * 守护: 铸渊 · ICE-GL-ZY001
+ * 主权: TCS-0002∞ · 国作登字-2026-A-00037559
+ *
+ * 设计口径:
+ *   - 全部走系统中文字体回退栈 (思源黑体 / PingFang / 微软雅黑 / sans-serif)
+ *     不引外部 CDN 字体 (国内 2C2G 不依赖 Google Fonts).
+ *   - 颜色取"光湖夜湖 · 月白" (深湛蓝 #163e6b + 米白 #f5e6c8 点缀)
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family:
+    "Source Han Sans CN", "Source Han Sans SC", "Noto Sans CJK SC",
+    "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "微软雅黑",
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1c2330;
+  background: #f6f7fb;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── 顶栏 ─── */
+.topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  background: linear-gradient(90deg, #102a45 0%, #163e6b 100%);
+  color: #f5e6c8;
+  border-bottom: 1px solid #0c1f33;
+}
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.brand-mark { font-size: 22px; opacity: 0.9; }
+.brand-name { font-size: 16px; letter-spacing: 0.04em; }
+.brand-meta { flex: 1; font-size: 12px; opacity: 0.55; letter-spacing: 0.03em; }
+.health {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(245, 230, 200, 0.12);
+  border: 1px solid rgba(245, 230, 200, 0.25);
+  white-space: nowrap;
+}
+.health.ok { background: rgba(76, 187, 124, 0.18); border-color: rgba(76, 187, 124, 0.45); }
+.health.bad { background: rgba(214, 99, 99, 0.18); border-color: rgba(214, 99, 99, 0.45); }
+
+/* ─── 三栏布局 ─── */
+.layout {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 240px 1fr 280px;
+  min-height: 0; /* allow children to scroll */
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #e3e6ee;
+  background: #fff;
+}
+.col-right { border-right: none; border-left: 1px solid #e3e6ee; background: #fafbfd; }
+.col-left { background: #fafbfd; }
+
+/* 左栏 */
+.col-left { padding: 12px 10px; gap: 10px; }
+.btn-primary {
+  appearance: none;
+  border: 1px solid #163e6b;
+  background: #163e6b;
+  color: #f5e6c8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+}
+.btn-primary:hover { background: #1d4d83; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.conv-list { flex: 1 1 auto; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.conv-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  width: 100%;
+}
+.conv-item:hover { background: #eef1f7; }
+.conv-item.active { background: #e7eef8; border-color: #b9c8e0; color: #163e6b; }
+.conv-item .conv-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conv-item .conv-meta { display: block; font-size: 11px; color: #6a778d; margin-top: 2px; }
+.empty { padding: 14px 10px; color: #8a93a8; font-size: 13px; text-align: center; }
+.col-foot { font-size: 11px; color: #8a93a8; text-align: center; padding: 6px 0; }
+
+/* 中栏 */
+.col-center { background: #fff; }
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid #e3e6ee; }
+.tab {
+  flex: 1;
+  appearance: none;
+  background: #f6f7fb;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  color: #4a5468;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tab small { font-size: 11px; color: #8a93a8; font-weight: normal; }
+.tab:hover { background: #eef1f7; }
+.tab.tab-active {
+  background: #fff;
+  border-bottom-color: #163e6b;
+  color: #163e6b;
+  font-weight: 600;
+}
+.chat-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chat-empty { color: #8a93a8; text-align: center; margin-top: 40px; }
+.chat-empty .muted { font-size: 12px; opacity: 0.75; }
+.msg { max-width: 80%; padding: 10px 14px; border-radius: 10px; word-wrap: break-word; white-space: pre-wrap; }
+.msg-user { align-self: flex-end; background: #e7eef8; color: #163e6b; border-bottom-right-radius: 2px; }
+.msg-asst { align-self: flex-start; background: #f1f3f8; color: #1c2330; border-bottom-left-radius: 2px; }
+.msg-asst.streaming::after { content: "▍"; opacity: 0.5; margin-left: 2px; }
+.msg-error { align-self: flex-start; background: #fdecec; color: #913030; border: 1px solid #f1bbbb; }
+
+.composer {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid #e3e6ee;
+  background: #fafbfd;
+}
+.composer textarea {
+  flex: 1 1 auto;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid #cdd3df;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  line-height: 1.6;
+}
+.composer textarea:focus { outline: none; border-color: #163e6b; }
+
+/* 右栏 */
+.col-right { padding: 12px 14px; gap: 10px; overflow-y: auto; }
+.col-title { font-size: 14px; margin: 4px 0 8px; color: #163e6b; font-weight: 600; }
+.ctx-cards { display: flex; flex-direction: column; gap: 8px; }
+.ctx-card {
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.ctx-card h4 { margin: 0 0 4px; font-size: 13px; color: #163e6b; }
+.ctx-card p { margin: 0; font-size: 12px; color: #4a5468; line-height: 1.55; }
+.ctx-card .ctx-tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 999px; background: #e7eef8; color: #163e6b; margin-right: 4px; }
+
+/* 响应式 (窄屏只显示中栏) */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .col-left, .col-right { display: none; }
+  .brand-meta { display: none; }
+}
