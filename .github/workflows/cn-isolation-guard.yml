@@ -1,0 +1,46 @@
+name: '🛡️ 国内域名机隔离守卫'
+
+# ═══════════════════════════════════════════════════════════
+# 国内 2C2G 域名机 (GH-CVM-DOMAIN-PROD-01) 单线运行守卫
+# 编号: ZY-WF-CN-ISOLATION-GUARD
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 工作:
+#   1. 扫描 .github/workflows/ 根目录所有 .yml
+#   2. 找引用 ZY_CN_SERVER_* / ZY_AUTODL_* 的 workflow
+#   3. 必须在 scripts/preflight/cn-isolation-allowlist.json 白名单里
+#   4. 否则 CI 红灯, PR 合不进来
+#
+# 因果链: cc-004 (团队技术近 0, 系统必自主, 把误触可能性吞进系统内部)
+# ═══════════════════════════════════════════════════════════
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/preflight/cn-isolation-allowlist.json'
+      - 'scripts/preflight/check-server-isolation.js'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/preflight/cn-isolation-allowlist.json'
+      - 'scripts/preflight/check-server-isolation.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolation-guard:
+    name: '🛡️ 扫描 workflow 引用'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: '🛡️ 跑隔离守卫脚本'
+        run: node scripts/preflight/check-server-isolation.js
