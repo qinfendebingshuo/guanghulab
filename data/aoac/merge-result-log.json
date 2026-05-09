@@ -2,40 +2,58 @@
   "aoac_agent": "AOAC-02",
   "aoac_agent_name": "action-merge-sentinel",
   "status": "half_ready",
-  "timestamp": "2026-05-10 00:26:10+08:00",
-  "timestamp_utc": "2026-05-09T16:26:10.899Z",
+  "timestamp": "2026-05-10 00:52:32+08:00",
+  "timestamp_utc": "2026-05-09T16:52:32.049Z",
   "merge": {
-    "pr_number": 454,
-    "pr_title": "国内搬家·PR-1: 隔离防火带 + 接力棒机制 + 给霜砚移交骨架",
-    "merge_commit_sha": "269fa97eb0edca4f9dbd76c2529529db74d3e0e6",
-    "head_sha": "544a496a838c9e808d161856efd18319b204fb83",
+    "pr_number": 455,
+    "pr_title": "PR-2 · 国内 2C2G 域名机一键部署 + 误触锁「重装广州」 + 自动回滚",
+    "merge_commit_sha": "0dc4b5129886720cf2e38d77e439b3b5f400eabb",
+    "head_sha": "18aaf2d608afb83c6161dc6251b8231033c30b57",
     "base_branch": "main"
   },
   "ci": {
     "combined_status": "failure",
     "overall_result": "failure",
     "summary": {
-      "total": 11,
-      "passed": 6,
+      "total": 13,
+      "passed": 5,
       "failed": 1,
-      "skipped": 4
+      "skipped": 5
     },
     "check_runs": [
       {
-        "name": "deploy",
+        "name": "🔧 ���务器初始化",
         "status": "completed",
-        "conclusion": "cancelled",
-        "started_at": "2026-05-09T16:25:01Z",
-        "completed_at": "2026-05-09T16:25:01Z",
+        "conclusion": "skipped",
+        "started_at": "2026-05-09T16:51:58Z",
+        "completed_at": "2026-05-09T16:51:58Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "report-build-status",
+        "name": "💚 健康检查",
         "status": "completed",
-        "conclusion": "cancelled",
-        "started_at": "2026-05-09T16:25:01Z",
-        "completed_at": "2026-05-09T16:25:01Z",
+        "conclusion": "skipped",
+        "started_at": "2026-05-09T16:51:58Z",
+        "completed_at": "2026-05-09T16:51:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🚀 预览站→主站 一键推送",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-09T16:51:58Z",
+        "completed_at": "2026-05-09T16:51:58Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🔒 SSL证书配置",
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-05-09T16:51:58Z",
+        "completed_at": "2026-05-09T16:51:58Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -43,17 +61,17 @@
         "name": "gate-guard",
         "status": "completed",
         "conclusion": "skipped",
-        "started_at": "2026-05-09T16:24:46Z",
-        "completed_at": "2026-05-09T16:24:46Z",
+        "started_at": "2026-05-09T16:51:58Z",
+        "completed_at": "2026-05-09T16:51:58Z",
         "output_title": null,
         "output_summary": ""
       },
       {
-        "name": "🌊 生成唤醒上下文",
-        "status": "completed",
-        "conclusion": "success",
-        "started_at": "2026-05-09T16:24:49Z",
-        "completed_at": "2026-05-09T16:24:59Z",
+        "name": "🚀 部署应用代码",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-09T16:52:00Z",
+        "completed_at": null,
         "output_title": null,
         "output_summary": ""
       },
@@ -61,26 +79,8 @@
         "name": "deploy",
         "status": "completed",
         "conclusion": "success",
-        "started_at": "2026-05-09T16:24:50Z",
-        "completed_at": "2026-05-09T16:25:05Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "💉 注入注册表上下文到 Copilot Issue",
-        "status": "completed",
-        "conclusion": "success",
-        "started_at": "2026-05-09T16:24:49Z",
-        "completed_at": "2026-05-09T16:24:55Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🗂️ 同步注册表状态",
-        "status": "completed",
-        "conclusion": "failure",
-        "started_at": "2026-05-09T16:24:55Z",
-        "completed_at": "2026-05-09T16:24:59Z",
+        "started_at": "2026-05-09T16:52:02Z",
+        "completed_at": "2026-05-09T16:52:18Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -88,17 +88,8 @@
         "name": "📡 Bridge E · GitHub Changes → Notion",
         "status": "completed",
         "conclusion": "success",
-        "started_at": "2026-05-09T16:24:54Z",
-        "completed_at": "2026-05-09T16:25:02Z",
-        "output_title": null,
-        "output_summary": ""
-      },
-      {
-        "name": "🛡️ 扫描 workflow 引用",
-        "status": "completed",
-        "conclusion": "success",
-        "started_at": "2026-05-09T16:24:49Z",
-        "completed_at": "2026-05-09T16:24:57Z",
+        "started_at": "2026-05-09T16:52:00Z",
+        "completed_at": "2026-05-09T16:52:05Z",
         "output_title": null,
         "output_summary": ""
       },
@@ -106,17 +97,44 @@
         "name": "校验 function-manifest.json",
         "status": "completed",
         "conclusion": "success",
-        "started_at": "2026-05-09T16:24:49Z",
-        "completed_at": "2026-05-09T16:24:58Z",
+        "started_at": "2026-05-09T16:52:01Z",
+        "completed_at": "2026-05-09T16:52:10Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "💉 注入注册表上下文到 Copilot Issue",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-05-09T16:52:00Z",
+        "completed_at": "2026-05-09T16:52:06Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🗂️ 同步注册表状态",
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-05-09T16:52:00Z",
+        "completed_at": "2026-05-09T16:52:04Z",
+        "output_title": null,
+        "output_summary": ""
+      },
+      {
+        "name": "🛡️ 扫描 workflow 引用",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-05-09T16:52:01Z",
+        "completed_at": "2026-05-09T16:52:08Z",
         "output_title": null,
         "output_summary": ""
       },
       {
         "name": "build",
-        "status": "completed",
-        "conclusion": "cancelled",
-        "started_at": "2026-05-09T16:24:53Z",
-        "completed_at": "2026-05-09T16:25:00Z",
+        "status": "in_progress",
+        "conclusion": null,
+        "started_at": "2026-05-09T16:51:59Z",
+        "completed_at": null,
         "output_title": null,
         "output_summary": ""
       }
