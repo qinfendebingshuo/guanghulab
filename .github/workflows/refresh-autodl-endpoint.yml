@@ -1,0 +1,346 @@
+name: '🔄 刷新推理端点'
+
+# ════════════════════════════════════════════════════════════
+# AutoDL 推理机端口刷新 · refresh-autodl-endpoint
+# 编号: ZY-WF-REFRESH-AUTODL-ENDPOINT
+# 守护: 铸渊 · ICE-GL-ZY001
+# 版权: 国作登字-2026-A-00037559
+#
+# 触发场景:
+#   AutoDL 实例每次开机 host:port 都漂移. 冰朔/Awen 在 AutoDL 开
+#   机后跑 setup-inference.sh, 然后来这里填新的 host:port + 误触
+#   锁口令「刷新推理端点」, 工作流自动:
+#     1. check-secrets 校验
+#     2. curl /v1/health 探活 (不通就不写, 避免污染 2C2G)
+#     3. SSH 到 ZY-SVR-CN01 写 inference-endpoint.json
+#     4. pm2 reload portal (热加载)
+#     5. 中文回执
+#
+# 误触锁: confirm_phrase = 「刷新推理端点」
+# 因果链: cc-003 (动态适配) + cc-004 (中文一次性)
+# ════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      autodl_host:
+        description: 'AutoDL 推理服务公网 host (例: connect.westa.seetacloud.com 或 8.131.xx.xx)'
+        required: true
+        type: string
+      autodl_port:
+        description: 'AutoDL 推理服务公网端口 (推理服务 HTTPS 暴露端口, 不是 SSH 端口)'
+        required: true
+        type: string
+      use_https:
+        description: '协议: https (推荐) / http'
+        required: true
+        default: 'https'
+        type: choice
+        options:
+          - 'https'
+          - 'http'
+      confirm_phrase:
+        description: '误触锁 · 必须输入「刷新推理端点」才会真写, 其他值降级 dry-run'
+        required: false
+        default: ''
+        type: string
+      dry_run:
+        description: '只打印计划, 不真写域名机 (true/false)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refresh-autodl-endpoint
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: 启动前预检 · 密钥 + 误触锁 + 探活
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      effective_dry_run: ${{ steps.misclick.outputs.effective_dry_run }}
+      health_ok: ${{ steps.health.outputs.health_ok }}
+      gpu_name: ${{ steps.health.outputs.gpu_name }}
+      gpu_mem_gb: ${{ steps.health.outputs.gpu_mem_gb }}
+      active_model: ${{ steps.health.outputs.active_model }}
+      tier: ${{ steps.health.outputs.tier }}
+      quant: ${{ steps.health.outputs.quant }}
+      endpoint_url: ${{ steps.endpoint.outputs.endpoint_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 启动前最小密钥校验 (cn-domain-deploy)
+        env:
+          ZY_CN_SERVER_HOST: ${{ secrets.ZY_CN_SERVER_HOST }}
+          ZY_CN_SERVER_USER: ${{ secrets.ZY_CN_SERVER_USER }}
+          ZY_CN_SERVER_KEY:  ${{ secrets.ZY_CN_SERVER_KEY }}
+          ZY_CN_SERVER_PATH: ${{ secrets.ZY_CN_SERVER_PATH }}
+          ZY_CN_SSH_PORT:    ${{ secrets.ZY_CN_SSH_PORT }}
+        run: |
+          # 这里只校验 ZY_CN_SERVER_*, AutoDL 的 host:port 是 input 不是 secret
+          node scripts/preflight/check-secrets.js \
+            --workflow cn-domain-deploy \
+            --stage update \
+            --target main
+
+      - name: 误触锁 · 必须输入「刷新推理端点」
+        id: misclick
+        env:
+          PHRASE: ${{ inputs.confirm_phrase }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          set -e
+          EFFECTIVE_DRY="$DRY"
+          REQUIRED="刷新推理端点"
+          if [ "$PHRASE" != "$REQUIRED" ]; then
+            echo "═══════════════════════════════════════════════"
+            echo "  ⚠️  误触保护"
+            echo "       要真写 2C2G 域名机, 必须在 confirm_phrase"
+            echo "       字段精确输入: 「$REQUIRED」"
+            echo "       当前值=「$PHRASE」 → 自动切到 dry-run."
+            echo "═══════════════════════════════════════════════"
+            EFFECTIVE_DRY="true"
+          else
+            echo "✅ 已显式确认 (phrase=「$PHRASE」), 即将真写"
+          fi
+          echo "effective_dry_run=$EFFECTIVE_DRY" >> "$GITHUB_OUTPUT"
+
+      - name: 组装端点 URL
+        id: endpoint
+        env:
+          HOST: ${{ inputs.autodl_host }}
+          PORT: ${{ inputs.autodl_port }}
+          PROTO: ${{ inputs.use_https }}
+        run: |
+          set -euo pipefail
+          # 简易格式校验 — 防止 Awen 误粘 ssh 命令进来
+          if echo "$HOST" | grep -qE '[[:space:]]'; then
+            echo "❌ host 含空白字符, 请只填裸 host (不要带 ssh -p ...)" >&2; exit 1
+          fi
+          if ! echo "$PORT" | grep -qE '^[0-9]+$'; then
+            echo "❌ port 必须是纯数字, 当前=「$PORT」" >&2; exit 1
+          fi
+          if [ "$PORT" -lt 1 ] || [ "$PORT" -gt 65535 ]; then
+            echo "❌ port 越界 (1..65535), 当前=$PORT" >&2; exit 1
+          fi
+          URL="${PROTO}://${HOST}:${PORT}"
+          echo "endpoint_url=$URL" >> "$GITHUB_OUTPUT"
+          echo "✅ 目标端点: $URL"
+
+      - name: 探活 /v1/health (不通就不往下走)
+        id: health
+        env:
+          URL: ${{ steps.endpoint.outputs.endpoint_url }}
+        run: |
+          set -uo pipefail
+          echo "[health] curl $URL/v1/health (重试 3 次, 每次 10s 超时)"
+          OK="false"
+          BODY=""
+          for i in 1 2 3; do
+            BODY="$(curl -fsS -m 10 "$URL/v1/health" 2>/dev/null || true)"
+            if [ -n "$BODY" ] && echo "$BODY" | grep -q '"status"'; then
+              OK="true"
+              break
+            fi
+            echo "  第 $i 次失败, 2s 后重试..."
+            sleep 2
+          done
+          if [ "$OK" != "true" ]; then
+            echo "═══════════════════════════════════════════════════════════"
+            echo "  ❌ 推理服务不可达: $URL/v1/health"
+            echo "═══════════════════════════════════════════════════════════"
+            echo "  常见原因:"
+            echo "    1. AutoDL 实例没开机 / 自定义服务端口没暴露"
+            echo "    2. host:port 抄错了 (注意是推理服务端口, 不是 SSH 端口)"
+            echo "    3. setup-inference.sh 还没跑完 (大模型加载需要 60-120s)"
+            echo "    4. 协议错: 实际只有 http 但填了 https (或反过来)"
+            echo ""
+            echo "  下一步: 先在 AutoDL 上 curl 本机 http://127.0.0.1:8000/v1/health"
+            echo "          确认服务在跑, 再来重试本工作流."
+            echo "═══════════════════════════════════════════════════════════"
+            echo "health_ok=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "$BODY" > /tmp/health.json
+          GPU_NAME="$(echo "$BODY" | jq -r '.gpu.name // "unknown"')"
+          GPU_MEM_GB="$(echo "$BODY" | jq -r '.gpu.memory_gb // "0"')"
+          ACTIVE_MODEL="$(echo "$BODY" | jq -r '.model.name // "unknown"')"
+          TIER="$(echo "$BODY" | jq -r '.tier.size_tier // "unknown"')"
+          QUANT="$(echo "$BODY" | jq -r '.tier.quantization // "unknown"')"
+          {
+            echo "health_ok=true"
+            echo "gpu_name=$GPU_NAME"
+            echo "gpu_mem_gb=$GPU_MEM_GB"
+            echo "active_model=$ACTIVE_MODEL"
+            echo "tier=$TIER"
+            echo "quant=$QUANT"
+          } >> "$GITHUB_OUTPUT"
+          echo "✅ 推理服务在跑 · GPU=$GPU_NAME · 当前模型=$ACTIVE_MODEL · 档位=$TIER/$QUANT"
+
+  write-endpoint:
+    name: 写 inference-endpoint.json + 重载 portal
+    needs: preflight
+    if: needs.preflight.outputs.health_ok == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 装载 SSH 凭据 (写到 2C2G 域名机)
+        id: target
+        env:
+          HOST: ${{ secrets.ZY_CN_SERVER_HOST }}
+          USER: ${{ secrets.ZY_CN_SERVER_USER }}
+          KEY:  ${{ secrets.ZY_CN_SERVER_KEY }}
+          PORT: ${{ secrets.ZY_CN_SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.ZY_CN_SERVER_PATH }}
+        run: |
+          set -euo pipefail
+          if [ -z "$HOST" ] || [ -z "$KEY" ] || [ -z "$USER" ]; then
+            echo "❌ ZY_CN_SERVER_{HOST,USER,KEY} 任一为空" >&2; exit 1
+          fi
+          PORT="${PORT:-22}"
+          DEPLOY_PATH="${DEPLOY_PATH:-/data/guanghulab}"
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+          echo "port=$PORT" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$DEPLOY_PATH" >> "$GITHUB_OUTPUT"
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/refresh_key
+          chmod 600 ~/.ssh/refresh_key
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf '%s' "$HOST" > ~/.ssh/refresh_host
+          chmod 600 ~/.ssh/refresh_host
+
+      - name: 组装 inference-endpoint.json
+        env:
+          URL: ${{ needs.preflight.outputs.endpoint_url }}
+          GPU_NAME: ${{ needs.preflight.outputs.gpu_name }}
+          GPU_MEM_GB: ${{ needs.preflight.outputs.gpu_mem_gb }}
+          ACTIVE_MODEL: ${{ needs.preflight.outputs.active_model }}
+          TIER: ${{ needs.preflight.outputs.tier }}
+          QUANT: ${{ needs.preflight.outputs.quant }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          REFRESHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # jq 安全组装, 避免 shell 注入
+          jq -n \
+            --arg url "$URL" \
+            --arg gpu_name "$GPU_NAME" \
+            --arg gpu_mem_gb "$GPU_MEM_GB" \
+            --arg active_model "$ACTIVE_MODEL" \
+            --arg tier "$TIER" \
+            --arg quant "$QUANT" \
+            --arg refreshed_at "$REFRESHED_AT" \
+            --arg run_id "$RUN_ID" \
+            '{
+              _sovereign: "TCS-0002∞ · 国作登字-2026-A-00037559",
+              _守护: "铸渊 · ICE-GL-ZY001",
+              endpoint_url: $url,
+              refreshed_at: $refreshed_at,
+              refreshed_by_run_id: $run_id,
+              gpu: { name: $gpu_name, memory_gb: $gpu_mem_gb },
+              tier: { size_tier: $tier, quantization: $quant },
+              active_model: $active_model
+            }' > inference-endpoint.json
+          echo "组装完成:"
+          cat inference-endpoint.json
+
+      - name: Dry-run · 只打印计划
+        if: needs.preflight.outputs.effective_dry_run == 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          DEPLOY_PATH: ${{ steps.target.outputs.deploy_path }}
+        run: |
+          echo "═══════════════ DRY RUN ═══════════════"
+          echo "would scp inference-endpoint.json → $USER@<host>:$DEPLOY_PATH/portal/data/"
+          echo "would ssh $USER@<host> 'sudo -u $USER mkdir -p $DEPLOY_PATH/portal/data && pm2 reload portal || true'"
+          echo "(real host masked)"
+
+      - name: 真跑 · scp 写入 + pm2 reload
+        if: needs.preflight.outputs.effective_dry_run != 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          DEPLOY_PATH: ${{ steps.target.outputs.deploy_path }}
+        run: |
+          set -euo pipefail
+          HOST="$(cat ~/.ssh/refresh_host)"
+
+          # 1. 确保目录存在 (PR-4 portal 会用这个路径; PR-4 之前也先建好)
+          ssh -i ~/.ssh/refresh_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo mkdir -p $DEPLOY_PATH/portal/data && sudo chown -R $USER:$USER $DEPLOY_PATH/portal"
+
+          # 2. scp 上去
+          scp -i ~/.ssh/refresh_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              inference-endpoint.json \
+              "$USER@$HOST:$DEPLOY_PATH/portal/data/inference-endpoint.json"
+
+          # 3. pm2 reload portal (PR-4 之前 portal 不存在, 命令失败也算成功)
+          ssh -i ~/.ssh/refresh_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "if pm2 describe portal >/dev/null 2>&1; then \
+                 pm2 reload portal && echo '✅ pm2 reload portal 成功'; \
+               else \
+                 echo 'ℹ️  portal 还没起 (PR-4 之前正常), 已写入 endpoint.json 等 portal 上线后自动读'; \
+               fi"
+
+      - name: 中文回执到 GitHub Actions Summary
+        if: always()
+        env:
+          URL: ${{ needs.preflight.outputs.endpoint_url }}
+          GPU_NAME: ${{ needs.preflight.outputs.gpu_name }}
+          GPU_MEM_GB: ${{ needs.preflight.outputs.gpu_mem_gb }}
+          ACTIVE_MODEL: ${{ needs.preflight.outputs.active_model }}
+          TIER: ${{ needs.preflight.outputs.tier }}
+          QUANT: ${{ needs.preflight.outputs.quant }}
+          DRY: ${{ needs.preflight.outputs.effective_dry_run }}
+        run: |
+          {
+            echo "# 🔄 推理端点刷新回执"
+            echo ""
+            echo "> 给冰朔 / 霜砚 / Awen 看的中文回执"
+            echo ""
+            if [ "$DRY" = "true" ]; then
+              echo "## ⚠️ DRY RUN (没真写)"
+              echo ""
+              echo "误触锁口令没填对, 工作流只打印计划, 没真写 2C2G 域名机."
+              echo ""
+            else
+              echo "## ✅ 已切到新端点"
+              echo ""
+            fi
+            echo "| 项 | 值 |"
+            echo "|---|---|"
+            echo "| 推理端点 | \`$URL\` |"
+            echo "| GPU      | $GPU_NAME ($GPU_MEM_GB GB) |"
+            echo "| 当前模型 | $ACTIVE_MODEL |"
+            echo "| 档位     | $TIER / $QUANT |"
+            echo "| 刷新时间 | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+            echo ""
+            echo "下一步: 冰朔打开 \`https://guanghulab.com/portal\` 试一下, 看模型有没有响应."
+            echo "如果还断, 看 \`/v1/health\`: \`$URL/v1/health\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 清理 SSH 私钥
+        if: always()
+        run: |
+          rm -f ~/.ssh/refresh_key ~/.ssh/refresh_host

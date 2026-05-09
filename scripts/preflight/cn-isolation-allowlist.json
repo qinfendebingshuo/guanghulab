@@ -9,7 +9,7 @@
     "3. .github/workflows/.archive/ 下的 .yml 不参与扫描 (已归档=不跑)",
     "4. 修改本文件需要冰朔 review (在 PR description 里说明为什么新加)"
   ],
-  "version": "1.1.0",
+  "version": "1.2.0",
   "updated_at": "2026-05-09",
   "cn_server_workflows": [
     {
@@ -26,9 +26,9 @@
     },
     {
       "name": "refresh-autodl-endpoint.yml",
-      "status": "planned-PR3",
-      "reason": "PR-3 · AutoDL 重开机后 SSH 到 2C2G 写 inference-endpoint.json + pm2 reload portal",
-      "exists": false
+      "status": "active",
+      "reason": "PR-3 落地 · AutoDL 重开机后 SSH 到 2C2G 写 inference-endpoint.json + pm2 reload portal · 误触锁=输入「刷新推理端点」 · 探活不通就不写",
+      "exists": true
     },
     {
       "name": "migrate-to-cn-restore.yml",
@@ -44,13 +44,8 @@
       "scan_only": true
     }
   ],
-  "autodl_workflows": [
-    {
-      "name": "refresh-autodl-endpoint.yml",
-      "status": "planned-PR3",
-      "reason": "唯一引用 ZY_AUTODL_HOST/PORT/USER/PASS 的 workflow"
-    }
-  ],
+  "_autodl_workflows_说明": "PR-3 决议: AutoDL host:port 每次开机都漂移, 不能做成静态 GitHub Secrets, 改用 workflow_dispatch 的 input 字段每次现填. 因此 refresh-autodl-endpoint.yml 不引用 ZY_AUTODL_* secret, 这一段保持空. ZY_AUTODL_USER/PASS 仅在 PR-5 密钥管理页里给冰朔自助保存用 (走域名机本地 vault, 不入 GitHub Secrets).",
+  "autodl_workflows": [],
   "_archived_in_PR1": [
     "deploy-cn-landing.yml",
     "deploy-to-cn-server.yml",

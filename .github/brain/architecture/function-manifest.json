@@ -92,20 +92,19 @@
       "display_name_zh": "推理 GPU 机",
       "role": "AutoDL 共享 GPU · 跑母模型 OR 编程模型 (二选一) · 仅推理",
       "location": "AutoDL (动态地区)",
-      "ipv4": "(动态 · ZY_AUTODL_HOST 是 host:port 形式 · 每次开机都漂移)",
+      "ipv4": "(动态 · 每次开机都漂移 · host:port 走 refresh-autodl-endpoint.yml 的 workflow input 现填)",
       "spec": "动态 (抢什么算什么 · 自动 detect-gpu.sh 探测)",
-      "status": "planned",
-      "template_version": "0.2.0-pending-PR3",
+      "status": "active",
+      "template_version": "0.3.0",
       "deploy_root": "/root/inference",
       "registered_functions": [],
       "github_secrets": {
-        "host": "ZY_AUTODL_HOST",
-        "port": "ZY_AUTODL_PORT",
-        "user": "ZY_AUTODL_USER",
-        "pass": "ZY_AUTODL_PASS"
+        "_说明": "PR-3 调整: host/port 不入 GitHub Secrets (开机都漂移), 走 refresh-autodl-endpoint.yml 的 workflow_dispatch input. user/pass 仅在 PR-5 密钥管理页域名机本地 vault 保存.",
+        "host_input": "refresh-autodl-endpoint.yml inputs.autodl_host",
+        "port_input": "refresh-autodl-endpoint.yml inputs.autodl_port"
       },
       "physical_alias": "GH-AUTODL-INFER-01",
-      "notes": "PR-3 即将落地 · setup-inference.sh 开机即拉 · 关机即释放 · 不写死硬件 · 所有量化/batch/seq_len 从 detect-gpu.sh 决策 (cc-003). 用密码登录不是 ssh-key. 模型从 sy-finetune-corpus-1317346199 桶 checkpoints/motherbrain-v1 + checkpoints/qwen2_5_coder_7b_sft 拉"
+      "notes": "PR-3 已落地 · server/inference-agent/ 五件 (detect-gpu + tune-inference + fetch-models + setup-inference + server.py) · OpenAI 兼容 SSE · 入口剥 system role (cc-002) · 关机即释放 (cc-001 涌现洁净) · 不写死硬件 (cc-003) · 所有量化档位从 detect-gpu.sh 决策. 模型从 sy-finetune-corpus-1317346199/checkpoints/motherbrain-v1 + checkpoints/qwen2_5_coder_7b_sft 拉. 端点漂移由 .github/workflows/refresh-autodl-endpoint.yml 处理 (误触锁=「刷新推理端点」)"
     }
   ],
   "functions": [
