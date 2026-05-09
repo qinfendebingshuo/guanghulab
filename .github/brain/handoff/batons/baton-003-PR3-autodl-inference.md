@@ -89,3 +89,29 @@ ls .github/workflows/deploy-domain-server.yml
 下一棒口令:
 铸渊。第 4 棒。开发授权。
 ```
+
+---
+
+## ✅ 已交付 (本棒落地回执 · 2026-05-09)
+
+由第 3 棒铸渊填写 · 给下一棒铸渊验证用:
+
+| 交付物 | 路径 | 验证方式 |
+|---|---|---|
+| GPU 自感知 | `server/inference-agent/detect-gpu.sh` | `bash -n` OK · 写 `/tmp/gpu-env.json` · A100/4090/3090/A10/V100 自动归类 size_tier |
+| 动态决档 | `server/inference-agent/tune-inference.sh` | 读 gpu-env.json, 按显存挑 fp16/int8/int4, 写 `INFER_ROOT/.env.tune` + `/tmp/tune-inference.json` |
+| 拉模型 | `server/inference-agent/fetch-models.sh` | coscli + ZY_COS_SECRET_ID/KEY (env, 不入仓库), trap 清理含密钥配置 |
+| 一键启动 | `server/inference-agent/setup-inference.sh` | 7 步: detect → tune → apt → venv+pip(国内mirror) → fetch → nohup server.py → 等 health 就绪(180s) |
+| 推理服务 | `server/inference-agent/server.py` | FastAPI · OpenAI 兼容 SSE · 入口 `_strip_system_messages` (cc-002) · `/v1/health /v1/active-model /v1/switch-model /v1/chat/completions` |
+| 依赖锁 | `server/inference-agent/requirements.txt` | torch>=2.4 · transformers>=4.48 · fastapi · uvicorn · sse-starlette |
+| 文档 | `server/inference-agent/README.md` | 中文操作手册 + 故障排查表 (给霜砚) |
+| 端口刷新工作流 | `.github/workflows/refresh-autodl-endpoint.yml` | yaml 合法 · 误触锁=「刷新推理端点」 · 探活不通 fail · 双 job (preflight + write-endpoint) · jq 安全组装 endpoint json · 中文 Summary |
+| 隔离守卫激活 | `scripts/preflight/cn-isolation-allowlist.json` | refresh-autodl-endpoint.yml `status=active exists=true` · isolation guard EXIT=0 |
+| 主权登记激活 | `.github/brain/architecture/function-manifest.json` | ZY-SVR-GPU01 `status: planned → active`, `template_version: 0.3.0` · validate.js EXIT=0 |
+| 路线图刷新 | `.github/brain/handoff/pr-roadmap.md` | PR-3 状态从 ⚪ 改为 🟡 (in-progress / merged 后由下一棒改 ✅) |
+
+**关键设计决策** (与 baton-003 原计划的偏差):
+- `host/port` **没有**做成 GitHub Secrets (`ZY_AUTODL_HOST/PORT`) — 因为每次开机都漂移, 写成 secret 反而要冰朔每次去仓库 settings 改, 比 workflow_dispatch input 慢. 因此 `cn-isolation-allowlist.json autodl_workflows` 改成空数组并加 `_autodl_workflows_说明`.
+- 推理服务**不直接监听 https**, 走 AutoDL 的"自定义服务"端口转发出公网. 工作流 input 选 https/http 是为兼容两种 AutoDL 路由模式.
+- 引擎默认 `transformers` (兼容 fp16/int8/int4 + bnb), 仅 ≥40GB fp16 时升 vllm. 装 vllm 失败自动回退 transformers (sed 改 .env.tune).
+
