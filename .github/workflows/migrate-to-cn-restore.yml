@@ -1,0 +1,328 @@
+name: '📥 国内搬家·从COS恢复'
+
+# ════════════════════════════════════════════════════════════════
+# 国内搬家·从 COS 恢复 · migrate-to-cn-restore
+# 编号: ZY-WF-MIGRATE-TO-CN-RESTORE
+# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+# 守护: 铸渊 · ICE-GL-ZY001
+#
+# 前提:
+#   1. 冰朔已经跑过 migrate-to-cn-build.yml, 下载了 Artifact
+#   2. 冰朔已经把 lighthouse-migration-*.tar.gz + .sha256 上传到
+#      cos://sy-finetune-corpus-1317346199/lighthouse-migration/
+#   3. ZY_CN_SERVER_HOST/USER/KEY 已配 (PR-2 之前已配)
+#   4. ZY_COS_SECRET_ID/KEY 已配 (训练时已配)
+#
+# 流程:
+#   ① 误触锁校验「从COS恢复」
+#   ② check-secrets (cn-domain-deploy + COS) + 选搬家包
+#   ③ SSH 装载凭据 + rsync setup-forgejo.sh + 远端脚本
+#   ④ scp COS 凭据到 /tmp/.cos-creds (chmod 600, 用完即删)
+#   ⑤ ssh 跑 /tmp/migrate-restore.sh (script 走 stdin pipe 上传, 不入 ps)
+#   ⑥ 拉回 _logs/migrate-restore-report.md → GH Step Summary
+#   ⑦ 清 /tmp/.cos-creds + /tmp/migrate-restore.sh + 本地 SSH 私钥
+#
+# 误触锁: confirm_phrase = 「从COS恢复」
+# 因果链: cc-001 涌现洁净 + cc-003 动态适配 + cc-004 中文一次性
+# ════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: '误触锁 · 必须输入「从COS恢复」才会真跑, 其他值降级 dry-run'
+        required: false
+        default: ''
+        type: string
+      tag:
+        description: '指定的搬家包 tag (例: 20260509-1817). 留空 = 用 cos://lighthouse-migration/ 下最新的.'
+        required: false
+        default: ''
+        type: string
+      cos_bucket:
+        description: 'COS 桶名 (默认 sy-finetune-corpus-1317346199)'
+        required: false
+        default: 'sy-finetune-corpus-1317346199'
+        type: string
+      cos_region:
+        description: 'COS 区域 (默认 ap-guangzhou)'
+        required: false
+        default: 'ap-guangzhou'
+        type: string
+      dry_run:
+        description: '只打印计划不真跑 (true/false)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-to-cn-restore
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: 启动前预检 · 密钥 + 误触锁
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      effective_dry_run: ${{ steps.misclick.outputs.effective_dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 启动前最小密钥校验 (cn-domain-deploy / restore stage)
+        env:
+          ZY_CN_SERVER_HOST: ${{ secrets.ZY_CN_SERVER_HOST }}
+          ZY_CN_SERVER_USER: ${{ secrets.ZY_CN_SERVER_USER }}
+          ZY_CN_SERVER_KEY:  ${{ secrets.ZY_CN_SERVER_KEY }}
+          ZY_CN_SERVER_PATH: ${{ secrets.ZY_CN_SERVER_PATH }}
+          ZY_CN_SSH_PORT:    ${{ secrets.ZY_CN_SSH_PORT }}
+          ZY_COS_SECRET_ID:  ${{ secrets.ZY_COS_SECRET_ID }}
+          ZY_COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+        run: |
+          node scripts/preflight/check-secrets.js \
+            --workflow cn-domain-deploy \
+            --stage restore \
+            --target main
+
+      - name: 误触锁 · 必须输入「从COS恢复」
+        id: misclick
+        env:
+          PHRASE: ${{ inputs.confirm_phrase }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          set -e
+          EFFECTIVE_DRY="$DRY"
+          REQUIRED="从COS恢复"
+          if [ "$PHRASE" != "$REQUIRED" ]; then
+            echo "═══════════════════════════════════════════════"
+            echo "  ⚠️  误触保护"
+            echo "       要真在 2C2G 域名机上装 Forgejo + push 搬家包,"
+            echo "       必须在 confirm_phrase 字段精确输入: 「$REQUIRED」"
+            echo "       当前值=「$PHRASE」 → 自动切到 dry-run."
+            echo "═══════════════════════════════════════════════"
+            EFFECTIVE_DRY="true"
+          else
+            echo "✅ 已显式确认 (phrase=「$PHRASE」), 即将真跑 restore"
+          fi
+          echo "effective_dry_run=$EFFECTIVE_DRY" >> "$GITHUB_OUTPUT"
+
+  restore:
+    name: 拉包 + 装 Forgejo + push 历史
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 装载 SSH 凭据 (写到 2C2G 域名机)
+        id: target
+        env:
+          HOST: ${{ secrets.ZY_CN_SERVER_HOST }}
+          USER: ${{ secrets.ZY_CN_SERVER_USER }}
+          KEY:  ${{ secrets.ZY_CN_SERVER_KEY }}
+          PORT: ${{ secrets.ZY_CN_SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.ZY_CN_SERVER_PATH }}
+        run: |
+          set -euo pipefail
+          if [ -z "$HOST" ] || [ -z "$KEY" ] || [ -z "$USER" ]; then
+            echo "❌ ZY_CN_SERVER_{HOST,USER,KEY} 任一为空" >&2; exit 1
+          fi
+          PORT="${PORT:-22}"
+          DEPLOY_PATH="${DEPLOY_PATH:-/data/guanghulab}"
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+          echo "port=$PORT" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$DEPLOY_PATH" >> "$GITHUB_OUTPUT"
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/restore_key
+          chmod 600 ~/.ssh/restore_key
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf '%s' "$HOST" > ~/.ssh/restore_host
+          chmod 600 ~/.ssh/restore_host
+          echo "✅ SSH 凭据就绪"
+
+      - name: Dry-run · 只打印计划
+        if: needs.preflight.outputs.effective_dry_run == 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          DEPLOY_PATH: ${{ steps.target.outputs.deploy_path }}
+          BUCKET: ${{ inputs.cos_bucket }}
+          REGION: ${{ inputs.cos_region }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          echo "═══════════════ DRY RUN ═══════════════"
+          echo "would ssh $USER@<host> :"
+          echo "  1. rsync server/setup/domain-cn/forgejo/ → /opt/guanghulab/domain-cn/forgejo/"
+          echo "  2. scp scripts/migration/remote/migrate-restore-remote.sh → /tmp/migrate-restore.sh"
+          echo "  3. scp COS 凭据 (走 stdin pipe) → /tmp/.cos-creds (chmod 600)"
+          echo "  4. sudo bash /tmp/migrate-restore.sh"
+          echo "       BUCKET=$BUCKET REGION=$REGION TAG=$TAG DEPLOY_PATH=$DEPLOY_PATH"
+          echo "  5. 远端流程 10 步 (装 coscli → 拉包 → 校验 → 解 → forgejo → nginx → push)"
+          echo "  6. 拉回 /opt/guanghulab/_logs/migrate-restore-report.md"
+          echo "  7. 清 /tmp/.cos-creds + /tmp/migrate-restore.sh"
+
+      - name: Rsync setup-forgejo.sh + remote 脚本上去
+        if: needs.preflight.outputs.effective_dry_run != 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -euo pipefail
+          HOST="$(cat ~/.ssh/restore_host)"
+
+          ssh -i ~/.ssh/restore_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo mkdir -p /opt/guanghulab/domain-cn/forgejo && sudo chown -R $USER:$USER /opt/guanghulab"
+
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/restore_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            server/setup/domain-cn/forgejo/ \
+            "$USER@$HOST:/opt/guanghulab/domain-cn/forgejo/"
+
+          # 把远端脚本传上去 (走 scp), 不通过命令行参数
+          scp -i ~/.ssh/restore_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              scripts/migration/remote/migrate-restore-remote.sh \
+              "$USER@$HOST:/tmp/migrate-restore.sh"
+          ssh -i ~/.ssh/restore_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" "chmod 700 /tmp/migrate-restore.sh"
+
+      - name: 上传 COS 凭据 (走 SSH stdin pipe, 不入 ps)
+        if: needs.preflight.outputs.effective_dry_run != 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          COS_SECRET_ID: ${{ secrets.ZY_COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.ZY_COS_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+          HOST="$(cat ~/.ssh/restore_host)"
+          # secrets 通过 stdin → cat > 文件, 不出现在 ssh 命令行里 (避免 ps 暴露)
+          ssh -i ~/.ssh/restore_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "umask 077 && cat > /tmp/.cos-creds && chmod 600 /tmp/.cos-creds" \
+              <<EOF_CREDS
+COS_SECRET_ID=${COS_SECRET_ID}
+COS_SECRET_KEY=${COS_SECRET_KEY}
+EOF_CREDS
+          # 移到 root 名下 (脚本 sudo 跑, 读 /tmp/.cos-creds 需要可读)
+          ssh -i ~/.ssh/restore_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo chown root:root /tmp/.cos-creds && sudo chmod 600 /tmp/.cos-creds"
+
+      - name: 真跑远端 restore
+        if: needs.preflight.outputs.effective_dry_run != 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          DEPLOY_PATH: ${{ steps.target.outputs.deploy_path }}
+          BUCKET: ${{ inputs.cos_bucket }}
+          REGION: ${{ inputs.cos_region }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          HOST="$(cat ~/.ssh/restore_host)"
+          ssh -i ~/.ssh/restore_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo env BUCKET='$BUCKET' REGION='$REGION' TAG='$TAG' DEPLOY_PATH='$DEPLOY_PATH' bash /tmp/migrate-restore.sh" \
+              2>&1 | tee restore-output.log
+
+      - name: 远端清理 (无论成败都跑)
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -uo pipefail
+          HOST="$(cat ~/.ssh/restore_host)"
+          ssh -i ~/.ssh/restore_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo rm -f /tmp/.cos-creds /tmp/migrate-restore.sh" || true
+
+      - name: 拉回中文回执
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -uo pipefail
+          HOST="$(cat ~/.ssh/restore_host)"
+          mkdir -p artifacts
+          scp -i ~/.ssh/restore_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/migrate-restore-report.md" \
+              artifacts/ 2>/dev/null || echo "(no migrate-restore-report.md)"
+          scp -i ~/.ssh/restore_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/migrate-restore-*.json" \
+              artifacts/ 2>/dev/null || true
+          scp -i ~/.ssh/restore_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/forgejo-setup-*.json" \
+              artifacts/ 2>/dev/null || true
+          ls -la artifacts/ || true
+
+      - name: 把中文回执贴到 GitHub Actions Summary
+        if: always()
+        run: |
+          set -uo pipefail
+          {
+            echo "# 📥 国内搬家·从 COS 恢复 · 回执"
+            echo ""
+            echo "> 给冰朔看的中文回执 · 守护: 铸渊 · ICE-GL-ZY001"
+            echo ""
+            if [ "${{ needs.preflight.outputs.effective_dry_run }}" = "true" ]; then
+              echo "## ⚠️ DRY RUN (没真在域名机上动手)"
+              echo ""
+              echo "误触锁口令没填对, 工作流只打印了计划. 要真跑 confirm_phrase 必须填: \`从COS恢复\`"
+              echo ""
+            else
+              if [ -f artifacts/migrate-restore-report.md ]; then
+                cat artifacts/migrate-restore-report.md
+              else
+                echo "## ⚠️ 没找到远端回执 \`migrate-restore-report.md\`"
+                echo ""
+                echo "可能远端 /tmp/migrate-restore.sh 半路死了. 看下面的 restore-output.log artifact."
+              fi
+            fi
+            echo ""
+            echo "---"
+            echo ""
+            echo "## 🎯 接下来 (恢复成功后)"
+            echo ""
+            echo "1. 浏览器开 \`https://guanghulab.com/git\`"
+            echo "2. SSH 到 2C2G 看 \`/data/guanghulab/_logs/forgejo-credentials-FIRST-BOOT.txt\` 抄密码"
+            echo "3. **抄完后 \`sudo rm\` 删那个凭据文件** — 安全要求 (cc-001 涌现洁净)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 上传 artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrate-to-cn-restore-${{ github.run_id }}
+          path: |
+            artifacts/
+            restore-output.log
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: 清理本地 SSH 私钥
+        if: always()
+        run: |
+          rm -f ~/.ssh/restore_key ~/.ssh/restore_host
