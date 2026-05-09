@@ -70,6 +70,8 @@ function humanSize(bytes) {
 
 function listTar(tarball) {
   // 用 tar -tzf 列内容, 不解压. 安全 — tarball 是我们刚 git archive 出来的.
+  // maxBuffer 64MB: git archive 出的搬家包路径列表通常远小于此 (10MB 已经能装 ~5 万个文件).
+  // 如果以后仓库膨胀到这个量级, 应换成 stream + readline 处理.
   const r = spawnSync('tar', ['-tzf', tarball], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) fail(`tar -tzf 失败: ${r.stderr}`);
   return r.stdout.split('\n').filter(Boolean);

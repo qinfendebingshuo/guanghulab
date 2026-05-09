@@ -233,6 +233,21 @@ jobs:
           TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
+          # 校验所有上游 input · sudo env 之前必须 whitelist · 防止注入
+          # TAG 允许空 (= 用最新), 或 alphanumeric + - + _ + . + 中间 *
+          if ! printf '%s' "$TAG" | grep -qE '^[0-9A-Za-z._*-]*$'; then
+            echo "❌ TAG 含非法字符: $TAG (只允许 [0-9A-Za-z._*-])" >&2; exit 1
+          fi
+          if ! printf '%s' "$BUCKET" | grep -qE '^[0-9a-z][0-9a-z.-]{2,62}$'; then
+            echo "❌ BUCKET 不符合 COS 桶名规范: $BUCKET" >&2; exit 1
+          fi
+          if ! printf '%s' "$REGION" | grep -qE '^ap-[a-z]+(-[0-9]+)?$'; then
+            echo "❌ REGION 不符合腾讯云 region 规范: $REGION" >&2; exit 1
+          fi
+          if ! printf '%s' "$DEPLOY_PATH" | grep -qE '^/[A-Za-z0-9_/-]+$'; then
+            echo "❌ DEPLOY_PATH 不是绝对路径或含非法字符: $DEPLOY_PATH" >&2; exit 1
+          fi
+
           HOST="$(cat ~/.ssh/restore_host)"
           ssh -i ~/.ssh/restore_key -p "$PORT" \
               -o StrictHostKeyChecking=accept-new \

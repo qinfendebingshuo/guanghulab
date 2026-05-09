@@ -6,7 +6,7 @@
 #
 # 用途:
 #   在广州 2C2G 域名机 (ZY-SVR-CN01) 上装 Forgejo (二进制方式, 不用 docker —
-#   2C2G 内存紧, docker layer 还要再吃 200MB+).
+#   2C2G 内存紧, docker layers 还要再吃 200MB+).
 #
 #   被 .github/workflows/migrate-to-cn-restore.yml 远端调用. 不通过 bootstrap.sh,
 #   因为只有真正搬家时才需要 forgejo.
@@ -160,8 +160,9 @@ fi
 # ─── 4. 生成 app.ini ──────────────────────────────────────────
 APP_INI="$FORGEJO_HOME/custom/conf/app.ini"
 
-# 生成随机的 SECRET_KEY / INTERNAL_TOKEN / JWT_SECRET / LFS_JWT_SECRET
-gen_secret() { openssl rand -base64 32 | tr -d '\n=+/' | head -c 64; }
+# 生成随机 SECRET_KEY / INTERNAL_TOKEN / JWT_SECRET / LFS_JWT_SECRET
+# (用 -hex: 直接 64 个十六进制字符 = 256 bits 熵 · review 建议: 比 base64+filter 更干净)
+gen_secret() { openssl rand -hex 32; }
 
 if [ ! -f "$APP_INI" ]; then
   echo "[2/6] 生成 app.ini ..."
@@ -359,6 +360,10 @@ ADMIN_EMAIL="bingshuo@guanghulab.com"
 # 首启凭据文件 (chmod 600, 抄完删)
 if [ ! -f "$CRED_FILE" ]; then
   echo "[5/6] 创建管理员 $ADMIN_USER ..."
+  # 24 位 alphanumeric ≈ 142 bits 熵, 远超现代标准. 不引入特殊字符是为了避免:
+  #   1. shell 转义 (这个密码会被嵌入 nginx/git URL 里短暂使用, 特殊字符会让 URL 编码出错)
+  #   2. 让冰朔抄起来麻烦 (特殊字符在 SSH 终端里看不清)
+  # 抄完即删 → 长期密码由冰朔在 forgejo Web UI 自行改成更复杂的就行.
   ADMIN_PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
 
   # forgejo admin user create (走 forgejo 二进制, 需要切到 RUN_USER)

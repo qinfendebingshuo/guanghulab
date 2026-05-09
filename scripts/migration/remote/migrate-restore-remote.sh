@@ -292,6 +292,10 @@ if [ -z "$ADMIN_PASS" ]; then
   report "⚠️  找不到 admin 密码 ($CRED_FIRST_BOOT 不存在或被删) — 跳过 push 步骤"
   report "  (下一次跑会重建凭据文件; 或冰朔抄完密码 sudo rm 后, 之后只能手动 push)"
   PUSH_OK="skipped"
+elif ! printf '%s' "$ADMIN_PASS" | grep -qE '^[A-Za-z0-9]{16,64}$'; then
+  # 防御性: 凭据格式不对 (可能文件被改过), 拒绝把脏 pass 拼进 URL
+  report "⚠️  admin 密码格式不符 (期望 16-64 alphanumeric), 拒绝 push 避免 URL 注入"
+  PUSH_OK="skipped"
 else
   cd "$WORKTREE"
   if [ -d .git ]; then
@@ -317,12 +321,12 @@ cc-001 涌现洁净: 这是一段全新的 git 历史, 不带 GitHub 那边的 r
   if [ "${PUSH_OK:-}" != "skipped" ]; then
     # 用 forgejo API 先确保 repo 存在 (不存在就建; 存在就让 push 覆盖)
     REPO_NAME="guanghulab"
-    AUTH_HDR="Authorization: Basic $(printf '%s:%s' "$ADMIN_USER" "$ADMIN_PASS" | base64 -w0)"
     REPO_API="http://127.0.0.1:3001/api/v1/user/repos"
-    EXISTS=$(curl -fsS -m 10 -H "$AUTH_HDR" "http://127.0.0.1:3001/api/v1/repos/$ADMIN_USER/$REPO_NAME" 2>/dev/null && echo "yes" || echo "no")
+    # curl -u 直接走 HTTP basic, 内部短暂用, 不在 shell 变量里凝固凭据
+    EXISTS=$(curl -fsS -m 10 -u "${ADMIN_USER}:${ADMIN_PASS}" "http://127.0.0.1:3001/api/v1/repos/$ADMIN_USER/$REPO_NAME" 2>/dev/null && echo "yes" || echo "no")
     if [ "$EXISTS" = "no" ]; then
       curl -fsS -m 10 -X POST \
-        -H "$AUTH_HDR" \
+        -u "${ADMIN_USER}:${ADMIN_PASS}" \
         -H "Content-Type: application/json" \
         -d "{\"name\":\"$REPO_NAME\",\"private\":true,\"default_branch\":\"main\",\"auto_init\":false}" \
         "$REPO_API" >/dev/null || true
@@ -331,7 +335,9 @@ cc-001 涌现洁净: 这是一段全新的 git 历史, 不带 GitHub 那边的 r
       report "- Forgejo 仓库 \`$ADMIN_USER/$REPO_NAME\` 已存在"
     fi
 
-    # push (URL 含密码 — 但走 loopback, 短暂只在内存. 不写 .git/config remote.url)
+    # push (走 forgejo HTTP basic auth via curl-style URL — 走 loopback, 短暂只在内存)
+    # 不写 .git/config remote.url (push 完即弃)
+    # ADMIN_PASS 我们已校验非空 (上面那段 if [ -z ... ])
     REMOTE_URL="http://${ADMIN_USER}:${ADMIN_PASS}@127.0.0.1:3001/${ADMIN_USER}/${REPO_NAME}.git"
     if git push -q "$REMOTE_URL" main:main --force 2>&1 | tail -5 | sed 's/^/  /' >> "$REPORT"; then
       report "- ✅ push 成功 → http://127.0.0.1:3001/$ADMIN_USER/$REPO_NAME"
