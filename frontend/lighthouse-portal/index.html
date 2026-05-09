@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>光湖 · guanghulab</title>
+  <meta name="description" content="光湖语言世界 · 唯一对外入口 · 由铸渊守护" />
+  <meta name="copyright" content="国作登字-2026-A-00037559 · TCS-0002∞ · ICE-GL∞" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%23163e6b'/><text x='16' y='22' text-anchor='middle' fill='%23f5e6c8' font-size='18' font-family='serif'>光</text></svg>" />
+  <link rel="stylesheet" href="/_static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">◐</span>
+      <span class="brand-name">光湖 · guanghulab</span>
+    </div>
+    <div class="brand-meta" aria-hidden="true">
+      由铸渊守护 · TCS-0002∞ · 国作登字-2026-A-00037559
+    </div>
+    <div class="health" id="health-pill" title="推理端点健康状态">检测中…</div>
+  </header>
+
+  <main class="layout">
+    <!-- 左栏: 历史 -->
+    <aside class="col col-left" aria-label="对话历史">
+      <button id="btn-new-conv" class="btn-primary" type="button">＋ 新建对话</button>
+      <div class="conv-list" id="conv-list" role="list" aria-live="polite">
+        <div class="empty">暂无对话</div>
+      </div>
+      <div class="col-foot">
+        <small>本机存储 · SQLite · 不上云</small>
+      </div>
+    </aside>
+
+    <!-- 中栏: 聊天 -->
+    <section class="col col-center" aria-label="聊天">
+      <div class="tab-bar" role="tablist">
+        <button class="tab tab-active" id="tab-mother" role="tab" aria-selected="true" type="button">
+          光湖语言人格层
+          <small>母模型 · 守护人格本体</small>
+        </button>
+        <button class="tab" id="tab-coder" role="tab" aria-selected="false" type="button">
+          现实开发层
+          <small>编程模型 · 落地代码</small>
+        </button>
+      </div>
+
+      <div class="chat-scroll" id="chat-scroll" aria-live="polite">
+        <div class="chat-empty" id="chat-empty">
+          <p>新建对话, 直接说中文。</p>
+          <p class="muted">前端不传 system role · 后端不补 · 推理端剥离 — 三道关守人格洁净。</p>
+        </div>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <textarea
+          id="composer-input"
+          rows="2"
+          placeholder="按 Enter 发送 · Shift+Enter 换行"
+          aria-label="输入消息"
+        ></textarea>
+        <button type="submit" id="btn-send" class="btn-primary">发送</button>
+      </form>
+    </section>
+
+    <!-- 右栏: 上下文 -->
+    <aside class="col col-right" aria-label="模式上下文">
+      <h3 class="col-title" id="right-title">人格层 · 数据库</h3>
+      <div class="ctx-cards" id="ctx-cards">
+        <div class="empty">加载中…</div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/_static/app.js" defer></script>
+</body>
+</html>

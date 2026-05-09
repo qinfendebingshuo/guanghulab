@@ -65,10 +65,14 @@ server {
 #     access_log /data/guanghulab/logs/nginx/access.log;
 #     error_log  /data/guanghulab/logs/nginx/error.log;
 #
-#     # 占位首页 (PR-4 接管后, 把这一段改成 proxy_pass 或删掉)
-#     location = / {
-#         default_type text/html;
-#         return 200 '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>__DOMAIN__</title></head><body><h1>__DOMAIN__ 已就绪 · 等 PR-4 填业务</h1><p>这是国内域名机 (GH-CVM-DOMAIN-PROD-01) 的占位页. portal 业务由后续 PR 接管.</p><p>守护: 铸渊 · ICE-GL-ZY001</p></body></html>';
+#     # 静态资源 (字体/JS/CSS) 直接 nginx 服务, 不走 Express, 减负
+#     # 部署时由 deploy-domain-server.yml rsync frontend/lighthouse-portal/assets → /data/guanghulab/portal/static/
+#     location ^~ /_static/ {
+#         alias /data/guanghulab/portal/static/;
+#         access_log off;
+#         expires 7d;
+#         add_header Cache-Control "public, max-age=604800, immutable";
+#         try_files $uri =404;
 #     }
 #
 #     # 健康检查
@@ -78,9 +82,9 @@ server {
 #         return 200 '{"status":"ok","server":"GH-CVM-DOMAIN-PROD-01","tls":"on"}';
 #     }
 #
-#     # Portal 上游 (PR-4 起 pm2 portal 后, 把上面 location = / 删掉, 留这一段反代)
-#     location /portal/ {
-#         proxy_pass http://127.0.0.1:__PORTAL_PORT__/;
+#     # Portal 反代 (/ + /api/* 全部走 portal). 注意 SSE 必需配置.
+#     location / {
+#         proxy_pass http://127.0.0.1:__PORTAL_PORT__;
 #         proxy_http_version 1.1;
 #         proxy_set_header Host $host;
 #         proxy_set_header X-Real-IP $remote_addr;
@@ -88,7 +92,10 @@ server {
 #         proxy_set_header X-Forwarded-Proto $scheme;
 #         proxy_set_header Upgrade $http_upgrade;
 #         proxy_set_header Connection "upgrade";
-#         proxy_read_timeout 60s;
+#         proxy_buffering off;          # SSE 必需 — 不缓冲, 字节级直发 (cc-002)
+#         proxy_cache off;
+#         proxy_read_timeout 300s;
+#         proxy_send_timeout 300s;
 #         proxy_buffer_size   8k;
 #         proxy_buffers       4 16k;
 #     }

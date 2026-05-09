@@ -1,0 +1,21 @@
+{
+  "name": "@guanghulab/portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "光湖 Portal · 国内域名机 (ZY-SVR-CN01) 对外入口 · Express + SQLite + SSE 字节管道转发 AutoDL 推理",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "PORT=3000 NODE_ENV=development node server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0"
+  }
+}
