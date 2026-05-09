@@ -210,14 +210,12 @@ jobs:
           set -euo pipefail
           HOST="$(cat ~/.ssh/restore_host)"
           # secrets 通过 stdin → cat > 文件, 不出现在 ssh 命令行里 (避免 ps 暴露)
-          ssh -i ~/.ssh/restore_key -p "$PORT" \
-              -o StrictHostKeyChecking=accept-new \
-              "$USER@$HOST" \
-              "umask 077 && cat > /tmp/.cos-creds && chmod 600 /tmp/.cos-creds" \
-              <<EOF_CREDS
-COS_SECRET_ID=${COS_SECRET_ID}
-COS_SECRET_KEY=${COS_SECRET_KEY}
-EOF_CREDS
+          # 用 printf 而非 here-doc, 避免 YAML 块标量缩进与 here-doc 终结符冲突
+          printf 'COS_SECRET_ID=%s\nCOS_SECRET_KEY=%s\n' "$COS_SECRET_ID" "$COS_SECRET_KEY" \
+            | ssh -i ~/.ssh/restore_key -p "$PORT" \
+                -o StrictHostKeyChecking=accept-new \
+                "$USER@$HOST" \
+                "umask 077 && cat > /tmp/.cos-creds && chmod 600 /tmp/.cos-creds"
           # 移到 root 名下 (脚本 sudo 跑, 读 /tmp/.cos-creds 需要可读)
           ssh -i ~/.ssh/restore_key -p "$PORT" \
               -o StrictHostKeyChecking=accept-new \
