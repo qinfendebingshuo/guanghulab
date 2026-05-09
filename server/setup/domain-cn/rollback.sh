@@ -95,16 +95,18 @@ mkdir -p "$PRE_ROLLBACK/nginx" "$PRE_ROLLBACK/systemd"
 echo "preserved before rollback to $TARGET_TS" > "$PRE_ROLLBACK/NOTE"
 echo "  [1/4] 当前态已保存到 $PRE_ROLLBACK"
 
-# ─── 2. 恢复 nginx 配置 ───────────────────────────────────────
-if [ -d "$SNAP_DIR/nginx/sites-available" ]; then
+# ─── 2. 恢复 nginx 配置 (有快照才动) ─────────────────────────
+if [ -d "$SNAP_DIR/nginx/sites-available" ] && [ -n "$(ls -A "$SNAP_DIR/nginx/sites-available" 2>/dev/null)" ]; then
   echo "  [2/4] 恢复 nginx sites-available ..."
   # 先清掉新装的 (避免残留), 再 cp 回快照里的
   if [ -d /etc/nginx/sites-available ]; then
     find /etc/nginx/sites-available -type f -delete
   fi
   cp -a "$SNAP_DIR/nginx/sites-available/." /etc/nginx/sites-available/ || true
+else
+  echo "  [2/4] 快照里没有 nginx/sites-available (或为空), 跳过 — 不做任何破坏"
 fi
-if [ -d "$SNAP_DIR/nginx/sites-enabled" ]; then
+if [ -d "$SNAP_DIR/nginx/sites-enabled" ] && [ -n "$(ls -A "$SNAP_DIR/nginx/sites-enabled" 2>/dev/null)" ]; then
   # sites-enabled 通常是软链, 重建即可
   if [ -d /etc/nginx/sites-enabled ]; then
     find /etc/nginx/sites-enabled -mindepth 1 -delete
