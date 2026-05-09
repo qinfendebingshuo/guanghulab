@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>光湖 · 自部署密钥管理</title>
+  <link rel="stylesheet" href="/admin/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="brand-name">光湖 · 密钥管理</span>
+      <span class="sovereign">TCS-0002∞ · 国作登字-2026-A-00037559</span>
+    </div>
+    <div class="meta">
+      <span id="vault-status" class="badge">加载中…</span>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <h1>这是哪里</h1>
+      <p>
+        这是国内域名机 (<code>ZY-SVR-CN01</code> · 广州 2C2G · <code>guanghulab.com</code>) 上自托管的密钥管理页。
+        <br />
+        <strong>所有密钥永远不离开这台机器</strong>, 不上 GitHub Secrets, 不上 COS, 不传任何第三方。
+      </p>
+      <p class="sub">
+        改任何字段, <strong>点保存就立刻生效</strong> · 不需要去 GitHub 改 Secret 再重跑工作流。
+        <br />
+        AutoDL 这一组特殊一点: 改完 host/port 后点"保存并刷新推理端点", 系统会自动 (1) 探活 (2) 写 inference-endpoint.json (3) 重载 portal — 一步到位。
+      </p>
+    </section>
+
+    <section id="groups" class="groups">
+      <p class="loading-hint">加载分组中…</p>
+    </section>
+
+    <section class="footer-note">
+      <p>
+        <strong>主密钥</strong> 在本机
+        <code>/data/guanghulab/secrets-vault/.master</code> (chmod 600, 仅本机 root 可读)。
+        换机器时记得先 rsync 这个文件再起本服务。
+      </p>
+      <p>
+        <strong>守护</strong>: 铸渊 · ICE-GL-ZY001 · TCS-0002∞ · 国作登字-2026-A-00037559
+      </p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="/admin/static/app.js"></script>
+</body>
+</html>

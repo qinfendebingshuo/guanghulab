@@ -254,11 +254,12 @@ apt-get install -y -qq \
   curl wget ca-certificates gnupg lsb-release \
   git jq unzip vim htop net-tools \
   nginx certbot python3-certbot-nginx \
+  apache2-utils \
   fail2ban ufw \
   rsync openssh-client \
   build-essential
 
-report "- apt 工具链 OK (nginx / certbot / fail2ban / git ...)"
+report "- apt 工具链 OK (nginx / certbot / fail2ban / git / htpasswd ...)"
 
 # ─── 3. Node 20 + PM2 (npmmirror 镜像) ───────────────────────
 NODE_OK="false"
@@ -313,9 +314,16 @@ chmod 700 "$DEPLOY_ROOT/_secrets" "$DATA_ROOT/secrets-vault"
 Portal 业务代码留给 PR-4 (光湖门户) 填充。本目录在 PR-2 bootstrap 时建立, 当前为空。
 EOF
 [ ! -f "$DATA_ROOT/secrets-vault/README.md" ] && cat > "$DATA_ROOT/secrets-vault/README.md" <<'EOF'
-# /data/guanghulab/secrets-vault/ · 占位
+# /data/guanghulab/secrets-vault/ · PR-5 落地
 
-密钥管理页留给 PR-5 (HLI-VAULT-*) 填充。本目录权限 700, 仅 root 可读。
+光湖国内域名机本地密钥库. AES-256-GCM 加密.
+
+- `.master`    — 32 字节随机主密钥 (chmod 600). **不上 git, 不上 COS, 不传冰朔.**
+- `vault.enc`  — 加密后的 secrets JSON (chmod 600).
+
+服务: `pm2 status guanghulab-vault` · 监听 127.0.0.1:8080
+访问: 走 nginx 的 /admin/ (basic-auth + 仅本机 IP)
+首启凭据: /data/guanghulab/_logs/vault-credentials-FIRST-BOOT.txt (抄完删)
 EOF
 [ ! -f "$DATA_ROOT/forgejo/README.md" ] && cat > "$DATA_ROOT/forgejo/README.md" <<'EOF'
 # /data/guanghulab/forgejo/ · 占位
@@ -369,6 +377,7 @@ else
   NGINX_WORKER_CONN_VAL="$NGINX_WORKER_CONN" \
   USE_SSL_VAL="$USE_SSL" \
   PORTAL_PORT_VAL="${PORTAL_PORT:-3000}" \
+  VAULT_PORT_VAL="${VAULT_PORT:-8080}" \
   awk '
     /^# __SSL_BEGIN__[[:space:]]*$/   { mode="ssl";   next }
     /^# __SSL_END__[[:space:]]*$/     { mode="";      next }
@@ -387,6 +396,7 @@ else
       }
       gsub(/__DOMAIN__/, ENVIRON["DOMAIN_VAL"])
       gsub(/__PORTAL_PORT__/, ENVIRON["PORTAL_PORT_VAL"])
+      gsub(/__VAULT_PORT__/, ENVIRON["VAULT_PORT_VAL"])
       gsub(/__NGINX_WORKER_CONN__/, ENVIRON["NGINX_WORKER_CONN_VAL"])
       print
     }' "$NGX_TPL" > "$NGX_OUT"
@@ -407,6 +417,49 @@ else
     report "❌ nginx 配置语法错, 拒绝 reload (旧配置仍在跑)"
     exit 1
   fi
+fi
+
+# ─── 6.5 生成 /admin/ basic-auth 凭据 (PR-5 secrets-vault) ───
+report ""
+report "## ④.5 生成密钥管理页 /admin/ basic-auth 凭据"
+HTPASSWD_FILE="/etc/nginx/.htpasswd_admin"
+VAULT_CRED_FILE="$DEPLOY_ROOT/_logs/vault-credentials-FIRST-BOOT.txt"
+
+if [ ! -f "$HTPASSWD_FILE" ]; then
+  if ! command -v htpasswd >/dev/null 2>&1; then
+    report "⚠️  htpasswd 不存在 (apache2-utils 没装), /admin/ 走仅 IP 限制"
+  else
+    # 生成 24 位随机密码 (URL-safe, 不含会让 awk/bash 难处理的字符)
+    VAULT_USER="bingshuo"
+    VAULT_PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+    htpasswd -B -b -c "$HTPASSWD_FILE" "$VAULT_USER" "$VAULT_PASS" >/dev/null 2>&1
+    chmod 644 "$HTPASSWD_FILE"
+
+    # 落首启凭据文件 — 冰朔抄完应自行删除
+    umask 077
+    cat > "$VAULT_CRED_FILE" <<EOF
+# 光湖密钥管理页 · 首启凭据 · 抄完后**手动删除本文件**
+# 守护: 铸渊 · ICE-GL-ZY001
+# 生成时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+# 域名机: $SERVER_ID ($DOMAIN)
+#
+# 访问方式 (在你电脑上跑):
+#   ssh -L 8443:127.0.0.1:443 ${SUDO_USER:-ubuntu}@<本机公网IP>
+#   浏览器打开 https://localhost:8443/admin/ (TLS 警告点继续)
+#
+# basic-auth:
+#   用户名: $VAULT_USER
+#   密码:   $VAULT_PASS
+#
+# 抄完请运行: sudo rm $VAULT_CRED_FILE
+EOF
+    chmod 600 "$VAULT_CRED_FILE"
+    umask 022
+    report "- 已生成 /admin/ basic-auth (\`$HTPASSWD_FILE\`)"
+    report "- 凭据落在 \`$VAULT_CRED_FILE\` (chmod 600, 抄完 \`sudo rm\`)"
+  fi
+else
+  report "- /admin/ basic-auth (\`$HTPASSWD_FILE\`) 已存在, 不覆盖 (改密码请手动 \`htpasswd -B $HTPASSWD_FILE bingshuo\`)"
 fi
 
 # ─── 7. Certbot 自动续期 timer ───────────────────────────────
@@ -452,6 +505,56 @@ EOF
   systemctl daemon-reload
   # 不主动 enable/start, 避免占位脚本占资源. PR-4 自己 enable.
   report "- portal systemd unit 占位写入: \`$PORTAL_UNIT\` (not enabled)"
+fi
+
+# ─── 8.5 启动 secrets-vault (PR-5) ───────────────────────────
+# 前提: deploy-domain-server.yml 已把以下两个目录 rsync 到位
+#   $DEPLOY_ROOT/secrets-vault/      (server/secrets-vault 全部源码)
+#   $DEPLOY_ROOT/secrets-vault-frontend/  (frontend/secrets-vault 全部源码)
+VAULT_SRC="$DEPLOY_ROOT/secrets-vault"
+VAULT_FE="$DEPLOY_ROOT/secrets-vault-frontend"
+if [ -d "$VAULT_SRC" ] && [ -f "$VAULT_SRC/server.js" ]; then
+  report ""
+  report "## ⑤ 启动 secrets-vault (PR-5)"
+  echo "[8.5] 启动 secrets-vault ..."
+
+  # 装 vault npm 依赖 (只 express, 体量小)
+  if [ ! -d "$VAULT_SRC/node_modules" ]; then
+    ( cd "$VAULT_SRC" && npm config set registry https://registry.npmmirror.com && npm install --omit=dev --silent ) || {
+      report "❌ secrets-vault npm install 失败"
+      exit 1
+    }
+  fi
+
+  # 用 pm2 启 (跟 portal 同一个 pm2 daemon)
+  export VAULT_DIR="${VAULT_DIR:-$DATA_ROOT/secrets-vault}"
+  export PORTAL_DATA_DIR="${PORTAL_DATA_DIR:-$DATA_ROOT/portal/data}"
+  export VAULT_STATIC_DIR="${VAULT_STATIC_DIR:-$VAULT_FE}"
+  export VAULT_PORT="${VAULT_PORT:-8080}"
+  export VAULT_HOST="127.0.0.1"
+  export VAULT_MANIFEST_PATH="${VAULT_MANIFEST_PATH:-$DEPLOY_ROOT/_active/scripts/preflight/secrets-manifest.json}"
+  # 没在 _active 那就退化到 vault 自带的副本 (deploy 时 rsync 整 scripts/preflight)
+  if [ ! -f "$VAULT_MANIFEST_PATH" ]; then
+    VAULT_MANIFEST_PATH="$VAULT_SRC/secrets-manifest.json"
+  fi
+
+  mkdir -p "$DATA_ROOT/_logs"
+  if pm2 describe guanghulab-vault >/dev/null 2>&1; then
+    pm2 reload guanghulab-vault --update-env >/dev/null 2>&1 \
+      && report "- guanghulab-vault: pm2 reload OK" \
+      || report "⚠️  guanghulab-vault pm2 reload 失败, 用 restart 兜底" 
+    pm2 describe guanghulab-vault >/dev/null 2>&1 || pm2 start "$VAULT_SRC/ecosystem.config.js" --only guanghulab-vault
+  else
+    pm2 start "$VAULT_SRC/ecosystem.config.js" --only guanghulab-vault \
+      && report "- guanghulab-vault: pm2 start OK (127.0.0.1:$VAULT_PORT)" \
+      || { report "❌ guanghulab-vault pm2 start 失败"; exit 1; }
+  fi
+  pm2 save >/dev/null 2>&1 || true
+  report "- vault 数据根: \`$VAULT_DIR\` · 主密钥首启自动生成 \`.master\`"
+else
+  report ""
+  report "## ⑤ secrets-vault 未就位 (跳过)"
+  report "- \`$VAULT_SRC\` 不存在 — deploy-domain-server.yml 把 server/secrets-vault/ rsync 上来后再跑一次 bootstrap 即可激活"
 fi
 
 # ─── 收尾回执 ─────────────────────────────────────────────────

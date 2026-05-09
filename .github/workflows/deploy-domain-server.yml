@@ -163,11 +163,29 @@ jobs:
           ssh -i ~/.ssh/domain_key -p "$PORT" \
               -o StrictHostKeyChecking=accept-new \
               "$USER@$HOST" \
-              "sudo mkdir -p /opt/guanghulab/domain-cn && sudo chown -R $USER:$USER /opt/guanghulab"
+              "sudo mkdir -p /opt/guanghulab/domain-cn /opt/guanghulab/secrets-vault /opt/guanghulab/secrets-vault-frontend /opt/guanghulab/_active/scripts/preflight && sudo chown -R $USER:$USER /opt/guanghulab"
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/domain_key -p $PORT -o StrictHostKeyChecking=accept-new" \
             server/setup/domain-cn/ \
             "$USER@$HOST:/opt/guanghulab/domain-cn/"
+
+          # PR-5 secrets-vault 源码 + 前端 + 清单 (同步上去, 让 bootstrap.sh 第 ⑤ 步起 pm2)
+          rsync -avz --delete \
+            --exclude=node_modules --exclude='*.log' \
+            -e "ssh -i ~/.ssh/domain_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            server/secrets-vault/ \
+            "$USER@$HOST:/opt/guanghulab/secrets-vault/"
+
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/domain_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            frontend/secrets-vault/ \
+            "$USER@$HOST:/opt/guanghulab/secrets-vault-frontend/"
+
+          # secrets-manifest.json 给 vault 用 (路径与 bootstrap.sh VAULT_MANIFEST_PATH 一致)
+          rsync -avz \
+            -e "ssh -i ~/.ssh/domain_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            scripts/preflight/secrets-manifest.json \
+            "$USER@$HOST:/opt/guanghulab/_active/scripts/preflight/secrets-manifest.json"
 
       - name: Run bootstrap (远端 trap autorollback 已就绪)
         if: needs.preflight.outputs.effective_dry_run != 'true'

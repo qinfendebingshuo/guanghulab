@@ -3,7 +3,7 @@
   "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
   "_copyright": "国作登字-2026-A-00037559",
   "_description": "光湖 · 母编号 × 子编号 编号体系 · 唯一真相源 · 铸渊维护",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "updated_at": "2026-05-09",
   "servers": [
     {
@@ -75,7 +75,7 @@
       "status": "active",
       "template_version": "0.3.0",
       "deploy_root": "/data/guanghulab",
-      "registered_functions": ["ZY-FN-PORTAL"],
+      "registered_functions": ["ZY-FN-PORTAL", "ZY-FN-VAULT"],
       "github_secrets": {
         "host": "ZY_CN_SERVER_HOST",
         "user": "ZY_CN_SERVER_USER",
@@ -85,7 +85,7 @@
       "isolation": "exclusive",
       "isolation_allowlist_path": "scripts/preflight/cn-isolation-allowlist.json",
       "physical_alias": "GH-CVM-DOMAIN-PROD-01",
-      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive. PR-2 落地 server/setup/domain-cn/ 三段式模板 + autorollback + 误触锁「重装广州」. PR-4 落地 server/portal/ (Express + better-sqlite3) + frontend/lighthouse-portal/ (静态三栏 · 中文 · 思源黑体本地) · pm2 max_memory_restart=512M · /api/chat 字节级 SSE 转发 AutoDL · cc-002 三道关 (前端不传 / 后端剥 / 推理剥)."
+      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive. PR-2 落地 server/setup/domain-cn/ 三段式模板 + autorollback + 误触锁「重装广州」. PR-4 落地 server/portal/ (Express + better-sqlite3) + frontend/lighthouse-portal/ (静态三栏 · 中文 · 思源黑体本地) · pm2 max_memory_restart=512M · /api/chat 字节级 SSE 转发 AutoDL · cc-002 三道关 (前端不传 / 后端剥 / 推理剥). PR-5 落地 server/secrets-vault/ + frontend/secrets-vault/ (AES-256-GCM · 监听 127.0.0.1:8080 · pm2 max_memory_restart=128M · nginx /admin/ allow 127.0.0.1 + basic-auth · 主密钥 .master 落本机不上 git · AutoDL 一键 save_and_refresh 联动 PR-3)."
     },
     {
       "id": "ZY-SVR-GPU01",
@@ -266,6 +266,32 @@
         "expected_status": 200
       },
       "notes": "PR-4 落地 · pm2 max_memory_restart=512M · 静态资源 nginx 直发 (/_static/) · cc-002 三道关 (前端不传 system / 后端 _strip_system_messages / 推理端 server.py 入口剥) · 切 tab=切模型, 推理端没起时本地状态先生效, upstream 异步重试"
+    },
+    {
+      "id": "ZY-FN-VAULT",
+      "display_name_zh": "自部署密钥管理",
+      "aliases": ["密钥管理页", "secrets-vault", "vault", "/admin/secrets"],
+      "host_server": "ZY-SVR-CN01",
+      "domain": "guanghulab.com",
+      "domain_paths": ["/admin/", "/admin/secrets", "/admin/static"],
+      "ports": [8080],
+      "pm2_processes": ["guanghulab-vault"],
+      "description": "国内域名机本地密钥库 (AES-256-GCM 加密) · 全中文 UI · 1 步保存立即生效 (vs GitHub Secrets 5 步) · AutoDL 一键 save_and_refresh (vault 落 + 探活 + 写 inference-endpoint.json + pm2 reload portal) · 神笔马良走 /internal/fetch/:key 现取现用",
+      "created_for": "PR-5 · 接力第 5 棒 · 自部署密钥管理页",
+      "keep_decision": "keep",
+      "status": "active",
+      "modules": ["M-VAULT-API", "M-VAULT-FRONTEND", "M-VAULT-PEN-FETCH"],
+      "api_keys_alias": {
+        "_说明": "vault 自身不引用 GitHub Secrets · 主密钥落本机 /data/guanghulab/secrets-vault/.master (chmod 600), 不上 git/COS · basic-auth 走 /etc/nginx/.htpasswd_admin (bootstrap 首启随机生成 → _logs/vault-credentials-FIRST-BOOT.txt 抄完删)"
+      },
+      "frontend_entry": "frontend/secrets-vault/",
+      "backend_entry": "server/secrets-vault/ecosystem.config.js",
+      "health_check": {
+        "url": "http://127.0.0.1:8080/admin/__healthz",
+        "expected_status": 200,
+        "_说明": "仅本机, 公网不暴露 — 走 ssh -L 隧道 + nginx allow 127.0.0.1 + basic-auth 三层守"
+      },
+      "notes": "PR-5 落地 · pm2 max_memory_restart=128M · Express 4.21 单依赖 · 监听 127.0.0.1:8080 永不公网 · routes: GET /admin/secrets/(manifest|/) · POST /admin/secrets/:key · DELETE /admin/secrets/:key · POST /admin/secrets/autodl/save_and_refresh · GET /internal/fetch/:key (本机 only · 神笔马良用) · 加密文件 vault.enc + 主密钥 .master 都 chmod 600 · GCM tag 防篡改 · key 名走 secrets-manifest.json 白名单"
     }
   ],
   "active_routes": {
@@ -352,6 +378,24 @@
       "display_name_zh": "光湖门户前端",
       "description": "纯静态 HTML + vanilla JS · 三栏 (历史/聊天/上下文) · 切 tab 切模型 · 中文思源黑体本地",
       "used_by": ["ZY-FN-PORTAL"]
+    },
+    {
+      "id": "M-VAULT-API",
+      "display_name_zh": "密钥库后端",
+      "description": "Express 4.21 子进程 · AES-256-GCM 加密 · 监听 127.0.0.1:8080 · /admin/secrets CRUD + AutoDL save_and_refresh + /internal/fetch (本机 only)",
+      "used_by": ["ZY-FN-VAULT"]
+    },
+    {
+      "id": "M-VAULT-FRONTEND",
+      "display_name_zh": "密钥库前端",
+      "description": "纯静态中文 UI · 按 workflow 分组 · 字段名走「用途」不走 secret 名 · AutoDL 一键按钮联动 PR-3 endpoint 刷新",
+      "used_by": ["ZY-FN-VAULT"]
+    },
+    {
+      "id": "M-VAULT-PEN-FETCH",
+      "display_name_zh": "神笔马良 secrets.fetch 能力",
+      "description": "mcp-servers/zhuyuan-pen/capabilities/secrets.fetch.js · 仅 loopback (127.0.0.1) · 现取现用不持久 · cc-004 强制隔离不可绕过",
+      "used_by": ["ZY-FN-VAULT"]
     }
   ]
 }
