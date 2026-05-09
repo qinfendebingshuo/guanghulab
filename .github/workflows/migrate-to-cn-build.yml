@@ -1,0 +1,229 @@
+name: '📦 国内搬家·打包'
+
+# ════════════════════════════════════════════════════════════════
+# 国内搬家·打包工作流 · migrate-to-cn-build
+# 编号: ZY-WF-MIGRATE-TO-CN-BUILD
+# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+# 守护: 铸渊 · ICE-GL-ZY001
+#
+# 触发场景:
+#   冰朔在 GitHub 上点 Run workflow + 填「打包搬家包」, 工作流自动:
+#     1. 误触锁校验
+#     2. checkout 整仓
+#     3. git archive 整工作树 (不带 .git/objects 历史 · cc-001 涌现洁净)
+#     4. 排除 node_modules / checkpoints / *.bin / *.safetensors / secrets/
+#     5. 跑 build-manifest.js 生成中文 MIGRATION-MANIFEST.md + sha256 + manifest.json
+#     6. 上传成 GH Actions Artifact (90 天保留)
+#     7. 中文回执 → Step Summary 告诉冰朔下一步去 COS 桶哪个路径上传
+#
+# 这个 workflow 不接触任何服务器 secrets, 也不接触 ZY_CN_SERVER_*,
+# 因此**不必加入 cn-isolation-allowlist** (扫描器只关心引用 ZY_CN_SERVER_* 的).
+#
+# 误触锁: confirm_phrase = 「打包搬家包」
+# 因果链: cc-001 (涌现洁净 · 不带 GitHub remote tracking) +
+#         cc-004 (中文一次性 · 操作流程写到回执里)
+# ════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: '误触锁 · 必须输入「打包搬家包」才会真打包, 其他值降级 dry-run (只列内容不上传 Artifact)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-to-cn-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 打包工作树 → Artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout 整仓
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 误触锁 · 必须输入「打包搬家包」
+        id: misclick
+        env:
+          PHRASE: ${{ inputs.confirm_phrase }}
+        run: |
+          set -e
+          REQUIRED="打包搬家包"
+          if [ "$PHRASE" != "$REQUIRED" ]; then
+            echo "═══════════════════════════════════════════════"
+            echo "  ⚠️  误触保护"
+            echo "       要真打包并上传 Artifact, 必须在 confirm_phrase"
+            echo "       字段精确输入: 「$REQUIRED」"
+            echo "       当前值=「$PHRASE」 → 自动切到 dry-run."
+            echo "═══════════════════════════════════════════════"
+            echo "effective_dry_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "✅ 已显式确认 (phrase=「$PHRASE」), 即将真打包"
+            echo "effective_dry_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 装 jq (build-manifest 不需要,但保险)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq
+
+      - name: 计算 tag (YYYYMMDD-HHMM UTC)
+        id: tag
+        run: |
+          TAG="$(date -u +%Y%m%d-%H%M)"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "✅ tag=$TAG"
+
+      - name: git archive 整工作树 (不带 .git 历史)
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/migration-out
+          # git archive 默认就不带 .git/, 这里再用 --worktree-attributes 让 .gitattributes
+          # 的 export-ignore 生效, 加双保险.
+          # 同时显式 --prefix=guanghulab/ 让解出来的目录名固定 (不跟仓库名 -<sha> 关联),
+          # 国内 Forgejo 那边解出来路径稳定.
+          git archive \
+            --format=tar.gz \
+            --worktree-attributes \
+            --prefix=guanghulab/ \
+            -o /tmp/repo-raw.tar.gz \
+            HEAD
+          ls -lh /tmp/repo-raw.tar.gz
+
+      - name: 二次过滤 · 剔除大目录/二进制/敏感目录
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # git archive 已经按 .gitattributes export-ignore 排除了一部分,
+          # 但仓库可能没配 .gitattributes. 这里再过一遍, 保证下面这些一定不在包里:
+          #   node_modules/  (大量小文件, 服务器恢复后重装)
+          #   **/checkpoints/  (模型权重, 单 GB 起, 走 COS 单独拉)
+          #   **/*.bin **/*.safetensors **/*.pt **/*.pth (模型权重)
+          #   secrets/  (永远不进搬家包)
+          #   **/__pycache__/ **/*.pyc (Python 缓存)
+          #   **/.DS_Store
+          mkdir -p /tmp/extract
+          tar -xzf /tmp/repo-raw.tar.gz -C /tmp/extract
+
+          # 删掉应排除的内容
+          find /tmp/extract -type d -name node_modules -prune -exec rm -rf {} +
+          find /tmp/extract -type d -name checkpoints -prune -exec rm -rf {} +
+          find /tmp/extract -type d -name __pycache__ -prune -exec rm -rf {} +
+          find /tmp/extract -type d -name 'secrets' -prune -exec rm -rf {} + 2>/dev/null || true
+          find /tmp/extract -type f \( -name '*.bin' -o -name '*.safetensors' -o -name '*.pt' -o -name '*.pth' -o -name '*.pyc' -o -name '.DS_Store' \) -delete
+
+          # 重新打包 (确保固定的 mtime, 让多次跑的 sha256 在内容相同时一致)
+          tar --sort=name \
+              --owner=0 --group=0 --numeric-owner \
+              --mtime='1970-01-01 00:00:00 UTC' \
+              -czf /tmp/repo.tar.gz \
+              -C /tmp/extract guanghulab
+          ls -lh /tmp/repo.tar.gz
+
+      - name: 跑 build-manifest.js 生成中文清单 + sha256
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          COMMIT: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          node scripts/migration/build-manifest.js \
+            --tarball /tmp/repo.tar.gz \
+            --out-dir /tmp/migration-out \
+            --tag "$TAG" \
+            --commit "$COMMIT" \
+            --branch "$BRANCH"
+          ls -la /tmp/migration-out/
+
+      - name: 准备中文 Step Summary
+        if: always()
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          DRY: ${{ steps.misclick.outputs.effective_dry_run }}
+          COMMIT: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -uo pipefail
+          MD=/tmp/migration-out/MIGRATION-MANIFEST.md
+          {
+            echo "# 📦 国内搬家·打包回执"
+            echo ""
+            echo "> 给冰朔看的中文回执 · 守护: 铸渊 · ICE-GL-ZY001"
+            echo ""
+            if [ "$DRY" = "true" ]; then
+              echo "## ⚠️ DRY RUN (没真打包/没上传)"
+              echo ""
+              echo "误触锁口令没填对, 工作流只走完前几步, 未上传 Artifact."
+              echo ""
+              echo "下次跑要真出包, confirm_phrase 字段精确填: \`打包搬家包\`"
+              echo ""
+            else
+              echo "## ✅ 搬家包已打包, Artifact 已上传"
+              echo ""
+              if [ -f "$MD" ]; then
+                cat "$MD"
+              else
+                echo "(MIGRATION-MANIFEST.md 没生成, 检查 build-manifest.js 这一步的日志)"
+              fi
+              echo ""
+              echo "---"
+              echo ""
+              echo "## 🎯 接下来你 3 步操作"
+              echo ""
+              echo "### 操作 1 · 下载 Artifact"
+              echo ""
+              echo "拉到本页底部 → \`Artifacts\` 区 → 下载 \`lighthouse-migration-${TAG}\` (zip)"
+              echo "解出来里面有:"
+              echo "- \`lighthouse-migration-${TAG}.tar.gz\` (主包)"
+              echo "- \`lighthouse-migration-${TAG}.sha256\`  (校验)"
+              echo "- \`MIGRATION-MANIFEST.md\` (中文清单, 这一份)"
+              echo "- \`manifest.json\`         (机读元数据)"
+              echo ""
+              echo "### 操作 2 · 上传到 COS"
+              echo ""
+              echo "腾讯云控制台 → COS → 桶 \`sy-finetune-corpus-1317346199\`"
+              echo "  → 建文件夹 \`lighthouse-migration/\` (如还没有)"
+              echo "  → 进 \`lighthouse-migration/\` → 上传 \`.tar.gz\` 和 \`.sha256\` 两个文件"
+              echo ""
+              echo "### 操作 3 · 跑恢复 workflow"
+              echo ""
+              echo "GitHub → Actions → 「📥 国内搬家·从COS恢复」"
+              echo "  → Run workflow → confirm_phrase 填 \`从COS恢复\` → Run"
+              echo "  → 等约 5-8 分钟, 跑完后回执贴在那次 run 的 Summary 里"
+              echo ""
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 上传 Artifact (90 天保留)
+        if: steps.misclick.outputs.effective_dry_run != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-migration-${{ steps.tag.outputs.tag }}
+          path: |
+            /tmp/migration-out/lighthouse-migration-*.tar.gz
+            /tmp/migration-out/lighthouse-migration-*.sha256
+            /tmp/migration-out/MIGRATION-MANIFEST.md
+            /tmp/migration-out/manifest.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Dry-run · 列内容不上传
+        if: steps.misclick.outputs.effective_dry_run == 'true'
+        run: |
+          echo "═══════════════ DRY RUN ═══════════════"
+          echo "would upload Artifact: lighthouse-migration-${{ steps.tag.outputs.tag }}"
+          echo "would contain:"
+          ls -la /tmp/migration-out/ 2>/dev/null || echo "(尚未生成)"

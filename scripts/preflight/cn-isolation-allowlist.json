@@ -9,7 +9,7 @@
     "3. .github/workflows/.archive/ 下的 .yml 不参与扫描 (已归档=不跑)",
     "4. 修改本文件需要冰朔 review (在 PR description 里说明为什么新加)"
   ],
-  "version": "1.2.0",
+  "version": "1.3.0",
   "updated_at": "2026-05-09",
   "cn_server_workflows": [
     {
@@ -32,9 +32,16 @@
     },
     {
       "name": "migrate-to-cn-restore.yml",
-      "status": "planned-PR6",
-      "reason": "PR-6 · 从 COS 拉搬家包到 2C2G + 装 Forgejo (用户授权选项 A: 一台到底)",
-      "exists": false
+      "status": "active",
+      "reason": "PR-6 落地 · 从 COS 拉搬家包到 2C2G + 装 Forgejo (一台到底搬家方案) · 误触锁=输入「从COS恢复」 · stage=restore (cn-domain-deploy + COS) · 远端走 sudo bash /tmp/migrate-restore.sh, 凭据走 stdin pipe 不入 ps · 用完即清 /tmp/.cos-creds + /tmp/migrate-restore.sh",
+      "exists": true
+    },
+    {
+      "name": "migrate-to-cn-build.yml",
+      "status": "active",
+      "reason": "PR-6 落地 · 在 GitHub Actions 上 git archive 整工作树 + sha256 + 中文 MIGRATION-MANIFEST.md, 上传成 Artifact 给冰朔下载 · 不接触任何服务器 secrets, 因此扫描器不会把它列进来 (这里登记仅作记录, scan_only=true)",
+      "exists": true,
+      "scan_only": true
     },
     {
       "name": "cn-isolation-guard.yml",
