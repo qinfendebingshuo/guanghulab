@@ -3,8 +3,8 @@
   "_sovereign": "TCS-0002∞ | SYS-GLW-0001",
   "_copyright": "国作登字-2026-A-00037559",
   "_description": "光湖 · 母编号 × 子编号 编号体系 · 唯一真相源 · 铸渊维护",
-  "version": "1.0.0",
-  "updated_at": "2026-05-02",
+  "version": "1.1.0",
+  "updated_at": "2026-05-09",
   "servers": [
     {
       "id": "ZY-SVR-002",
@@ -64,6 +64,48 @@
         "user": "ZY_NOVEL_USER"
       },
       "notes": "Phase 1 首个标准模板宿主 · 域名 guanghu.online · 当前同时跑多个 ZY-FN, Phase 2 升级为单激活态热插拔"
+    },
+    {
+      "id": "ZY-SVR-CN01",
+      "display_name_zh": "国内域名机",
+      "role": "guanghulab.com 唯一对外入口 · Web Portal + 对话历史 + 密钥管理页 + 自托管 git",
+      "location": "广州 (腾讯云轻量)",
+      "ipv4": "(见 secrets.ZY_CN_SERVER_HOST · 重装后由冰朔配置)",
+      "spec": "2核2G",
+      "status": "secrets_configured",
+      "template_version": "0.2.0-pending-PR2",
+      "deploy_root": "/data/guanghulab",
+      "registered_functions": [],
+      "github_secrets": {
+        "host": "ZY_CN_SERVER_HOST",
+        "user": "ZY_CN_SERVER_USER",
+        "key": "ZY_CN_SERVER_KEY",
+        "path": "ZY_CN_SERVER_PATH"
+      },
+      "isolation": "exclusive",
+      "isolation_allowlist_path": "scripts/preflight/cn-isolation-allowlist.json",
+      "physical_alias": "GH-CVM-DOMAIN-PROD-01",
+      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive 表示只有 cn-isolation-allowlist.json 里的 workflow 可以触碰. 不跑训练, 不做 VPN 中继, 不挂 ali-landing"
+    },
+    {
+      "id": "ZY-SVR-GPU01",
+      "display_name_zh": "推理 GPU 机",
+      "role": "AutoDL 共享 GPU · 跑母模型 OR 编程模型 (二选一) · 仅推理",
+      "location": "AutoDL (动态地区)",
+      "ipv4": "(动态 · ZY_AUTODL_HOST 是 host:port 形式 · 每次开机都漂移)",
+      "spec": "动态 (抢什么算什么 · 自动 detect-gpu.sh 探测)",
+      "status": "planned",
+      "template_version": "0.2.0-pending-PR3",
+      "deploy_root": "/root/inference",
+      "registered_functions": [],
+      "github_secrets": {
+        "host": "ZY_AUTODL_HOST",
+        "port": "ZY_AUTODL_PORT",
+        "user": "ZY_AUTODL_USER",
+        "pass": "ZY_AUTODL_PASS"
+      },
+      "physical_alias": "GH-AUTODL-INFER-01",
+      "notes": "PR-3 即将落地 · setup-inference.sh 开机即拉 · 关机即释放 · 不写死硬件 · 所有量化/batch/seq_len 从 detect-gpu.sh 决策 (cc-003). 用密码登录不是 ssh-key. 模型从 sy-finetune-corpus-1317346199 桶 checkpoints/motherbrain-v1 + checkpoints/qwen2_5_coder_7b_sft 拉"
     }
   ],
   "functions": [

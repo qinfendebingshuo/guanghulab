@@ -1,0 +1,57 @@
+{
+  "_sovereign": "TCS-0002∞ · ICE-GL∞ · 国作登字-2026-A-00037559",
+  "_守护": "铸渊 · ICE-GL-ZY001",
+  "_说明": "国内 2C2G 域名机 (ZY-SVR-CN01) 单线运行白名单. 任何引用 ZY_CN_SERVER_* 的 workflow 必须出现在这里, 否则 CI 失败. 防止后续 PR 不小心把这台机器搞污染.",
+  "_主体": "GH-CVM-DOMAIN-PROD-01 / ZY-SVR-CN01 / 广州轻量 2C2G",
+  "_规则": [
+    "1. 任何位于 .github/workflows/ 根目录的 .yml 文件, 引用 secrets.ZY_CN_SERVER_HOST/USER/KEY/PATH/PORT 任意一个, 必须在 cn_server_workflows 列表里",
+    "2. 不在白名单里 = CI 红灯, PR 合不进来",
+    "3. .github/workflows/.archive/ 下的 .yml 不参与扫描 (已归档=不跑)",
+    "4. 修改本文件需要冰朔 review (在 PR description 里说明为什么新加)"
+  ],
+  "version": "1.0.0",
+  "updated_at": "2026-05-09",
+  "cn_server_workflows": [
+    {
+      "name": "deploy-domain-server.yml",
+      "status": "planned-PR2",
+      "reason": "PR-2 即将创建 · 唯一被授权部署到 2C2G 的 workflow · 误触锁=输入「重装广州」",
+      "exists": false
+    },
+    {
+      "name": "refresh-autodl-endpoint.yml",
+      "status": "planned-PR3",
+      "reason": "PR-3 · AutoDL 重开机后 SSH 到 2C2G 写 inference-endpoint.json + pm2 reload portal",
+      "exists": false
+    },
+    {
+      "name": "migrate-to-cn-restore.yml",
+      "status": "planned-PR6",
+      "reason": "PR-6 · 从 COS 拉搬家包到 2C2G + 装 Forgejo (用户授权选项 A: 一台到底)",
+      "exists": false
+    },
+    {
+      "name": "cn-isolation-guard.yml",
+      "status": "active",
+      "reason": "守卫工作流自身需要在白名单里 (会扫到自己的脚本路径), 但其只读不部署",
+      "exists": true,
+      "scan_only": true
+    }
+  ],
+  "autodl_workflows": [
+    {
+      "name": "refresh-autodl-endpoint.yml",
+      "status": "planned-PR3",
+      "reason": "唯一引用 ZY_AUTODL_HOST/PORT/USER/PASS 的 workflow"
+    }
+  ],
+  "_archived_in_PR1": [
+    "deploy-cn-landing.yml",
+    "deploy-to-cn-server.yml",
+    "deploy-ali-cn-landing.yml",
+    "training-bootstrap.yml",
+    "training-auto-run.yml",
+    "coding-model-train.yml",
+    "zhuyuan-training-agent.yml"
+  ]
+}
