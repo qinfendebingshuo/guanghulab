@@ -72,8 +72,8 @@
       "location": "广州 (腾讯云轻量)",
       "ipv4": "(见 secrets.ZY_CN_SERVER_HOST · 重装后由冰朔配置)",
       "spec": "2核2G",
-      "status": "secrets_configured",
-      "template_version": "0.2.0-pending-PR2",
+      "status": "bootstrapping",
+      "template_version": "0.2.0",
       "deploy_root": "/data/guanghulab",
       "registered_functions": [],
       "github_secrets": {
@@ -85,7 +85,7 @@
       "isolation": "exclusive",
       "isolation_allowlist_path": "scripts/preflight/cn-isolation-allowlist.json",
       "physical_alias": "GH-CVM-DOMAIN-PROD-01",
-      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive 表示只有 cn-isolation-allowlist.json 里的 workflow 可以触碰. 不跑训练, 不做 VPN 中继, 不挂 ali-landing"
+      "notes": "2026-05-09 冰朔重装系统, 解析 guanghulab.com (已备案 + Let's Encrypt 已配, 续期到 2026-08-07). 唯一对外服务器, isolation=exclusive 表示只有 cn-isolation-allowlist.json 里的 workflow 可以触碰. 不跑训练, 不做 VPN 中继, 不挂 ali-landing. PR-2 已落地 server/setup/domain-cn/ 三段式模板 (detect-env + tune-from-env + bootstrap) + autorollback + 误触锁「重装广州」, 等 Awen 跑 deploy-domain-server.yml 真正落地."
     },
     {
       "id": "ZY-SVR-GPU01",

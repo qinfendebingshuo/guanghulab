@@ -1,0 +1,259 @@
+name: deploy-domain-server
+
+# ════════════════════════════════════════════════════════════════
+# 国内域名机一键部署 · GH-CVM-DOMAIN-PROD-01 (广州 2C2G)
+# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+# 守护: 铸渊 · ICE-GL-ZY001
+#
+# 这是**唯一**被授权部署到 ZY-SVR-CN01 的工作流, 已登记在
+# scripts/preflight/cn-isolation-allowlist.json 的 cn_server_workflows.
+#
+# 误触锁: confirm_phrase 必须输入「重装广州」, 否则自动降级 dry-run.
+# 自动回滚: 远端 bootstrap.sh 失败时自带 trap autorollback,
+#           workflow 这一层再捞回 deploy-report.md 贴 GH summary.
+#
+# 必需 Secrets:
+#   ZY_CN_SERVER_HOST / ZY_CN_SERVER_USER / ZY_CN_SERVER_KEY
+#   ZY_CN_SERVER_PATH (默认 /data/guanghulab)
+#   ZY_CN_SSH_PORT (可选, 默认 22)
+# ════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: '部署阶段'
+        required: true
+        default: 'bootstrap'
+        type: choice
+        options:
+          - bootstrap
+          - update
+      confirm_phrase:
+        description: '误触锁 · 必须输入「重装广州」才会真跑, 其他值自动降级 dry-run'
+        required: false
+        default: ''
+        type: string
+      dry_run:
+        description: '只打印计划, 不真的执行 (true/false)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-domain-server
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: 启动前预检 · 密钥 + 误触锁
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      effective_dry_run: ${{ steps.misclick.outputs.effective_dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 启动前最小密钥校验 (中文报告)
+        env:
+          ZY_CN_SERVER_HOST: ${{ secrets.ZY_CN_SERVER_HOST }}
+          ZY_CN_SERVER_USER: ${{ secrets.ZY_CN_SERVER_USER }}
+          ZY_CN_SERVER_KEY:  ${{ secrets.ZY_CN_SERVER_KEY }}
+          ZY_CN_SERVER_PATH: ${{ secrets.ZY_CN_SERVER_PATH }}
+          ZY_CN_SSH_PORT:    ${{ secrets.ZY_CN_SSH_PORT }}
+        run: |
+          node scripts/preflight/check-secrets.js \
+            --workflow cn-domain-deploy \
+            --stage "${{ inputs.stage }}" \
+            --target main
+
+      - name: 误触锁 · 必须输入「重装广州」
+        id: misclick
+        env:
+          STAGE: ${{ inputs.stage }}
+          PHRASE: ${{ inputs.confirm_phrase }}
+          DRY: ${{ inputs.dry_run }}
+        run: |
+          set -e
+          EFFECTIVE_DRY="$DRY"
+          REQUIRED="重装广州"
+          if [ "$PHRASE" != "$REQUIRED" ]; then
+            echo "═══════════════════════════════════════════════"
+            echo "  ⚠️  误触保护"
+            echo "       要真跑 (stage=$STAGE), 必须在 confirm_phrase"
+            echo "       字段精确输入: 「$REQUIRED」"
+            echo "       当前值=「$PHRASE」 → 自动切到 dry-run."
+            echo "       (这一层是为了防止 Awen / 冰朔不小心点错按钮)"
+            echo "═══════════════════════════════════════════════"
+            EFFECTIVE_DRY="true"
+          else
+            echo "✅ 已显式确认 (phrase=「$PHRASE」), 即将真跑 stage=$STAGE"
+          fi
+          echo "effective_dry_run=$EFFECTIVE_DRY" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: domain-cn · ${{ inputs.stage }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 装载 SSH 凭据
+        id: target
+        env:
+          HOST: ${{ secrets.ZY_CN_SERVER_HOST }}
+          USER: ${{ secrets.ZY_CN_SERVER_USER }}
+          KEY:  ${{ secrets.ZY_CN_SERVER_KEY }}
+          PORT: ${{ secrets.ZY_CN_SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.ZY_CN_SERVER_PATH }}
+        run: |
+          set -euo pipefail
+          if [ -z "$HOST" ] || [ -z "$KEY" ] || [ -z "$USER" ]; then
+            echo "❌ ZY_CN_SERVER_{HOST,USER,KEY} 任一为空" >&2; exit 1
+          fi
+          PORT="${PORT:-22}"
+          DEPLOY_PATH="${DEPLOY_PATH:-/data/guanghulab}"
+          # 不输出 HOST 到 stdout 以避免被截图泄露
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+          echo "port=$PORT" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$DEPLOY_PATH" >> "$GITHUB_OUTPUT"
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/domain_key
+          chmod 600 ~/.ssh/domain_key
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          # HOST 单独写文件供后续步骤使用 (步骤间不共享 secrets env)
+          printf '%s' "$HOST" > ~/.ssh/domain_host
+          chmod 600 ~/.ssh/domain_host
+          echo "✅ SSH 凭据就绪 (GH-CVM-DOMAIN-PROD-01)"
+
+      - name: Sanity check (dry-run)
+        if: needs.preflight.outputs.effective_dry_run == 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          DEPLOY_PATH: ${{ steps.target.outputs.deploy_path }}
+        run: |
+          echo "=== DRY RUN ==="
+          echo "would rsync server/setup/domain-cn/ → $USER@<host>:/opt/guanghulab/domain-cn/"
+          echo "would ssh $USER@<host> sudo bash /opt/guanghulab/domain-cn/bootstrap.sh STAGE=${{ inputs.stage }}"
+          echo "(real host masked)"
+          echo "deploy data root will be: $DEPLOY_PATH"
+
+      - name: Rsync template to server
+        if: needs.preflight.outputs.effective_dry_run != 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -euo pipefail
+          HOST="$(cat ~/.ssh/domain_host)"
+          ssh -i ~/.ssh/domain_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo mkdir -p /opt/guanghulab/domain-cn && sudo chown -R $USER:$USER /opt/guanghulab"
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/domain_key -p $PORT -o StrictHostKeyChecking=accept-new" \
+            server/setup/domain-cn/ \
+            "$USER@$HOST:/opt/guanghulab/domain-cn/"
+
+      - name: Run bootstrap (远端 trap autorollback 已就绪)
+        if: needs.preflight.outputs.effective_dry_run != 'true'
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+          DEPLOY_PATH: ${{ steps.target.outputs.deploy_path }}
+          STAGE: ${{ inputs.stage }}
+        run: |
+          set -euo pipefail
+          HOST="$(cat ~/.ssh/domain_host)"
+          # 远端 bootstrap.sh 自带 trap autorollback_on_failure EXIT,
+          # 这里 ssh 命令的退出码直接反映"部署成功 OR 已自动回滚到原状态".
+          # tee 保留全量日志, GH Actions 自动屏蔽 secrets 出现 (***).
+          ssh -i ~/.ssh/domain_key -p "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST" \
+              "sudo env DATA_ROOT='$DEPLOY_PATH' STAGE='$STAGE' bash /opt/guanghulab/domain-cn/bootstrap.sh" \
+              2>&1 | tee bootstrap-output.log
+
+      - name: 拉回中文回执 (deploy-report.md + JSON 回执)
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
+        env:
+          USER: ${{ steps.target.outputs.user }}
+          PORT: ${{ steps.target.outputs.port }}
+        run: |
+          set -uo pipefail
+          HOST="$(cat ~/.ssh/domain_host)"
+          mkdir -p artifacts
+          scp -i ~/.ssh/domain_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/deploy-report.md" \
+              artifacts/deploy-report.md 2>/dev/null || echo "(no deploy-report.md)"
+          scp -i ~/.ssh/domain_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/bootstrap-*.json" \
+              artifacts/ 2>/dev/null || echo "(no bootstrap json receipt)"
+          scp -i ~/.ssh/domain_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/rollback-*.json" \
+              artifacts/ 2>/dev/null || echo "(no rollback json receipt — 没回滚说明部署成功)"
+          scp -i ~/.ssh/domain_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/server-env.json" \
+              artifacts/server-env.json 2>/dev/null || true
+          scp -i ~/.ssh/domain_key -P "$PORT" \
+              -o StrictHostKeyChecking=accept-new \
+              "$USER@$HOST:/opt/guanghulab/_logs/tune-decision-*.json" \
+              artifacts/ 2>/dev/null || true
+          ls -la artifacts/ || true
+
+      - name: 把中文回执贴到 GitHub Actions Summary
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
+        run: |
+          set -uo pipefail
+          if [ -f artifacts/deploy-report.md ]; then
+            {
+              echo "# 国内域名机部署回执"
+              echo ""
+              echo "> 给冰朔 / 霜砚 / Awen 看的中文回执 (从远端 \`/opt/guanghulab/_logs/deploy-report.md\` 拉回)"
+              echo ""
+              echo "---"
+              echo ""
+              cat artifacts/deploy-report.md
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "# 国内域名机部署"
+              echo ""
+              echo "⚠️ 没找到 \`deploy-report.md\`. 远端 bootstrap 可能还没跑到生成回执的步骤就死了."
+              echo "查看 bootstrap-output.log artifact 或 SSH 上去看 \`/opt/guanghulab/_logs/\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: 上传所有回执 artifact
+        if: needs.preflight.outputs.effective_dry_run != 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: domain-cn-${{ inputs.stage }}-${{ github.run_id }}
+          path: |
+            artifacts/
+            bootstrap-output.log
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: 清理 SSH 私钥
+        if: always()
+        run: |
+          rm -f ~/.ssh/domain_key ~/.ssh/domain_host

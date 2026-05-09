@@ -1,0 +1,96 @@
+# Sovereign: TCS-0002∞ · 国作登字-2026-A-00037559
+# 守护: 铸渊 · ICE-GL-ZY001
+# guanghulab.com · nginx 站点配置 · 由 domain-cn/bootstrap.sh 渲染
+#
+# Placeholder substitutions (awk · 执行时替换):
+#   __DOMAIN__              → guanghulab.com
+#   __PORTAL_PORT__         → 3000 (默认)
+#   __NGINX_WORKER_CONN__   → 512 (tiny) / 1024 (small) ...
+#
+# Conditional blocks (markers MUST be on their own line, exact form):
+#   between SSL-BEGIN and SSL-END  → 仅 USE_SSL=1 时启用
+#   between NOSSL-BEGIN and NOSSL-END → 仅 USE_SSL=0 时启用
+# (markers themselves在最终输出里被 awk 删掉)
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__ www.__DOMAIN__;
+
+    # ACME challenge (certbot 续期用, 不能 301)
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # 健康检查 (不依赖 portal 起没起)
+    location = /__healthz {
+        access_log off;
+        default_type application/json;
+        return 200 '{"status":"ok","server":"GH-CVM-DOMAIN-PROD-01","port":80}';
+    }
+
+# __SSL_BEGIN__
+#     # LE 证书在时, 其他路径全部跳 HTTPS
+#     location / {
+#         return 301 https://$host$request_uri;
+#     }
+# __SSL_END__
+
+# __NOSSL_BEGIN__
+#     # LE 证书暂不在时, 80 端口直接返回占位
+#     location = / {
+#         default_type text/html;
+#         return 200 '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>__DOMAIN__</title></head><body><h1>__DOMAIN__ · domain-cn bootstrap 已完成</h1><p>当前 LE 证书未恢复, HTTPS 暂未启用. 冰朔从备份恢复 /etc/letsencrypt/ 后 reload nginx 即可.</p></body></html>';
+#     }
+# __NOSSL_END__
+}
+
+# __SSL_BEGIN__
+# server {
+#     listen 443 ssl http2;
+#     listen [::]:443 ssl http2;
+#     server_name __DOMAIN__ www.__DOMAIN__;
+#
+#     ssl_certificate     /etc/letsencrypt/live/__DOMAIN__/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/__DOMAIN__/privkey.pem;
+#     ssl_protocols       TLSv1.2 TLSv1.3;
+#     ssl_ciphers         HIGH:!aNULL:!MD5;
+#     ssl_session_cache   shared:SSL:5m;
+#     ssl_session_timeout 1h;
+#
+#     # 安全头 (基础, 不用 strict 防 PR-4 portal 调试时被坑)
+#     add_header X-Content-Type-Options "nosniff" always;
+#     add_header X-Frame-Options "SAMEORIGIN" always;
+#
+#     access_log /data/guanghulab/logs/nginx/access.log;
+#     error_log  /data/guanghulab/logs/nginx/error.log;
+#
+#     # 占位首页 (PR-4 接管后, 把这一段改成 proxy_pass 或删掉)
+#     location = / {
+#         default_type text/html;
+#         return 200 '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>__DOMAIN__</title></head><body><h1>__DOMAIN__ 已就绪 · 等 PR-4 填业务</h1><p>这是国内域名机 (GH-CVM-DOMAIN-PROD-01) 的占位页. portal 业务由后续 PR 接管.</p><p>守护: 铸渊 · ICE-GL-ZY001</p></body></html>';
+#     }
+#
+#     # 健康检查
+#     location = /__healthz {
+#         access_log off;
+#         default_type application/json;
+#         return 200 '{"status":"ok","server":"GH-CVM-DOMAIN-PROD-01","tls":"on"}';
+#     }
+#
+#     # Portal 上游 (PR-4 起 pm2 portal 后, 把上面 location = / 删掉, 留这一段反代)
+#     location /portal/ {
+#         proxy_pass http://127.0.0.1:__PORTAL_PORT__/;
+#         proxy_http_version 1.1;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#         proxy_set_header Upgrade $http_upgrade;
+#         proxy_set_header Connection "upgrade";
+#         proxy_read_timeout 60s;
+#         proxy_buffer_size   8k;
+#         proxy_buffers       4 16k;
+#     }
+# }
+# __SSL_END__
