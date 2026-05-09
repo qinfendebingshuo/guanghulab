@@ -61,6 +61,7 @@ const express = require("express");
 const { Vault } = require("./lib/vault");
 const { buildRouter } = require("./routes/secrets");
 const { buildInternalRouter } = require("./routes/internal");
+const { createRateLimit } = require("./lib/rate-limit");
 
 // ─── 配置 ─────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "8080", 10);
@@ -101,15 +102,25 @@ app.get("/admin/__healthz", (_req, res) => {
   });
 });
 
+// ─── 限流 (纵深防御 · nginx 在前层也限) ────────────────────
+// admin: 静态/路由用宽松限流; internal: 神笔马良调, 给紧一点
+const adminLimit = createRateLimit({ windowMs: 60_000, max: 240 });
+const internalLimit = createRateLimit({ windowMs: 60_000, max: 600 });
+
 // ─── Admin 路由 (basic-auth 由 nginx 在前面拦, app 这层不再做) ─
 app.use(
   "/admin/secrets",
+  adminLimit,
   buildRouter({ vault, manifestPath: MANIFEST_PATH, endpointPath: ENDPOINT_PATH })
 );
 
 // ─── 静态 (前端) ───────────────────────────────────────────────
-app.use("/admin/static", express.static(path.join(STATIC_DIR, "assets"), { fallthrough: true }));
-app.get(["/admin", "/admin/"], (_req, res, next) => {
+app.use(
+  "/admin/static",
+  adminLimit,
+  express.static(path.join(STATIC_DIR, "assets"), { fallthrough: true })
+);
+app.get(["/admin", "/admin/"], adminLimit, (_req, res, next) => {
   const idx = path.join(STATIC_DIR, "index.html");
   fs.access(idx, fs.constants.R_OK, (err) => {
     if (err) return next();
@@ -118,7 +129,7 @@ app.get(["/admin", "/admin/"], (_req, res, next) => {
 });
 
 // ─── 内部 (本机) 路由 — 神笔马良 ────────────────────────────────
-app.use("/internal", buildInternalRouter({ vault }));
+app.use("/internal", internalLimit, buildInternalRouter({ vault }));
 
 // ─── 404 + 错误 ───────────────────────────────────────────────
 app.use((req, res) => {

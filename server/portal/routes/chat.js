@@ -6,11 +6,18 @@
  *   后端不补 system. 收到任何 system 消息直接剥 (inference-client 也再剥一次).
  *   不重组 SSE. 上游写什么字节, 浏览器收什么字节.
  *
+ * 上下文喂养 (2026-05-09 冰朔点透 · 模型零记忆需 Agent 持续喂):
+ *   前端只发当前一条 user. 后端落库后, 从 SQLite 取该 conv 全部历史, 走
+ *   context-window.buildContextWindow 折叠 (滚动 20 轮 + 16000 字 cap, cc-002
+ *   再剥一次), 拼成完整 messages 数组发推理端. 这样模型每次都拿到全程上下文,
+ *   可正常多轮对话.
+ *
  * 流程:
  *   1. 校验 body
  *   2. 落库 user 消息 (在 stream 开始前, 失败也不挡 SSE)
- *   3. inference.pipeChat 转发, 旁路累计 fullText
- *   4. 流结束后落库 assistant 消息 + 更新 conversations.updated_at
+ *   3. **从 DB 重新拉本对话所有 messages** + buildContextWindow
+ *   4. inference.pipeChat 转发, 旁路累计 fullText
+ *   5. 流结束后落库 assistant 消息 + 更新 conversations.updated_at
  */
 "use strict";
 
@@ -18,6 +25,7 @@ const express = require("express");
 const router = express.Router();
 
 const { isValidId } = require("./conversations");
+const { buildContextWindow } = require("../lib/context-window");
 
 router.post("/", async (req, res) => {
   const body = req.body || {};
@@ -68,11 +76,28 @@ router.post("/", async (req, res) => {
     return res.status(500).json({ error: true, code: "db_error", message: "落库失败: " + e.message });
   }
 
-  // 2. byte-pipe SSE 到推理端
+  // 2. 从 DB 拉完整历史 + 折叠成上下文窗口 (这一步修复"模型一轮都记不住")
+  let history;
+  try {
+    history = req.ctx.db
+      .prepare(
+        "SELECT role, content FROM messages WHERE conv_id = ? ORDER BY ts ASC, id ASC LIMIT 1000"
+      )
+      .all(convId);
+  } catch (e) {
+    return res.status(500).json({ error: true, code: "db_error", message: "读历史失败: " + e.message });
+  }
+  const ctxOpts = {
+    maxTurns: parseInt(process.env.PORTAL_CTX_MAX_TURNS, 10) || undefined,
+    maxChars: parseInt(process.env.PORTAL_CTX_MAX_CHARS, 10) || undefined
+  };
+  const ctx = buildContextWindow(history, ctxOpts);
+
+  // 3. byte-pipe SSE 到推理端 — payload 用拼好的 ctx.messages, 不是前端原始
   const activeModel = req.ctx.inference.getActiveModel();
   const payload = {
     model: activeModel,
-    messages: cleaned, // already system-stripped
+    messages: ctx.messages, // 已 cc-002 剥 system + 滚动窗口 + 字数 cap
     stream: true
   };
 
@@ -91,7 +116,7 @@ router.post("/", async (req, res) => {
     console.error("[portal] /api/chat 流中断:", e.message);
   }
 
-  // 3. 落库 assistant 消息 (即使中间断流, 已收到的字也存)
+  // 4. 落库 assistant 消息 (即使中间断流, 已收到的字也存)
   if (fullText) {
     try {
       const ts = Date.now();

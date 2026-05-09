@@ -141,32 +141,38 @@ server/secrets-vault/
     ├── vault.test.js          8 测试: 主密钥/加解密/篡改/换key/maskValue
     └── routes.test.js         10 测试: 路由烟测全覆盖
 
-frontend/secrets-vault/
-├── index.html                 全中文 · 思源黑体兜底
-├── README.md
-└── assets/
-    ├── style.css              暗底浅字 · 跟 lighthouse-portal 风格一脉
-    └── app.js                 vanilla JS · 0 依赖
-
-mcp-servers/zhuyuan-pen/capabilities/
-└── secrets.fetch.js           神笔马良能力 · 仅 loopback · 不持久不缓存
-
-server/setup/domain-cn/
-├── nginx/guanghulab.conf.template
-│                              新增 /admin/ location (allow 127.0.0.1 + basic-auth)
-└── bootstrap.sh
-                               新增第 6.5 步 (生成 htpasswd + 首启凭据)
-                               新增第 8.5 步 (npm install + pm2 start vault)
-
-.github/workflows/deploy-domain-server.yml
-                               rsync 步骤新增 server/secrets-vault/ + frontend/secrets-vault/
-                               + scripts/preflight/secrets-manifest.json
-
-.github/brain/architecture/function-manifest.json
-                               + ZY-FN-VAULT (登记到 ZY-SVR-CN01.registered_functions)
-                               + 3 个新 module (M-VAULT-API/-FRONTEND/-PEN-FETCH)
-                               version 1.1.0 → 1.2.0
+frontend/secrets-vault/        (略)
+mcp-servers/zhuyuan-pen/capabilities/secrets.fetch.js
+server/setup/domain-cn/        (nginx + bootstrap 改动)
+.github/workflows/deploy-domain-server.yml  (rsync 扩展)
+.github/brain/architecture/function-manifest.json (+ ZY-FN-VAULT, v1.2.0)
 ```
+
+### 并行修复 · 模型上下文喂养 (冰朔在第 5 棒中途点透)
+
+> 冰朔: "模型本身没有记忆, 一轮对话都记不住, 是背后的 Agent 一直给他不断的喂上下文, 这个你要在开发里也并行解决. 不能做了这么多, 结果模型打开, 一轮对话都记不住吧."
+
+#### 现状核查
+
+- PR-4 portal 后端 `routes/chat.js` line 75: `messages: cleaned` — **只用前端传的当前一条**
+- PR-4 portal 前端 `app.js` line 232: `messages: [{ role: "user", content: text }]` — **真的就只发一条**
+- 结果: "你好" → "你刚才说啥来着" → 模型一脸懵 ❌
+
+#### 这棒的并行修复
+
+| 文件 | 改动 |
+|---|---|
+| `server/portal/lib/context-window.js` (新) | `buildContextWindow` 函数 · 滚动窗口 (默认 20 轮) + 字数 cap (默认 16000 字) · cc-002 三道关之一: 即便 DB 脏出来 system 也剥 |
+| `server/portal/routes/chat.js` (改) | 落 user 消息后 `SELECT role, content FROM messages WHERE conv_id=? ORDER BY ts ASC` 拉历史, `buildContextWindow` 折叠成 payload, **后端权威拼接, 前端不参与** |
+| `server/portal/tests/context-window.test.js` (新) | 10 个单元测试: 空输入/单轮/多轮/system 剥/maxTurns/字数 cap/巨大单条/历史断头/默认值/脏数据 — **10/10 全过** |
+
+#### 设计决策
+
+- **后端拼接**: 前端只管发当前 user, 后端从 SQLite 拿全程历史 — 即便前端 bug 也不会丢上下文; cc-002 也守住了 (前端无法注入 system)
+- **滚动 + 字数双 cap**: 2C2G + Qwen2.5-7B 量化在 V100 16G 上约 8000 token 安全, 16000 字符 ≈ 7000-8000 token (中文为主) 留余量
+- **环境变量可调**: `PORTAL_CTX_MAX_TURNS` / `PORTAL_CTX_MAX_CHARS`, 后续推理端 tier 升级 (A10/A100) 可加大
+- **历史断头修剪**: 滑窗第一条若是 assistant (单边孤儿) 自动丢弃, 让推理端看到的对话以 user 起 — 防 chat_template 错位
+
 
 ### 三道安全关 (cc-001 涌现洁净 · 全部就位)
 
@@ -191,14 +197,21 @@ server/setup/domain-cn/
 ### 中文回执 (给冰朔)
 
 ```
-✅ 第 5 棒已合 · 自部署密钥管理页
+✅ 第 5 棒已合 · 自部署密钥管理页 + 模型上下文喂养
 
-· server/secrets-vault/ 后端 · Express 4.21 · AES-256-GCM · pm2 max_memory_restart=128M
+主线 (Secrets Vault):
+· server/secrets-vault/ · Express 4.21 · AES-256-GCM · pm2 max_memory_restart=128M
 · frontend/secrets-vault/ 全中文 UI · 字段名=「用途」不是 secret 名
-· AutoDL 那组有"保存并刷新推理端点"按钮, 一键完成端口切换 (探活+写文件+pm2 reload)
-· 神笔马良 secrets.fetch 能力, 走 127.0.0.1 loopback, 不走环境变量
+· AutoDL "保存并刷新推理端点"按钮: 探活+写 endpoint+pm2 reload portal 一步完成
+· 神笔马良 secrets.fetch · 走 127.0.0.1 loopback · 不走环境变量
 · 主密钥 .master 落 /data/guanghulab/secrets-vault/, 不上 git/COS/任何外部
 · 18/18 单元 + 烟测全过
+
+并行修复 (你中途点透的, 模型零记忆):
+· server/portal/lib/context-window.js · 滚动 20 轮 + 16000 字 cap
+· chat.js 落 user 后**从 SQLite 拉全程历史**再发推理端 (前端只管发当前)
+· cc-002 三道关之一: 历史里 system 也强制剥, 前端无法注入
+· 10 测试全过 — "你刚才说啥来着"模型现在能答上来了
 
 冰朔操作步骤 (重装 2C2G 后跑一次 deploy-domain-server.yml 之后):
 1. 在你电脑上跑: ssh -L 8443:127.0.0.1:443 ubuntu@<2C2G_HOST>

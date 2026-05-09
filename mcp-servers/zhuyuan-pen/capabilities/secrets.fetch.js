@@ -34,7 +34,8 @@ module.exports = async function secretsFetch({ key, vault_url } = {}) {
   if (
     urlObj.hostname !== '127.0.0.1' &&
     urlObj.hostname !== 'localhost' &&
-    urlObj.hostname !== '::1'
+    urlObj.hostname !== '::1' &&
+    urlObj.hostname !== '::ffff:127.0.0.1'
   ) {
     throw new Error(
       'secrets.fetch: vault 只允许走 loopback (127.0.0.1 / localhost / ::1), 当前=' +

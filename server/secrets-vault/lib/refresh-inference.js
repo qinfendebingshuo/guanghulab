@@ -166,7 +166,8 @@ async function saveAndRefresh(opts) {
 function tryPmReload() {
   return new Promise((resolve) => {
     let pm2Bin = process.env.PM2_BIN || "pm2";
-    const child = spawn(pm2Bin, ["reload", "guanghulab-portal"], {
+    const portalProcessName = process.env.PM2_PORTAL_PROCESS_NAME || "guanghulab-portal";
+    const child = spawn(pm2Bin, ["reload", portalProcessName], {
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 15000
     });
