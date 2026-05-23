@@ -201,77 +201,63 @@ jobs:
           # ─── Nginx 配置 ───
           ln -sf /etc/nginx/sites-available/zhiku /etc/nginx/sites-enabled/zhiku
           
-          # 检查 SSL 证书是否存在，不存在则先用
-          # 默认配置启动（后续可单独执行 setup-ssl 动作）
-          if [ ! -f /etc/letsencrypt/live/${{ secrets.ZY_ZHIKU_DOMAIN }}/fullchain.pem ]; then
-            echo "[ZY-SVR-006] SSL 证书不存在，使用 HTTP 配置启动"
-            sed -i 's/listen 443 ssl http2;/listen 80;/g' /etc/nginx/sites-available/zhiku
-            sed -i 's/listen [::]:443 ssl http2;/listen [::]:80;/g' /etc/nginx/sites-available/zhiku
-            sed -i '/ssl_certificate/d' /etc/nginx/sites-available/zhiku
-          else
-            echo "[ZY-SVR-006] 检测到 SSL 证书，使用 HTTPS 配置"
+          # 检查 SSL 证书是否存在，不存在则先用HTTP配置启动
+          if [ ! -f "/etc/letsencrypt/live/${{ secrets.ZY_ZHIKU_DOMAIN }}/fullchain.pem" ]; then
+            echo "[ZY-SVR-006] 未检测到SSL证书，使用HTTP配置启动"
+            sed -i 's/listen 443 ssl http2;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/listen [::]:443 ssl http2;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_certificate.*;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_certificate_key.*;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_protocols.*;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_ciphers.*;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_prefer_server_ciphers.*;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_session_cache.*;//g' /etc/nginx/sites-available/zhiku
+            sed -i 's/ssl_session_timeout.*;//g' /etc/nginx/sites-available/zhiku
           fi
           
-          # ─── PM2 启动服务 ───
+          # 重启 Nginx
+          systemctl restart nginx
+          
+          # ─── 启动 PM2 服务 ───
           cd /opt/zhiku
-          pm2 delete zhiku || true
+          pm2 delete zhiku-api 2>/dev/null || true
           pm2 start ecosystem.config.js
-          
-          # ─── 重载 Nginx ───
-          nginx -t && systemctl reload nginx
-          
-          # ─── 保存 PM2 启动配置 ───
           pm2 save
+          pm2 startup systemd -u root --hp /root
           
-          echo "[ZY-SVR-006] 部署完成 · 服务已启动"
+          echo "[ZY-SVR-006] 部署完成"
           ENDSSH
 
-      - name: '✅ 验证 PM2 服务状态'
+      - name: '✅ 验证部署'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'pm2 list | grep zhiku | grep online || (echo "[ZY-SVR-006] ❌ 服务未运行"; exit 1)'
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # 检查 PM2 状态
+          pm2 list | grep "zhiku-api" | grep "online" || (echo "PM2 服务未正常运行"; exit 1)
+          
+          # 检查 Nginx 状态
+          systemctl status nginx | grep "active (running)" || (echo "Nginx 服务未正常运行"; exit 1)
+          
+          # 检查端口监听
+          netstat -tulnp | grep "3006" || (echo "Node.js 未监听3006端口"; exit 1)
+          netstat -tulnp | grep "80" || (echo "Nginx 未监听80端口"; exit 1)
+          
+          echo "[ZY-SVR-006] 验证通过"
+          ENDSSH
 
   # ═══════════════════════════════════════════════════════
-  # Job 2: 配置内置数据源
-  # ═══════════════════════════════════════════════════════
-  setup-datasources:
-    name: '⚙️ 配置内置数据源 · FQWeb/SwiftCat'
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-datasources'
-
-    steps:
-      - name: '📥 检出代码'
-        uses: actions/checkout@v4
-
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '📤 上传数据源配置'
-        run: |
-          scp -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no -r \
-            server/zhiku-node/server/datasources/* \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }}:/opt/zhiku/datasources/
-
-      - name: '🔄 重启服务'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'cd /opt/zhiku && pm2 restart zhiku'
-
-  # ═══════════════════════════════════════════════════════
-  # Job 3: 配置 SSL 证书
+  # Job 2: SSL证书配置
   # ═══════════════════════════════════════════════════════
   setup-ssl:
-    name: '🔒 配置 SSL 证书 · Let\'s Encrypt'
+    name: '🔒 SSL证书配置 · guanghu.online'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
     needs: deploy
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'setup-ssl'
 
     steps:
       - name: '📥 检出代码'
@@ -290,99 +276,138 @@ jobs:
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 安装 certbot + nginx 插件
-          if ! command -v certbot &>/dev/null; then
-            apt-get update
-            apt-get install -y certbot python3-certbot-nginx
-          fi
+          # 安装 certbot 和 Nginx 插件
+          apt-get update
+          apt-get install -y certbot python3-certbot-nginx
           
-          # 申请证书
-          certbot --nginx -d ${{ secrets.ZY_ZHIKU_DOMAIN }} -d www.${{ secrets.ZY_ZHIKU_DOMAIN }} --non-interactive --agree-tos \
-            -m ${{ secrets.ZY_SMTP_USER }} --redirect
-          
-          # 更新 Nginx 配置
-          sed -i 's/listen 80;/listen 443 ssl http2;/g' /etc/nginx/sites-available/zhiku
-          sed -i 's/listen [::]:80;/listen [::]:443 ssl http2;/g' /etc/nginx/sites-available/zhiku
-          
-          # 重载 Nginx
-          nginx -t && systemctl reload nginx
-          
-          echo "[ZY-SVR-006] SSL 证书配置完成"
+          echo "[ZY-SVR-006] certbot 安装完成"
           ENDSSH
 
-  # ═══════════════════════════════════════════════════════
-  # Job 4: 健康检查
-  # ═══════════════════════════════════════════════════════
-  health:
-    name: '🩺 健康检查 · API + 前端'
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
-
-    steps:
-      - name: '📥 检出代码'
-        uses: actions/checkout@v4
-
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '🔄 检查 PM2 状态'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'pm2 list | grep zhiku'
-
-      - name: '📊 检查 API 状态'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'curl -s http://localhost:3006/api/health | jq'
-
-      - name: '🌐 检查 Nginx 状态'
-        run: |
-          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
-            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} \
-            'nginx -t && systemctl status nginx --no-pager'
-
-  # ═══════════════════════════════════════════════════════
-  # Job 5: 回滚
-  # ═══════════════════════════════════════════════════════
-  rollback:
-    name: '⏮️ 回滚到上一版本'
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
-
-    steps:
-      - name: '📥 检出代码'
-        uses: actions/checkout@v4
-
-      - name: '🔑 配置 SSH'
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
-          chmod 600 ~/.ssh/zhiku_key
-          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
-
-      - name: '🔄 执行回滚'
+      - name: '🔐 申请 SSL 证书'
         run: |
           ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
             ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
           set -e
           
-          # 回滚 PM2
-          cd /opt/zhiku
-          pm2 resurrect || pm2 start ecosystem.config.js
+          # 申请证书
+          certbot --nginx -d ${{ secrets.ZY_ZHIKU_DOMAIN }} -d www.${{ secrets.ZY_ZHIKU_DOMAIN }} \
+            --non-interactive --agree-tos \
+            --email ${{ secrets.ZY_SMTP_USER }} \
+            --redirect --hsts --uir --staple-ocsp
           
-          # 回滚 Nginx
-          if [ -f /etc/nginx/sites-available/zhiku.bak ]; then
+          # 恢复 Nginx 完整配置
+          cp /etc/nginx/sites-available/zhiku /etc/nginx/sites-available/zhiku.bak
+          sed -i 's/listen 80;//g' /etc/nginx/sites-available/zhiku
+          sed -i 's/listen [::]:80;//g' /etc/nginx/sites-available/zhiku
+          
+          # 重启 Nginx
+          systemctl restart nginx
+          
+          echo "[ZY-SVR-006] SSL 证书配置完成"
+          ENDSSH
+
+      - name: '✅ 验证 HTTPS'
+        run: |
+          curl -I https://${{ secrets.ZY_ZHIKU_DOMAIN }}/api/health
+          if [ $? -ne 0 ]; then
+            echo "HTTPS 验证失败"
+            exit 1
+          fi
+          echo "[ZY-SVR-006] HTTPS 验证通过"
+
+  # ═══════════════════════════════════════════════════════
+  # Job 3: 健康检查
+  # ═══════════════════════════════════════════════════════
+  health:
+    name: '🏥 健康检查 · guanghu.online'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'health'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '🔍 检查服务状态'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # 检查 PM2 状态
+          pm2 list | grep "zhiku-api" | grep "online" || (echo "PM2 服务未正常运行"; exit 1)
+          
+          # 检查 Nginx 状态
+          systemctl status nginx | grep "active (running)" || (echo "Nginx 服务未正常运行"; exit 1)
+          
+          # 检查 API 健康状态
+          curl -s http://localhost:3006/api/health | jq -e '.status == "ok"' || \
+            (echo "API 健康检查失败"; exit 1)
+          
+          # 检查前端访问
+          curl -s http://localhost | grep "<title>" || (echo "前端访问失败"; exit 1)
+          
+          echo "[ZY-SVR-006] 所有服务运行正常"
+          ENDSSH
+
+  # ═══════════════════════════════════════════════════════
+  # Job 4: 回滚
+  # ═══════════════════════════════════════════════════════
+  rollback:
+    name: '⏮️ 回滚 · guanghu.online'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+
+    steps:
+      - name: '🔑 配置 SSH'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ZY_NOVEL_KEY }}" > ~/.ssh/zhiku_key
+          chmod 600 ~/.ssh/zhiku_key
+          ssh-keyscan -H ${{ secrets.ZY_NOVEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: '⏮️ 执行回滚'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # 回滚到上一版本
+          cd /opt/zhiku
+          pm2 stop zhiku-api
+          git checkout .
+          pm2 start ecosystem.config.js
+          
+          # 如果有备份的Nginx配置则恢复
+          if [ -f "/etc/nginx/sites-available/zhiku.bak" ]; then
             cp /etc/nginx/sites-available/zhiku.bak /etc/nginx/sites-available/zhiku
+            systemctl restart nginx
           fi
           
-          nginx -t && systemctl reload nginx
-          
           echo "[ZY-SVR-006] 回滚完成"
+          ENDSSH
+
+      - name: '✅ 验证回滚'
+        run: |
+          ssh -i ~/.ssh/zhiku_key -o StrictHostKeyChecking=no \
+            ${{ secrets.ZY_NOVEL_USER }}@${{ secrets.ZY_NOVEL_HOST }} << 'ENDSSH'
+          set -e
+          
+          # 检查 PM2 状态
+          pm2 list | grep "zhiku-api" | grep "online" || (echo "PM2 服务未正常运行"; exit 1)
+          
+          # 检查 API 健康状态
+          curl -s http://localhost:3006/api/health | jq -e '.status == "ok"' || \
+            (echo "API 健康检查失败"; exit 1)
+          
+          echo "[ZY-SVR-006] 回滚验证通过"
           ENDSSH
