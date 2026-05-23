@@ -143,6 +143,7 @@ function autoDetectSmtpHost(email) {
  */
 async function testSmtpConnection() {
   if (!SMTP_USER || !SMTP_PASS) {
+    console.log('[ZY-SVR-006] SMTP测试: 配置不完整 (ZY_SMTP_USER或ZY_SMTP_PASS未设置)');
     return {
       ok: false,
       error: 'SMTP配置不完整 (ZY_SMTP_USER或ZY_SMTP_PASS未设置)'
@@ -151,6 +152,7 @@ async function testSmtpConnection() {
 
   const effectiveHost = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
   if (!effectiveHost) {
+    console.log('[ZY-SVR-006] SMTP测试: 无法自动检测SMTP主机 (请设置ZY_SMTP_HOST)');
     return {
       ok: false,
       error: '无法自动检测SMTP主机 (请设置ZY_SMTP_HOST)'
@@ -173,8 +175,10 @@ async function testSmtpConnection() {
 
   try {
     await transporter.verify();
+    console.log('[ZY-SVR-006] SMTP测试: 连接成功');
     return { ok: true };
   } catch (err) {
+    console.log(`[ZY-SVR-006] SMTP测试: 连接失败 - ${err.message}`);
     return {
       ok: false,
       error: `SMTP连接失败: ${err.message}`
@@ -271,141 +275,208 @@ app.get('/api/health', async (req, res) => {
       sentinelStatus = { ok: false, error: err.message };
     }
   }
-  
+
   res.json({
+    ok: true,
     status: 'running',
-    timestamp: now.toISOString(),
-    uptime: `${uptime}秒`,
     version: '2.1',
-    server: 'ZY-SVR-006',
-    domain: DOMAIN,
-    services: {
+    uptime: `${uptime}秒`,
+    serverTime: now.toISOString(),
+    components: {
       smtp: smtpStatus,
       builtinSource: builtinSourceStatus,
       sentinel: sentinelStatus
     },
-    system: {
+    memoryUsage: process.memoryUsage(),
+    env: {
       node: process.version,
       platform: process.platform,
-      memory: process.memoryUsage(),
-      env: process.env.NODE_ENV || 'development'
+      pid: process.pid
     }
   });
 });
 
 /* ═══════════════════════════════════════════════════════════
- * 用户数据管理 · 一人一数据
+ * 认证系统
  * ═══════════════════════════════════════════════════════════ */
 
 /**
- * 用户ID由邮箱地址的SHA256前12位生成，确保稳定且隐私安全
+ * POST /api/auth/send-code
+ * 发送验证码到用户邮箱
  */
-function emailToUserId(email) {
-  return 'U-' + crypto.createHash('sha256').update(email.toLowerCase().trim()).digest('hex').slice(0, 12);
-}
-
-function getUserDir(userId) {
-  const dir = path.join(USERS_DIR, userId);
-  try { fs.mkdirSync(dir, { recursive: true }); } catch {}
-  return dir;
-}
-
-function loadUserProfile(userId) {
-  const file = path.join(getUserDir(userId), 'profile.json');
-  try {
-    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
-  } catch {}
-  return null;
-}
-
-function saveUserProfile(userId, profile) {
-  const file = path.join(getUserDir(userId), 'profile.json');
-  fs.writeFileSync(file, JSON.stringify(profile, null, 2), 'utf8');
-}
-
-/* ═══════════════════════════════════════════════════════════
- * 邮箱验证码 · 内存存储 (生产可迁Redis)
- * ═══════════════════════════════════════════════════════════ */
-
-const verificationCodes = new Map(); // email → { code, expires, attempts }
-const AUTH_CODE_TTL = 300000; // 5分钟
-const AUTH_CODE_MAX_ATTEMPTS = 5;
-
-// 清理过期验证码（每2分钟）
-setInterval(() => {
-  const now = Date.now();
-  for (const [email, data] of verificationCodes) {
-    if (data.expires < now) verificationCodes.delete(email);
-  }
-}, 120000);
-
-function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-/**
- * 发送验证码邮件 — 直接SMTP发送（首选），或通过主站3800转发
- * 生产环境下不允许静默降级到DEV模式
- */
-async function sendVerificationEmail(email, code) {
-  // 方式1: 直接SMTP发送（首选 · 可靠）
-  const effectiveHost = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
-  if (effectiveHost && SMTP_USER && SMTP_PASS) {
-    const transporter = nodemailer.createTransport({
-      host: effectiveHost,
-      port: parseInt(SMTP_PORT, 10),
-      secure: true,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS
-      }
+app.post('/api/auth/send-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ 
+      error: true, 
+      code: 'INVALID_EMAIL', 
+      message: '请输入有效的邮箱地址' 
     });
-
-    try {
-      await transporter.sendMail({
-        from: `"光湖智库" <${SMTP_USER}>`,
-        to: email,
-        subject: '光湖智库验证码',
-        html: `<p>您的验证码是: <strong>${code}</strong></p><p>5分钟内有效。</p>`
-      });
-      return { ok: true };
-    } catch (err) {
-      console.error('[ZY-SVR-006] SMTP发送失败:', err.message);
-      return { ok: false, error: err.message };
-    }
   }
 
-  // 方式2: 通过主站3800转发（备用）
-  if (MAIN_API_URL) {
-    try {
+  // 生成6位数字验证码
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 300000; // 5分钟有效
+
+  // 存储验证码
+  try {
+    fs.writeFileSync(
+      path.join(USERS_DIR, `${email}.json`),
+      JSON.stringify({ code, expiresAt }, null, 2)
+    );
+  } catch (err) {
+    console.error(`[ZY-SVR-006] 验证码存储失败: ${err.message}`);
+    return res.status(500).json({ 
+      error: true, 
+      code: 'SERVER_ERROR', 
+      message: '验证码生成失败，请稍后重试' 
+    });
+  }
+
+  // 发送邮件
+  const mailOptions = {
+    from: `"光湖智库" <${SMTP_USER}>`,
+    to: email,
+    subject: '光湖智库 - 邮箱验证码',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">光湖智库验证码</h2>
+        <p>您的验证码是: <strong style="font-size: 18px;">${code}</strong></p>
+        <p>请在5分钟内使用此验证码完成验证。</p>
+        <p style="color: #999; font-size: 12px;">
+          如果您没有请求此验证码，请忽略此邮件。
+        </p>
+      </div>
+    `
+  };
+
+  try {
+    // 优先尝试直接SMTP发送
+    if (SMTP_USER && SMTP_PASS) {
+      const effectiveHost = SMTP_HOST || autoDetectSmtpHost(SMTP_USER);
+      if (!effectiveHost) {
+        throw new Error('无法自动检测SMTP主机');
+      }
+
+      const transporter = nodemailer.createTransport({
+        host: effectiveHost,
+        port: parseInt(SMTP_PORT, 10),
+        secure: true,
+        auth: {
+          user: SMTP_USER,
+          pass: SMTP_PASS
+        }
+      });
+
+      await transporter.sendMail(mailOptions);
+      console.log(`[ZY-SVR-006] 验证码邮件已发送至 ${email} (直接SMTP)`);
+      return res.json({ ok: true });
+    }
+
+    // 备用方案：通过主站API转发
+    if (MAIN_API_URL) {
       const response = await fetch(`${MAIN_API_URL}/api/mail/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: email,
-          subject: '光湖智库验证码',
-          html: `<p>您的验证码是: <strong>${code}</strong></p><p>5分钟内有效。</p>`
-        })
+        body: JSON.stringify(mailOptions)
       });
 
       if (!response.ok) {
-        const err = await response.json();
-        return { ok: false, error: err.message || '主站邮件转发失败' };
+        throw new Error(`主站转发失败: ${response.status}`);
       }
-      return { ok: true };
-    } catch (err) {
-      console.error('[ZY-SVR-006] 主站邮件转发失败:', err.message);
-      return { ok: false, error: err.message };
+
+      console.log(`[ZY-SVR-006] 验证码邮件已发送至 ${email} (主站转发)`);
+      return res.json({ ok: true });
     }
+
+    throw new Error('无可用邮件发送渠道');
+  } catch (err) {
+    console.error(`[ZY-SVR-006] 邮件发送失败: ${err.message}`);
+    return res.status(500).json({ 
+      error: true, 
+      code: 'EMAIL_FAILED', 
+      message: '验证码发送失败，请检查邮箱地址或稍后重试'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/verify
+ * 验证邮箱验证码
+ */
+app.post('/api/auth/verify', (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ 
+      error: true, 
+      code: 'MISSING_FIELDS', 
+      message: '邮箱和验证码不能为空' 
+    });
   }
 
-  // 方式3: 开发模式日志输出（仅限非生产环境）
+  try {
+    const filePath = path.join(USERS_DIR, `${email}.json`);
+    if (!fs.existsSync(filePath)) {
+      return res.status(400).json({ 
+        error: true, 
+        code: 'CODE_EXPIRED', 
+        message: '验证码已过期，请重新获取' 
+      });
+    }
+
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    if (data.expiresAt < Date.now()) {
+      fs.unlinkSync(filePath);
+      return res.status(400).json({ 
+        error: true, 
+        code: 'CODE_EXPIRED', 
+        message: '验证码已过期，请重新获取' 
+      });
+    }
+
+    if (data.code !== code) {
+      return res.status(400).json({ 
+        error: true, 
+        code: 'INVALID_CODE', 
+        message: '验证码不正确' 
+      });
+    }
+
+    // 验证成功，签发JWT
+    const token = jwt.sign(
+      { email, exp: Math.floor(Date.now() / 1000) + TOKEN_TTL },
+      JWT_SECRET_FINAL
+    );
+
+    // 删除验证码文件
+    fs.unlinkSync(filePath);
+
+    res.json({ 
+      ok: true, 
+      token,
+      expiresIn: TOKEN_TTL 
+    });
+  } catch (err) {
+    console.error(`[ZY-SVR-006] 验证码验证失败: ${err.message}`);
+    res.status(500).json({ 
+      error: true, 
+      code: 'SERVER_ERROR', 
+      message: '验证失败，请稍后重试' 
+    });
+  }
+});
+
+// 注册其他路由...
+[registerShieldRoutes, mirrorAgent.registerRoutes, shulanAgent.registerRoutes].forEach(register => {
+  try { register(app); } catch (err) {
+    console.error(`[ZY-SVR-006] 路由注册失败: ${err.message}`);
+  }
+});
+
+// 启动服务器
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`[ZY-SVR-006] 光湖智库服务已启动，监听端口 ${PORT}`);
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[DEV] 验证码邮件(不实际发送): ${email} → ${code}`);
-    return { ok: true };
+    console.log('[ZY-SVR-006] 警告: 当前运行在非生产环境');
   }
-
-  return { ok: false, error: '无可用邮件发送方式' };
-}
-
-// [其余代码保持不变...]
+});
