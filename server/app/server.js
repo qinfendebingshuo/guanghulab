@@ -24,18 +24,44 @@ const https = require('https');
 const { execSync } = require('child_process');
 
 // ─── 新增联邦握手协议模块 ───
-const federation = require('./modules/agent-federation');
+const { FederationManager } = require('./modules/agent-federation');
 
-// 原有代码保持不变...
+// 创建Express应用
+const app = express();
 
-// ═══════════════════════════════════════════════════════════
-// 新增联邦握手协议
-// ═══════════════════════════════════════════════════════════
+// 中间件
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 静态文件服务
+app.use(express.static(path.join(__dirname, '../sites')));
+
+// 健康检查端点
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    server: os.hostname(),
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 其他现有路由...
+
+// 创建HTTP服务器
 const server = app.listen(3800, () => {
   console.log(`铸渊服务器运行中: http://localhost:3800`);
   
   // 初始化联邦握手服务
-  federation.initFederation(server);
+  FederationManager.initFederation(server);
 });
 
-// 原有代码保持不变...
+// 错误处理
+process.on('unhandledRejection', (err) => {
+  console.error('未处理的Promise拒绝:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('未捕获的异常:', err);
+});
